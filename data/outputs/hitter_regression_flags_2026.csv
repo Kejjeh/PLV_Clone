@@ -1,0 +1,3 @@
+batter_name,batter,pa,confidence,primary_position,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag
+Kerry Carpenter,681481,85,Signal,OF,OF,100.0,79.7,90.0,108.7,0.445,0.31,0.402,-0.265,improving,0.036,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Willi Castro,650489,81,Signal,OF,2B,97.8,89.7,87.7,105.6,0.524,0.331,0.387,-0.255,cold,0.021,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average

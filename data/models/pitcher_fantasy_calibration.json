@@ -1,0 +1,66 @@
+{
+  "calibration_years": [
+    2023,
+    2024
+  ],
+  "n_samples": 1379,
+  "league_averages": {
+    "k_per_ip": 0.944,
+    "bb_per_ip": 0.333,
+    "h_per_ip": 0.944,
+    "er_per_ip": 0.467,
+    "hb_per_ip": 0.033,
+    "ip_per_start": 5.5,
+    "ip_per_app": 1.0
+  },
+  "k_model": {
+    "features": [
+      "plv",
+      "whiff_pct"
+    ],
+    "coefs": [
+      0.5363060972687236,
+      0.48383010618773703
+    ],
+    "intercept": -1.9985383555798264,
+    "r2": 0.3714
+  },
+  "bb_model": {
+    "features": [
+      "plv",
+      "cs_pct"
+    ],
+    "coefs": [
+      -0.08107674717292183,
+      -1.988169968610813
+    ],
+    "intercept": 1.7096702497449454,
+    "r2": 0.2726
+  },
+  "h_model": {
+    "features": [
+      "plv",
+      "contact_pct",
+      "xwoba_model"
+    ],
+    "coefs": [
+      -0.2555341299472315,
+      0.9921509343746284,
+      0.833191432761387
+    ],
+    "intercept": 1.1994378495124556,
+    "r2": 0.2003
+  },
+  "er_model": {
+    "features": [
+      "plv",
+      "xwoba_model"
+    ],
+    "coefs": [
+      -0.21835570835049706,
+      0.9545618828337287
+    ],
+    "intercept": 1.2437908328118799,
+    "r2": 0.1636
+  }
+}

@@ -1,0 +1,108 @@
+batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,xwoba_vs_expected,tag
+Aaron Judge,592450,687,Tier A,147.3,100.8,99.1,144.8,0.438,0.234,0.59,0.22,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Shohei Ohtani,660271,783,Tier A,141.3,93.5,97.1,141.5,0.45,0.255,0.56,0.203,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Kyle Schwarber,656941,751,Tier A,128.9,99.6,91.3,131.2,0.419,0.214,0.518,0.151,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Nick Kurtz,701762,487,Tier A,125.8,95.1,89.5,130.1,0.431,0.248,0.504,0.145,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Giancarlo Stanton,519317,310,Tier B,123.9,84.1,93.4,128.7,0.422,0.274,0.507,0.138,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+James Wood,695578,689,Tier A,121.3,73.3,93.5,128.4,0.402,0.251,0.502,0.137,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Juan Soto,665742,713,Tier A,129.0,91.0,107.5,125.7,0.357,0.174,0.491,0.123,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Jonathan Aranda,666018,428,Tier A,124.2,102.7,93.1,125.3,0.485,0.272,0.482,0.121,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Kyle Stowers,669065,469,Tier A,126.1,120.6,90.6,124.7,0.537,0.282,0.487,0.118,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Ronald Acuña,660670,407,Tier A,121.9,123.6,83.8,123.2,0.462,0.243,0.481,0.11,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Cal Raleigh,663728,756,Tier A,121.8,104.6,92.3,123.1,0.518,0.292,0.47,0.11,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Pete Alonso,624413,716,Tier A,125.2,99.2,103.0,122.6,0.464,0.272,0.473,0.107,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Mike Trout,545361,568,Tier A,116.6,95.3,89.0,121.6,0.386,0.228,0.486,0.102,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Roman Anthony,701350,303,Tier B,117.6,82.4,96.9,121.5,0.376,0.218,0.469,0.102,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Jo Adell,666176,582,Tier A,123.8,111.5,97.8,121.1,0.526,0.332,0.474,0.1,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Riley Greene,682985,702,Tier A,118.0,109.1,88.0,120.6,0.528,0.313,0.454,0.097,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Rafael Devers,646240,724,Tier A,118.2,109.5,88.7,120.4,0.473,0.245,0.452,0.096,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Corey Seager,608369,439,Tier A,125.3,116.7,102.7,119.3,0.499,0.258,0.465,0.09,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Jahmai Jones,663330,160,Tier C,120.7,108.2,97.4,119.0,0.447,0.244,0.475,0.089,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Austin Slater,596103,171,Tier C,116.9,96.9,94.6,119.0,0.493,0.266,0.469,0.089,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Corbin Carroll,682998,649,Tier A,119.1,95.5,100.2,118.8,0.49,0.326,0.455,0.088,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Yordan Álvarez,670541,197,Tier C,122.8,85.4,112.8,118.6,0.44,0.294,0.437,0.087,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Colson Montgomery,695657,283,Tier B,116.7,104.7,91.7,118.6,0.507,0.311,0.452,0.087,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+George Springer,543807,672,Tier A,123.5,116.6,101.8,118.0,0.468,0.209,0.462,0.084,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Ben Rice,700250,565,Tier A,123.2,93.8,111.6,117.8,0.437,0.228,0.457,0.083,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Byron Buxton,621439,548,Tier A,118.7,109.5,95.4,117.7,0.52,0.297,0.457,0.083,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Michael Busch,683737,613,Tier A,119.8,109.2,98.3,117.6,0.468,0.233,0.461,0.082,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Oneil Cruz,665833,549,Tier A,111.4,71.5,98.9,117.0,0.414,0.268,0.433,0.079,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Dominic Canzone,686527,303,Tier B,118.1,86.6,106.6,116.7,0.519,0.347,0.432,0.077,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Ramón Laureano,657656,490,Tier A,116.3,107.3,94.4,116.5,0.477,0.247,0.451,0.076,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Willson Contreras,575929,567,Tier A,116.3,103.0,96.4,116.3,0.485,0.318,0.439,0.075,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Matt Olson,621566,722,Tier A,114.5,103.8,93.1,116.0,0.453,0.249,0.432,0.074,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Zach Neto,687263,550,Tier A,116.5,105.4,96.8,115.9,0.486,0.285,0.447,0.073,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Jackson Merrill,701538,506,Tier A,119.4,108.3,101.9,115.8,0.586,0.369,0.424,0.073,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Dillon Dingler,693307,512,Tier A,116.0,95.1,101.1,115.5,0.484,0.329,0.439,0.071,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Salvador Pérez,521692,647,Tier A,121.6,104.3,108.8,115.4,0.575,0.417,0.427,0.071,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Jazz Chisholm,665862,564,Tier A,113.0,99.6,93.6,115.2,0.469,0.265,0.432,0.07,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Austin Riley,663586,447,Tier A,114.3,111.3,91.2,115.2,0.51,0.282,0.44,0.07,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong
+Julio Rodríguez,677594,771,Tier A,119.4,110.9,102.8,114.8,0.547,0.349,0.427,0.068,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Will Benson,666181,254,Tier B,115.0,105.0,97.5,114.3,0.528,0.253,0.439,0.065,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Dansby Swanson,621020,666,Tier A,115.0,120.6,90.8,114.1,0.503,0.253,0.441,0.064,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Brandon Lowe,664040,561,Tier A,113.8,118.2,89.9,114.0,0.553,0.294,0.434,0.063,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Bryce Harper,547180,602,Tier A,117.4,113.7,99.8,113.7,0.543,0.343,0.417,0.062,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Mickey Moniak,666160,468,Tier A,115.9,103.9,101.9,113.3,0.563,0.362,0.426,0.06,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Rowdy Tellez,642133,321,Tier B,111.6,77.7,104.8,113.3,0.45,0.295,0.424,0.06,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Tyler O'Neill,641933,209,Tier C,114.2,110.6,96.2,113.0,0.474,0.296,0.438,0.058,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Seiya Suzuki,673548,673,Tier A,112.6,96.0,99.7,112.8,0.407,0.229,0.437,0.057,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Kerry Carpenter,681481,509,Tier A,114.5,100.8,101.8,112.7,0.525,0.348,0.422,0.057,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Lenyn Sosa,672820,553,Tier A,113.1,76.8,110.1,112.4,0.509,0.406,0.411,0.056,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Ryan Mcmahon,641857,615,Tier A,106.3,104.7,83.5,112.4,0.456,0.253,0.429,0.056,Power+ strong (top 25%); xwOBA above model expectation
+Bobby Witt,677951,692,Tier A,119.5,105.4,111.6,112.0,0.51,0.321,0.424,0.054,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Christopher Morel,666624,319,Tier B,109.0,122.5,82.5,111.9,0.529,0.288,0.438,0.053,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Will Smith,669257,497,Tier A,112.0,94.7,101.5,111.7,0.392,0.21,0.426,0.052,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Derek Hill,656537,154,Tier C,105.3,94.7,88.2,111.4,0.531,0.372,0.425,0.05,Power+ strong (top 25%); xwOBA above model expectation
+Tyler Stephenson,663886,348,Tier B,104.8,94.2,87.6,111.3,0.438,0.271,0.426,0.05,Power+ strong (top 25%); xwOBA above model expectation
+Trent Grisham,663757,621,Tier A,110.5,91.8,101.2,111.0,0.387,0.187,0.425,0.048,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Addison Barger,680718,573,Tier A,111.7,88.8,105.1,111.0,0.484,0.294,0.413,0.048,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Vladimir Guerrero,665489,768,Tier A,121.7,94.7,123.5,110.8,0.424,0.248,0.415,0.047,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Romy Gonzalez,663853,349,Tier B,113.9,99.8,105.1,110.8,0.536,0.329,0.426,0.047,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Hunter Goodman,696100,589,Tier A,112.3,107.6,98.5,110.8,0.55,0.359,0.416,0.047,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Colton Cowser,681297,361,Tier B,103.7,81.0,92.4,110.8,0.425,0.259,0.418,0.047,Power+ strong (top 25%); xwOBA above model expectation
+Jake Bauers,641343,234,Tier C,108.7,100.9,93.8,110.8,0.427,0.23,0.435,0.047,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Eugenio Suárez,553993,718,Tier A,108.2,103.2,92.3,110.6,0.502,0.307,0.421,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Brandon Marsh,669016,452,Tier A,109.8,90.3,101.4,110.6,0.466,0.271,0.414,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Ezequiel Tovar,678662,401,Tier A,112.6,125.0,91.6,110.6,0.604,0.382,0.407,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Jake Burger,669394,387,Tier B,112.6,99.2,103.3,110.5,0.55,0.351,0.411,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Manny Machado,592518,697,Tier A,114.7,102.7,106.4,110.4,0.5,0.307,0.413,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Freddie Freeman,518692,710,Tier A,113.6,112.8,99.6,110.4,0.518,0.288,0.412,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Max Muncy,571970,451,Tier A,109.7,110.9,92.4,110.4,0.417,0.22,0.418,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Pete Crow-Armstrong,691718,669,Tier A,111.7,108.3,98.0,110.3,0.598,0.403,0.4,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Brett Baty,683146,440,Tier A,111.2,96.9,101.9,110.3,0.468,0.284,0.417,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Junior Caminero,691406,661,Tier A,114.4,103.5,105.7,110.3,0.504,0.337,0.403,0.045,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Daulton Varsho,662139,359,Tier B,111.1,111.5,95.8,110.1,0.549,0.305,0.416,0.044,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Ryan Mountcastle,663624,357,Tier B,110.0,107.2,95.6,110.0,0.575,0.372,0.41,0.043,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Wilyer Abreu,677800,418,Tier A,111.6,111.9,96.9,109.9,0.519,0.265,0.412,0.043,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Edouard Julien,666397,222,Tier C,105.3,90.9,93.7,109.7,0.405,0.246,0.422,0.042,Power+ strong (top 25%); xwOBA above model expectation
+Ketel Marte,606466,559,Tier A,116.3,99.3,112.9,109.7,0.456,0.262,0.42,0.042,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Alexander Canario,672744,241,Tier C,105.9,113.5,84.8,109.7,0.534,0.302,0.421,0.042,Power+ strong (top 25%); xwOBA above model expectation
+Michael Toglia,669911,345,Tier B,99.6,88.5,83.2,109.6,0.489,0.294,0.411,0.041,Power+ strong (top 25%); xwOBA above model expectation
+Riley Adams,656180,291,Tier B,101.0,97.1,82.5,109.5,0.483,0.328,0.41,0.041,Power+ strong (top 25%); xwOBA above model expectation
+Logan O'Hoppe,681351,462,Tier A,109.2,112.5,92.7,109.4,0.522,0.311,0.412,0.04,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Wyatt Langford,694671,582,Tier A,108.8,102.6,96.4,109.4,0.433,0.271,0.421,0.04,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Brent Rooker,667670,699,Tier A,114.5,115.9,102.3,109.4,0.5,0.282,0.418,0.04,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Teoscar Hernández,606192,621,Tier A,110.6,107.2,98.3,109.3,0.504,0.29,0.411,0.04,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Luis Robert,673357,441,Tier A,111.1,112.1,97.5,109.1,0.534,0.31,0.401,0.039,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Bo Bichette,666182,665,Tier A,116.1,102.8,112.8,108.8,0.53,0.35,0.393,0.037,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Marcell Ozuna,542303,591,Tier A,106.9,97.3,96.2,108.7,0.394,0.221,0.407,0.037,Power+ strong (top 25%); xwOBA above model expectation
+Tyler Soderstrom,691016,623,Tier A,111.3,95.6,106.1,108.7,0.489,0.286,0.406,0.037,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Bryan Reynolds,668804,659,Tier A,107.9,115.6,90.5,108.6,0.495,0.265,0.424,0.036,Power+ strong (top 25%); xwOBA above model expectation
+Kody Clemens,665019,399,Tier B,108.7,96.4,100.9,108.6,0.484,0.273,0.405,0.036,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Iván Herrera,671056,458,Tier A,112.5,106.2,104.1,108.6,0.45,0.264,0.412,0.036,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Christian Yelich,592885,683,Tier A,107.4,100.6,96.3,108.5,0.456,0.272,0.403,0.036,Power+ strong (top 25%); xwOBA above model expectation
+Sean Murphy,669221,336,Tier B,102.9,103.0,86.0,108.5,0.479,0.263,0.404,0.035,Power+ strong (top 25%); xwOBA above model expectation
+Pavin Smith,656976,299,Tier B,100.6,82.5,90.5,108.4,0.405,0.221,0.413,0.035,Power+ strong (top 25%); xwOBA above model expectation
+Gabriel Arias,672356,488,Tier A,105.2,116.1,85.2,108.4,0.573,0.374,0.4,0.035,Power+ strong (top 25%); xwOBA above model expectation
+Fernando Tatís,665487,712,Tier A,113.8,110.9,105.5,108.3,0.458,0.249,0.409,0.035,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Matt Wallner,670242,408,Tier A,105.0,109.6,88.1,108.2,0.508,0.299,0.404,0.034,Power+ strong (top 25%); xwOBA above model expectation
+Gavin Sheets,657757,559,Tier A,109.3,81.3,109.9,108.1,0.448,0.309,0.388,0.034,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Elly De La Cruz,682829,709,Tier A,107.2,85.6,103.6,108.0,0.454,0.266,0.402,0.033,Power+ strong (top 25%); xwOBA above model expectation
+Jakob Marsee,805300,233,Tier C,111.1,97.4,106.8,107.9,0.433,0.194,0.399,0.033,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Michael Harris,671739,640,Tier A,112.3,90.0,112.6,107.9,0.57,0.401,0.384,0.033,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Trevor Story,596115,669,Tier A,108.6,103.2,99.0,107.9,0.544,0.365,0.407,0.033,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Gunnar Henderson,683002,643,Tier A,109.3,93.9,105.1,107.7,0.475,0.281,0.395,0.032,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Eli White,642201,274,Tier B,108.0,110.4,94.9,107.7,0.529,0.286,0.405,0.032,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong
+Ian Happ,664023,686,Tier A,106.0,101.2,95.7,107.3,0.435,0.229,0.415,0.03,Power+ strong (top 25%)
+Kyle Teel,691019,299,Tier B,104.8,101.4,93.8,107.1,0.445,0.264,0.398,0.028,Power+ strong (top 25%)
+Gabriel Moreno,672515,315,Tier B,108.6,90.7,106.5,107.0,0.44,0.286,0.385,0.028,Power+ strong (top 25%); Process+ also strong

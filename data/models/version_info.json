@@ -1,0 +1,76 @@
+{
+  "version": "1.0.0",
+  "released": "2026-04-23",
+  "description": "First validated release. PLV hardening pass complete. Process+ approved for exploratory use.",
+  "train_config": {
+    "train_years": "2021-2023",
+    "train_start": "2021-04-01",
+    "train_end": "2023-11-01",
+    "val_years": "2024",
+    "val_start": "2024-03-20",
+    "val_end": "2024-10-31",
+    "test_years": "2025",
+    "include_2020": false,
+    "min_pitches_plv": 100,
+    "min_pa_process": 150,
+    "lgbm_n_estimators": 800,
+    "lgbm_learning_rate": 0.05,
+    "lgbm_num_leaves": 63,
+    "lgbm_early_stopping": 50,
+    "random_seed": 42
+  },
+  "plv_scaling": {
+    "pitch_level_mean": -0.05561341639073812,
+    "pitch_level_std": 0.05441337998678588,
+    "target_avg": 5.0,
+    "target_std": 1.5,
+    "n_qualified_pitchers": 1119
+  },
+  "process_plus_scaling": {
+    "decision_mean": 0.06582637206242133,
+    "decision_std": 0.01022368280977798,
+    "contact_mean": -0.004163237105747028,
+    "contact_std": 0.023066367342801368,
+    "power_mean": -0.007463861953517511,
+    "power_std": 0.05074540158836515,
+    "process_mean": 0.05419927300315679,
+    "process_std": 0.04779069316787824,
+    "center": 100.0,
+    "std_scale": 10.0,
+    "n_qualified_hitters": 646
+  },
+  "validation_2024": {
+    "qualified_hitters": 413,
+    "process_plus_mean": 102.26,
+    "process_plus_std": 10.59,
+    "process_plus_range": [60.1, 148.1],
+    "yoy_spearman": {
+      "decision_plus": 0.740,
+      "contact_plus": 0.790,
+      "power_plus": 0.724,
+      "process_plus": 0.646,
+      "n_shared_hitters": 322
+    },
+    "stability_min_pa_for_sb_r_70": {
+      "Decision+": 50,
+      "Contact+": 25,
+      "Power+": 100
+    }
+  },
+  "artifacts": [
+    "swing_model.lgb",
+    "swing_model_meta.json",
+    "called_strike_model.lgb",
+    "called_strike_model_meta.json",
+    "contact_model.lgb",
+    "contact_model_meta.json",
+    "foul_model.lgb",
+    "foul_model_meta.json",
+    "batted_ball_model.lgb",
+    "batted_ball_model_meta.json",
+    "count_value_table.json",
+    "plv_scaling_params.json",
+    "process_plus_scaling_params.json",
+    "version_info.json"
+  ]
+}

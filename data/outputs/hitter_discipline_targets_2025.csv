@@ -1,0 +1,83 @@
+batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rolling_decision_30d,tag
+Bryce Teodosio,669326,150,Tier C,84.0,129.5,89.4,83.8,0.627,0.358,0.288,0.0986,Decision+ elite (top 10%)
+Nick Gonzales,693304,412,Tier A,99.5,129.4,103.5,92.0,0.574,0.307,0.33,0.10686,Decision+ elite (top 10%)
+Marcus Semien,543760,545,Tier A,99.2,126.8,102.2,92.8,0.491,0.258,0.341,0.0657,Decision+ elite (top 10%)
+Ezequiel Tovar,678662,401,Tier A,112.6,125.0,91.6,110.6,0.604,0.382,0.407,0.08214,Decision+ elite (top 10%); Process+ strong
+Matt Thaiss,642136,200,Tier C,83.5,124.3,87.5,85.2,0.485,0.225,0.3,0.0788,Decision+ elite (top 10%); low chase rate
+Ronald Acuña,660670,407,Tier A,121.9,123.6,83.8,123.2,0.462,0.243,0.481,0.07555,Decision+ elite (top 10%); Process+ strong
+Christopher Morel,666624,319,Tier B,109.0,122.5,82.5,111.9,0.529,0.288,0.438,0.08618,Decision+ elite (top 10%); Process+ strong
+Jeff Mcneil,643446,459,Tier A,101.3,122.2,108.5,92.9,0.529,0.271,0.327,0.08637,Decision+ elite (top 10%)
+Freddy Fermin,666023,369,Tier B,93.0,121.7,102.3,88.0,0.533,0.3,0.312,0.07033,Decision+ elite (top 10%)
+Luke Raley,670042,236,Tier C,97.2,121.1,86.4,99.3,0.544,0.279,0.367,0.07349,Decision+ elite (top 10%)
+Dansby Swanson,621020,666,Tier A,115.0,120.6,90.8,114.1,0.503,0.253,0.441,0.0729,Decision+ elite (top 10%); Process+ strong
+Kyle Stowers,669065,469,Tier A,126.1,120.6,90.6,124.7,0.537,0.282,0.487,0.11308,Decision+ elite (top 10%); Process+ strong
+Paul Dejong,657557,213,Tier C,94.2,120.4,84.6,97.4,0.57,0.331,0.362,0.04837,Decision+ elite (top 10%)
+Connor Norby,681393,340,Tier B,105.3,120.3,92.9,104.1,0.541,0.336,0.39,0.0463,Decision+ elite (top 10%)
+Andrew Mccutchen,457705,555,Tier A,101.5,119.2,91.9,101.2,0.456,0.231,0.379,0.08426,Decision+ elite (top 10%); low chase rate
+Max Schuemann,680474,213,Tier C,88.1,119.0,103.2,83.5,0.451,0.224,0.294,0.06836,Decision+ elite (top 10%); low chase rate
+Drew Waters,671221,220,Tier C,94.6,118.9,91.3,95.0,0.565,0.338,0.337,0.06111,Decision+ elite (top 10%)
+Víctor Robles,645302,160,Tier C,84.6,118.4,106.4,78.9,0.573,0.393,0.278,0.08942,Decision+ elite (top 10%)
+Miguel Vargas,678246,582,Tier A,97.3,118.4,100.4,93.5,0.461,0.234,0.34,0.07716,Decision+ elite (top 10%); low chase rate
+Brandon Lowe,664040,561,Tier A,113.8,118.2,89.9,114.0,0.553,0.294,0.434,0.05088,Decision+ elite (top 10%); Process+ strong
+Kyle Tucker,663656,615,Tier A,108.5,118.1,103.6,102.7,0.454,0.189,0.385,0.10503,Decision+ elite (top 10%); low chase rate; Process+ strong
+Davis Schneider,676914,253,Tier B,88.9,117.5,80.4,94.9,0.419,0.221,0.359,0.05737,Decision+ elite (top 10%); selective swinger; low chase rate
+Christian Walker,572233,639,Tier A,105.3,117.3,92.1,105.1,0.523,0.285,0.403,0.13678,Decision+ elite (top 10%)
+Andy Ibáñez,628451,205,Tier C,93.4,117.3,108.4,86.5,0.509,0.293,0.312,0.08273,Decision+ elite (top 10%)
+Oswald Peraza,672724,275,Tier B,87.1,117.1,84.7,91.4,0.521,0.298,0.318,0.07585,Decision+ elite (top 10%)
+Orlando Arcia,606115,214,Tier C,85.9,116.8,98.5,84.0,0.54,0.317,0.284,0.06453,Decision+ elite (top 10%)
+Gleyber Torres,650402,677,Tier A,105.9,116.8,102.6,101.0,0.415,0.191,0.38,0.09901,Decision+ elite (top 10%); selective swinger; low chase rate
+Corey Seager,608369,439,Tier A,125.3,116.7,102.7,119.3,0.499,0.258,0.465,0.08373,Decision+ elite (top 10%); Process+ strong
+George Springer,543807,672,Tier A,123.5,116.6,101.8,118.0,0.468,0.209,0.462,0.08442,Decision+ elite (top 10%); low chase rate; Process+ strong
+Henry Davis,680779,283,Tier B,101.1,116.5,92.5,101.1,0.553,0.324,0.366,0.06052,Decision+ elite (top 10%)
+Casey Schmitt,669477,347,Tier B,106.9,116.3,95.8,105.1,0.515,0.306,0.396,0.08747,Decision+ elite (top 10%)
+Gabriel Arias,672356,488,Tier A,105.2,116.1,85.2,108.4,0.573,0.374,0.4,0.02736,Decision+ elite (top 10%)
+Brent Rooker,667670,699,Tier A,114.5,115.9,102.3,109.4,0.5,0.282,0.418,0.03878,Decision+ elite (top 10%); Process+ strong
+Bryan Reynolds,668804,659,Tier A,107.9,115.6,90.5,108.6,0.495,0.265,0.424,0.08396,Decision+ elite (top 10%)
+Elías Díaz,553869,288,Tier B,90.8,115.4,93.7,91.1,0.525,0.304,0.323,0.10489,Decision+ elite (top 10%)
+Ozzie Albies,645277,666,Tier A,95.4,115.0,106.2,89.9,0.542,0.329,0.31,0.06257,Decision+ elite (top 10%)
+Bryce Harper,547180,602,Tier A,117.4,113.7,99.8,113.7,0.543,0.343,0.417,0.08974,Decision+ strong (top 25%); Process+ strong
+Ryan Ritter,690022,212,Tier C,88.5,113.6,90.8,90.7,0.536,0.331,0.313,0.05257,Decision+ strong (top 25%)
+Alexander Canario,672744,241,Tier C,105.9,113.5,84.8,109.7,0.534,0.302,0.421,0.03882,Decision+ strong (top 25%)
+Daylen Lile,695734,351,Tier B,112.6,112.9,108.1,105.6,0.522,0.267,0.388,0.10367,Decision+ strong (top 25%); Process+ strong
+Freddie Freeman,518692,710,Tier A,113.6,112.8,99.6,110.4,0.518,0.288,0.412,0.0761,Decision+ strong (top 25%); Process+ strong
+Logan O'Hoppe,681351,462,Tier A,109.2,112.5,92.7,109.4,0.522,0.311,0.412,0.07883,Decision+ strong (top 25%); Process+ strong
+Luis Robert,673357,441,Tier A,111.1,112.1,97.5,109.1,0.534,0.31,0.401,0.06916,Decision+ strong (top 25%); Process+ strong
+Wilyer Abreu,677800,418,Tier A,111.6,111.9,96.9,109.9,0.519,0.265,0.412,0.06156,Decision+ strong (top 25%); Process+ strong
+Heriberto Hernandez,681715,296,Tier B,105.6,111.8,93.7,105.8,0.452,0.249,0.404,0.07595,Decision+ strong (top 25%)
+Spencer Steer,668715,577,Tier A,92.2,111.7,94.4,92.9,0.48,0.244,0.333,0.06741,Decision+ strong (top 25%)
+Nick Castellanos,592206,613,Tier A,105.2,111.7,98.9,103.0,0.589,0.364,0.362,0.10418,Decision+ strong (top 25%)
+Jo Adell,666176,582,Tier A,123.8,111.5,97.8,121.1,0.526,0.332,0.474,0.07003,Decision+ strong (top 25%); Process+ strong
+Daulton Varsho,662139,359,Tier B,111.1,111.5,95.8,110.1,0.549,0.305,0.416,0.07543,Decision+ strong (top 25%); Process+ strong
+Jake Mangum,663968,426,Tier A,96.6,111.5,110.7,89.6,0.62,0.391,0.303,0.05069,Decision+ strong (top 25%)
+Dylan Carlson,666185,245,Tier C,91.4,111.4,98.7,90.2,0.451,0.231,0.322,0.08744,Decision+ strong (top 25%); low chase rate
+Will Wagner,695238,159,Tier C,96.4,111.3,99.5,94.6,0.489,0.284,0.338,0.0467,Decision+ strong (top 25%)
+Austin Riley,663586,447,Tier A,114.3,111.3,91.2,115.2,0.51,0.282,0.44,0.0388,Decision+ strong (top 25%); Process+ strong
+Spencer Torkelson,679529,691,Tier A,104.4,111.1,92.7,105.2,0.448,0.229,0.405,0.08418,Decision+ strong (top 25%); selective swinger; low chase rate
+Christian Koss,683766,192,Tier C,106.6,111.0,103.1,102.6,0.552,0.33,0.378,0.07851,Decision+ strong (top 25%)
+Max Muncy,571970,451,Tier A,109.7,110.9,92.4,110.4,0.417,0.22,0.418,0.07003,Decision+ strong (top 25%); selective swinger; low chase rate; Process+ strong
+Julio Rodríguez,677594,771,Tier A,119.4,110.9,102.8,114.8,0.547,0.349,0.427,0.06791,Decision+ strong (top 25%); Process+ strong
+Fernando Tatís,665487,712,Tier A,113.8,110.9,105.5,108.3,0.458,0.249,0.409,0.06963,Decision+ strong (top 25%); Process+ strong
+Ty France,664034,504,Tier A,104.9,110.8,104.7,100.3,0.521,0.316,0.358,0.0659,Decision+ strong (top 25%)
+Tyler O'Neill,641933,209,Tier C,114.2,110.6,96.2,113.0,0.474,0.296,0.438,0.05794,Decision+ strong (top 25%); Process+ strong
+Brady House,691781,274,Tier B,105.7,110.6,96.2,104.9,0.572,0.358,0.385,0.07066,Decision+ strong (top 25%)
+William Contreras,661388,694,Tier A,101.5,110.5,102.3,98.3,0.468,0.258,0.356,0.091,Decision+ strong (top 25%)
+Tyler Fitzgerald,666149,249,Tier C,85.6,110.5,92.3,87.8,0.526,0.323,0.299,0.05074,Decision+ strong (top 25%)
+Eli White,642201,274,Tier B,108.0,110.4,94.9,107.7,0.529,0.286,0.405,0.06612,Decision+ strong (top 25%); Process+ strong
+Edgar Quero,700337,404,Tier A,90.8,110.4,104.2,87.3,0.464,0.208,0.31,0.06265,Decision+ strong (top 25%); low chase rate
+Victor Scott,687363,468,Tier A,91.7,110.3,98.1,91.0,0.491,0.262,0.324,0.09904,Decision+ strong (top 25%)
+Trea Turner,607208,672,Tier A,102.5,109.8,108.7,96.5,0.512,0.299,0.355,0.05793,Decision+ strong (top 25%)
+Ramón Urías,602104,389,Tier B,96.1,109.8,100.2,94.2,0.492,0.272,0.336,0.06286,Decision+ strong (top 25%)
+Tyler Heineman,623168,180,Tier C,85.0,109.7,107.4,80.6,0.54,0.34,0.278,0.02278,Decision+ strong (top 25%)
+Andy Pages,681624,680,Tier A,102.9,109.6,102.6,99.6,0.536,0.342,0.363,0.06324,Decision+ strong (top 25%)
+Matt Wallner,670242,408,Tier A,105.0,109.6,88.1,108.2,0.508,0.299,0.404,0.1097,Decision+ strong (top 25%)
+Ceddanne Rafaela,678882,601,Tier A,103.5,109.5,104.3,99.5,0.589,0.41,0.353,0.07107,Decision+ strong (top 25%)
+Rafael Devers,646240,724,Tier A,118.2,109.5,88.7,120.4,0.473,0.245,0.452,0.07585,Decision+ strong (top 25%); Process+ strong
+Byron Buxton,621439,548,Tier A,118.7,109.5,95.4,117.7,0.52,0.297,0.457,0.0836,Decision+ strong (top 25%); Process+ strong
+Thairo Estrada,642731,166,Tier C,93.1,109.5,109.4,87.3,0.536,0.328,0.29,0.06174,Decision+ strong (top 25%)
+Tim Tawa,694374,225,Tier C,97.1,109.5,92.6,98.7,0.484,0.297,0.363,0.06701,Decision+ strong (top 25%)
+Dylan Moore,664238,251,Tier B,91.9,109.3,84.1,97.8,0.489,0.255,0.352,0.07652,Decision+ strong (top 25%)
+Enrique Hernández,571771,322,Tier B,94.5,109.3,90.7,97.2,0.512,0.313,0.348,0.06482,Decision+ strong (top 25%)
+David Fry,681807,157,Tier C,73.0,109.3,82.5,80.6,0.526,0.296,0.274,0.04408,Decision+ strong (top 25%)
+Michael Busch,683737,613,Tier A,119.8,109.2,98.3,117.6,0.468,0.233,0.461,0.07946,Decision+ strong (top 25%); low chase rate; Process+ strong
+Riley Greene,682985,702,Tier A,118.0,109.1,88.0,120.6,0.528,0.313,0.454,0.06686,Decision+ strong (top 25%); Process+ strong
+Shea Langeliers,669127,526,Tier A,109.9,109.1,108.5,103.6,0.524,0.299,0.382,0.06467,Decision+ strong (top 25%); Process+ strong

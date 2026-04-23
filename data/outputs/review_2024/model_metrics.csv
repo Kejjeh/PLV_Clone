@@ -1,0 +1,6 @@
+model,kind,n,positive_rate,log_loss,baseline_log_loss,log_loss_delta,beats_baseline_ll,brier_score,baseline_brier,beats_baseline_brier,auc_roc,ece,rmse,mae,r2,spearman_r,baseline_rmse,beats_baseline_rmse
+SwingModel,classifier,742122,0.4795,0.445,0.6923,-0.2473,True,0.1466,0.2496,True,0.8706,0.0,,,,,,
+CalledStrikeModel,classifier,386258,0.3149,0.1397,0.623,-0.4832,True,0.0429,0.2157,True,0.9862,0.0,,,,,,
+ContactModel,classifier,355864,0.7671,0.4356,0.5428,-0.1072,True,0.138,0.1787,True,0.7825,0.0,,,,,,
+FoulModel,classifier,272968,0.5252,0.6614,0.6919,-0.0305,True,0.2347,0.2494,True,0.6367,0.0,,,,,,
+BattedBallModel,regression,125349,,,,,,,,,,,0.3707,0.2849,0.0325,0.143,0.3768,True

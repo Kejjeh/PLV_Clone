@@ -1,0 +1,2 @@
+category,severity,count,pct_of_scored,detail,player_name,pitcher
+"PLV out of [0,10]",LOW,4113,0.554,"min=-3.540, max=12.208",,

@@ -1,0 +1,129 @@
+{
+  "generated_at": "2026-04-23T04:36:49.209224",
+  "train": {
+    "label": "Train 2021-2023",
+    "rows": 2220319,
+    "unique_pitchers": 1610,
+    "unique_batters": 2078,
+    "date_min": "2021-04-01",
+    "date_max": "2023-11-01",
+    "pitch_type_pct": {
+      "FF": 33.7,
+      "SL": 16.3,
+      "SI": 15.4,
+      "CH": 11.1,
+      "FC": 7.6,
+      "CU": 7.1,
+      "ST": 4.2,
+      "KC": 2.2,
+      "FS": 1.8,
+      "SV": 0.4,
+      "EP": 0.1,
+      "FO": 0.0,
+      "CS": 0.0,
+      "KN": 0.0,
+      "SC": 0.0
+    },
+    "outcome_pct": {
+      "ball": 35.66,
+      "foul": 18.0,
+      "in_play": 17.3,
+      "called_strike": 16.41,
+      "whiff": 11.35,
+      "foul_tip": 0.98,
+      "hbp": 0.29,
+      "bunt_foul_k": 0.01
+    },
+    "swing_rate": 0.4763,
+    "contact_rate": 0.3628,
+    "in_play_rate": 0.173,
+    "missing_pct": {
+      "estimated_woba_using_speedangle": 75.2
+    },
+    "duplicate_pitch_keys": 0
+  },
+  "val": {
+    "label": "Val 2024",
+    "rows": 742122,
+    "unique_pitchers": 1025,
+    "unique_batters": 1116,
+    "date_min": "2024-03-15",
+    "date_max": "2024-10-30",
+    "pitch_type_pct": {
+      "FF": 31.9,
+      "SI": 15.9,
+      "SL": 15.0,
+      "CH": 10.2,
+      "FC": 8.2,
+      "ST": 7.0,
+      "CU": 6.2,
+      "FS": 3.1,
+      "KC": 1.8,
+      "SV": 0.5,
+      "KN": 0.1,
+      "EP": 0.1,
+      "FO": 0.0,
+      "SC": 0.0,
+      "CS": 0.0
+    },
+    "outcome_pct": {
+      "ball": 35.37,
+      "foul": 18.29,
+      "in_play": 17.47,
+      "called_strike": 16.39,
+      "whiff": 11.17,
+      "foul_tip": 1.03,
+      "hbp": 0.29,
+      "bunt_foul_k": 0.0
+    },
+    "swing_rate": 0.4795,
+    "contact_rate": 0.3678,
+    "in_play_rate": 0.1747,
+    "missing_pct": {
+      "estimated_woba_using_speedangle": 75.21
+    },
+    "duplicate_pitch_keys": 0
+  },
+  "scored": {
+    "label": "Scored 2024",
+    "rows": 742122,
+    "unique_pitchers": 1025,
+    "unique_batters": 1116,
+    "date_min": "2024-03-15",
+    "date_max": "2024-10-30",
+    "pitch_type_pct": {
+      "FF": 31.9,
+      "SI": 15.9,
+      "SL": 15.0,
+      "CH": 10.2,
+      "FC": 8.2,
+      "ST": 7.0,
+      "CU": 6.2,
+      "FS": 3.1,
+      "KC": 1.8,
+      "SV": 0.5,
+      "KN": 0.1,
+      "EP": 0.1,
+      "FO": 0.0,
+      "SC": 0.0,
+      "CS": 0.0
+    },
+    "outcome_pct": {
+      "ball": 35.37,
+      "foul": 18.29,
+      "in_play": 17.47,
+      "called_strike": 16.39,
+      "whiff": 11.17,
+      "foul_tip": 1.03,
+      "hbp": 0.29,
+      "bunt_foul_k": 0.0
+    },
+    "swing_rate": 0.4795,
+    "contact_rate": 0.3678,
+    "in_play_rate": 0.1747,
+    "missing_pct": {
+      "estimated_woba_using_speedangle": 75.21
+    },
+    "duplicate_pitch_keys": 0
+  }
+}

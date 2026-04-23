@@ -1,0 +1,53 @@
+batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag
+Trayce Thompson,572204,188,Tier C,89.6,101.6,64.6,106.0,0.4,0.228,0.416,-0.669,hot,0.023,surface xwOBA elite (top 25%); large rank divergence (results >> process); Process+ very weak — high regression risk
+Joey Gallo,608336,350,Tier B,101.8,106.4,69.5,114.3,0.47,0.231,0.45,-0.437,warm,0.065,surface xwOBA elite (top 25%); large rank divergence (results >> process); Process+ below average
+Ryan Noda,676116,502,Tier A,103.2,103.5,80.3,111.2,0.431,0.197,0.44,-0.386,hot,0.05,surface xwOBA elite (top 25%); large rank divergence (results >> process); Process+ below average
+Dylan Moore,664238,165,Tier C,101.6,96.3,84.5,109.3,0.46,0.214,0.426,-0.363,cold,0.04,surface xwOBA elite (top 25%); large rank divergence (results >> process); Process+ below average
+Martín Maldonado,455117,441,Tier A,90.9,100.5,85.8,97.8,0.493,0.282,0.363,-0.336,warm,-0.019,surface xwOBA above avg; results ahead of process; Process+ below average
+Edouard Julien,666397,434,Tier A,104.4,98.7,86.1,110.7,0.376,0.181,0.439,-0.318,cold,0.047,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Nick Pratto,668472,352,Tier B,100.7,79.7,86.9,110.7,0.433,0.256,0.413,-0.301,cold,0.047,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Brenton Doyle,686668,449,Tier A,93.5,106.6,85.9,99.0,0.522,0.316,0.368,-0.299,hot,-0.013,surface xwOBA above avg; results ahead of process; Process+ below average
+Trent Grisham,663757,559,Tier A,98.1,95.0,92.1,102.8,0.414,0.202,0.385,-0.293,cold,0.007,surface xwOBA above avg; results ahead of process; Process+ below average
+Elehuris Montero,660707,329,Tier B,92.7,82.1,92.7,100.0,0.531,0.386,0.363,-0.29,warm,-0.007,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average
+Seby Zavala,664874,193,Tier C,92.1,109.3,81.3,99.2,0.542,0.321,0.36,-0.281,hot,-0.011,surface xwOBA OK; results ahead of process; Process+ below average
+Zack Short,670097,271,Tier B,88.9,103.8,89.3,93.6,0.415,0.186,0.351,-0.281,cold,-0.04,surface xwOBA OK; results ahead of process; contact below pitch expectation; Process+ very weak — high regression risk
+Mike Ford,645801,248,Tier C,99.9,91.4,91.1,105.7,0.425,0.212,0.397,-0.264,warm,0.021,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average
+Drew Waters,671221,337,Tier B,103.7,100.3,89.0,108.4,0.513,0.301,0.42,-0.264,improving,0.035,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Blake Sabol,666165,346,Tier B,99.2,109.8,84.6,104.3,0.523,0.279,0.388,-0.263,hot,0.014,surface xwOBA above avg; results ahead of process; Process+ below average
+Miguel Amaya,665804,155,Tier C,97.3,97.7,93.5,100.9,0.463,0.282,0.377,-0.258,cold,-0.003,surface xwOBA above avg; results ahead of process; Process+ below average
+Connor Wong,657136,403,Tier A,97.7,104.2,86.7,103.0,0.529,0.326,0.378,-0.257,cold,0.008,surface xwOBA above avg; results ahead of process; Process+ below average
+Stuart Fairchild,656413,256,Tier B,97.7,125.8,85.5,99.3,0.512,0.222,0.378,-0.257,warm,-0.011,surface xwOBA above avg; results ahead of process; Process+ below average
+Will Benson,666181,337,Tier B,103.6,100.9,87.0,109.1,0.429,0.217,0.416,-0.245,warm,0.039,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Austin Slater,596103,207,Tier C,104.6,93.8,99.0,106.0,0.423,0.246,0.424,-0.237,cold,0.023,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Chris Taylor,621035,410,Tier A,103.9,121.3,80.9,108.0,0.477,0.224,0.417,-0.236,cold,0.033,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Brandon Marsh,669016,540,Tier A,103.9,87.1,91.1,110.3,0.426,0.291,0.417,-0.236,cold,0.045,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Tyler Stephenson,663886,517,Tier A,99.6,92.6,97.8,102.1,0.425,0.232,0.384,-0.233,hot,0.003,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average
+Liover Peguero,678894,213,Tier C,94.9,105.4,90.9,98.3,0.517,0.304,0.364,-0.23,cold,-0.016,surface xwOBA above avg; results ahead of process; Process+ below average
+James Outman,681546,583,Tier A,103.9,105.3,83.5,110.1,0.458,0.244,0.416,-0.227,warm,0.044,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Brandon Belt,474832,431,Tier A,107.5,108.7,78.4,115.1,0.418,0.202,0.454,-0.224,hot,0.069,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Patrick Bailey,672275,353,Tier B,102.9,92.9,95.3,106.3,0.465,0.272,0.408,-0.22,warm,0.025,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Cavan Biggio,624415,372,Tier B,94.6,97.4,99.1,95.9,0.393,0.181,0.362,-0.219,cold,-0.028,surface xwOBA OK; results ahead of process; Process+ below average
+Eugenio Suárez,553993,694,Tier A,104.3,109.0,87.3,108.0,0.446,0.229,0.417,-0.217,improving,0.033,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Ramón Laureano,657656,412,Tier A,98.2,106.2,90.8,101.2,0.467,0.292,0.377,-0.216,cold,-0.001,surface xwOBA above avg; results ahead of process; Process+ below average
+Byron Buxton,621439,355,Tier B,104.2,113.0,83.3,109.0,0.5,0.284,0.416,-0.212,warm,0.038,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Andrew Mccutchen,457705,486,Tier A,98.3,111.2,91.7,99.9,0.416,0.199,0.377,-0.208,hot,-0.008,surface xwOBA above avg; results ahead of process; Process+ below average
+Connor Joe,656582,488,Tier A,98.3,94.7,100.7,99.1,0.397,0.201,0.377,-0.208,warm,-0.012,surface xwOBA above avg; results ahead of process; Process+ below average
+Jared Triolo,669707,209,Tier C,104.0,87.8,92.9,109.5,0.437,0.275,0.415,-0.207,cold,0.041,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Chad Wallach,595453,178,Tier C,103.5,110.3,86.3,107.5,0.485,0.29,0.409,-0.205,hot,0.03,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Elly De La Cruz,682829,428,Tier A,106.6,73.5,95.9,113.4,0.455,0.346,0.43,-0.201,cold,0.061,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Mitch Haniger,571745,231,Tier C,103.3,101.3,91.0,106.9,0.458,0.281,0.407,-0.198,cold,0.028,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Luke Maile,571912,207,Tier C,98.7,96.1,99.5,99.9,0.443,0.263,0.377,-0.195,cold,-0.008,surface xwOBA above avg; results ahead of process; Process+ below average
+Jake Rogers,668670,377,Tier B,107.8,102.4,90.7,111.1,0.458,0.225,0.44,-0.178,cold,0.049,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Parker Meadows,678009,153,Tier C,100.7,90.2,98.9,103.1,0.432,0.251,0.386,-0.178,cold,0.008,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average
+Brian Anderson,605119,362,Tier B,103.3,110.1,87.1,106.9,0.489,0.278,0.402,-0.178,warm,0.028,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Matt Mclain,680574,407,Tier A,106.9,88.4,93.1,112.0,0.418,0.255,0.429,-0.175,improving,0.054,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Trevor Story,596115,168,Tier C,97.1,106.4,89.2,100.9,0.508,0.316,0.364,-0.173,hot,-0.003,surface xwOBA above avg; results ahead of process; Process+ below average
+Anthony Volpe,683011,633,Tier A,100.9,103.9,89.9,104.7,0.476,0.257,0.386,-0.17,warm,0.016,surface xwOBA above avg; results ahead of process; Process+ below average
+Trevor Larnach,663616,227,Tier C,108.5,93.1,88.2,114.8,0.413,0.248,0.45,-0.17,cold,0.067,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average
+Shea Langeliers,669127,494,Tier A,101.8,101.4,94.3,104.1,0.501,0.33,0.39,-0.166,hot,0.013,surface xwOBA above avg; results ahead of process; Process+ below average
+Ian Happ,664023,690,Tier A,101.4,103.0,95.8,102.6,0.445,0.245,0.387,-0.163,warm,0.006,surface xwOBA above avg; results ahead of process; Process+ below average
+Mike Tauchman,643565,400,Tier A,100.3,107.1,90.8,103.1,0.417,0.184,0.38,-0.161,cold,0.008,surface xwOBA above avg; results ahead of process; Process+ below average
+Josh Smith,669701,239,Tier C,93.9,91.1,97.3,97.2,0.426,0.213,0.35,-0.16,cold,-0.022,surface xwOBA OK; results ahead of process; chasing (low Decision+); Process+ below average
+J. D. Davis,605204,552,Tier A,103.9,132.5,84.2,104.3,0.531,0.257,0.403,-0.153,hot,0.014,surface xwOBA elite (top 25%); results ahead of process; Process+ below average
+Riley Adams,656180,167,Tier C,96.1,105.4,93.3,98.3,0.525,0.289,0.358,-0.153,cold,-0.016,surface xwOBA OK; results ahead of process; Process+ below average
+Evan Longoria,446334,304,Tier B,107.4,87.3,97.1,110.8,0.434,0.242,0.427,-0.151,cold,0.047,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average

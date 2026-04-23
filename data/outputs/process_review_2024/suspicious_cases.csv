@@ -1,0 +1,2 @@
+category,severity,count,pct_of_qualified,detail,hitter_name
+Extreme decision_value (|z|>3),LOW,27,,"z range: [-4.98, 4.38]","['621433', '622491', '650331', '651016', '663731']"

@@ -1,0 +1,26 @@
+{
+  "model_name": "batted_ball_model",
+  "feature_cols": [
+    "balls",
+    "strikes",
+    "pitch_type",
+    "release_speed",
+    "pfx_x",
+    "pfx_z",
+    "plate_x",
+    "plate_z",
+    "p_throws",
+    "stand",
+    "matchup"
+  ],
+  "categorical_cols": [
+    "pitch_type",
+    "p_throws",
+    "stand",
+    "matchup"
+  ],
+  "best_iteration": 138,
+  "train_size": 744380,
+  "val_size": 250698,
+  "trained_at": "2026-04-23T04:12:26.330740"
+}

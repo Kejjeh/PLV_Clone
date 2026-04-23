@@ -1,0 +1,36 @@
+{
+  "model_name": "contact_model",
+  "feature_cols": [
+    "release_speed",
+    "release_pos_x",
+    "release_pos_z",
+    "pfx_x",
+    "pfx_z",
+    "plate_x",
+    "plate_z",
+    "release_extension",
+    "movement_magnitude",
+    "plate_x_abs",
+    "induced_vertical_break",
+    "balls",
+    "strikes",
+    "pitch_type",
+    "pitch_group",
+    "p_throws",
+    "stand",
+    "matchup",
+    "zone_bin"
+  ],
+  "categorical_cols": [
+    "pitch_type",
+    "pitch_group",
+    "p_throws",
+    "stand",
+    "matchup",
+    "zone_bin"
+  ],
+  "best_iteration": 797,
+  "train_size": 2115192,
+  "val_size": 711728,
+  "trained_at": "2026-04-23T04:12:08.412357"
+}

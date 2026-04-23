@@ -1,0 +1,244 @@
+player_name,pitcher,pitches,confidence,plv,plv_pctile,swing_pct,whiff_pct,cs_pct,xwoba_model,rolling_plv_30d,rolling_pitches_30d,rolling_trend_pitcher,tag
+"Chapman, Aroldis",547973,972,Tier B,5.782,100.0,0.549,0.4,0.503,0.336,5.744,40,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Hader, Josh",623352,876,Tier B,5.757,99.9,0.492,0.423,0.458,0.332,5.982,36,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Megill, Trevor",656730,841,Tier B,5.751,99.7,0.536,0.389,0.512,0.332,5.575,67,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Estrada, Jeremiah",669093,1290,Tier A,5.683,99.6,0.528,0.416,0.477,0.325,5.007,30,flat,PLV elite (top 10%); elite whiff rate
+"Rodríguez, Randy",678495,826,Tier B,5.678,99.5,0.487,0.385,0.512,0.338,5.528,38,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Misiorowski, Jacob",694819,1348,Tier A,5.66,99.3,0.544,0.397,0.52,0.335,5.686,184,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Montgomery, Mason",682254,876,Tier B,5.659,99.2,0.517,0.412,0.489,0.33,5.771,32,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Puk, A.J.",640462,180,Tier C,5.64,99.0,0.552,0.377,0.548,0.355,5.81,21,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Detmers, Reid",672282,1082,Tier A,5.637,98.9,0.502,0.339,0.512,0.337,5.148,35,flat,PLV elite (top 10%)
+"Scott, Tanner",656945,914,Tier B,5.635,98.8,0.538,0.401,0.507,0.342,5.679,39,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Sewald, Paul",623149,330,Tier C,5.617,98.6,0.527,0.368,0.534,0.35,5.092,22,flat,PLV elite (top 10%)
+"Suero, Wander",593833,142,Tier C,5.602,98.5,0.479,0.354,0.444,0.324,5.504,31,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Burns, Chase",695505,777,Tier B,5.593,98.4,0.529,0.39,0.491,0.328,5.559,46,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Miller, Mason",695243,1027,Tier A,5.581,98.2,0.486,0.419,0.448,0.325,5.811,40,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Williams, Devin",642207,1212,Tier A,5.581,98.1,0.503,0.41,0.442,0.326,5.712,49,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Bautista, Félix",642585,626,Tier B,5.56,97.9,0.472,0.394,0.445,0.314,4.907,34,flat,PLV elite (top 10%); elite whiff rate
+"Peralta, Freddy",642547,3362,Tier A,5.541,97.8,0.474,0.411,0.454,0.331,5.4,276,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Henriquez, Ronny",678692,1158,Tier A,5.515,97.7,0.481,0.45,0.461,0.323,5.499,23,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Varland, Louis",686973,1343,Tier A,5.512,97.5,0.511,0.404,0.517,0.334,5.625,250,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Abreu, Bryan",650556,1205,Tier A,5.511,97.4,0.462,0.421,0.441,0.329,4.876,20,flat,PLV elite (top 10%); elite whiff rate
+"deGrom, Jacob",594798,2684,Tier A,5.495,97.3,0.51,0.405,0.492,0.329,5.498,74,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Miller, Shelby",571946,712,Tier B,5.494,97.1,0.498,0.365,0.493,0.344,5.523,40,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Smith, Cade",671922,1257,Tier A,5.48,97.0,0.538,0.371,0.494,0.342,5.471,58,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Greene, Hunter",668881,1897,Tier A,5.475,96.8,0.551,0.381,0.522,0.332,5.146,65,flat,PLV elite (top 10%)
+"Sabrowski, Erik",681870,534,Tier B,5.471,96.7,0.472,0.352,0.478,0.335,5.163,31,flat,PLV elite (top 10%)
+"García, Yimi",554340,379,Tier C,5.456,96.6,0.492,0.361,0.523,0.336,5.578,34,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Fluharty, Mason",689254,1009,Tier A,5.453,96.4,0.453,0.399,0.449,0.316,5.497,138,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Tolle, Payton",801139,311,Tier C,5.44,96.3,0.504,0.33,0.54,0.355,5.898,67,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Vesia, Alex",681911,1109,Tier A,5.436,96.2,0.525,0.361,0.503,0.331,5.242,50,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Maxwell, Zach",687209,165,Tier C,5.428,96.0,0.467,0.399,0.509,0.331,5.225,30,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Roberts, Ethan",681799,144,Tier C,5.42,95.9,0.442,0.364,0.482,0.326,5.283,33,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Klein, Will",694361,391,Tier C,5.42,95.7,0.482,0.361,0.461,0.325,5.478,86,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Chandler, Bubba",696149,461,Tier B,5.414,95.6,0.505,0.345,0.481,0.329,5.484,86,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Minter, A.J.",621345,215,Tier C,5.413,95.5,0.465,0.4,0.459,0.329,5.884,33,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Alvarado, José",621237,477,Tier B,5.412,95.3,0.453,0.362,0.478,0.317,4.87,27,flat,PLV elite (top 10%)
+"Taylor, Grant",691799,609,Tier B,5.411,95.2,0.498,0.36,0.53,0.333,5.644,40,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Hodge, Porter",687863,609,Tier B,5.409,95.1,0.456,0.392,0.477,0.33,5.215,31,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Phillips, Connor",683175,400,Tier B,5.408,94.9,0.433,0.401,0.459,0.327,5.235,23,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Cease, Dylan",656302,3187,Tier A,5.398,94.8,0.491,0.401,0.449,0.32,5.592,69,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Leasure, Jordan",673929,1144,Tier A,5.398,94.6,0.477,0.411,0.462,0.328,5.135,36,flat,PLV elite (top 10%); elite whiff rate
+"Fuentes, Didier",800311,293,Tier C,5.396,94.5,0.486,0.392,0.478,0.343,5.239,40,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Petersen, Michael",656848,327,Tier C,5.385,94.4,0.544,0.383,0.469,0.334,5.665,39,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Wheeler, Zack",554430,2465,Tier A,5.38,94.2,0.515,0.35,0.471,0.328,5.381,97,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Booser, Cam",592155,597,Tier B,5.374,94.1,0.484,0.348,0.492,0.338,5.504,32,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Blubaugh, AJ",805123,507,Tier B,5.373,94.0,0.465,0.366,0.477,0.336,5.214,70,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Brash, Matt",666374,980,Tier B,5.362,93.8,0.428,0.417,0.427,0.304,5.226,146,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Hendriks, Liam",521230,238,Tier C,5.361,93.7,0.446,0.423,0.408,0.321,5.097,34,flat,PLV elite (top 10%); elite whiff rate
+"Pérez, Eury",691587,1673,Tier A,5.354,93.5,0.49,0.365,0.494,0.336,5.514,100,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Fermin, José",820862,656,Tier B,5.354,93.4,0.501,0.374,0.482,0.333,4.923,30,flat,PLV elite (top 10%)
+"Harvey, Hunter",640451,202,Tier C,5.353,93.3,0.517,0.385,0.453,0.333,5.53,41,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Ort, Kaleb",672391,788,Tier B,5.347,93.1,0.469,0.384,0.46,0.334,5.389,37,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Kimbrel, Craig",518886,230,Tier C,5.346,93.0,0.446,0.415,0.421,0.337,5.523,36,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Palencia, Daniel",694037,940,Tier B,5.342,92.9,0.519,0.341,0.505,0.339,5.314,60,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Stanek, Ryne",592773,1087,Tier A,5.34,92.7,0.529,0.376,0.487,0.331,5.154,21,improving,PLV elite (top 10%)
+"Young, Danny",664849,198,Tier C,5.339,92.6,0.366,0.394,0.441,0.292,5.635,28,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Latz, Jacob",656641,1388,Tier A,5.338,92.4,0.499,0.352,0.484,0.338,5.175,81,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Hoffman, Jeff",656546,1341,Tier A,5.334,92.3,0.475,0.379,0.467,0.322,5.288,207,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Jansen, Kenley",445276,916,Tier B,5.331,92.2,0.496,0.286,0.563,0.34,5.685,27,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Rainey, Tanner",663432,209,Tier C,5.331,92.0,0.457,0.411,0.443,0.327,5.162,29,flat,PLV elite (top 10%); elite whiff rate
+"Kopech, Michael",656629,231,Tier C,5.327,91.9,0.476,0.371,0.461,0.339,5.335,40,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Díaz, Edwin",621242,1067,Tier A,5.326,91.8,0.486,0.384,0.471,0.329,5.323,25,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Ashcraft, Graham",668933,1095,Tier A,5.322,91.6,0.504,0.409,0.468,0.3,5.23,25,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Morales, Luis",806960,821,Tier B,5.32,91.5,0.457,0.367,0.502,0.338,5.105,101,flat,PLV elite (top 10%)
+"Sheehan, Emmet",686218,1299,Tier A,5.315,91.3,0.498,0.387,0.461,0.329,5.449,127,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Pagán, Emilio",641941,1092,Tier A,5.314,91.2,0.518,0.352,0.477,0.337,5.563,25,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Henriquez, Edgardo",683618,342,Tier C,5.313,91.1,0.485,0.369,0.49,0.315,5.308,45,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Bednar, David",670280,1126,Tier A,5.311,90.9,0.497,0.358,0.506,0.336,5.484,43,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Bachar, Lake",669199,1177,Tier A,5.31,90.8,0.482,0.39,0.476,0.331,5.069,59,flat,PLV elite (top 10%); elite whiff rate
+"Richards, Trevor",670950,116,Tier C,5.308,90.7,0.519,0.372,0.444,0.33,5.32,21,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Snell, Blake",605483,1564,Tier A,5.305,90.5,0.495,0.409,0.437,0.325,5.321,446,hot,PLV elite (top 10%); elite whiff rate; rolling also strong; recent form improving
+"Okert, Steven",595345,1066,Tier A,5.304,90.4,0.5,0.343,0.528,0.346,5.216,42,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Hernández, Carlos",672578,759,Tier B,5.304,90.2,0.512,0.352,0.511,0.34,4.967,24,flat,PLV elite (top 10%)
+"Lawrence, Justin",664875,285,Tier C,5.303,90.1,0.412,0.354,0.459,0.304,5.394,53,hot,PLV elite (top 10%); rolling also strong; recent form improving
+"Jax, Griffin",643377,1124,Tier A,5.302,90.0,0.52,0.388,0.472,0.316,4.653,21,flat,PLV elite (top 10%)
+"Nelson, Ryne",669194,2518,Tier A,5.299,89.8,0.524,0.316,0.509,0.333,5.434,92,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Kerkering, Orion",689147,1139,Tier A,5.299,89.7,0.497,0.325,0.529,0.329,5.474,44,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Suarez, Robert",663158,1140,Tier A,5.299,89.6,0.549,0.313,0.535,0.341,5.146,31,flat,PLV strong (top 25%)
+"Bigge, Hunter",685801,242,Tier C,5.294,89.4,0.519,0.402,0.48,0.329,4.892,22,flat,PLV strong (top 25%); elite whiff rate
+"Fisher, Braydon",680755,964,Tier B,5.294,89.3,0.447,0.363,0.483,0.325,5.428,131,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Thielbar, Caleb",573204,879,Tier B,5.294,89.1,0.499,0.324,0.52,0.332,5.243,30,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Vest, Will",676684,1268,Tier A,5.293,89.0,0.513,0.346,0.495,0.331,4.978,65,flat,PLV strong (top 25%)
+"Matsui, Yuki",673513,1083,Tier A,5.289,88.9,0.474,0.381,0.449,0.323,5.376,37,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Wilson, Steven",621051,997,Tier B,5.287,88.7,0.477,0.378,0.497,0.331,5.784,22,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Scholtens, Jesse",669947,154,Tier C,5.287,88.6,0.479,0.368,0.457,0.326,5.228,92,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Ohtani, Shohei",660271,1086,Tier A,5.286,88.5,0.513,0.365,0.513,0.331,5.346,333,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Scott, Tayler",605463,550,Tier B,5.286,88.3,0.466,0.365,0.43,0.329,5.054,42,flat,PLV strong (top 25%)
+"Núñez, Eduarniel",674384,249,Tier C,5.285,88.2,0.439,0.405,0.442,0.325,5.649,38,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Cruz, Steven",674444,642,Tier B,5.282,88.0,0.499,0.353,0.553,0.341,5.245,35,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"McLean, Nolan",690997,738,Tier B,5.28,87.9,0.457,0.318,0.524,0.322,5.439,94,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Ragans, Cole",666142,1079,Tier A,5.278,87.8,0.49,0.338,0.499,0.34,5.456,72,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Ryan, Joe",657746,2794,Tier A,5.277,87.6,0.494,0.323,0.529,0.342,5.515,90,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Kranick, Max",668820,539,Tier B,5.276,87.5,0.54,0.329,0.554,0.341,4.993,26,flat,PLV strong (top 25%)
+"Early, Connelly",813349,401,Tier B,5.275,87.4,0.489,0.324,0.477,0.328,5.454,78,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Zuber, Tyler",676604,245,Tier C,5.275,87.2,0.497,0.33,0.53,0.333,5.079,39,flat,PLV strong (top 25%)
+"Sims, Lucas",608371,279,Tier C,5.271,87.1,0.412,0.422,0.431,0.324,4.829,32,flat,PLV strong (top 25%); elite whiff rate
+"Dreyer, Jack",676263,1213,Tier A,5.27,87.0,0.493,0.37,0.517,0.345,5.809,53,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Estrada, Lazaro",681751,119,Tier C,5.266,86.8,0.465,0.345,0.517,0.336,5.186,72,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Helsley, Ryan",664854,995,Tier B,5.266,86.7,0.527,0.398,0.504,0.33,4.992,42,flat,PLV strong (top 25%); elite whiff rate
+"Montero, Rafael",606160,1098,Tier A,5.264,86.5,0.515,0.37,0.43,0.323,4.975,31,flat,PLV strong (top 25%)
+"Slaten, Justin",686580,540,Tier B,5.264,86.4,0.501,0.357,0.514,0.332,5.299,29,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Webb, Logan",657277,3282,Tier A,5.262,86.3,0.455,0.33,0.48,0.321,5.541,78,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Domínguez, Seranthony",622554,1300,Tier A,5.26,86.1,0.438,0.394,0.438,0.319,5.401,199,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Bruihl, Justin",677865,231,Tier C,5.259,86.0,0.446,0.251,0.573,0.309,5.365,24,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Weaver, Luke",596133,1091,Tier A,5.258,85.9,0.476,0.349,0.482,0.337,4.939,26,flat,PLV strong (top 25%)
+"Jackson, Luke",592426,827,Tier B,5.257,85.7,0.482,0.348,0.497,0.335,5.008,32,flat,PLV strong (top 25%)
+"Gore, MacKenzie",669022,2892,Tier A,5.257,85.6,0.485,0.368,0.458,0.34,5.188,71,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Ferrer, Jose A.",678606,1208,Tier A,5.252,85.4,0.469,0.301,0.537,0.299,5.024,42,flat,PLV strong (top 25%)
+"Nicolas, Kyle",693312,652,Tier B,5.251,85.3,0.464,0.4,0.468,0.328,5.601,39,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Murphy, Chris",669684,569,Tier B,5.25,85.2,0.44,0.352,0.448,0.327,5.184,49,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Beeter, Clayton",690925,465,Tier B,5.249,85.0,0.454,0.369,0.458,0.331,5.076,31,flat,PLV strong (top 25%)
+"Mena, Cristian",691441,100,Tier C,5.248,84.9,0.46,0.417,0.434,0.314,5.008,27,flat,PLV strong (top 25%); elite whiff rate
+"Garcia, Rico",670329,586,Tier B,5.248,84.8,0.503,0.373,0.516,0.337,5.383,20,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Little, Brendon",663893,1370,Tier A,5.248,84.6,0.423,0.474,0.367,0.288,4.972,96,flat,PLV strong (top 25%); elite whiff rate
+"Woo, Bryan",693433,2858,Tier A,5.248,84.5,0.503,0.311,0.521,0.336,5.449,66,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Zeferjahn, Ryan",666171,1073,Tier A,5.247,84.3,0.469,0.369,0.5,0.326,5.734,21,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"McKenzie, Triston",663474,144,Tier C,5.247,84.2,0.347,0.416,0.418,0.321,5.442,27,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Yamamoto, Yoshinobu",808967,3243,Tier A,5.247,84.1,0.515,0.343,0.493,0.33,5.293,413,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Leiter, Jack",683004,2667,Tier A,5.246,83.9,0.476,0.37,0.498,0.332,5.471,101,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Anderson, Grant",681982,1190,Tier A,5.245,83.8,0.445,0.344,0.489,0.327,5.603,32,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Nola, Aaron",605400,1670,Tier A,5.245,83.7,0.474,0.305,0.481,0.329,5.184,31,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Miller, Bobby",676272,116,Tier C,5.243,83.5,0.474,0.34,0.495,0.33,5.337,32,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Henderson, Logan",701656,410,Tier B,5.243,83.4,0.534,0.293,0.498,0.335,5.142,76,flat,PLV strong (top 25%)
+"Sterner, Justin",686993,1104,Tier A,5.243,83.2,0.499,0.382,0.455,0.333,5.03,25,flat,PLV strong (top 25%)
+"Pivetta, Nick",601713,3011,Tier A,5.241,83.1,0.493,0.295,0.518,0.332,4.958,85,flat,PLV strong (top 25%)
+"Hollowell, Gavin",668970,172,Tier C,5.239,83.0,0.466,0.306,0.502,0.326,5.174,45,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Fitts, Richard",690916,735,Tier B,5.237,82.8,0.512,0.36,0.492,0.33,5.235,68,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Payamps, Joel",606303,449,Tier B,5.237,82.7,0.462,0.348,0.502,0.335,5.198,31,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Banda, Anthony",607455,1148,Tier A,5.233,82.6,0.461,0.399,0.464,0.321,5.452,78,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Kirby, George",669923,2385,Tier A,5.233,82.4,0.466,0.33,0.467,0.326,5.184,299,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Speier, Gabe",642100,1034,Tier A,5.232,82.3,0.521,0.299,0.521,0.335,4.994,99,flat,PLV strong (top 25%)
+"Martin, Corbin",656686,332,Tier C,5.231,82.1,0.464,0.4,0.477,0.329,4.911,29,flat,PLV strong (top 25%); elite whiff rate
+"Matzek, Tyler",554431,127,Tier C,5.231,82.0,0.499,0.301,0.498,0.35,5.224,35,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"O'Brien, Riley",676617,758,Tier B,5.231,81.9,0.444,0.373,0.466,0.306,5.161,49,improving,PLV strong (top 25%)
+"Eisert, Brandon",685126,1255,Tier A,5.231,81.7,0.449,0.418,0.434,0.324,5.726,27,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Ashby, Aaron",676879,1188,Tier A,5.23,81.6,0.447,0.368,0.49,0.307,5.178,155,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Cleavinger, Garrett",664076,895,Tier B,5.23,81.5,0.486,0.334,0.523,0.327,5.354,30,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Legumina, Casey",668984,882,Tier B,5.229,81.3,0.509,0.297,0.516,0.335,5.622,26,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Beck, Tristan",663941,817,Tier B,5.228,81.2,0.454,0.309,0.519,0.338,5.309,21,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Pomeranz, Drew",519141,903,Tier B,5.228,81.0,0.526,0.288,0.525,0.345,5.705,62,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Hernández, Daysbel",678226,717,Tier B,5.227,80.9,0.485,0.407,0.445,0.321,4.793,61,flat,PLV strong (top 25%); elite whiff rate
+"Clase, Emmanuel",661403,760,Tier B,5.226,80.8,0.551,0.371,0.521,0.309,5.194,27,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Wilson, Justin",458677,838,Tier B,5.225,80.6,0.507,0.353,0.485,0.333,5.427,23,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Casparius, Ben",676508,1279,Tier A,5.221,80.5,0.487,0.353,0.494,0.326,4.981,35,flat,PLV strong (top 25%)
+"Bender, Anthony",669622,783,Tier B,5.22,80.4,0.463,0.317,0.551,0.319,5.711,30,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Sandlin, Nick",680704,323,Tier C,5.22,80.2,0.45,0.365,0.442,0.313,5.478,34,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Finnegan, Kyle",640448,967,Tier B,5.219,80.1,0.527,0.344,0.528,0.346,5.532,76,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Romano, Jordan",605447,722,Tier B,5.216,79.9,0.506,0.348,0.527,0.336,5.102,29,flat,PLV strong (top 25%)
+"Megill, Tylor",656731,1322,Tier A,5.211,79.8,0.483,0.359,0.469,0.33,5.041,82,flat,PLV strong (top 25%)
+"Raley, Brooks",548384,388,Tier C,5.208,79.7,0.467,0.3,0.528,0.318,5.439,23,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Headrick, Brent",687396,403,Tier B,5.207,79.5,0.535,0.324,0.494,0.344,5.382,22,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Gausman, Kevin",592332,3466,Tier A,5.205,79.4,0.511,0.349,0.508,0.34,5.188,436,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Zerpa, Angel",672582,1120,Tier A,5.205,79.3,0.476,0.285,0.52,0.314,5.103,24,flat,PLV strong (top 25%)
+"Skenes, Paul",694973,3048,Tier A,5.202,79.1,0.514,0.341,0.49,0.322,5.354,85,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Faucher, Calvin",676534,1054,Tier A,5.202,79.0,0.452,0.394,0.473,0.314,5.738,24,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"Pepiot, Ryan",686752,2733,Tier A,5.202,78.8,0.513,0.328,0.498,0.334,5.53,61,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Strahm, Matt",621381,1024,Tier A,5.201,78.7,0.499,0.309,0.519,0.346,5.347,31,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Kikuchi, Yusei",579328,3182,Tier A,5.198,78.6,0.485,0.344,0.516,0.35,5.293,66,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Díaz, Alexis",664747,381,Tier C,5.198,78.4,0.467,0.369,0.466,0.339,5.185,25,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Stewart, Brock",592779,610,Tier B,5.198,78.3,0.512,0.364,0.504,0.331,5.348,37,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Green, Chad",643338,719,Tier B,5.197,78.2,0.509,0.374,0.491,0.332,5.004,23,flat,PLV strong (top 25%)
+"Ray, Robbie",592662,3142,Tier A,5.197,78.0,0.506,0.362,0.473,0.345,5.352,84,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Whitlock, Garrett",676477,1227,Tier A,5.197,77.9,0.498,0.349,0.499,0.326,4.978,47,flat,PLV strong (top 25%)
+"Gilbert, Logan",669302,2487,Tier A,5.196,77.7,0.521,0.384,0.506,0.34,5.109,252,flat,PLV strong (top 25%)
+"Cruz, Fernando",518585,868,Tier B,5.195,77.6,0.461,0.453,0.415,0.322,5.181,35,hot,PLV strong (top 25%); elite whiff rate; rolling also strong; recent form improving
+"King, Michael",650633,1238,Tier A,5.195,77.5,0.45,0.323,0.481,0.324,5.219,68,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Rodón, Carlos",607074,3446,Tier A,5.194,77.3,0.462,0.355,0.461,0.339,4.789,67,flat,PLV strong (top 25%)
+"Milner, Hoby",571948,1183,Tier A,5.193,77.2,0.446,0.282,0.537,0.32,5.145,30,flat,PLV strong (top 25%)
+"Soto, Gregory",642397,1054,Tier A,5.193,77.1,0.454,0.354,0.488,0.308,5.72,25,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Webb, Jacob",657097,994,Tier B,5.193,76.9,0.499,0.346,0.512,0.337,5.214,43,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Doval, Camilo",666808,1167,Tier A,5.192,76.8,0.491,0.379,0.491,0.309,5.291,43,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Matthews, Zebby",805673,1353,Tier A,5.188,76.6,0.526,0.34,0.513,0.339,5.356,90,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Garrett, Reed",657585,979,Tier B,5.188,76.5,0.475,0.381,0.446,0.306,6.183,24,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Morillo, Juan",666661,640,Tier B,5.188,76.4,0.504,0.331,0.481,0.323,5.515,37,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Bachman, Sam",696147,334,Tier C,5.188,76.2,0.436,0.36,0.5,0.319,4.842,37,flat,PLV strong (top 25%)
+"Bieber, Shane",669456,955,Tier B,5.187,76.1,0.474,0.369,0.472,0.33,5.178,310,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Sanders, Cam",676742,147,Tier C,5.185,76.0,0.448,0.332,0.463,0.329,5.03,39,flat,PLV strong (top 25%)
+"Oviedo, Johan",670912,665,Tier B,5.185,75.8,0.439,0.36,0.489,0.334,5.102,71,flat,PLV strong (top 25%)
+"Tong, Jonah",804636,371,Tier C,5.185,75.7,0.473,0.363,0.515,0.34,4.806,56,flat,PLV strong (top 25%)
+"Perkins, Jack",678022,637,Tier B,5.184,75.5,0.476,0.367,0.461,0.327,5.004,90,flat,PLV strong (top 25%)
+"Weathers, Ryan",677960,642,Tier B,5.184,75.4,0.513,0.345,0.524,0.347,5.087,88,flat,PLV strong (top 25%)
+"Roupp, Landen",694738,1851,Tier A,5.18,75.3,0.434,0.324,0.482,0.313,5.01,65,flat,PLV strong (top 25%)
+"Ramírez, Yohan",670990,604,Tier B,5.18,75.1,0.458,0.335,0.527,0.335,5.344,28,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Mears, Nick",683232,882,Tier B,5.18,75.0,0.546,0.341,0.534,0.344,4.871,37,flat,PLV strong (top 25%)
+"Morgan, David",688158,786,Tier B,5.179,74.9,0.476,0.367,0.485,0.319,5.547,32,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Harrison, Kyle",690986,587,Tier B,5.178,74.7,0.476,0.297,0.515,0.347,5.448,65,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Sousa, Bennett",656986,728,Tier B,5.177,74.6,0.49,0.355,0.5,0.345,5.04,36,flat,PLV strong (top 25%)
+"Gil, Luis",661563,1018,Tier A,5.177,74.5,0.48,0.362,0.495,0.333,5.316,48,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Uceta, Edwin",670955,1216,Tier A,5.176,74.3,0.493,0.337,0.479,0.328,5.042,28,flat,PLV strong (top 25%)
+"Sale, Chris",519242,2031,Tier A,5.174,74.2,0.485,0.318,0.506,0.34,5.032,96,flat,PLV strong (top 25%)
+"Kelly, Zack",677161,587,Tier B,5.174,74.0,0.503,0.325,0.503,0.324,5.194,29,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Alvarado, Elvis",665660,765,Tier B,5.174,73.9,0.458,0.356,0.462,0.321,4.944,36,flat,PLV strong (top 25%)
+"Muñoz, Andrés",662253,1164,Tier A,5.173,73.8,0.462,0.367,0.464,0.322,5.224,106,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Duran, Jhoan",661395,1177,Tier A,5.172,73.6,0.502,0.355,0.495,0.317,5.288,66,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Williams, Gavin",668909,3085,Tier A,5.17,73.5,0.472,0.353,0.481,0.335,5.455,88,hot,PLV strong (top 25%); rolling also strong; recent form improving
+"Leahy, Kyle",681517,1368,Tier A,5.17,73.4,0.496,0.362,0.515,0.334,4.802,39,flat,PLV strong (top 25%)
+"Flaherty, Jack",656427,3103,Tier A,5.167,72.9,0.461,0.365,0.473,0.338,5.178,119,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Gaddis, Hunter",683769,1105,Tier A,5.159,71.6,0.511,0.381,0.466,0.326,5.508,49,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Vodnik, Victor",680767,944,Tier B,5.158,71.4,0.483,0.38,0.456,0.321,4.974,26,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Lee, Dylan",669276,1102,Tier A,5.158,71.3,0.528,0.383,0.51,0.335,4.919,28,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Strider, Spencer",675911,2110,Tier A,5.157,70.9,0.47,0.398,0.445,0.337,4.912,85,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Teng, Kai-Wei",678906,573,Tier B,5.152,70.5,0.427,0.368,0.47,0.321,5.125,74,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Cabrera, Edward",665795,2252,Tier A,5.151,69.9,0.489,0.361,0.483,0.318,5.295,83,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Graceffo, Gordon",700669,756,Tier B,5.139,67.4,0.511,0.372,0.49,0.339,5.395,31,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Glasnow, Tyler",607192,1895,Tier A,5.137,67.2,0.458,0.385,0.492,0.33,5.072,342,improving,"PLV-result divergence: whiff rate elite, results may catch up"
+"Otañez, Michel",671305,121,Tier C,5.135,67.0,0.391,0.464,0.355,0.31,5.231,23,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Morgan, Eli",669212,111,Tier C,5.133,66.8,0.48,0.394,0.44,0.318,5.308,26,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Guerrero, Luis",692285,288,Tier C,5.131,66.3,0.445,0.408,0.438,0.329,5.047,45,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Murfee, Penn",682171,251,Tier C,5.131,66.2,0.439,0.37,0.441,0.321,5.012,36,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Turnbull, Spencer",605513,125,Tier C,5.126,65.0,0.483,0.378,0.468,0.318,5.002,45,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Yesavage, Trey",702056,679,Tier B,5.126,64.8,0.492,0.37,0.466,0.327,5.079,440,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Petty, Chase",695534,169,Tier C,5.125,64.7,0.437,0.383,0.418,0.31,5.243,90,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Barnes, Jacob",606930,146,Tier C,5.125,64.6,0.413,0.432,0.409,0.317,4.956,37,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Hiraldo, Yaramil",682274,314,Tier C,5.124,64.3,0.492,0.391,0.448,0.323,5.166,50,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Cox, Austin",680735,427,Tier B,5.123,63.9,0.501,0.371,0.491,0.333,5.22,68,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Maldonado, Anthony",687424,129,Tier C,5.119,63.3,0.388,0.393,0.404,0.325,4.798,39,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Rodríguez, Yariel",684320,1216,Tier A,5.119,63.2,0.45,0.372,0.448,0.321,5.064,58,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Senga, Kodai",673540,1901,Tier A,5.113,62.5,0.46,0.398,0.454,0.333,5.172,75,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Suarez, José",660761,324,Tier C,5.104,61.0,0.448,0.379,0.477,0.335,4.834,73,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Pilkington, Konnor",663455,529,Tier B,5.101,60.4,0.43,0.369,0.468,0.338,5.349,38,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Olson, Reese",681857,1243,Tier A,5.095,59.1,0.444,0.383,0.434,0.319,5.054,95,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Miller, Erik",669062,504,Tier B,5.095,58.9,0.429,0.361,0.415,0.315,5.295,20,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Sulser, Cole",642121,387,Tier C,5.089,58.1,0.536,0.379,0.456,0.334,4.474,32,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Phillips, Tyler",663969,1131,Tier A,5.087,57.6,0.481,0.382,0.47,0.316,5.22,26,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Birdsong, Hayden",806185,1194,Tier A,5.086,56.7,0.453,0.375,0.448,0.33,4.685,25,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Núñez, Dedniel",673380,197,Tier C,5.085,56.5,0.547,0.37,0.521,0.342,5.286,33,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Kinley, Tyler",641755,1235,Tier A,5.081,55.9,0.508,0.397,0.477,0.324,5.047,23,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Holman, Grant",680880,375,Tier C,5.074,54.8,0.469,0.395,0.428,0.332,4.971,23,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Buttó, José",676130,1094,Tier A,5.073,54.7,0.45,0.373,0.44,0.32,5.672,22,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Dodd, Dylan",689266,536,Tier B,5.072,54.5,0.495,0.373,0.501,0.335,4.825,31,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Blanco, Ronel",669854,793,Tier B,5.071,54.3,0.483,0.36,0.474,0.33,4.895,92,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Spence, Mitch",687765,1385,Tier A,5.065,52.9,0.491,0.376,0.499,0.321,4.905,47,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Fernandez, Ryan",681676,544,Tier B,5.064,52.5,0.481,0.389,0.466,0.332,5.395,37,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"López, Reynaldo",625643,166,Tier C,5.063,52.2,0.457,0.367,0.518,0.345,5.164,94,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Peguero, Elvis",665625,204,Tier C,5.052,51.0,0.46,0.397,0.41,0.299,5.252,41,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Silseth, Chase",681217,212,Tier C,5.051,50.7,0.49,0.364,0.438,0.323,5.293,33,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"McGough, Scott",543518,332,Tier C,5.046,49.6,0.486,0.372,0.458,0.332,5.109,48,improving,"PLV-result divergence: whiff rate elite, results may catch up"
+"Holmes, Grant",656550,1964,Tier A,5.03,47.9,0.49,0.368,0.477,0.333,4.798,81,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Maeda, Kenta",628317,199,Tier C,5.028,47.5,0.429,0.366,0.443,0.315,4.856,36,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Barlow, Scott",605130,1324,Tier A,5.023,47.0,0.465,0.376,0.469,0.322,5.506,30,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Ginkel, Kevin",656464,499,Tier B,5.02,46.8,0.472,0.377,0.438,0.332,5.219,20,hot,"PLV-result divergence: whiff rate elite, results may catch up"
+"Hoffmann, Andrew",694851,256,Tier C,5.016,46.0,0.476,0.388,0.436,0.326,4.759,24,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Montas, Frankie",593423,708,Tier B,5.016,45.9,0.509,0.362,0.463,0.321,4.994,44,flat,"PLV-result divergence: whiff rate elite, results may catch up"
+"Leiter Jr., Mark",643410,855,Tier B,5.015,45.5,0.453,0.362,0.475,0.325,4.748,24,flat,"PLV-result divergence: whiff rate elite, results may catch up"

@@ -1,0 +1,55 @@
+{
+  "calibration_years": [
+    2023,
+    2024
+  ],
+  "n_samples": 828,
+  "league_averages": {
+    "bb_rate": 0.085,
+    "k_rate": 0.228,
+    "tb_rate": 0.365,
+    "hbp_rate": 0.009,
+    "h_rate": 0.248,
+    "r_rate": 0.105,
+    "rbi_rate": 0.095,
+    "sb_rate": 0.02
+  },
+  "bb_model": {
+    "features": [
+      "chase_pct",
+      "decision_plus"
+    ],
+    "coefs": [
+      -0.3538727022734035,
+      3.09417026309009e-05
+    ],
+    "intercept": 0.17816150509452178,
+    "r2": 0.4865
+  },
+  "k_model": {
+    "features": [
+      "whiff_pct",
+      "chase_pct"
+    ],
+    "coefs": [
+      1.6768616637131872,
+      -0.45380857123671475
+    ],
+    "intercept": 0.168785787991673,
+    "r2": 0.7112
+  },
+  "tb_model": {
+    "features": [
+      "in_play_pct",
+      "xwoba_actual",
+      "power_plus"
+    ],
+    "coefs": [
+      1.0075566264910758,
+      0.752173950886993,
+      0.001537386546638349
+    ],
+    "intercept": -0.25354130697824806,
+    "r2": 0.659
+  }
+}

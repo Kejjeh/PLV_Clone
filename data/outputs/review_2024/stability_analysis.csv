@@ -1,0 +1,10 @@
+min_pitches,n_pitchers,half_half_pearson_r,half_half_spearman_r,full_sample_r_spearman_brown,reliable_70pct,yoy_spearman_r,yoy_p_value
+25,787,0.7548,0.743,0.8602,True,,
+50,725,0.8122,0.8099,0.8964,True,,
+100,639,0.858,0.8482,0.9235,True,,
+200,519,0.9036,0.887,0.9493,True,,
+300,439,0.9205,0.9115,0.9586,True,,
+500,290,0.9386,0.9271,0.9683,True,,
+750,148,0.945,0.9319,0.9717,True,,
+1000,107,0.9502,0.9362,0.9744,True,,
+YoY_2023_2024,518,,,,,0.7507,0.0

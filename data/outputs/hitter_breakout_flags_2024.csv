@@ -1,0 +1,9 @@
+batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rolling_decision_30d,rolling_trend,tag
+Freddie Freeman,518692,697,Tier A,114.1,114.0,103.2,109.0,0.497,0.265,0.399,0.07491,warm,Process+ strong; strong discipline; surface stats not yet elite
+Carlos Correa,621043,378,Tier B,114.0,101.3,114.3,106.4,0.449,0.261,0.392,0.06348,improving,Process+ strong; contact quality; surface stats not yet elite
+Luis García,671277,532,Tier A,113.4,96.1,115.2,106.5,0.518,0.35,0.383,0.09426,hot,Process+ strong; contact quality; trending up; surface stats not yet elite
+Mookie Betts,605141,594,Tier A,111.3,99.5,123.2,100.2,0.405,0.194,0.37,0.07591,warm,Process+ strong; contact quality; surface stats not yet elite
+Lenyn Sosa,672820,368,Tier B,111.3,94.8,108.1,108.0,0.527,0.392,0.392,0.1037,hot,Process+ strong; trending up; surface stats not yet elite
+Alec Bohm,664761,640,Tier A,111.2,105.2,117.4,101.6,0.503,0.294,0.371,0.03108,cold,Process+ strong; contact quality; surface stats not yet elite
+Junior Caminero,691406,176,Tier C,110.2,85.5,116.1,105.1,0.477,0.329,0.364,0.05684,cold,Process+ strong; contact quality; surface stats not yet elite
+Ryan O'Hearn,656811,498,Tier A,110.1,95.3,116.8,102.8,0.465,0.294,0.378,0.0625,cold,Process+ strong; contact quality; surface stats not yet elite

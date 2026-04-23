@@ -1,0 +1,40 @@
+{
+  "generated_at": "2026-04-23T04:56:23.216107",
+  "pitch_level": {
+    "rows": 742122,
+    "unique_batters": 1116,
+    "decision_coverage_pct": 100.0,
+    "contact_coverage_pct": 47.95,
+    "power_coverage_pct": 16.89
+  },
+  "hitter_level": {
+    "qualified_hitters": 413,
+    "process_plus_range": [
+      60.1,
+      148.1
+    ],
+    "process_plus_mean": 102.26,
+    "process_plus_std": 10.59
+  },
+  "decision_value_stats": {
+    "n": 742122,
+    "mean": 0.067086,
+    "std": 0.178862,
+    "min": -0.621408,
+    "max": 0.629678
+  },
+  "contact_value_stats": {
+    "n": 355864,
+    "mean": -8e-06,
+    "std": 0.201949,
+    "min": -0.614904,
+    "max": 0.579314
+  },
+  "power_value_stats": {
+    "n": 125349,
+    "mean": 0.000917,
+    "std": 0.37067,
+    "min": -0.620697,
+    "max": 1.754821
+  }
+}

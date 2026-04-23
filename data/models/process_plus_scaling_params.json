@@ -1,0 +1,13 @@
+{
+  "center": 100.0,
+  "std_scale": 10.0,
+  "decision_mean": 0.06582637206242133,
+  "decision_std": 0.01022368280977798,
+  "contact_mean": -0.004163237105747028,
+  "contact_std": 0.023066367342801368,
+  "power_mean": -0.007463861953517511,
+  "power_std": 0.05074540158836515,
+  "process_mean": 0.05419927300315679,
+  "process_std": 0.04779069316787824,
+  "n_qualified_hitters": 646
+}

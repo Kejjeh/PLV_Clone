@@ -1,0 +1,62 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+.env
+*.env
+
+# Keep .env.example
+!.env.example
+
+# Test / coverage artifacts
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.tox/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+
+# Logs
+logs/
+*.log
+data/outputs/review_pipeline.log
+
+# ── Data: raw Statcast (large, regenerable via pybaseball) ──────────────────
+data/raw/*.parquet
+
+# Keep the raw manifest (small, descriptive)
+!data/raw/manifest.json
+
+# ── Data: processed intermediates (all generated) ───────────────────────────
+data/processed/
+
+# ── Data: output parquets (binary, regenerable; keep CSVs for audit) ────────
+data/outputs/*.parquet
+
+# ── Models: binary pkl artifacts (regenerable via training pipeline) ─────────
+data/models/*.pkl
+
+# Keep all JSON in data/models (calibration, scaling, positions, league config)
+!data/models/*.json
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db

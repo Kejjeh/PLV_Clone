@@ -1,0 +1,5 @@
+year_from,year_to,component,n_hitters,yoy_spearman_r,yoy_p_value
+2023,2024,decision_plus,322,0.7396,0.0
+2023,2024,contact_plus,322,0.7896,0.0
+2023,2024,power_plus,322,0.7241,0.0
+2023,2024,process_plus,322,0.646,0.0
