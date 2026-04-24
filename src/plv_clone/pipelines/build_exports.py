@@ -110,7 +110,19 @@ def run(
         exports["plv_rolling"] = rolling_pitcher
         _write(rolling_pitcher, cfg.outputs_dir / f"plv_rolling_{year}", output_format)
 
-        master_pitcher = build_master_pitcher(plv_df, min_pitches=cfg.min_pitches_plv, position_map=position_map)
+        _pitcher_cache = cfg.models_dir / f"pitcher_names_{year}.json"
+        _pitcher_cache_age = 7 if year >= _dt.date.today().year else None
+        pitcher_name_map = _build_pitcher_name_map(
+            plv_df["pitcher"].dropna().astype(int).unique().tolist(),
+            cache_path=_pitcher_cache,
+            max_cache_age_days=_pitcher_cache_age,
+        )
+        master_pitcher = build_master_pitcher(
+            plv_df,
+            min_pitches=cfg.min_pitches_plv,
+            position_map=position_map,
+            pitcher_name_map=pitcher_name_map,
+        )
         exports["master_pitcher"] = master_pitcher
         _write(master_pitcher, cfg.outputs_dir / f"master_pitcher_{year}", output_format)
     else:
@@ -352,6 +364,7 @@ def build_master_pitcher(
     plv_df: pd.DataFrame,
     min_pitches: int = 100,
     position_map=None,
+    pitcher_name_map: dict | None = None,
 ) -> pd.DataFrame:
     """Season-level pitcher leaderboard with PLV + plate-discipline surface stats.
 
@@ -391,8 +404,15 @@ def build_master_pitcher(
             lb[col] = lb[col].round(3)
     lb["plv_pctile"] = lb["plv_pctile"].mul(100).round(1)
 
-    # Fix null or numeric player_name via MLB Stats API fallback
+    # Apply pre-built name map if provided (avoids live API call on re-runs)
     import re as _re
+    if pitcher_name_map:
+        lb["player_name"] = lb.apply(
+            lambda r: pitcher_name_map.get(int(r["pitcher"]), r["player_name"]),
+            axis=1,
+        )
+
+    # Fix any remaining null or numeric player_name via MLB Stats API fallback
     null_mask = lb["player_name"].isna() | lb["player_name"].astype(str).str.match(r"^\d+$")
     if null_mask.any():
         missing_ids = lb.loc[null_mask, "pitcher"].astype(int).tolist()
@@ -599,6 +619,74 @@ def _build_batter_name_map(
             logger.info("Batter name snapshot saved → %s", cache_path.name)
         except Exception as exc:
             logger.warning("Could not save batter name snapshot: %s", exc)
+
+    return name_map
+
+
+def _build_pitcher_name_map(
+    pitcher_ids: list[int],
+    cache_path: Path | None = None,
+    max_cache_age_days: int | None = None,
+) -> dict[int, str]:
+    """Return {mlbam_id: 'First Last'} for all provided pitcher IDs.
+
+    Primary source: Chadwick Bureau register via pybaseball.
+    Fallback for any missing IDs: MLB Stats API.
+
+    Cache behaviour mirrors _build_batter_name_map — see its docstring.
+    """
+    import time as _time
+
+    if cache_path is not None and cache_path.exists():
+        use_cache = True
+        if max_cache_age_days is not None:
+            age_days = (_time.time() - cache_path.stat().st_mtime) / 86400
+            if age_days > max_cache_age_days:
+                use_cache = False
+                logger.info("Pitcher name cache is %.1f days old — refreshing.", age_days)
+        if use_cache:
+            try:
+                cached = {int(k): v for k, v in json.loads(cache_path.read_text()).items()}
+                logger.info("Pitcher names loaded from cache (%d entries).", len(cached))
+                return cached
+            except Exception as exc:
+                logger.warning("Pitcher name cache read failed (%s); re-resolving.", exc)
+
+    name_map: dict[int, str] = {}
+
+    try:
+        from pybaseball import playerid_reverse_lookup
+        logger.info("Gathering pitcher lookup table via Chadwick register.")
+        lookup = playerid_reverse_lookup(pitcher_ids, key_type="mlbam")
+        lookup["player_name"] = lookup["name_first"].str.title() + " " + lookup["name_last"].str.title()
+        name_map.update(dict(zip(lookup["key_mlbam"].astype(int), lookup["player_name"])))
+    except Exception as e:
+        logger.warning("Chadwick pitcher lookup failed: %s", e)
+
+    missing = [pid for pid in pitcher_ids if pid not in name_map]
+    if missing:
+        logger.info("Looking up %d pitcher(s) not in Chadwick via MLB Stats API.", len(missing))
+        try:
+            import requests
+            ids_param = ",".join(str(i) for i in missing)
+            url = f"https://statsapi.mlb.com/api/v1/people?personIds={ids_param}&fields=people,id,fullName"
+            resp = requests.get(url, timeout=10)
+            resp.raise_for_status()
+            for person in resp.json().get("people", []):
+                pid = person.get("id")
+                name = person.get("fullName")
+                if pid and name:
+                    name_map[int(pid)] = name
+        except Exception as e:
+            logger.warning("MLB Stats API pitcher fallback failed: %s", e)
+
+    if cache_path is not None:
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(json.dumps({str(k): v for k, v in name_map.items()}, indent=2))
+            logger.info("Pitcher name snapshot saved → %s", cache_path.name)
+        except Exception as exc:
+            logger.warning("Could not save pitcher name snapshot: %s", exc)
 
     return name_map
 

@@ -40,6 +40,7 @@ def pull_statcast_range(
     chunk_days: int = 7,
     force_refresh: bool = False,
     sleep_s: float = _SLEEP_BETWEEN_CHUNKS,
+    reconcile_days: int | None = None,
 ) -> pd.DataFrame:
     """Pull Statcast data between *start_date* and *end_date* (inclusive).
 
@@ -48,12 +49,17 @@ def pull_statcast_range(
     *raw_dir*.  Returns the full DataFrame for the requested range.
 
     Args:
-        start_date: First date to pull.
-        end_date:   Last date to pull (inclusive).
-        raw_dir:    Directory for raw parquet files and manifest.json.
-        chunk_days: Days per pybaseball call (keep ≤ 7 for reliability).
-        force_refresh: If True, re-pull all dates regardless of manifest.
-        sleep_s:    Seconds to sleep between HTTP calls.
+        start_date:     First date to pull.
+        end_date:       Last date to pull (inclusive).
+        raw_dir:        Directory for raw parquet files and manifest.json.
+        chunk_days:     Days per pybaseball call (keep ≤ 7 for reliability).
+        force_refresh:  If True, re-pull all dates regardless of manifest.
+        sleep_s:        Seconds to sleep between HTTP calls.
+        reconcile_days: If set, re-pull the most recent N days even if the
+                        manifest marks them as complete. Intended for
+                        upstream corrections/backfills (typical use: 7–14).
+                        The manifest is updated normally after re-pull, and
+                        reconcile metadata is recorded for provenance.
 
     Returns:
         DataFrame of all pitches in [start_date, end_date].
@@ -62,6 +68,9 @@ def pull_statcast_range(
     raw_dir.mkdir(parents=True, exist_ok=True)
 
     manifest = _load_manifest(raw_dir) if not force_refresh else {}
+
+    if reconcile_days is not None and not force_refresh:
+        manifest = _apply_reconciliation_window(manifest, end_date, reconcile_days)
 
     missing_ranges = list(
         _iter_missing_date_ranges(start_date, end_date, chunk_days, raw_dir, manifest)
@@ -102,11 +111,60 @@ def pull_statcast_range(
         _log_missingness(chunk_df, f"chunk {chunk_start}→{chunk_end}")
         time.sleep(sleep_s)
 
+    # Record reconciliation provenance in manifest
+    if reconcile_days is not None and not force_refresh:
+        manifest["_reconcile_last_run"] = str(end_date)
+        manifest["_reconcile_days"] = reconcile_days
+        _save_manifest(raw_dir, manifest)
+
     # Return the requested range from disk
     return _load_date_range(start_date, end_date, raw_dir)
 
 
 # ── Internal helpers ─────────────────────────────────────────────────────────
+
+def _apply_reconciliation_window(
+    manifest: dict,
+    end_date: date,
+    reconcile_days: int,
+) -> dict:
+    """Roll back manifest last_date for any year that overlaps the reconcile window.
+
+    The reconcile window is [end_date - reconcile_days + 1, end_date].
+    For each year whose manifest last_date falls within or after that window,
+    last_date is set to one day before the window start so that chunks
+    overlapping the window are treated as uncached and re-pulled.
+
+    Operates on a copy of the manifest; does not write to disk.
+    """
+    cutoff = end_date - timedelta(days=reconcile_days - 1)
+    logger.info(
+        "Reconciliation window: %s → %s (%d days). "
+        "Chunks in this range will be re-pulled even if manifest says complete.",
+        cutoff, end_date, reconcile_days,
+    )
+
+    updated = {k: v for k, v in manifest.items() if k.startswith("_")}  # preserve meta keys
+    for year_str, entry in manifest.items():
+        if year_str.startswith("_"):
+            continue
+        last_date_str = entry.get("last_date")
+        if last_date_str is None:
+            updated[year_str] = entry
+            continue
+        last_date = date.fromisoformat(last_date_str)
+        if last_date >= cutoff:
+            rolled_back = cutoff - timedelta(days=1)
+            logger.info(
+                "  year=%s: rolling back last_date %s → %s",
+                year_str, last_date, rolled_back,
+            )
+            entry = dict(entry)
+            entry["last_date"] = str(rolled_back)
+        updated[year_str] = entry
+
+    return updated
+
 
 def _pull_chunk_with_retry(
     start: date,

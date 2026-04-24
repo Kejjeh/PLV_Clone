@@ -42,6 +42,15 @@ def pull_data(
     start: str = typer.Option("2021-04-01", help="Start date (YYYY-MM-DD)"),
     end: str = typer.Option("2023-11-01", help="End date (YYYY-MM-DD)"),
     force: bool = typer.Option(False, "--force", help="Re-pull even if cached"),
+    reconcile_days: int = typer.Option(
+        0,
+        "--reconcile-days",
+        help=(
+            "Re-pull the most recent N days even if the manifest marks them complete. "
+            "Use 7–14 to catch upstream Baseball Savant corrections. "
+            "0 = disabled (default)."
+        ),
+    ),
 ) -> None:
     """Pull pitch-level Statcast data and store as year-partitioned Parquet."""
     from plv_clone.config import get_config
@@ -52,12 +61,15 @@ def pull_data(
     end_date = date.fromisoformat(end)
 
     typer.echo(f"Pulling Statcast data: {start_date} to {end_date}")
+    if reconcile_days:
+        typer.echo(f"Reconciliation mode: re-pulling last {reconcile_days} days.")
     df = pull_statcast_range(
         start_date=start_date,
         end_date=end_date,
         raw_dir=cfg.raw_data_dir,
         chunk_days=cfg.statcast_chunk_days,
         force_refresh=force,
+        reconcile_days=reconcile_days if reconcile_days > 0 else None,
     )
     typer.echo(f"Done. {len(df):,} pitches available for {start_date} to {end_date}.")
 
