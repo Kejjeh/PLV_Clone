@@ -32,6 +32,7 @@ import numpy as np
 
 from plv_clone.config import PipelineConfig, get_config
 from plv_clone.utils.logging import get_logger
+from plv_clone.utils.provenance import write_build_meta
 from plv_clone.utils.season_stage import (
     StageThresholds, get_thresholds, infer_stage,
 )
@@ -152,6 +153,21 @@ def run(
         path = cfg.outputs_dir / f"{name}_{year}.csv"
         df.to_csv(path, index=False)
         logger.info("Wrote %s: %d rows [stage=%s] -> %s", name, len(df), active_stage, path.name)
+
+    # ── Provenance sidecar ────────────────────────────────────────────────
+    write_build_meta(
+        cfg.outputs_dir,
+        year,
+        suffix="_boards",
+        exports=list(boards.keys()),
+        extra={
+            "stage_detected": detected_stage,
+            "stage_active": active_stage,
+            "source_hitter_path": str(hitter_path),
+            "source_pitcher_path": str(pitcher_path),
+        },
+        models_dir=cfg.models_dir,
+    )
 
     return boards
 

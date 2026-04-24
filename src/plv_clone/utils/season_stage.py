@@ -21,7 +21,7 @@ Calibration basis: 2023–2025 full-season data (n=1,200+ hitter-seasons).
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import date
 
 import pandas as pd

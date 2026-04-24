@@ -68,7 +68,7 @@ class TestStaleFallbackRemoved:
         # Patch: build_master_hitter returns empty (simulates no qualifying hitters)
         monkeypatch.setattr(be, "build_master_hitter", lambda *a, **kw: pd.DataFrame())
         monkeypatch.setattr(be, "build_position_map", lambda *a, **kw: pd.DataFrame())
-        monkeypatch.setattr(be, "_build_batter_name_map", lambda ids: {})
+        monkeypatch.setattr(be, "_build_batter_name_map", lambda *a, **kw: {})
         # build_rolling_process_plus needs game_date; skip by patching read_parquet
         # to return a df that the rolling builder handles gracefully (no game_date col)
         monkeypatch.setattr(be, "build_rolling_process_plus",

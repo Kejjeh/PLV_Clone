@@ -48,8 +48,8 @@ dimensions:
 - **Power+**: On fair balls in play, how much xwOBA was generated above what the pitch deserved?
 - **Process+**: Sum of the three components, normalised to 100 = league average.
 
-> **Coming in MVP v2** — Process+ models are not included in the initial release.
-> The PLV sub-models must be validated first.
+Process+ scoring, leaderboard exports, and the fantasy projection layer are
+fully implemented. Both PLV and Process+ models are trained and frozen.
 
 ---
 
@@ -93,14 +93,48 @@ plv build-features --start 2021-04-01 --end 2024-10-31
 plv train-plv
 ```
 
-### 5. Score a season and export leaderboards
+### 5. Score pitchers
 
 ```bash
 plv score-plv 2024
 plv build-leaderboards 2024 --output-format both
 ```
 
-Leaderboards are written to `data/outputs/`.
+### 6. Score hitters (Process+)
+
+```bash
+plv score-process 2024
+```
+
+### 7. Build master exports and target boards
+
+```bash
+plv build-exports 2024
+plv build-target-boards 2024
+```
+
+### 8. Build fantasy projections (optional)
+
+```bash
+plv calibrate-fantasy          # one-time / annual
+plv build-fantasy-exports 2024
+```
+
+### 9. Validate outputs
+
+```bash
+python scripts/validate_outputs.py --year 2024 --strict
+```
+
+### 10. Launch dashboard
+
+```bash
+streamlit run app/dashboard.py
+```
+
+All outputs are written to `data/outputs/`. A `build_meta_{year}.json` sidecar
+is written alongside exports recording build timestamp, source date range,
+and active config thresholds.
 
 ---
 
@@ -112,6 +146,12 @@ plv build-features --start 2021-04-01 --end 2024-10-31
 plv train-plv
 plv score-plv 2024
 plv build-leaderboards 2024
+plv score-process 2024
+plv build-exports 2024
+plv build-target-boards 2024
+plv build-fantasy-exports 2024
+python scripts/validate_outputs.py --year 2024 --strict
+streamlit run app/dashboard.py
 ```
 
 ---
@@ -141,42 +181,62 @@ Key settings:
 
 ```
 plv_clone/
+  app/
+    dashboard.py              # Streamlit dashboard (run with streamlit run)
+  scripts/
+    validate_outputs.py       # Output sanity checks (--strict for CI)
   src/plv_clone/
-    cli.py                    # Typer CLI entry point
-    config.py                 # PipelineConfig (pydantic-settings)
+    cli.py                    # Typer CLI entry point (plv ...)
+    config.py                 # PipelineConfig (pydantic-settings, PLV_ prefix)
     data/
       ingest_statcast.py      # pybaseball pull + manifest-based incremental updates
       clean_statcast.py       # Outcome normalisation + flag derivation
+      player_positions.py     # Position map fetch, cache, enrichment
       schemas.py              # Column lists, PITCH_KEY_COLS, validate_schema()
+    fantasy/
+      scoring.py              # LeagueScoring dataclass
+      hitter_points.py        # Hitter FP projection + calibration
+      pitcher_points.py       # Pitcher FP projection + calibration
     features/
       pitch_features.py       # Movement, location, count features
       context_features.py     # Within-game features (velocity delta, pitch-in-AB)
       batter_features.py      # Expanding-window hitter tendencies (no leakage)
       run_value_features.py   # Count value table
     models/
-      swing_take_model.py     # SwingModel
-      called_strike_model.py  # CalledStrikeModel
-      contact_whiff_model.py  # ContactModel
-      foul_in_play_model.py   # FoulModel
-      batted_ball_value_model.py  # BattedBallValueModel
-      plv_model.py            # PLVModel orchestrator
+      plv_model.py            # PLVModel orchestrator (5 sub-models)
+      process_plus_model.py   # ProcessPlusModel (Decision+, Contact+, Power+)
       evaluation.py           # evaluate_classifier, evaluate_regression
       calibration.py          # Isotonic calibration wrapper
+      [other sub-models]      # swing_take, called_strike, contact_whiff, etc.
     pipelines/
       build_pitch_dataset.py  # Ingest → clean → features → parquet
-      train_plv.py            # Train all sub-models
-      score_plv.py            # Score a season
+      train_plv.py            # Train all PLV sub-models
+      score_plv.py            # Score pitchers for a season
       build_leaderboards.py   # DuckDB aggregation → CSV/parquet
+      score_process_plus.py   # Score hitters for a season
+      build_exports.py        # Master hitter/pitcher exports + rolling trends
+      build_target_boards.py  # Fantasy target boards (6 CSVs)
+      build_fantasy_exports.py# Fantasy FP projections
+    utils/
+      season_stage.py         # Stage inference (early/mid/mature) + thresholds
+      provenance.py           # Build metadata / freshness sidecar writer
+      constants.py            # Outcome transition table (single source of truth)
+      io.py                   # read_parquet / read_json helpers
+      logging.py              # configure_logging / get_logger
   tests/
     conftest.py               # Synthetic pitch fixtures
     test_ingestion.py
     test_features.py
     test_scoring.py
+    test_season_stage.py      # infer_stage() boundary tests
+    test_board_schema.py      # Target board column contracts
+    test_export_integrity.py  # Export pipeline integrity
+    test_contract_schemas.py  # Dashboard/consumer column contracts
   data/
     raw/                      # Year-partitioned raw parquet + manifest.json
     processed/                # Feature/score hive-partitioned parquet
-    models/                   # Trained model artifacts
-    outputs/                  # Leaderboard CSV/parquet
+    models/                   # Trained model artifacts + enrichment snapshots
+    outputs/                  # Leaderboard CSV/parquet + build_meta_{year}.json
   notebooks/
     01_diagnostics.ipynb
     02_leaderboards.ipynb
@@ -194,7 +254,8 @@ including feature lists, evaluation metrics, and calibration diagnostics.
 ## Running Tests
 
 ```bash
-pytest tests/ -v
+python -m pytest
+python -m ruff check src/ tests/
 ```
 
 ---
@@ -223,4 +284,4 @@ pytest tests/ -v
 
 ---
 
-*Built with Python 3.11+, pybaseball, LightGBM, scikit-learn, DuckDB, and Typer.*
+*Built with Python 3.11+, pybaseball, LightGBM, scikit-learn, DuckDB, Typer, Streamlit, and SciPy.*

@@ -24,6 +24,7 @@ Usage:
 from __future__ import annotations
 
 import datetime as _dt
+import json
 from pathlib import Path
 
 import pandas as pd
@@ -38,6 +39,7 @@ from plv_clone.data.player_positions import (
 )
 from plv_clone.utils.io import read_parquet
 from plv_clone.utils.logging import get_logger
+from plv_clone.utils.provenance import write_build_meta
 
 logger = get_logger(__name__)
 
@@ -122,7 +124,13 @@ def run(
         pp_df = _ensure_game_date(pp_df)
 
         # Build player name map once for all unique batters (used in both rolling and master)
-        batter_name_map = _build_batter_name_map(pp_df["batter"].dropna().astype(int).unique().tolist())
+        _name_cache = cfg.models_dir / f"batter_names_{year}.json"
+        _name_cache_age = 7 if year >= _dt.date.today().year else None
+        batter_name_map = _build_batter_name_map(
+            pp_df["batter"].dropna().astype(int).unique().tolist(),
+            cache_path=_name_cache,
+            max_cache_age_days=_name_cache_age,
+        )
 
         rolling_hitter = build_rolling_process_plus(pp_df, window_days=_ROLLING_DAYS, batter_name_map=batter_name_map)
         exports["process_plus_rolling"] = rolling_hitter
@@ -159,6 +167,38 @@ def run(
     mh = exports.get("master_hitter")
     if mh is not None and "primary_position" in mh.columns:
         validate_positions(mh, id_col="batter")
+
+    # ── Provenance sidecar ────────────────────────────────────────────────
+    _source_dates: dict = {}
+    if "master_hitter" in exports and not exports["master_hitter"].empty:
+        _mh = exports["master_hitter"]
+        if "game_date" in _mh.columns:
+            _source_dates["hitter_date_min"] = str(_mh["game_date"].min())
+            _source_dates["hitter_date_max"] = str(_mh["game_date"].max())
+    if "master_pitcher" in exports and not exports["master_pitcher"].empty:
+        _mp = exports["master_pitcher"]
+        if "game_date" in _mp.columns:
+            _source_dates["pitcher_date_min"] = str(_mp["game_date"].min())
+            _source_dates["pitcher_date_max"] = str(_mp["game_date"].max())
+    # rolling exports carry a date column — use it for freshness
+    for _key, _date_key in (("process_plus_rolling", "hitter_rolling_max_date"),
+                             ("plv_rolling", "pitcher_rolling_max_date")):
+        _rdf = exports.get(_key)
+        if _rdf is not None and not _rdf.empty and "date" in _rdf.columns:
+            _source_dates[_date_key] = str(pd.to_datetime(_rdf["date"]).max().date())
+
+    write_build_meta(
+        cfg.outputs_dir,
+        year,
+        exports=list(exports.keys()),
+        extra={
+            "min_pa_process": cfg.min_pa_process,
+            "min_pitches_plv": cfg.min_pitches_plv,
+            "rolling_days": _ROLLING_DAYS,
+            **_source_dates,
+        },
+        models_dir=cfg.models_dir,
+    )
 
     logger.info("Exports written to %s", cfg.outputs_dir)
     return exports
@@ -488,12 +528,39 @@ def build_master_hitter(
 
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
-def _build_batter_name_map(batter_ids: list[int]) -> dict[int, str]:
+def _build_batter_name_map(
+    batter_ids: list[int],
+    cache_path: Path | None = None,
+    max_cache_age_days: int | None = None,
+) -> dict[int, str]:
     """Return {mlbam_id: 'First Last'} for all provided batter IDs.
 
     Primary source: Chadwick Bureau register via pybaseball.
     Fallback for any missing IDs: MLB Stats API (handles recent debuts).
+
+    If *cache_path* is given, the resolved map is persisted there as JSON.
+    On subsequent calls with the same path, the cache is used if it is
+    younger than *max_cache_age_days* (or always, if that is None).
+    This makes export re-runs reproducible without repeated API calls.
     """
+    import time as _time
+
+    # ── Load from cache if fresh ──────────────────────────────────────────
+    if cache_path is not None and cache_path.exists():
+        use_cache = True
+        if max_cache_age_days is not None:
+            age_days = (_time.time() - cache_path.stat().st_mtime) / 86400
+            if age_days > max_cache_age_days:
+                use_cache = False
+                logger.info("Batter name cache is %.1f days old — refreshing.", age_days)
+        if use_cache:
+            try:
+                cached = {int(k): v for k, v in json.loads(cache_path.read_text()).items()}
+                logger.info("Batter names loaded from cache (%d entries).", len(cached))
+                return cached
+            except Exception as exc:
+                logger.warning("Cache read failed (%s); re-resolving names.", exc)
+
     name_map: dict[int, str] = {}
 
     # ── Primary: Chadwick register ────────────────────────────────────────
@@ -523,6 +590,15 @@ def _build_batter_name_map(batter_ids: list[int]) -> dict[int, str]:
                     name_map[int(pid)] = name
         except Exception as e:
             logger.warning("MLB Stats API fallback failed: %s", e)
+
+    # ── Persist snapshot so future re-runs are reproducible ──────────────
+    if cache_path is not None:
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            cache_path.write_text(json.dumps({str(k): v for k, v in name_map.items()}, indent=2))
+            logger.info("Batter name snapshot saved → %s", cache_path.name)
+        except Exception as exc:
+            logger.warning("Could not save batter name snapshot: %s", exc)
 
     return name_map
 

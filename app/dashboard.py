@@ -29,6 +29,7 @@ sys.path.insert(0, str(ROOT / "src"))
 os.chdir(ROOT)
 
 from plv_clone.config import get_config
+from plv_clone.utils.provenance import read_build_meta
 from plv_clone.utils.season_stage import infer_stage, get_thresholds
 
 
@@ -185,6 +186,18 @@ st.sidebar.markdown(
     f"**Stage:** :{_STAGE_COLOR[active_stage]}[{t.stage_label}]"
 )
 
+# ── Freshness indicator ───────────────────────────────────────────────────────
+_meta = read_build_meta(get_config().outputs_dir, year)
+if _meta:
+    _built_at = _meta.get("built_at", "")
+    _rolling_max = _meta.get("hitter_rolling_max_date") or _meta.get("pitcher_rolling_max_date", "")
+    st.sidebar.caption(
+        f"Exports built: {_built_at[:10] if _built_at else '?'}  \n"
+        f"Latest data: {_rolling_max or '?'}"
+    )
+else:
+    st.sidebar.caption("No build metadata found — run `plv build-exports` to populate.")
+
 # Show warning banner for non-mature stages
 if t.stage_warning:
     st.warning(t.stage_warning, icon="ℹ️")
@@ -220,11 +233,12 @@ if active_tab == "Hitters":
     with col2:
         min_pp = st.number_input("Min Process+", min_value=80, max_value=160, value=95, step=1)
     with col3:
-        sort_col = st.selectbox("Sort by", ["process_plus", "decision_plus", "contact_plus", "power_plus", "xwoba_actual"])
+        _sort_opts_h = [c for c in ["process_plus", "decision_plus", "contact_plus", "power_plus", "xwoba_actual"] if c in hitters.columns]
+        sort_col = st.selectbox("Sort by", _sort_opts_h)
     with col4:
         n_rows = st.number_input("Show rows", min_value=10, max_value=413, value=50, step=10)
 
-    df = hitters[hitters["pa"] >= min_pa][hitters["process_plus"] >= min_pp].copy()
+    df = hitters[(hitters["pa"] >= min_pa) & (hitters["process_plus"] >= min_pp)].copy()
     if sel_pos_h and "fantasy_positions" in df.columns:
         df = df[df["fantasy_positions"].fillna("").apply(
             lambda fps: any(p in fps.split("|") for p in sel_pos_h)
@@ -297,7 +311,8 @@ elif active_tab == "Pitchers":
     with col1:
         min_pitches = st.number_input("Min pitches", min_value=50, max_value=3000, value=100, step=50)
     with col2:
-        sort_col_p = st.selectbox("Sort by", ["plv", "whiff_pct", "cs_pct", "xwoba_model"])
+        _sort_opts_p = [c for c in ["plv", "whiff_pct", "cs_pct", "xwoba_model"] if c in pitchers.columns]
+        sort_col_p = st.selectbox("Sort by", _sort_opts_p)
     with col3:
         n_rows_p = st.number_input("Show rows", min_value=10, max_value=800, value=50, step=10)
 

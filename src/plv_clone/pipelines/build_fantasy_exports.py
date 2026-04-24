@@ -24,6 +24,7 @@ from plv_clone.fantasy.scoring import LeagueScoring
 from plv_clone.fantasy import hitter_points, pitcher_points
 from plv_clone.utils.io import read_parquet
 from plv_clone.utils.logging import get_logger
+from plv_clone.utils.provenance import write_build_meta
 
 logger = get_logger(__name__)
 
@@ -97,9 +98,10 @@ def run(
         logger.info("Building hitter fantasy export for year=%d …", year)
         hitters = pd.read_csv(hitter_path)
 
-        # Fetch per-player SB rates from MLB Stats API for the shrinkage SB proxy
+        # Fetch per-player SB rates; cache snapshot for reproducible re-runs
         try:
-            sb_data = _compute_sb_rates(year)
+            _sb_cache = cfg.models_dir / f"sb_rates_{year}.csv"
+            sb_data = _compute_sb_rates(year, cache_path=_sb_cache)
             if not sb_data.empty:
                 hitters = hitters.merge(sb_data[["batter", "sb_per_pa_raw"]], on="batter", how="left")
         except Exception as e:
@@ -151,20 +153,55 @@ def run(
     else:
         logger.warning("master_pitcher_%d.csv not found. Skipping pitcher fantasy.", year)
 
+    # ── Provenance sidecar ────────────────────────────────────────────────
+    write_build_meta(
+        cfg.outputs_dir,
+        year,
+        suffix="_fantasy",
+        exports=list(exports.keys()),
+        extra={
+            "pa_per_game": pa_per_game,
+            "ip_per_start": ip_per_start,
+            "ip_per_app": ip_per_app,
+            "scoring_file": str(scoring_file),
+        },
+        models_dir=cfg.models_dir,
+    )
+
     return exports
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
-def _compute_sb_rates(year: int) -> pd.DataFrame:
+def _compute_sb_rates(year: int, cache_path: Path | None = None) -> pd.DataFrame:
     """Fetch per-batter SB and PA from MLB Stats API for *year*.
 
     Returns DataFrame with columns: batter (MLBAM ID), sb_per_pa_raw, sb, pa_ev.
     The caller (project()) applies shrinkage toward league average.
 
-    Uses one API call for all players — much faster and more complete than
-    trying to extract SB from pitch-level events (which don't include SB rows).
+    If *cache_path* is given, the result is persisted as a CSV there.
+    On the next run with the same path, the cache is loaded instead of
+    hitting the API — making fantasy export re-runs reproducible.
+    For in-progress seasons the cache is refreshed if older than 7 days.
     """
+    import time as _time
+
+    if cache_path is not None and cache_path.exists():
+        use_cache = True
+        import datetime as _dt2
+        if year >= _dt2.date.today().year:
+            age_days = (_time.time() - cache_path.stat().st_mtime) / 86400
+            if age_days > 7:
+                use_cache = False
+                logger.info("SB rate cache is %.1f days old — refreshing.", age_days)
+        if use_cache:
+            try:
+                cached = pd.read_csv(cache_path)
+                logger.info("SB rates loaded from cache (%d players, year=%d).", len(cached), year)
+                return cached[["batter", "sb_per_pa_raw", "sb", "pa_ev"]]
+            except Exception as exc:
+                logger.warning("SB cache read failed (%s); re-fetching API.", exc)
+
     import requests
     url = (
         f"https://statsapi.mlb.com/api/v1/stats"
@@ -195,6 +232,15 @@ def _compute_sb_rates(year: int) -> pd.DataFrame:
     result = pd.DataFrame(rows)
     result["sb_per_pa_raw"] = (result["sb"] / result["pa_ev"]).round(5)
     logger.info("SB rates loaded from MLB Stats API: %d players, year=%d", len(result), year)
+
+    if cache_path is not None:
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            result[["batter", "sb_per_pa_raw", "sb", "pa_ev"]].to_csv(cache_path, index=False)
+            logger.info("SB rate snapshot saved → %s", cache_path.name)
+        except Exception as exc:
+            logger.warning("Could not save SB rate snapshot: %s", exc)
+
     return result[["batter", "sb_per_pa_raw", "sb", "pa_ev"]]
 
 
