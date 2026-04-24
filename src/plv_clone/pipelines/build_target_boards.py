@@ -88,9 +88,24 @@ def run(
     )
 
     # ── Determine season stage ────────────────────────────────────────────
+    # Prefer the latest game date from rolling data as the stage signal.
+    # Rolling dates are actual game dates (unbiased), whereas hitter PA from
+    # the qualified export skews high (only ≥min_pa players), which causes
+    # systematic late-stage misclassification early in the season.
+    _season_date = None
+    if not rolling_h.empty and "date" in rolling_h.columns:
+        _max = pd.to_datetime(rolling_h["date"]).max()
+        if pd.notna(_max):
+            _season_date = _max.date()
+    elif not rolling_p.empty and "date" in rolling_p.columns:
+        _max = pd.to_datetime(rolling_p["date"]).max()
+        if pd.notna(_max):
+            _season_date = _max.date()
+
     detected_stage = infer_stage(
         hitters=hitters if not hitters.empty else None,
         pitchers=pitchers if not pitchers.empty else None,
+        season_date=_season_date,
     )
     active_stage = stage if stage in ("early", "mid", "mature") else detected_stage
     t = get_thresholds(active_stage)
@@ -477,10 +492,10 @@ def _add_rolling_context_pitcher(
 
 _BASE_HITTER_COLS = [
     "batter_name", "batter", "pa", "confidence",
-    "primary_position", "fantasy_positions_display",
+    "primary_position", "fantasy_positions", "fantasy_positions_display",
     "process_plus", "decision_plus", "contact_plus", "power_plus",
     "swing_pct", "chase_pct", "xwoba_actual",
-    "tag",
+    "tag", "season_stage",
 ]
 
 _BASE_PITCHER_COLS = [

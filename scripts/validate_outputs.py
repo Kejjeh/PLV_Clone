@@ -167,6 +167,14 @@ def check_process_plus(year: int) -> list[Check]:
 
     lb = pd.read_csv(lb_path)
 
+    if lb.empty:
+        return [Check(
+            "Process+ leaderboard has data",
+            False,
+            "0 rows — no qualified hitters yet (early season). Re-run once PA accumulates.",
+            is_warning=True,
+        )]
+
     # Check 1: Mean near 100
     mean = lb["process_plus"].mean()
     drift = abs(mean - REF["process_plus_mean"])
@@ -290,6 +298,113 @@ def check_scaling_params() -> list[Check]:
     return checks
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# NAME RESOLUTION CHECKS  (P1-C)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def check_name_resolution(year: int) -> list[Check]:
+    """Fail in --strict if unresolved numeric player names exceed 5%."""
+    checks = []
+    threshold = 0.05
+
+    mh_path = CFG.outputs_dir / f"master_hitter_{year}.csv"
+    if mh_path.exists():
+        try:
+            mh = pd.read_csv(mh_path, usecols=["batter_name"])
+            n = len(mh)
+            n_bad = int(mh["batter_name"].astype(str).str.match(r"^\d+$").sum())
+            frac = n_bad / max(n, 1)
+            is_warn = n_bad > 0 and frac <= threshold
+            checks.append(Check(
+                "Hitter names resolved",
+                passed=(n_bad == 0),
+                detail=f"{n_bad}/{n} numeric ({100*frac:.1f}%, threshold {100*threshold:.0f}%)",
+                is_warning=is_warn,
+            ))
+        except Exception as exc:
+            checks.append(Check("Hitter name resolution (read)", False, str(exc)))
+    else:
+        checks.append(Check(
+            "master_hitter exists (name check)", False,
+            f"master_hitter_{year}.csv not found",
+        ))
+
+    mp_path = CFG.outputs_dir / f"master_pitcher_{year}.csv"
+    if mp_path.exists():
+        try:
+            mp = pd.read_csv(mp_path, usecols=["player_name"])
+            n = len(mp)
+            n_bad = int(mp["player_name"].astype(str).str.match(r"^\d+$").sum())
+            frac = n_bad / max(n, 1)
+            is_warn = n_bad > 0 and frac <= threshold
+            checks.append(Check(
+                "Pitcher names resolved",
+                passed=(n_bad == 0),
+                detail=f"{n_bad}/{n} numeric ({100*frac:.1f}%, threshold {100*threshold:.0f}%)",
+                is_warning=is_warn,
+            ))
+        except Exception as exc:
+            checks.append(Check("Pitcher name resolution (read)", False, str(exc)))
+    else:
+        checks.append(Check(
+            "master_pitcher exists (name check)", False,
+            f"master_pitcher_{year}.csv not found",
+        ))
+
+    return checks
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# POSITION QUALITY CHECKS  (P1-D)
+# ══════════════════════════════════════════════════════════════════════════════
+
+def check_position_quality(year: int) -> list[Check]:
+    """Fail in --strict if empty fantasy_positions exceeds 20% of qualified hitters."""
+    checks = []
+    threshold = 0.20
+
+    mh_path = CFG.outputs_dir / f"master_hitter_{year}.csv"
+    if not mh_path.exists():
+        return [Check(
+            "master_hitter exists (pos check)", False,
+            f"master_hitter_{year}.csv not found",
+        )]
+
+    try:
+        mh = pd.read_csv(mh_path)
+    except Exception as exc:
+        return [Check("master_hitter readable (pos check)", False, str(exc))]
+
+    if mh.empty:
+        checks.append(Check(
+            "fantasy_positions populated",
+            True,
+            "master_hitter is empty (early season — no qualified hitters yet)",
+            is_warning=False,
+        ))
+        return checks
+
+    if "fantasy_positions" not in mh.columns:
+        checks.append(Check(
+            "fantasy_positions column present",
+            False,
+            "Column missing — re-run `plv build-exports` to regenerate",
+        ))
+        return checks
+
+    n = len(mh)
+    n_empty = int((mh["fantasy_positions"].fillna("") == "").sum())
+    frac = n_empty / max(n, 1)
+    passed = frac <= threshold
+    checks.append(Check(
+        f"fantasy_positions populated (≤{100*threshold:.0f}% empty)",
+        passed,
+        f"{n_empty}/{n} empty ({100*frac:.1f}%, threshold {100*threshold:.0f}%)",
+        is_warning=not passed,
+    ))
+    return checks
+
+
 # ── helpers ───────────────────────────────────────────────────────────────────
 
 def _quick_split_half(scored_df: pd.DataFrame, pitch_col: str, min_pa: int) -> float | None:
@@ -361,6 +476,18 @@ def main() -> None:
     for c in sp_checks:
         print(c)
     all_checks.extend(sp_checks)
+
+    print("\n── Player name resolution ───────────────────────────────────────────")
+    name_checks = check_name_resolution(year)
+    for c in name_checks:
+        print(c)
+    all_checks.extend(name_checks)
+
+    print("\n── Position quality ─────────────────────────────────────────────────")
+    pos_checks = check_position_quality(year)
+    for c in pos_checks:
+        print(c)
+    all_checks.extend(pos_checks)
 
     # Summary
     n_total  = len(all_checks)

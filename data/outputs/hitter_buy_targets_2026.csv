@@ -1,4 +1,1 @@
-batter_name,batter,pa,confidence,primary_position,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag
-Yandy Díaz,650490,119,Signal,1B,DH,111.2,110.1,115.5,101.5,0.466,0.259,0.357,0.248,warm,0.0,Process+ strong; process ahead of results; disciplined; [Early Season]
-Daylen Lile,695734,116,Signal,OF,OF,117.2,109.4,114.7,107.6,0.555,0.347,0.383,0.215,warm,0.031,Process+ elite; process ahead of results; disciplined; [Early Season]
-Daulton Varsho,662139,87,Signal,OF,OF,103.7,119.5,103.4,98.1,0.551,0.317,0.33,0.205,hot,-0.017,Process+ above avg; process ahead of results; disciplined; rolling hot; [Early Season]
+batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage

@@ -153,9 +153,22 @@ name_col_h = "batter_name" if hitters is not None and "batter_name" in hitters.c
 name_col_p = "player_name" if pitchers is not None and "player_name" in pitchers.columns else "pitcher"
 
 # ── Season stage detection & sidebar selector ─────────────────────────────────
+# Derive season_date from rolling data (actual game dates, unbiased by PA filter).
+# Falls back to PA-based inference when rolling data is unavailable.
+_season_date = None
+if rolling_h is not None and "date" in rolling_h.columns and not rolling_h.empty:
+    _max_date = pd.to_datetime(rolling_h["date"]).max()
+    if pd.notna(_max_date):
+        _season_date = _max_date.date()
+elif rolling_p is not None and "date" in rolling_p.columns and not rolling_p.empty:
+    _max_date = pd.to_datetime(rolling_p["date"]).max()
+    if pd.notna(_max_date):
+        _season_date = _max_date.date()
+
 _detected_stage = infer_stage(
     hitters=hitters if hitters is not None else None,
     pitchers=pitchers if pitchers is not None else None,
+    season_date=_season_date,
 )
 _STAGE_OPTIONS = {
     f"Auto-detect ({_detected_stage})": _detected_stage,
@@ -434,8 +447,11 @@ elif active_tab == "Rolling Trends":
                 "rolling_core_fp_pa", "rolling_full_fp_pa",
                 "rolling_tb_pa", "rolling_bb_pa", "rolling_k_pa", "rolling_sb_pa",
             ] if c in latest_rh.columns]
+            # For hitters, lower K/PA is better (fewer strikeouts = better plate skill).
+            _rfh_low_is_better = {"rolling_k_pa"}
             if rf_sort_h and rf_sort_h in latest_rh.columns:
-                top_rh = latest_rh.sort_values(rf_sort_h, ascending=False).head(n_rfh)[show_rh].reset_index(drop=True)
+                _rfh_asc = rf_sort_h in _rfh_low_is_better
+                top_rh = latest_rh.sort_values(rf_sort_h, ascending=_rfh_asc).head(n_rfh)[show_rh].reset_index(drop=True)
             else:
                 top_rh = latest_rh.head(n_rfh)[show_rh].reset_index(drop=True)
             top_rh.index += 1
@@ -491,8 +507,11 @@ elif active_tab == "Rolling Trends":
                 "rolling_fp_from_events",
                 "rolling_k_ip", "rolling_bb_ip", "rolling_h_ip", "rolling_er_ip",
             ] if c in latest_rp.columns]
+            # For pitchers, lower BB/IP, H/IP, and ER/IP is better.
+            _rfp_low_is_better = {"rolling_bb_ip", "rolling_h_ip", "rolling_er_ip"}
             if rf_sort_p and rf_sort_p in latest_rp.columns:
-                top_rp = latest_rp.sort_values(rf_sort_p, ascending=False).head(n_rfp)[show_rp].reset_index(drop=True)
+                _rfp_asc = rf_sort_p in _rfp_low_is_better
+                top_rp = latest_rp.sort_values(rf_sort_p, ascending=_rfp_asc).head(n_rfp)[show_rp].reset_index(drop=True)
             else:
                 top_rp = latest_rp.head(n_rfp)[show_rp].reset_index(drop=True)
             top_rp.index += 1

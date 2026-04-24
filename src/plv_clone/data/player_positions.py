@@ -17,6 +17,7 @@ See docs/position_mapping_methodology.md.
 from __future__ import annotations
 
 import json
+import time as _time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -145,6 +146,7 @@ def build_position_map(
     year: int,
     config: PositionConfig | None = None,
     cache_dir: Path | None = None,
+    max_cache_age_days: int | None = None,
 ) -> pd.DataFrame:
     """Build the complete player position map for *year*.
 
@@ -169,17 +171,27 @@ def build_position_map(
     if cache_dir:
         cache_path = cache_dir / f"player_positions_{year}.json"
         if cache_path.exists():
-            try:
-                df = pd.DataFrame(json.loads(cache_path.read_text()))
-                # Ensure boolean column survives JSON round-trip
-                if "is_multi_position" in df.columns:
-                    df["is_multi_position"] = df["is_multi_position"].astype(bool)
-                logger.info(
-                    "Position map loaded from cache: %d players (year=%d)", len(df), year
-                )
-                return df
-            except Exception as exc:
-                logger.warning("Cache read failed (%s); re-fetching API.", exc)
+            cache_fresh = True
+            if max_cache_age_days is not None:
+                age_days = (_time.time() - cache_path.stat().st_mtime) / 86400
+                if age_days > max_cache_age_days:
+                    cache_fresh = False
+                    logger.info(
+                        "Position cache is %.1f days old (max %d) — refreshing (year=%d).",
+                        age_days, max_cache_age_days, year,
+                    )
+            if cache_fresh:
+                try:
+                    df = pd.DataFrame(json.loads(cache_path.read_text()))
+                    # Ensure boolean column survives JSON round-trip
+                    if "is_multi_position" in df.columns:
+                        df["is_multi_position"] = df["is_multi_position"].astype(bool)
+                    logger.info(
+                        "Position map loaded from cache: %d players (year=%d)", len(df), year
+                    )
+                    return df
+                except Exception as exc:
+                    logger.warning("Cache read failed (%s); re-fetching API.", exc)
 
     # ── Fetch ─────────────────────────────────────────────────────────────────
     primary_pos = fetch_primary_positions(year)

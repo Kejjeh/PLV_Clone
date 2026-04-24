@@ -23,6 +23,7 @@ Usage:
 
 from __future__ import annotations
 
+import datetime as _dt
 from pathlib import Path
 
 import pandas as pd
@@ -81,8 +82,17 @@ def run(
     exports: dict[str, pd.DataFrame] = {}
 
     # ── Position map (fetched once per year, cached in models_dir) ────────
+    # Refresh the cache weekly for in-progress seasons so position changes
+    # (e.g. new call-ups, role switches) appear in exports without a manual
+    # cache deletion.
+    _cache_age_days = 7 if year >= _dt.date.today().year else None
     try:
-        position_map = build_position_map(year, config=PositionConfig(), cache_dir=cfg.models_dir)
+        position_map = build_position_map(
+            year,
+            config=PositionConfig(),
+            cache_dir=cfg.models_dir,
+            max_cache_age_days=_cache_age_days,
+        )
     except Exception as e:
         logger.warning("Position map build failed for year=%d: %s", year, e)
         position_map = None
@@ -120,22 +130,22 @@ def run(
 
         master_hitter = build_master_hitter(pp_df, min_pa=cfg.min_pa_process, batter_name_map=batter_name_map, position_map=position_map)
 
-        # Early season: if no hitters qualify at min_pa but an existing CSV exists,
-        # load it and enrich it with position data so position columns are always present.
-        existing_path = cfg.outputs_dir / f"master_hitter_{year}.csv"
-        if master_hitter.empty and existing_path.exists() and position_map is not None and not position_map.empty:
+        exports["master_hitter"] = master_hitter
+        if master_hitter.empty:
             logger.info(
-                "No hitters qualify at min_pa=%d for year=%d; enriching existing master_hitter with positions.",
+                "No hitters qualify at min_pa=%d for year=%d — writing empty export. "
+                "Re-run build-exports once enough PA accumulates.",
                 cfg.min_pa_process, year,
             )
-            master_hitter = pd.read_csv(existing_path)
-            pos_cols = ["primary_position", "all_positions_seen", "fantasy_positions",
-                        "fantasy_positions_display", "is_multi_position", "position_count"]
-            master_hitter = master_hitter.drop(columns=[c for c in pos_cols if c in master_hitter.columns])
-            master_hitter = enrich_hitters(master_hitter, position_map, id_col="batter")
-
-        exports["master_hitter"] = master_hitter
-        _write(master_hitter, cfg.outputs_dir / f"master_hitter_{year}", output_format)
+            # Write explicitly even when empty so any stale artifact on disk
+            # is overwritten. The dashboard treats a 0-row CSV as "no data"
+            # rather than falling back to a prior run's metrics.
+            cfg.outputs_dir.mkdir(parents=True, exist_ok=True)
+            master_hitter.to_csv(
+                cfg.outputs_dir / f"master_hitter_{year}.csv", index=False
+            )
+        else:
+            _write(master_hitter, cfg.outputs_dir / f"master_hitter_{year}", output_format)
     else:
         logger.warning("No Process+ scores found for year=%d. Skipping hitter exports.", year)
 

@@ -22,6 +22,7 @@ Calibration basis: 2023–2025 full-season data (n=1,200+ hitter-seasons).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import date
 
 import pandas as pd
 
@@ -34,13 +35,33 @@ _PITCH_MID_MAX   = 500
 STAGES = ("early", "mid", "mature")
 
 
-def infer_stage(hitters: pd.DataFrame | None = None,
-                pitchers: pd.DataFrame | None = None) -> str:
-    """Infer season stage from the league median PA of the loaded dataset.
+def infer_stage(
+    hitters: pd.DataFrame | None = None,
+    pitchers: pd.DataFrame | None = None,
+    season_date: date | None = None,
+) -> str:
+    """Infer season stage.
 
-    Uses hitters first; falls back to pitchers; falls back to 'mature'
-    if neither is provided.
+    Priority order:
+    1. ``season_date`` (calendar date) — preferred; avoids PA-qualification bias.
+    2. League median PA of *hitters* (must be an unfiltered or lightly-filtered
+       population to give a valid signal; qualified-only exports skew high).
+    3. League median pitches of *pitchers*.
+    4. 'mature' fallback.
+
+    Calendar cutoffs (from docs/season_stage_thresholds.md):
+        early  : before  May 16   (approx. March 20 – May 15)
+        mid    : May 16 – July 25  (approx. May 16 – July 25)
+        mature : July 26+
     """
+    if season_date is not None:
+        month_day = (season_date.month, season_date.day)
+        if month_day < (5, 16):
+            return "early"
+        if month_day < (7, 26):
+            return "mid"
+        return "mature"
+
     if hitters is not None and not hitters.empty and "pa" in hitters.columns:
         median_pa = float(hitters["pa"].median())
         if median_pa < _PA_EARLY_MAX:
