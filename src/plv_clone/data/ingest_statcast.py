@@ -21,7 +21,7 @@ from typing import Iterator
 
 import pandas as pd
 
-from plv_clone.data.schemas import STATCAST_RAW_COLS, validate_schema
+from plv_clone.data.schemas import PITCH_KEY_COLS, STATCAST_RAW_COLS, validate_schema
 from plv_clone.utils.io import read_json, read_parquet, write_json, write_parquet
 from plv_clone.utils.logging import get_logger
 
@@ -249,12 +249,29 @@ def _cast_types(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _append_to_year_file(chunk_df: pd.DataFrame, year_file: Path) -> None:
-    """Append *chunk_df* to the year's Parquet file, creating it if absent."""
+    """Append *chunk_df* to the year's Parquet file, creating it if absent.
+
+    After concat, dedup on PITCH_KEY_COLS keeping the last occurrence so that
+    a reconcile re-pull of a date range replaces stale rows rather than
+    accumulating duplicates alongside them.
+    """
     if year_file.exists():
         existing = pd.read_parquet(year_file, engine="pyarrow")
         combined = pd.concat([existing, chunk_df], ignore_index=True)
     else:
         combined = chunk_df
+
+    dedup_cols = [c for c in PITCH_KEY_COLS if c in combined.columns]
+    if dedup_cols:
+        before = len(combined)
+        combined = combined.drop_duplicates(subset=dedup_cols, keep="last")
+        removed = before - len(combined)
+        if removed:
+            logger.info(
+                "  Deduped %d duplicate pitch row(s) on %s in %s.",
+                removed, dedup_cols, year_file.name,
+            )
+
     combined.to_parquet(year_file, index=False, engine="pyarrow")
     logger.debug("  Year file updated: %s (%d rows)", year_file.name, len(combined))
 

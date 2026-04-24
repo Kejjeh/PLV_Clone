@@ -128,3 +128,93 @@ class TestReconcileMetadataWritten:
         manifest = json.loads(manifest_path.read_text())
         assert "_reconcile_last_run" in manifest, "manifest must record reconcile run date"
         assert manifest["_reconcile_days"] == 7
+
+
+class TestReconcileDedup:
+    """End-to-end integration: reconcile does not leave duplicate pitch keys."""
+
+    def _make_pitches(self, game_pk: int, n: int, speed: float) -> "pd.DataFrame":
+        """Return a minimal pitch DataFrame with PITCH_KEY_COLS + a STATCAST_RAW_COLS field.
+
+        release_speed is in STATCAST_RAW_COLS so it survives _select_available_cols
+        and can be used to verify that reconciled rows replaced original rows.
+        """
+        import pandas as pd
+        return pd.DataFrame({
+            "game_pk":        [game_pk] * n,
+            "at_bat_number":  list(range(1, n + 1)),
+            "pitch_number":   [1] * n,
+            "pitcher":        [100] * n,
+            "batter":         [200] * n,
+            "game_date":      [date(2024, 10, 28)] * n,
+            "release_speed":  [speed] * n,
+        })
+
+    def test_reconcile_does_not_duplicate_pitch_keys(self, tmp_path, monkeypatch):
+        """
+        Scenario:
+          1. Initial pull writes 5 pitches for game_pk=1 on 2024-10-28.
+          2. Reconcile re-pulls the same date with updated plv values.
+          3. After re-pull, each pitch key appears exactly once and holds
+             the new value (keep='last' semantics).
+        """
+        import pandas as pd
+        from plv_clone.data import ingest_statcast as ing
+        from plv_clone.data.schemas import PITCH_KEY_COLS
+
+        raw_dir = tmp_path / "raw"
+        raw_dir.mkdir()
+
+        original_pitches = self._make_pitches(game_pk=1, n=5, speed=90.0)
+        updated_pitches  = self._make_pitches(game_pk=1, n=5, speed=95.5)  # corrected upstream value
+
+        pull_calls = []
+
+        def fake_pull(start, end, retries=3):
+            pull_calls.append((start, end))
+            if start <= date(2024, 10, 28) <= end:
+                # Second call (reconcile) returns updated data
+                return updated_pitches if len(pull_calls) > 1 else original_pitches
+            return pd.DataFrame()
+
+        monkeypatch.setattr(ing, "_pull_chunk_with_retry", fake_pull)
+
+        # ── Step 1: initial pull ──────────────────────────────────────────
+        ing.pull_statcast_range(
+            start_date=date(2024, 10, 25),
+            end_date=date(2024, 10, 31),
+            raw_dir=raw_dir,
+            sleep_s=0,
+        )
+
+        year_file = raw_dir / "statcast_2024.parquet"
+        assert year_file.exists()
+        after_initial = pd.read_parquet(year_file)
+        assert len(after_initial) == 5
+
+        # ── Step 2: reconcile re-pull ─────────────────────────────────────
+        ing.pull_statcast_range(
+            start_date=date(2024, 10, 25),
+            end_date=date(2024, 10, 31),
+            raw_dir=raw_dir,
+            reconcile_days=7,
+            sleep_s=0,
+        )
+
+        after_reconcile = pd.read_parquet(year_file)
+
+        # No duplicate pitch keys
+        key_cols = [c for c in PITCH_KEY_COLS if c in after_reconcile.columns]
+        n_dupes = after_reconcile.duplicated(subset=key_cols).sum()
+        assert n_dupes == 0, f"Found {n_dupes} duplicate pitch key(s) after reconcile"
+
+        # Row count unchanged (dedup removed the originals)
+        assert len(after_reconcile) == 5, (
+            f"Expected 5 rows after reconcile dedup, got {len(after_reconcile)}"
+        )
+
+        # Reconciled values are present (keep='last' → re-pulled data wins).
+        # release_speed is in STATCAST_RAW_COLS so it survives _select_available_cols.
+        assert (after_reconcile["release_speed"] == 95.5).all(), (
+            "Reconciled release_speed values should replace original values"
+        )
