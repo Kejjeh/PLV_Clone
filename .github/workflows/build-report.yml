@@ -1,0 +1,66 @@
+name: Build and deploy Process Report
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Every 4 hours, on the hour (UTC). Adjust if you want fewer/more runs.
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install minimal runtime deps
+        # The report generator only needs pandas / numpy / pyarrow / espn-api.
+        # We deliberately skip lightgbm/sklearn/etc. so CI installs in seconds.
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy pyarrow espn-api
+
+      - name: Generate report
+        env:
+          ESPN_LEAGUE_ID: ${{ secrets.ESPN_LEAGUE_ID }}
+          ESPN_YEAR:      ${{ secrets.ESPN_YEAR }}
+          ESPN_SWID:      ${{ secrets.ESPN_SWID }}
+          ESPN_S2:        ${{ secrets.ESPN_S2 }}
+        run: |
+          python scripts/generate_report.py --year "${ESPN_YEAR:-2026}"
+
+      - name: Stage for Pages
+        run: |
+          mkdir -p _site
+          cp "data/outputs/process_report_${ESPN_YEAR:-2026}.html" _site/index.html
+        env:
+          ESPN_YEAR: ${{ secrets.ESPN_YEAR }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
