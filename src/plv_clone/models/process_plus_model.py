@@ -7,20 +7,21 @@ with +metric normalization (100 = league average, 10 = 1 SD).
 
 Components
 ----------
-Decision+  (all pitches)
-    decision_value = EV(actual_choice) - EV(counterfactual_choice)
+Discipline+      (all pitches)
+    discipline_value = EV(actual_choice) - EV(counterfactual_choice)
     Measures whether the hitter swung at the right pitches.
+    Kept as standalone output; excluded from Process+ composite (r = -0.017 with FP).
 
-Contact+   (all swings)
+K-Avoidance+   (all swings, reported as contact_plus internally)
     contact_value = actual_swing_ev - expected_swing_ev
-    Measures contact/whiff and foul/in-play execution.
-    Uses model-predicted xwOBA for in-play so there is no overlap with Power+.
+    Measures whiff/chase avoidance. Renamed from Contact+ to K-Avoidance+ on output
+    because it measures K-avoidance, not contact quality (Power+ handles that).
 
-Power+     (in-play pitches with non-null xwOBA)
+Power+         (in-play pitches with non-null xwOBA)
     power_value = actual_xwoba - expected_xwoba_from_bbv_model
     Measures batted-ball damage above pitch expectation.
 
-Process+   = Decision+ + Contact+ + Power+  (all normalised to 100-scale)
+Process+   = K-Avoidance+ + Power+  (all normalised to 100-scale)
 
 Scaling parameters are computed from the training-population distribution
 of qualified hitters (min_pa_process) and frozen at save time.
@@ -34,7 +35,7 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from plv_clone.models.hitter_decision_model import compute_decision_values
+from plv_clone.models.hitter_decision_model import compute_discipline_values
 from plv_clone.models.hitter_contact_model import compute_contact_values
 from plv_clone.models.hitter_power_model import compute_power_values
 from plv_clone.models.plv_model import PLVModel
@@ -69,15 +70,15 @@ class ProcessPlusModel:
         """Compute per-pitch component values and return an annotated DataFrame.
 
         Adds the following columns to a copy of df:
-          decision_value, contact_value, power_value
+          discipline_value, contact_value, power_value
 
-        decision_value is defined for all pitches.
+        discipline_value is defined for all pitches.
         contact_value is NaN for takes.
         power_value is NaN for non-in-play pitches.
         """
         df = df.copy()
 
-        df["decision_value"] = compute_decision_values(df, self.plv_model)
+        df["discipline_value"] = compute_discipline_values(df, self.plv_model)
         df["contact_value"]  = compute_contact_values(df, self.plv_model)
         df["power_value"]    = compute_power_values(df, self.plv_model)
 
@@ -85,7 +86,7 @@ class ProcessPlusModel:
             "score_pitches: %d pitches | "
             "decision mean=%.4f | contact mean=%.4f (n=%d) | power mean=%.4f (n=%d)",
             len(df),
-            df["decision_value"].mean(),
+            df["discipline_value"].mean(),
             df["contact_value"].mean(),
             df["contact_value"].notna().sum(),
             df["power_value"].mean(),
@@ -103,7 +104,7 @@ class ProcessPlusModel:
         """Aggregate per-pitch scores to hitter-season +metrics.
 
         Aggregation rules:
-          - decision_raw  : mean(decision_value)  over all pitches
+          - decision_raw  : mean(discipline_value)  over all pitches
           - contact_raw   : mean(contact_value)   over swings only
           - power_raw     : mean(power_value)      over in-play pitches only
           - process_raw   : decision_raw + contact_raw + power_raw
@@ -150,7 +151,7 @@ class ProcessPlusModel:
 
         # ── Per-component means ───────────────────────────────────────────
         decision_agg = (
-            scored_df.groupby("batter")["decision_value"]
+            scored_df.groupby("batter")["discipline_value"]
             .mean()
             .rename("decision_raw")
             .reset_index()
@@ -201,16 +202,22 @@ class ProcessPlusModel:
         hitters = hitters[hitters["pa"] >= min_pa].copy()
 
         # ── Combined raw score ────────────────────────────────────────────
-        # Components are additive; fill missing components with 0 so the
-        # combined score is still meaningful for hitters with no in-play events.
+        # decision_raw is kept as a standalone output column but excluded from
+        # process_raw — it has near-zero correlation with FP (r = -0.017) and
+        # dilutes the composite's predictive power (see docs/model_audit_and_roadmap.md BUG-03).
         hitters["process_raw"] = (
-            hitters["decision_raw"].fillna(0.0) +
             hitters["contact_raw"].fillna(0.0) +
             hitters["power_raw"].fillna(0.0)
         )
 
         # ── +metric normalization ─────────────────────────────────────────
         hitters = self._apply_plus_metrics(hitters)
+
+        # ── Rename contact_plus → k_avoidance_plus ────────────────────────
+        # contact_plus measures whiff/chase rate (K-avoidance), not contact quality.
+        # Power+ captures contact quality. Rename to eliminate the misleading label.
+        if "contact_plus" in hitters.columns:
+            hitters = hitters.rename(columns={"contact_plus": "k_avoidance_plus"})
 
         # ── Sort ──────────────────────────────────────────────────────────
         hitters = hitters.sort_values("process_plus", ascending=False).reset_index(drop=True)
@@ -334,7 +341,7 @@ class ProcessPlusModel:
             )
 
         decision_agg = (
-            scored_df.groupby("batter")["decision_value"]
+            scored_df.groupby("batter")["discipline_value"]
             .mean().rename("decision_raw").reset_index()
         )
         contact_agg = (
@@ -356,7 +363,6 @@ class ProcessPlusModel:
         )
         hitters = hitters[hitters["pa"] >= min_pa].copy()
         hitters["process_raw"] = (
-            hitters["decision_raw"].fillna(0.0) +
             hitters["contact_raw"].fillna(0.0) +
             hitters["power_raw"].fillna(0.0)
         )

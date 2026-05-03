@@ -329,7 +329,7 @@ def build_rolling_process_plus(
                 "pa": pa,
                 "pitches": len(window),
             }
-            for comp in ("decision_value", "contact_value", "power_value"):
+            for comp in ("discipline_value", "contact_value", "power_value"):
                 if comp in window.columns:
                     vals = window[comp].dropna()
                     row[f"{comp}_mean"] = round(float(vals.mean()), 5) if len(vals) > 0 else None
@@ -455,7 +455,7 @@ def build_master_hitter(
 ) -> pd.DataFrame:
     """Season-level hitter leaderboard with Process+ components + surface stats.
 
-    Includes: Process+, Decision+, Contact+, Power+, contact rate, chase rate,
+    Includes: Process+, Discipline+, Contact+, Power+, contact rate, chase rate,
     swing rate, xwOBA actual vs expected.
     """
     from plv_clone.models.process_plus_model import ProcessPlusModel

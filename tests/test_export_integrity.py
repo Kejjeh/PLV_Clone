@@ -43,7 +43,7 @@ class TestStaleFallbackRemoved:
         pp_dir = tmp_path / "processed" / "process_plus_scores" / "year=2099"
         pp_dir.mkdir(parents=True)
         # Minimal parquet so the directory is detected as present
-        pd.DataFrame({"batter": [1], "decision_value": [0.0],
+        pd.DataFrame({"batter": [1], "discipline_value": [0.0],
                       "game_date": ["2099-04-01"]}).to_parquet(
             pp_dir / "part-0.parquet", index=False
         )
@@ -272,7 +272,7 @@ class TestProcessPlusEmptyLeaderboard:
         self.vo = vo
 
     def _write_empty_leaderboard(self):
-        pd.DataFrame(columns=["batter", "process_plus", "decision_plus",
+        pd.DataFrame(columns=["batter", "process_plus", "discipline_plus",
                                "contact_plus", "power_plus", "pa"]).to_csv(
             self.out_dir / "process_plus_leaderboard_2026.csv", index=False
         )

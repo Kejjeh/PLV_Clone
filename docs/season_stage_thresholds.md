@@ -41,16 +41,16 @@ From 2023–2025 full-season data (n ≈ 1,200 hitter-seasons):
 |-------------|-----------------|------------------|-----------|
 | Process+    | 10.6            | 16.2             | +53%      |
 | Power+      | 10.6            | 15.6             | +47%      |
-| Decision+   | ~11             | ~13              | +18%      |
+| Discipline+   | ~11             | ~13              | +18%      |
 
 The consequence: **PP >= 110 catches the top 18% of hitters at full season, but the
 top 33% of hitters at early season**. Without gating, the breakout board becomes
 meaningless in April.
 
-### Decision+ is the most stable early metric
+### Discipline+ is the most stable early metric
 
-Split-half reliability at 50 PA: Decision+ r = 0.741 vs. Process+ r ≈ 0.45.
-Decision+ is the most interpretable early-season filter — it measures the
+Split-half reliability at 50 PA: Discipline+ r = 0.741 vs. Process+ r ≈ 0.45.
+Discipline+ is the most interpretable early-season filter — it measures the
 swing/take *choice*, which stabilizes faster than contact or power outcomes.
 
 ### rank_gap noise
@@ -65,7 +65,7 @@ ensuring the buy signal represents a real divergence rather than noise.
 
 ### Rolling and PLV thresholds are stable
 
-Rolling decision_value p50 = 0.066, p75 = 0.083 — consistent across 2023, 2024,
+Rolling discipline_value p50 = 0.066, p75 = 0.083 — consistent across 2023, 2024,
 and 2025. PLV p75 = 5.17–5.20 across all stages. These do not need adjustment.
 
 ---
@@ -79,7 +79,7 @@ and 2025. PLV p75 = 5.17–5.20 across all stages. These do not need adjustment.
 | `min_pa_for_boards`| 40     | 50     | 150    | Minimum to appear on any board         |
 | `buy_rank_gap_min` | 0.20   | 0.17   | 0.15   | pp_rank – xwoba_rank                   |
 | `buy_pp_floor`     | 102.0  | 101.0  | 100.0  | Minimum Process+                       |
-| `buy_dec_gate`     | 109.0  | None   | None   | Required Decision+ (early only)        |
+| `buy_dec_gate`     | 109.0  | None   | None   | Required Discipline+ (early only)        |
 
 ### Regression flags
 
@@ -87,20 +87,20 @@ and 2025. PLV p75 = 5.17–5.20 across all stages. These do not need adjustment.
 |--------------------|--------|--------|--------|----------------------------------------|
 | `reg_rank_gap_max` | -0.20  | -0.17  | -0.15  | xwoba_rank – pp_rank (negative)        |
 | `reg_xwoba_floor`  | 0.350  | 0.350  | 0.350  | Min xwOBA to appear on board           |
-| `reg_dec_gate`     | 97.0   | 94.0   | None   | Require Decision+ below this           |
+| `reg_dec_gate`     | 97.0   | 94.0   | None   | Require Discipline+ below this           |
 
 ### Breakout flags
 
 | Parameter            | Early  | Mid    | Mature | Notes                                  |
 |----------------------|--------|--------|--------|----------------------------------------|
 | `breakout_pp_min`    | 110.0  | 110.0  | 110.0  | Process+ floor (unchanged)             |
-| `breakout_dec_gate`  | 112.0  | 109.0  | None   | Required Decision+ (tighter early)     |
+| `breakout_dec_gate`  | 112.0  | 109.0  | None   | Required Discipline+ (tighter early)     |
 
 ### Discipline and Power
 
 | Parameter              | Early  | Mid    | Mature | Notes                                  |
 |------------------------|--------|--------|--------|----------------------------------------|
-| `discipline_dec_min`   | 109.0  | 109.0  | 109.0  | Stable — Decision+ is reliable early   |
+| `discipline_dec_min`   | 109.0  | 109.0  | 109.0  | Stable — Discipline+ is reliable early   |
 | `power_pow_min`        | 110.0  | 108.0  | 107.0  | Power+ bar raised early (wider std)    |
 
 ### Confidence tiers (hitters)
@@ -117,7 +117,7 @@ and 2025. PLV p75 = 5.17–5.20 across all stages. These do not need adjustment.
 
 - Calibration dataset: 2023–2025 full-season data, n ≈ 1,200 hitter-seasons.
 - 2026 is used **only for validation** (3-week snapshot as of calibration date).
-- Decision+ thresholds (109.0 = top 25%) are the same across all stages because
+- Discipline+ thresholds (109.0 = top 25%) are the same across all stages because
   the metric is reliable even at 50 PA. No stage adjustment needed.
 - Rolling thresholds and PLV thresholds are identical across all stages.
 - All stage thresholds are defined in `utils/season_stage.py` (`_EARLY`, `_MID`, `_MATURE`).
@@ -139,7 +139,7 @@ and 2025. PLV p75 = 5.17–5.20 across all stages. These do not need adjustment.
 
 The tight buy/regression boards (3 and 2 rows) are intentional: at 3 weeks of
 data, very few hitters have a stable enough rank_gap to trust. The discipline
-and power boards remain useful because Decision+ and Power+ give signal sooner.
+and power boards remain useful because Discipline+ and Power+ give signal sooner.
 
 ---
 
@@ -147,10 +147,10 @@ and power boards remain useful because Decision+ and Power+ give signal sooner.
 
 **Early season** — trust the discipline board; treat buy/regression as a watchlist
 only. The `[Early Season]` label in the tag column flags every board entry.
-Decision+ gate on buy targets means every buy flag has confirmed process quality.
+Discipline+ gate on buy targets means every buy flag has confirmed process quality.
 
 **Mid season** — buy/regression boards gain reliability as PA accumulates.
-Decision+ gate is removed from buy flags; regression flags still require weak D+
+Discipline+ gate is removed from buy flags; regression flags still require weak D+
 to distinguish process weakness from BABIP luck.
 
 **Mature season** — all boards operate at full confidence. Standard thresholds.

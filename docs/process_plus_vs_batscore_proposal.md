@@ -14,14 +14,14 @@ Process+ is pitch-sequence-level and **decomposed by decision stage**:
 
 | Component | What it captures | BatScore equivalent |
 |---|---|---|
-| **Decision+** | Swing/take quality *before* contact — did the hitter take the right pitches? | No direct equivalent. Swing% and Chase% are volume, not value-adjusted. |
-| **Contact+** | Contact/whiff rate and foul/fair rate vs. pitch expectation | Partially: K% implies contact failure, but not conditioned on pitch quality |
+| **Discipline+** | Swing/take quality *before* contact — did the hitter take the right pitches? | No direct equivalent. Swing% and Chase% are volume, not value-adjusted. |
+| **K-Avoidance+** | Whiff/chase rate vs. pitch expectation (K-avoidance skill) | Partially: K% implies contact failure, but not conditioned on pitch quality |
 | **Power+** | xwOBA above pitch-level expectation on fair balls | Closest overlap: raw xwOBA, barrel rate, hard-hit% — but those are not pitch-adjusted |
 | **Process+** | Combined | No single BatScore/BatSignal column maps here directly |
 
 The core difference: **Process+ conditions every value on the pitch itself**. A hitter who
-takes a 3-0 fastball for a strike hurts their Decision+ even if they "look disciplined".
-A hitter who makes contact on an unhittable slider gets Contact+ credit. A hitter who
+takes a 3-0 fastball for a strike hurts their Discipline+ even if they "look disciplined".
+A hitter who avoids whiffing on an unhittable slider gets K-Avoidance+ credit. A hitter who
 crushes a meatball is expected to — Power+ rewards only the excess.
 
 ---
@@ -41,7 +41,7 @@ crushes a meatball is expected to — Power+ rewards only the excess.
 ### 1. Identifying "unlucky" hitters (regression candidates)
 
 ```
-Target: process_plus >= 108  AND  xwoba_actual < league_median_xwoba
+Target: process_plus >= 108  AND  xwoba_on_contact < league_median_xwoba
 ```
 
 These hitters are making good decisions and quality contact relative to pitch difficulty,
@@ -54,11 +54,11 @@ but their raw xwOBA is below median. This can indicate:
 
 ### 2. Flagging hitters with structural discipline improvement
 
-Decision+ is highly stable (SB r=0.833 at 150 PA, YoY r=0.740). If a hitter's
-Decision+ improved YoY, it's likely real, not noise. BatScore metrics often lag
+Discipline+ is highly stable (SB r=0.833 at 150 PA, YoY r=0.740). If a hitter's
+Discipline+ improved YoY, it's likely real, not noise. BatScore metrics often lag
 because they require in-play contact to manifest.
 
-**Early-season tiebreaker**: Decision+ at 50 PA is already reliable (SB r=0.741).
+**Early-season tiebreaker**: Discipline+ at 50 PA is already reliable (SB r=0.741).
 Use it to separate hitters with similar BatScore profiles in April/May.
 
 ### 3. Breakout identification
@@ -77,8 +77,8 @@ High exit velocity on pitches you shouldn't have swung at is not sustainable.
 
 BatScore can't separate "hit it hard because he swings at hittable pitches" from
 "hit it hard despite swinging at unhittable pitches". Process+ can. A hitter who
-is Power+ 130 but Decision+ 85 is swinging at bad pitches and still barreling them —
-that's less sustainable than Power+ 125 with Decision+ 115.
+is Power+ 130 but Discipline+ 85 is swinging at bad pitches and still barreling them —
+that's less sustainable than Power+ 125 with Discipline+ 115.
 
 ---
 
@@ -90,7 +90,7 @@ merged = process_lb.merge(batscore_lb, on='player_id', how='inner')
 
 # 1. Check information overlap
 from scipy.stats import spearmanr
-for comp in ['process_plus', 'decision_plus', 'contact_plus', 'power_plus']:
+for comp in ['process_plus', 'discipline_plus', 'k_avoidance_plus', 'power_plus']:
     r, _ = spearmanr(merged[comp], merged['batscore'])
     print(f'{comp} vs BatScore: r={r:.3f}')
 
@@ -101,7 +101,7 @@ merged['disagreement'] = merged['process_plus'].rank(pct=True) - merged['batscor
 ```
 
 Expected result: Power+ will correlate most strongly with BatScore (both capture
-batted-ball damage). Decision+ will have the lowest correlation — that's the novel signal.
+batted-ball damage). Discipline+ will have the lowest correlation — that's the novel signal.
 
 ---
 
@@ -112,8 +112,8 @@ batted-ball damage). Decision+ will have the lowest correlation — that's the n
 | Signal | Source | Weight |
 |---|---|---|
 | Batted-ball damage (exit velo, barrel%) | BatScore | Primary — talent ceiling |
-| Pitch-level decision quality | Decision+ | Secondary — sustainable rate |
-| Contact execution vs. expectation | Contact+ | Secondary — K% interpretation |
+| Pitch-level decision quality | Discipline+ | Secondary — sustainable rate |
+| K-avoidance vs. pitch expectation | K-Avoidance+ | Secondary — K% interpretation |
 | xwOBA above pitch expectation | Power+ | Confirmation — correlated with BatScore |
 
 **Tier definition (draft):**
@@ -132,7 +132,7 @@ Thresholds are starting points. Calibrate against your historical hit rate.
 
 ## Process+ caveats to keep in mind
 
-1. **Power+ is the noisiest component** (reliable at 100 PA vs. 25 PA for Contact+).
+1. **Power+ is the noisiest component** (reliable at 100 PA vs. 25 PA for K-Avoidance+).
    Do not over-index on Power+ in early-season samples.
 
 2. **Frozen scaling creates mild season drift**. Process+ scaling is frozen to 2021-2023
@@ -142,9 +142,9 @@ Thresholds are starting points. Calibrate against your historical hit rate.
 3. **No park adjustment**. A hitter who plays in Coors vs. Dodger Stadium will have
    different batted-ball outcomes independent of pitch quality.
 
-4. **No pitcher-quality adjustment in Decision+**. Swinging at a Chase-zone pitch
+4. **No pitcher-quality adjustment in Discipline+**. Swinging at a Chase-zone pitch
    from Jacob deGrom and a Chase-zone pitch from a replacement-level arm have the
-   same Decision+ penalty. This is a deliberate scope choice (pitch features are
+   same Discipline+ penalty. This is a deliberate scope choice (pitch features are
    included, but pitcher identity is not).
 
 5. **Process+ is a one-year snapshot**. Use rolling trends

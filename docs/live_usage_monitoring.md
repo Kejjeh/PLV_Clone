@@ -37,7 +37,7 @@ stats haven't caught up. Look for players in the top 25% of Process+ but not
 yet in the top 25% of xwOBA. Useful if at least 2–3 names per week are
 non-obvious.
 
-**Discipline targets** — Decision+ is the most stable early-season metric.
+**Discipline targets** — Discipline+ is the most stable early-season metric.
 This board should be consistently useful regardless of stage. If it feels
 redundant with the buy board, check for overlap.
 

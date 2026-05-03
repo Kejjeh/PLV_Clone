@@ -58,16 +58,18 @@ fit on 2023–2024 actual player outcomes (n = 828 hitter-seasons):
 
 | Rate | Features | R² | Notes |
 |------|----------|-----|-------|
-| BB/PA | chase_pct, decision_plus | 0.49 | Chase rate is dominant signal |
+| BB/PA | chase_pct, discipline_plus | 0.49 | Chase rate is dominant signal |
 | K/PA  | whiff_pct, chase_pct     | 0.71 | Best-fit hitter rate; whiff is key |
-| TB/PA | in_play_pct, xwoba_actual, power_plus | 0.66 | In-play rate × contact quality |
+| TB/PA | in_play_pct, xwoba_on_contact, power_plus | 0.66 | In-play rate × contact quality |
 
 Three additional rates are derived from empirical formulas:
 
 **H/PA** (batting average proxy):
 ```
-H/PA ≈ xwoba_actual × 0.85 − 0.015
+H/PA ≈ xwoba_on_contact × 0.85 − 0.015
 ```
+`xwoba_on_contact` = mean `estimated_woba_using_speedangle` on batted balls only (contact denominator).
+Not Savant per-PA xwOBA — see `xwoba_per_pa` (actual wOBA per PA) for the PA-denominator version.
 At league avg xwOBA on contact (0.370) → H/PA ≈ 0.250.
 At elite (0.450) → 0.368. At weak (0.250) → 0.198.
 
@@ -123,7 +125,7 @@ Adjust down for platoon players, part-time players, or injury risk.
    year-over-year.
 
 2. **BB/PA estimate** (R²=0.49): Chase rate is very predictive of walks.
-   Decision+ adds marginal improvement. BB rate is stable skill.
+   Discipline+ adds marginal improvement. BB rate is stable skill.
 
 3. **TB/PA estimate** (R²=0.66): Improved by including in-play rate.
    Power+ captures above-expected damage. xwOBA on contact is stable.
@@ -280,7 +282,7 @@ In order from most to least noisy:
 **Early season (< 150 PA / < 50 IP):**
 - K and BB rates stabilize fastest (reliable at ~50 PA)
 - TB/PA and ER/IP need ~150+ PA / 30+ IP to stabilize
-- Use Decision+ (for hitters) and PLV (for pitchers) as the primary
+- Use Discipline+ (for hitters) and PLV (for pitchers) as the primary
   early-season signal; let the TB/ER models update over time
 
 ---

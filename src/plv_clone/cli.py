@@ -151,6 +151,40 @@ def build_leaderboards(
     typer.echo(f"Outputs written to: {cfg.outputs_dir}")
 
 
+@app.command(name="train-pl-plv")
+def train_pl_plv(
+    train_year: int = typer.Option(2025, "--train-year", help="Reference season to fit scaling (e.g. 2025)"),
+) -> None:
+    """Fit PLPlvModel scaling parameters against Pitcher List reference data for TRAIN_YEAR."""
+    from plv_clone.config import get_config
+    from plv_clone.pipelines.train_pl_plv import run
+
+    cfg = get_config()
+    typer.echo(f"Fitting PLPlvModel scaling from year={train_year} reference …")
+    model = run(train_year=train_year, config=cfg)
+    rv_method = model.scaling_params.get("rv_method", "delta_run_exp")
+    typer.echo(f"rv_method={rv_method}  |  saved to: {cfg.models_dir}/pl_plv_scaling.json")
+
+
+@app.command(name="score-pl-plv")
+def score_pl_plv(
+    year: int = typer.Argument(..., help="Season year to score (e.g. 2026)"),
+) -> None:
+    """Score pitchers for YEAR with PLPlvModel and write pl_plv_{year}.csv."""
+    from plv_clone.config import get_config
+    from plv_clone.pipelines.score_pl_plv import run
+
+    cfg = get_config()
+    typer.echo(f"Scoring pl_plv for year={year} …")
+    agg = run(year=year, config=cfg)
+    typer.echo(
+        f"Scored {len(agg)} qualified pitchers. "
+        f"PLV: mean={agg['pl_plv'].mean():.3f}, "
+        f"range=[{agg['pl_plv'].min():.2f}, {agg['pl_plv'].max():.2f}]"
+    )
+    typer.echo(f"Output written to: {cfg.outputs_dir / f'pl_plv_{year}.csv'}")
+
+
 @app.command(name="build-exports")
 def build_exports(
     year: int = typer.Argument(..., help="Season year (e.g. 2024)"),
@@ -263,27 +297,44 @@ def calibrate_fantasy(
 
 @app.command(name="build-fantasy-exports")
 def build_fantasy_exports(
-    year: int = typer.Argument(..., help="Season year (e.g. 2024)"),
+    year: Optional[int] = typer.Argument(None, help="Season year (e.g. 2024). Omit to run all available years."),
     output_format: str = typer.Option("both", "--output-format", help="parquet | csv | both"),
     pa_per_game: float = typer.Option(3.5, "--pa-per-game", help="PA/game assumption for hitters"),
     ip_per_start: float = typer.Option(5.5, "--ip-per-start", help="IP/start for SP projection"),
 ) -> None:
-    """Build hitter and pitcher fantasy-point leaderboard exports for YEAR."""
+    """Build hitter and pitcher fantasy-point leaderboard exports for YEAR (or all years if omitted)."""
     from plv_clone.config import get_config
     from plv_clone.pipelines.build_fantasy_exports import run
+    import re
 
     cfg = get_config()
-    typer.echo(f"Building fantasy exports for year={year} ...")
-    exports = run(
-        year=year,
-        config=cfg,
-        pa_per_game=pa_per_game,
-        ip_per_start=ip_per_start,
-        output_format=output_format,
-    )
-    for name, df in exports.items():
-        typer.echo(f"  {name}: {len(df)} rows")
-    typer.echo(f"Outputs written to: {cfg.outputs_dir}")
+
+    if year is None:
+        found = sorted({
+            int(m.group(1))
+            for f in cfg.outputs_dir.glob("master_pitcher_*.csv")
+            if (m := re.search(r"master_pitcher_(\d{4})\.csv", f.name))
+        })
+        if not found:
+            typer.echo("No master_pitcher_YYYY.csv files found — nothing to build.")
+            raise typer.Exit(1)
+        typer.echo(f"No year specified — running all available years: {found}")
+        years = found
+    else:
+        years = [year]
+
+    for yr in years:
+        typer.echo(f"Building fantasy exports for year={yr} ...")
+        exports = run(
+            year=yr,
+            config=cfg,
+            pa_per_game=pa_per_game,
+            ip_per_start=ip_per_start,
+            output_format=output_format,
+        )
+        for name, df in exports.items():
+            typer.echo(f"  {name}: {len(df)} rows")
+        typer.echo(f"Outputs written to: {cfg.outputs_dir}")
 
 
 @app.command(name="update")

@@ -77,18 +77,18 @@ Navigate to `http://localhost:8501` in your browser.
 
 2. **Regression Flags** (rank_gap < -0.15): Sell-high candidates.
    - Check `rolling_trend` column — if trend is also "cold", the deterioration may be underway already.
-   - Cross-check Decision+: if < 94, the chasing behavior is the cause (structural). If only Power+ is weak, could be batted-ball variance.
+   - Cross-check Discipline+: if < 94, the chasing behavior is the cause (structural). If only Power+ is weak, could be batted-ball variance.
 
 3. **Breakout Flags**: Process+ >= 110, surface stats not yet elite. Add-low targets on waivers.
 
 **Hitters tab — leaderboard drill-down**
 
-- Filter to Min PA = 150, sort by Decision+ to find early-season discipline leaders.
+- Filter to Min PA = 150, sort by Discipline+ to find early-season discipline leaders.
 - For hitters in the top 30 Process+ but not in your lineup: check if they're available.
 
 **Rolling Trends tab — week-to-week movers**
 
-- Sort by `decision_value_mean` — the raw rolling value that drives Decision+.
+- Sort by `discipline_value_mean` — the raw rolling value that drives Discipline+.
 - Anyone who jumped into the top 20 this week and isn't in your lineup is worth evaluating.
 
 **Player View tab — individual deep-dive**
@@ -104,7 +104,7 @@ For each player you're considering adding, trading for, or dropping:
 
 **Waiver add:**
 - [ ] Process+ >= 100 (above average)?
-- [ ] Decision+ >= 109 (top 25%)? If yes, the walk rate/K% trajectory is reliable.
+- [ ] Discipline+ >= 109 (top 25%)? If yes, the walk rate/K% trajectory is reliable.
 - [ ] Rolling trend: improving or hot?
 - [ ] Sample: Tier B or A? Tier C = watch for 2 more weeks before acting.
 
@@ -115,7 +115,7 @@ For each player you're considering adding, trading for, or dropping:
 
 **Sell-high target:**
 - [ ] rank_gap < -0.15? (xwOBA ahead of process)
-- [ ] Decision+ < 94? Chase rate is the culprit — structural, not variance.
+- [ ] Discipline+ < 94? Chase rate is the culprit — structural, not variance.
 - [ ] Rolling trend falling? Deterioration may already be underway.
 
 **Dynasty hold vs. cut:**
@@ -131,7 +131,7 @@ For each player you're considering adding, trading for, or dropping:
 |---|---|
 | Strong Process+ (top 25%) | >= 108 |
 | Elite Process+ (top 10%) | >= 115 |
-| Strong Decision+ (top 25%) | >= 109 |
+| Strong Discipline+ (top 25%) | >= 109 |
 | Strong Power+ (top 25%) | >= 107 |
 | Buy signal (rank divergence) | rank_gap > 0.15 |
 | Regression risk (rank divergence) | rank_gap < -0.15 |
@@ -141,7 +141,7 @@ For each player you're considering adding, trading for, or dropping:
 | Tier A sample (hitter) | >= 400 PA |
 | Tier B sample (hitter) | 250-399 PA |
 | Min reliable Process+ | 150 PA |
-| Min reliable Decision+ | 50 PA |
+| Min reliable Discipline+ | 50 PA |
 
 Full threshold documentation: `docs/fantasy_decision_framework.md`
 
@@ -176,7 +176,7 @@ See `docs/process_plus_vs_batscore_analysis.md` for how to interpret the `pp_vs_
 | `data/outputs/hitter_buy_targets_2025.csv` | Buy target board |
 | `data/outputs/hitter_regression_flags_2025.csv` | Sell-high board |
 | `data/outputs/hitter_breakout_flags_2025.csv` | Breakout/add-low board |
-| `data/outputs/hitter_discipline_targets_2025.csv` | Top Decision+ |
+| `data/outputs/hitter_discipline_targets_2025.csv` | Top Discipline+ |
 | `data/outputs/hitter_power_targets_2025.csv` | Top Power+ |
 | `data/outputs/pitcher_plv_targets_2025.csv` | Top PLV pitchers |
 | `data/outputs/fantasy_hitter_merged_2025.csv` | BatScore merge (template until data loaded) |

@@ -1,0 +1,1260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>The Process Report</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
+<style>html,body{margin:0;padding:0;}*{box-sizing:border-box;}</style>
+<!-- DATA INJECTION POINT — generator replaces this comment -->
+<script>
+window.REPORT_META = "Vol. II · No. — · — Season · Build LOCAL";
+window.HITTERS = [];
+window.SPARKS = {};
+window.DISTRIBUTIONS = { proc:{mean:90,bins:[]}, kavoid:{mean:106,bins:[]}, power:{mean:100,bins:[]}, swing:{mean:42,bins:[]} };
+window.PITCHERS = [];
+window.TARGETS = { buy:[], preBreakout:[], breakout:[] };
+window.ROLLING = {};
+window.WAIVER = [];
+window.MY_TEAM = { teamName: "", hitters: [], pitchers: [], error: null };
+</script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+// ═══ Constants ════════════════════════════════════════════════════════════════
+const TABS = ['hitters','pitchers','targets','trends','waiver','my-team'];
+const TAB_LABELS = { hitters:'Hitters', pitchers:'Pitchers', targets:'Targets',
+                     trends:'Trends', waiver:'Waiver', 'my-team':'My Team' };
+const POS_OPTIONS = ['C','1B','2B','3B','SS','OF','DH'];
+const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
+const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
+
+// ═══ Utilities ════════════════════════════════════════════════════════════════
+const fmt = (n, d = 1) => {
+  if (n === '—' || n == null) return '—';
+  if (typeof n !== 'number') return n;
+  if (Number.isNaN(n)) return '—';
+  return n.toFixed(d);
+};
+
+function Sparkline({ data, width = 60, height = 20, color = 'currentColor', strokeWidth = 1.2, fill = false }) {
+  if (!data || data.length === 0) return null;
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  const range = max - min || 1;
+  const step = width / (data.length - 1);
+  const pts = data.map((v, i) => `${i * step},${height - ((v - min) / range) * height}`).join(' ');
+  const last = data[data.length - 1];
+  const lastY = height - ((last - min) / range) * height;
+  const trend = data[data.length - 1] - data[Math.max(0, data.length - 4)];
+  const lineColor = trend > 2 ? 'var(--pos)' : trend < -2 ? 'var(--neg)' : color;
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ display: 'block', overflow: 'visible' }}>
+      {fill && <polygon points={`0,${height} ${pts} ${width},${height}`} fill={lineColor} opacity={0.15} />}
+      <polyline points={pts} fill="none" stroke={lineColor} strokeWidth={strokeWidth} strokeLinejoin="round" strokeLinecap="round" />
+      <circle cx={width} cy={lastY} r={1.6} fill={lineColor} />
+    </svg>
+  );
+}
+
+function Histogram({ bins, mean, label, highlightPct, color = 'currentColor', height = 60, width = 200 }) {
+  if (!bins || bins.length === 0) return null;
+  const max = Math.max(...bins);
+  const bw = width / bins.length;
+  return (
+    <svg width={width} height={height + 24} viewBox={`0 0 ${width} ${height + 24}`} style={{ display: 'block' }}>
+      <text x={width / 2} y={11} textAnchor="middle" fontSize="9" fill="currentColor" opacity="0.65" style={{ fontFamily: 'inherit' }}>
+        {label} · μ={mean}
+      </text>
+      {bins.map((v, i) => {
+        const h = (v / (max || 1)) * height;
+        const isHighlight = highlightPct != null && Math.abs((i / bins.length) - highlightPct) < (1 / bins.length / 1.5);
+        return (
+          <rect key={i} x={i * bw + 0.5} y={height - h + 16} width={bw - 1} height={h}
+            fill={isHighlight ? 'var(--accent)' : color} opacity={isHighlight ? 1 : 0.55} />
+        );
+      })}
+    </svg>
+  );
+}
+
+function dataCell(colors, color) {
+  return {
+    padding: '7px 8px', textAlign: 'right',
+    fontFamily: MONO, fontSize: 11, fontVariantNumeric: 'tabular-nums',
+    color: color || colors.text,
+  };
+}
+
+function editorialBtn(colors) {
+  return {
+    padding: '5px 10px', fontSize: 10, fontFamily: MONO, letterSpacing: 1.2,
+    background: colors.panel, color: colors.text,
+    border: `1px solid ${colors.border}`, borderRadius: 2,
+    cursor: 'pointer', textTransform: 'uppercase', fontWeight: 500,
+  };
+}
+
+function makeEditorialHeat(dark) {
+  return (v, min, max) => {
+    if (typeof v !== 'number' || Number.isNaN(v)) return 'transparent';
+    const t = Math.max(0, Math.min(1, (v - min) / (max - min)));
+    if (dark) {
+      return t < 0.5
+        ? `oklch(${0.22 + (1 - t * 2) * 0.02} 0 0 / 0)`
+        : `oklch(0.55 ${0.04 + (t - 0.5) * 0.18} 35 / ${0.10 + (t - 0.5) * 0.40})`;
+    }
+    return t < 0.5
+      ? `oklch(0.97 0 0 / 0)`
+      : `oklch(0.65 ${0.04 + (t - 0.5) * 0.20} 35 / ${0.06 + (t - 0.5) * 0.30})`;
+  };
+}
+
+const initials = (n) => n ? n.split(' ').map(w => w[0] + '.').join(' ') : '—';
+const lastName = (n) => n ? n.split(' ').pop() : '—';
+
+function exportCSV(rows, cols, filename = 'process_report.csv') {
+  const escape = v => {
+    if (v == null || v === '—') return '';
+    const s = String(v);
+    return s.includes(',') || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+  };
+  const header = cols.join(',');
+  const body = rows.map(r => cols.map(c => escape(r[c])).join(',')).join('\n');
+  const blob = new Blob([header + '\n' + body], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══ Sortable header cell ═════════════════════════════════════════════════════
+function SortTh({ col, label, align = 'r', width, sortCol, sortDir, onSort, colors, sticky = false, left = 0 }) {
+  const active = sortCol === col;
+  return (
+    <th onClick={() => onSort(col)} style={{
+      textAlign: align === 'l' ? 'left' : 'right', padding: '8px 8px',
+      fontSize: 9, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase',
+      fontFamily: MONO, whiteSpace: 'nowrap', minWidth: width,
+      cursor: 'pointer', userSelect: 'none',
+      color: active ? colors.accent : colors.dim,
+      background: colors.bg,
+      position: sticky ? 'sticky' : 'static', left: sticky ? left : 'auto',
+      zIndex: sticky ? 2 : 1,
+    }}>
+      {label}{active ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
+    </th>
+  );
+}
+
+// ═══ Hitters Table (also reused by Waiver and My Team) ════════════════════════
+function HittersTable({ rows, colors, editorialHeat, selected, setSelected, expanded, setExpanded,
+                        pinned, setPinned, sortCol, sortDir, onSort, lastColLabel = 'Risk', renderLastCell }) {
+  return (
+    <div style={{ overflow: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse', fontVariantNumeric: 'tabular-nums' }}>
+        <thead>
+          <tr style={{ borderBottom: `2px solid ${colors.text}` }}>
+            <SortTh col="rank"    label="Rk"      align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="name"    label="Player"  align="l" width={150} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} sticky left={36} />
+            <SortTh col="pa"      label="PA"      width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="pos"     label="Pos"     width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpos"    label="FPos"    width={60}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="proc"    label="Proc+"   width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <th style={{ textAlign:'right', padding:'8px 8px', fontSize:9, color:colors.dim, fontWeight:600, letterSpacing:1.5, textTransform:'uppercase', fontFamily:MONO }}>12W</th>
+            <SortTh col="procPos" label="ProcPos" width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="kavoid"  label="K-Avd+"  width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="power"   label="Power+"  width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="swing"   label="Swg%"    width={44}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="chase"   label="Chs%"    width={44}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="mc"      label="MC"      width={50}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="mci"     label="MCi"     width={50}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="blast"   label="Blast"   width={44}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="ev"      label="EV"      width={40}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpTotal"   label="FP"    width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpPerGame" label="FP/G"  width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="signal"  label="Signal"  width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <th style={{ textAlign:'right', padding:'8px 8px', fontSize:9, color:colors.dim, fontWeight:600, letterSpacing:1.5, textTransform:'uppercase', fontFamily:MONO, minWidth:90 }}>{lastColLabel}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((h, idx) => {
+            const isSel = selected === h.name;
+            const isExp = expanded === h.name;
+            const rowBg = isSel ? colors.panel : 'transparent';
+            return (
+              <React.Fragment key={`${h.name}-${idx}`}>
+                <tr onClick={() => setSelected(h.name)}
+                    onDoubleClick={() => setExpanded(isExp ? null : h.name)}
+                    style={{ borderBottom: `1px solid ${colors.faint}`, background: rowBg, cursor: 'pointer' }}>
+                  <td style={{ padding: '7px 8px', fontSize: 16, fontFamily: SERIF, fontStyle: 'italic',
+                               color: idx < 3 ? colors.accent : colors.dim, width: 36 }}>{idx + 1}</td>
+                  <td style={{ padding:'7px 8px', position:'sticky', left:36,
+                               background: rowBg === 'transparent' ? colors.bg : rowBg,
+                               whiteSpace:'nowrap', width:150, zIndex:1 }}>
+                    <span onClick={(e) => { e.stopPropagation();
+                      setPinned(pinned.includes(h.name) ? pinned.filter(x => x !== h.name) : [...pinned, h.name]); }}
+                      style={{ color: pinned.includes(h.name) ? colors.accent : colors.faint,
+                               marginRight: 6, cursor: 'pointer', fontSize: 11 }}>★</span>
+                    <span style={{ fontSize: 14, fontWeight: 500 }}>{h.name}</span>
+                  </td>
+                  <td style={dataCell(colors, h.pa < 100 ? colors.dim : colors.text)}>{h.pa}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.pos}</td>
+                  <td style={{ ...dataCell(colors, colors.dim), fontSize: 10 }}>{h.fpos}</td>
+                  <td style={{ padding: '5px 8px', textAlign:'right', background: editorialHeat(h.proc, 100, 150) }}>
+                    <span style={{ fontSize: 18, fontFamily: SERIF, fontStyle: 'italic', color: colors.accent }}>{fmt(h.proc, 1)}</span>
+                  </td>
+                  <td style={{ padding: '5px 8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                      <Sparkline data={window.SPARKS[h.name]} width={56} height={16} color={colors.dim} strokeWidth={1.2} />
+                    </div>
+                  </td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(h.procPos, 100, 170) }}>{fmt(h.procPos, 1)}</td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(h.kavoid, 85, 130) }}>{fmt(h.kavoid, 1)}</td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(h.power, 120, 170) }}>{fmt(h.power, 1)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(h.swing, 1)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(h.chase, 1)}</td>
+                  <td style={dataCell(colors)}>{fmt(h.mc, 3)}</td>
+                  <td style={dataCell(colors)}>{fmt(h.mci, 3)}</td>
+                  <td style={dataCell(colors, typeof h.blast === 'number' && h.blast >= 17 ? colors.pos : colors.text)}>{fmt(h.blast)}</td>
+                  <td style={dataCell(colors)}>{fmt(h.ev)}</td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(h.fpTotal, 30, 250) }}>
+                    {typeof h.fpTotal === 'number' ? Math.round(h.fpTotal) : '—'}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(h.fpPerGame, 2)}</td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right' }}>
+                    <span style={{ fontSize: 11, fontFamily: SERIF, fontStyle: 'italic',
+                                   color: h.signal === 'Top Target' ? colors.pos : colors.dim }}>
+                      {h.signal === 'Top Target' ? '“ buy ”' : `“ ${(h.signal || '').toLowerCase() || '—'} ”`}
+                    </span>
+                  </td>
+                  <td style={{ padding: '7px 8px', textAlign: 'right', fontSize: 10, fontFamily: MONO, letterSpacing: 0.3 }}>
+                    {renderLastCell ? renderLastCell(h, colors) : (
+                      h.flag && h.flag !== '—'
+                        ? <span style={{ padding:'1px 6px', border:`1px solid ${colors.warn}`, color:colors.warn, textTransform:'uppercase', whiteSpace:'nowrap' }}>⚑ {h.flag.split(',')[0].trim()}</span>
+                        : <span style={{ color: colors.faint }}>—</span>
+                    )}
+                  </td>
+                </tr>
+                {isExp && (
+                  <tr>
+                    <td colSpan={20} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
+                      <div style={{ display:'grid', gridTemplateColumns:'1.2fr 1fr 1fr', gap:24 }}>
+                        <div>
+                          <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>12-week trajectory</div>
+                          <Sparkline data={window.SPARKS[h.name]} width={240} height={48} color={colors.accent} fill strokeWidth={1.4} />
+                        </div>
+                        <div>
+                          <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>ESPN scoring</div>
+                          <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'4px 12px' }}>
+                            {[
+                              ['Total FP', typeof h.fpTotal === 'number' ? Math.round(h.fpTotal) : '—'],
+                              ['Per Game', fmt(h.fpPerGame, 2)],
+                              ['Projected', typeof h.fpProj === 'number' ? Math.round(h.fpProj) : '—'],
+                              ['Games', h.gp || '—'],
+                              ['% Owned', typeof h.pctOwned === 'number' ? `${h.pctOwned.toFixed(0)}%` : '—'],
+                              ['Status', h.espnStatus === 'ROSTER' ? (h.onTeam || 'Rostered') : (h.espnStatus || '—')],
+                            ].map(([lbl, val]) => (
+                              <div key={lbl}>
+                                <div style={{ fontSize:8, letterSpacing:2, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{lbl}</div>
+                                <div style={{ fontSize:13, fontFamily:MONO, color:colors.text }}>{val}</div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:8 }}>
+                          <button style={{ ...editorialBtn(colors), background: colors.accent, color: '#fff', borderColor: colors.accent }}>Full Player View →</button>
+                          <button style={editorialBtn(colors)}>Add to Compare</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══ Pitchers Table ═══════════════════════════════════════════════════════════
+function PitchersTable({ rows, colors, editorialHeat, sortCol, sortDir, onSort, expanded, setExpanded }) {
+  return (
+    <div style={{ overflow:'auto' }}>
+      <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+        <thead>
+          <tr style={{ borderBottom: `2px solid ${colors.text}` }}>
+            <SortTh col="rank"    label="Rk"       align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="name"    label="Pitcher"  align="l" width={170} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="pitches" label="Pitches"  width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="plv"     label="PLV"      width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="plvStd"  label="Std"      width={52}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="swing"   label="Swing%"   width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="whiff"   label="Whiff%"   width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="cs"      label="CS%"      width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xwoba"   label="xwOBA"    width={60}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="contact" label="Contact%" width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="pctile"  label="Pctile"   width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpTotal"   label="FP"     width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpPerGame" label="FP/G"   width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((p, idx) => {
+            const isExp = expanded === p.name;
+            return (
+              <React.Fragment key={`${p.name}-${idx}`}>
+                <tr onDoubleClick={() => setExpanded(isExp ? null : p.name)}
+                    style={{ borderBottom: `1px solid ${colors.faint}`, cursor: 'pointer' }}>
+                  <td style={{ padding:'7px 8px', fontSize:16, fontFamily:SERIF, fontStyle:'italic',
+                               color: idx < 3 ? colors.accent : colors.dim, width:36 }}>{idx + 1}</td>
+                  <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
+                    <span style={{ fontSize: 14, fontWeight: 500 }}>{p.name}</span>
+                  </td>
+                  <td style={dataCell(colors, p.pitches < 200 ? colors.dim : colors.text)}>{p.pitches}</td>
+                  <td style={{ padding:'5px 8px', textAlign:'right', background: editorialHeat(p.plv, 4.5, 6.0) }}>
+                    <span style={{ fontSize:18, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>{fmt(p.plv, 2)}</span>
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.plvStd, 2)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.swing, 1)}</td>
+                  <td style={dataCell(colors)}>{fmt(p.whiff, 1)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.cs, 1)}</td>
+                  <td style={dataCell(colors)}>{fmt(p.xwoba, 3)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.contact, 1)}</td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(p.pctile, 0, 100) }}>{fmt(p.pctile, 1)}</td>
+                  <td style={{ ...dataCell(colors), background: editorialHeat(p.fpTotal, 30, 250) }}>
+                    {typeof p.fpTotal === 'number' ? Math.round(p.fpTotal) : '—'}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.fpPerGame, 2)}</td>
+                </tr>
+                {isExp && (
+                  <tr>
+                    <td colSpan={13} style={{ padding:'14px 24px', background:colors.stripe }}>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
+                        <div>
+                          <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>PLV vs. league (qualified pitchers)</div>
+                          <div style={{ fontStyle:'italic', color:colors.dim, fontSize:11 }}>
+                            {p.name} ranks at the {fmt(p.pctile, 0)}th percentile by PLV.
+                            Whiff: {fmt(p.whiff, 1)}% · CS: {fmt(p.cs, 1)}% · xwOBA model: {fmt(p.xwoba, 3)}.
+                            {typeof p.fpTotal === 'number' && (
+                              <>{' '}ESPN: {Math.round(p.fpTotal)} FP across {p.gp || 0} apps ({fmt(p.fpPerGame, 2)} per app).</>
+                            )}
+                          </div>
+                        </div>
+                        <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:8 }}>
+                          <button style={{ ...editorialBtn(colors), background: colors.accent, color: '#fff', borderColor: colors.accent }}>Full Pitcher View →</button>
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ═══ Target card ══════════════════════════════════════════════════════════════
+function TargetCard({ h, colors }) {
+  const trendColor = h.rollingTrend === 'hot' ? colors.pos
+                   : h.rollingTrend === 'warm' ? colors.warn
+                   : h.rollingTrend === 'cold' ? colors.neg : colors.dim;
+  const tag = (h.tag || '').toString();
+  return (
+    <div style={{ borderTop: `1px solid ${colors.faint}`, paddingTop: 10 }}>
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+        <div style={{ fontStyle:'italic', fontFamily:SERIF, fontSize:20, color:colors.accent, lineHeight:1.1 }}>{h.name}</div>
+        <span style={{ fontFamily:MONO, fontSize:9, color:trendColor, textTransform:'uppercase', letterSpacing:1, paddingTop:4 }}>
+          ● {h.rollingTrend || '—'}
+        </span>
+      </div>
+      <div style={{ fontFamily:MONO, fontSize:10, color:colors.dim, marginTop:3 }}>
+        {h.pos || '—'} · {h.pa} PA · <span style={{ color: h.confidence === 'Signal' ? colors.pos : colors.warn }}>{h.confidence || '—'}</span>
+      </div>
+      <div style={{ display:'flex', gap:16, marginTop:8 }}>
+        {[['Proc+', h.proc], ['Power+', h.power], ['K-Avd+', h.kavoid]].map(([l, v]) => (
+          <div key={l}>
+            <div style={{ fontSize:8, letterSpacing:2, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{l}</div>
+            <div style={{ fontSize:18, fontStyle:'italic', fontFamily:SERIF, color:colors.text }}>{fmt(v, 1)}</div>
+          </div>
+        ))}
+      </div>
+      {tag && (
+        <div style={{ fontSize:11, fontStyle:'italic', color:colors.dim, marginTop:8, lineHeight:1.4 }}>
+          {tag.length > 120 ? tag.substring(0, 120) + '…' : tag}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ═══ Trend Chart ══════════════════════════════════════════════════════════════
+function TrendChart({ players, colors }) {
+  const W = 680, H = 220, PAD = { top:16, right:16, bottom:36, left:44 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  const allDates = [...new Set(
+    players.flatMap(name => (window.ROLLING[name] || []).map(r => r.date))
+  )].sort();
+
+  if (allDates.length === 0) {
+    return <div style={{ color: colors.dim, fontFamily: MONO, fontSize: 11 }}>No rolling data for selected players.</div>;
+  }
+
+  const xScale = i => PAD.left + (i / Math.max(1, allDates.length - 1)) * cw;
+  const yMin = 70, yMax = 170;
+  const yScale = v => PAD.top + ch - ((v - yMin) / (yMax - yMin)) * ch;
+
+  const LINE_COLORS = [colors.accent, colors.pos, '#6b9fd4', '#c17b3f', '#9b6bbf'];
+
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display:'block', maxWidth:'100%' }}>
+      {[80, 100, 120, 140, 160].map(v => (
+        <g key={v}>
+          <line x1={PAD.left} x2={W - PAD.right} y1={yScale(v)} y2={yScale(v)} stroke={colors.faint} strokeWidth={1} />
+          <text x={PAD.left - 6} y={yScale(v) + 4} textAnchor="end" fontSize={9} fill={colors.dim} fontFamily={MONO}>{v}</text>
+        </g>
+      ))}
+      <line x1={PAD.left} x2={W - PAD.right} y1={yScale(100)} y2={yScale(100)}
+            stroke={colors.dim} strokeWidth={1} strokeDasharray="3 3" />
+
+      {players.map((name, pi) => {
+        const data = (window.ROLLING[name] || []).slice().sort((a, b) => a.date.localeCompare(b.date));
+        if (!data.length) return null;
+        const pts = data.map(r => {
+          const xi = allDates.indexOf(r.date);
+          return `${xScale(xi)},${yScale(Math.max(yMin, Math.min(yMax, r.score)))}`;
+        }).join(' ');
+        const lc = LINE_COLORS[pi % LINE_COLORS.length];
+        const last = data[data.length - 1];
+        const lxi = allDates.indexOf(last.date);
+        const lly = yScale(Math.max(yMin, Math.min(yMax, last.score)));
+        return (
+          <g key={name}>
+            <polyline points={pts} fill="none" stroke={lc} strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round" />
+            <circle cx={xScale(lxi)} cy={lly} r={3} fill={lc} />
+            <text x={xScale(lxi) + 6} y={lly + 4} fontSize={9} fill={lc} fontFamily={MONO}>{lastName(name)}</text>
+          </g>
+        );
+      })}
+
+      {allDates.filter((_, i) => i % Math.max(1, Math.floor(allDates.length / 6)) === 0).map(d => {
+        const i = allDates.indexOf(d);
+        return (
+          <text key={d} x={xScale(i)} y={H - PAD.bottom + 14} textAnchor="middle"
+            fontSize={8} fill={colors.dim} fontFamily={MONO}>{d.slice(5)}</text>
+        );
+      })}
+    </svg>
+  );
+}
+
+// ═══ Section heading ══════════════════════════════════════════════════════════
+function SectionHeading({ num, label, right, colors }) {
+  return (
+    <div style={{ padding: '20px 32px 10px', display:'flex', alignItems:'baseline', gap:14 }}>
+      <span style={{ fontSize:10, letterSpacing:3, textTransform:'uppercase', color:colors.accent, fontFamily:MONO, flexShrink:0 }}>§ {num}</span>
+      <h2 style={{ fontSize:22, fontWeight:400, margin:0, fontStyle:'italic', letterSpacing:-0.3, whiteSpace:'nowrap', flexShrink:0 }}>{label}</h2>
+      <div style={{ flex:1, borderBottom:`1px solid ${colors.border}`, marginBottom:6, minWidth:20 }} />
+      {right && <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1, whiteSpace:'nowrap', flexShrink:0 }}>{right}</span>}
+    </div>
+  );
+}
+
+// ═══ Main component ═══════════════════════════════════════════════════════════
+function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinned }) {
+  const colors = dark ? {
+    bg: '#1a1815', panel: '#211e1a', stripe: '#1d1b17', border: '#34302a', text: '#f5f1ea',
+    dim: '#8d8579', faint: '#3a352e', accent: '#d97757',
+    pos: '#7fb069', neg: '#c1666b', warn: '#d4a945',
+  } : {
+    bg: '#f7f3ec', panel: '#fdfaf3', stripe: '#f3eee4', border: '#e3dccb', text: '#1a1815',
+    dim: '#7a7261', faint: '#d4ccba', accent: '#a8421f',
+    pos: '#56753f', neg: '#9d3540', warn: '#a8761f',
+  };
+  const editorialHeat = makeEditorialHeat(dark);
+
+  // ── Hitters tab state ──
+  const [search, setSearch]     = React.useState('');
+  const [posFlt, setPosFlt]     = React.useState([]);
+  const [minPa, setMinPa]       = React.useState(40);
+  const [minProc, setMinProc]   = React.useState(95);
+  const [powerFlt, setPowerFlt] = React.useState(0);
+  const [sortCol, setSortCol]   = React.useState('proc');
+  const [sortDir, setSortDir]   = React.useState('desc');
+  const [rowLimit, setRowLimit] = React.useState(50);
+  const [selected, setSelected] = React.useState(window.HITTERS[0]?.name || '');
+  const [expanded, setExpanded] = React.useState(null);
+  const [compareOpen, setCompareOpen] = React.useState(false);
+
+  // ── Pitchers tab state ──
+  const [pSort, setPSort] = React.useState('plv');
+  const [pDir, setPDir]   = React.useState('desc');
+  const [pMinPitches, setPMinPitches] = React.useState(100);
+  const [pSearch, setPSearch] = React.useState('');
+  const [pRows, setPRows] = React.useState(50);
+  const [pExp, setPExp]   = React.useState(null);
+
+  // ── Trends tab state ──
+  const trendDefault = React.useMemo(() =>
+    Object.keys(window.ROLLING).slice(0, 3), []);
+  const [trendPlayers, setTrendPlayers] = React.useState(trendDefault);
+  const [trendSearch, setTrendSearch]   = React.useState('');
+
+  // ── Waiver tab state (separate selection so it doesn't fight Hitters) ──
+  const [wSelected, setWSelected] = React.useState(window.WAIVER[0]?.name || '');
+  const [wExpanded, setWExpanded] = React.useState(null);
+  const [wSort, setWSort] = React.useState('proc');
+  const [wDir, setWDir]   = React.useState('desc');
+
+  // ── Hitters: handle sort ──
+  function handleSort(col) {
+    if (sortCol === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setSortCol(col); setSortDir('desc'); }
+  }
+  function handlePSort(col) {
+    if (pSort === col) setPDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setPSort(col); setPDir('desc'); }
+  }
+  function handleWSort(col) {
+    if (wSort === col) setWDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setWSort(col); setWDir('desc'); }
+  }
+
+  // ── Filter + sort hitters ──
+  const filteredHitters = React.useMemo(() => {
+    let rows = window.HITTERS.filter(h => {
+      if (search && !h.name.toLowerCase().includes(search.toLowerCase())) return false;
+      if (typeof h.pa === 'number' && h.pa < minPa) return false;
+      if (typeof h.proc === 'number' && h.proc < minProc) return false;
+      if (powerFlt > 0 && (typeof h.power !== 'number' || h.power < powerFlt)) return false;
+      if (posFlt.length > 0) {
+        const fposTokens = (h.fpos || '').split(/[,\s|]+/).map(t => t.trim()).filter(Boolean);
+        const all = [h.pos, ...fposTokens];
+        if (!posFlt.some(p => all.includes(p))) return false;
+      }
+      return true;
+    });
+    rows = [...rows].sort((a, b) => {
+      const av = a[sortCol], bv = b[sortCol];
+      const aNum = typeof av === 'number' ? av : -Infinity;
+      const bNum = typeof bv === 'number' ? bv : -Infinity;
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return sortDir === 'asc' ? aNum - bNum : bNum - aNum;
+    });
+    return rows.slice(0, rowLimit);
+  }, [search, posFlt, minPa, minProc, powerFlt, sortCol, sortDir, rowLimit]);
+
+  // ── Filter + sort pitchers ──
+  const filteredPitchers = React.useMemo(() => {
+    let rows = window.PITCHERS.filter(p => {
+      if (pSearch && !p.name.toLowerCase().includes(pSearch.toLowerCase())) return false;
+      if (typeof p.pitches === 'number' && p.pitches < pMinPitches) return false;
+      return true;
+    });
+    rows = [...rows].sort((a, b) => {
+      const av = a[pSort], bv = b[pSort];
+      const aNum = typeof av === 'number' ? av : -Infinity;
+      const bNum = typeof bv === 'number' ? bv : -Infinity;
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return pDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return pDir === 'asc' ? aNum - bNum : bNum - aNum;
+    });
+    return rows.slice(0, pRows);
+  }, [pSearch, pMinPitches, pSort, pDir, pRows]);
+
+  // ── Sort waiver ──
+  const sortedWaiver = React.useMemo(() => {
+    const rows = [...window.WAIVER].sort((a, b) => {
+      const av = a[wSort], bv = b[wSort];
+      const aNum = typeof av === 'number' ? av : -Infinity;
+      const bNum = typeof bv === 'number' ? bv : -Infinity;
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return wDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return wDir === 'asc' ? aNum - bNum : bNum - aNum;
+    });
+    return rows;
+  }, [wSort, wDir]);
+
+  // ── Lede leaders ──
+  // Lede leader needs a meaningful sample — drop ultra-low-PA outliers from the headline pick
+  const LEDE_MIN_PA = 40;
+  const ledePool = window.HITTERS.filter(h => typeof h.pa === 'number' && h.pa >= LEDE_MIN_PA);
+  const sel = window.HITTERS.find(h => h.name === selected) || ledePool[0] || window.HITTERS[0] || { name:'—', proc:0, kavoid:0, power:0, swing:0 };
+  const leader = ledePool[0] || window.HITTERS[0] || {};
+  const powerLeader  = [...ledePool].sort((a, b) => (typeof b.power  === 'number' ? b.power  : -Infinity) - (typeof a.power  === 'number' ? a.power  : -Infinity))[0] || {};
+  const kavoidLeader = [...ledePool].sort((a, b) => (typeof b.kavoid === 'number' ? b.kavoid : -Infinity) - (typeof a.kavoid === 'number' ? a.kavoid : -Infinity))[0] || {};
+  const hottestPlayer = window.HITTERS.reduce((best, h) => {
+    const spark = window.SPARKS[h.name] || [];
+    if (spark.length < 2) return best;
+    const delta = spark[spark.length - 1] - spark[Math.max(0, spark.length - 4)];
+    return (!best || delta > best.delta) ? { ...h, delta } : best;
+  }, null) || {};
+  const stealth = window.HITTERS.find(h =>
+    (h.sample === 'Too Small' || h.sample === 'Small') && typeof h.procPos === 'number' && typeof h.proc === 'number' && h.procPos > h.proc
+  ) || {};
+
+  // ── Presets ──
+  const PRESETS = [
+    { label:'My OF Targets', apply: () => { setActiveTab('hitters'); setPosFlt(['OF']); setMinProc(110); setMinPa(40); setPowerFlt(0); setSearch(''); } },
+    { label:'Catchers',      apply: () => { setActiveTab('hitters'); setPosFlt(['C']);  setMinProc(95);  setMinPa(40); setPowerFlt(0); setSearch(''); } },
+    { label:'Power+ > 130',  apply: () => { setActiveTab('hitters'); setPosFlt([]);     setMinProc(95);  setMinPa(40); setPowerFlt(130); setSearch(''); setSortCol('power'); setSortDir('desc'); } },
+  ];
+
+  // ── Tab rendering ──
+  const renderHittersTab = () => (
+    <>
+      {/* Lede */}
+      <div style={{ padding:'20px 32px 18px', borderBottom:`1px solid ${colors.border}`, display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:32 }}>
+        <div>
+          <div style={{ fontSize:10, letterSpacing:3, textTransform:'uppercase', color:colors.accent, fontFamily:MONO, marginBottom:8 }}>Lede · Hitter Spotlight</div>
+          <h2 style={{ fontSize:26, fontWeight:400, lineHeight:1.15, margin:0, letterSpacing:-0.5 }}>
+            <span style={{ fontStyle:'italic' }}>{leader.name || '—'}</span> tops the early-season leaderboard at{' '}
+            <span style={{ color:colors.accent, fontVariantNumeric:'tabular-nums' }}>{fmt(leader.proc, 1)}</span> Process+
+          </h2>
+          <p style={{ fontSize:13, color:colors.dim, margin:'8px 0 0', fontStyle:'italic', lineHeight:1.5 }}>
+            Sample size remains {leader.sample === 'Too Small' ? 'very small' : 'small'} ({leader.pa || '—'} PA),
+            but the underlying signal is strong: a {fmt(leader.power, 1)} Power+ and a top-decile Process+ both flag {lastName(leader.name)} as a buy candidate.
+            {leader.sample === 'Too Small' ? ' Weight against the small sample.' : ''}
+          </p>
+          <div style={{ display:'flex', gap:12, marginTop:10, fontSize:10, fontFamily:MONO, color:colors.dim, textTransform:'uppercase', letterSpacing:1.2, alignItems:'center', flexWrap:'wrap' }}>
+            <span>{leader.pa || '—'} PA</span><span style={{ color:colors.faint }}>·</span>
+            <span>{leader.pos || '—'}</span><span style={{ color:colors.faint }}>·</span>
+            <span>{leader.flag && leader.flag !== '—' ? leader.flag.split(',')[0].trim() : (leader.signal || '—')}</span>
+          </div>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 24px' }}>
+          {[
+            { lbl:'Power+ Leader', name:initials(powerLeader.name),  v:fmt(powerLeader.power, 1),  delta:'+leader', spark:window.SPARKS[powerLeader.name],  pos:true },
+            { lbl:'K-Avoidance',   name:initials(kavoidLeader.name), v:fmt(kavoidLeader.kavoid,1), delta:'+leader', spark:window.SPARKS[kavoidLeader.name], pos:true },
+            { lbl:'Hottest 7d',    name:initials(hottestPlayer.name),v:typeof hottestPlayer.delta === 'number' ? `+${hottestPlayer.delta.toFixed(1)}` : '—', delta:'proc+', spark:window.SPARKS[hottestPlayer.name], pos:true },
+            { lbl:'Stealth',       name:initials(stealth.name),      v:fmt(stealth.proc, 1),       delta:stealth.sample || 'small N', spark:window.SPARKS[stealth.name], pos:false },
+          ].map(c => (
+            <div key={c.lbl} style={{ borderTop:`1px solid ${colors.faint}`, paddingTop:6 }}>
+              <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>{c.lbl}</div>
+              <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginTop:4 }}>
+                <div>
+                  <div style={{ fontSize:20, fontFamily:SERIF, fontStyle:'italic', color:colors.accent, letterSpacing:-0.5, lineHeight:1 }}>{c.v}</div>
+                  <div style={{ fontSize:11, marginTop:4 }}>{c.name}</div>
+                  <div style={{ fontSize:10, color: c.pos ? colors.pos : colors.warn, fontFamily:MONO, letterSpacing:0.5 }}>{c.delta}</div>
+                </div>
+                <Sparkline data={c.spark} width={40} height={20} color={colors.accent} fill strokeWidth={1.4} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Filter strip */}
+      <div style={{ padding:'8px 32px', display:'flex', gap:18, alignItems:'center', fontSize:10, fontFamily:MONO, textTransform:'uppercase', letterSpacing:1.5, borderBottom:`1px solid ${colors.border}`, background:colors.stripe, flexWrap:'wrap' }}>
+        <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+          <span style={{ color:colors.dim, marginRight:4 }}>Pos</span>
+          {['All', ...POS_OPTIONS].map(p => {
+            const active = p === 'All' ? posFlt.length === 0 : posFlt.includes(p);
+            return (
+              <span key={p} onClick={() => {
+                if (p === 'All') setPosFlt([]);
+                else setPosFlt(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+              }} style={{
+                padding:'2px 7px', borderRadius:2, cursor:'pointer', fontSize:10,
+                fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
+                border:`1px solid ${active ? colors.accent : colors.border}`,
+                color: active ? colors.accent : colors.dim,
+                background: active ? `${colors.accent}18` : 'transparent',
+              }}>{p}</span>
+            );
+          })}
+        </div>
+
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min PA
+          <input type="number" value={minPa} onChange={e => setMinPa(+e.target.value || 0)}
+            style={{ width:48, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min Proc+
+          <input type="number" value={minProc} onChange={e => setMinProc(+e.target.value || 0)}
+            style={{ width:48, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min Pwr+
+          <input type="number" value={powerFlt} onChange={e => setPowerFlt(+e.target.value || 0)}
+            style={{ width:48, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Rows
+          <select value={rowLimit} onChange={e => setRowLimit(+e.target.value)}
+            style={{ padding:'2px 4px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11 }}>
+            {[25, 50, 100, 999].map(n => <option key={n} value={n}>{n === 999 ? 'All' : n}</option>)}
+          </select>
+        </label>
+
+        <div style={{ flex:1 }} />
+        <span style={{ color:colors.dim }}>{filteredHitters.length} / {window.HITTERS.length} hitters</span>
+      </div>
+
+      <SectionHeading num="I" label="The Leaderboard" right={`SORTED BY ${sortCol.toUpperCase()} ${sortDir === 'desc' ? '↓' : '↑'}`} colors={colors} />
+
+      <div style={{ padding:'0 32px 24px' }}>
+        <HittersTable
+          rows={filteredHitters} colors={colors} editorialHeat={editorialHeat}
+          selected={selected} setSelected={setSelected}
+          expanded={expanded} setExpanded={setExpanded}
+          pinned={pinned} setPinned={setPinned}
+          sortCol={sortCol} sortDir={sortDir} onSort={handleSort}
+        />
+        <div style={{ paddingTop:10, fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1, textAlign:'right' }}>
+          ↳ CLICK ROW TO SELECT · DOUBLE-CLICK TO EXPAND · ★ TO PIN · CLICK HEADER TO SORT
+        </div>
+      </div>
+
+      {/* § II distributions */}
+      <div style={{ padding:'0 32px 32px' }}>
+        <div style={{ padding:'0 0 10px', display:'flex', alignItems:'baseline', gap:14 }}>
+          <span style={{ fontSize:10, letterSpacing:3, textTransform:'uppercase', color:colors.accent, fontFamily:MONO, flexShrink:0 }}>§ II</span>
+          <h2 style={{ fontSize:22, fontWeight:400, margin:0, fontStyle:'italic', letterSpacing:-0.3 }}>Where {lastName(sel.name)} stands</h2>
+          <div style={{ flex:1, borderBottom:`1px solid ${colors.border}`, marginBottom:6, minWidth:20 }} />
+          <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1, whiteSpace:'nowrap' }}>COMPONENT DISTRIBUTIONS</span>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:16 }}>
+          {[
+            { k:'Process+', d:window.DISTRIBUTIONS.proc,   v:sel.proc,   range:[70, 170] },
+            { k:'K-Avoid+', d:window.DISTRIBUTIONS.kavoid, v:sel.kavoid, range:[60, 140] },
+            { k:'Power+',   d:window.DISTRIBUTIONS.power,  v:sel.power,  range:[60, 170] },
+            { k:'Swing%',   d:window.DISTRIBUTIONS.swing,  v:sel.swing,  range:[20, 60] },
+          ].map(d => (
+            <div key={d.k} style={{ borderTop:`1px solid ${colors.faint}`, paddingTop:8 }}>
+              <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>{d.k}</div>
+              <div style={{ display:'flex', alignItems:'baseline', gap:6, marginTop:2 }}>
+                <span style={{ fontSize:18, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>{fmt(d.v, 1)}</span>
+                <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO }}>μ = {d.d.mean}</span>
+              </div>
+              <div style={{ marginTop:4 }}>
+                <Histogram bins={d.d.bins} mean={d.d.mean} label=""
+                  highlightPct={typeof d.v === 'number' ? (d.v - d.range[0]) / (d.range[1] - d.range[0]) : null}
+                  width={220} height={40} color={colors.dim} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+
+  const renderPitchersTab = () => (
+    <>
+      <div style={{ padding:'8px 32px', display:'flex', gap:18, alignItems:'center', fontSize:10, fontFamily:MONO, textTransform:'uppercase', letterSpacing:1.5, borderBottom:`1px solid ${colors.border}`, background:colors.stripe }}>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Search
+          <input type="text" value={pSearch} onChange={e => setPSearch(e.target.value)}
+            placeholder="pitcher..."
+            style={{ width:140, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.text, fontFamily:SERIF, fontStyle:'italic', fontSize:12 }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min Pitches
+          <input type="number" value={pMinPitches} onChange={e => setPMinPitches(+e.target.value || 0)}
+            style={{ width:54, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Rows
+          <select value={pRows} onChange={e => setPRows(+e.target.value)}
+            style={{ padding:'2px 4px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11 }}>
+            {[25, 50, 100, 999].map(n => <option key={n} value={n}>{n === 999 ? 'All' : n}</option>)}
+          </select>
+        </label>
+        <div style={{ flex:1 }} />
+        <span style={{ color:colors.dim }}>{filteredPitchers.length} / {window.PITCHERS.length} pitchers</span>
+      </div>
+
+      <SectionHeading num="I" label="The Pitching Leaderboard" right="RANKED BY PLV" colors={colors} />
+      <div style={{ padding:'0 32px 32px' }}>
+        <PitchersTable rows={filteredPitchers} colors={colors} editorialHeat={editorialHeat}
+          sortCol={pSort} sortDir={pDir} onSort={handlePSort} expanded={pExp} setExpanded={setPExp} />
+        <div style={{ paddingTop:10, fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1, textAlign:'right' }}>
+          ↳ DOUBLE-CLICK TO EXPAND · CLICK HEADER TO SORT
+        </div>
+      </div>
+    </>
+  );
+
+  const renderTargetsTab = () => {
+    const boards = [
+      { num:'I',   label:'Buy Targets',     rows: window.TARGETS.buy },
+      { num:'II',  label:'Pre-Breakout',    rows: window.TARGETS.preBreakout },
+      { num:'III', label:'Breakout Flags',  rows: window.TARGETS.breakout },
+    ];
+    return (
+      <>
+        {boards.map(b => (
+          <React.Fragment key={b.num}>
+            <SectionHeading num={b.num} label={b.label} right={`${b.rows.length} PLAYER${b.rows.length === 1 ? '' : 'S'}`} colors={colors} />
+            <div style={{ padding:'0 32px 28px' }}>
+              {b.rows.length === 0 ? (
+                <div style={{ fontStyle:'italic', color:colors.dim, fontSize:13, paddingTop:8 }}>No qualifying players this week.</div>
+              ) : (
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'18px 32px' }}>
+                  {b.rows.map((h, i) => <TargetCard key={`${h.name}-${i}`} h={h} colors={colors} />)}
+                </div>
+              )}
+            </div>
+          </React.Fragment>
+        ))}
+      </>
+    );
+  };
+
+  const renderTrendsTab = () => {
+    // Comprehensive name list: union of leaderboard + my-team + waiver + anyone with rolling data
+    const _nameSet = new Set([
+      ...window.HITTERS.map(h => h.name),
+      ...window.MY_TEAM.hitters.map(h => h.name),
+      ...window.WAIVER.map(h => h.name),
+      ...Object.keys(window.ROLLING || {}),
+    ]);
+    const allNames = [..._nameSet].filter(Boolean).sort();
+    const filteredNames = allNames.filter(n =>
+      !trendSearch || n.toLowerCase().includes(trendSearch.toLowerCase()));
+    return (
+      <>
+        <SectionHeading num="I" label="Rolling Trajectories" right="ROLLING PROCESS+ TREND" colors={colors} />
+        <div style={{ padding:'0 32px 32px', display:'grid', gridTemplateColumns:'280px 1fr', gap:24 }}>
+          <div>
+            <input type="text" placeholder="search players..." value={trendSearch}
+              onChange={e => setTrendSearch(e.target.value)}
+              style={{ width:'100%', padding:'6px 10px', border:`1px solid ${colors.border}`, borderRadius:2,
+                       background:colors.panel, color:colors.text, fontFamily:SERIF, fontStyle:'italic', fontSize:12, marginBottom:8 }} />
+            <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, padding:'4px 0' }}>
+              Selected · {trendPlayers.length} / 5 max
+            </div>
+            <div style={{ maxHeight:380, overflow:'auto', border:`1px solid ${colors.border}`, borderRadius:2, background:colors.panel }}>
+              {filteredNames.map(name => {
+                const isOn = trendPlayers.includes(name);
+                return (
+                  <div key={name} onClick={() => {
+                    if (isOn) setTrendPlayers(trendPlayers.filter(n => n !== name));
+                    else if (trendPlayers.length < 5) setTrendPlayers([...trendPlayers, name]);
+                  }} style={{
+                    padding:'6px 10px', cursor:'pointer',
+                    background: isOn ? colors.stripe : 'transparent',
+                    borderBottom:`1px solid ${colors.faint}`,
+                    display:'flex', alignItems:'center', gap:8,
+                    fontFamily:SERIF, fontSize:13,
+                    color: isOn ? colors.accent : colors.text,
+                  }}>
+                    <span style={{ color: isOn ? colors.accent : colors.faint, fontSize:12 }}>{isOn ? '●' : '○'}</span>
+                    <span style={{ fontStyle:'italic' }}>{name}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div style={{ background:colors.panel, border:`1px solid ${colors.border}`, padding:16, borderRadius:2 }}>
+            <TrendChart players={trendPlayers} colors={colors} />
+            <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, marginTop:6, letterSpacing:1, textTransform:'uppercase' }}>
+              Y axis · Process+ scale (70–170) · 100 = league average
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
+  const renderWaiverTab = () => (
+    <>
+      <SectionHeading num="I" label="Waiver Wire" right="RANKED BY PROCESS+" colors={colors} />
+      <div style={{ padding:'0 32px 12px' }}>
+        <p style={{ fontSize:13, fontStyle:'italic', color:colors.dim, margin:0, lineHeight:1.5 }}>
+          Players with strong underlying process not yet reflected in results or ownership. Weight by sample tier.
+        </p>
+      </div>
+      <div style={{ padding:'0 32px 32px' }}>
+        <HittersTable
+          rows={sortedWaiver} colors={colors} editorialHeat={editorialHeat}
+          selected={wSelected} setSelected={setWSelected}
+          expanded={wExpanded} setExpanded={setWExpanded}
+          pinned={pinned} setPinned={setPinned}
+          sortCol={wSort} sortDir={wDir} onSort={handleWSort}
+          lastColLabel="Angle"
+          renderLastCell={(h, c) => {
+            const procIsHigh = typeof h.proc === 'number' && h.proc > 115;
+            const tier = h.sample || '—';
+            const color = tier === 'Too Small' ? c.warn : procIsHigh ? c.pos : c.dim;
+            return <span style={{ padding:'1px 6px', border:`1px solid ${color}`, color, textTransform:'uppercase', whiteSpace:'nowrap' }}>{tier}</span>;
+          }}
+        />
+      </div>
+    </>
+  );
+
+  const renderMyTeamTab = () => {
+    const team = window.MY_TEAM;
+    const teamHitters  = team.hitters  || [];
+    const teamPitchers = team.pitchers || [];
+    const teamLabel    = team.teamName || 'My Team';
+
+    if (!teamHitters.length && !teamPitchers.length) {
+      return (
+        <>
+          <SectionHeading num="I" label="My Team" right="ESPN ROSTER" colors={colors} />
+          <div style={{ padding:'40px 32px', textAlign:'center' }}>
+            <div style={{ fontStyle:'italic', color:colors.dim, fontSize:14, marginBottom:8 }}>
+              ESPN roster unavailable.
+            </div>
+            {team.error && (
+              <div style={{ fontFamily:MONO, fontSize:10, color:colors.warn, letterSpacing:1 }}>
+                {team.error}
+              </div>
+            )}
+            <div style={{ fontStyle:'italic', color:colors.dim, fontSize:12, marginTop:12 }}>
+              Re-run <code style={{ fontFamily:MONO, color:colors.accent }}>python scripts/generate_report.py</code> with valid ESPN cookies.
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    // Sort hitters by Proc+ desc (NaN/"—" sink to bottom)
+    const sortedHitters = [...teamHitters].sort((a, b) => {
+      const av = typeof a.proc === 'number' ? a.proc : -Infinity;
+      const bv = typeof b.proc === 'number' ? b.proc : -Infinity;
+      return bv - av;
+    });
+    const sortedPitchers = [...teamPitchers].sort((a, b) => {
+      const av = typeof a.plv === 'number' ? a.plv : -Infinity;
+      const bv = typeof b.plv === 'number' ? b.plv : -Infinity;
+      return bv - av;
+    });
+
+    // Roster summary stats
+    const statedHitters  = teamHitters.filter(h => typeof h.proc === 'number');
+    const meanProc = statedHitters.length
+      ? (statedHitters.reduce((s, h) => s + h.proc, 0) / statedHitters.length) : null;
+
+    const allRoster = [...teamHitters, ...teamPitchers];
+    const fpRoster = allRoster.filter(p => typeof p.fpTotal === 'number');
+    const totalFp  = fpRoster.reduce((s, p) => s + p.fpTotal, 0);
+    const totalGp  = fpRoster.reduce((s, p) => s + (p.gp || 0), 0);
+    const meanFpPerGame = totalGp > 0 ? totalFp / totalGp : null;
+    const projTotal = allRoster.filter(p => typeof p.fpProj === 'number')
+                               .reduce((s, p) => s + p.fpProj, 0);
+
+    return (
+      <>
+        <SectionHeading num="I" label={teamLabel}
+          right={`${teamHitters.length} HITTERS · ${teamPitchers.length} PITCHERS`} colors={colors} />
+
+        {/* Roster summary */}
+        <div style={{ padding:'0 32px 12px', display:'flex', gap:32, alignItems:'baseline', flexWrap:'wrap' }}>
+          <p style={{ fontSize:13, fontStyle:'italic', color:colors.dim, margin:0, lineHeight:1.5, flex:'1 1 280px' }}>
+            Live roster from ESPN · {teamLabel}. Use ★ in Hitters/Waiver to build a watchlist, then COMPARE to stack candidates against your team.
+          </p>
+          {[
+            ['Mean Proc+',    meanProc != null ? meanProc.toFixed(1) : '—'],
+            ['Total FP',      totalFp > 0 ? Math.round(totalFp).toLocaleString() : '—'],
+            ['FP / Game',     meanFpPerGame != null ? meanFpPerGame.toFixed(2) : '—'],
+            ['Projected',     projTotal > 0 ? Math.round(projTotal).toLocaleString() : '—'],
+          ].map(([lbl, val]) => (
+            <div key={lbl}>
+              <div style={{ fontSize:9, letterSpacing:2, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{lbl}</div>
+              <div style={{ fontSize:22, fontStyle:'italic', fontFamily:SERIF, color:colors.accent, lineHeight:1 }}>{val}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Hitters table */}
+        {sortedHitters.length > 0 && (
+          <div style={{ padding:'0 32px 24px' }}>
+            <HittersTable
+              rows={sortedHitters} colors={colors} editorialHeat={editorialHeat}
+              selected={selected} setSelected={setSelected}
+              expanded={expanded} setExpanded={setExpanded}
+              pinned={pinned} setPinned={setPinned}
+              sortCol="proc" sortDir="desc" onSort={() => {}}
+              lastColLabel="ESPN Slot"
+              renderLastCell={(h, c) => (
+                <span style={{ fontFamily:MONO, fontSize:10, color:c.dim, letterSpacing:1, textTransform:'uppercase' }}>
+                  {h.espnPos || '—'}
+                </span>
+              )}
+            />
+          </div>
+        )}
+
+        {/* Pitchers table */}
+        {sortedPitchers.length > 0 && (
+          <>
+            <div style={{ padding:'8px 32px 6px', display:'flex', alignItems:'baseline', gap:14 }}>
+              <span style={{ fontSize:10, letterSpacing:3, textTransform:'uppercase', color:colors.accent, fontFamily:MONO, flexShrink:0 }}>§ II</span>
+              <h2 style={{ fontSize:18, fontWeight:400, margin:0, fontStyle:'italic', letterSpacing:-0.3 }}>Pitching staff</h2>
+              <div style={{ flex:1, borderBottom:`1px solid ${colors.border}`, marginBottom:6, minWidth:20 }} />
+              <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1, whiteSpace:'nowrap' }}>RANKED BY PLV</span>
+            </div>
+            <div style={{ padding:'0 32px 32px' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+                <thead>
+                  <tr style={{ borderBottom: `2px solid ${colors.text}` }}>
+                    {[['Player','l',150], ['Slot','r',60], ['Team','r',46], ['Pitches','r',56],
+                      ['PLV','r',64], ['Whiff%','r',56], ['CS%','r',48], ['xwOBA','r',60], ['Pctile','r',56],
+                      ['FP','r',48], ['FP/G','r',48]].map(([lbl, a, w]) => (
+                      <th key={lbl} style={{
+                        textAlign: a === 'l' ? 'left' : 'right', padding:'8px 8px',
+                        fontSize:9, color:colors.dim, fontWeight:600, letterSpacing:1.5, textTransform:'uppercase',
+                        fontFamily:MONO, whiteSpace:'nowrap', minWidth:w,
+                      }}>{lbl}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedPitchers.map((p, i) => (
+                    <tr key={`${p.name}-${i}`} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                      <td style={{ padding:'7px 8px', fontSize:14, fontWeight:500 }}>{p.name}</td>
+                      <td style={dataCell(colors, colors.dim)}>{p.espnPos || '—'}</td>
+                      <td style={dataCell(colors, colors.dim)}>{p.proTeam || '—'}</td>
+                      <td style={dataCell(colors, p.pitches < 200 ? colors.dim : colors.text)}>{p.pitches || '—'}</td>
+                      <td style={{ padding:'5px 8px', textAlign:'right', background: editorialHeat(p.plv, 4.5, 6.0) }}>
+                        <span style={{ fontSize:16, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>{fmt(p.plv, 2)}</span>
+                      </td>
+                      <td style={dataCell(colors)}>{fmt(p.whiff, 1)}</td>
+                      <td style={dataCell(colors, colors.dim)}>{fmt(p.cs, 1)}</td>
+                      <td style={dataCell(colors)}>{fmt(p.xwoba, 3)}</td>
+                      <td style={{ ...dataCell(colors), background: editorialHeat(p.pctile, 0, 100) }}>{fmt(p.pctile, 1)}</td>
+                      <td style={{ ...dataCell(colors), background: editorialHeat(p.fpTotal, 30, 250) }}>
+                        {typeof p.fpTotal === 'number' ? Math.round(p.fpTotal) : '—'}
+                      </td>
+                      <td style={dataCell(colors, colors.dim)}>{fmt(p.fpPerGame, 2)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
+
+  return (
+    <div style={{
+      '--bg': colors.bg, '--panel': colors.panel, '--border': colors.border,
+      '--text': colors.text, '--dim': colors.dim, '--accent': colors.accent,
+      '--pos': colors.pos, '--neg': colors.neg, '--hover': colors.stripe, '--selected': colors.panel,
+      background: colors.bg, color: colors.text,
+      fontFamily: SERIF, fontSize: 13, lineHeight: 1.5, minHeight: '100vh', overflow:'auto',
+    }}>
+      {/* Masthead */}
+      <div style={{ padding:'20px 32px 14px', borderBottom:`2px solid ${colors.text}`, display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:24 }}>
+        <div>
+          <div style={{ fontSize:9, letterSpacing:4, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>{window.REPORT_META}</div>
+          <h1 style={{ fontSize:32, fontWeight:400, margin:'2px 0 0', letterSpacing:-0.5, fontStyle:'italic', whiteSpace:'nowrap' }}>The Process Report</h1>
+        </div>
+        <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+          <div style={{ position:'relative' }}>
+            <input placeholder="search players..." value={search} onChange={e => setSearch(e.target.value)}
+              style={{ padding:'6px 10px 6px 26px', border:`1px solid ${colors.border}`, borderRadius:2,
+                       background:colors.panel, color:colors.text, fontSize:12, width:180, outline:'none',
+                       fontFamily:SERIF, fontStyle:'italic' }} />
+            <svg width="11" height="11" viewBox="0 0 11 11" fill="none" stroke={colors.dim} strokeWidth="1.5" style={{ position:'absolute', left:9, top:9 }}>
+              <circle cx="4.5" cy="4.5" r="3.5" /><path d="M7.5 7.5l2.5 2.5" strokeLinecap="round" />
+            </svg>
+          </div>
+          <button onClick={() => exportCSV(filteredHitters, ['rank','name','pa','pos','fpos','proc','procPos','kavoid','power','swing','chase','mc','mci','blast','ev','signal','flag','sample'], 'process_report_hitters.csv')} style={editorialBtn(colors)}>CSV</button>
+          <button onClick={() => setCompareOpen(o => !o)} style={editorialBtn(colors)}>COMPARE · {pinned.length}</button>
+        </div>
+      </div>
+
+      {/* Compare panel (inline, full-width) — Watchlist + My Team */}
+      {compareOpen && (() => {
+        // Resolve pinned names against HITTERS first, then MY_TEAM hitters
+        const watchRows = pinned.map(n =>
+          window.HITTERS.find(x => x.name === n)
+          || window.MY_TEAM.hitters.find(x => x.name === n)
+        ).filter(Boolean).slice(0, 5);
+        const teamRows  = window.MY_TEAM.hitters
+          .filter(h => typeof h.proc === 'number')
+          .sort((a, b) => b.proc - a.proc).slice(0, 5);
+
+        if (watchRows.length === 0 && teamRows.length === 0) {
+          return (
+            <div style={{ padding:'16px 32px', background:colors.stripe, borderBottom:`1px solid ${colors.border}`, fontStyle:'italic', color:colors.dim }}>
+              Nothing to compare. Pin players with ★ or load your team via ESPN.
+            </div>
+          );
+        }
+
+        const Card = ({ h, onRemove }) => (
+          <div style={{ borderTop:`2px solid ${colors.accent}`, paddingTop:10 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start' }}>
+              <div style={{ fontStyle:'italic', fontFamily:SERIF, fontSize:18, color:colors.text }}>{h.name}</div>
+              {onRemove && <span onClick={onRemove} style={{ color:colors.faint, cursor:'pointer', fontSize:12 }}>×</span>}
+            </div>
+            <div style={{ fontFamily:MONO, fontSize:10, color:colors.dim, marginTop:4 }}>
+              {h.pos || h.espnPos || '—'} · {h.pa} PA · {h.sample || '—'}
+              {h.proTeam ? ` · ${h.proTeam}` : ''}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'6px 16px', marginTop:12 }}>
+              {[['Proc+', h.proc, 1], ['ProcPos', h.procPos, 1],
+                ['K-Avd+', h.kavoid, 1], ['Power+', h.power, 1],
+                ['FP Total', h.fpTotal, 0], ['FP / Game', h.fpPerGame, 2],
+                ['Blast', h.blast, 1], ['EV', h.ev, 1]].map(([lbl, val, d]) => (
+                <div key={lbl}>
+                  <div style={{ fontSize:9, letterSpacing:2, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{lbl}</div>
+                  <div style={{ fontSize:16, fontStyle:'italic', fontFamily:SERIF, color:colors.accent }}>{fmt(val, d)}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop:8 }}>
+              <Sparkline data={window.SPARKS[h.name]} width={200} height={32} color={colors.accent} fill strokeWidth={1.4} />
+            </div>
+          </div>
+        );
+
+        const SectionLabel = ({ children }) => (
+          <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, fontWeight:600, marginBottom:10 }}>
+            {children}
+          </div>
+        );
+
+        return (
+          <div style={{ padding:'16px 32px', background:colors.stripe, borderBottom:`1px solid ${colors.border}` }}>
+            {watchRows.length > 0 && (
+              <>
+                <SectionLabel>★ Watchlist · {watchRows.length}</SectionLabel>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:24, marginBottom: teamRows.length > 0 ? 24 : 0 }}>
+                  {watchRows.map(h => (
+                    <Card key={`w-${h.name}`} h={h}
+                      onRemove={() => setPinned(pinned.filter(p => p !== h.name))} />
+                  ))}
+                </div>
+              </>
+            )}
+            {teamRows.length > 0 && (
+              <>
+                <SectionLabel>{window.MY_TEAM.teamName || 'My Team'} · {teamRows.length} top hitters</SectionLabel>
+                <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:24 }}>
+                  {teamRows.map(h => <Card key={`t-${h.name}`} h={h} />)}
+                </div>
+              </>
+            )}
+          </div>
+        );
+      })()}
+
+      {/* Section nav */}
+      <div style={{ padding:'10px 32px', borderBottom:`1px solid ${colors.border}`, display:'flex', gap:24, fontSize:10, letterSpacing:2, textTransform:'uppercase', fontFamily:MONO, alignItems:'center', flexWrap:'wrap' }}>
+        {TABS.map(t => (
+          <span key={t} onClick={() => setActiveTab(t)} style={{
+            color: activeTab === t ? colors.text : colors.dim,
+            fontWeight: activeTab === t ? 600 : 400,
+            cursor: 'pointer',
+            borderBottom: activeTab === t ? `2px solid ${colors.accent}` : 'none',
+            paddingBottom: 4, marginBottom: -11,
+          }}>{TAB_LABELS[t]}</span>
+        ))}
+        <div style={{ flex:1 }} />
+        <span style={{ color:colors.dim }}>Presets:</span>
+        {PRESETS.map((p, i) => (
+          <span key={p.label} onClick={p.apply} style={{
+            color: i === 0 ? colors.accent : colors.dim, cursor:'pointer',
+            borderBottom: i === 0 ? `1px solid ${colors.accent}` : 'none', paddingBottom:2,
+          }}>{p.label}</span>
+        ))}
+        <span style={{ color:colors.dim, cursor:'pointer' }}>+ New</span>
+      </div>
+
+      {/* Watchlist strip */}
+      <div style={{ padding:'12px 32px', borderBottom:`1px solid ${colors.border}`, display:'flex', gap:16, alignItems:'center', flexWrap:'wrap' }}>
+        <span style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>★ Following</span>
+        {pinned.map(p => {
+          const h = window.HITTERS.find(x => x.name === p);
+          if (!h) return null;
+          return (
+            <span key={p} onClick={() => setSelected(p)} style={{
+              display:'inline-flex', gap:8, alignItems:'center', cursor:'pointer',
+              padding:'4px 10px', borderRadius:2,
+              background: selected === p ? colors.panel : 'transparent',
+              border: `1px solid ${selected === p ? colors.accent : colors.border}`,
+              whiteSpace:'nowrap',
+            }}>
+              <span style={{ fontStyle:'italic', fontSize:13 }}>{p}</span>
+              <span style={{ fontFamily:MONO, fontSize:10, color:colors.accent }}>{fmt(h.proc, 1)}</span>
+              <span onClick={(e) => { e.stopPropagation(); setPinned(pinned.filter(x => x !== p)); }}
+                style={{ color:colors.faint, fontSize:12, lineHeight:1 }}>×</span>
+            </span>
+          );
+        })}
+        {pinned.length === 0 && (
+          <span style={{ fontStyle:'italic', fontSize:12, color:colors.dim }}>None pinned. Click ★ on any row to follow.</span>
+        )}
+      </div>
+
+      {/* Tab body */}
+      {activeTab === 'hitters'  && renderHittersTab()}
+      {activeTab === 'pitchers' && renderPitchersTab()}
+      {activeTab === 'targets'  && renderTargetsTab()}
+      {activeTab === 'trends'   && renderTrendsTab()}
+      {activeTab === 'waiver'   && renderWaiverTab()}
+      {activeTab === 'my-team'  && renderMyTeamTab()}
+    </div>
+  );
+}
+
+// ═══ Theme toggle + App root ══════════════════════════════════════════════════
+function ThemeToggle({ dark, setDark }) {
+  return (
+    <div style={{
+      position:'fixed', top:10, right:14, zIndex:100,
+      display:'flex', gap:4, padding:3, borderRadius:6,
+      background:'rgba(255,255,255,0.85)', border:'1px solid rgba(0,0,0,.1)',
+      fontFamily:'monospace', fontSize:11,
+    }}>
+      {['Light', 'Dark'].map((m, i) => {
+        const active = dark === (i === 1);
+        return (
+          <button key={m} onClick={() => setDark(i === 1)} style={{
+            padding:'3px 10px', borderRadius:4, border:'none', cursor:'pointer',
+            background: active ? '#1a1a1a' : 'transparent',
+            color: active ? '#fff' : '#555', fontWeight:500, fontSize:11,
+          }}>{m}</button>
+        );
+      })}
+    </div>
+  );
+}
+
+function App() {
+  const [dark, setDark] = React.useState(false);
+  const [tab, setTab]   = React.useState('hitters');
+  const [pinned, setPinned] = React.useState(window.HITTERS.slice(0, 2).map(h => h.name).filter(Boolean));
+  return (
+    <div style={{ position:'relative', minHeight:'100vh' }}>
+      <ThemeToggle dark={dark} setDark={setDark} />
+      <VariantEditorialDense
+        dark={dark}
+        activeTab={tab}
+        setActiveTab={setTab}
+        pinned={pinned}
+        setPinned={setPinned}
+      />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

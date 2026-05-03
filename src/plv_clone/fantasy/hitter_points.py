@@ -1,16 +1,16 @@
 """
 Hitter fantasy-point projection layer.
 
-Translates Process+, Decision+, Contact+, Power+, and pitch-surface stats
+Translates Process+, Discipline+, K-Avoidance+, Power+, and pitch-surface stats
 into expected per-PA fantasy-point rates, calibrated from historical data.
 
 Rate models (calibrated via linear regression on 2023-2024 data):
-  BB/PA   ~ chase_pct + decision_plus
+  BB/PA   ~ chase_pct + discipline_plus
   K/PA    ~ whiff_pct + chase_pct
-  TB/PA   ~ in_play_pct + xwoba_actual + power_plus
+  TB/PA   ~ in_play_pct + xwoba_on_contact + power_plus
 
 Derived (empirical multipliers, not fit by regression):
-  H/PA    = xwoba_actual * 0.85 - 0.015   (xwOBA -> BA proxy)
+  H/PA    = xwoba_on_contact * 0.85 - 0.015   (xwOBA on contact -> BA proxy)
   R/PA    = 0.37 * (H/PA + BB/PA + HBP/PA)
   RBI/PA  = 0.24 * TB/PA + 0.06 * (H/PA + BB/PA + HBP/PA)
   HBP/PA  = league average constant
@@ -41,7 +41,8 @@ from .scoring import LeagueScoring, hitter_fp_per_pa, hitter_core_fp_per_pa
 logger = get_logger(__name__)
 
 _CALIB_FILE = "hitter_fantasy_calibration.json"
-_SB_SHRINK_PA = 150.0   # prior weight for SB shrinkage toward league average
+_SB_SHRINK_PA  = 150.0   # prior weight for SB shrinkage toward league average
+_HBP_SHRINK_PA = 250.0   # prior weight for HBP shrinkage (r=0.322 YoY, less sticky than SB)
 
 # ── Event sets ────────────────────────────────────────────────────────────────
 
@@ -115,18 +116,18 @@ def calibrate(
 
     df = pd.concat(records, ignore_index=True)
     df = df[df["pa"] >= 50].dropna(subset=[
-        "chase_pct", "decision_plus", "whiff_pct", "contact_plus",
-        "xwoba_actual", "power_plus",
+        "chase_pct", "discipline_plus", "whiff_pct", "k_avoidance_plus",
+        "xwoba_on_contact", "power_plus",
         "bb_rate", "k_rate", "tb_rate",
     ])
     logger.info("Calibration dataset: %d hitter-seasons", len(df))
 
     calib = {"calibration_years": years, "n_samples": len(df), "league_averages": _LEAGUE_AVG}
 
-    # ── Fit: BB/PA ~ chase_pct + decision_plus ───────────────────────────
+    # ── Fit: BB/PA ~ chase_pct + discipline_plus ───────────────────────────
     calib["bb_model"] = _fit_linear(
         df,
-        features=["chase_pct", "decision_plus"],
+        features=["chase_pct", "discipline_plus"],
         target="bb_rate",
         label="BB/PA",
     )
@@ -139,11 +140,11 @@ def calibrate(
         label="K/PA",
     )
 
-    # ── Fit: TB/PA ~ in_play_pct + xwoba_actual + power_plus ─────────────
+    # ── Fit: TB/PA ~ in_play_pct + xwoba_on_contact + power_plus ────────
     # in_play_pct is needed because TB/PA = contact_rate × quality_of_contact
     calib["tb_model"] = _fit_linear(
         df,
-        features=["in_play_pct", "xwoba_actual", "power_plus"],
+        features=["in_play_pct", "xwoba_on_contact", "power_plus"],
         target="tb_rate",
         label="TB/PA",
     )
@@ -199,11 +200,24 @@ def project(
     df["est_bb_rate"]  = _apply_model(df, c["bb_model"])
     df["est_k_rate"]   = _apply_model(df, c["k_model"])
     df["est_tb_rate"]  = _apply_model(df, c["tb_model"])
-    df["est_hbp_rate"] = c["league_averages"].get("hbp_rate", 0.009)
+    # HBP proxy: shrinkage toward league average (r=0.322 YoY stable — real skill,
+    # but regresses faster than BB/K; prior weight = 250 PA).
+    # Requires hbp_per_pa_raw column (added by build_fantasy_exports._compute_hbp_rates).
+    # Falls back to league average (0.009) when column is absent.
+    league_hbp = c["league_averages"].get("hbp_rate", 0.009)
+    if "hbp_per_pa_raw" in df.columns:
+        hbp_raw = df["hbp_per_pa_raw"].fillna(league_hbp)
+        pa_col  = df["pa"].clip(lower=0) if "pa" in df.columns else pd.Series(0.0, index=df.index)
+        df["est_hbp_rate"] = (
+            (hbp_raw * pa_col + league_hbp * _HBP_SHRINK_PA)
+            / (pa_col + _HBP_SHRINK_PA)
+        ).clip(lower=0.0, upper=0.10).round(4)
+    else:
+        df["est_hbp_rate"] = league_hbp
 
-    # H proxy: xwOBA -> batting average (empirical linear)
-    if "xwoba_actual" in df.columns:
-        df["est_h_rate"] = (df["xwoba_actual"] * 0.85 - 0.015).clip(lower=0.100, upper=0.450)
+    # H proxy: xwOBA on contact -> batting average (empirical linear)
+    if "xwoba_on_contact" in df.columns:
+        df["est_h_rate"] = (df["xwoba_on_contact"] * 0.85 - 0.015).clip(lower=0.100, upper=0.450)
     else:
         df["est_h_rate"] = c["league_averages"].get("h_rate", 0.248)
 
@@ -267,6 +281,54 @@ def project(
 
 
 # ── Internal helpers ──────────────────────────────────────────────────────────
+
+def compute_positional_zscores(
+    df: pd.DataFrame,
+    pos_col: str = "primary_position",
+    process_col: str = "process_plus",
+    out_col: str = "proc_plus_positional",
+    center: float = 100.0,
+    std_scale: float = 10.0,
+    min_group_size: int = 5,
+) -> pd.DataFrame:
+    """Add proc_plus_positional: process_plus z-score within position group, scaled to 100±10.
+
+    Groups by primary_position (C, 1B, 2B, 3B, SS, OF, DH). Position groups
+    with fewer than min_group_size qualified hitters receive NaN — too small to
+    z-score reliably.
+
+    Returns a copy of df with out_col added.
+    """
+    if pos_col not in df.columns or process_col not in df.columns:
+        logger.warning(
+            "compute_positional_zscores: '%s' or '%s' not found — skipping.", pos_col, process_col
+        )
+        df = df.copy()
+        df[out_col] = float("nan")
+        return df
+
+    df = df.copy()
+    df[out_col] = float("nan")
+
+    for pos, grp_idx in df.groupby(pos_col).groups.items():
+        vals = df.loc[grp_idx, process_col].dropna()
+        if len(vals) < min_group_size:
+            continue
+        pos_mean = float(vals.mean())
+        pos_std  = float(vals.std())
+        valid_idx = df.loc[grp_idx].index[df.loc[grp_idx, process_col].notna()]
+        if pos_std <= 0:
+            df.loc[valid_idx, out_col] = center
+        else:
+            df.loc[valid_idx, out_col] = (
+                (df.loc[valid_idx, process_col] - pos_mean) / pos_std * std_scale + center
+            ).round(1)
+
+    n_scored = df[out_col].notna().sum()
+    logger.info("Positional z-scores: %d / %d hitters scored across %d positions",
+                n_scored, len(df), df[pos_col].nunique())
+    return df
+
 
 def _compute_hitter_actuals(pp_df: pd.DataFrame) -> pd.DataFrame:
     """Compute per-batter actual rate stats from pitch-level events."""
@@ -355,7 +417,7 @@ def _default_calibration() -> dict:
         "league_averages": avg,
         # BB: negative chase, positive decision+
         "bb_model": {
-            "features":  ["chase_pct", "decision_plus"],
+            "features":  ["chase_pct", "discipline_plus"],
             "coefs":     [-0.18, 0.003],
             "intercept": avg["bb_rate"] + 0.18 * 0.290 - 0.003 * 100,
             "r2": None,
@@ -367,9 +429,9 @@ def _default_calibration() -> dict:
             "intercept": avg["k_rate"] - 1.55 * 0.124 - 0.45 * 0.290,
             "r2": None,
         },
-        # TB: in_play rate drives volume, xwOBA × power+ drive quality
+        # TB: in_play rate drives volume, xwOBA on contact × power+ drive quality
         "tb_model": {
-            "features":  ["in_play_pct", "xwoba_actual", "power_plus"],
+            "features":  ["in_play_pct", "xwoba_on_contact", "power_plus"],
             "coefs":     [1.20, 0.60, 0.006],
             "intercept": avg["tb_rate"] - 1.20 * 0.265 - 0.60 * 0.313 - 0.006 * 100,
             "r2": None,

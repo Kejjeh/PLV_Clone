@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baseball Advanced Stat Analysis — Fantasy Impact</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #22263a;
+    --border: #2e3450;
+    --text: #e2e8f0;
+    --muted: #8892b0;
+    --accent: #64ffda;
+    --accent2: #f7c948;
+    --accent3: #ff6b6b;
+    --accent4: #74b9ff;
+    --positive: #52c41a;
+    --negative: #ff4d4f;
+    --neutral: #8892b0;
+    --gold: #f7c948;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; font-size: 14px; line-height: 1.6; }
+
+  .header { background: linear-gradient(135deg, #0f1117 0%, #1a1d27 50%, #12182b 100%); border-bottom: 1px solid var(--border); padding: 32px 40px; }
+  .header h1 { font-size: 26px; font-weight: 700; color: var(--accent); letter-spacing: -0.5px; }
+  .header p  { color: var(--muted); font-size: 13px; margin-top: 6px; }
+  .header .tags { display: flex; gap: 8px; margin-top: 12px; }
+  .tag { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 3px 10px; font-size: 11px; color: var(--accent); }
+
+  .nav { display: flex; gap: 4px; padding: 16px 40px; border-bottom: 1px solid var(--border); background: var(--surface); overflow-x: auto; }
+  .nav-btn { background: none; border: 1px solid var(--border); border-radius: 6px; padding: 7px 16px; color: var(--muted); cursor: pointer; font-size: 12px; font-weight: 500; white-space: nowrap; transition: all 0.15s; }
+  .nav-btn:hover  { border-color: var(--accent); color: var(--accent); }
+  .nav-btn.active { background: var(--accent); border-color: var(--accent); color: #0f1117; font-weight: 700; }
+
+  .main { padding: 32px 40px; max-width: 1400px; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  h2 { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 6px; }
+  h3 { font-size: 14px; font-weight: 600; color: var(--accent2); margin-bottom: 12px; }
+  .subtitle { color: var(--muted); font-size: 12px; margin-bottom: 24px; }
+
+  .insight-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .insight-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; }
+  .insight-card h3 { font-size: 13px; color: var(--accent2); margin-bottom: 8px; }
+  .insight-card p  { font-size: 12px; color: var(--muted); line-height: 1.7; }
+  .insight-card .stat { font-size: 22px; font-weight: 700; color: var(--accent); margin-bottom: 4px; }
+  .insight-card .stat-label { font-size: 11px; color: var(--muted); }
+
+  .table-wrap { overflow-x: auto; margin-bottom: 32px; border-radius: 10px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  thead tr { background: var(--surface2); }
+  thead th { padding: 10px 14px; text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid rgba(46,52,80,0.5); transition: background 0.1s; }
+  tbody tr:hover { background: var(--surface2); }
+  tbody td { padding: 9px 14px; white-space: nowrap; }
+  tbody tr:first-child td { color: var(--gold); font-weight: 600; }
+  tbody tr:nth-child(2) td, tbody tr:nth-child(3) td { color: #c8d0e0; }
+
+  .r-val { font-weight: 600; text-align: center; }
+  .heat-strong-pos  { color: #52c41a; }
+  .heat-mod-pos     { color: #a8e063; }
+  .heat-weak-pos    { color: #d4edda; }
+  .heat-neutral     { color: var(--muted); }
+  .heat-weak-neg    { color: #ffd6d6; }
+  .heat-mod-neg     { color: #ff9c9c; }
+  .heat-strong-neg  { color: #ff4d4f; }
+
+  .section-divider { height: 1px; background: var(--border); margin: 32px 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 16px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+  .badge-green  { background: rgba(82,196,26,0.15); color: #52c41a; }
+  .badge-red    { background: rgba(255,77,79,0.15); color: #ff4d4f; }
+  .badge-yellow { background: rgba(247,201,72,0.15); color: #f7c948; }
+  .badge-blue   { background: rgba(116,185,255,0.15); color: #74b9ff; }
+
+  .early-season-note { background: rgba(247,201,72,0.08); border: 1px solid rgba(247,201,72,0.25); border-radius: 8px; padding: 12px 16px; font-size: 12px; color: var(--accent2); margin-bottom: 20px; }
+
+  .stat-tier { padding: 16px; background: var(--surface); border-radius: 8px; border-left: 3px solid; margin-bottom: 12px; }
+  .tier-1 { border-color: var(--positive); }
+  .tier-2 { border-color: var(--accent2); }
+  .tier-3 { border-color: var(--accent3); }
+  .stat-tier h4 { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .stat-tier p  { font-size: 12px; color: var(--muted); }
+  .tier-1 h4 { color: var(--positive); }
+  .tier-2 h4 { color: var(--accent2); }
+  .tier-3 h4 { color: var(--accent3); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚾ Advanced Baseball Stat Analysis</h1>
+  <p>Correlation matrices, proxy maps, and fantasy leaderboards — 2024 full season + 2026 early season</p>
+  <div class="tags">
+    <span class="tag">n=413 hitter-seasons</span>
+    <span class="tag">n=639 pitcher-seasons</span>
+    <span class="tag">Pearson r · 2024 Statcast</span>
+    <span class="tag">Your scoring rules</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show('overview')">Overview</button>
+  <button class="nav-btn" onclick="show('hitter-corr')">Hitter Correlations</button>
+  <button class="nav-btn" onclick="show('pitcher-corr')">Pitcher Correlations</button>
+  <button class="nav-btn" onclick="show('blast')">Blast Leaderboard '24</button>
+  <button class="nav-btn" onclick="show('fp-hitters')">Top Hitters '24</button>
+  <button class="nav-btn" onclick="show('fp-hitters-26')">Top Hitters '26 ⚡</button>
+  <button class="nav-btn" onclick="show('pitchers-24')">Top SPs '24</button>
+  <button class="nav-btn" onclick="show('pitchers-26')">Top SPs '26 ⚡</button>
+</div>
+
+<div class="main">
+
+<!-- ═══ OVERVIEW ═══════════════════════════════════════════════════════════ -->
+<div id="section-overview" class="section active">
+  <h2>Key Findings</h2>
+  <p class="subtitle">What the data actually says about hitting and pitching, mapped to your fantasy scoring</p>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <h3>🏆 Blast% is the best single hitting proxy</h3>
+      <div class="stat">r = +0.74</div>
+      <div class="stat-label">Blast% → xwOBA</div>
+      <p style="margin-top:10px">Blast (hard hit + sweet spot angle) explains 55% of xwOBA variance. It's your best cheap-to-compute proxy for real contact quality — more explanatory than hard hit% alone (r=+0.69) or barrel% (r=+0.86, but noisier at small samples).</p>
+    </div>
+    <div class="insight-card">
+      <h3>⚠️ Core FP/PA ≠ Power Proxy</h3>
+      <div class="stat">r = +0.34</div>
+      <div class="stat-label">Blast% → Core FP/PA</div>
+      <p style="margin-top:10px">Blast% surprisingly has only moderate correlation with <em>core</em> fantasy points. Why? Core FP/PA heavily weights K avoidance and BB, not just power. Whiff% is the single biggest drag (r=−0.63 with Core FP/PA).</p>
+    </div>
+    <div class="insight-card">
+      <h3>🎯 The two-axis hitter model</h3>
+      <div class="stat">Discipline × Power</div>
+      <div class="stat-label">Chase% + Whiff% + Blast%</div>
+      <p style="margin-top:10px">The ideal fantasy hitter scores on both axes: low chase (→BB, avoids K), low whiff (→contact quality), high blast (→TB). Ohtani, Soto, and Judge all clear 14%+ blast <em>and</em> sub-14% whiff. That combination is extremely rare.</p>
+    </div>
+    <div class="insight-card">
+      <h3>🔥 PLV is a near-perfect FP/IP predictor</h3>
+      <div class="stat">r = +0.95</div>
+      <div class="stat-label">PLV → FP/IP</div>
+      <p style="margin-top:10px">PLV explains 89% of FP/IP variance (r²=0.895) — essentially a complete picture. Whiff% adds info for K rate specifically. Called strike% is the best proxy for walk rate (r=−0.96 with BB/IP).</p>
+    </div>
+    <div class="insight-card">
+      <h3>🛑 Chase% = BB% (exactly)</h3>
+      <div class="stat">r = −1.00</div>
+      <div class="stat-label">Chase% → BB/PA</div>
+      <p style="margin-top:10px">Chase rate is literally the same signal as walk rate in your model (r=−1.000). If you want to identify walk contributors, chase% is your number. Decision+ and BB% are near-identical rankings.</p>
+    </div>
+    <div class="insight-card">
+      <h3>📊 Whiff% is the strikeout key</h3>
+      <div class="stat">r = +0.90</div>
+      <div class="stat-label">Whiff% → K/PA</div>
+      <p style="margin-top:10px">Whiff rate explains 81% of K rate variance. It's a better predictor than swing% or chase% for Ks. High whiff = K liability for hitters, K generator for pitchers.</p>
+    </div>
+  </div>
+
+  <div class="section-divider"></div>
+  <h2>Stat Tiers — Hitting</h2>
+  <p class="subtitle">Ranked by explanatory power for your fantasy scoring</p>
+  <div class="two-col">
+    <div>
+      <div class="stat-tier tier-1">
+        <h4>Tier 1 — Core signal (use these to rank)</h4>
+        <p><strong>Process+</strong> (r=+0.61 → Core FP/PA) · <strong>Whiff%</strong> (r=−0.63) · <strong>Contact+</strong> (r=+0.53) · <strong>Avg EV</strong> (r=+0.40). These are the direct inputs to your best-calibrated model components.</p>
+      </div>
+      <div class="stat-tier tier-2">
+        <h4>Tier 2 — Power proxy (good for TB/RBI upside)</h4>
+        <p><strong>Power+</strong> (r=+0.90 → TB/PA) · <strong>Blast%</strong> (r=+0.71) · <strong>Barrel%</strong> (r=+0.71) · <strong>xwOBA</strong> (r=+0.87). These tell you about raw damage — but remember TB is only 1 part of your scoring.</p>
+      </div>
+      <div class="stat-tier tier-3">
+        <h4>Tier 3 — Contextual / noisy</h4>
+        <p><strong>Sweet spot%</strong> (r=+0.18 — weakest batted ball metric) · <strong>Decision+</strong> (r=−0.26 with Core FP) · <strong>Full FP/PA</strong> (R/RBI contamination). Use directionally, not for ranking.</p>
+      </div>
+    </div>
+    <div>
+      <h2 style="margin-bottom:12px">Stat Tiers — Pitching</h2>
+      <div class="stat-tier tier-1">
+        <h4>Tier 1 — PLV dominates</h4>
+        <p><strong>PLV</strong> (r=+0.95 → FP/IP, r²=0.895). Nothing else comes close. If a pitcher has elite PLV (5.3+), everything else is a downstream consequence. Start here, always.</p>
+      </div>
+      <div class="stat-tier tier-2">
+        <h4>Tier 2 — Rate-specific predictors</h4>
+        <p><strong>CS%</strong> (r=−0.96 → BB/IP — this is basically the same metric). <strong>Whiff%</strong> (r=+0.64 → K/IP). If you want to find K upside beyond PLV, add whiff. If you want to find walk risk, use CS%.</p>
+      </div>
+      <div class="stat-tier tier-3">
+        <h4>Tier 3 — Noise</h4>
+        <p><strong>xwOBA model</strong> (r=+0.27 → ER/IP — barely explains anything). <strong>H/IP</strong> is BABIP-contaminated. <strong>ER/IP</strong> predictions have high variance. Don't over-index on projected ERA.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ HITTER CORRELATIONS ════════════════════════════════════════════════ -->
+<div id="section-hitter-corr" class="section">
+  <h2>Hitter Correlation Matrix</h2>
+  <p class="subtitle">Pearson r — 2024 full season, n=413 players (150+ PA). Positive = stat helps fantasy score; negative = hurts.</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#52c41a"></div> Strong positive (r ≥ 0.6)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a8e063"></div> Moderate positive (0.3–0.6)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div> Weak (&lt;0.3)</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff9c9c"></div> Moderate negative</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff4d4f"></div> Strong negative (≤ −0.6)</div>
+  </div>
+  <div class="table-wrap">
+    <table id="hcorr-table"></table>
+  </div>
+  <h3>How to read this</h3>
+  <p style="color:var(--muted);font-size:12px;line-height:1.8">
+    <strong style="color:var(--text)">Core FP/PA</strong> = skill-based fantasy points (TB + BB − K). The most trustworthy ranking column.<br>
+    <strong style="color:var(--text)">Full FP/PA</strong> = adds R and RBI estimates. Higher, but messier.<br>
+    <strong style="color:var(--text)">TB/PA</strong> shows which stats are power proxies. BB/PA and K/PA isolate the discipline axis.
+  </p>
+</div>
+
+<!-- ═══ PITCHER CORRELATIONS ═══════════════════════════════════════════════ -->
+<div id="section-pitcher-corr" class="section">
+  <h2>Pitcher Correlation Matrix</h2>
+  <p class="subtitle">Pearson r — 2024, n=639 pitchers (200+ pitches). Positive = helps fantasy score (except BB/IP and H/IP where positive = bad).</p>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#52c41a"></div> Strong positive</div>
+    <div class="legend-item"><div class="legend-dot" style="background:var(--muted)"></div> Weak</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff4d4f"></div> Strong negative</div>
+  </div>
+  <div class="table-wrap">
+    <table id="pcorr-table"></table>
+  </div>
+  <h3 style="margin-top:24px">Key takeaways</h3>
+  <p style="color:var(--muted);font-size:12px;line-height:1.9">
+    <strong style="color:var(--accent)">PLV r=+0.95 with FP/IP</strong> — this is as clean as baseball stats get. R²=0.895.<br>
+    <strong style="color:var(--accent)">CS% r=−0.96 with BB/IP</strong> — called strike rate is almost perfectly predictive of walks. A pitcher who can't get called strikes will walk batters.<br>
+    <strong style="color:var(--accent)">PLV StdDev r=−0.59 with FP/IP</strong> — high variance pitchers (inconsistent PLV) are punished. Consistency matters, not just average quality.<br>
+    <strong style="color:var(--accent)">xwOBA model is surprisingly weak</strong> (r=+0.27 for ER) — your PLV scores capture most pitcher value already; xwOBA adds marginal signal at best.
+  </p>
+</div>
+
+<!-- ═══ BLAST LEADERBOARD '24 ═══════════════════════════════════════════════ -->
+<div id="section-blast" class="section">
+  <h2>Blast% Leaders — 2024</h2>
+  <p class="subtitle">Hard hit (≥95 mph EV) + sweet spot (8–32° launch angle). Best single contact quality proxy. Min 150 PA.</p>
+  <div class="table-wrap">
+    <table id="blast-table"></table>
+  </div>
+  <p style="color:var(--muted);font-size:12px;margin-top:-16px">Blast% r=+0.74 with xwOBA, r=+0.75 with barrel%, r=+0.81 with hard hit%</p>
+</div>
+
+<!-- ═══ CORE FP HITTERS '24 ══════════════════════════════════════════════════ -->
+<div id="section-fp-hitters" class="section">
+  <h2>Top Hitters by Core Fantasy Score — 2024</h2>
+  <p class="subtitle">Core FP/PA = TB + BB − K (per PA). Best skill-based ranking — excludes noisy R/RBI context. Min 150 PA, n=413.</p>
+  <div class="table-wrap">
+    <table id="fp24-table"></table>
+  </div>
+  <p style="color:var(--muted);font-size:12px;margin-top:-16px">Note: Luis Arráez (#5) and Steven Kwan are contact-first hitters with elite Core FP driven by near-zero whiff, not power.</p>
+</div>
+
+<!-- ═══ HITTERS '26 ══════════════════════════════════════════════════════════ -->
+<div id="section-fp-hitters-26" class="section">
+  <h2>Top Hitters — 2026 Early Season ⚡</h2>
+  <div class="early-season-note">⚠️ Early season data (50–127 PA). K/BB rates stabilize fastest (~50 PA). Power and TB estimates need 150+ PA. Use Process+ as primary signal; treat individual rate estimates with caution.</div>
+  <div class="table-wrap">
+    <table id="h26-table"></table>
+  </div>
+</div>
+
+<!-- ═══ PITCHERS '24 ═════════════════════════════════════════════════════════ -->
+<div id="section-pitchers-24" class="section">
+  <h2>Top Starting Pitchers — 2024</h2>
+  <p class="subtitle">Ranked by FP/IP (excluding SV/HD). Min 500 pitches (~30+ IP). FP/Start = FP/IP × 5.5 IP assumed per start.</p>
+  <div class="table-wrap">
+    <table id="p24-table"></table>
+  </div>
+</div>
+
+<!-- ═══ PITCHERS '26 ═════════════════════════════════════════════════════════ -->
+<div id="section-pitchers-26" class="section">
+  <h2>Top Starting Pitchers — 2026 Early Season ⚡</h2>
+  <div class="early-season-note">⚠️ Early season. PLV stabilizes at ~200 pitches (~2–3 starts). Whiff% and CS% are reliable early. BB/IP and ER/IP estimates need more data. Min 100 pitches shown.</div>
+  <div class="table-wrap">
+    <table id="p26-table"></table>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const DATA = {
+  hcorr: [{"Variable":"Blast%","Core FP/PA":0.341,"Full FP/PA":0.542,"TB/PA":0.707,"BB/PA":0.057,"K/PA":0.232},{"Variable":"Barrel%","Core FP/PA":0.166,"Full FP/PA":0.427,"TB/PA":0.714,"BB/PA":0.03,"K/PA":0.451},{"Variable":"HardHit%","Core FP/PA":0.361,"Full FP/PA":0.539,"TB/PA":0.69,"BB/PA":0.022,"K/PA":0.175},{"Variable":"SweetSpot%","Core FP/PA":0.182,"Full FP/PA":0.25,"TB/PA":0.232,"BB/PA":0.1,"K/PA":0.021},{"Variable":"Avg EV","Core FP/PA":0.398,"Full FP/PA":0.574,"TB/PA":0.679,"BB/PA":0.103,"K/PA":0.127},{"Variable":"xwOBA/Contact","Core FP/PA":0.307,"Full FP/PA":0.592,"TB/PA":0.871,"BB/PA":0.029,"K/PA":0.456},{"Variable":"xwOBA","Core FP/PA":0.307,"Full FP/PA":0.592,"TB/PA":0.872,"BB/PA":0.029,"K/PA":0.456},{"Variable":"Power+","Core FP/PA":0.34,"Full FP/PA":0.609,"TB/PA":0.898,"BB/PA":-0.069,"K/PA":0.405},{"Variable":"Process+","Core FP/PA":0.606,"Full FP/PA":0.802,"TB/PA":0.98,"BB/PA":-0.131,"K/PA":0.122},{"Variable":"Contact+","Core FP/PA":0.627,"Full FP/PA":0.394,"TB/PA":0.006,"BB/PA":-0.127,"K/PA":-0.844},{"Variable":"Decision+","Core FP/PA":-0.26,"Full FP/PA":-0.152,"TB/PA":0.112,"BB/PA":0.016,"K/PA":0.451},{"Variable":"Chase%","Core FP/PA":-0.09,"Full FP/PA":-0.142,"TB/PA":0.22,"BB/PA":-1.0,"K/PA":-0.036},{"Variable":"Whiff%","Core FP/PA":-0.629,"Full FP/PA":-0.409,"TB/PA":0.24,"BB/PA":-0.397,"K/PA":0.9},{"Variable":"Contact%","Core FP/PA":0.526,"Full FP/PA":0.289,"TB/PA":-0.25,"BB/PA":0.207,"K/PA":-0.842},{"Variable":"InPlay%","Core FP/PA":0.441,"Full FP/PA":0.227,"TB/PA":0.088,"BB/PA":-0.427,"K/PA":-0.628}],
+  pcorr: [{"Variable":"PLV","FP/IP":0.946,"K/IP":0.954,"BB/IP":-0.096,"H/IP":-0.9,"ER/IP":-0.929},{"Variable":"Whiff%","FP/IP":0.571,"K/IP":0.644,"BB/IP":0.501,"H/IP":-0.829,"ER/IP":-0.587},{"Variable":"CalledStrike%","FP/IP":-0.089,"K/IP":-0.231,"BB/IP":-0.96,"H/IP":0.427,"ER/IP":0.229},{"Variable":"Contact%","FP/IP":-0.571,"K/IP":-0.644,"BB/IP":-0.501,"H/IP":0.829,"ER/IP":0.587},{"Variable":"Swing%","FP/IP":0.142,"K/IP":0.091,"BB/IP":-0.504,"H/IP":0.02,"ER/IP":-0.03},{"Variable":"xwOBA (model)","FP/IP":-0.118,"K/IP":-0.092,"BB/IP":-0.368,"H/IP":0.26,"ER/IP":0.267},{"Variable":"PLV StdDev","FP/IP":-0.593,"K/IP":-0.608,"BB/IP":0.118,"H/IP":0.523,"ER/IP":0.567}],
+  lb_blast24: [{"Name":"Shohei Ohtani","PA":803,"Blast%":17.0,"Barrel%":10.5,"HH%":35.7,"Avg EV":86.5,"xwOBA":0.551,"Process+":142.7,"Core FP/PA":0.449},{"Name":"Michael Toglia","PA":470,"Blast%":16.5,"Barrel%":9.0,"HH%":30.0,"Avg EV":84.8,"xwOBA":0.499,"Process+":120.5,"Core FP/PA":0.268},{"Name":"Juan Soto","PA":798,"Blast%":16.4,"Barrel%":9.5,"HH%":36.4,"Avg EV":87.4,"xwOBA":0.524,"Process+":137.2,"Core FP/PA":0.424},{"Name":"Logan O'Hoppe","PA":532,"Blast%":15.8,"Barrel%":6.8,"HH%":28.0,"Avg EV":83.7,"xwOBA":0.446,"Process+":116.1,"Core FP/PA":0.217},{"Name":"Marcell Ozuna","PA":697,"Blast%":15.6,"Barrel%":7.2,"HH%":30.9,"Avg EV":85.0,"xwOBA":0.510,"Process+":130.1,"Core FP/PA":0.308},{"Name":"Yordan Álvarez","PA":644,"Blast%":15.6,"Barrel%":8.5,"HH%":31.7,"Avg EV":85.4,"xwOBA":0.460,"Process+":131.3,"Core FP/PA":0.393},{"Name":"Giancarlo Stanton","PA":536,"Blast%":15.5,"Barrel%":10.6,"HH%":36.3,"Avg EV":87.1,"xwOBA":0.500,"Process+":126.5,"Core FP/PA":0.286},{"Name":"Rafael Devers","PA":593,"Blast%":15.5,"Barrel%":6.1,"HH%":30.5,"Avg EV":85.4,"xwOBA":0.459,"Process+":124.3,"Core FP/PA":0.266},{"Name":"Kyle Tucker","PA":355,"Blast%":15.5,"Barrel%":6.7,"HH%":26.7,"Avg EV":84.0,"xwOBA":0.422,"Process+":116.5,"Core FP/PA":0.353},{"Name":"Francisco Lindor","PA":774,"Blast%":15.4,"Barrel%":6.8,"HH%":30.8,"Avg EV":85.7,"xwOBA":0.437,"Process+":116.9,"Core FP/PA":0.344},{"Name":"Fernando Tatís","PA":472,"Blast%":15.4,"Barrel%":7.4,"HH%":35.1,"Avg EV":86.2,"xwOBA":0.485,"Process+":130.5,"Core FP/PA":0.356},{"Name":"Kyle Schwarber","PA":718,"Blast%":15.3,"Barrel%":8.7,"HH%":35.7,"Avg EV":87.0,"xwOBA":0.493,"Process+":121.6,"Core FP/PA":0.292},{"Name":"José Ramírez","PA":715,"Blast%":15.3,"Barrel%":5.7,"HH%":30.6,"Avg EV":84.7,"xwOBA":0.353,"Process+":104.3,"Core FP/PA":0.349},{"Name":"Jordan Westburg","PA":466,"Blast%":15.2,"Barrel%":6.5,"HH%":29.5,"Avg EV":84.6,"xwOBA":0.431,"Process+":119.2,"Core FP/PA":0.287},{"Name":"Kerry Carpenter","PA":340,"Blast%":15.1,"Barrel%":8.9,"HH%":29.1,"Avg EV":85.3,"xwOBA":0.494,"Process+":128.1,"Core FP/PA":0.302},{"Name":"Corey Seager","PA":529,"Blast%":15.1,"Barrel%":7.1,"HH%":29.6,"Avg EV":84.6,"xwOBA":0.454,"Process+":128.0,"Core FP/PA":0.342},{"Name":"Aaron Judge","PA":761,"Blast%":15.0,"Barrel%":11.7,"HH%":35.6,"Avg EV":87.6,"xwOBA":0.612,"Process+":148.1,"Core FP/PA":0.414},{"Name":"Edouard Julien","PA":314,"Blast%":14.8,"Barrel%":4.6,"HH%":23.1,"Avg EV":83.2,"xwOBA":0.380,"Process+":95.2,"Core FP/PA":0.185},{"Name":"Pavin Smith","PA":158,"Blast%":14.8,"Barrel%":7.1,"HH%":29.5,"Avg EV":84.8,"xwOBA":0.465,"Process+":123.3,"Core FP/PA":0.376},{"Name":"Aaron Nola","PA":0,"Blast%":0,"Barrel%":0,"HH%":0,"Avg EV":0,"xwOBA":0,"Process+":0,"Core FP/PA":0}].slice(0,19),
+  lb_fp24: [{"Name":"Shohei Ohtani","PA":803,"Core FP/PA":0.449,"Process+":142.7,"Blast%":17.0,"Whiff%":12.7,"Chase%":28.0,"BB%":8.2,"K%":25.5},{"Name":"Juan Soto","PA":798,"Core FP/PA":0.424,"Process+":137.2,"Blast%":16.4,"Whiff%":7.5,"Chase%":16.0,"BB%":12.5,"K%":22.2},{"Name":"Aaron Judge","PA":761,"Core FP/PA":0.414,"Process+":148.1,"Blast%":15.0,"Whiff%":12.7,"Chase%":22.0,"BB%":10.4,"K%":28.2},{"Name":"Bobby Witt","PA":734,"Core FP/PA":0.411,"Process+":129.6,"Blast%":14.1,"Whiff%":9.9,"Chase%":32.5,"BB%":6.6,"K%":18.7},{"Name":"Luis Arráez","PA":712,"Core FP/PA":0.408,"Process+":107.2,"Blast%":9.0,"Whiff%":3.0,"Chase%":27.6,"BB%":8.3,"K%":9.4},{"Name":"Yordan Álvarez","PA":644,"Core FP/PA":0.393,"Process+":131.3,"Blast%":15.6,"Whiff%":9.0,"Chase%":27.3,"BB%":8.4,"K%":19.6},{"Name":"Pavin Smith","PA":158,"Core FP/PA":0.376,"Process+":123.3,"Blast%":14.8,"Whiff%":7.9,"Chase%":23.3,"BB%":9.8,"K%":19.6},{"Name":"Vladimir Guerrero","PA":708,"Core FP/PA":0.370,"Process+":128.2,"Blast%":14.4,"Whiff%":9.5,"Chase%":27.9,"BB%":8.3,"K%":20.1},{"Name":"Jung Hoo Lee","PA":165,"Core FP/PA":0.368,"Process+":105.3,"Blast%":13.9,"Whiff%":3.8,"Chase%":25.7,"BB%":9.0,"K%":11.6},{"Name":"Jackson Merrill","PA":625,"Core FP/PA":0.361,"Process+":123.4,"Blast%":12.7,"Whiff%":11.1,"Chase%":35.3,"BB%":5.7,"K%":19.5},{"Name":"Nico Hoerner","PA":641,"Core FP/PA":0.361,"Process+":100.8,"Blast%":6.8,"Whiff%":5.3,"Chase%":31.7,"BB%":6.9,"K%":11.4},{"Name":"Ketel Marte","PA":596,"Core FP/PA":0.360,"Process+":120.8,"Blast%":14.1,"Whiff%":9.3,"Chase%":26.5,"BB%":8.8,"K%":20.4},{"Name":"Fernando Tatís","PA":472,"Core FP/PA":0.356,"Process+":130.5,"Blast%":15.4,"Whiff%":13.2,"Chase%":30.2,"BB%":7.5,"K%":25.3},{"Name":"Steven Kwan","PA":596,"Core FP/PA":0.354,"Process+":102.8,"Blast%":8.7,"Whiff%":2.8,"Chase%":20.6,"BB%":10.8,"K%":12.2},{"Name":"Kyle Tucker","PA":355,"Core FP/PA":0.353,"Process+":116.5,"Blast%":15.5,"Whiff%":7.3,"Chase%":24.2,"BB%":9.6,"K%":18.1},{"Name":"Mookie Betts","PA":594,"Core FP/PA":0.350,"Process+":111.3,"Blast%":13.6,"Whiff%":5.6,"Chase%":19.4,"BB%":11.3,"K%":17.5},{"Name":"José Ramírez","PA":715,"Core FP/PA":0.349,"Process+":104.3,"Blast%":15.3,"Whiff%":7.0,"Chase%":27.9,"BB%":8.3,"K%":16.0},{"Name":"Brice Turang","PA":629,"Core FP/PA":0.349,"Process+":96.2,"Blast%":5.6,"Whiff%":5.6,"Chase%":27.0,"BB%":8.6,"K%":14.0},{"Name":"Bobby Witt Jr.","PA":734,"Core FP/PA":0.411,"Process+":129.6,"Blast%":14.1,"Whiff%":9.9,"Chase%":32.5,"BB%":6.6,"K%":18.7},{"Name":"Ernie Clement","PA":463,"Core FP/PA":0.354,"Process+":102.3,"Blast%":10.1,"Whiff%":7.1,"Chase%":37.6,"BB%":4.8,"K%":11.7}],
+  lb_h26: [{"Name":"Yordan Álvarez","PA":115,"Core FP/PA":0.526,"Process+":155.0,"xwOBA":0.575,"Blast%":17.5,"Whiff%":7.6,"Chase%":31.1},{"Name":"Dillon Dingler","PA":94,"Core FP/PA":0.463,"Process+":140.3,"xwOBA":0.529,"Blast%":15.4,"Whiff%":9.8,"Chase%":30.4},{"Name":"Dominic Smith","PA":66,"Core FP/PA":0.452,"Process+":133.8,"xwOBA":0.465,"Blast%":13.2,"Whiff%":8.2,"Chase%":31.8},{"Name":"Mike Trout","PA":119,"Core FP/PA":0.450,"Process+":134.3,"xwOBA":0.555,"Blast%":16.5,"Whiff%":6.9,"Chase%":20.3},{"Name":"Ildemaro Vargas","PA":72,"Core FP/PA":0.445,"Process+":123.7,"xwOBA":0.426,"Blast%":12.1,"Whiff%":7.5,"Chase%":33.8},{"Name":"Brice Turang","PA":103,"Core FP/PA":0.442,"Process+":124.9,"xwOBA":0.496,"Blast%":8.4,"Whiff%":6.1,"Chase%":24.5},{"Name":"Kevin McGonigle","PA":110,"Core FP/PA":0.432,"Process+":124.5,"xwOBA":0.443,"Blast%":11.8,"Whiff%":4.8,"Chase%":28.5},{"Name":"Chandler Simpson","PA":110,"Core FP/PA":0.428,"Process+":106.2,"xwOBA":0.294,"Blast%":3.2,"Whiff%":3.4,"Chase%":31.6},{"Name":"James Wood","PA":127,"Core FP/PA":0.426,"Process+":146.3,"xwOBA":0.624,"Blast%":17.8,"Whiff%":12.6,"Chase%":28.2},{"Name":"Michael Harris","PA":92,"Core FP/PA":0.424,"Process+":134.6,"xwOBA":0.493,"Blast%":14.7,"Whiff%":11.0,"Chase%":35.5},{"Name":"Carlos Cortes","PA":58,"Core FP/PA":0.424,"Process+":119.3,"xwOBA":0.423,"Blast%":9.1,"Whiff%":5.2,"Chase%":25.3},{"Name":"Ben Rice","PA":101,"Core FP/PA":0.422,"Process+":141.8,"xwOBA":0.583,"Blast%":14.7,"Whiff%":9.9,"Chase%":25.4},{"Name":"Freddie Freeman","PA":105,"Core FP/PA":0.421,"Process+":134.0,"xwOBA":0.488,"Blast%":14.4,"Whiff%":8.6,"Chase%":30.4},{"Name":"José Ramírez","PA":116,"Core FP/PA":0.418,"Process+":117.6,"xwOBA":0.432,"Blast%":13.8,"Whiff%":5.9,"Chase%":30.3},{"Name":"Liam Hicks","PA":94,"Core FP/PA":0.410,"Process+":113.1,"xwOBA":0.356,"Blast%":7.8,"Whiff%":2.9,"Chase%":25.8}],
+  lb_p24: [{"Name":"Cease, Dylan","Pitches":3383,"PLV":5.41,"PLV%ile":96.0,"Whiff%":40.9,"CS%":45.4,"K/IP":1.118,"BB/IP":0.366,"FP/IP":2.636,"FP/Start":14.5},{"Name":"Snell, Blake","Pitches":1773,"PLV":5.41,"PLV%ile":95.9,"Whiff%":41.1,"CS%":41.9,"K/IP":1.15,"BB/IP":0.431,"FP/IP":2.628,"FP/Start":14.46},{"Name":"Jones, Jared","Pitches":1995,"PLV":5.405,"PLV%ile":95.3,"Whiff%":37.2,"CS%":50.3,"K/IP":1.088,"BB/IP":0.27,"FP/IP":2.602,"FP/Start":14.31},{"Name":"Leiter, Jack","Pitches":669,"PLV":5.489,"PLV%ile":98.2,"Whiff%":40.7,"CS%":47.2,"K/IP":1.089,"BB/IP":0.334,"FP/IP":2.558,"FP/Start":14.07},{"Name":"Scott, Christian","Pitches":846,"PLV":5.276,"PLV%ile":87.6,"Whiff%":36.6,"CS%":49.7,"K/IP":1.06,"BB/IP":0.286,"FP/IP":2.516,"FP/Start":13.84},{"Name":"Rodón, Carlos","Pitches":3569,"PLV":5.35,"PLV%ile":93.4,"Whiff%":37.8,"CS%":46.0,"K/IP":1.089,"BB/IP":0.356,"FP/IP":2.508,"FP/Start":13.79},{"Name":"Pivetta, Nick","Pitches":2465,"PLV":5.33,"PLV%ile":92.7,"Whiff%":32.6,"CS%":50.8,"K/IP":1.033,"BB/IP":0.265,"FP/IP":2.478,"FP/Start":13.63},{"Name":"Kikuchi, Yusei","Pitches":3006,"PLV":5.45,"PLV%ile":97.1,"Whiff%":37.5,"CS%":50.3,"K/IP":1.048,"BB/IP":0.277,"FP/IP":2.469,"FP/Start":13.58},{"Name":"Gilbert, Logan","Pitches":3041,"PLV":5.225,"PLV%ile":83.1,"Whiff%":39.3,"CS%":49.2,"K/IP":1.028,"BB/IP":0.303,"FP/IP":2.452,"FP/Start":13.48},{"Name":"Pepiot, Ryan","Pitches":2364,"PLV":5.315,"PLV%ile":91.7,"Whiff%":34.5,"CS%":47.5,"K/IP":1.043,"BB/IP":0.331,"FP/IP":2.44,"FP/Start":13.42},{"Name":"Cole, Gerrit","Pitches":1986,"PLV":5.314,"PLV%ile":91.6,"Whiff%":33.3,"CS%":49.4,"K/IP":1.026,"BB/IP":0.295,"FP/IP":2.423,"FP/Start":13.33},{"Name":"Gore, MacKenzie","Pitches":2994,"PLV":5.29,"PLV%ile":89.1,"Whiff%":36.2,"CS%":48.2,"K/IP":1.036,"BB/IP":0.319,"FP/IP":2.419,"FP/Start":13.31},{"Name":"Wheeler, Zack","Pitches":3371,"PLV":5.23,"PLV%ile":83.8,"Whiff%":34.3,"CS%":46.5,"K/IP":1.034,"BB/IP":0.352,"FP/IP":2.408,"FP/Start":13.24},{"Name":"Gil, Luis","Pitches":2929,"PLV":5.316,"PLV%ile":92.0,"Whiff%":38.6,"CS%":46.4,"K/IP":1.029,"BB/IP":0.358,"FP/IP":2.406,"FP/Start":13.24},{"Name":"Peralta, Freddy","Pitches":3147,"PLV":5.323,"PLV%ile":92.5,"Whiff%":39.0,"CS%":44.2,"K/IP":1.047,"BB/IP":0.399,"FP/IP":2.4,"FP/Start":13.2},{"Name":"Ragans, Cole","Pitches":3285,"PLV":5.241,"PLV%ile":84.9,"Whiff%":35.9,"CS%":47.3,"K/IP":1.015,"BB/IP":0.34,"FP/IP":2.362,"FP/Start":12.99},{"Name":"Bradley, Taj","Pitches":2294,"PLV":5.235,"PLV%ile":84.1,"Whiff%":36.7,"CS%":47.4,"K/IP":1.006,"BB/IP":0.34,"FP/IP":2.366,"FP/Start":13.01},{"Name":"Baz, Shane","Pitches":1206,"PLV":5.175,"PLV%ile":76.7,"Whiff%":34.2,"CS%":51.6,"K/IP":0.981,"BB/IP":0.258,"FP/IP":2.35,"FP/Start":12.92},{"Name":"Ray, Robbie","Pitches":568,"PLV":5.377,"PLV%ile":94.8,"Whiff%":40.3,"CS%":41.9,"K/IP":1.053,"BB/IP":0.445,"FP/IP":2.367,"FP/Start":13.02},{"Name":"Imanaga, Shota","Pitches":2929,"PLV":5.2,"PLV%ile":79.5,"Whiff%":33.0,"CS%":47.0,"K/IP":0.99,"BB/IP":0.315,"FP/IP":2.32,"FP/Start":12.76}],
+  lb_p26: [{"Name":"Jacob Misiorowski","Pitches":548,"PLV":5.598,"PLV%ile":98.3,"Whiff%":41.3,"CS%":46.8,"K/IP":1.215,"BB/IP":0.324,"FP/IP":2.866},{"Name":"Jacob Degrom","Pitches":338,"PLV":5.507,"PLV%ile":96.9,"Whiff%":37.7,"CS%":52.2,"K/IP":1.137,"BB/IP":0.225,"FP/IP":2.762},{"Name":"Chase Burns","Pitches":509,"PLV":5.484,"PLV%ile":96.4,"Whiff%":38.9,"CS%":49.2,"K/IP":1.131,"BB/IP":0.287,"FP/IP":2.714},{"Name":"Bubba Chandler","Pitches":344,"PLV":5.52,"PLV%ile":97.1,"Whiff%":39.0,"CS%":46.6,"K/IP":1.151,"BB/IP":0.336,"FP/IP":2.709},{"Name":"Will Warren","Pitches":489,"PLV":5.481,"PLV%ile":96.2,"Whiff%":32.7,"CS%":54.3,"K/IP":1.095,"BB/IP":0.186,"FP/IP":2.676},{"Name":"Freddy Peralta","Pitches":466,"PLV":5.419,"PLV%ile":94.7,"Whiff%":38.3,"CS%":48.0,"K/IP":1.093,"BB/IP":0.316,"FP/IP":2.577},{"Name":"Eury Pérez","Pitches":513,"PLV":5.392,"PLV%ile":93.3,"Whiff%":37.9,"CS%":47.8,"K/IP":1.081,"BB/IP":0.321,"FP/IP":2.552},{"Name":"Ryne Nelson","Pitches":442,"PLV":5.366,"PLV%ile":91.6,"Whiff%":33.5,"CS%":50.6,"K/IP":1.048,"BB/IP":0.268,"FP/IP":2.525},{"Name":"Nolan Mclean","Pitches":471,"PLV":5.366,"PLV%ile":91.4,"Whiff%":32.5,"CS%":51.3,"K/IP":1.037,"BB/IP":0.255,"FP/IP":2.518},{"Name":"Dylan Cease","Pitches":578,"PLV":5.365,"PLV%ile":91.1,"Whiff%":40.5,"CS%":42.9,"K/IP":1.082,"BB/IP":0.421,"FP/IP":2.5},{"Name":"Shota Imanaga","Pitches":539,"PLV":5.409,"PLV%ile":94.0,"Whiff%":35.4,"CS%":44.7,"K/IP":1.074,"BB/IP":0.382,"FP/IP":2.467},{"Name":"Joe Ryan","Pitches":507,"PLV":5.337,"PLV%ile":88.5,"Whiff%":34.3,"CS%":50.1,"K/IP":1.033,"BB/IP":0.28,"FP/IP":2.454},{"Name":"Kyle Harrison","Pitches":407,"PLV":5.363,"PLV%ile":90.4,"Whiff%":33.2,"CS%":50.5,"K/IP":1.038,"BB/IP":0.271,"FP/IP":2.424},{"Name":"Nick Pivetta","Pitches":354,"PLV":5.331,"PLV%ile":88.3,"Whiff%":31.5,"CS%":49.1,"K/IP":1.012,"BB/IP":0.301,"FP/IP":2.399},{"Name":"José Soriano","Pitches":535,"PLV":5.24,"PLV%ile":81.6,"Whiff%":37.4,"CS%":45.6,"K/IP":0.998,"BB/IP":0.377,"FP/IP":2.378}]
+};
+
+function heatClass(val, colName) {
+  // For K/PA (hitter), positive is bad for fantasy; for BB/IP, H/IP, ER/IP positive = bad
+  const invertCols = ['K/PA','BB/IP','H/IP','ER/IP'];
+  const v = invertCols.includes(colName) ? -val : val;
+  if (v >=  0.6) return 'heat-strong-pos';
+  if (v >=  0.3) return 'heat-mod-pos';
+  if (v >=  0.1) return 'heat-weak-pos';
+  if (v >= -0.1) return 'heat-neutral';
+  if (v >= -0.3) return 'heat-weak-neg';
+  if (v >= -0.6) return 'heat-mod-neg';
+  return 'heat-strong-neg';
+}
+
+function buildCorrTable(tableId, data) {
+  const table = document.getElementById(tableId);
+  if (!data || !data.length) return;
+  const cols = Object.keys(data[0]);
+  let html = '<thead><tr>';
+  cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+  data.forEach(row => {
+    html += '<tr>';
+    cols.forEach(c => {
+      const val = row[c];
+      if (c === 'Variable') {
+        html += `<td style="color:var(--text);font-weight:500">${val}</td>`;
+      } else {
+        const cls = heatClass(val, c);
+        html += `<td class="r-val ${cls}">${val}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function buildLeaderboard(tableId, data) {
+  const table = document.getElementById(tableId);
+  if (!data || !data.length) return;
+  const cols = Object.keys(data[0]);
+  let html = '<thead><tr>';
+  cols.forEach(c => html += `<th>${c}</th>`);
+  html += '</tr></thead><tbody>';
+  data.forEach((row, i) => {
+    html += '<tr>';
+    cols.forEach((c, j) => {
+      const val = row[c];
+      if (j === 0) {
+        const medal = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
+        html += `<td style="color:var(--text)">${medal}${val}</td>`;
+      } else {
+        html += `<td>${val}</td>`;
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+}
+
+function show(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Build all tables
+buildCorrTable('hcorr-table', DATA.hcorr);
+buildCorrTable('pcorr-table', DATA.pcorr);
+buildLeaderboard('blast-table', DATA.lb_blast24);
+// Fix fp24 — dedupe
+const seen = new Set();
+const fp24clean = DATA.lb_fp24.filter(r => { if(seen.has(r.Name)) return false; seen.add(r.Name); return true; });
+buildLeaderboard('fp24-table', fp24clean.slice(0,18));
+buildLeaderboard('h26-table', DATA.lb_h26);
+buildLeaderboard('p24-table', DATA.lb_p24);
+buildLeaderboard('p26-table', DATA.lb_p26);
+</script>
+</body>
+</html>

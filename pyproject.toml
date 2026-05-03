@@ -23,6 +23,7 @@ dependencies = [
     "plotly>=5.0",
     "matplotlib>=3.8",
     "requests>=2.31",
+    "espn-api>=0.35",
     "ipykernel>=6.0",
 ]
 

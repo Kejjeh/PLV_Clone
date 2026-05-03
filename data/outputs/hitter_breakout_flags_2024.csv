@@ -1,9 +1,77 @@
-batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rolling_decision_30d,rolling_trend,tag
-Freddie Freeman,518692,697,Tier A,114.1,114.0,103.2,109.0,0.497,0.265,0.399,0.07491,warm,Process+ strong; strong discipline; surface stats not yet elite
-Carlos Correa,621043,378,Tier B,114.0,101.3,114.3,106.4,0.449,0.261,0.392,0.06348,improving,Process+ strong; contact quality; surface stats not yet elite
-Luis García,671277,532,Tier A,113.4,96.1,115.2,106.5,0.518,0.35,0.383,0.09426,hot,Process+ strong; contact quality; trending up; surface stats not yet elite
-Mookie Betts,605141,594,Tier A,111.3,99.5,123.2,100.2,0.405,0.194,0.37,0.07591,warm,Process+ strong; contact quality; surface stats not yet elite
-Lenyn Sosa,672820,368,Tier B,111.3,94.8,108.1,108.0,0.527,0.392,0.392,0.1037,hot,Process+ strong; trending up; surface stats not yet elite
-Alec Bohm,664761,640,Tier A,111.2,105.2,117.4,101.6,0.503,0.294,0.371,0.03108,cold,Process+ strong; contact quality; surface stats not yet elite
-Junior Caminero,691406,176,Tier C,110.2,85.5,116.1,105.1,0.477,0.329,0.364,0.05684,cold,Process+ strong; contact quality; surface stats not yet elite
-Ryan O'Hearn,656811,498,Tier A,110.1,95.3,116.8,102.8,0.465,0.294,0.378,0.0625,cold,Process+ strong; contact quality; surface stats not yet elite
+batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rolling_decision_30d,rolling_trend,tag,season_stage
+Brent Rooker,667670,618,Tier A,OF,DH,DH,128.5,103.7,96.3,127.7,0.501,0.286,0.383,0.05564,improving,Process+ elite; surface stats not yet elite,mature
+Kerry Carpenter,681481,340,Tier B,OF,OF|DH,"OF, DH",128.1,101.1,98.4,127.0,0.511,0.33,0.383,0.08062,warm,Process+ elite; surface stats not yet elite,mature
+Corey Seager,608369,529,Tier A,SS,SS,SS,128.0,120.3,106.0,119.5,0.532,0.286,0.392,0.07973,warm,Process+ elite; elite discipline; surface stats not yet elite,mature
+Giancarlo Stanton,519317,536,Tier A,DH,DH,DH,126.5,89.2,100.1,127.1,0.469,0.277,0.368,0.06717,warm,Process+ elite; surface stats not yet elite,mature
+Rafael Devers,646240,593,Tier A,DH,3B,3B,124.3,108.6,95.9,123.1,0.509,0.332,0.367,0.11082,hot,Process+ elite; trending up; surface stats not yet elite,mature
+Jackson Merrill,701538,625,Tier A,OF,OF,OF,123.4,107.6,107.5,117.1,0.571,0.353,0.373,0.0446,cold,Process+ elite; surface stats not yet elite,mature
+Salvador Pérez,521692,673,Tier A,C,C|1B|DH,"C, 1B, DH",122.9,106.7,106.0,117.5,0.581,0.447,0.36,0.0333,cold,Process+ elite; surface stats not yet elite,mature
+Matt Wallner,670242,267,Tier B,OF,OF|DH,"OF, DH",122.5,111.6,79.5,128.2,0.479,0.265,0.357,0.10056,hot,Process+ elite; strong discipline; trending up; surface stats not yet elite,mature
+Kyle Schwarber,656941,718,Tier A,OF,DH,DH,121.6,94.1,92.5,125.0,0.402,0.213,0.384,0.06852,warm,Process+ elite; surface stats not yet elite,mature
+Ketel Marte,606466,596,Tier A,2B,2B|DH,"2B, DH",120.8,105.3,107.0,115.4,0.483,0.265,0.396,0.07495,warm,Process+ elite; surface stats not yet elite,mature
+Oneil Cruz,665833,617,Tier A,OF,SS|OF,"SS, OF",120.8,81.6,98.1,124.2,0.464,0.322,0.346,0.06395,cold,Process+ elite; surface stats not yet elite,mature
+Michael Toglia,669911,470,Tier A,1B,1B|OF,"1B, OF",120.5,96.6,88.2,125.4,0.451,0.288,0.362,0.07476,warm,Process+ elite; surface stats not yet elite,mature
+Austin Riley,663586,472,Tier A,3B,3B,3B,120.1,116.0,95.2,117.9,0.501,0.294,0.368,0.08866,hot,Process+ elite; elite discipline; trending up; surface stats not yet elite,mature
+Julio Rodríguez,677594,620,Tier A,OF,OF|DH,"OF, DH",119.5,107.8,97.5,117.9,0.541,0.358,0.35,0.13273,hot,Process+ elite; trending up; surface stats not yet elite,mature
+Jordan Westburg,676059,466,Tier A,3B,2B|3B,"2B, 3B",119.2,111.2,105.1,113.5,0.508,0.292,0.357,0.06991,warm,Process+ elite; strong discipline; surface stats not yet elite,mature
+Jesús Sánchez,660821,552,Tier A,OF,OF|DH,"OF, DH",119.1,96.7,103.4,117.2,0.536,0.327,0.348,0.07592,warm,Process+ elite; surface stats not yet elite,mature
+Byron Buxton,621439,394,Tier B,OF,OF,OF,118.9,113.4,97.6,116.3,0.541,0.29,0.355,0.12485,hot,Process+ elite; strong discipline; trending up; surface stats not yet elite,mature
+Yainer Diaz,673237,641,Tier A,C,C|1B|DH,"C, 1B, DH",118.3,109.5,110.5,110.6,0.586,0.423,0.344,0.1033,hot,Process+ elite; strong discipline; contact quality; trending up; surface stats not yet elite,mature
+Gunnar Henderson,683002,729,Tier A,SS,SS,SS,118.0,95.6,102.6,116.6,0.444,0.239,0.373,0.05457,improving,Process+ elite; surface stats not yet elite,mature
+Bryce Harper,547180,647,Tier A,1B,1B,1B,117.7,115.9,94.3,116.0,0.526,0.311,0.365,0.05416,cold,Process+ elite; elite discipline; surface stats not yet elite,mature
+Michael Harris,671739,482,Tier A,OF,OF,OF,117.6,93.0,108.7,114.0,0.552,0.391,0.351,0.06307,improving,Process+ elite; surface stats not yet elite,mature
+Mark Vientos,668901,531,Tier A,3B,3B,3B,117.4,101.8,94.6,118.5,0.501,0.33,0.337,0.07407,warm,Process+ elite; surface stats not yet elite,mature
+James Wood,695578,338,Tier B,OF,OF,OF,117.3,79.2,100.0,120.5,0.382,0.241,0.356,0.03983,cold,Process+ elite; surface stats not yet elite,mature
+Teoscar Hernández,606192,728,Tier A,OF,OF,OF,117.3,115.1,88.5,118.5,0.507,0.317,0.353,0.06316,improving,Process+ elite; elite discipline; surface stats not yet elite,mature
+Brandon Lowe,664040,435,Tier A,2B,1B|2B|DH,"1B, 2B, DH",117.0,119.1,92.4,115.6,0.552,0.301,0.345,0.08525,hot,Process+ elite; elite discipline; trending up; surface stats not yet elite,mature
+Francisco Lindor,596019,774,Tier A,SS,SS,SS,116.9,106.8,103.5,113.0,0.488,0.276,0.382,0.07048,warm,Process+ elite; surface stats not yet elite,mature
+Jake Burger,669394,593,Tier A,1B,1B|3B|DH,"1B, 3B, DH",116.8,95.8,104.6,114.6,0.526,0.38,0.339,0.08005,warm,Process+ elite; surface stats not yet elite,mature
+J. D. Martinez,502110,519,Tier A,DH,DH,DH,116.4,110.7,90.2,117.7,0.482,0.323,0.357,0.07741,warm,Process+ elite; strong discipline; surface stats not yet elite,mature
+Joc Pederson,592626,467,Tier A,1B,DH,DH,116.3,85.3,97.1,119.6,0.443,0.301,0.382,0.01953,improving,Process+ elite; surface stats not yet elite,mature
+Logan O'Hoppe,681351,532,Tier A,C,C,C,116.1,107.6,92.8,116.9,0.519,0.329,0.334,0.09897,hot,Process+ elite; trending up; surface stats not yet elite,mature
+Christian Yelich,592885,314,Tier B,OF,OF|DH,"OF, DH",115.6,110.2,104.8,110.5,0.457,0.226,0.375,0.07775,warm,Process+ elite; strong discipline; surface stats not yet elite,mature
+Tyler O'Neill,641933,477,Tier A,OF,OF|DH,"OF, DH",115.3,100.6,83.1,122.0,0.446,0.263,0.34,0.06756,warm,Process+ elite; surface stats not yet elite,mature
+Cal Raleigh,663728,629,Tier A,C,C|DH,"C, DH",115.2,107.3,90.9,117.0,0.523,0.324,0.348,0.10487,hot,Process+ elite; trending up; surface stats not yet elite,mature
+Riley Greene,682985,637,Tier A,OF,OF|DH,"OF, DH",114.9,98.7,95.3,116.4,0.442,0.257,0.357,0.08288,warm,Process+ strong; surface stats not yet elite,mature
+Nick Castellanos,592206,703,Tier A,OF,OF,OF,114.8,112.4,102.8,110.2,0.581,0.388,0.342,0.03859,cold,Process+ strong; strong discipline; surface stats not yet elite,mature
+Manny Machado,592518,674,Tier A,3B,3B|DH,"3B, DH",114.7,104.7,107.0,109.7,0.52,0.298,0.343,0.03901,cold,Process+ strong; surface stats not yet elite,mature
+Pete Alonso,624413,770,Tier A,1B,1B,1B,114.7,92.5,103.2,114.0,0.427,0.3,0.353,0.06732,warm,Process+ strong; surface stats not yet elite,mature
+Iván Herrera,671056,269,Tier B,C,C,C,114.6,87.8,106.5,113.3,0.435,0.259,0.372,0.05662,cold,Process+ strong; surface stats not yet elite,mature
+Willson Contreras,575929,364,Tier B,1B,C|DH,"C, DH",114.5,113.6,90.7,115.1,0.499,0.3,0.368,0.06939,warm,Process+ strong; strong discipline; surface stats not yet elite,mature
+José Siri,642350,458,Tier A,OF,OF,OF,114.5,98.8,85.8,120.4,0.508,0.368,0.302,0.02119,cold,Process+ strong; surface stats not yet elite,mature
+Freddie Freeman,518692,697,Tier A,1B,1B,1B,114.1,114.0,103.2,109.0,0.497,0.265,0.372,0.07491,warm,Process+ strong; strong discipline; surface stats not yet elite,mature
+Tyler Soderstrom,691016,214,Tier C,OF,1B,1B,114.0,93.6,103.8,112.7,0.487,0.3,0.352,0.08706,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Carlos Correa,621043,378,Tier B,SS,SS,SS,114.0,101.3,114.3,106.4,0.449,0.261,0.36,0.06348,improving,Process+ strong; contact quality; surface stats not yet elite,mature
+Randal Grichuk,545341,279,Tier B,OF,OF|DH,"OF, DH",113.8,104.0,111.0,107.2,0.473,0.327,0.368,0.14276,hot,Process+ strong; contact quality; trending up; surface stats not yet elite,mature
+Ryan Mountcastle,663624,517,Tier A,1B,1B,1B,113.7,108.7,100.6,110.9,0.563,0.38,0.332,0.06192,cold,Process+ strong; surface stats not yet elite,mature
+Luis García,671277,532,Tier A,2B,2B,2B,113.4,96.1,115.2,106.5,0.518,0.35,0.335,0.09426,hot,Process+ strong; contact quality; trending up; surface stats not yet elite,mature
+Michael Conforto,624424,492,Tier A,OF,OF|DH,"OF, DH",113.3,99.8,97.2,113.8,0.448,0.243,0.353,0.06231,improving,Process+ strong; surface stats not yet elite,mature
+Starling Marte,516782,448,Tier A,OF,OF,OF,113.3,106.4,102.3,110.2,0.502,0.329,0.348,0.06876,warm,Process+ strong; surface stats not yet elite,mature
+Nolan Gorman,669357,419,Tier A,2B,2B,2B,113.2,101.8,80.9,120.7,0.505,0.294,0.308,0.08093,warm,Process+ strong; surface stats not yet elite,mature
+Triston Casas,671213,252,Tier B,1B,1B,1B,112.8,91.5,93.1,116.9,0.442,0.22,0.329,0.07106,warm,Process+ strong; surface stats not yet elite,mature
+Heliot Ramos,671218,512,Tier A,OF,OF,OF,112.8,116.4,92.7,112.1,0.502,0.293,0.34,0.08762,hot,Process+ strong; elite discipline; trending up; surface stats not yet elite,mature
+Lawrence Butler,671732,460,Tier A,OF,OF,OF,112.7,97.8,102.4,111.4,0.476,0.27,0.342,0.08726,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Bryan Reynolds,668804,706,Tier A,OF,OF|DH,"OF, DH",112.4,113.9,97.3,110.1,0.502,0.276,0.355,0.08205,warm,Process+ strong; strong discipline; surface stats not yet elite,mature
+Christian Walker,572233,569,Tier A,1B,1B,1B,112.3,120.7,90.4,111.8,0.484,0.252,0.354,0.05097,cold,Process+ strong; elite discipline; surface stats not yet elite,mature
+J. T. Realmuto,592663,448,Tier A,C,C,C,111.9,99.6,98.0,112.2,0.5,0.305,0.34,0.04765,cold,Process+ strong; surface stats not yet elite,mature
+Matt Olson,621566,693,Tier A,1B,1B,1B,111.8,108.0,91.8,113.2,0.498,0.266,0.342,0.05022,cold,Process+ strong; surface stats not yet elite,mature
+Shea Langeliers,669127,539,Tier A,C,C,C,111.8,100.0,99.9,111.1,0.495,0.322,0.328,0.10521,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Eugenio Suárez,553993,660,Tier A,3B,3B,3B,111.7,102.8,95.8,112.4,0.473,0.234,0.336,0.08833,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Connor Norby,681393,204,Tier C,3B,2B|3B,"2B, 3B",111.7,127.5,80.3,114.4,0.575,0.361,0.315,0.07266,warm,Process+ strong; elite discipline; surface stats not yet elite,mature
+Seiya Suzuki,673548,584,Tier A,OF,OF|DH,"OF, DH",111.4,99.7,93.6,113.7,0.396,0.208,0.349,0.07392,warm,Process+ strong; surface stats not yet elite,mature
+Jarren Duran,680776,748,Tier A,OF,OF,OF,111.4,97.5,107.0,108.1,0.485,0.305,0.342,0.06948,warm,Process+ strong; surface stats not yet elite,mature
+Mookie Betts,605141,594,Tier A,SS,2B|SS|OF,"2B, SS, OF",111.3,99.5,123.2,100.2,0.405,0.194,0.366,0.07591,warm,Process+ strong; contact quality; surface stats not yet elite,mature
+Paul Goldschmidt,502671,673,Tier A,1B,1B,1B,111.3,100.6,93.9,113.3,0.477,0.26,0.335,0.08368,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Lenyn Sosa,672820,368,Tier B,2B,2B|3B,"2B, 3B",111.3,94.8,108.1,108.0,0.527,0.392,0.321,0.1037,hot,Process+ strong; trending up; surface stats not yet elite,mature
+Alec Bohm,664761,640,Tier A,3B,1B|3B,"1B, 3B",111.2,105.2,117.4,101.6,0.503,0.294,0.343,0.03108,cold,Process+ strong; contact quality; surface stats not yet elite,mature
+Elly De La Cruz,682829,695,Tier A,SS,SS,SS,111.1,82.0,98.7,114.7,0.434,0.302,0.331,0.05651,cold,Process+ strong; surface stats not yet elite,mature
+Jhonkensy Noel,678877,222,Tier C,OF,OF,OF,110.8,84.1,95.6,115.4,0.542,0.43,0.319,0.0618,cold,Process+ strong; surface stats not yet elite,mature
+William Contreras,661388,687,Tier A,C,C|DH,"C, DH",110.8,113.7,100.9,107.0,0.472,0.268,0.356,0.08285,warm,Process+ strong; strong discipline; surface stats not yet elite,mature
+Brenton Doyle,686668,614,Tier A,OF,OF,OF,110.8,114.7,97.8,108.2,0.514,0.31,0.331,0.07738,warm,Process+ strong; strong discipline; surface stats not yet elite,mature
+Ronald Acuña,660670,224,Tier C,OF,OF,OF,110.7,120.5,90.5,110.3,0.471,0.231,0.351,0.10373,hot,Process+ strong; elite discipline; trending up; surface stats not yet elite,mature
+Colton Cowser,681297,579,Tier A,OF,OF,OF,110.5,92.5,92.2,114.9,0.448,0.241,0.331,0.03988,improving,Process+ strong; surface stats not yet elite,mature
+Joey Bart,663698,286,Tier B,C,C|DH,"C, DH",110.3,85.2,101.7,111.9,0.436,0.29,0.336,0.0439,improving,Process+ strong; surface stats not yet elite,mature
+Junior Caminero,691406,176,Tier C,3B,3B,3B,110.2,85.5,116.1,105.1,0.477,0.329,0.304,0.05684,cold,Process+ strong; contact quality; surface stats not yet elite,mature
+Ryan O'Hearn,656811,498,Tier A,1B,1B|OF|DH,"1B, OF, DH",110.1,95.3,116.8,102.8,0.465,0.294,0.356,0.0625,cold,Process+ strong; contact quality; surface stats not yet elite,mature
+Trevor Larnach,663616,404,Tier A,OF,OF|DH,"OF, DH",110.0,95.7,106.8,107.1,0.441,0.25,0.347,0.03124,cold,Process+ strong; surface stats not yet elite,mature
+Kyle Stowers,669065,217,Tier C,OF,OF,OF,110.0,107.4,88.7,113.0,0.543,0.336,0.292,0.06746,warm,Process+ strong; surface stats not yet elite,mature

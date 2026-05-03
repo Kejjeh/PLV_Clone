@@ -235,6 +235,15 @@ def build_position_map(
             best = grp.sort_values("games_started", ascending=False).iloc[0]
             norm_primary = _normalize_position(best["position_raw"], cfg) or best["position_raw"]
 
+        # Primary defensive position always grants eligibility regardless of GS threshold.
+        # Matches ESPN behaviour: registered position qualifies before accumulating enough
+        # starts (e.g. a catcher getting DH reps early in the season).
+        if norm_primary and norm_primary not in fantasy_set:
+            _is_pitcher = norm_primary in _PITCHER_RAW
+            if not cfg.exclude_pitchers or not _is_pitcher:
+                fantasy_set.add(norm_primary)
+                fantasy_sorted = _sort_positions(list(fantasy_set))
+
         rows.append({
             "player_id":                int(pid),
             "player_name_pos":          name,

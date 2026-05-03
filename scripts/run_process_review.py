@@ -139,7 +139,7 @@ def write_data_integrity(scored_df: pd.DataFrame, hitter_lb: pd.DataFrame, out: 
         "pitch_level": {
             "rows": len(scored_df),
             "unique_batters": int(scored_df["batter"].nunique()) if "batter" in scored_df.columns else None,
-            "decision_coverage_pct": round(100 * scored_df["decision_value"].notna().mean(), 2),
+            "decision_coverage_pct": round(100 * scored_df["discipline_value"].notna().mean(), 2),
             "contact_coverage_pct":  round(100 * scored_df["contact_value"].notna().mean(), 2),
             "power_coverage_pct":    round(100 * scored_df["power_value"].notna().mean(), 2),
         },
@@ -155,7 +155,7 @@ def write_data_integrity(scored_df: pd.DataFrame, hitter_lb: pd.DataFrame, out: 
     }
 
     # Component-level pitch stats
-    for comp in ("decision_value", "contact_value", "power_value"):
+    for comp in ("discipline_value", "contact_value", "power_value"):
         if comp in scored_df.columns:
             vals = scored_df[comp].dropna()
             integrity[f"{comp}_stats"] = {
@@ -189,8 +189,8 @@ def write_component_distributions(hitter_lb: pd.DataFrame, out: Path) -> None:
     logger.info("Writing component_distributions.png ...")
 
     components = [
-        ("decision_plus", "Decision+", "#2196F3"),
-        ("contact_plus",  "Contact+",  "#4CAF50"),
+        ("discipline_plus", "Discipline+", "#2196F3"),
+        ("k_avoidance_plus",  "K-Avoidance+",  "#4CAF50"),
         ("power_plus",    "Power+",    "#FF9800"),
         ("process_plus",  "Process+",  "#9C27B0"),
     ]
@@ -225,9 +225,9 @@ def write_component_correlations(hitter_lb: pd.DataFrame, out: Path) -> None:
     logger.info("Writing component_correlations.png ...")
 
     pairs = [
-        ("decision_plus", "contact_plus"),
-        ("decision_plus", "power_plus"),
-        ("contact_plus",  "power_plus"),
+        ("discipline_plus", "k_avoidance_plus"),
+        ("discipline_plus", "power_plus"),
+        ("k_avoidance_plus",  "power_plus"),
     ]
     pairs = [(a, b) for a, b in pairs if a in hitter_lb.columns and b in hitter_lb.columns]
 
@@ -263,8 +263,8 @@ def write_stability_analysis(scored_df: pd.DataFrame, out_dir: Path) -> pd.DataF
 
     pa_thresholds = [25, 50, 100, 150, 200, 300, 500]
     components = [
-        ("decision_value", "decision_plus", "Decision+"),
-        ("contact_value",  "contact_plus",  "Contact+"),
+        ("discipline_value", "discipline_plus", "Discipline+"),
+        ("contact_value",  "k_avoidance_plus",  "Contact+"),
         ("power_value",    "power_plus",    "Power+"),
     ]
 
@@ -409,7 +409,7 @@ def write_yoy_stability(year: int, out: Path) -> dict | None:
     cur   = pd.read_csv(CFG.outputs_dir / f"process_plus_leaderboard_{year}.csv")
 
     results = {}
-    for comp in ("decision_plus", "contact_plus", "power_plus", "process_plus"):
+    for comp in ("discipline_plus", "k_avoidance_plus", "power_plus", "process_plus"):
         if comp not in prior.columns or comp not in cur.columns:
             continue
         merged = prior[["batter", comp]].merge(
@@ -466,7 +466,7 @@ def write_suspicious_cases(hitter_lb: pd.DataFrame, scored_df: pd.DataFrame, out
     # contributing little to process_plus correlation is *expected*, not degenerate.
     # Only flag if ALL three show near-zero correlation (suggests model failure).
     comp_rs = {}
-    for comp in ("decision_plus", "contact_plus", "power_plus"):
+    for comp in ("discipline_plus", "k_avoidance_plus", "power_plus"):
         if comp in hitter_lb.columns and "process_plus" in hitter_lb.columns:
             sub = hitter_lb[[comp, "process_plus"]].dropna()
             if len(sub) > 10:
@@ -483,8 +483,8 @@ def write_suspicious_cases(hitter_lb: pd.DataFrame, scored_df: pd.DataFrame, out
         })
 
     # Hitters with extreme per-pitch decision values (>3 SD from mean)
-    if "decision_value" in scored_df.columns:
-        mean_dv = scored_df.groupby("batter")["decision_value"].mean()
+    if "discipline_value" in scored_df.columns:
+        mean_dv = scored_df.groupby("batter")["discipline_value"].mean()
         pop_mean = mean_dv.mean()
         pop_std  = mean_dv.std()
         if pop_std > 0:
@@ -492,7 +492,7 @@ def write_suspicious_cases(hitter_lb: pd.DataFrame, scored_df: pd.DataFrame, out
             extreme = z[z.abs() > 3]
             if len(extreme) > 0:
                 cases.append({
-                    "category": "Extreme decision_value (|z|>3)",
+                    "category": "Extreme discipline_value (|z|>3)",
                     "severity": "LOW",
                     "count": len(extreme),
                     "pct_of_qualified": None,
@@ -537,9 +537,9 @@ def write_review_summary(
     top10_lines    = ""
     bottom10_lines = ""
     if len(hitter_lb) >= 10:
-        top10 = hitter_lb.nlargest(10, "process_plus")[[name_col, "pa", "process_plus", "decision_plus", "contact_plus", "power_plus"]]
+        top10 = hitter_lb.nlargest(10, "process_plus")[[name_col, "pa", "process_plus", "discipline_plus", "k_avoidance_plus", "power_plus"]]
         top10_lines = top10.to_string(index=False)
-        bottom10 = hitter_lb.nsmallest(10, "process_plus")[[name_col, "pa", "process_plus", "decision_plus", "contact_plus", "power_plus"]]
+        bottom10 = hitter_lb.nsmallest(10, "process_plus")[[name_col, "pa", "process_plus", "discipline_plus", "k_avoidance_plus", "power_plus"]]
         bottom10_lines = bottom10.to_string(index=False)
 
     # YoY summary
@@ -572,7 +572,7 @@ def write_review_summary(
 
     # Pairwise correlations
     pair_lines = ""
-    for a, b in [("decision_plus", "contact_plus"), ("decision_plus", "power_plus"), ("contact_plus", "power_plus")]:
+    for a, b in [("discipline_plus", "k_avoidance_plus"), ("discipline_plus", "power_plus"), ("k_avoidance_plus", "power_plus")]:
         if a in hitter_lb.columns and b in hitter_lb.columns:
             sub = hitter_lb[[a, b]].dropna()
             if len(sub) > 10:

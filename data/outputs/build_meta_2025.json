@@ -1,0 +1,16 @@
+{
+  "built_at": "2026-04-29T02:56:44Z",
+  "year": 2025,
+  "exports": [
+    "plv_rolling",
+    "master_pitcher",
+    "process_plus_rolling",
+    "master_hitter"
+  ],
+  "model_version": "1.0.0",
+  "min_pa_process": 150,
+  "min_pitches_plv": 100,
+  "rolling_days": 30,
+  "hitter_rolling_max_date": "2025-11-01",
+  "pitcher_rolling_max_date": "2025-11-01"
+}

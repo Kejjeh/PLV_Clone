@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BATQ — New Fantasy Batting Metric</title>
+<style>
+  :root {
+    --bg:#0f1117; --surface:#1a1d27; --surface2:#22263a; --border:#2e3450;
+    --text:#e2e8f0; --muted:#8892b0; --accent:#64ffda; --accent2:#f7c948;
+    --accent3:#ff6b6b; --accent4:#74b9ff; --green:#52c41a; --red:#ff4d4f;
+    --gold:#f7c948;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; line-height:1.6; }
+
+  .header { background:linear-gradient(135deg,#0f1117 0%,#1a1d27 50%,#12182b 100%); border-bottom:1px solid var(--border); padding:28px 40px; }
+  .header h1 { font-size:28px; font-weight:800; color:var(--accent); letter-spacing:-0.5px; }
+  .header .sub { color:var(--muted); font-size:13px; margin-top:6px; }
+  .tags { display:flex; gap:8px; margin-top:12px; flex-wrap:wrap; }
+  .tag { background:var(--surface2); border:1px solid var(--border); border-radius:12px; padding:3px 10px; font-size:11px; color:var(--accent); }
+
+  .nav { display:flex; gap:4px; padding:14px 40px; border-bottom:1px solid var(--border); background:var(--surface); overflow-x:auto; }
+  .nav-btn { background:none; border:1px solid var(--border); border-radius:6px; padding:7px 16px; color:var(--muted); cursor:pointer; font-size:12px; font-weight:500; white-space:nowrap; transition:all 0.15s; }
+  .nav-btn:hover { border-color:var(--accent); color:var(--accent); }
+  .nav-btn.active { background:var(--accent); border-color:var(--accent); color:#0f1117; font-weight:700; }
+
+  .main { padding:32px 40px; max-width:1400px; margin:0 auto; }
+  .section { display:none; } .section.active { display:block; }
+  h2 { font-size:18px; font-weight:700; margin-bottom:6px; }
+  h3 { font-size:14px; font-weight:600; color:var(--accent2); margin-bottom:10px; }
+  .sub-text { color:var(--muted); font-size:12px; margin-bottom:24px; line-height:1.8; }
+
+  .card-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:16px; margin-bottom:28px; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; }
+  .card h3 { font-size:12px; color:var(--accent2); margin-bottom:8px; }
+  .card .big { font-size:28px; font-weight:800; color:var(--accent); }
+  .card .label { font-size:11px; color:var(--muted); }
+  .card p { font-size:12px; color:var(--muted); margin-top:10px; line-height:1.7; }
+
+  .table-wrap { overflow-x:auto; margin-bottom:28px; border-radius:10px; border:1px solid var(--border); }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  thead tr { background:var(--surface2); }
+  thead th { padding:10px 14px; text-align:left; font-weight:600; color:var(--muted); font-size:11px; text-transform:uppercase; letter-spacing:0.5px; white-space:nowrap; border-bottom:1px solid var(--border); }
+  tbody tr { border-bottom:1px solid rgba(46,52,80,0.5); transition:background 0.1s; }
+  tbody tr:hover { background:var(--surface2); }
+  tbody td { padding:9px 14px; white-space:nowrap; }
+  tbody tr:first-child td { color:var(--gold); font-weight:600; }
+  tbody tr:nth-child(2) td, tbody tr:nth-child(3) td { color:#c8d0e0; }
+
+  .divider { height:1px; background:var(--border); margin:28px 0; }
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+  @media(max-width:900px){ .two-col { grid-template-columns:1fr; } }
+
+  /* Formula box */
+  .formula-box { background:#0d1526; border:1px solid var(--accent); border-radius:10px; padding:24px 28px; margin-bottom:24px; }
+  .formula-box h3 { color:var(--accent); font-size:15px; margin-bottom:16px; }
+  .formula-line { font-family:'Courier New',monospace; font-size:13px; color:var(--text); line-height:2.2; }
+  .formula-line .op { color:var(--accent2); }
+  .formula-line .coef { color:var(--accent); }
+  .formula-line .var { color:#74b9ff; }
+  .formula-line .comment { color:var(--muted); font-size:11px; }
+
+  /* Axis bars */
+  .axis-row { display:flex; align-items:center; gap:12px; margin-bottom:10px; }
+  .axis-label { font-size:12px; color:var(--muted); width:160px; flex-shrink:0; }
+  .axis-bar-bg { flex:1; height:8px; background:var(--surface2); border-radius:4px; }
+  .axis-bar-fill { height:8px; border-radius:4px; }
+  .axis-weight { font-size:12px; color:var(--accent2); width:60px; text-align:right; }
+
+  /* Score badges */
+  .badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:10px; font-weight:700; }
+  .badge-green { background:rgba(82,196,26,0.15); color:#52c41a; }
+  .badge-yellow { background:rgba(247,201,72,0.15); color:#f7c948; }
+  .badge-red { background:rgba(255,77,79,0.15); color:#ff4d4f; }
+  .badge-blue { background:rgba(116,185,255,0.15); color:#74b9ff; }
+
+  /* Reliability meter */
+  .reliability { display:flex; align-items:center; gap:10px; margin-bottom:20px; }
+  .rel-label { font-size:12px; color:var(--muted); width:200px; }
+  .rel-bar-bg { width:200px; height:10px; background:var(--surface2); border-radius:5px; }
+  .rel-bar-fill { height:10px; border-radius:5px; }
+  .rel-val { font-size:12px; font-weight:600; width:60px; }
+
+  .warning-box { background:rgba(255,107,107,0.08); border:1px solid rgba(255,107,107,0.3); border-radius:8px; padding:14px 18px; font-size:12px; color:var(--accent3); margin-bottom:20px; line-height:1.8; }
+  .good-box    { background:rgba(82,196,26,0.08);  border:1px solid rgba(82,196,26,0.3);  border-radius:8px; padding:14px 18px; font-size:12px; color:#52c41a; margin-bottom:20px; line-height:1.8; }
+  .info-box    { background:rgba(116,185,255,0.08);border:1px solid rgba(116,185,255,0.3);border-radius:8px; padding:14px 18px; font-size:12px; color:#74b9ff; margin-bottom:20px; line-height:1.8; }
+
+  .three-level { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:24px; }
+  @media(max-width:900px){ .three-level { grid-template-columns:1fr; } }
+  .level-card { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:18px; border-top:3px solid; }
+  .level-card.l1 { border-top-color:#52c41a; }
+  .level-card.l2 { border-top-color:#f7c948; }
+  .level-card.l3 { border-top-color:#74b9ff; }
+  .level-card h4 { font-size:13px; font-weight:700; margin-bottom:8px; }
+  .level-card.l1 h4 { color:#52c41a; }
+  .level-card.l2 h4 { color:#f7c948; }
+  .level-card.l3 h4 { color:#74b9ff; }
+  .level-card p { font-size:12px; color:var(--muted); line-height:1.7; }
+  .level-card .formula { font-family:monospace; font-size:11px; color:var(--text); background:var(--surface2); padding:6px 10px; border-radius:4px; margin:8px 0; }
+
+  /* Environment gauge */
+  .env-row { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid rgba(46,52,80,0.4); }
+  .env-name { width:180px; font-size:12px; color:var(--text); }
+  .env-bar-container { flex:1; position:relative; height:12px; background:var(--surface2); border-radius:6px; }
+  .env-bar { height:12px; border-radius:6px; position:absolute; }
+  .env-val { width:50px; font-size:12px; text-align:right; }
+  .env-bonus { width:80px; font-size:11px; text-align:right; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>BATQ — Batting Quality Score</h1>
+  <div class="sub">A new fantasy-scoring-optimized batting metric · built from raw Statcast inputs · scored against your actual league rules</div>
+  <div class="tags">
+    <span class="tag">n=815 player-seasons · 2023+2024</span>
+    <span class="tag">4-axis composite</span>
+    <span class="tag">r=0.814 in-sample</span>
+    <span class="tag">CV r²=0.34 (see caveats)</span>
+    <span class="tag">Your scoring: TB+BB−K+HBP</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show('metric')">The Metric</button>
+  <button class="nav-btn" onclick="show('levels')">3 Score Levels</button>
+  <button class="nav-btn" onclick="show('compare')">vs Existing Stats</button>
+  <button class="nav-btn" onclick="show('leaders')">BATQ Leaders '24</button>
+  <button class="nav-btn" onclick="show('environment')">Run/RBI Environment</button>
+  <button class="nav-btn" onclick="show('honest')">Honest Assessment</button>
+</div>
+
+<div class="main">
+
+<!-- ═══ METRIC ═══════════════════════════════════════════════════════════════ -->
+<div id="section-metric" class="section active">
+  <h2>BATQ: Batting Quality Score</h2>
+  <p class="sub-text">A new composite designed specifically around your scoring rules (TB+1, BB+1, K−1, HBP+1). Built from four orthogonal axes, each z-scored within season, then optimally weighted against actual realized fantasy points.</p>
+
+  <div class="formula-box">
+    <h3>BATQ Formula</h3>
+    <div class="formula-line">
+      <span class="var">BATQ</span> <span class="op">=</span>
+      <span class="coef">0.0667</span> × <span class="var">z(xwOBA_on_Contact)</span>
+      <span class="op">+</span> <span class="coef">0.0432</span> × <span class="var">z(InPlay%)</span>
+      <span class="op">+</span> <span class="coef">0.0547</span> × <span class="var">z(1 − Whiff%)</span>
+      <span class="op">+</span> <span class="coef">0.0039</span> × <span class="var">z(1 − Chase%)</span>
+    </div>
+    <div class="formula-line" style="margin-top:6px;font-size:12px;color:var(--muted)">
+      All inputs z-scored within season (mean=0, std=1). Output scaled 0–100.
+    </div>
+    <div style="margin-top:16px">
+      <div class="axis-row">
+        <div class="axis-label">Contact Quality<br><span style="font-size:10px">xwOBA on Contact</span></div>
+        <div class="axis-bar-bg"><div class="axis-bar-fill" style="width:82%;background:var(--accent)"></div></div>
+        <div class="axis-weight">weight 0.067</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-label">K Avoidance<br><span style="font-size:10px">1 − Whiff%</span></div>
+        <div class="axis-bar-bg"><div class="axis-bar-fill" style="width:67%;background:#52c41a"></div></div>
+        <div class="axis-weight">weight 0.055</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-label">In-Play Frequency<br><span style="font-size:10px">InPlay%</span></div>
+        <div class="axis-bar-bg"><div class="axis-bar-fill" style="width:53%;background:#f7c948"></div></div>
+        <div class="axis-weight">weight 0.043</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-label">Walk Selectivity<br><span style="font-size:10px">1 − Chase%</span></div>
+        <div class="axis-bar-bg"><div class="axis-bar-fill" style="width:5%;background:#74b9ff"></div></div>
+        <div class="axis-weight">weight 0.004</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="info-box">
+    <strong>Why these four axes?</strong><br>
+    Your scoring formula (TB + BB − K + HBP) decomposes into three near-independent dimensions of batter skill. <strong>Contact quality</strong> (xwOBA on contact) drives TB. <strong>K avoidance</strong> (1−Whiff%) drives the biggest penalty in your system — K is −1 pt and is the single highest-variance component. <strong>In-play frequency</strong> multiplies contact quality: even elite contact means nothing if the ball stays on the bat. Walk selectivity (1−Chase%) was the weakest axis in the data — BB/PA is surprisingly less predictive of total FP than K rate.
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>In-Sample Performance</h3>
+      <div class="big">r = 0.814</div>
+      <div class="label">vs actual FP/PA · 2023+2024 · n=815</div>
+      <p>Beats core_fp_per_pa (r=0.792) in-sample. Explains 66% of actual FP variance using only raw Statcast inputs — no model needed.</p>
+    </div>
+    <div class="card">
+      <h3>Cross-Validated Performance</h3>
+      <div class="big" style="color:var(--accent2)">r² = 0.34</div>
+      <div class="label">5-fold CV · honest out-of-sample estimate</div>
+      <p>The gap between in-sample (0.66) and CV (0.34) is real. Two seasons of data isn't enough to fully stabilize the weights. Core_fp_per_pa is still more reliable for ranking. See the Honest Assessment tab.</p>
+    </div>
+    <div class="card">
+      <h3>Key Insight vs xwOBA</h3>
+      <div class="big" style="color:var(--accent3)">8.3×</div>
+      <div class="label">more explanatory than xwOBA alone</div>
+      <p>xwOBA explains only 7.5% of your FP variance (r=0.27). BATQ is 8× better because it correctly prices K avoidance, which xwOBA barely penalizes.</p>
+    </div>
+    <div class="card">
+      <h3>What BATQ Adds</h3>
+      <div class="big">+0.025</div>
+      <div class="label">improvement in r over core_fp_per_pa</div>
+      <p>Marginal gain in-sample. The real value is conceptual: BATQ uses only raw Statcast inputs (no regression model), so it's calculable from a single game or rolling window without needing the full model pipeline.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ 3 LEVELS ═══════════════════════════════════════════════════════════ -->
+<div id="section-levels" class="section">
+  <h2>Three Score Levels</h2>
+  <p class="sub-text">Fantasy batting performance breaks into three cleanly separable layers — each with a different data requirement and reliability level.</p>
+
+  <div class="three-level">
+    <div class="level-card l1">
+      <h4>Level 1 — Pure Bat Control</h4>
+      <div class="formula">FP_L1 = TB + BB − K + HBP</div>
+      <p><strong style="color:#52c41a">Most reliable.</strong> 100% derivable from pitch-level Statcast. No context dependence — this is what the batter controls at the plate, full stop. Stabilizes fastest (TB ~150 PA, K/BB ~50 PA). This is what BATQ and core_fp_per_pa are designed to predict.</p>
+      <p style="margin-top:8px">Best predictors: Whiff% (K), xwOBA on contact + InPlay% (TB), Chase% (BB).</p>
+    </div>
+    <div class="level-card l2">
+      <h4>Level 2 — Bat Control + Speed</h4>
+      <div class="formula">FP_L2 = L1 + SB</div>
+      <p><strong style="color:#f7c948">Moderately reliable.</strong> Adds stolen base value. SB is the hardest of the non-context stats to predict from Statcast because sprint speed and opportunity (not just ability) drive it. The model uses Bayesian shrinkage toward league average — best signal comes after 150+ PA.</p>
+      <p style="margin-top:8px">Best predictor: observed SB rate (shrunk). Sprint speed would help but isn't in your current data.</p>
+    </div>
+    <div class="level-card l3">
+      <h4>Level 3 — Full Fantasy Score</h4>
+      <div class="formula">FP_L3 = L2 + R + RBI</div>
+      <p><strong style="color:#74b9ff">Context dependent.</strong> R and RBI are the noisiest components — they require lineup environment (who's batting around the player, team OBP, batting order position). A .380 OBP player batting 8th scores ~40% fewer fantasy runs than the same player batting 2nd. See the Environment tab.</p>
+      <p style="margin-top:8px">Best predictors: OBP proxy (for R) + avg runners on base when batting (for RBI).</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Metric Reliability Comparison</h2>
+  <p class="sub-text">At what sample size does each metric stabilize? (correlation with true-talent level ≥ 0.70)</p>
+  <div style="max-width:600px">
+    <div class="reliability"><div class="rel-label">K/PA (Whiff%)</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:92%;background:#52c41a"></div></div><div class="rel-val" style="color:#52c41a">~50 PA</div></div>
+    <div class="reliability"><div class="rel-label">BB/PA (Chase%)</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:82%;background:#52c41a"></div></div><div class="rel-val" style="color:#52c41a">~60 PA</div></div>
+    <div class="reliability"><div class="rel-label">TB/PA (contact quality)</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:55%;background:#f7c948"></div></div><div class="rel-val" style="color:#f7c948">~150 PA</div></div>
+    <div class="reliability"><div class="rel-label">SB rate</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:35%;background:#f7c948"></div></div><div class="rel-val" style="color:#f7c948">~200 PA</div></div>
+    <div class="reliability"><div class="rel-label">R/PA (environment)</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:20%;background:var(--accent3)"></div></div><div class="rel-val" style="color:var(--accent3)">~400 PA</div></div>
+    <div class="reliability"><div class="rel-label">RBI/PA (environment)</div><div class="rel-bar-bg"><div class="rel-bar-fill" style="width:15%;background:var(--accent3)"></div></div><div class="rel-val" style="color:var(--accent3)">~500 PA</div></div>
+  </div>
+</div>
+
+<!-- ═══ COMPARE ═══════════════════════════════════════════════════════════ -->
+<div id="section-compare" class="section">
+  <h2>Every Stat Ranked — vs Actual FP/PA</h2>
+  <p class="sub-text">Pearson r with actual Level 1 fantasy points (TB+BB−K+HBP per PA). 2023+2024 combined, n=815 player-seasons, min 150 PA. Sorted by absolute correlation.</p>
+  <div class="table-wrap">
+    <table id="compare-table">
+      <thead><tr><th>Rank</th><th>Stat / Metric</th><th>r</th><th>r²</th><th>Direction</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Core FP/PA <span class="badge badge-blue">model composite</span></td><td style="color:#52c41a;font-weight:700">+0.792</td><td>0.627</td><td>▲ more = better</td><td>Best overall — weighted projection of same formula</td></tr>
+        <tr><td>2</td><td>BATQ <span class="badge badge-green">new</span></td><td style="color:#52c41a;font-weight:700">+0.814</td><td>0.662</td><td>▲ more = better</td><td>In-sample only; CV r²=0.34</td></tr>
+        <tr><td>3</td><td>Actual TB/PA <span class="badge badge-yellow">realized</span></td><td style="color:#52c41a">+0.702</td><td>0.493</td><td>▲ more = better</td><td>Outcome stat — not predictive</td></tr>
+        <tr><td>4</td><td>Actual K/PA <span class="badge badge-yellow">realized</span></td><td style="color:#ff4d4f">−0.656</td><td>0.430</td><td>▼ less = better</td><td>K rate is huge drag — outcome stat</td></tr>
+        <tr><td>5</td><td>Process+</td><td style="color:#52c41a">+0.560</td><td>0.314</td><td>▲ more = better</td><td>Best single predictive stat from model</td></tr>
+        <tr><td>6</td><td>Contact+</td><td style="color:#52c41a">+0.497</td><td>0.247</td><td>▲ more = better</td><td>Captures K avoidance axis well</td></tr>
+        <tr><td>7</td><td>Whiff%</td><td style="color:#ff4d4f">−0.482</td><td>0.232</td><td>▼ less = better</td><td>Best single raw Statcast input</td></tr>
+        <tr><td>8</td><td>Avg Exit Velocity</td><td style="color:#52c41a">+0.419</td><td>0.176</td><td>▲ more = better</td><td>Good power proxy</td></tr>
+        <tr><td>9</td><td>Contact%</td><td style="color:#52c41a">+0.417</td><td>0.174</td><td>▲ more = better</td><td>Inverse of whiff</td></tr>
+        <tr><td>10</td><td>Hard Hit%</td><td style="color:#a8e063">+0.366</td><td>0.134</td><td>▲ more = better</td><td>Useful but weak alone</td></tr>
+        <tr><td>11</td><td>Blast%</td><td style="color:#a8e063">+0.366</td><td>0.134</td><td>▲ more = better</td><td>xwOBA proxy — not a FP proxy</td></tr>
+        <tr><td>12</td><td>In-Play%</td><td style="color:#a8e063">+0.354</td><td>0.125</td><td>▲ more = better</td><td>Contact frequency multiplier</td></tr>
+        <tr><td>13</td><td>Power+</td><td style="color:#a8e063">+0.296</td><td>0.088</td><td>▲ more = better</td><td>Power isolated</td></tr>
+        <tr><td>14</td><td><strong>xwOBA (season)</strong></td><td style="color:var(--accent3);font-weight:700">+0.274</td><td><strong>0.075</strong></td><td>▲ more = better</td><td>⚠️ Explains only 7.5% of your FP variance</td></tr>
+        <tr><td>15</td><td>xwOBA on Contact</td><td style="color:var(--accent3)">+0.274</td><td>0.075</td><td>▲ more = better</td><td>Same as xwOBA — same weakness</td></tr>
+        <tr><td>16</td><td>Barrel%</td><td style="color:var(--muted)">+0.248</td><td>0.061</td><td>▲ more = better</td><td>Even weaker than blast%</td></tr>
+        <tr><td>17</td><td>Actual BB/PA <span class="badge badge-yellow">realized</span></td><td style="color:var(--muted)">+0.201</td><td>0.040</td><td>▲ more = better</td><td>Walks matter but are small contribution</td></tr>
+        <tr><td>18</td><td>Sweet Spot%</td><td style="color:var(--muted)">+0.143</td><td>0.020</td><td>▲ more = better</td><td>Near noise level</td></tr>
+        <tr><td>19</td><td>Chase%</td><td style="color:var(--muted)">−0.117</td><td>0.014</td><td>▼ less = better</td><td>Near noise — BB is weak FP contributor</td></tr>
+        <tr><td>20</td><td>Decision+</td><td style="color:var(--muted)">+0.025</td><td>0.001</td><td>—</td><td>Essentially zero correlation</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div class="warning-box">
+    ⚠️ <strong>The xwOBA problem:</strong> Baseball Savant's whole stackcast framework (blast → hard hit → xwOBA) is built to predict xwOBA. But xwOBA only explains 7.5% of your fantasy scoring variance. Your scoring penalizes Ks at −1 pt each — xwOBA barely prices this. A player with elite blast% but 30% K rate is losing 0.30 FP/PA from strikeouts alone. That's why the Savant approach is the wrong frame for your league.
+  </div>
+</div>
+
+<!-- ═══ LEADERS ═══════════════════════════════════════════════════════════ -->
+<div id="section-leaders" class="section">
+  <h2>BATQ Leaders — 2024</h2>
+  <p class="sub-text">Min 150 PA. BATQ scored 0–100. Actual FP/PA = realized TB+BB−K+HBP per PA from Statcast events.</p>
+  <div class="table-wrap"><table id="batq-table"></table></div>
+  <p style="color:var(--muted);font-size:12px">Notable: Luis Arráez scores 100 despite near-zero blast% — his ~3% whiff rate and 25% in-play rate make him elite on the K-avoidance and frequency axes that drive your scoring.</p>
+</div>
+
+<!-- ═══ ENVIRONMENT ═══════════════════════════════════════════════════════ -->
+<div id="section-environment" class="section">
+  <h2>Run/RBI Environment Dashboard</h2>
+  <p class="sub-text">Lineup context from actual Statcast baserunner data (2024). Average runners on base when each batter steps to the plate — the cleanest available proxy for R/RBI opportunity. Updated each time you rebuild exports.</p>
+
+  <div class="info-box">
+    <strong>How this is computed:</strong> For every plate appearance in your Statcast data, we record which bases are occupied (on_1b, on_2b, on_3b booleans). Per-batter averages tell us whether they're batting with runners on (RBI environment) or leading off with bases empty (run-scoring environment). This is real data from your parquets — not an estimate.
+  </div>
+
+  <div class="card-grid">
+    <div class="card">
+      <h3>League Average (2024)</h3>
+      <div class="big">0.598</div>
+      <div class="label">avg runners on base per PA</div>
+      <p>Ranges from 0.42 (leadoff-heavy hitters) to 0.77 (protected middle-of-order hitters). Std dev = 0.063.</p>
+    </div>
+    <div class="card">
+      <h3>Environment Effect Size</h3>
+      <div class="big">±2–6 pts</div>
+      <div class="label">fantasy pts over 600 PA season</div>
+      <p>Compared to lineup-neutral, the best RBI environments (Muncy, Kirk) add ~6 pts/600 PA. The worst (Kwan, Arráez) lose ~6 pts. Small but real — worth tracking for waiver decisions.</p>
+    </div>
+    <div class="card">
+      <h3>R vs RBI Environment</h3>
+      <div class="big">Opposite</div>
+      <div class="label">leadoff hitters vs protection hitters</div>
+      <p>Leadoff hitters (low avg runners on, high bases-empty rate) score more runs themselves but drive in fewer. Middle-order hitters are the reverse. Your R+RBI scoring weights both equally.</p>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <h3>Best RBI Environments (2024)</h3>
+      <div class="table-wrap"><table id="env-top-table"></table></div>
+    </div>
+    <div>
+      <h3>Worst RBI Environments (2024)</h3>
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px">These players tend to bat leadoff — fewer runners = fewer RBI but more R opportunities.</p>
+      <div class="table-wrap"><table id="env-bot-table"></table></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <h2>Incorporating Environment into Full FP Projection</h2>
+  <p class="sub-text">How to combine the three levels into a complete projection:</p>
+
+  <div class="formula-box">
+    <h3>Full FP/PA Projection (with environment adjustment)</h3>
+    <div class="formula-line">
+      <span class="var">Full_FP</span> <span class="op">=</span>
+      <span class="comment">// Level 1 (pure bat — from BATQ or core_fp_per_pa)</span>
+    </div>
+    <div class="formula-line">
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="coef">L1_FP</span>
+      <span class="op">+</span> <span class="coef">est_sb_rate</span>
+      <span class="comment">// +speed premium (shrinkage model)</span>
+    </div>
+    <div class="formula-line">
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="op">+</span> <span class="coef">0.37 × OBP_proxy</span>
+      <span class="comment">// +R/PA estimate</span>
+    </div>
+    <div class="formula-line">
+      &nbsp;&nbsp;&nbsp;&nbsp;<span class="op">+</span> <span class="coef">(0.24 × TB/PA + 0.06 × OBP) × env_multiplier</span>
+      <span class="comment">// +RBI/PA adjusted for lineup environment</span>
+    </div>
+    <div class="formula-line" style="margin-top:12px;color:var(--accent2)">
+      env_multiplier = avg_runners_on / league_avg_runners_on
+      <span class="comment">// 1.0 = neutral · &gt;1.0 = premium environment · &lt;1.0 = discount</span>
+    </div>
+  </div>
+
+  <div class="good-box">
+    <strong>Suggested improvement for your project:</strong> Add a live environment feed to the dashboard. Each time you update exports, compute <code>avg_runners_on</code> from the current season's Statcast and flag players whose environment has changed by ≥ 0.05 (lineup move, injury to lineup protection, etc.). A player moving from batting 1st to 4th gains ~6 fantasy pts over a 600 PA season in R/RBI alone.
+  </div>
+</div>
+
+<!-- ═══ HONEST ═══════════════════════════════════════════════════════════ -->
+<div id="section-honest" class="section">
+  <h2>Honest Assessment — What We Actually Know</h2>
+  <p class="sub-text">Building new metrics is easy. Knowing what they're actually worth is harder. Here's the unvarnished picture.</p>
+
+  <div class="warning-box">
+    <strong>BATQ's cross-validation problem:</strong> In-sample r²=0.66 looks great. 5-fold CV r²=0.34 is much weaker — and the CV variance was huge (±0.30 std dev). This means the metric weights are somewhat overfit to 2023+2024 data. With only 815 player-seasons across 2 years, there's not enough data to fully stabilize a 4-weight fit. Until we validate against a third year (2025), treat BATQ as directionally correct but not reliably better than core_fp_per_pa for ranking purposes.
+  </div>
+
+  <div class="good-box">
+    <strong>What is actually robust:</strong> The <em>direction</em> of the four axes is clearly correct and stable — xwOBA on contact, K avoidance, and in-play frequency all point the right way. The relative ordering at the extremes (Ohtani, Soto, Judge at top; replacement-level players at bottom) is reliable. The middle of the distribution is noisier.
+  </div>
+
+  <div class="info-box">
+    <strong>What would make BATQ better:</strong><br>
+    1. <strong>More seasons</strong> — add 2021 and 2022 Statcast data to get to 4 years (~1,600 player-seasons). CV r² would likely improve to 0.50+.<br>
+    2. <strong>Sprint speed</strong> — adding Statcast sprint speed (ft/sec) would significantly improve the SB component, currently the weakest axis.<br>
+    3. <strong>Pull% / GB%</strong> — groundball rate limits TB even on well-struck contact. This is partially captured by in_play_pct but could be more explicit.<br>
+    4. <strong>Year-over-year weight</strong> — a rolling 2-year weighted average of BATQ (70% current / 30% prior year) would reduce variance without much bias cost.
+  </div>
+
+  <div class="divider"></div>
+  <h2>Practical Recommendation</h2>
+  <p style="color:var(--muted);font-size:13px;line-height:2">
+    For ranking purposes: <strong style="color:var(--text)">core_fp_per_pa is still your best ranking metric</strong> — it has better CV stability and years of calibration. BATQ is most useful as a <em>quick sanity check</em> on players who are new to the model (early season, recent debuts) because it needs only raw Statcast inputs rather than the full model pipeline.<br><br>
+    For understanding: <strong style="color:var(--text)">the three-axis framing (contact quality × in-play frequency × K avoidance) is the right mental model</strong>. Any player you evaluate, run those three numbers in your head. A player who scores elite on all three is genuinely rare — that's your target.<br><br>
+    For R/RBI: <strong style="color:var(--text)">use environment as a +/− adjustment on top of L1 rankings</strong>, not as a primary driver. The effect (±6 pts/600 PA) is real but small compared to the bat-control signal (range of ~120 pts/600 PA between best and worst hitters). Don't reach for a bad hitter because he bats cleanup — the lineup context bump doesn't overcome a 0.05 lower core_fp_per_pa.
+  </p>
+</div>
+
+</div><!-- /main -->
+
+<script>
+const DATA = {
+  batq_leaders: [
+    {"Name":"Shohei Ohtani","PA":797,"BATQ":100.0,"Actual FP/PA":0.429,"Whiff%":12.7,"xwOBA/Con":0.553,"InPlay%":16.4,"Chase%":28.0,"Core FP/PA":0.449},
+    {"Name":"Juan Soto","PA":772,"BATQ":100.0,"Actual FP/PA":0.484,"Whiff%":7.5,"xwOBA/Con":0.524,"InPlay%":15.6,"Chase%":16.0,"Core FP/PA":0.424},
+    {"Name":"Aaron Judge","PA":745,"BATQ":100.0,"Actual FP/PA":0.477,"Whiff%":12.7,"xwOBA/Con":0.612,"InPlay%":13.3,"Chase%":22.0,"Core FP/PA":0.414},
+    {"Name":"Luis Arráez","PA":698,"BATQ":100.0,"Actual FP/PA":0.367,"Whiff%":3.0,"xwOBA/Con":0.329,"InPlay%":25.3,"Chase%":27.6,"Core FP/PA":0.408},
+    {"Name":"Yordan Álvarez","PA":627,"BATQ":100.0,"Actual FP/PA":0.453,"Whiff%":9.0,"xwOBA/Con":0.460,"InPlay%":20.1,"Chase%":27.3,"Core FP/PA":0.393},
+    {"Name":"Bobby Witt Jr.","PA":727,"BATQ":97.5,"Actual FP/PA":0.446,"Whiff%":9.9,"xwOBA/Con":0.456,"InPlay%":20.7,"Chase%":32.5,"Core FP/PA":0.411},
+    {"Name":"Vladimir Guerrero","PA":683,"BATQ":97.0,"Actual FP/PA":0.445,"Whiff%":9.5,"xwOBA/Con":0.453,"InPlay%":20.2,"Chase%":27.9,"Core FP/PA":0.370},
+    {"Name":"Pavin Smith","PA":158,"BATQ":93.3,"Actual FP/PA":0.392,"Whiff%":7.9,"xwOBA/Con":0.461,"InPlay%":17.1,"Chase%":23.3,"Core FP/PA":0.376},
+    {"Name":"Ketel Marte","PA":575,"BATQ":91.4,"Actual FP/PA":0.416,"Whiff%":9.3,"xwOBA/Con":0.450,"InPlay%":19.0,"Chase%":26.5,"Core FP/PA":0.360},
+    {"Name":"Jung Hoo Lee","PA":157,"BATQ":91.0,"Actual FP/PA":0.293,"Whiff%":3.8,"xwOBA/Con":0.325,"InPlay%":23.1,"Chase%":25.7,"Core FP/PA":0.368},
+    {"Name":"Corey Seager","PA":520,"BATQ":89.5,"Actual FP/PA":0.369,"Whiff%":11.5,"xwOBA/Con":0.454,"InPlay%":20.5,"Chase%":28.6,"Core FP/PA":0.342},
+    {"Name":"Fernando Tatís","PA":467,"BATQ":89.1,"Actual FP/PA":0.358,"Whiff%":13.2,"xwOBA/Con":0.485,"InPlay%":19.8,"Chase%":30.2,"Core FP/PA":0.356},
+    {"Name":"Alec Bohm","PA":616,"BATQ":86.7,"Actual FP/PA":0.336,"Whiff%":7.8,"xwOBA/Con":0.371,"InPlay%":22.7,"Chase%":29.4,"Core FP/PA":0.341},
+    {"Name":"Jackson Merrill","PA":614,"BATQ":85.6,"Actual FP/PA":0.347,"Whiff%":11.1,"xwOBA/Con":0.438,"InPlay%":20.8,"Chase%":35.3,"Core FP/PA":0.361},
+    {"Name":"Alex Bregman","PA":640,"BATQ":85.1,"Actual FP/PA":0.355,"Whiff%":5.1,"xwOBA/Con":0.348,"InPlay%":21.0,"Chase%":19.1,"Core FP/PA":0.329},
+    {"Name":"Steven Kwan","PA":586,"BATQ":83.3,"Actual FP/PA":0.392,"Whiff%":2.8,"xwOBA/Con":0.328,"InPlay%":20.0,"Chase%":20.6,"Core FP/PA":0.354},
+    {"Name":"Mookie Betts","PA":586,"BATQ":83.2,"Actual FP/PA":0.439,"Whiff%":5.6,"xwOBA/Con":0.370,"InPlay%":19.4,"Chase%":19.4,"Core FP/PA":0.350},
+    {"Name":"Yandy Díaz","PA":618,"BATQ":81.8,"Actual FP/PA":0.309,"Whiff%":5.4,"xwOBA/Con":0.367,"InPlay%":19.2,"Chase%":20.4,"Core FP/PA":0.327},
+    {"Name":"José Ramírez","PA":715,"BATQ":80.0,"Actual FP/PA":0.381,"Whiff%":7.0,"xwOBA/Con":0.383,"InPlay%":20.8,"Chase%":27.9,"Core FP/PA":0.349},
+    {"Name":"Freddie Freeman","PA":649,"BATQ":79.5,"Actual FP/PA":0.392,"Whiff%":8.3,"xwOBA/Con":0.407,"InPlay%":19.8,"Chase%":27.0,"Core FP/PA":0.348}
+  ],
+  env_top: [
+    {"Name":"Max Muncy","PA":357,"Avg Runners":0.768,"RISP%":0.303,"Bases Empty%":0.479,"Env Bonus/600PA":6.4},
+    {"Name":"Enmanuel Valdez","PA":221,"Avg Runners":0.760,"RISP%":0.339,"Bases Empty%":0.480,"Env Bonus/600PA":6.1},
+    {"Name":"Alejandro Kirk","PA":384,"Avg Runners":0.758,"RISP%":0.341,"Bases Empty%":0.500,"Env Bonus/600PA":6.0},
+    {"Name":"Tyrone Taylor","PA":387,"Avg Runners":0.757,"RISP%":0.300,"Bases Empty%":0.491,"Env Bonus/600PA":6.0},
+    {"Name":"Austin Wells","PA":467,"Avg Runners":0.739,"RISP%":0.276,"Bases Empty%":0.480,"Env Bonus/600PA":5.3},
+    {"Name":"Francisco Álvarez","PA":388,"Avg Runners":0.729,"RISP%":0.317,"Bases Empty%":0.526,"Env Bonus/600PA":5.0},
+    {"Name":"Randal Grichuk","PA":279,"Avg Runners":0.717,"RISP%":0.312,"Bases Empty%":0.513,"Env Bonus/600PA":4.6},
+    {"Name":"Jake Meyers","PA":511,"Avg Runners":0.710,"RISP%":0.297,"Bases Empty%":0.521,"Env Bonus/600PA":4.3},
+    {"Name":"Manny Machado","PA":663,"Avg Runners":0.707,"RISP%":0.275,"Bases Empty%":0.498,"Env Bonus/600PA":4.2},
+    {"Name":"Yainer Diaz","PA":625,"Avg Runners":0.707,"RISP%":0.277,"Bases Empty%":0.526,"Env Bonus/600PA":4.2}
+  ],
+  env_bot: [
+    {"Name":"Steven Kwan","PA":586,"Avg Runners":0.428,"RISP%":0.177,"Bases Empty%":0.684,"Env Bonus/600PA":-5.8},
+    {"Name":"Edouard Julien","PA":301,"Avg Runners":0.429,"RISP%":0.166,"Bases Empty%":0.664,"Env Bonus/600PA":-5.8},
+    {"Name":"Luis Arráez","PA":698,"Avg Runners":0.430,"RISP%":0.172,"Bases Empty%":0.676,"Env Bonus/600PA":-5.8},
+    {"Name":"Yandy Díaz","PA":618,"Avg Runners":0.430,"RISP%":0.194,"Bases Empty%":0.678,"Env Bonus/600PA":-5.8},
+    {"Name":"Jarren Duran","PA":732,"Avg Runners":0.445,"RISP%":0.217,"Bases Empty%":0.660,"Env Bonus/600PA":-5.2},
+    {"Name":"José Altuve","PA":687,"Avg Runners":0.450,"RISP%":0.192,"Bases Empty%":0.672,"Env Bonus/600PA":-5.1},
+    {"Name":"Jonathan India","PA":634,"Avg Runners":0.456,"RISP%":0.191,"Bases Empty%":0.658,"Env Bonus/600PA":-4.8},
+    {"Name":"Charlie Blackmon","PA":495,"Avg Runners":0.457,"RISP%":0.216,"Bases Empty%":0.648,"Env Bonus/600PA":-4.8},
+    {"Name":"Lawrence Butler","PA":449,"Avg Runners":0.457,"RISP%":0.176,"Bases Empty%":0.653,"Env Bonus/600PA":-4.8},
+    {"Name":"Nicky Lopez","PA":438,"Avg Runners":0.447,"RISP%":0.196,"Bases Empty%":0.648,"Env Bonus/600PA":-5.1}
+  ]
+};
+
+function buildTable(id, data) {
+  if (!data || !data.length) return;
+  const t = document.getElementById(id);
+  const cols = Object.keys(data[0]);
+  let h = '<thead><tr>' + cols.map(c=>`<th>${c}</th>`).join('') + '</tr></thead><tbody>';
+  data.forEach((row,i)=>{
+    h += '<tr>';
+    cols.forEach((c,j)=>{
+      const v = row[c];
+      if(j===0){ const m = i===0?'🥇 ':i===1?'🥈 ':i===2?'🥉 ':''; h+=`<td>${m}${v}</td>`; }
+      else if(c==='Env Bonus/600PA'){ const col=v>0?'#52c41a':v<0?'#ff4d4f':'var(--muted)'; h+=`<td style="color:${col};font-weight:600">${v>0?'+':''}${v}</td>`; }
+      else if(c==='BATQ'){ const col=v>=90?'#52c41a':v>=70?'#f7c948':'var(--muted)'; h+=`<td style="color:${col};font-weight:700">${v}</td>`; }
+      else { h+=`<td>${v}</td>`; }
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  t.innerHTML = h;
+}
+
+function show(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+
+buildTable('batq-table', DATA.batq_leaders);
+buildTable('env-top-table', DATA.env_top);
+buildTable('env-bot-table', DATA.env_bot);
+</script>
+</body>
+</html>

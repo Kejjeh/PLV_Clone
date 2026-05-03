@@ -106,22 +106,22 @@ class StageThresholds:
     # ── Buy-target thresholds ─────────────────────────────────────────────────
     buy_rank_gap_min:    float = 0.15   # process+ rank - xwoba rank
     buy_pp_floor:        float = 100.0  # Process+ minimum
-    buy_dec_gate:        float | None = None  # Decision+ gate (None = no gate)
+    buy_dec_gate:        float | None = None  # Discipline+ gate (None = no gate)
 
     # ── Regression-flag thresholds ────────────────────────────────────────────
     reg_rank_gap_max:    float = -0.15  # negative = xwoba rank > process+ rank
     reg_xwoba_floor:     float = 0.350  # minimum xwOBA to flag
-    reg_dec_gate:        float | None = None  # require Decision+ below this (None = no gate)
+    reg_dec_gate:        float | None = None  # require Discipline+ below this (None = no gate)
 
     # ── Breakout-flag thresholds ──────────────────────────────────────────────
     breakout_pp_min:     float = 110.0
-    breakout_dec_gate:   float | None = None  # Decision+ must also be elevated
+    breakout_dec_gate:   float | None = None  # Discipline+ must also be elevated
 
     # ── Discipline / Power thresholds ─────────────────────────────────────────
     discipline_dec_min:  float = 109.0   # top 25% stable across seasons
     power_pow_min:       float = 107.0   # top 25%
 
-    # ── Rolling trend thresholds (decision_value_mean) ────────────────────────
+    # ── Rolling trend thresholds (discipline_value_mean) ────────────────────────
     rolling_hot_dec:     float = 0.083   # ≈ p75 of 2023-2025 rolling
     rolling_warm_dec:    float = 0.066   # ≈ p50
 
@@ -157,11 +157,11 @@ def get_thresholds(stage: str) -> StageThresholds:
 #   Process+ std at full season:  ~10.6
 #   Process+ std at 50-150 PA:    ~16.2  (+53%)
 #   Power+ std at 50-150 PA:      ~15.6  (+47%)
-#   Decision+ std is more stable:  ~12-14 early vs ~11 mature
+#   Discipline+ std is more stable:  ~12-14 early vs ~11 mature
 #
 #   rank_gap std: 0.115 early, 0.148-0.157 mature.
 #   PP >= 110 catches top 33% early vs top 18% mature — needs gating.
-#   Decision+ is the most reliable early signal (split-half r=0.741 at 50 PA).
+#   Discipline+ is the most reliable early signal (split-half r=0.741 at 50 PA).
 #
 #   Rolling thresholds (p50=0.066, p75=0.083) are stable across seasons.
 #   PLV distribution barely moves across stages.
@@ -200,7 +200,7 @@ _MID = StageThresholds(
     # Buy/regression — slightly stricter rank_gap; no component gates yet
     buy_rank_gap_min=0.17,  buy_pp_floor=101.0,  buy_dec_gate=None,
     reg_rank_gap_max=-0.17, reg_xwoba_floor=0.350, reg_dec_gate=94.0,
-    # Breakout — keep PP threshold; add modest Decision+ gate
+    # Breakout — keep PP threshold; add modest Discipline+ gate
     breakout_pp_min=110.0,  breakout_dec_gate=109.0,
     discipline_dec_min=109.0, power_pow_min=108.0,
     # Rolling — unchanged (stable across seasons)
@@ -211,7 +211,7 @@ _MID = StageThresholds(
     stage_label="Mid Season", stage_color="blue",
     stage_warning=(
         "Mid-season mode. Process+ and Power+ are building signal (100-200 PA). "
-        "Decision+ is reliable. Use rolling trends to confirm any flag."
+        "Discipline+ is reliable. Use rolling trends to confirm any flag."
     ),
 )
 
@@ -223,17 +223,17 @@ _EARLY = StageThresholds(
     pitcher_tier_a_pitches=150, pitcher_tier_b_pitches=75, pitcher_tier_c_pitches=0,
     pitcher_tier_labels=("Signal", "Watch", "Too Early"),
     min_pa_for_boards=40,  min_pitches_for_boards=75,
-    # Buy — stricter rank_gap to cut through noise; Decision+ gate required
+    # Buy — stricter rank_gap to cut through noise; Discipline+ gate required
     # Rationale: Process+ std is 53% wider early. rank_gap std=0.115.
     # 0.20 threshold = 1.74 std deviations (top ~4%), ensuring real signal.
     buy_rank_gap_min=0.20,  buy_pp_floor=102.0,  buy_dec_gate=109.0,
-    # Regression — require Decision+ to be weak (not just Power+ noise)
+    # Regression — require Discipline+ to be weak (not just Power+ noise)
     # Power+ has 47% wider std early; bad Power+ alone is not meaningful.
     reg_rank_gap_max=-0.20, reg_xwoba_floor=0.350, reg_dec_gate=97.0,
-    # Breakout — must have BOTH PP elevated AND elite Decision+
+    # Breakout — must have BOTH PP elevated AND elite Discipline+
     # PP >= 110 catches top 33% early-season (vs 18% mature). Need D+ gate.
     breakout_pp_min=110.0,  breakout_dec_gate=112.0,
-    # Discipline — Decision+ is reliable at 50 PA (split-half r=0.741). Keep same.
+    # Discipline — Discipline+ is reliable at 50 PA (split-half r=0.741). Keep same.
     discipline_dec_min=109.0,
     # Power — raise bar because Power+ std is 47% wider early
     # 110 ≈ p75 of early-season distribution (vs p75 = 107 at full season)
@@ -246,7 +246,7 @@ _EARLY = StageThresholds(
     stage_label="Early Season", stage_color="orange",
     stage_warning=(
         "Early-season mode (< 150 PA median). Process+ and Power+ are noisy at "
-        "small samples. Decision+ is the most reliable signal. "
+        "small samples. Discipline+ is the most reliable signal. "
         "Board flags require stronger evidence and use tighter thresholds."
     ),
 )

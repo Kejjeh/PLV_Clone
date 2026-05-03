@@ -20,7 +20,9 @@
     "row_count": 749091
   },
   "2026": {
-    "last_date": "2026-04-23",
-    "row_count": 124700
-  }
+    "last_date": "2026-04-27",
+    "row_count": 145027
+  },
+  "_reconcile_last_run": "2026-04-27",
+  "_reconcile_days": 7
 }

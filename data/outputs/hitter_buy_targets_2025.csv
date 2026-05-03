@@ -1,43 +1,53 @@
-batter_name,batter,pa,confidence,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag
-Ernie Clement,676391,671,Tier A,105.3,99.7,130.5,91.2,0.552,0.36,0.313,0.476,warm,-0.052,Process+ above avg; large rank divergence (process >> results)
-Jacob Wilson,805779,527,Tier A,103.1,98.3,128.1,90.5,0.497,0.327,0.302,0.457,improving,-0.056,Process+ above avg; large rank divergence (process >> results)
-Nico Hoerner,663538,682,Tier A,105.4,94.5,128.2,93.3,0.49,0.332,0.324,0.436,improving,-0.041,Process+ above avg; large rank divergence (process >> results)
-Luis Arráez,650333,699,Tier A,100.6,86.6,131.6,88.9,0.492,0.327,0.291,0.412,cold,-0.064,Process+ above avg; large rank divergence (process >> results)
-Chandler Simpson,802415,440,Tier A,102.3,87.8,129.1,91.4,0.486,0.3,0.31,0.377,cold,-0.051,Process+ above avg; large rank divergence (process >> results)
-Maikel García,672580,675,Tier A,107.3,86.2,129.6,96.2,0.4,0.226,0.345,0.355,cold,-0.027,Process+ above avg; large rank divergence (process >> results)
-Keibert Ruiz,660688,272,Tier B,100.1,90.2,129.5,88.6,0.525,0.334,0.3,0.341,warm,-0.065,Process+ above avg; large rank divergence (process >> results)
-Mookie Betts,605141,747,Tier A,103.8,94.3,128.3,91.9,0.418,0.232,0.327,0.338,warm,-0.049,Process+ above avg; large rank divergence (process >> results)
-Josh Naylor,647304,661,Tier A,110.6,100.4,117.5,101.9,0.543,0.333,0.36,0.337,warm,0.002,Process+ strong; large rank divergence (process >> results)
-Otto Lopez,672640,596,Tier A,106.5,94.0,119.4,98.5,0.462,0.293,0.35,0.297,cold,-0.015,Process+ above avg; process ahead of results
-Jung Hoo Lee,808982,624,Tier A,102.4,98.2,121.1,93.0,0.447,0.246,0.326,0.293,warm,-0.043,Process+ above avg; process ahead of results
-Cody Bellinger,641355,695,Tier A,104.8,88.7,116.9,99.1,0.485,0.307,0.338,0.292,cold,-0.012,Process+ above avg; process ahead of results
-Miguel Andújar,609280,349,Tier B,101.6,106.9,113.3,94.1,0.535,0.316,0.324,0.287,warm,-0.037,Process+ above avg; process ahead of results
-Yainer Diaz,673237,571,Tier A,114.5,104.5,116.3,105.3,0.595,0.413,0.379,0.282,hot,0.02,Process+ strong; process ahead of results; rolling hot
-Amed Rosario,642708,206,Tier C,112.6,100.1,118.6,103.4,0.564,0.349,0.373,0.281,warm,0.01,Process+ strong; process ahead of results
-Alec Burleson,676475,555,Tier A,113.5,93.4,118.9,105.4,0.494,0.303,0.376,0.273,cold,0.02,Process+ strong; process ahead of results
-Masataka Yoshida,807799,215,Tier C,103.9,76.3,132.0,93.9,0.449,0.285,0.338,0.269,cold,-0.038,Process+ above avg; process ahead of results
-José Altuve,514888,654,Tier A,101.0,82.7,117.4,96.6,0.499,0.374,0.323,0.259,improving,-0.025,Process+ above avg; process ahead of results
-Alec Bohm,664761,528,Tier A,107.8,96.2,118.8,99.6,0.476,0.272,0.361,0.254,cold,-0.01,Process+ above avg; process ahead of results
-Lourdes Gurriel,666971,554,Tier A,103.3,102.4,116.4,95.2,0.523,0.33,0.338,0.253,cold,-0.032,Process+ above avg; process ahead of results
-Jeremy Peña,665161,547,Tier A,110.5,96.2,118.5,102.3,0.512,0.333,0.37,0.249,cold,0.004,Process+ strong; process ahead of results
-Jeff Mcneil,643446,459,Tier A,101.3,122.2,108.5,92.9,0.529,0.271,0.327,0.239,hot,-0.043,Process+ above avg; process ahead of results; disciplined; rolling hot
-Nathan Lukes,664770,511,Tier A,101.7,89.3,114.8,97.0,0.495,0.308,0.33,0.239,improving,-0.023,Process+ above avg; process ahead of results
-Vinnie Pasquantino,686469,684,Tier A,109.2,91.6,117.2,102.6,0.479,0.311,0.367,0.236,cold,0.006,Process+ strong; process ahead of results
-Brendan Donovan,680977,523,Tier A,108.4,91.4,120.4,100.3,0.439,0.254,0.364,0.228,improving,-0.006,Process+ strong; process ahead of results
-Nolan Schanuel,694384,576,Tier A,100.2,91.1,117.0,94.2,0.455,0.254,0.325,0.213,cold,-0.037,Process+ above avg; process ahead of results
-Luis García,671277,533,Tier A,112.8,95.8,114.1,106.5,0.539,0.369,0.384,0.212,cold,0.026,Process+ strong; process ahead of results
-Alejandro Kirk,672386,594,Tier A,110.4,106.4,112.9,102.6,0.473,0.286,0.375,0.208,cold,0.006,Process+ strong; process ahead of results
-Bo Bichette,666182,665,Tier A,116.1,102.8,112.8,108.8,0.53,0.35,0.393,0.206,cold,0.037,Process+ elite; process ahead of results; quality contact
-Michael Harris,671739,640,Tier A,112.3,90.0,112.6,107.9,0.57,0.401,0.384,0.193,cold,0.033,Process+ strong; process ahead of results; quality contact
-José Ramírez,608070,673,Tier A,104.6,95.5,114.4,98.7,0.464,0.294,0.353,0.19,cold,-0.014,Process+ above avg; process ahead of results
-Cj Abrams,682928,638,Tier A,103.7,88.7,111.0,100.8,0.506,0.32,0.35,0.188,cold,-0.004,Process+ above avg; process ahead of results
-Yandy Díaz,650490,651,Tier A,110.0,101.0,111.0,104.2,0.443,0.267,0.378,0.187,warm,0.014,Process+ strong; process ahead of results
-Daylen Lile,695734,351,Tier B,112.6,112.9,108.1,105.6,0.522,0.267,0.388,0.178,hot,0.021,Process+ strong; process ahead of results; disciplined; rolling hot
-Ty France,664034,504,Tier A,104.9,110.8,104.7,100.3,0.521,0.316,0.358,0.172,cold,-0.006,Process+ above avg; process ahead of results; disciplined
-Xander Bogaerts,593428,579,Tier A,105.1,83.0,118.2,100.0,0.418,0.228,0.36,0.17,hot,-0.008,Process+ above avg; process ahead of results; rolling hot
-Ceddanne Rafaela,678882,601,Tier A,103.5,109.5,104.3,99.5,0.589,0.41,0.353,0.167,warm,-0.01,Process+ above avg; process ahead of results; disciplined
-Alex Bregman,608324,510,Tier A,102.1,98.2,116.4,94.9,0.403,0.208,0.345,0.163,cold,-0.033,Process+ above avg; process ahead of results
-Jackson Chourio,694192,625,Tier A,106.1,99.8,107.8,102.2,0.537,0.379,0.367,0.159,warm,0.004,Process+ above avg; process ahead of results
-Andrew Benintendi,643217,479,Tier A,103.0,101.5,107.4,99.2,0.503,0.283,0.351,0.158,warm,-0.012,Process+ above avg; process ahead of results
-Nick Castellanos,592206,613,Tier A,105.2,111.7,98.9,103.0,0.589,0.364,0.362,0.155,hot,0.008,Process+ above avg; process ahead of results; disciplined; rolling hot
-Jake Meyers,676694,385,Tier B,104.6,104.1,114.9,96.7,0.473,0.253,0.358,0.153,improving,-0.024,Process+ above avg; process ahead of results
+batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
+Brady House,691781,274,Tier B,3B,3B,3B,105.7,110.6,96.2,104.9,0.572,0.358,0.284,0.47,warm,0.018,Process+ above avg; large rank divergence (process >> results); disciplined,mature
+Gabriel Arias,672356,488,Tier A,SS,2B|SS,"2B, SS",105.2,116.1,85.2,108.4,0.573,0.374,0.283,0.447,cold,0.035,Process+ above avg; large rank divergence (process >> results); disciplined; quality contact,mature
+Logan O'Hoppe,681351,462,Tier A,C,C,C,109.2,112.5,92.7,109.4,0.522,0.311,0.301,0.39,warm,0.04,Process+ strong; large rank divergence (process >> results); disciplined; quality contact,mature
+Javier Báez,595879,481,Tier A,OF,3B|SS|OF,"3B, SS, OF",101.5,75.1,114.8,99.7,0.553,0.386,0.278,0.336,warm,-0.009,Process+ above avg; large rank divergence (process >> results),mature
+Riley Adams,656180,291,Tier B,C,C,C,101.0,97.1,82.5,109.5,0.483,0.328,0.275,0.332,hot,0.041,Process+ above avg; large rank divergence (process >> results); quality contact; rolling hot,mature
+Christopher Morel,666624,319,Tier B,OF,OF|DH,"OF, DH",109.0,122.5,82.5,111.9,0.529,0.288,0.305,0.325,hot,0.053,Process+ strong; large rank divergence (process >> results); disciplined; quality contact; rolling hot,mature
+Alexander Canario,672744,241,Tier C,OF,OF,OF,105.9,113.5,84.8,109.7,0.534,0.302,0.3,0.322,cold,0.042,Process+ above avg; large rank divergence (process >> results); disciplined; quality contact,mature
+Colton Cowser,681297,361,Tier B,OF,OF,OF,103.7,81.0,92.4,110.8,0.425,0.259,0.292,0.321,improving,0.047,Process+ above avg; large rank divergence (process >> results); quality contact,mature
+Robert Hassell,690987,207,Tier C,OF,OF,OF,100.4,104.9,96.6,100.9,0.509,0.288,0.273,0.32,cold,-0.003,Process+ above avg; large rank divergence (process >> results),mature
+Heston Kjerstad,677008,171,Tier C,OF,OF,OF,102.8,102.2,99.5,102.4,0.562,0.343,0.289,0.32,hot,0.005,Process+ above avg; large rank divergence (process >> results); rolling hot,mature
+Michael Harris,671739,640,Tier A,OF,OF,OF,112.3,90.0,112.6,107.9,0.57,0.401,0.315,0.317,cold,0.033,Process+ strong; large rank divergence (process >> results); quality contact,mature
+Noelvi Marte,682622,364,Tier B,OF,3B|OF,"3B, OF",107.1,94.7,107.1,104.5,0.519,0.323,0.303,0.312,warm,0.015,Process+ above avg; large rank divergence (process >> results),mature
+Ernie Clement,676391,671,Tier A,3B,2B|3B|SS,"2B, 3B, SS",105.3,99.7,130.5,91.2,0.552,0.36,0.3,0.296,warm,-0.052,Process+ above avg; process ahead of results,mature
+Thomas Saggese,695336,295,Tier B,2B,2B|3B|SS,"2B, 3B, SS",101.0,88.8,99.2,103.5,0.503,0.341,0.281,0.296,cold,0.01,Process+ above avg; process ahead of results,mature
+Ryan Mountcastle,663624,357,Tier B,1B,1B|DH,"1B, DH",110.0,107.2,95.6,110.0,0.575,0.372,0.313,0.289,hot,0.043,Process+ strong; process ahead of results; quality contact; rolling hot,mature
+Nick Castellanos,592206,613,Tier A,OF,OF,OF,105.2,111.7,98.9,103.0,0.589,0.364,0.3,0.286,hot,0.008,Process+ above avg; process ahead of results; disciplined; rolling hot,mature
+Pete Crow-Armstrong,691718,669,Tier A,OF,OF,OF,111.7,108.3,98.0,110.3,0.598,0.403,0.318,0.283,cold,0.045,Process+ strong; process ahead of results; quality contact,mature
+Alek Thomas,677950,478,Tier A,OF,OF,OF,101.7,91.3,102.9,102.1,0.525,0.312,0.289,0.283,cold,0.003,Process+ above avg; process ahead of results,mature
+Edmundo Sosa,624641,274,Tier B,2B,2B|3B|SS,"2B, 3B, SS",103.1,88.1,107.0,102.1,0.574,0.405,0.295,0.281,improving,0.003,Process+ above avg; process ahead of results,mature
+Josh Jung,673962,515,Tier A,3B,3B,3B,107.1,91.4,103.9,106.7,0.512,0.33,0.305,0.281,cold,0.026,Process+ above avg; process ahead of results,mature
+Ezequiel Tovar,678662,401,Tier A,SS,SS,SS,112.6,125.0,91.6,110.6,0.604,0.382,0.32,0.277,warm,0.046,Process+ strong; process ahead of results; disciplined; quality contact,mature
+Trevor Story,596115,669,Tier A,SS,SS,SS,108.6,103.2,99.0,107.9,0.544,0.365,0.312,0.253,cold,0.033,Process+ strong; process ahead of results; quality contact,mature
+Eli White,642201,274,Tier B,OF,OF,OF,108.0,110.4,94.9,107.7,0.529,0.286,0.311,0.246,warm,0.032,Process+ strong; process ahead of results; disciplined; quality contact,mature
+Austin Hays,669720,433,Tier A,OF,OF|DH,"OF, DH",104.0,105.9,100.2,102.5,0.519,0.339,0.3,0.244,cold,0.005,Process+ above avg; process ahead of results,mature
+Daulton Varsho,662139,359,Tier B,OF,OF,OF,111.1,111.5,95.8,110.1,0.549,0.305,0.32,0.239,warm,0.044,Process+ strong; process ahead of results; disciplined; quality contact,mature
+Yainer Diaz,673237,571,Tier A,C,C|DH,"C, DH",114.5,104.5,116.3,105.3,0.595,0.413,0.327,0.229,hot,0.02,Process+ strong; process ahead of results; rolling hot,mature
+Jake Burger,669394,387,Tier B,1B,1B,1B,112.6,99.2,103.3,110.5,0.55,0.351,0.324,0.227,warm,0.046,Process+ strong; process ahead of results; quality contact,mature
+Christian Koss,683766,192,Tier C,2B,2B,2B,106.6,111.0,103.1,102.6,0.552,0.33,0.309,0.224,warm,0.006,Process+ above avg; process ahead of results; disciplined,mature
+Keibert Ruiz,660688,272,Tier B,C,C,C,100.1,90.2,129.5,88.6,0.525,0.334,0.287,0.223,warm,-0.065,Process+ above avg; process ahead of results,mature
+Jackson Chourio,694192,625,Tier A,OF,OF,OF,106.1,99.8,107.8,102.2,0.537,0.379,0.308,0.221,warm,0.004,Process+ above avg; process ahead of results,mature
+Hunter Goodman,696100,589,Tier A,C,C|DH,"C, DH",112.3,107.6,98.5,110.8,0.55,0.359,0.324,0.216,cold,0.047,Process+ strong; process ahead of results; quality contact,mature
+Miguel Andújar,609280,349,Tier B,OF,3B|OF|DH,"3B, OF, DH",101.6,106.9,113.3,94.1,0.535,0.316,0.296,0.208,warm,-0.037,Process+ above avg; process ahead of results,mature
+Lenyn Sosa,672820,553,Tier A,2B,1B|2B|DH,"1B, 2B, DH",113.1,76.8,110.1,112.4,0.509,0.406,0.327,0.203,cold,0.056,Process+ strong; process ahead of results; quality contact,mature
+Connor Norby,681393,340,Tier B,3B,3B,3B,105.3,120.3,92.9,104.1,0.541,0.336,0.306,0.203,cold,0.014,Process+ above avg; process ahead of results; disciplined,mature
+Derek Hill,656537,154,Tier C,OF,OF,OF,105.3,94.7,88.2,111.4,0.531,0.372,0.307,0.194,cold,0.05,Process+ above avg; process ahead of results; quality contact,mature
+Chandler Simpson,802415,440,Tier A,OF,OF,OF,102.3,87.8,129.1,91.4,0.486,0.3,0.299,0.192,cold,-0.051,Process+ above avg; process ahead of results,mature
+Riley Greene,682985,702,Tier A,OF,OF|DH,"OF, DH",118.0,109.1,88.0,120.6,0.528,0.313,0.333,0.189,warm,0.097,Process+ elite; process ahead of results; disciplined; quality contact,mature
+Oneil Cruz,665833,549,Tier A,OF,OF,OF,111.4,71.5,98.9,117.0,0.414,0.268,0.325,0.188,cold,0.079,Process+ strong; process ahead of results; quality contact,mature
+Mark Vientos,668901,473,Tier A,3B,3B|DH,"3B, DH",107.5,102.6,99.8,106.7,0.517,0.307,0.317,0.185,cold,0.026,Process+ above avg; process ahead of results,mature
+Brenton Doyle,686668,552,Tier A,OF,OF,OF,102.4,105.9,103.0,99.8,0.503,0.306,0.3,0.182,cold,-0.009,Process+ above avg; process ahead of results,mature
+Austin Slater,596103,171,Tier C,OF,OF,OF,116.9,96.9,94.6,119.0,0.493,0.266,0.333,0.182,cold,0.089,Process+ elite; process ahead of results; quality contact,mature
+Luis Robert,673357,441,Tier A,OF,OF,OF,111.1,112.1,97.5,109.1,0.534,0.31,0.325,0.178,warm,0.039,Process+ strong; process ahead of results; disciplined; quality contact,mature
+Austin Wells,669224,482,Tier A,C,C,C,100.3,104.5,97.1,100.6,0.509,0.294,0.293,0.178,hot,-0.004,Process+ above avg; process ahead of results; rolling hot,mature
+Adolis García,666969,557,Tier A,OF,OF,OF,103.8,99.3,99.4,104.0,0.521,0.368,0.304,0.178,hot,0.013,Process+ above avg; process ahead of results; rolling hot,mature
+Tyler Stephenson,663886,348,Tier B,C,C|DH,"C, DH",104.8,94.2,87.6,111.3,0.438,0.271,0.306,0.172,cold,0.05,Process+ above avg; process ahead of results; quality contact,mature
+Eugenio Suárez,553993,718,Tier A,3B,3B,3B,108.2,103.2,92.3,110.6,0.502,0.307,0.319,0.172,warm,0.046,Process+ strong; process ahead of results; quality contact,mature
+Amed Rosario,642708,206,Tier C,3B,2B|3B,"2B, 3B",112.6,100.1,118.6,103.4,0.564,0.349,0.328,0.169,warm,0.01,Process+ strong; process ahead of results,mature
+Jordan Beck,687597,606,Tier A,OF,OF,OF,103.1,97.1,93.0,106.7,0.473,0.285,0.303,0.169,improving,0.027,Process+ above avg; process ahead of results,mature
+Ceddanne Rafaela,678882,601,Tier A,OF,2B|OF,"2B, OF",103.5,109.5,104.3,99.5,0.589,0.41,0.304,0.169,warm,-0.01,Process+ above avg; process ahead of results; disciplined,mature
+Henry Davis,680779,283,Tier B,C,C,C,101.1,116.5,92.5,101.1,0.553,0.324,0.297,0.168,cold,-0.002,Process+ above avg; process ahead of results; disciplined,mature
+Teoscar Hernández,606192,621,Tier A,OF,OF,OF,110.6,107.2,98.3,109.3,0.504,0.29,0.325,0.167,warm,0.04,Process+ strong; process ahead of results; quality contact,mature
+Austin Riley,663586,447,Tier A,3B,3B,3B,114.3,111.3,91.2,115.2,0.51,0.282,0.331,0.154,cold,0.07,Process+ strong; process ahead of results; disciplined; quality contact,mature

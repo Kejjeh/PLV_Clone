@@ -1,0 +1,10 @@
+{
+  "built_at": "2026-04-27T21:08:18Z",
+  "year": 202,
+  "exports": [],
+  "model_version": "1.0.0",
+  "pa_per_game": 3.5,
+  "ip_per_start": 5.5,
+  "ip_per_app": 1.0,
+  "scoring_file": "data\\models\\league_scoring.json"
+}

@@ -107,6 +107,31 @@ def run(
         except Exception as e:
             logger.warning("Could not compute SB rates for year=%d: %s", year, e)
 
+        try:
+            _hbp_cache = cfg.models_dir / f"hbp_rates_{year}.csv"
+            hbp_data = _compute_hbp_rates(year, cache_path=_hbp_cache)
+            if not hbp_data.empty:
+                hitters = hitters.merge(hbp_data[["batter", "hbp_per_pa_raw"]], on="batter", how="left")
+        except Exception as e:
+            logger.warning("Could not compute HBP rates for year=%d: %s", year, e)
+
+        # Merge Pitcher List hitter metrics (pl_dv, pl_odv, pl_process) when available
+        _pl_hitter_ref = Path("data/reference/pitcher_list") / f"pl_plv_hitters_{year}.xlsx"
+        if _pl_hitter_ref.exists():
+            try:
+                _pl_h = pd.read_excel(_pl_hitter_ref, usecols=["MLBAMID", "Decision\nValue+", "oDV+", "Process+"])
+                _pl_h.columns = [c.strip().replace("\n", " ") for c in _pl_h.columns]
+                _pl_h = _pl_h.rename(columns={
+                    "MLBAMID": "batter",
+                    "Decision Value+": "pl_dv",
+                    "oDV+": "pl_odv",
+                    "Process+": "pl_process",
+                })
+                hitters = hitters.merge(_pl_h, on="batter", how="left")
+                logger.info("Merged PL hitter metrics (pl_dv/pl_odv/pl_process) from %s", _pl_hitter_ref.name)
+            except Exception as e:
+                logger.warning("Could not merge PL hitter reference for year=%d: %s", year, e)
+
         hitters = hitter_points.project(hitters, scoring, coefs=h_coefs, pa_per_game=pa_per_game)
         hitters = hitters.sort_values("core_fp_per_pa", ascending=False).reset_index(drop=True)
         _write(hitters, cfg.outputs_dir / f"hitter_fantasy_{year}", output_format)
@@ -146,6 +171,21 @@ def run(
             role_df=role_df,
         )
         pitchers = pitchers.sort_values("fp_per_ip", ascending=False).reset_index(drop=True)
+
+        # Merge pl_plv / pl_pla if available
+        _pl_plv_path = cfg.outputs_dir / f"pl_plv_{year}.csv"
+        if _pl_plv_path.exists():
+            try:
+                _pl_p = pd.read_csv(_pl_plv_path, usecols=["pitcher", "pl_plv", "pl_pla"])
+                _pl_p["pitcher"] = _pl_p["pitcher"].astype(pitchers["pitcher"].dtype)
+                pitchers = pitchers.merge(_pl_p, on="pitcher", how="left")
+                logger.info(
+                    "Merged pl_plv/pl_pla into pitcher fantasy from %s (%d matched)",
+                    _pl_plv_path.name, pitchers["pl_plv"].notna().sum(),
+                )
+            except Exception as e:
+                logger.warning("Could not merge pl_plv scores into pitcher fantasy: %s", e)
+
         _write(pitchers, cfg.outputs_dir / f"pitcher_fantasy_{year}", output_format)
         exports["pitcher_fantasy"] = pitchers
         logger.info("Pitcher fantasy: %d pitchers, fp_per_ip range [%.3f, %.3f]",
@@ -242,6 +282,75 @@ def _compute_sb_rates(year: int, cache_path: Path | None = None) -> pd.DataFrame
             logger.warning("Could not save SB rate snapshot: %s", exc)
 
     return result[["batter", "sb_per_pa_raw", "sb", "pa_ev"]]
+
+
+def _compute_hbp_rates(year: int, cache_path: Path | None = None) -> pd.DataFrame:
+    """Fetch per-batter HBP and PA from MLB Stats API for *year*.
+
+    Returns DataFrame with columns: batter (MLBAM ID), hbp_per_pa_raw, hbp, pa_ev.
+    The caller (hitter_points.project) applies shrinkage toward league average
+    (_HBP_SHRINK_PA = 250 PA) since HBP rate has YoY stability r=0.322.
+
+    Cache is refreshed every 7 days for in-progress seasons.
+    """
+    import time as _time
+
+    if cache_path is not None and cache_path.exists():
+        use_cache = True
+        import datetime as _dt3
+        if year >= _dt3.date.today().year:
+            age_days = (_time.time() - cache_path.stat().st_mtime) / 86400
+            if age_days > 7:
+                use_cache = False
+                logger.info("HBP rate cache is %.1f days old — refreshing.", age_days)
+        if use_cache:
+            try:
+                cached = pd.read_csv(cache_path)
+                logger.info("HBP rates loaded from cache (%d players, year=%d).", len(cached), year)
+                return cached[["batter", "hbp_per_pa_raw", "hbp", "pa_ev"]]
+            except Exception as exc:
+                logger.warning("HBP cache read failed (%s); re-fetching API.", exc)
+
+    import requests
+    url = (
+        f"https://statsapi.mlb.com/api/v1/stats"
+        f"?stats=season&group=hitting&season={year}&playerPool=ALL&limit=2000"
+    )
+    try:
+        resp = requests.get(url, timeout=15)
+        resp.raise_for_status()
+    except Exception as e:
+        logger.warning("MLB Stats API HBP fetch failed for year=%d: %s", year, e)
+        return pd.DataFrame(columns=["batter", "hbp_per_pa_raw", "hbp", "pa_ev"])
+
+    splits = resp.json().get("stats", [{}])[0].get("splits", [])
+    rows = []
+    for s in splits:
+        p   = s.get("player", {})
+        pid = p.get("id")
+        st  = s.get("stat", {})
+        hbp = int(st.get("hitByPitch", 0) or 0)
+        pa  = int(st.get("plateAppearances", 0) or 0)
+        if pid and pa > 0:
+            rows.append({"batter": int(pid), "hbp": hbp, "pa_ev": pa})
+
+    if not rows:
+        logger.warning("No HBP data returned from MLB Stats API for year=%d.", year)
+        return pd.DataFrame(columns=["batter", "hbp_per_pa_raw", "hbp", "pa_ev"])
+
+    result = pd.DataFrame(rows)
+    result["hbp_per_pa_raw"] = (result["hbp"] / result["pa_ev"]).round(5)
+    logger.info("HBP rates loaded from MLB Stats API: %d players, year=%d", len(result), year)
+
+    if cache_path is not None:
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            result[["batter", "hbp_per_pa_raw", "hbp", "pa_ev"]].to_csv(cache_path, index=False)
+            logger.info("HBP rate snapshot saved → %s", cache_path.name)
+        except Exception as exc:
+            logger.warning("Could not save HBP rate snapshot: %s", exc)
+
+    return result[["batter", "hbp_per_pa_raw", "hbp", "pa_ev"]]
 
 
 def _write(df: pd.DataFrame, base_path: Path, fmt: str) -> None:

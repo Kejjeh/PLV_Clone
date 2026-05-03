@@ -54,9 +54,12 @@ def run(
     import duckdb
     conn = duckdb.connect()
 
-    parquet_glob = str(scores_dir / "*.parquet").replace("\\", "/")
-    # DuckDB needs a forward-slash glob
-    conn.execute(f"CREATE VIEW plv_scores AS SELECT * FROM read_parquet('{parquet_glob}')")
+    # Parquet data may be a single file (year=YYYY) or a directory of *.parquet files
+    if scores_dir.is_file():
+        parquet_path = str(scores_dir).replace("\\", "/")
+    else:
+        parquet_path = str(scores_dir / "*.parquet").replace("\\", "/")
+    conn.execute(f"CREATE VIEW plv_scores AS SELECT * FROM read_parquet('{parquet_path}')")
 
     # ── Pitcher-level leaderboard ─────────────────────────────────────────
     pitcher_lb = conn.execute(f"""
@@ -99,6 +102,23 @@ def run(
     """).df()
 
     conn.close()
+
+    # ── Merge PLPlvModel scores if available ──────────────────────────────
+    pl_plv_path = cfg.outputs_dir / f"pl_plv_{year}.csv"
+    if pl_plv_path.exists():
+        try:
+            pl_df = pd.read_csv(pl_plv_path, usecols=["pitcher", "pl_plv", "pl_pla"])
+            pl_df["pitcher"] = pl_df["pitcher"].astype(pitcher_lb["pitcher"].dtype)
+            pitcher_lb = pitcher_lb.merge(pl_df, on="pitcher", how="left")
+            logger.info(
+                "Merged pl_plv/pl_pla from %s (%d matched)",
+                pl_plv_path.name,
+                pitcher_lb["pl_plv"].notna().sum(),
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Could not merge pl_plv scores: %s", exc)
+    else:
+        logger.debug("pl_plv_%d.csv not found — pl_plv/pl_pla columns omitted.", year)
 
     # ── Add percentile ranks ──────────────────────────────────────────────
     pitcher_lb = _add_percentile_rank(pitcher_lb, "plv", "plv_pctile")

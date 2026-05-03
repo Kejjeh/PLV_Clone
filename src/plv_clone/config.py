@@ -43,7 +43,7 @@ class PipelineConfig(BaseSettings):
 
     # ── Qualification thresholds ─────────────────────────────────────────
     min_pitches_plv: int = 100
-    min_pa_process: int = 150
+    min_pa_process: int = 1
 
     # ── LightGBM hyperparameters ─────────────────────────────────────────
     lgbm_n_estimators: int = 800

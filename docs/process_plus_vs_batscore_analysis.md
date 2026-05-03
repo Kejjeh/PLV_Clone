@@ -18,7 +18,7 @@ Because Power+ measures xwOBA above pitch expectation on in-play balls, and BatS
 |---|---|
 | Power+ | **0.985** — nearly identical ranking |
 | Process+ | **0.887** — strong, mostly driven by Power+ |
-| Decision+ | **0.157** — largely independent |
+| Discipline+ | **0.157** — largely independent |
 | Contact+ | **-0.398** — negatively correlated (discipline suppresses contact%) |
 
 **Implication:** If you use absolute dual thresholds (Process+ strong AND xwOBA weak), you'll find almost no one — the two metrics largely rank hitters the same way. The useful signal is **rank divergence**, not absolute threshold crossings.
@@ -46,15 +46,15 @@ Hitters with `rank_gap > 0.15` are outliers where Process+ materially outranks t
 
 ## Component-Level Disagreement: Where the Real Novel Signal Lives
 
-BatScore and Process+ differ most on Decision+ (r = 0.157 vs xwOBA). This is the independent signal.
+BatScore and Process+ differ most on Discipline+ (r = 0.157 vs xwOBA). This is the independent signal.
 
-**Decision+ tells you things BatScore cannot:**
+**Discipline+ tells you things BatScore cannot:**
 
-1. **Is the hitter making correct swing/take decisions?** A hitter who chases 35% of pitches outside the zone but still runs a 0.400 xwOBA is a regression risk — their batted-ball quality is masking poor decisions. Decision+ flags this.
+1. **Is the hitter making correct swing/take decisions?** A hitter who chases 35% of pitches outside the zone but still runs a 0.400 xwOBA is a regression risk — their batted-ball quality is masking poor decisions. Discipline+ flags this.
 
-2. **Early-season stability.** Decision+ is reliable at 50 PA (split-half r = 0.741). BatScore-style exit velocity metrics require more contact events to stabilize. In April/May, Decision+ separates hitters before BatScore can.
+2. **Early-season stability.** Discipline+ is reliable at 50 PA (split-half r = 0.741). BatScore-style exit velocity metrics require more contact events to stabilize. In April/May, Discipline+ separates hitters before BatScore can.
 
-3. **Walk rate and K% sustainability.** Decision+ correlates strongly with BB% and inversely with K% in ways that don't show up in exit velocity profiles.
+3. **Walk rate and K% sustainability.** Discipline+ correlates strongly with BB% and inversely with K% in ways that don't show up in exit velocity profiles.
 
 ---
 
@@ -68,7 +68,7 @@ BatScore and Process+ differ most on Decision+ (r = 0.157 vs xwOBA). This is the
 | Ernie Clement | 463 | 102.3 | 0.301 | +0.470 | Strong process for a low-profile hitter |
 | Jung Hoo Lee | 165 | 105.3 | 0.327 | +0.437 | Small sample; process ahead; monitor |
 
-**Interpretation:** Arráez and Kwan are known discipline-first hitters — their Contact+ and Decision+ are strong but they don't generate the exit velocity that BatScore rewards. Their Process+ is "correct" about their hitter quality in a way that raw xwOBA undersells.
+**Interpretation:** Arráez and Kwan are known discipline-first hitters — their Contact+ and Discipline+ are strong but they don't generate the exit velocity that BatScore rewards. Their Process+ is "correct" about their hitter quality in a way that raw xwOBA undersells.
 
 ### xwOBA ahead of Process+ (regression risks — rank_gap < -0.35)
 
@@ -78,7 +78,7 @@ BatScore and Process+ differ most on Decision+ (r = 0.157 vs xwOBA). This is the
 | Will Benson | 389 | 96.4 | 0.399 | -0.450 | High raw power, low discipline |
 | Michael Taylor | 311 | 95.2 | 0.381 | -0.438 | Below-average process across all components |
 
-**Interpretation:** These hitters are generating surface value through raw power/barrel rate, but their Decision+ is weak. They are chase-prone. When pitchers locate better or adjust, the results will decline faster than their BatScore suggests.
+**Interpretation:** These hitters are generating surface value through raw power/barrel rate, but their Discipline+ is weak. They are chase-prone. When pitchers locate better or adjust, the results will decline faster than their BatScore suggests.
 
 ---
 
@@ -97,7 +97,7 @@ process_ahead = merged[merged["pp_bs_agreement"] == "process_ahead"].sort_values
 batscore_ahead = merged[merged["pp_bs_agreement"] == "batscore_ahead"].sort_values("pp_vs_bs_gap")
 ```
 
-Expected result: `dec_rank_vs_bs` will show the widest spreads — Decision+ is the least correlated with BatScore-style metrics. `pow_rank_vs_bs` should show tight agreement (near zero mean spread).
+Expected result: `dec_rank_vs_bs` will show the widest spreads — Discipline+ is the least correlated with BatScore-style metrics. `pow_rank_vs_bs` should show tight agreement (near zero mean spread).
 
 ---
 

@@ -6,7 +6,7 @@ Generates six CSV files under data/outputs/:
   hitter_buy_targets_YYYY.csv       -- strong Process+, weak surface xwOBA
   hitter_breakout_flags_YYYY.csv    -- elite Process+, surface not yet caught up
   hitter_regression_flags_YYYY.csv  -- strong xwOBA, weak Process+
-  hitter_discipline_targets_YYYY.csv-- top Decision+
+  hitter_discipline_targets_YYYY.csv-- top Discipline+
   hitter_power_targets_YYYY.csv     -- top Power+
   pitcher_plv_targets_YYYY.csv      -- top PLV, rolling strength, result divergence
 
@@ -41,10 +41,27 @@ logger = get_logger(__name__)
 
 # Stable constants that don't vary by stage
 _PP_ELITE    = 115.0   # Process+ top 10%
-_DEC_ELITE   = 115.0   # Decision+ top 10%
+_DEC_ELITE   = 115.0   # Discipline+ top 10%
 _CON_STRONG  = 109.0   # Contact+ top 25%
 _XWOBA_MEDIAN = 0.363  # xwOBA median (2023-2025)
 _XWOBA_P75   = 0.400   # xwOBA top quartile
+_BLAST_FLOOR  = 0.08   # static blast rate floor (~top-quartile in most seasons)
+
+# ── Pre-breakout board schema ─────────────────────────────────────────────────
+# All no-data paths return an empty DataFrame with this exact schema so that
+# downstream CSV reads and dashboard loads are predictable regardless of data
+# availability (e.g. year < 2023, fetch failure, zero qualifying rows).
+_PRE_BREAKOUT_EMPTY_COLS = [
+    "batter_name", "batter", "pa", "confidence",
+    "primary_position", "fantasy_positions", "fantasy_positions_display",
+    "process_plus", "discipline_plus", "blast_rate", "avg_swing_speed",
+    "swing_count", "xwoba_on_contact", "rolling_decision_30d", "rolling_trend",
+    "tag", "season_stage",
+]
+
+
+def _pre_breakout_empty() -> pd.DataFrame:
+    return pd.DataFrame(columns=_PRE_BREAKOUT_EMPTY_COLS)
 
 
 def run(
@@ -144,6 +161,7 @@ def run(
     boards["hitter_regression_flags"]   = _regression_flags(hitters, t)
     boards["hitter_discipline_targets"] = _discipline_targets(hitters, t)
     boards["hitter_power_targets"]      = _power_targets(hitters, t)
+    boards["hitter_pre_breakout"]       = _pre_breakout_board(hitters, t)
     if not pitchers.empty:
         boards["pitcher_plv_targets"]   = _pitcher_plv_targets(pitchers, t)
 
@@ -182,7 +200,7 @@ def _buy_targets(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
         h["pa"].ge(t.min_pa_for_boards)
     )
     if t.buy_dec_gate is not None:
-        mask &= h["decision_plus"].ge(t.buy_dec_gate)
+        mask &= h["discipline_plus"].ge(t.buy_dec_gate)
     df = h[mask].copy()
     df["tag"] = df.apply(lambda r: _buy_tag(r, t), axis=1)
     cols = _hitter_display_cols(df, extras=["rank_gap", "rolling_trend", "xwoba_vs_expected"])
@@ -193,14 +211,14 @@ def _breakout_flags(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
     """Process+ elevated AND xwOBA not yet in top quartile — emerging elite."""
     mask = (
         h["process_plus"].ge(t.breakout_pp_min) &
-        h["xwoba_actual"].lt(_XWOBA_P75) &
+        h["xwoba_on_contact"].lt(_XWOBA_P75) &
         h["pa"].ge(t.min_pa_for_boards)
     )
     if t.breakout_dec_gate is not None:
-        mask &= h["decision_plus"].ge(t.breakout_dec_gate)
+        mask &= h["discipline_plus"].ge(t.breakout_dec_gate)
     df = h[mask].copy()
     df["tag"] = df.apply(lambda r: _breakout_tag(r, t), axis=1)
-    cols = _hitter_display_cols(df, extras=["rolling_decision_30d", "rolling_trend"])
+    cols = _hitter_display_cols(df, extras=["blast_rate", "avg_swing_speed", "rolling_decision_30d", "rolling_trend"])
     return df[cols].sort_values("process_plus", ascending=False).reset_index(drop=True)
 
 
@@ -208,11 +226,11 @@ def _regression_flags(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
     """xwOBA rank materially exceeds Process+ rank — results ahead of process."""
     mask = (
         h["rank_gap"].lt(t.reg_rank_gap_max) &
-        h["xwoba_actual"].ge(t.reg_xwoba_floor) &
+        h["xwoba_on_contact"].ge(t.reg_xwoba_floor) &
         h["pa"].ge(t.min_pa_for_boards)
     )
     if t.reg_dec_gate is not None:
-        mask &= h["decision_plus"].lt(t.reg_dec_gate)
+        mask &= h["discipline_plus"].lt(t.reg_dec_gate)
     df = h[mask].copy()
     df["tag"] = df.apply(lambda r: _regression_tag(r, t), axis=1)
     cols = _hitter_display_cols(df, extras=["rank_gap", "rolling_trend", "xwoba_vs_expected"])
@@ -220,15 +238,15 @@ def _regression_flags(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
 
 
 def _discipline_targets(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
-    """Decision+ in top 25% — most stable early-season metric."""
+    """Discipline+ in top 25% — most stable early-season metric."""
     mask = (
-        h["decision_plus"].ge(t.discipline_dec_min) &
+        h["discipline_plus"].ge(t.discipline_dec_min) &
         h["pa"].ge(t.min_pa_for_boards)
     )
     df = h[mask].copy()
     df["tag"] = df.apply(lambda r: _discipline_tag(r, t), axis=1)
     cols = _hitter_display_cols(df, extras=["rolling_decision_30d"])
-    return df[cols].sort_values("decision_plus", ascending=False).reset_index(drop=True)
+    return df[cols].sort_values("discipline_plus", ascending=False).reset_index(drop=True)
 
 
 def _power_targets(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
@@ -239,7 +257,7 @@ def _power_targets(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
     )
     df = h[mask].copy()
     df["tag"] = df.apply(lambda r: _power_tag(r, t), axis=1)
-    cols = _hitter_display_cols(df, extras=["xwoba_actual", "xwoba_vs_expected"])
+    cols = _hitter_display_cols(df, extras=["xwoba_on_contact", "xwoba_vs_expected"])
     return df[cols].sort_values("power_plus", ascending=False).reset_index(drop=True)
 
 
@@ -268,6 +286,64 @@ def _pitcher_plv_targets(p: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
     return elite[cols].sort_values("plv", ascending=False).reset_index(drop=True)
 
 
+def _pre_breakout_board(h: pd.DataFrame, t: StageThresholds) -> pd.DataFrame:
+    """Elite decision-making + confirmed blast rate, but surface not yet top-quartile.
+
+    Returns a schemaful empty DataFrame on all no-data paths so callers can
+    always write a CSV without checking for None or missing columns.
+    """
+    if "blast_rate" not in h.columns or h["blast_rate"].isna().all():
+        logger.info("Pre-breakout board: blast_rate unavailable — writing empty board.")
+        return _pre_breakout_empty()
+
+    # Dynamic threshold: 75th pctile of blast_rate on rows with adequate sample.
+    # Falls back to static floor if no qualifying rows exist.
+    _valid_mask = h["blast_rate"].notna()
+    if "swing_count" in h.columns:
+        _valid_mask &= h["swing_count"].ge(50)
+    valid = h[_valid_mask]
+    if valid.empty:
+        blast_cutoff = _BLAST_FLOOR
+        logger.info(
+            "Pre-breakout board: no rows with swing_count>=50 and non-null blast_rate — "
+            "using static floor %.2f.", _BLAST_FLOOR,
+        )
+    else:
+        p75_blast = valid["blast_rate"].quantile(0.75)
+        blast_cutoff = max(_BLAST_FLOOR, p75_blast)
+        logger.info(
+            "Pre-breakout board: blast_cutoff=%.3f (p75=%.3f, floor=%.2f).",
+            blast_cutoff, p75_blast, _BLAST_FLOOR,
+        )
+
+    mask = (
+        h["discipline_plus"].ge(t.discipline_dec_min) &
+        h["blast_rate"].ge(blast_cutoff) &
+        h["xwoba_on_contact"].lt(_XWOBA_P75) &
+        h["pa"].ge(t.min_pa_for_boards)
+    )
+    if "swing_count" in h.columns:
+        mask &= h["swing_count"].ge(50)
+
+    df = h[mask].copy()
+    if df.empty:
+        logger.info("Pre-breakout board: no qualifying hitters at stage=%s.", t.stage)
+        return _pre_breakout_empty()
+
+    df["tag"] = df.apply(
+        lambda r: (
+            f"Elite decision ({r.get('discipline_plus', 0):.0f}) + blast rate confirms "
+            "contact damage — surface lag suggests upside"
+            + (f" [{t.stage_label}]" if t.stage != "mature" else "")
+        ),
+        axis=1,
+    )
+    cols = _hitter_display_cols(
+        df, extras=["blast_rate", "avg_swing_speed", "swing_count", "rolling_decision_30d", "rolling_trend"]
+    )
+    return df[cols].sort_values("blast_rate", ascending=False).reset_index(drop=True)
+
+
 # ── Tag generators ────────────────────────────────────────────────────────────
 
 def _buy_tag(row: pd.Series, t: StageThresholds) -> str:
@@ -284,7 +360,7 @@ def _buy_tag(row: pd.Series, t: StageThresholds) -> str:
         parts.append("large rank divergence (process >> results)")
     else:
         parts.append("process ahead of results")
-    if row.get("decision_plus", 0) >= t.discipline_dec_min:
+    if row.get("discipline_plus", 0) >= t.discipline_dec_min:
         parts.append("disciplined")
     if row.get("power_plus", 0) >= t.power_pow_min:
         parts.append("quality contact")
@@ -301,12 +377,14 @@ def _breakout_tag(row: pd.Series, t: StageThresholds) -> str:
         parts.append("Process+ elite")
     else:
         parts.append("Process+ strong")
-    if row.get("decision_plus", 0) >= _DEC_ELITE:
+    if row.get("discipline_plus", 0) >= _DEC_ELITE:
         parts.append("elite discipline")
-    elif row.get("decision_plus", 0) >= t.discipline_dec_min:
+    elif row.get("discipline_plus", 0) >= t.discipline_dec_min:
         parts.append("strong discipline")
-    if row.get("contact_plus", 0) >= _CON_STRONG:
+    if row.get("k_avoidance_plus", 0) >= _CON_STRONG:
         parts.append("contact quality")
+    if row.get("blast_rate", 0) >= _BLAST_FLOOR:
+        parts.append("confirmed by blast rate")
     trend = row.get("rolling_trend", "")
     if trend == "hot":
         parts.append("trending up")
@@ -317,7 +395,7 @@ def _breakout_tag(row: pd.Series, t: StageThresholds) -> str:
 
 
 def _regression_tag(row: pd.Series, t: StageThresholds) -> str:
-    xwoba = row.get("xwoba_actual", 0)
+    xwoba = row.get("xwoba_on_contact", 0)
     if xwoba >= _XWOBA_P75:
         parts = ["surface xwOBA elite (top 25%)"]
     elif xwoba >= _XWOBA_MEDIAN:
@@ -329,8 +407,8 @@ def _regression_tag(row: pd.Series, t: StageThresholds) -> str:
         parts.append("large rank divergence (results >> process)")
     else:
         parts.append("results ahead of process")
-    if row.get("decision_plus", 0) < 94:
-        parts.append("chasing (low Decision+)")
+    if row.get("discipline_plus", 0) < 94:
+        parts.append("chasing (low Discipline+)")
     if row.get("power_plus", 0) < 94:
         parts.append("contact below pitch expectation")
     if row.get("process_plus", 0) < 90:
@@ -342,10 +420,10 @@ def _regression_tag(row: pd.Series, t: StageThresholds) -> str:
 
 def _discipline_tag(row: pd.Series, t: StageThresholds) -> str:
     parts = []
-    if row.get("decision_plus", 0) >= _DEC_ELITE:
-        parts.append("Decision+ elite (top 10%)")
+    if row.get("discipline_plus", 0) >= _DEC_ELITE:
+        parts.append("Discipline+ elite (top 10%)")
     else:
-        parts.append("Decision+ strong (top 25%)")
+        parts.append("Discipline+ strong (top 25%)")
     if row.get("swing_pct", 1) < 0.45:
         parts.append("selective swinger")
     if row.get("chase_pct", 1) < 0.24:
@@ -397,9 +475,9 @@ def _add_rank_gap(h: pd.DataFrame) -> pd.DataFrame:
     Negative: results ahead of process (regression risk).
     """
     df = h.copy()
-    if "process_plus" in df.columns and "xwoba_actual" in df.columns:
+    if "process_plus" in df.columns and "xwoba_on_contact" in df.columns:
         df["pp_rank"]     = df["process_plus"].rank(pct=True)
-        df["xwoba_rank"]  = df["xwoba_actual"].rank(pct=True)
+        df["xwoba_rank"]  = df["xwoba_on_contact"].rank(pct=True)
         df["rank_gap"]    = (df["pp_rank"] - df["xwoba_rank"]).round(3)
     return df
 
@@ -429,14 +507,14 @@ def _add_rolling_context_hitter(
     t: StageThresholds,
 ) -> pd.DataFrame:
     """Add latest 30-day rolling decision value and trend label per hitter."""
-    if rolling.empty or "decision_value_mean" not in rolling.columns:
+    if rolling.empty or "discipline_value_mean" not in rolling.columns:
         return hitters
 
     rolling = rolling.sort_values("date")
     latest  = rolling.groupby("batter").last().reset_index()[
-        ["batter", "decision_value_mean", "contact_value_mean", "power_value_mean", "pa"]
+        ["batter", "discipline_value_mean", "contact_value_mean", "power_value_mean", "pa"]
     ].rename(columns={
-        "decision_value_mean": "rolling_decision_30d",
+        "discipline_value_mean": "rolling_decision_30d",
         "contact_value_mean":  "rolling_contact_30d",
         "power_value_mean":    "rolling_power_30d",
         "pa":                  "rolling_pa_30d",
@@ -444,8 +522,8 @@ def _add_rolling_context_hitter(
 
     # Trend: compare latest vs second-to-last window
     prior = rolling.groupby("batter").nth(-2).reset_index()[
-        ["batter", "decision_value_mean"]
-    ].rename(columns={"decision_value_mean": "_prior_dec"})
+        ["batter", "discipline_value_mean"]
+    ].rename(columns={"discipline_value_mean": "_prior_dec"})
 
     trend = latest.merge(prior, on="batter", how="left")
     trend["rolling_trend"] = np.where(
@@ -509,8 +587,8 @@ def _add_rolling_context_pitcher(
 _BASE_HITTER_COLS = [
     "batter_name", "batter", "pa", "confidence",
     "primary_position", "fantasy_positions", "fantasy_positions_display",
-    "process_plus", "decision_plus", "contact_plus", "power_plus",
-    "swing_pct", "chase_pct", "xwoba_actual",
+    "process_plus", "discipline_plus", "k_avoidance_plus", "power_plus",
+    "swing_pct", "chase_pct", "xwoba_on_contact",
     "tag", "season_stage",
 ]
 

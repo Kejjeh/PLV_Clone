@@ -3,12 +3,12 @@ Decision component of Process+.
 
 Measures the value of the hitter's swing/take decision on each pitch:
 
-    decision_value = EV(actual_choice) - EV(counterfactual_choice)
+    discipline_value = EV(actual_choice) - EV(counterfactual_choice)
 
 Both EVs are computed from PLV sub-model predictions (not observed outcomes),
 so this component captures decision *quality* independent of execution.
 
-Positive decision_value means the hitter chose correctly (actual EV > alternative).
+Positive discipline_value means the hitter chose correctly (actual EV > alternative).
 
 Population units: same run-expectancy units as the count-value table (delta_run_exp).
 Cross-pitch sign convention: higher is *better for the hitter*.
@@ -25,7 +25,7 @@ from plv_clone.utils.logging import get_logger
 logger = get_logger(__name__)
 
 
-def compute_decision_values(
+def compute_discipline_values(
     df: pd.DataFrame,
     plv_model: PLVModel,
 ) -> pd.Series:
@@ -35,7 +35,7 @@ def compute_decision_values(
       - EV_take  = p_cs * ev_cs + p_ball * ev_ball
       - EV_swing = p_whiff * ev_whiff + p_contact * (p_foul * ev_foul + p_in_play * e_xwoba)
 
-    decision_value:
+    discipline_value:
       - If hitter swung:  EV_swing - EV_take  (positive = swing was the better choice)
       - If hitter took:   EV_take  - EV_swing  (positive = take was the better choice)
 
@@ -45,7 +45,7 @@ def compute_decision_values(
         plv_model: Loaded and scored PLVModel.
 
     Returns:
-        Series of per-pitch decision_value, indexed as df.
+        Series of per-pitch discipline_value, indexed as df.
     """
     # Pre-encode categoricals once (mirrors PLVModel._pre_encode)
     df = plv_model._pre_encode(df)
@@ -81,9 +81,9 @@ def compute_decision_values(
 
     # ── Decision value ────────────────────────────────────────────────────
     is_swing = df["is_swing"].astype(float)
-    decision_value = (
+    discipline_value = (
         is_swing       * (ev_swing_branch - ev_take_branch) +
         (1.0 - is_swing) * (ev_take_branch  - ev_swing_branch)
     )
 
-    return pd.Series(decision_value.values, index=df.index, name="decision_value")
+    return pd.Series(discipline_value.values, index=df.index, name="discipline_value")

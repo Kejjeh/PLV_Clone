@@ -2,9 +2,9 @@
 Pipeline: Score pitches with Process+ component values.
 
 Produces two outputs for each year:
-  1. Pitch-level parquet with decision_value / contact_value / power_value
+  1. Pitch-level parquet with discipline_value / contact_value / power_value
      (at data/processed/process_plus_scores/year=YYYY/)
-  2. Hitter-season leaderboard with Process+, Decision+, Contact+, Power+
+  2. Hitter-season leaderboard with Process+, Discipline+, Contact+, Power+
      (at data/outputs/process_plus_leaderboard_YYYY.{parquet,csv})
 
 Usage:

@@ -206,7 +206,7 @@ def check_process_plus(year: int) -> list[Check]:
     ))
 
     # Check 4: Individual component means
-    for comp in ("decision_plus", "contact_plus", "power_plus"):
+    for comp in ("discipline_plus", "k_avoidance_plus", "power_plus"):
         if comp not in lb.columns:
             checks.append(Check(f"{comp} column exists", False, "Column missing"))
             continue
@@ -230,9 +230,9 @@ def check_process_plus(year: int) -> list[Check]:
     ))
 
     # Check 6: Power+ std ≤ 2× contact_std (guard for runaway variance)
-    if "power_plus" in lb.columns and "contact_plus" in lb.columns:
+    if "power_plus" in lb.columns and "k_avoidance_plus" in lb.columns:
         power_std   = lb["power_plus"].std()
-        contact_std = lb["contact_plus"].std()
+        contact_std = lb["k_avoidance_plus"].std()
         ratio = power_std / max(contact_std, 0.1)
         passed = ratio < 3.0
         checks.append(Check(
@@ -247,11 +247,11 @@ def check_process_plus(year: int) -> list[Check]:
     if pp_dir.exists():
         from plv_clone.utils.io import read_parquet
         scored = read_parquet(pp_dir)
-        r = _quick_split_half(scored, "decision_value", min_pa=150)
+        r = _quick_split_half(scored, "discipline_value", min_pa=150)
         if r is not None:
             passed = r >= 0.60
             checks.append(Check(
-                "Decision+ split-half r ≥ 0.60 (at 150 PA)",
+                "Discipline+ split-half r ≥ 0.60 (at 150 PA)",
                 passed,
                 f"r={r:.3f}",
                 is_warning=not passed,

@@ -9,7 +9,7 @@
 | Metric | Minimum sample | Notes |
 |---|---|---|
 | **Process+** (combined) | **150 PA** | Below this = noise dominates |
-| **Decision+** | **50 PA** | Most stable component; reliable early |
+| **Discipline+** | **50 PA** | Most stable component; reliable early |
 | **Contact+** | **25 PA** | Extremely stable; trust quickly |
 | **Power+** | **100 PA** | Noisiest component; wait for volume |
 | **PLV** (pitcher) | **100 pitches** | Roughly 3–4 starts |
@@ -26,7 +26,7 @@
 
 All thresholds are percentile-based on 2024 qualified hitters (n=413, min 150 PA).
 
-| Threshold label | Process+ | Decision+ | Contact+ | Power+ | xwOBA |
+| Threshold label | Process+ | Discipline+ | Contact+ | Power+ | xwOBA |
 |---|---|---|---|---|---|
 | **Top 10%** | ≥ 115 | ≥ 115 | ≥ 115 | ≥ 115 | ≥ 0.44 |
 | **Top 25% (strong)** | ≥ 108 | ≥ 109 | ≥ 109 | ≥ 107 | ≥ 0.40 |
@@ -44,17 +44,17 @@ All thresholds are percentile-based on 2024 qualified hitters (n=413, min 150 PA
 - xwOBA actual < 0.363 (below median) — surface underperformance signal
 
 **Soft criteria (strengthen the case):**
-- Decision+ ≥ 109 (selective + disciplined)
+- Discipline+ ≥ 109 (selective + disciplined)
 - Power+ ≥ 107 (quality contact when he makes it)
-- 30-day rolling decision_value_mean above 0.075 (trending up recently)
+- 30-day rolling discipline_value_mean above 0.075 (trending up recently)
 - xwoba_vs_expected > 0.00 (hitting the ball harder than pitch quality predicts)
 
 **How to use:** Sort `hitter_buy_targets_2024.csv` by Process+. Prioritize Tier A/B hitters
 first. For Tier C, only act if rolling trend is also positive.
 
-**What makes it a better buy:** Decision+ is the most predictive and stable — a hitter
+**What makes it a better buy:** Discipline+ is the most predictive and stable — a hitter
 who is making better decisions (higher D+) is correcting a sustainable behaviour. Power+
-improvement is real but reverts faster than Decision+.
+improvement is real but reverts faster than Discipline+.
 
 ---
 
@@ -69,8 +69,8 @@ traditional rankings or ADP.
 - Tier B or C sample (still accumulating — upside not yet priced)
 
 **Soft criteria:**
-- 30-day decision_value_mean in the top 25% of rolling leaders
-- Decision+ ≥ 112 (exceptional discipline signal)
+- 30-day discipline_value_mean in the top 25% of rolling leaders
+- Discipline+ ≥ 112 (exceptional discipline signal)
 - Contact+ ≥ 109 (making contact on difficult pitches)
 
 **How to use:** `hitter_breakout_flags_2024.csv`. These are add-low / priority
@@ -88,7 +88,7 @@ is weak — results are likely to deteriorate.
 - Process+ < 96 (bottom 25% in process)
 
 **Soft criteria (strengthen the case):**
-- Decision+ < 94 (chasing, not selective)
+- Discipline+ < 94 (chasing, not selective)
 - Power+ < 94 (contact quality below pitch expectation)
 - 30-day rolling values also declining
 
@@ -107,14 +107,14 @@ with BatScore before selling.
 **Definition:** Hitters who excel at the swing/take decision — they swing at
 hittable pitches and lay off unhittable ones.
 
-**Criteria:** Decision+ ≥ 109 (top 25%)
+**Criteria:** Discipline+ ≥ 109 (top 25%)
 
-**Why this matters for fantasy:** Decision+ is the most stable metric (YoY r=0.74).
+**Why this matters for fantasy:** Discipline+ is the most stable metric (YoY r=0.74).
 It is the earliest reliable signal of a hitter's true quality. Elite walk rate, low
-K%, and consistent BABIP often trace back to strong Decision+.
+K%, and consistent BABIP often trace back to strong Discipline+.
 
 **Actionable use:** In points leagues, walks and strikeout avoidance are explicit.
-In roto/category leagues, high OBP hitters with strong Decision+ tend to hold their
+In roto/category leagues, high OBP hitters with strong Discipline+ tend to hold their
 walk rate even in slumps.
 
 ---
@@ -151,9 +151,9 @@ Power+ ≥ 107 + BatScore mediocre = under-the-radar buy.
 chase rate trend. If both are improving, weight rolling more. If only power is up,
 be cautious (power streaks are noisy).
 
-**Rolling much worse than full-season:** Recent slump. Distinguish: is Decision+
+**Rolling much worse than full-season:** Recent slump. Distinguish: is Discipline+
 falling (concerning, potentially structural) or only Power+ falling (more likely
-variance)? Decision+ slumps matter more.
+variance)? Discipline+ slumps matter more.
 
 **Heuristic:** Weight rolling at 40% if full-season sample ≥ 300 PA. Weight
 rolling at 60% if full-season is Tier C or there's a known recent event.
@@ -171,7 +171,7 @@ They measure partially overlapping but distinct things.
 The hitter is generating exit velocity but making poor decisions (chasing, swinging
 at unhittable pitches). This is sustainable only if raw power is truly elite
 (think: free-swinging slugger archetype). If the hitter is NOT a known free-swinger,
-this is a sell signal. Check Decision+: if < 90, that's the culprit.
+this is a sell signal. Check Discipline+: if < 90, that's the culprit.
 
 ### Process+ high, BatScore low → **Buy candidate / stealth value**
 

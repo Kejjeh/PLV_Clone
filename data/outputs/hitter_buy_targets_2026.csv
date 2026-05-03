@@ -1,1 +1,5 @@
 batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
+Matt Wallner,670242,94,Signal,OF,OF,OF,110.9,109.0,82.9,116.2,0.513,0.283,0.295,0.32,warm,0.075,Process+ strong; large rank divergence (process >> results); disciplined; quality contact; [Early Season],early
+Nick Castellanos,592206,54,Watch,OF,,,110.4,120.3,99.5,106.0,0.605,0.382,0.296,0.307,warm,0.023,Process+ strong; large rank divergence (process >> results); disciplined; [Early Season],early
+Ezequiel Tovar,678662,107,Signal,SS,SS,SS,112.2,111.9,94.8,111.5,0.62,0.402,0.304,0.301,warm,0.051,Process+ strong; large rank divergence (process >> results); disciplined; quality contact; [Early Season],early
+Salvador Pérez,521692,103,Signal,C,C,C,103.0,113.8,102.4,99.0,0.577,0.395,0.283,0.256,warm,-0.013,Process+ above avg; process ahead of results; disciplined; [Early Season],early

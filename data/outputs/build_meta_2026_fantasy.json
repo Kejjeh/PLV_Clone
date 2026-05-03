@@ -1,0 +1,13 @@
+{
+  "built_at": "2026-05-01T19:38:18Z",
+  "year": 2026,
+  "exports": [
+    "hitter_fantasy",
+    "pitcher_fantasy"
+  ],
+  "model_version": "1.0.0",
+  "pa_per_game": 3.5,
+  "ip_per_start": 5.5,
+  "ip_per_app": 1.0,
+  "scoring_file": "data\\models\\league_scoring.json"
+}

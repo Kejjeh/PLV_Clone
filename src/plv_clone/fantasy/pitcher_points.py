@@ -34,6 +34,11 @@ import pandas as pd
 from plv_clone.utils.logging import get_logger
 from .scoring import LeagueScoring, pitcher_fp_per_ip
 
+# Minimum pitches in a season for a pitcher to qualify for historical PLV blending.
+_HISTORY_MIN_PITCHES = 200
+# Bayesian prior weight (equivalent pitch count) for historical PLV shrinkage.
+_BLEND_PRIOR_PITCHES = 600
+
 logger = get_logger(__name__)
 
 _CALIB_FILE = "pitcher_fantasy_calibration.json"
@@ -61,6 +66,66 @@ _LEAGUE_AVG: dict[str, float] = {
     "ip_per_start": 5.5,
     "ip_per_app":   1.0,
 }
+
+
+# ── Historical PLV blending ───────────────────────────────────────────────────
+
+def compute_plv_history(
+    processed_dir: Path,
+    years: list[int] | None = None,
+    min_pitches: int = _HISTORY_MIN_PITCHES,
+) -> pd.DataFrame:
+    """Compute per-pitcher mean PLV from historical scored seasons.
+
+    Reads pre-scored plv_scores parquets for each year in *years*, computes the
+    per-pitcher season-average PLV (qualifying seasons only: >= min_pitches), then
+    averages qualifying season means into a single ``plv_history_mean`` per pitcher.
+
+    Returns a DataFrame with columns: pitcher, plv_history_mean.
+    Returns an empty DataFrame if no historical parquets are found.
+    """
+    from plv_clone.utils.io import read_parquet
+
+    years = years or [2023, 2024, 2025]
+    processed_dir = Path(processed_dir)
+
+    season_records = []
+    for yr in years:
+        plv_dir = processed_dir / "plv_scores" / f"year={yr}"
+        if not plv_dir.exists():
+            logger.info("Historical PLV not found for year=%d — skipping.", yr)
+            continue
+        try:
+            df = read_parquet(plv_dir)
+            if "pitcher" not in df.columns or "plv" not in df.columns:
+                logger.warning("plv_scores year=%d missing pitcher/plv columns — skipping.", yr)
+                continue
+            season_avg = (
+                df.groupby("pitcher")
+                .agg(plv_season=("plv", "mean"), n_pitches=("plv", "count"))
+                .reset_index()
+            )
+            qualifying = season_avg[season_avg["n_pitches"] >= min_pitches][["pitcher", "plv_season"]]
+            qualifying = qualifying.assign(year=yr)
+            season_records.append(qualifying)
+            logger.info("Historical PLV year=%d: %d qualifying pitchers (>= %d pitches)",
+                        yr, len(qualifying), min_pitches)
+        except Exception as exc:
+            logger.warning("Could not load PLV history for year=%d: %s", yr, exc)
+
+    if not season_records:
+        logger.warning("No historical PLV data found — plv_blended will equal plv.")
+        return pd.DataFrame(columns=["pitcher", "plv_history_mean"])
+
+    all_seasons = pd.concat(season_records, ignore_index=True)
+    history = (
+        all_seasons.groupby("pitcher")["plv_season"]
+        .mean()
+        .rename("plv_history_mean")
+        .reset_index()
+    )
+    logger.info("Historical PLV: %d pitchers with qualifying history across years %s", len(history), years)
+    return history
 
 
 # ── Calibration ───────────────────────────────────────────────────────────────
@@ -142,13 +207,20 @@ def project(
     ip_per_start: float = 5.5,
     ip_per_app: float = 1.0,
     role_df: pd.DataFrame | None = None,
+    plv_history: pd.DataFrame | None = None,
 ) -> pd.DataFrame:
     """Add expected fantasy rate and FP columns to master_pitcher.
 
     Added columns:
       est_k_per_ip, est_bb_per_ip, est_h_per_ip, est_er_per_ip, est_hb_per_ip,
       fp_per_ip, fp_per_start (SP), fp_per_app (RP),
-      pitcher_role, sv_upside, hd_upside
+      pitcher_role, sv_upside, hd_upside, plv_blended
+
+    plv_history : DataFrame with columns (pitcher, plv_history_mean) from
+        compute_plv_history(). When provided, plv_blended uses Bayesian shrinkage:
+        plv_blended = (plv * pitches + plv_history_mean * 600) / (pitches + 600).
+        True rookies with no history retain plv_blended = plv.
+        When None, falls back to the rolling 30-day blend (or plv if no rolling data).
     """
     c = coefs or _default_calibration()
     df = master_pitcher.copy()
@@ -160,8 +232,23 @@ def project(
     if "pitcher_role" not in df.columns:
         df["pitcher_role"] = "SP"   # default if no role info; caller should supply role_df
 
-    # ── Rolling PLV blend (weight 30% recent if available) ───────────────
-    if rolling_plv is not None and not rolling_plv.empty and "plv" in rolling_plv.columns:
+    # ── PLV blending ──────────────────────────────────────────────────────
+    # Preferred path: Bayesian shrinkage toward multi-year historical mean.
+    # plv_blended = (plv * pitches + plv_history_mean * 600) / (pitches + 600)
+    # Fallback: rolling 30-day blend (legacy). Final fallback: plv unchanged.
+    if plv_history is not None and not plv_history.empty and "plv_history_mean" in plv_history.columns:
+        df = df.merge(plv_history[["pitcher", "plv_history_mean"]], on="pitcher", how="left")
+        pitch_col = df["pitches"] if "pitches" in df.columns else pd.Series(0, index=df.index)
+        has_hist = df["plv_history_mean"].notna()
+        df["plv_blended"] = df["plv"].copy()
+        df.loc[has_hist, "plv_blended"] = (
+            (df.loc[has_hist, "plv"] * pitch_col.loc[has_hist] + df.loc[has_hist, "plv_history_mean"] * _BLEND_PRIOR_PITCHES)
+            / (pitch_col.loc[has_hist] + _BLEND_PRIOR_PITCHES)
+        )
+        n_blended = int(has_hist.sum())
+        n_rookie = int((~has_hist).sum())
+        logger.info("PLV blend (Bayesian): %d veterans blended, %d rookies unchanged", n_blended, n_rookie)
+    elif rolling_plv is not None and not rolling_plv.empty and "plv" in rolling_plv.columns:
         latest_roll = (
             rolling_plv.sort_values("date")
             .groupby("pitcher")["plv"]
@@ -170,7 +257,6 @@ def project(
             .reset_index()
         )
         df = df.merge(latest_roll, on="pitcher", how="left")
-        # Blend: 70% season PLV, 30% rolling (if rolling is available)
         df["plv_blended"] = df["plv"].copy()
         has_roll = df["rolling_plv_30d"].notna()
         df.loc[has_roll, "plv_blended"] = (
@@ -218,16 +304,80 @@ def project(
         np.nan,
     )
 
-    # ── SV / HD upside notes ──────────────────────────────────────────────
-    # These are role-sensitive and very noisy. Reported as multipliers only.
-    # Closer (RP with high-leverage usage): ~0.15 SV/app → +0.75 FP/app
-    # Setup/hold (RP): ~0.25 HD/app → +0.75 FP/app
-    # We flag RP pitchers; user applies their own role knowledge.
+    # ── SV / HD upside ────────────────────────────────────────────────────
+    # String labels retained for display; numeric estimates added separately.
     df["sv_upside"]  = np.where(df["pitcher_role"] == "RP",
                                  f"+{scoring.sv:.0f}/save (role-dependent)", "")
     df["hd_upside"]  = np.where(df["pitcher_role"] == "RP",
                                  f"+{scoring.hd:.0f}/hold (role-dependent)", "")
 
+    # Numeric SV/HD estimates based on PLV percentile tier within RPs.
+    # fp_per_ip is NOT modified — this is an additive companion column.
+    df = assign_sv_hd_estimates(df, sv_pts=scoring.sv, hd_pts=scoring.hd)
+
+    return df
+
+
+# ── SV/HD numeric estimates ───────────────────────────────────────────────────
+
+# plv_pctile thresholds are on a 0–100 scale (not 0–1).
+_CLOSER_PLV_PCTILE = 85.0   # top 15% of all pitchers by PLV → closer tier
+_SETUP_PLV_PCTILE  = 50.0   # 50th–85th pctile → setup / high-leverage RP
+
+# Estimated season totals per tier (scaling to a full 162-game season)
+_SV_HD_TIERS: dict[str, dict[str, int]] = {
+    "closer": {"est_sv": 28, "est_hd":  0},
+    "setup":  {"est_sv":  2, "est_hd": 18},
+    "middle": {"est_sv":  0, "est_hd":  8},
+    "sp":     {"est_sv":  0, "est_hd":  0},
+}
+
+
+def assign_sv_hd_estimates(
+    df: pd.DataFrame,
+    sv_pts: float,
+    hd_pts: float,
+    closer_pctile: float = _CLOSER_PLV_PCTILE,
+    setup_pctile: float  = _SETUP_PLV_PCTILE,
+) -> pd.DataFrame:
+    """Add numeric est_sv_per_162, est_hd_per_162, sv_hd_fp_per_162 columns.
+
+    Tier assignment (plv_pctile is 0–100 scale):
+      SP:                          0 SV / 0 HD
+      RP + plv_pctile >= closer:  28 SV / 0 HD  (closer tier)
+      RP + plv_pctile >= setup:    2 SV / 18 HD (setup/high-leverage)
+      RP + plv_pctile <  setup:    0 SV / 8 HD  (middle reliever)
+
+    sv_hd_fp_per_162 = est_sv * sv_pts + est_hd * hd_pts
+
+    The existing sv_upside / hd_upside string columns are preserved unchanged.
+    fp_per_ip is NOT modified — sv/hd contribution is additive and kept separate.
+    """
+    df = df.copy()
+
+    pctile = df["plv_pctile"] if "plv_pctile" in df.columns else pd.Series(50.0, index=df.index)
+    role   = df["pitcher_role"] if "pitcher_role" in df.columns else pd.Series("SP", index=df.index)
+
+    is_sp  = role == "SP"
+    is_rp  = role == "RP"
+
+    tier = pd.Series("sp", index=df.index)
+    tier = tier.where(is_sp, other="middle")             # all RP start as middle
+    tier = tier.where(~(is_rp & (pctile >= setup_pctile)),  other="setup")
+    tier = tier.where(~(is_rp & (pctile >= closer_pctile)), other="closer")
+    tier = tier.where(~is_sp, other="sp")                # re-apply SP override
+
+    df["est_sv_per_162"]  = tier.map(lambda t: _SV_HD_TIERS[t]["est_sv"])
+    df["est_hd_per_162"]  = tier.map(lambda t: _SV_HD_TIERS[t]["est_hd"])
+    df["sv_hd_fp_per_162"] = (
+        df["est_sv_per_162"] * sv_pts + df["est_hd_per_162"] * hd_pts
+    ).round(1)
+
+    tier_counts = tier.value_counts().to_dict()
+    logger.info(
+        "SV/HD estimates assigned: %s  (closer>=%.0f, setup>=%.0f)",
+        tier_counts, closer_pctile, setup_pctile,
+    )
     return df
 
 

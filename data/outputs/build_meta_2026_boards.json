@@ -1,0 +1,18 @@
+{
+  "built_at": "2026-04-27T22:00:53Z",
+  "year": 2026,
+  "exports": [
+    "hitter_buy_targets",
+    "hitter_breakout_flags",
+    "hitter_regression_flags",
+    "hitter_discipline_targets",
+    "hitter_power_targets",
+    "hitter_pre_breakout",
+    "pitcher_plv_targets"
+  ],
+  "model_version": "1.0.0",
+  "stage_detected": "early",
+  "stage_active": "early",
+  "source_hitter_path": "data\\outputs\\master_hitter_2026.csv",
+  "source_pitcher_path": "data\\outputs\\master_pitcher_2026.csv"
+}
