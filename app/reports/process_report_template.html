@@ -17,6 +17,7 @@ window.PITCHERS = [];
 window.TARGETS = { buy:[], preBreakout:[], breakout:[] };
 window.ROLLING = {};
 window.WAIVER = [];
+window.WAIVER_PITCHERS = [];
 window.MY_TEAM = { teamName: "", hitters: [], pitchers: [], error: null };
 </script>
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
@@ -512,11 +513,19 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
   const [trendPlayers, setTrendPlayers] = React.useState(trendDefault);
   const [trendSearch, setTrendSearch]   = React.useState('');
 
-  // ── Waiver tab state (separate selection so it doesn't fight Hitters) ──
+  // ── Waiver tab state ──
   const [wSelected, setWSelected] = React.useState(window.WAIVER[0]?.name || '');
   const [wExpanded, setWExpanded] = React.useState(null);
   const [wSort, setWSort] = React.useState('proc');
   const [wDir, setWDir]   = React.useState('desc');
+  const [wTab, setWTab]   = React.useState('hitters');   // 'hitters' | 'pitchers'
+  // Pitcher waiver state
+  const [wpRole, setWpRole] = React.useState('all');
+  const [wpSort, setWpSort] = React.useState('plv');
+  const [wpDir, setWpDir]   = React.useState('desc');
+  const [wpExp, setWpExp]   = React.useState(null);
+  // Pitchers leaderboard role toggle
+  const [pRole, setPRole]   = React.useState('all');
 
   // ── Hitters: handle sort ──
   function handleSort(col) {
@@ -530,6 +539,10 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
   function handleWSort(col) {
     if (wSort === col) setWDir(d => d === 'desc' ? 'asc' : 'desc');
     else { setWSort(col); setWDir('desc'); }
+  }
+  function handleWpSort(col) {
+    if (wpSort === col) setWpDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setWpSort(col); setWpDir('desc'); }
   }
 
   // ── Filter + sort hitters ──
@@ -563,6 +576,7 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
     let rows = window.PITCHERS.filter(p => {
       if (pSearch && !p.name.toLowerCase().includes(pSearch.toLowerCase())) return false;
       if (typeof p.pitches === 'number' && p.pitches < pMinPitches) return false;
+      if (pRole !== 'all' && (p.role || '') !== pRole) return false;
       return true;
     });
     rows = [...rows].sort((a, b) => {
@@ -575,7 +589,7 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
       return pDir === 'asc' ? aNum - bNum : bNum - aNum;
     });
     return rows.slice(0, pRows);
-  }, [pSearch, pMinPitches, pSort, pDir, pRows]);
+  }, [pSearch, pMinPitches, pSort, pDir, pRows, pRole]);
 
   // ── Sort waiver ──
   const sortedWaiver = React.useMemo(() => {
@@ -590,6 +604,23 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
     });
     return rows;
   }, [wSort, wDir]);
+
+  // ── Waiver pitchers sort/filter ──
+  const sortedWaiverPitchers = React.useMemo(() => {
+    let rows = window.WAIVER_PITCHERS.filter(p =>
+      wpRole === 'all' || (p.role || '') === wpRole
+    );
+    rows = [...rows].sort((a, b) => {
+      const av = a[wpSort], bv = b[wpSort];
+      const aNum = typeof av === 'number' ? av : -Infinity;
+      const bNum = typeof bv === 'number' ? bv : -Infinity;
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return wpDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return wpDir === 'asc' ? aNum - bNum : bNum - aNum;
+    });
+    return rows;
+  }, [wpRole, wpSort, wpDir]);
 
   // ── Lede leaders ──
   // Lede leader needs a meaningful sample — drop ultra-low-PA outliers from the headline pick
@@ -777,6 +808,17 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
             {[25, 50, 100, 999].map(n => <option key={n} value={n}>{n === 999 ? 'All' : n}</option>)}
           </select>
         </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Role
+          {['all','SP','RP'].map(r => (
+            <button key={r} onClick={() => setPRole(r)}
+              style={{ padding:'2px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1,
+                       textTransform:'uppercase', border:`1px solid ${pRole===r ? colors.accent : colors.border}`,
+                       borderRadius:2, background: pRole===r ? colors.accent : colors.panel,
+                       color: pRole===r ? '#fff' : colors.dim, cursor:'pointer' }}>
+              {r === 'all' ? 'All' : r}
+            </button>
+          ))}
+        </label>
         <div style={{ flex:1 }} />
         <span style={{ color:colors.dim }}>{filteredPitchers.length} / {window.PITCHERS.length} pitchers</span>
       </div>
@@ -874,32 +916,94 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
     );
   };
 
-  const renderWaiverTab = () => (
-    <>
-      <SectionHeading num="I" label="Waiver Wire" right="RANKED BY PROCESS+" colors={colors} />
-      <div style={{ padding:'0 32px 12px' }}>
-        <p style={{ fontSize:13, fontStyle:'italic', color:colors.dim, margin:0, lineHeight:1.5 }}>
-          Players with strong underlying process not yet reflected in results or ownership. Weight by sample tier.
-        </p>
-      </div>
-      <div style={{ padding:'0 32px 32px' }}>
-        <HittersTable
-          rows={sortedWaiver} colors={colors} editorialHeat={editorialHeat}
-          selected={wSelected} setSelected={setWSelected}
-          expanded={wExpanded} setExpanded={setWExpanded}
-          pinned={pinned} setPinned={setPinned}
-          sortCol={wSort} sortDir={wDir} onSort={handleWSort}
-          lastColLabel="Angle"
-          renderLastCell={(h, c) => {
-            const procIsHigh = typeof h.proc === 'number' && h.proc > 115;
-            const tier = h.sample || '—';
-            const color = tier === 'Too Small' ? c.warn : procIsHigh ? c.pos : c.dim;
-            return <span style={{ padding:'1px 6px', border:`1px solid ${color}`, color, textTransform:'uppercase', whiteSpace:'nowrap' }}>{tier}</span>;
-          }}
-        />
-      </div>
-    </>
-  );
+  const renderWaiverTab = () => {
+    const subTabs = [
+      { id:'hitters',  label:`Hitters (${window.WAIVER.length})` },
+      { id:'pitchers', label:`Pitchers (${window.WAIVER_PITCHERS.length})` },
+    ];
+    return (
+      <>
+        {/* Sub-tab switcher */}
+        <div style={{ padding:'8px 32px', display:'flex', gap:0, borderBottom:`1px solid ${colors.border}`, background:colors.stripe }}>
+          {subTabs.map(t => (
+            <button key={t.id} onClick={() => setWTab(t.id)}
+              style={{ padding:'6px 20px', fontSize:11, fontFamily:MONO, letterSpacing:1.5,
+                       textTransform:'uppercase', border:'none', borderBottom: wTab===t.id ? `2px solid ${colors.accent}` : '2px solid transparent',
+                       background:'transparent', color: wTab===t.id ? colors.accent : colors.dim,
+                       cursor:'pointer', marginBottom:-1 }}>
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        {wTab === 'hitters' && (
+          <>
+            <SectionHeading num="I" label="Waiver Wire — Hitters" right="RANKED BY PROCESS+" colors={colors} />
+            <div style={{ padding:'0 32px 12px' }}>
+              <p style={{ fontSize:13, fontStyle:'italic', color:colors.dim, margin:0, lineHeight:1.5 }}>
+                Hitters with strong underlying process not yet reflected in results or ownership. Weight by sample tier.
+              </p>
+            </div>
+            <div style={{ padding:'0 32px 32px' }}>
+              <HittersTable
+                rows={sortedWaiver} colors={colors} editorialHeat={editorialHeat}
+                selected={wSelected} setSelected={setWSelected}
+                expanded={wExpanded} setExpanded={setWExpanded}
+                pinned={pinned} setPinned={setPinned}
+                sortCol={wSort} sortDir={wDir} onSort={handleWSort}
+                lastColLabel="Angle"
+                renderLastCell={(h, c) => {
+                  const procIsHigh = typeof h.proc === 'number' && h.proc > 115;
+                  const tier = h.sample || '—';
+                  const color = tier === 'Too Small' ? c.warn : procIsHigh ? c.pos : c.dim;
+                  return <span style={{ padding:'1px 6px', border:`1px solid ${color}`, color, textTransform:'uppercase', whiteSpace:'nowrap' }}>{tier}</span>;
+                }}
+              />
+            </div>
+          </>
+        )}
+
+        {wTab === 'pitchers' && (
+          <>
+            <SectionHeading num="I" label="Waiver Wire — Pitchers" right="RANKED BY PLV" colors={colors} />
+            <div style={{ padding:'0 32px 12px', display:'flex', gap:12, alignItems:'center' }}>
+              <p style={{ fontSize:13, fontStyle:'italic', color:colors.dim, margin:0, lineHeight:1.5, flex:1 }}>
+                ESPN free-agent pitchers with qualifying pitch counts, ranked by PLV.
+              </p>
+              <div style={{ display:'flex', gap:6, alignItems:'center', fontSize:10, fontFamily:MONO, textTransform:'uppercase', letterSpacing:1 }}>
+                <span style={{ color:colors.dim }}>Role</span>
+                {['all','SP','RP'].map(r => (
+                  <button key={r} onClick={() => setWpRole(r)}
+                    style={{ padding:'2px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
+                             border:`1px solid ${wpRole===r ? colors.accent : colors.border}`, borderRadius:2,
+                             background: wpRole===r ? colors.accent : colors.panel,
+                             color: wpRole===r ? '#fff' : colors.dim, cursor:'pointer' }}>
+                    {r === 'all' ? 'All' : r}
+                  </button>
+                ))}
+                <span style={{ color:colors.dim, marginLeft:8 }}>
+                  {sortedWaiverPitchers.length} / {window.WAIVER_PITCHERS.length}
+                </span>
+              </div>
+            </div>
+            <div style={{ padding:'0 32px 32px' }}>
+              {sortedWaiverPitchers.length === 0 ? (
+                <div style={{ fontStyle:'italic', color:colors.dim, fontSize:13, paddingTop:8 }}>
+                  No qualifying free-agent pitchers found.
+                </div>
+              ) : (
+                <PitchersTable
+                  rows={sortedWaiverPitchers} colors={colors} editorialHeat={editorialHeat}
+                  sortCol={wpSort} sortDir={wpDir} onSort={handleWpSort}
+                  expanded={wpExp} setExpanded={setWpExp}
+                />
+              )}
+            </div>
+          </>
+        )}
+      </>
+    );
+  };
 
   const renderMyTeamTab = () => {
     const team = window.MY_TEAM;

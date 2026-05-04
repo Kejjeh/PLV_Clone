@@ -42,7 +42,7 @@ SPARK_WEEKS  = 12
 MIN_PITCHES  = 100
 ROLLING_KEEP = 60          # last N daily points per player for Trends
 WAIVER_MIN_PA      = 10    # ESPN free-agent hitters with this many PA make the wire
-WAIVER_MIN_PITCHES = 50    # ESPN free-agent pitchers
+WAIVER_MIN_PITCHES = 100   # ESPN free-agent pitchers need at least this many pitches
 WAIVER_TOP_N       = 9999  # show every ESPN free agent that joined master
 ESPN_FA_SIZE       = 800   # how many free agents to pull from ESPN
 
@@ -629,6 +629,37 @@ def build_waiver_from_espn(master_hitter: pd.DataFrame,
     return rows[:WAIVER_TOP_N]
 
 
+def build_waiver_pitchers(
+    master_pitcher: pd.DataFrame,
+    fp_by_p_name: dict[str, dict],
+    fa_pnames: set[str],
+) -> list[dict]:
+    """ESPN free-agent pitchers cross-referenced with master_pitcher, sorted by PLV."""
+    if master_pitcher is None or master_pitcher.empty:
+        return []
+    rows: list[dict] = []
+    for pname in fa_pnames:
+        sub = master_pitcher[master_pitcher["player_name"] == pname]
+        if sub.empty:
+            continue
+        r = sub.iloc[0]
+        if (r.get("pitches") or 0) < WAIVER_MIN_PITCHES:
+            continue
+        row = _pitcher_row(pname, "", "", r)
+        row["rank"] = 0
+        fp = fp_by_p_name.get(pname, _empty_fp())
+        row.update(fp)
+        row["role"] = fp.get("espnFpos") or fp.get("espnPos") or ""
+        rows.append(row)
+
+    def _plv_key(r):
+        v = r.get("plv")
+        return v if isinstance(v, float) else -99.0
+
+    rows.sort(key=_plv_key, reverse=True)
+    return rows
+
+
 # ─── MY TEAM (ESPN roster) ────────────────────────────────────────────────────
 def _hitter_row(name: str, espn_pos: str, pro_team: str,
                 master_row: pd.Series | None) -> dict:
@@ -756,10 +787,14 @@ def run(year: int) -> int:
     # Attach actual ESPN fantasy points (hitters by MLB id, pitchers by name)
     attach_fantasy_by_id(hitters,      fp_by_h_id)
     attach_fantasy_by_name(pitchers_out, fp_by_p_name)
+    # Tag each leaderboard pitcher with their ESPN role (SP/RP/"")
+    for p in pitchers_out:
+        p["role"] = p.get("espnFpos") or p.get("espnPos") or ""
 
     # Build ESPN-driven waiver wire (free agents only)
     waiver = build_waiver_from_espn(master, fp_by_h_id, espn["fa_hids"],
                                     dup_names, mlb_to_team, hitters)
+    waiver_pitchers = build_waiver_pitchers(pitchers, fp_by_p_name, espn["fa_pnames"])
 
     # Sparks + rolling cover top-50 + my-team + waiver hitters
     sparkable = hitters + my_team["hitters"] + waiver
@@ -775,7 +810,7 @@ def run(year: int) -> int:
           f"preBreakout={len(targets['preBreakout'])}, "
           f"breakout={len(targets['breakout'])}")
     print(f"  rolling:     {len(rolling_out)} players (last {ROLLING_KEEP} days)")
-    print(f"  waiver:      {len(waiver)} (ESPN free agents, pa>={WAIVER_MIN_PA})")
+    print(f"  waiver:      {len(waiver)} hitters, {len(waiver_pitchers)} pitchers (ESPN free agents)")
     print(f"  my_team:     {my_team['teamName'] or '(unavailable)'} - "
           f"{len(my_team['hitters'])} hitters, {len(my_team['pitchers'])} pitchers"
           + (f"  ({my_team['error']})" if my_team['error'] else ''))
@@ -792,8 +827,9 @@ def run(year: int) -> int:
         ("PITCHERS",      json.dumps(pitchers_out,  indent=2)),
         ("TARGETS",       json.dumps(targets,       indent=2)),
         ("ROLLING",       json.dumps(rolling_out,   indent=2)),
-        ("WAIVER",        json.dumps(waiver,        indent=2)),
-        ("MY_TEAM",       json.dumps(my_team,       indent=2)),
+        ("WAIVER",         json.dumps(waiver,          indent=2)),
+        ("WAIVER_PITCHERS",json.dumps(waiver_pitchers, indent=2)),
+        ("MY_TEAM",        json.dumps(my_team,         indent=2)),
     ]
     body = "\n".join(f"window.{k} = {v};" for k, v in blocks)
     data_script = f"<script>\n{body}\n</script>"
