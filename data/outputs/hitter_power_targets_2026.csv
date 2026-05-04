@@ -1,86 +1,93 @@
-batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,xwoba_vs_expected,tag,season_stage
-Luke Raley,670042,83,Signal,OF,OF,OF,155.7,101.3,82.3,160.2,0.534,0.318,0.428,0.298,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Dalton Rushing,687221,40,Watch,C,,,159.6,116.2,96.1,154.7,0.452,0.258,0.499,0.27,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-James Wood,695578,127,Signal,OF,OF,OF,146.3,79.3,92.4,151.2,0.373,0.282,0.44,0.252,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Dane Myers,667472,49,Watch,OF,,,154.8,70.9,115.0,150.7,0.33,0.256,0.522,0.25,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Yordan Álvarez,670541,115,Signal,OF,DH,DH,155.0,82.1,124.5,144.3,0.424,0.311,0.537,0.217,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Ben Rice,700250,101,Signal,1B,1B,1B,141.8,79.4,99.3,143.9,0.376,0.254,0.441,0.215,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Jordan Walker,691023,106,Signal,OF,OF,OF,143.3,102.6,92.8,143.5,0.501,0.28,0.402,0.213,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Munetaka Murakami,808959,101,Signal,3B,1B,1B,139.1,106.1,83.4,143.2,0.398,0.245,0.414,0.212,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Aaron Judge,592450,109,Signal,OF,OF,OF,138.1,97.3,89.3,141.3,0.43,0.264,0.425,0.202,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Max Muncy,571970,97,Signal,3B,3B,3B,133.4,95.4,84.5,139.4,0.446,0.245,0.398,0.192,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Nick Kurtz,701762,111,Signal,1B,1B,1B,128.8,99.2,77.5,137.5,0.384,0.262,0.407,0.183,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Kyle Schwarber,656941,113,Signal,OF,DH,DH,131.3,81.7,91.8,136.9,0.41,0.266,0.39,0.18,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Oneil Cruz,665833,111,Signal,OF,OF,OF,136.9,79.8,106.2,136.0,0.447,0.294,0.38,0.175,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Garrett Mitchell,669003,80,Signal,OF,OF,OF,125.9,96.0,77.5,135.5,0.407,0.259,0.373,0.173,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Elly De La Cruz,682829,122,Signal,SS,SS,SS,133.7,75.5,108.2,133.0,0.405,0.264,0.392,0.16,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Mike Trout,545361,119,Signal,OF,OF,OF,134.3,96.0,102.0,132.2,0.363,0.203,0.47,0.156,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Everson Pereira,677592,48,Watch,OF,OF,OF,134.8,116.3,94.0,132.2,0.582,0.351,0.382,0.156,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Shea Langeliers,669127,108,Signal,C,C,C,132.1,106.1,94.2,131.6,0.513,0.306,0.385,0.153,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Dillon Dingler,693307,94,Signal,C,C,C,140.3,89.5,118.9,131.5,0.489,0.304,0.461,0.152,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Michael Harris,671739,92,Signal,OF,OF,OF,134.6,100.8,109.1,128.3,0.549,0.355,0.414,0.136,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Shohei Ohtani,660271,114,Signal,TWP,DH,DH,126.9,87.7,100.3,127.7,0.45,0.299,0.408,0.133,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Willson Contreras,575929,105,Signal,1B,1B,1B,125.4,94.2,94.9,127.4,0.442,0.258,0.397,0.132,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Corbin Carroll,682998,91,Signal,OF,OF,OF,122.7,70.5,100.8,126.9,0.452,0.345,0.383,0.129,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Daniel Schneemann,682177,71,Watch,2B,,,122.8,85.2,96.3,126.1,0.485,0.333,0.384,0.125,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Owen Caissie,683357,80,Signal,OF,OF,OF,117.6,73.8,91.2,125.8,0.419,0.259,0.305,0.123,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Matt Olson,621566,119,Signal,1B,1B,1B,126.2,86.7,103.7,125.6,0.426,0.294,0.382,0.123,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Freddie Freeman,518692,105,Signal,1B,1B,1B,134.0,120.2,105.4,125.5,0.508,0.304,0.458,0.122,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Bryce Harper,547180,104,Signal,1B,1B,1B,131.8,109.9,106.1,125.2,0.531,0.342,0.422,0.12,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Michael Conforto,624424,40,Watch,OF,,,126.1,114.1,92.3,125.2,0.434,0.257,0.386,0.121,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Brice Turang,668930,103,Signal,2B,2B,2B,124.9,83.8,104.7,124.6,0.378,0.245,0.422,0.117,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Dominic Canzone,686527,71,Watch,OF,DH,DH,132.5,83.3,120.8,124.6,0.496,0.324,0.418,0.117,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Gary Sánchez,596142,63,Watch,C,,,125.2,92.7,103.5,123.6,0.347,0.257,0.42,0.112,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Andy Pages,681624,102,Signal,OF,OF,OF,120.3,94.5,93.8,123.1,0.472,0.296,0.37,0.11,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Sal Stewart,701398,119,Signal,3B,1B,1B,130.1,115.2,104.7,123.1,0.48,0.288,0.424,0.11,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Giancarlo Stanton,519317,91,Signal,DH,DH,DH,119.1,93.2,96.2,121.1,0.456,0.311,0.341,0.1,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Dominic Smith,642086,66,Watch,1B,DH,DH,133.8,114.0,118.0,120.8,0.537,0.318,0.417,0.098,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Drake Baldwin,686948,122,Signal,C,C,C,123.2,92.9,106.0,120.6,0.505,0.294,0.391,0.097,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Ramón Laureano,657656,97,Signal,OF,OF,OF,119.3,123.6,84.4,120.5,0.519,0.299,0.365,0.097,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Kody Clemens,665019,58,Watch,2B,1B,1B,111.4,68.3,94.6,119.5,0.412,0.286,0.331,0.092,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Heliot Ramos,671218,91,Signal,OF,OF,OF,116.3,108.4,87.2,119.4,0.517,0.34,0.323,0.091,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Riley Greene,682985,109,Signal,OF,OF,OF,118.1,99.4,96.7,118.6,0.438,0.277,0.392,0.087,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Jac Caglianone,695506,85,Signal,OF,OF,OF,116.7,84.4,101.3,118.3,0.458,0.296,0.34,0.085,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Andrew Benintendi,643217,73,Watch,OF,DH,DH,113.2,100.8,86.6,118.3,0.544,0.359,0.306,0.086,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Ronald Acuña,660670,116,Signal,OF,OF,OF,118.9,121.2,89.8,118.1,0.465,0.28,0.395,0.085,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Ian Happ,664023,107,Signal,OF,OF,OF,114.5,86.8,96.2,118.0,0.415,0.276,0.362,0.084,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Bobby Witt,677951,114,Signal,SS,SS,SS,121.5,95.8,108.7,117.1,0.479,0.327,0.386,0.079,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Cj Abrams,682928,107,Signal,SS,SS,SS,124.2,100.3,112.8,117.0,0.504,0.318,0.411,0.079,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Kevin McGonigle,805808,110,Signal,SS,3B|SS,"3B, SS",124.5,94.2,116.2,116.9,0.417,0.285,0.423,0.078,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Fernando Tatís,665487,106,Signal,OF,OF,OF,119.5,116.0,96.5,116.7,0.467,0.267,0.371,0.078,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Spencer Steer,668715,95,Signal,1B,OF,OF,115.3,91.1,99.4,116.4,0.461,0.293,0.328,0.076,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Amed Rosario,642708,64,Watch,3B,3B,3B,126.5,106.3,116.1,116.4,0.549,0.361,0.387,0.076,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Ryan O'Hearn,656811,96,Signal,1B,OF,OF,119.2,85.7,110.2,116.3,0.434,0.275,0.402,0.075,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Matt Wallner,670242,94,Signal,OF,OF,OF,110.9,109.0,82.9,116.2,0.513,0.283,0.295,0.075,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Max Muncy,691777,101,Signal,3B,3B,3B,109.1,85.9,90.7,115.7,0.51,0.342,0.31,0.072,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Blaze Alexander,677942,68,Watch,SS,,,111.2,127.1,77.1,115.5,0.583,0.359,0.319,0.071,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Francisco Álvarez,682626,75,Watch,C,C,C,120.3,87.2,113.9,115.3,0.447,0.305,0.406,0.07,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Kyle Manzardo,700932,90,Signal,1B,1B,1B,108.0,96.3,85.1,115.0,0.489,0.307,0.296,0.069,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
-Teoscar Hernández,606192,92,Signal,OF,OF,OF,107.6,87.1,89.2,114.6,0.445,0.299,0.32,0.067,Power+ strong (top 25%); xwOBA above model expectation,early
-Jorge Soler,624585,101,Signal,OF,DH,DH,108.6,102.0,84.8,114.6,0.459,0.289,0.327,0.067,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Alec Burleson,676475,109,Signal,1B,1B,1B,123.6,104.4,114.8,114.6,0.51,0.321,0.392,0.067,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Vladimir Guerrero,665489,102,Signal,1B,1B,1B,124.0,113.3,111.7,114.6,0.48,0.274,0.397,0.067,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Leody Taveras,665750,65,Watch,OF,OF,OF,115.5,109.0,96.0,114.6,0.481,0.306,0.39,0.066,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Ketel Marte,606466,100,Signal,2B,2B,2B,121.1,91.1,116.1,114.4,0.491,0.307,0.377,0.066,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Jake Burger,669394,107,Signal,1B,1B,1B,112.1,72.5,106.1,114.2,0.495,0.328,0.312,0.065,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Cam Smith,701358,104,Signal,OF,OF,OF,113.4,95.7,98.2,114.2,0.467,0.335,0.375,0.065,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Edouard Julien,666397,79,Watch,2B,2B,2B,112.7,86.3,101.5,114.1,0.37,0.227,0.366,0.064,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Gabriel Arias,672356,43,Watch,SS,SS,SS,111.5,107.9,89.5,114.0,0.448,0.264,0.292,0.064,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Jesús Sánchez,660821,83,Signal,OF,OF,OF,118.6,99.4,108.5,113.8,0.558,0.338,0.377,0.063,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Bryan Reynolds,668804,106,Signal,OF,OF,OF,109.6,87.4,96.4,113.3,0.421,0.247,0.357,0.06,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Ildemaro Vargas,545121,72,Watch,2B,,,123.7,74.6,131.6,113.0,0.507,0.338,0.383,0.059,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Hunter Goodman,696100,104,Signal,C,C,C,106.2,99.2,85.5,112.6,0.538,0.338,0.286,0.057,Power+ strong (top 25%); xwOBA above model expectation,early
-Moisés Ballesteros,694208,64,Watch,C,DH,DH,121.5,110.7,112.0,112.6,0.455,0.268,0.371,0.057,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-José Ramírez,608070,116,Signal,3B,3B,3B,117.6,95.6,111.0,112.5,0.438,0.303,0.418,0.056,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Brandon Nimmo,607043,117,Signal,OF,OF,OF,116.5,104.2,105.2,112.3,0.492,0.27,0.362,0.055,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Jeremiah Jackson,669236,83,Signal,2B,2B,2B,119.5,132.1,99.3,112.2,0.607,0.348,0.337,0.055,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Carter Jensen,695600,82,Signal,C,DH,DH,109.1,94.6,95.0,112.0,0.422,0.277,0.338,0.053,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Corey Seager,608369,104,Signal,SS,SS,SS,112.2,114.4,92.7,111.9,0.503,0.284,0.344,0.053,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Jackson Merrill,701538,102,Signal,OF,OF,OF,114.4,108.5,100.3,111.7,0.59,0.378,0.319,0.052,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Ezequiel Tovar,678662,107,Signal,SS,SS,SS,112.2,111.9,94.8,111.5,0.62,0.402,0.304,0.051,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Roman Anthony,701350,112,Signal,OF,OF,OF,106.0,64.5,103.1,111.4,0.353,0.244,0.356,0.051,Power+ strong (top 25%); xwOBA above model expectation,early
-Luis Campusano,669134,42,Watch,C,C,C,112.0,104.3,98.0,111.4,0.494,0.306,0.333,0.05,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Carlos Cortes,666126,58,Watch,OF,,,119.3,106.3,114.2,110.5,0.476,0.253,0.431,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Brandon Lowe,664040,94,Signal,2B,2B,2B,110.7,101.0,98.7,110.5,0.478,0.316,0.369,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Brady House,691781,99,Signal,3B,3B,3B,110.0,104.9,96.2,110.2,0.496,0.326,0.306,0.044,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
-Wilyer Abreu,677800,105,Signal,OF,OF,OF,111.5,98.3,102.1,110.2,0.472,0.279,0.335,0.044,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+batter_name,batter,pa,confidence,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,xwoba_vs_expected,tag,season_stage
+James Wood,695578,168,Signal,137.0,75.0,90.9,151.9,0.354,0.27,0.626,0.256,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Munetaka Murakami,808959,145,Signal,124.6,104.1,80.9,144.8,0.405,0.236,0.605,0.22,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Luke Raley,670042,99,Signal,124.9,104.5,82.0,144.6,0.531,0.319,0.603,0.219,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Aaron Judge,592450,144,Signal,126.2,96.4,90.1,142.2,0.417,0.261,0.575,0.207,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Ben Rice,700250,133,Signal,133.2,84.5,105.7,141.7,0.392,0.249,0.576,0.204,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Yordan Álvarez,670541,148,Signal,142.2,82.8,125.4,141.1,0.429,0.305,0.557,0.201,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Dalton Rushing,687221,60,Watch,126.6,105.1,97.6,139.1,0.458,0.259,0.557,0.191,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Jordan Walker,691023,138,Signal,125.6,101.9,97.1,138.4,0.513,0.286,0.55,0.188,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Dane Myers,667472,63,Watch,131.5,70.0,112.0,137.2,0.327,0.241,0.534,0.181,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Mike Trout,545361,152,Signal,122.9,94.5,97.1,135.9,0.352,0.199,0.573,0.175,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Nick Kurtz,701762,149,Signal,114.3,98.5,79.0,135.9,0.387,0.252,0.547,0.175,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Michael Harris,671739,119,Signal,128.7,100.8,109.8,135.6,0.553,0.361,0.528,0.173,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Oneil Cruz,665833,150,Signal,124.8,78.4,101.8,135.5,0.456,0.302,0.544,0.173,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Max Muncy,571970,123,Signal,118.7,95.3,92.5,134.0,0.443,0.249,0.531,0.165,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Willson Contreras,575929,139,Signal,118.9,94.5,93.8,133.6,0.447,0.266,0.537,0.163,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Jahmai Jones,663330,45,Watch,114.6,122.0,85.5,133.3,0.551,0.315,0.571,0.162,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Juan Soto,665742,77,Watch,123.5,110.5,108.2,131.3,0.428,0.289,0.521,0.152,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Kyle Schwarber,656941,155,Signal,111.8,90.2,88.8,129.2,0.413,0.261,0.506,0.14,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Shea Langeliers,669127,146,Signal,116.4,107.6,100.3,128.3,0.515,0.313,0.496,0.136,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Hunter Goodman,696100,137,Signal,109.1,100.0,87.0,127.4,0.553,0.347,0.505,0.132,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Elly De La Cruz,682829,156,Signal,119.3,71.5,108.8,127.1,0.402,0.26,0.499,0.13,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Matt Olson,621566,158,Signal,114.1,97.2,100.2,126.2,0.438,0.288,0.485,0.125,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Riley Greene,682985,148,Signal,111.3,97.5,94.4,126.2,0.432,0.272,0.496,0.125,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Daniel Schneemann,682177,93,Signal,108.5,86.8,92.1,124.6,0.484,0.333,0.486,0.117,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Corbin Carroll,682998,130,Signal,107.4,77.3,91.7,123.8,0.446,0.343,0.456,0.113,Power+ elite (top 10%); xwOBA above model expectation,early
+Dillon Dingler,693307,121,Signal,115.9,92.7,109.6,123.6,0.495,0.309,0.48,0.112,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Shohei Ohtani,660271,145,Signal,111.8,85.0,101.0,123.6,0.434,0.301,0.48,0.112,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Garrett Mitchell,669003,114,Signal,98.6,100.0,77.6,121.9,0.416,0.248,0.473,0.104,Power+ elite (top 10%); xwOBA above model expectation,early
+Drake Baldwin,686948,162,Signal,111.3,92.1,104.6,121.5,0.506,0.304,0.452,0.102,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Nathaniel Lowe,663993,71,Watch,111.3,100.5,105.7,121.0,0.461,0.261,0.466,0.099,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Michael Conforto,624424,45,Watch,108.4,113.2,100.7,120.6,0.431,0.256,0.493,0.097,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Spencer Steer,668715,125,Signal,108.0,96.0,101.1,120.1,0.438,0.29,0.463,0.094,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Dominic Canzone,686527,89,Signal,113.8,80.2,113.1,120.0,0.484,0.326,0.467,0.094,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Brice Turang,668930,144,Signal,106.5,90.4,99.5,119.3,0.404,0.234,0.469,0.091,Power+ elite (top 10%); xwOBA above model expectation,early
+Heliot Ramos,671218,127,Signal,99.9,113.2,86.1,119.2,0.533,0.343,0.46,0.09,Power+ elite (top 10%); xwOBA above model expectation,early
+Sal Stewart,701398,153,Signal,108.0,114.4,103.2,119.0,0.496,0.289,0.451,0.089,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Alec Burleson,676475,140,Signal,113.2,95.6,114.7,118.7,0.493,0.324,0.434,0.088,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Luis Campusano,669134,57,Watch,105.3,102.1,98.4,118.7,0.502,0.309,0.453,0.087,Power+ elite (top 10%); xwOBA above model expectation,early
+Amed Rosario,642708,78,Watch,110.6,104.4,109.6,118.6,0.55,0.361,0.444,0.087,Power+ elite (top 10%); xwOBA above model expectation; Process+ also strong,early
+Spencer Torkelson,679529,135,Signal,98.2,115.4,85.4,117.9,0.392,0.218,0.47,0.083,Power+ elite (top 10%); xwOBA above model expectation,early
+Bryce Harper,547180,144,Signal,106.7,114.0,103.9,117.5,0.53,0.349,0.427,0.081,Power+ elite (top 10%); xwOBA above model expectation,early
+Giancarlo Stanton,519317,102,Signal,103.5,90.8,97.3,117.4,0.453,0.311,0.444,0.081,Power+ elite (top 10%); xwOBA above model expectation,early
+Jac Caglianone,695506,108,Signal,103.8,85.1,99.5,116.8,0.463,0.298,0.454,0.078,Power+ elite (top 10%); xwOBA above model expectation,early
+Kazuma Okamoto,672960,132,Signal,100.2,108.4,92.6,116.5,0.443,0.28,0.462,0.076,Power+ elite (top 10%); xwOBA above model expectation,early
+Paul Goldschmidt,502671,49,Watch,99.0,113.4,90.0,116.5,0.445,0.274,0.44,0.076,Power+ elite (top 10%); xwOBA above model expectation,early
+Seiya Suzuki,673548,78,Watch,102.9,91.9,99.0,116.1,0.407,0.242,0.447,0.074,Power+ elite (top 10%); xwOBA above model expectation,early
+Cj Abrams,682928,142,Signal,106.9,97.4,107.9,115.9,0.495,0.324,0.426,0.073,Power+ elite (top 10%); xwOBA above model expectation,early
+Carlos Cortes,666126,84,Signal,107.8,109.4,110.8,115.4,0.455,0.256,0.452,0.071,Power+ elite (top 10%); xwOBA above model expectation,early
+Andy Pages,681624,135,Signal,99.8,95.7,94.7,115.2,0.488,0.301,0.431,0.069,Power+ elite (top 10%); xwOBA above model expectation,early
+Joey Wiemer,686894,74,Watch,97.8,88.0,90.6,115.1,0.428,0.284,0.441,0.069,Power+ elite (top 10%); xwOBA above model expectation,early
+Everson Pereira,677592,74,Watch,96.5,122.6,88.5,114.9,0.599,0.357,0.429,0.068,Power+ strong (top 25%); xwOBA above model expectation,early
+Owen Caissie,683357,101,Signal,97.6,74.5,90.9,114.8,0.447,0.263,0.453,0.068,Power+ strong (top 25%); xwOBA above model expectation,early
+Fernando Tatís,665487,136,Signal,100.8,111.1,98.0,114.6,0.471,0.271,0.436,0.067,Power+ strong (top 25%); xwOBA above model expectation,early
+Ryan O'Hearn,656811,136,Signal,109.0,78.9,115.1,114.6,0.437,0.28,0.434,0.067,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Randal Grichuk,545341,44,Watch,108.2,66.8,113.9,114.4,0.462,0.306,0.438,0.065,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Edouard Julien,666397,109,Signal,100.5,92.8,97.8,114.4,0.392,0.221,0.45,0.066,Power+ strong (top 25%); xwOBA above model expectation,early
+Dominic Smith,642086,79,Watch,110.4,108.9,118.6,114.3,0.546,0.325,0.434,0.065,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Corey Seager,608369,139,Signal,97.7,116.8,92.6,114.2,0.504,0.288,0.417,0.065,Power+ strong (top 25%); xwOBA above model expectation,early
+Ronald Acuña,660670,157,Signal,96.9,119.7,91.2,114.1,0.46,0.276,0.429,0.064,Power+ strong (top 25%); xwOBA above model expectation,early
+Bobby Witt,677951,153,Signal,106.2,95.1,110.4,114.1,0.492,0.328,0.428,0.064,Power+ strong (top 25%); xwOBA above model expectation,early
+Gabriel Arias,672356,43,Watch,96.0,107.9,89.5,114.0,0.448,0.264,0.451,0.064,Power+ strong (top 25%); xwOBA above model expectation,early
+Julio Rodríguez,677594,150,Signal,99.4,101.8,96.7,113.9,0.516,0.343,0.411,0.063,Power+ strong (top 25%); xwOBA above model expectation,early
+Gary Sánchez,596142,81,Signal,103.3,94.3,104.9,113.8,0.366,0.25,0.439,0.063,Power+ strong (top 25%); xwOBA above model expectation,early
+Ildemaro Vargas,545121,112,Signal,115.7,74.8,131.0,113.7,0.495,0.351,0.43,0.062,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Ty France,664034,57,Watch,112.7,125.3,124.7,113.7,0.563,0.311,0.428,0.062,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Brandon Nimmo,607043,150,Signal,103.8,102.8,106.5,113.6,0.486,0.275,0.431,0.062,Power+ strong (top 25%); xwOBA above model expectation,early
+Brandon Lowe,664040,128,Signal,99.3,104.9,97.1,113.6,0.498,0.316,0.428,0.062,Power+ strong (top 25%); xwOBA above model expectation,early
+Cole Young,702284,139,Signal,100.1,97.1,99.5,113.3,0.472,0.274,0.41,0.06,Power+ strong (top 25%); xwOBA above model expectation,early
+Vladimir Guerrero,665489,135,Signal,107.5,112.8,114.8,113.3,0.481,0.279,0.405,0.06,Power+ strong (top 25%); xwOBA above model expectation,early
+Nathan Church,701675,99,Signal,104.8,74.8,109.7,113.1,0.547,0.381,0.401,0.059,Power+ strong (top 25%); xwOBA above model expectation,early
+Wilyer Abreu,677800,139,Signal,102.7,102.1,105.2,113.1,0.467,0.279,0.41,0.059,Power+ strong (top 25%); xwOBA above model expectation,early
+Kerry Carpenter,681481,113,Signal,96.9,82.4,93.9,112.8,0.46,0.308,0.423,0.058,Power+ strong (top 25%); xwOBA above model expectation,early
+Carlos Correa,621043,129,Signal,102.5,94.2,106.6,112.4,0.454,0.301,0.415,0.055,Power+ strong (top 25%); xwOBA above model expectation,early
+Ketel Marte,606466,137,Signal,105.3,93.7,112.5,112.3,0.494,0.309,0.421,0.055,Power+ strong (top 25%); xwOBA above model expectation,early
+Casey Schmitt,669477,109,Signal,107.2,93.4,116.2,112.3,0.48,0.292,0.423,0.055,Power+ strong (top 25%); xwOBA above model expectation,early
+Colson Montgomery,695657,138,Signal,94.9,100.5,90.9,112.3,0.474,0.272,0.421,0.055,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Kevin McGonigle,805808,151,Signal,102.5,109.5,107.3,112.0,0.424,0.27,0.424,0.054,Power+ strong (top 25%); xwOBA above model expectation,early
+Junior Caminero,691406,140,Signal,108.0,93.7,119.1,111.8,0.446,0.29,0.403,0.053,Power+ strong (top 25%); xwOBA above model expectation; Process+ also strong,early
+Tristan Gray,656484,64,Watch,94.1,95.5,91.2,111.4,0.556,0.334,0.416,0.05,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Andrew Benintendi,643217,106,Signal,92.2,101.1,87.3,111.4,0.543,0.356,0.421,0.05,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Ramón Laureano,657656,126,Signal,88.3,125.5,79.8,111.2,0.523,0.301,0.428,0.049,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Freddie Freeman,518692,139,Signal,102.4,112.6,108.8,111.2,0.518,0.306,0.412,0.05,Power+ strong (top 25%); xwOBA above model expectation,early
+Max Muncy,691777,113,Signal,92.5,85.6,88.8,111.0,0.507,0.343,0.427,0.048,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Blaze Alexander,677942,80,Signal,88.2,133.2,79.8,111.0,0.572,0.356,0.41,0.048,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Edmundo Sosa,624641,55,Watch,102.3,93.7,109.4,110.9,0.596,0.377,0.409,0.048,Power+ strong (top 25%); xwOBA above model expectation,early
+Cam Smith,701358,133,Signal,93.2,95.2,90.6,110.9,0.468,0.33,0.423,0.048,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Jorge Soler,624585,130,Signal,91.2,103.0,87.1,110.6,0.468,0.29,0.415,0.046,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Otto Lopez,672640,134,Signal,105.4,86.3,116.5,110.5,0.485,0.339,0.415,0.046,Power+ strong (top 25%); xwOBA above model expectation,early
+Ryan Jeffers,680777,107,Signal,104.8,91.7,115.2,110.5,0.397,0.288,0.422,0.046,Power+ strong (top 25%); xwOBA above model expectation,early
+Matt Wallner,670242,113,Signal,89.0,110.7,83.4,110.2,0.514,0.286,0.417,0.044,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early
+Alex Freeland,690976,97,Signal,96.0,88.3,98.0,110.1,0.39,0.227,0.423,0.044,Power+ strong (top 25%); xwOBA above model expectation,early
+Oswald Peraza,672724,94,Signal,91.7,115.0,89.2,110.1,0.541,0.313,0.411,0.044,Power+ strong (top 25%); xwOBA above model expectation; Process+ weak — power may not be sustainable,early

@@ -1,7 +1,5 @@
-batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,decision_plus,contact_plus,power_plus,swing_pct,chase_pct,xwoba_actual,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
-Alex Call,669743,40,Watch,OF,,,92.7,91.3,114.6,88.3,0.35,0.233,0.393,-0.568,improving,-0.067,surface xwOBA above avg; large rank divergence (results >> process); chasing (low Decision+); contact below pitch expectation; Process+ below average,early
-Iván Herrera,671056,109,Signal,C,DH,DH,102.6,89.0,105.8,102.1,0.418,0.268,0.375,-0.28,cold,0.003,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average,early
-Trevor Larnach,663616,66,Watch,OF,OF,OF,107.8,73.0,111.7,107.5,0.359,0.29,0.41,-0.276,improving,0.03,surface xwOBA elite (top 25%); results ahead of process; chasing (low Decision+); Process+ below average,early
-J. P. Crawford,641487,69,Watch,SS,SS,SS,103.6,77.8,106.9,104.8,0.359,0.238,0.371,-0.242,improving,0.017,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average,early
-Trent Grisham,663757,90,Signal,OF,OF,OF,104.9,80.6,118.2,100.3,0.342,0.2,0.376,-0.234,cold,-0.006,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average,early
-Richie Palacios,680700,53,Watch,OF,2B,2B,108.7,92.7,110.7,104.8,0.407,0.247,0.395,-0.22,cold,0.017,surface xwOBA above avg; results ahead of process; chasing (low Decision+); Process+ below average,early
+batter_name,batter,pa,confidence,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
+Jorge Mateo,622761,46,Watch,88.0,94.2,85.8,108.1,0.527,0.344,0.415,-0.281,warm,0.034,surface xwOBA elite (top 25%); results ahead of process; Process+ very weak — high regression risk,early
+Derek Hill,656537,49,Watch,87.5,88.2,81.9,109.5,0.481,0.276,0.403,-0.234,cold,0.041,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
+Max Muncy,691777,113,Signal,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.214,improving,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Owen Caissie,683357,101,Signal,97.6,74.5,90.9,114.8,0.447,0.263,0.453,-0.205,cold,0.068,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early

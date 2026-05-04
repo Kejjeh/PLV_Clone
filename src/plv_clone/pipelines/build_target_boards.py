@@ -94,6 +94,12 @@ def run(
         )
 
     hitters  = pd.read_csv(hitter_path)
+    # Alias: build_exports writes xwoba_actual; target boards expect xwoba_on_contact
+    if "xwoba_on_contact" not in hitters.columns and "xwoba_actual" in hitters.columns:
+        hitters["xwoba_on_contact"] = hitters["xwoba_actual"]
+    # Alias: build_exports writes decision_plus; target boards expect discipline_plus
+    if "discipline_plus" not in hitters.columns and "decision_plus" in hitters.columns:
+        hitters["discipline_plus"] = hitters["decision_plus"]
     pitchers = pd.read_csv(pitcher_path) if pitcher_path.exists() else pd.DataFrame()
 
     rolling_h = (
@@ -479,6 +485,10 @@ def _add_rank_gap(h: pd.DataFrame) -> pd.DataFrame:
         df["pp_rank"]     = df["process_plus"].rank(pct=True)
         df["xwoba_rank"]  = df["xwoba_on_contact"].rank(pct=True)
         df["rank_gap"]    = (df["pp_rank"] - df["xwoba_rank"]).round(3)
+    else:
+        df["pp_rank"]    = df["process_plus"].rank(pct=True) if "process_plus" in df.columns else float("nan")
+        df["xwoba_rank"] = float("nan")
+        df["rank_gap"]   = float("nan")
     return df
 
 
