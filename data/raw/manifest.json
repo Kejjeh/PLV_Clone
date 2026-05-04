@@ -21,7 +21,8 @@
   },
   "2026": {
     "last_date": "2026-05-02",
-    "row_count": 165418
+    "row_count": 165418,
+    "features_built_through": "2026-05-02"
   },
   "_reconcile_last_run": "2026-04-27",
   "_reconcile_days": 7

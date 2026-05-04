@@ -355,14 +355,19 @@ def update(
         False, "--skip-scoring",
         help="Skip score-plv and score-process (use if models have not changed)",
     ),
+    push: bool = typer.Option(
+        False, "--push",
+        help="Commit updated outputs and push to origin/main after a successful run",
+    ),
 ) -> None:
     """Pull any new Statcast data and rebuild all outputs for YEAR.
 
     Checks the manifest for the last-pulled date, pulls only new data
     (up to today minus --lag days for Statcast availability), then re-runs:
-      score-plv → score-process → build-exports → build-target-boards → build-fantasy-exports
+      build-features (full season) -> score-plv -> score-process ->
+      build-exports -> build-target-boards -> build-fantasy-exports
 
-    Safe to run daily — skips the pull entirely if already up to date.
+    Safe to run daily. Pass --push to auto-commit and deploy to GitHub Pages.
     """
     import json
     from datetime import date, timedelta
@@ -386,52 +391,77 @@ def update(
     last_date_str = year_manifest.get("last_date")
     last_date = date.fromisoformat(last_date_str) if last_date_str else None
 
+    features_through_str = year_manifest.get("features_built_through")
+    features_through = date.fromisoformat(features_through_str) if features_through_str else None
+
     # ── Determine pull window ──────────────────────────────────────────────
     season_start = date(target_year, 3, 15)   # Opening Day is typically late March
     pull_start = (last_date + timedelta(days=1)) if last_date else season_start
     pull_end   = available_through
 
-    needs_pull = pull_start <= pull_end
+    needs_pull     = pull_start <= pull_end
+    features_stale = features_through is None or features_through < available_through
 
     typer.echo(f"PLV update — year={target_year}")
-    typer.echo(f"  Last manifest date : {last_date or 'none'}")
-    typer.echo(f"  Available through  : {available_through}  (today minus {lag}d lag)")
+    typer.echo(f"  Last manifest date    : {last_date or 'none'}")
+    typer.echo(f"  Features built through: {features_through or 'none'}")
+    typer.echo(f"  Available through     : {available_through}  (today minus {lag}d lag)")
     if needs_pull:
-        typer.echo(f"  Pull window        : {pull_start} → {pull_end}")
+        typer.echo(f"  Pull window           : {pull_start} to {pull_end}")
     else:
         typer.echo("  Data is up to date — no pull needed.")
+    if features_stale and not needs_pull:
+        typer.echo("  Features are stale — will rebuild full season.")
 
     if dry_run:
         if needs_pull:
             typer.echo(f"\n[dry-run] Would pull {pull_start} to {pull_end}")
+        if needs_pull or features_stale:
+            typer.echo(f"[dry-run] Would run: build-features {season_start} to {pull_end} (full season)")
         if not skip_scoring:
             typer.echo(f"[dry-run] Would run: score-plv {target_year}")
             typer.echo(f"[dry-run] Would run: score-process {target_year}")
         typer.echo(f"[dry-run] Would run: build-exports {target_year}")
         typer.echo(f"[dry-run] Would run: build-target-boards {target_year}")
         typer.echo(f"[dry-run] Would run: build-fantasy-exports {target_year}")
+        if push:
+            typer.echo(f"[dry-run] Would commit + push (data: refresh {target_year} through {pull_end})")
         raise typer.Exit(0)
 
     # ── Pull new data ──────────────────────────────────────────────────────
     if needs_pull:
         from plv_clone.data.ingest_statcast import pull_statcast_range
-        from plv_clone.pipelines.build_pitch_dataset import run as build_features_run
 
-        typer.echo(f"\nPulling {pull_start} to {pull_end} …")
+        typer.echo(f"\nPulling {pull_start} to {pull_end} ...")
         pull_statcast_range(
             start_date=pull_start,
             end_date=pull_end,
             raw_dir=cfg.raw_data_dir,
             chunk_days=cfg.statcast_chunk_days,
         )
-        typer.echo("Building features for new data …")
+    else:
+        typer.echo("Skipping pull (already up to date).")
+
+    # ── Build features (always full-season when stale or new data arrived) ─
+    # Batter features use an expanding window: they must be computed from
+    # Opening Day forward so each batter's tendencies include their full
+    # season history. Incremental builds (new dates only) silently produce
+    # wrong features for all prior dates.
+    if needs_pull or features_stale:
+        from plv_clone.pipelines.build_pitch_dataset import run as build_features_run
+
+        typer.echo(f"\nBuilding features {season_start} to {pull_end} (full season) ...")
         build_features_run(
-            start_date=pull_start,
+            start_date=season_start,
             end_date=pull_end,
             config=cfg,
         )
-    else:
-        typer.echo("Skipping pull (already up to date).")
+        # Record the feature build date in manifest so future runs skip this
+        # when data is already current.
+        if str(target_year) not in manifest:
+            manifest[str(target_year)] = {}
+        manifest[str(target_year)]["features_built_through"] = str(pull_end)
+        manifest_path.write_text(json.dumps(manifest, indent=2))
 
     # ── Score ──────────────────────────────────────────────────────────────
     if not skip_scoring or needs_pull:
@@ -469,6 +499,50 @@ def update(
         typer.echo(f"  {name}: {len(df)} rows")
 
     typer.echo(f"\nUpdate complete. All outputs written to: {cfg.outputs_dir}")
+
+    # ── Commit + push ──────────────────────────────────────────────────────
+    if push:
+        import subprocess
+        date_str = str(pull_end)
+        typer.echo(f"\nCommitting and pushing (data: refresh {target_year} through {date_str}) ...")
+        subprocess.run(
+            ["git", "add", "data/outputs/", "data/raw/manifest.json"],
+            check=True,
+        )
+        subprocess.run(
+            ["git", "commit", "-m", f"data: refresh {target_year} through {date_str}"],
+            check=True,
+        )
+        subprocess.run(["git", "push", "origin", "main"], check=True)
+        typer.echo("Pushed. GitHub Pages will redeploy in ~60s.")
+
+
+@app.command(name="generate-report")
+def generate_report_cmd(
+    year: int = typer.Option(2026, "--year", help="Season year"),
+) -> None:
+    """Generate the standalone HTML process report for YEAR.
+
+    Reads pre-built CSVs from data/outputs/, fetches live ESPN data,
+    and writes data/outputs/process_report_{year}.html.
+    """
+    import sys
+    from pathlib import Path
+
+    # Add scripts/ to path so we can import generate_report.
+    # cli.py lives at src/plv_clone/cli.py → 3 parents up = project root.
+    scripts_dir = Path(__file__).resolve().parents[2] / "scripts"
+    sys.path.insert(0, str(scripts_dir))
+
+    try:
+        from generate_report import run as report_run
+    except ImportError:
+        typer.echo("ERROR: could not import scripts/generate_report.py", err=True)
+        raise typer.Exit(1)
+
+    rc = report_run(year)
+    if rc != 0:
+        raise typer.Exit(rc)
 
 
 if __name__ == "__main__":

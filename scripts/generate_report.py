@@ -719,12 +719,8 @@ def build_meta(year: int) -> str:
 
 
 # ─── MAIN ─────────────────────────────────────────────────────────────────────
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--year", type=int, default=2026)
-    args = ap.parse_args()
-    year = args.year
-
+def run(year: int) -> int:
+    """Generate the HTML report for *year*. Returns 0 on success, 1 on error."""
     master_path  = OUT_DIR / f"master_hitter_{year}.csv"
     rolling_path = OUT_DIR / f"process_plus_rolling_{year}.csv"
     pitcher_path = OUT_DIR / f"master_pitcher_{year}.csv"
@@ -818,6 +814,13 @@ def main() -> int:
     out_path.write_text(new_html, encoding="utf-8")
     print(f"Written: {out_path}  ({len(new_html):,} bytes)")
     return 0
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--year", type=int, default=2026)
+    args = ap.parse_args()
+    return run(args.year)
 
 
 if __name__ == "__main__":
