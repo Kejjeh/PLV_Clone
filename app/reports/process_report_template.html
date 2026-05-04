@@ -35,6 +35,36 @@ const POS_OPTIONS = ['C','1B','2B','3B','SS','OF','DH'];
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
+const QUAD_AXES = [
+  { key:'proc',     label:'Process+',        avg:100,   dp:1 },
+  { key:'kavoid',   label:'K-Avoid+',        avg:100,   dp:1 },
+  { key:'power',    label:'Power+',          avg:100,   dp:1 },
+  { key:'procPos',  label:'ProcPos+',        avg:100,   dp:1 },
+  { key:'swing',    label:'Swing%',          avg:null,  dp:1 },
+  { key:'chase',    label:'Chase%',          avg:null,  dp:1 },
+  { key:'mc',       label:'xwOBA/Contact',   avg:0.310, dp:3 },
+  { key:'mci',      label:'xwOBA vs Exp',    avg:0.000, dp:3 },
+  { key:'fpPerGame',label:'FP/Game',         avg:null,  dp:2 },
+];
+
+const QUAD_PRESETS = [
+  { key:'proc_power',   label:'Process+ vs Power+',
+    xKey:'power',  yKey:'proc',
+    tl:'Disciplined, Low Pop', tr:'All-Around Elite', bl:'Struggling', br:'Raw Power, Volatile' },
+  { key:'proc_kavoid',  label:'Process+ vs K-Avoid+',
+    xKey:'kavoid', yKey:'proc',
+    tl:'High-K, High Process', tr:'Complete Hitter', bl:'Struggling', br:'Contact, Lower Process' },
+  { key:'power_kavoid', label:'Power+ vs K-Avoid+',
+    xKey:'kavoid', yKey:'power',
+    tl:'High-K Slugger', tr:'Five-Tool Bat', bl:'Weak Contact', br:'Pure Contact, No Pop' },
+  { key:'mc_proc',      label:'xwOBA Contact vs Process+',
+    xKey:'proc',   yKey:'mc',
+    tl:'Process, Avg Contact', tr:'Process + Results', bl:'Cold All Around', br:'Contact-Driven' },
+  { key:'mci_proc',     label:'xwOBA vs Exp vs Process+',
+    xKey:'proc',   yKey:'mci',
+    tl:'Underperforming', tr:'Upside Case', bl:'Regression Candidate', br:'Outperforming Expected' },
+];
+
 // ═══ Utilities ════════════════════════════════════════════════════════════════
 const fmt = (n, d = 1) => {
   if (n === '—' || n == null) return '—';
@@ -461,6 +491,131 @@ function TrendChart({ players, colors }) {
   );
 }
 
+// ═══ Pearson R ════════════════════════════════════════════════════════════════
+function pearsonR(xs, ys) {
+  const n = xs.length;
+  if (n < 3) return NaN;
+  const mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+  const num = xs.reduce((s,x,i)=>s+(x-mx)*(ys[i]-my),0);
+  const sdx = Math.sqrt(xs.reduce((s,x)=>s+(x-mx)**2,0));
+  const sdy = Math.sqrt(ys.reduce((s,y)=>s+(y-my)**2,0));
+  return sdx*sdy < 1e-12 ? 0 : num/(sdx*sdy);
+}
+
+// ═══ Scatter Plot ═════════════════════════════════════════════════════════════
+function ScatterPlot({ points, xLabel, yLabel, xDp, yDp, xAvg, yAvg, colors, hover, setHover }) {
+  const W = 580, H = 360;
+  const PAD = { top:28, right:24, bottom:46, left:56 };
+  const cw = W - PAD.left - PAD.right;
+  const ch = H - PAD.top - PAD.bottom;
+
+  const valid = points.filter(p => p.x != null && p.y != null);
+  if (valid.length === 0) return (
+    <div style={{ height:H, display:'flex', alignItems:'center', justifyContent:'center',
+                  color:colors.dim, fontFamily:MONO, fontSize:11 }}>
+      No data for selected combination.
+    </div>
+  );
+
+  const xs = valid.map(p => p.x), ys = valid.map(p => p.y);
+  const xRange = Math.max(...xs) - Math.min(...xs) || 1;
+  const yRange = Math.max(...ys) - Math.min(...ys) || 1;
+  const xMin = Math.min(...xs) - xRange * 0.06, xMax = Math.max(...xs) + xRange * 0.06;
+  const yMin = Math.min(...ys) - yRange * 0.06, yMax = Math.max(...ys) + yRange * 0.06;
+  const sx = x => PAD.left + ((x - xMin) / (xMax - xMin)) * cw;
+  const sy = y => PAD.top + ch - ((y - yMin) / (yMax - yMin)) * ch;
+
+  const xTicks = Array.from({length:5}, (_,i) => xMin + (xMax-xMin)*(i+0.5)/5);
+  const yTicks = Array.from({length:5}, (_,i) => yMin + (yMax-yMin)*(i+0.5)/5);
+
+  const hoverPt = hover ? valid.find(p => p.name === hover) : null;
+  let ttx = 0, tty = 0;
+  if (hoverPt) {
+    const cx = sx(hoverPt.x), cy = sy(hoverPt.y);
+    ttx = cx + 12 + 132 > W - PAD.right ? cx - 144 : cx + 12;
+    tty = cy - 48 < PAD.top ? cy + 8 : cy - 48;
+  }
+
+  return (
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display:'block' }}
+         onMouseLeave={() => setHover(null)}>
+      {yTicks.map((v,i) => (
+        <line key={`gy${i}`} x1={PAD.left} x2={PAD.left+cw} y1={sy(v)} y2={sy(v)}
+              stroke={colors.faint} strokeWidth={0.5} />
+      ))}
+      {xTicks.map((v,i) => (
+        <line key={`gx${i}`} x1={sx(v)} x2={sx(v)} y1={PAD.top} y2={PAD.top+ch}
+              stroke={colors.faint} strokeWidth={0.5} />
+      ))}
+      <line x1={PAD.left} x2={PAD.left+cw} y1={PAD.top+ch} y2={PAD.top+ch} stroke={colors.border} strokeWidth={1} />
+      <line x1={PAD.left} x2={PAD.left}     y1={PAD.top}    y2={PAD.top+ch} stroke={colors.border} strokeWidth={1} />
+
+      {xAvg >= xMin && xAvg <= xMax && (
+        <line x1={sx(xAvg)} x2={sx(xAvg)} y1={PAD.top} y2={PAD.top+ch}
+              stroke={colors.dim} strokeWidth={1} strokeDasharray="5 3" opacity={0.55} />
+      )}
+      {yAvg >= yMin && yAvg <= yMax && (
+        <line x1={PAD.left} x2={PAD.left+cw} y1={sy(yAvg)} y2={sy(yAvg)}
+              stroke={colors.dim} strokeWidth={1} strokeDasharray="5 3" opacity={0.55} />
+      )}
+
+      {valid.map(p => {
+        const isHot  = p.x >= xAvg && p.y >= yAvg;
+        const isCold = p.x <  xAvg && p.y <  yAvg;
+        const dotColor = p.highlighted ? colors.accent : isHot ? colors.pos : isCold ? colors.neg : colors.dim;
+        const dotR = p.highlighted ? 5.5 : 3.5;
+        const dimmed = hover && hover !== p.name;
+        return (
+          <g key={p.name} onMouseEnter={() => setHover(p.name)}>
+            <circle cx={sx(p.x)} cy={sy(p.y)} r={dotR} fill={dotColor}
+                    opacity={dimmed ? 0.2 : p.highlighted ? 0.95 : 0.65}
+                    stroke={hover === p.name ? colors.text : 'none'} strokeWidth={1.5} />
+            {p.highlighted && !hover && (
+              <text x={sx(p.x)+7} y={sy(p.y)+3} fontSize={8.5} fill={dotColor} fontFamily={MONO}
+                    style={{ pointerEvents:'none' }}>
+                {p.name.split(' ').pop()}
+              </text>
+            )}
+          </g>
+        );
+      })}
+
+      {hoverPt && (
+        <g style={{ pointerEvents:'none' }}>
+          <rect x={ttx} y={tty} width={132} height={48} rx={2}
+                fill={colors.panel} stroke={colors.border} strokeWidth={1} opacity={0.97} />
+          <text x={ttx+7} y={tty+15} fontSize={10.5} fill={colors.text} fontFamily={SERIF} fontStyle="italic">
+            {hoverPt.name}
+          </text>
+          <text x={ttx+7} y={tty+28} fontSize={8.5} fill={colors.dim} fontFamily={MONO}>
+            {xLabel}: {hoverPt.x.toFixed(xDp)}
+          </text>
+          <text x={ttx+7} y={tty+41} fontSize={8.5} fill={colors.dim} fontFamily={MONO}>
+            {yLabel}: {hoverPt.y.toFixed(yDp)}
+          </text>
+        </g>
+      )}
+
+      <text x={PAD.left + cw/2} y={H-7} textAnchor="middle" fontSize={10} fill={colors.dim} fontFamily={MONO}>{xLabel}</text>
+      <text x={13} y={PAD.top + ch/2} textAnchor="middle" fontSize={10} fill={colors.dim} fontFamily={MONO}
+            transform={`rotate(-90 13 ${PAD.top + ch/2})`}>{yLabel}</text>
+      <text x={W - PAD.right - 2} y={PAD.top - 8} textAnchor="end" fontSize={9} fill={colors.accent} fontFamily={MONO}>
+        r = {isNaN(pearsonR(xs,ys)) ? '—' : pearsonR(xs,ys).toFixed(3)} · n = {valid.length}
+      </text>
+      {xTicks.map((v,i) => (
+        <text key={`tx${i}`} x={sx(v)} y={PAD.top+ch+15} textAnchor="middle" fontSize={8} fill={colors.dim} fontFamily={MONO}>
+          {v.toFixed(xDp)}
+        </text>
+      ))}
+      {yTicks.map((v,i) => (
+        <text key={`ty${i}`} x={PAD.left-7} y={sy(v)+3} textAnchor="end" fontSize={8} fill={colors.dim} fontFamily={MONO}>
+          {v.toFixed(yDp)}
+        </text>
+      ))}
+    </svg>
+  );
+}
+
 // ═══ Section heading ══════════════════════════════════════════════════════════
 function SectionHeading({ num, label, right, colors }) {
   return (
@@ -526,6 +681,27 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
   const [wpExp, setWpExp]   = React.useState(null);
   // Pitchers leaderboard role toggle
   const [pRole, setPRole]   = React.useState('all');
+
+  // ── Pre-computed lookups ──
+  const hitterLookup = React.useMemo(() => {
+    const m = {};
+    [...window.HITTERS, ...window.MY_TEAM.hitters, ...window.WAIVER].forEach(h => { if (h?.name) m[h.name] = h; });
+    return m;
+  }, []);
+  const myTeamNames = React.useMemo(() => new Set(window.MY_TEAM.hitters.map(h => h.name)), []);
+
+  // ── Quadrant analysis state ──
+  const [qPreset,  setQPreset]  = React.useState('proc_power');
+  const [qCustomX, setQCustomX] = React.useState('power');
+  const [qCustomY, setQCustomY] = React.useState('proc');
+  const [qMinPa,   setQMinPa]   = React.useState(50);
+  const [qFilter,  setQFilter]  = React.useState('all');
+  const [qHover,   setQHover]   = React.useState(null);
+
+  // ── Trends filter state ──
+  const [trendPos,    setTrendPos]    = React.useState('all');
+  const [trendMinPa,  setTrendMinPa]  = React.useState(0);
+  const [trendFilter, setTrendFilter] = React.useState('all');
 
   // ── Hitters: handle sort ──
   function handleSort(col) {
@@ -861,37 +1037,112 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
   };
 
   const renderTrendsTab = () => {
-    // Comprehensive name list: union of leaderboard + my-team + waiver + anyone with rolling data
+    // Build filtered name pool for rolling chart player selector
     const _nameSet = new Set([
       ...window.HITTERS.map(h => h.name),
       ...window.MY_TEAM.hitters.map(h => h.name),
       ...window.WAIVER.map(h => h.name),
       ...Object.keys(window.ROLLING || {}),
     ]);
-    const allNames = [..._nameSet].filter(Boolean).sort();
-    const filteredNames = allNames.filter(n =>
+    let trendAll = [..._nameSet].filter(Boolean).sort();
+    if (trendMinPa > 0) trendAll = trendAll.filter(n => (hitterLookup[n]?.pa || 0) >= trendMinPa);
+    if (trendPos !== 'all') trendAll = trendAll.filter(n => {
+      const h = hitterLookup[n];
+      return h && (h.fpos || h.pos || '').includes(trendPos);
+    });
+    if (trendFilter === 'team') trendAll = trendAll.filter(n => myTeamNames.has(n));
+    else if (trendFilter === 'watchlist') trendAll = trendAll.filter(n => pinned.includes(n));
+    const filteredNames = trendAll.filter(n =>
       !trendSearch || n.toLowerCase().includes(trendSearch.toLowerCase()));
+
+    // Build quadrant analysis data
+    const isCustomQ = qPreset === 'custom';
+    const activePreset = QUAD_PRESETS.find(p => p.key === qPreset);
+    const qXKey = isCustomQ ? qCustomX : (activePreset?.xKey || 'power');
+    const qYKey = isCustomQ ? qCustomY : (activePreset?.yKey || 'proc');
+    const xAxisDef = QUAD_AXES.find(a => a.key === qXKey);
+    const yAxisDef = QUAD_AXES.find(a => a.key === qYKey);
+    const xLabel = xAxisDef?.label || qXKey;
+    const yLabel = yAxisDef?.label || qYKey;
+    const xDp = xAxisDef?.dp ?? 1;
+    const yDp = yAxisDef?.dp ?? 1;
+    let qSource = window.HITTERS.filter(h => (h.pa || 0) >= qMinPa);
+    if (qFilter === 'team') qSource = qSource.filter(h => myTeamNames.has(h.name));
+    else if (qFilter === 'watchlist') qSource = qSource.filter(h => pinned.includes(h.name));
+    const quadPoints = qSource.map(h => ({
+      name: h.name,
+      x: typeof h[qXKey] === 'number' ? h[qXKey] : null,
+      y: typeof h[qYKey] === 'number' ? h[qYKey] : null,
+      highlighted: myTeamNames.has(h.name) || pinned.includes(h.name),
+    })).filter(p => p.x != null && p.y != null);
+    const _med = vals => { if (!vals.length) return 0; const s=[...vals].sort((a,b)=>a-b); return s[Math.floor(s.length/2)]; };
+    const xAvg = xAxisDef?.avg != null ? xAxisDef.avg : _med(quadPoints.map(p => p.x));
+    const yAvg = yAxisDef?.avg != null ? yAxisDef.avg : _med(quadPoints.map(p => p.y));
+    const qR = pearsonR(quadPoints.map(p=>p.x), quadPoints.map(p=>p.y));
+
     return (
       <>
+        {/* ── Section I: Rolling Trajectories ── */}
         <SectionHeading num="I" label="Rolling Trajectories" right="ROLLING PROCESS+ TREND" colors={colors} />
-        <div style={{ padding:'0 32px 32px', display:'grid', gridTemplateColumns:'280px 1fr', gap:24 }}>
+        <div style={{ padding:'0 32px 32px', display:'grid', gridTemplateColumns:'290px 1fr', gap:24 }}>
           <div>
             <input type="text" placeholder="search players..." value={trendSearch}
               onChange={e => setTrendSearch(e.target.value)}
               style={{ width:'100%', padding:'6px 10px', border:`1px solid ${colors.border}`, borderRadius:2,
-                       background:colors.panel, color:colors.text, fontFamily:SERIF, fontStyle:'italic', fontSize:12, marginBottom:8 }} />
-            <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, padding:'4px 0' }}>
-              Selected · {trendPlayers.length} / 5 max
+                       background:colors.panel, color:colors.text, fontFamily:SERIF, fontStyle:'italic',
+                       fontSize:12, marginBottom:8 }} />
+            {/* Position filter */}
+            <div style={{ display:'flex', flexWrap:'wrap', gap:3, marginBottom:7 }}>
+              {['all', ...POS_OPTIONS].map(p => (
+                <button key={p} onClick={() => setTrendPos(p)}
+                  style={{ padding:'2px 6px', fontSize:9, fontFamily:MONO, letterSpacing:0.8, textTransform:'uppercase',
+                           border:`1px solid ${trendPos===p ? colors.accent : colors.border}`, borderRadius:2,
+                           background: trendPos===p ? colors.accent : colors.panel,
+                           color: trendPos===p ? '#fff' : colors.dim, cursor:'pointer' }}>
+                  {p === 'all' ? 'All' : p}
+                </button>
+              ))}
             </div>
-            <div style={{ maxHeight:380, overflow:'auto', border:`1px solid ${colors.border}`, borderRadius:2, background:colors.panel }}>
+            {/* PA + group filters */}
+            <div style={{ display:'flex', gap:10, flexWrap:'wrap', marginBottom:6, alignItems:'center' }}>
+              <div style={{ display:'flex', gap:3, alignItems:'center' }}>
+                <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO, textTransform:'uppercase', letterSpacing:0.8 }}>PA≥</span>
+                {[0, 30, 100].map(v => (
+                  <button key={v} onClick={() => setTrendMinPa(v)}
+                    style={{ padding:'2px 5px', fontSize:9, fontFamily:MONO,
+                             border:`1px solid ${trendMinPa===v ? colors.accent : colors.border}`, borderRadius:2,
+                             background: trendMinPa===v ? colors.accent : colors.panel,
+                             color: trendMinPa===v ? '#fff' : colors.dim, cursor:'pointer' }}>
+                    {v === 0 ? 'All' : v}
+                  </button>
+                ))}
+              </div>
+              <div style={{ display:'flex', gap:3, alignItems:'center' }}>
+                {[['all','All'],['team','Team'],['watchlist','★']].map(([v,l]) => (
+                  <button key={v} onClick={() => setTrendFilter(v)}
+                    style={{ padding:'2px 6px', fontSize:9, fontFamily:MONO,
+                             border:`1px solid ${trendFilter===v ? colors.accent : colors.border}`, borderRadius:2,
+                             background: trendFilter===v ? colors.accent : colors.panel,
+                             color: trendFilter===v ? '#fff' : colors.dim, cursor:'pointer' }}>
+                    {l}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:colors.dim,
+                          fontFamily:MONO, padding:'3px 0 5px' }}>
+              Selected · {trendPlayers.length} / 5 max · {filteredNames.length} shown
+            </div>
+            <div style={{ maxHeight:310, overflow:'auto', border:`1px solid ${colors.border}`, borderRadius:2, background:colors.panel }}>
               {filteredNames.map(name => {
                 const isOn = trendPlayers.includes(name);
+                const h = hitterLookup[name];
                 return (
                   <div key={name} onClick={() => {
                     if (isOn) setTrendPlayers(trendPlayers.filter(n => n !== name));
                     else if (trendPlayers.length < 5) setTrendPlayers([...trendPlayers, name]);
                   }} style={{
-                    padding:'6px 10px', cursor:'pointer',
+                    padding:'5px 10px', cursor:'pointer',
                     background: isOn ? colors.stripe : 'transparent',
                     borderBottom:`1px solid ${colors.faint}`,
                     display:'flex', alignItems:'center', gap:8,
@@ -899,7 +1150,9 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
                     color: isOn ? colors.accent : colors.text,
                   }}>
                     <span style={{ color: isOn ? colors.accent : colors.faint, fontSize:12 }}>{isOn ? '●' : '○'}</span>
-                    <span style={{ fontStyle:'italic' }}>{name}</span>
+                    <span style={{ fontStyle:'italic', flex:1 }}>{name}</span>
+                    {h?.pos && <span style={{ fontSize:9.5, color:colors.dim, fontFamily:MONO }}>{h.pos}</span>}
+                    {h?.pa != null && <span style={{ fontSize:9, color:colors.faint, fontFamily:MONO }}>{h.pa}pa</span>}
                   </div>
                 );
               })}
@@ -909,6 +1162,127 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
             <TrendChart players={trendPlayers} colors={colors} />
             <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, marginTop:6, letterSpacing:1, textTransform:'uppercase' }}>
               Y axis · Process+ scale (70–170) · 100 = league average
+            </div>
+          </div>
+        </div>
+
+        {/* ── Section II: Quadrant Analysis ── */}
+        <SectionHeading num="II" label="Quadrant Analysis" right="CORRELATION · PROCESS METRICS" colors={colors} />
+        <div style={{ padding:'0 32px 32px' }}>
+          {/* Preset buttons */}
+          <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:12, alignItems:'center' }}>
+            <span style={{ fontSize:9, letterSpacing:1.5, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>Preset</span>
+            {QUAD_PRESETS.map(p => (
+              <button key={p.key} onClick={() => setQPreset(p.key)}
+                style={{ padding:'3px 10px', fontSize:10, fontFamily:MONO, letterSpacing:0.8, cursor:'pointer',
+                         border:`1px solid ${qPreset===p.key ? colors.accent : colors.border}`, borderRadius:2,
+                         background: qPreset===p.key ? colors.accent : colors.panel,
+                         color: qPreset===p.key ? '#fff' : colors.dim }}>
+                {p.label}
+              </button>
+            ))}
+            <button onClick={() => setQPreset('custom')}
+              style={{ padding:'3px 10px', fontSize:10, fontFamily:MONO, letterSpacing:0.8, cursor:'pointer',
+                       border:`1px solid ${qPreset==='custom' ? colors.accent : colors.border}`, borderRadius:2,
+                       background: qPreset==='custom' ? colors.accent : colors.panel,
+                       color: qPreset==='custom' ? '#fff' : colors.dim }}>
+              Custom
+            </button>
+          </div>
+
+          {/* Custom axis selectors */}
+          {qPreset === 'custom' && (
+            <div style={{ display:'flex', gap:16, marginBottom:12, flexWrap:'wrap', alignItems:'center',
+                          padding:'8px 12px', background:colors.stripe, border:`1px solid ${colors.border}`, borderRadius:2 }}>
+              <span style={{ fontSize:9, color:colors.dim, textTransform:'uppercase', letterSpacing:1, fontFamily:MONO }}>X Axis</span>
+              <select value={qCustomX} onChange={e => setQCustomX(e.target.value)}
+                style={{ padding:'4px 8px', fontSize:11, fontFamily:MONO, background:colors.panel,
+                         color:colors.text, border:`1px solid ${colors.border}`, borderRadius:2 }}>
+                {QUAD_AXES.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+              </select>
+              <span style={{ fontSize:9, color:colors.dim, textTransform:'uppercase', letterSpacing:1, fontFamily:MONO }}>Y Axis</span>
+              <select value={qCustomY} onChange={e => setQCustomY(e.target.value)}
+                style={{ padding:'4px 8px', fontSize:11, fontFamily:MONO, background:colors.panel,
+                         color:colors.text, border:`1px solid ${colors.border}`, borderRadius:2 }}>
+                {QUAD_AXES.map(a => <option key={a.key} value={a.key}>{a.label}</option>)}
+              </select>
+            </div>
+          )}
+
+          {/* Filters row */}
+          <div style={{ display:'flex', gap:16, alignItems:'center', marginBottom:14, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+              <span style={{ fontSize:9, letterSpacing:1, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>Min PA</span>
+              {[0, 30, 50, 100, 150].map(v => (
+                <button key={v} onClick={() => setQMinPa(v)}
+                  style={{ padding:'2px 7px', fontSize:9, fontFamily:MONO, cursor:'pointer',
+                           border:`1px solid ${qMinPa===v ? colors.accent : colors.border}`, borderRadius:2,
+                           background: qMinPa===v ? colors.accent : colors.panel,
+                           color: qMinPa===v ? '#fff' : colors.dim }}>
+                  {v === 0 ? 'All' : v}
+                </button>
+              ))}
+            </div>
+            <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+              <span style={{ fontSize:9, letterSpacing:1, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>Show</span>
+              {[['all','All'],['team','My Team'],['watchlist','Watchlist ★']].map(([v,l]) => (
+                <button key={v} onClick={() => setQFilter(v)}
+                  style={{ padding:'2px 8px', fontSize:9, fontFamily:MONO, cursor:'pointer',
+                           border:`1px solid ${qFilter===v ? colors.accent : colors.border}`, borderRadius:2,
+                           background: qFilter===v ? colors.accent : colors.panel,
+                           color: qFilter===v ? '#fff' : colors.dim }}>
+                  {l}
+                </button>
+              ))}
+            </div>
+            <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO }}>
+              {quadPoints.length} players · Team + Watchlist shown larger
+            </span>
+          </div>
+
+          {/* Scatter + legend side by side */}
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 168px', gap:16, alignItems:'start' }}>
+            <div style={{ background:colors.panel, border:`1px solid ${colors.border}`, padding:16, borderRadius:2 }}>
+              <ScatterPlot
+                points={quadPoints} xLabel={xLabel} yLabel={yLabel} xDp={xDp} yDp={yDp}
+                xAvg={xAvg} yAvg={yAvg} colors={colors} hover={qHover} setHover={setQHover}
+              />
+            </div>
+            <div>
+              {/* R coefficient box */}
+              <div style={{ padding:'10px 12px', background:colors.panel, border:`1px solid ${colors.border}`,
+                            borderRadius:2, marginBottom:10 }}>
+                <div style={{ fontSize:8, letterSpacing:1.5, fontFamily:MONO, textTransform:'uppercase', color:colors.dim, marginBottom:4 }}>
+                  Pearson r
+                </div>
+                <div style={{ fontSize:22, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>
+                  {isNaN(qR) ? '—' : qR.toFixed(3)}
+                </div>
+                <div style={{ fontSize:9, fontFamily:MONO, color:colors.dim, marginTop:2 }}>
+                  {isNaN(qR) ? '' : Math.abs(qR) > 0.7 ? 'Strong' : Math.abs(qR) > 0.4 ? 'Moderate' : Math.abs(qR) > 0.2 ? 'Weak' : 'Near zero'}
+                </div>
+                <div style={{ fontSize:8, fontFamily:MONO, color:colors.faint, marginTop:4 }}>
+                  n = {quadPoints.length}
+                </div>
+              </div>
+              {/* Quadrant guide (presets only) */}
+              {!isCustomQ && activePreset && (
+                <div style={{ fontSize:10, fontFamily:SERIF, fontStyle:'italic' }}>
+                  <div style={{ fontSize:8, letterSpacing:1.5, fontFamily:MONO, fontStyle:'normal', textTransform:'uppercase',
+                                color:colors.dim, marginBottom:6 }}>Quadrant Guide</div>
+                  {[
+                    ['↗', activePreset.tr, colors.pos],
+                    ['↖', activePreset.tl, colors.warn],
+                    ['↙', activePreset.bl, colors.neg],
+                    ['↘', activePreset.br, colors.dim],
+                  ].map(([dir, desc, clr]) => (
+                    <div key={dir} style={{ marginBottom:9 }}>
+                      <span style={{ fontSize:9, fontFamily:MONO, fontStyle:'normal', color:clr }}>{dir} </span>
+                      <span style={{ color:colors.dim, lineHeight:1.3 }}>{desc}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
