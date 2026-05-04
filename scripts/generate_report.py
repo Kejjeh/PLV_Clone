@@ -172,7 +172,8 @@ def build_sparks(targets: list[dict],
         if mlb_id:
             sub = rolling[rolling["batter"] == mlb_id].sort_values("date")
         else:
-            sub = rolling[rolling["batter_name"] == h.get("cleanName") or h["name"]].sort_values("date")
+            name_key = h.get("cleanName") or h["name"]
+            sub = rolling[rolling["batter_name"] == name_key].sort_values("date")
 
         if sub.empty or sub["weekly_score"].dropna().empty:
             out[h["name"]] = [proc] * SPARK_WEEKS
@@ -296,7 +297,8 @@ def build_rolling(rolling: pd.DataFrame | None,
         if mlb_id:
             sub = df[df["batter"] == mlb_id].sort_values("date")
         else:
-            sub = df[df["batter_name"] == h.get("cleanName") or name].sort_values("date")
+            name_key = h.get("cleanName") or name
+            sub = df[df["batter_name"] == name_key].sort_values("date")
         if sub.empty:
             continue
 

@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-05-04T04:18:30Z",
+  "built_at": "2026-05-04T18:55:52Z",
   "year": 2026,
   "exports": [
     "plv_rolling",
@@ -11,6 +11,6 @@
   "min_pa_process": 1,
   "min_pitches_plv": 100,
   "rolling_days": 30,
-  "hitter_rolling_max_date": "2026-05-02",
-  "pitcher_rolling_max_date": "2026-05-02"
+  "hitter_rolling_max_date": "2026-05-03",
+  "pitcher_rolling_max_date": "2026-05-03"
 }
