@@ -1,5 +1,6 @@
 batter_name,batter,pa,confidence,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
-Jorge Mateo,622761,46,Watch,88.0,94.2,85.8,108.1,0.527,0.344,0.415,-0.281,warm,0.034,surface xwOBA elite (top 25%); results ahead of process; Process+ very weak — high regression risk,early
-Derek Hill,656537,49,Watch,87.5,88.2,81.9,109.5,0.481,0.276,0.403,-0.234,cold,0.041,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
-Max Muncy,691777,113,Signal,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.214,improving,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
-Owen Caissie,683357,101,Signal,97.6,74.5,90.9,114.8,0.447,0.263,0.453,-0.205,cold,0.068,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Derek Hill,656537,49,Watch,87.5,88.2,81.9,109.5,0.481,0.276,0.403,-0.238,cold,0.041,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
+Jorge Mateo,622761,50,Watch,91.8,95.9,87.1,111.1,0.53,0.347,0.428,-0.237,warm,0.049,surface xwOBA elite (top 25%); results ahead of process; Process+ below average,early
+Max Muncy,691777,113,Signal,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.217,cold,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Ryan Mcmahon,641857,91,Signal,82.0,95.6,91.1,100.1,0.44,0.283,0.368,-0.213,improving,-0.007,surface xwOBA above avg; results ahead of process; Process+ very weak — high regression risk,early
+Owen Caissie,683357,101,Signal,97.6,74.5,90.9,114.8,0.447,0.263,0.453,-0.204,cold,0.068,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
