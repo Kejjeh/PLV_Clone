@@ -117,19 +117,35 @@ def build_records() -> tuple[list[dict], dict]:
 
     records = []
     for _, r in proj.iterrows():
+        gs_val = int(r['gs_2026']) if pd.notna(r['gs_2026']) else None
+        fp_actual_val = num(r['fp_per_start_actual_2026'], 2)
+        # Cumulative FP for the season (≥ 5 GS gate so the number is meaningful).
+        fp_total_val = (
+            round(gs_val * fp_actual_val, 1)
+            if gs_val is not None and gs_val >= 5 and fp_actual_val is not None
+            else None
+        )
+        # Residual: how far off the V11 projection is from per-start actual.
+        # Positive = V11 over-projects, Negative = pitcher outperforming V11.
+        residual_val = (
+            round(num(r['xfp_v11'], 2) - fp_actual_val, 2)
+            if fp_actual_val is not None and gs_val is not None and gs_val >= 5
+            else None
+        )
         records.append({
             'mlbId': int(r['pitcher']),
             'name': r['player_name'],
             'xfpV11': num(r['xfp_v11'], 2),
             'xfpV85': num(r['xfp_v8_5'], 2),
-            'delta': num(r['delta_v11_v85'], 2),
+            'delta': residual_val,
+            'fpTotal': fp_total_val,
             'stuffXfp': num(r['stuff_xfp'], 2),
             'ipPremium': num(r['ip_premium'], 2),
             'ipTrend': r['ip_trend'],
             'kPct': num(r['k_pct_2026'], 3),
             'swstrPct': num(r.get('swstr_pct'), 3),
-            'gs': int(r['gs_2026']) if pd.notna(r['gs_2026']) else None,
-            'fpActual': num(r['fp_per_start_actual_2026'], 2),
+            'gs': gs_val,
+            'fpActual': fp_actual_val,
             'hasFG': bool(r['v11_has_pitching_plus']),
             'rollingIp': num(r['rolling_ip_last5'], 2),
             # ESPN fields (filled from MY_TEAM where available)
@@ -375,8 +391,8 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <SortTh col="rank"     label="Rk"        align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="xfpV11"   label="xFP V11"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpV85"   label="V8.5"      width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="delta"    label="Δ"         width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="fpTotal"  label="FP Total"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="delta"    label="Δ vs Act"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="stuffXfp" label="Stuff"     width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="ipPremium" label="IP Prem"  width={60}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="ipTrend"  label="Trend"     width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
@@ -421,9 +437,11 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                       {fmt(p.xfpV11, 2)}
                     </span>
                   </td>
-                  <td style={dataCell(colors, colors.dim)}>{fmt(p.xfpV85, 2)}</td>
-                  <td style={dataCell(colors, p.delta > 0.05 ? colors.pos : p.delta < -0.05 ? colors.neg : colors.dim)}>
-                    {fmtSign(p.delta, 2)}
+                  <td style={dataCell(colors, p.fpTotal == null ? colors.faint : colors.text)}>
+                    {p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)}
+                  </td>
+                  <td style={dataCell(colors, p.delta == null ? colors.faint : p.delta > 0.5 ? colors.neg : p.delta < -0.5 ? colors.pos : colors.dim)}>
+                    {p.delta == null ? '—' : fmtSign(p.delta, 2)}
                   </td>
                   <td style={dataCell(colors)}>{fmt(p.stuffXfp, 2)}</td>
                   <td style={dataCell(colors, p.ipPremium > 0.1 ? colors.pos : p.ipPremium < -0.1 ? colors.neg : colors.dim)}>
@@ -479,9 +497,10 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                           <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'6px 14px' }}>
                             {[['GS', p.gs ?? '—'],
                               ['FP/start', (p.gs ?? 0) >= 5 ? fmt(p.fpActual, 2) : '—'],
+                              ['FP total', p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)],
                               ['K%', p.kPct == null ? '—' : fmtPct(p.kPct, 1)],
                               ['SwStr%', p.swstrPct == null ? '—' : fmtPct(p.swstrPct, 1)],
-                              ['vs V8.5', fmtSign(p.delta, 2)],
+                              ['Δ vs actual', p.delta == null ? '—' : fmtSign(p.delta, 2)],
                               ['Trend', p.ipTrend]].map(([lbl, val]) => (
                               <div key={lbl}>
                                 <div style={{ fontSize:8, letterSpacing:2, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{lbl}</div>
@@ -659,10 +678,10 @@ function KDistributionChart({ data, colors }) {
   const W = 720, H = 280, PAD = { top: 28, right: 30, bottom: 50, left: 60 };
   const cw = W - PAD.left - PAD.right;
   const ch = H - PAD.top - PAD.bottom;
-  const valid = data.filter(d => d.kPct != null);
+  const valid = data.filter(d => d.kPct != null && d.delta != null);
   if (valid.length === 0) return null;
 
-  // Bucket K% into 12 bins from 10% to 38%
+  // Bucket K% into bins from 10% to 38%, mean residual per bucket.
   const lo = 0.10, hi = 0.38, nBins = 14;
   const bins = Array.from({length: nBins}, () => ({ count: 0, deltaSum: 0 }));
   valid.forEach(p => {
@@ -678,14 +697,16 @@ function KDistributionChart({ data, colors }) {
     <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ display:'block' }}>
       <text x={W/2} y={18} textAnchor="middle" fontSize={11} fill={colors.dim} fontFamily={MONO}
             letterSpacing={1.5} textTransform="uppercase">
-        K% distribution · bar height = pitcher count · bar fill = mean V11 - V8.5 delta
+        K% bucket · bar height = pitcher count · fill = mean (V11 − actual)
       </text>
       {bins.map((b, i) => {
         const x = PAD.left + i * bw;
         const h = (b.count / maxCount) * ch;
         const meanDelta = b.count > 0 ? b.deltaSum / b.count : 0;
-        const fill = meanDelta > 0.02 ? colors.pos : meanDelta < -0.02 ? colors.neg : colors.dim;
-        const opacity = Math.min(1, 0.3 + Math.abs(meanDelta) * 2);
+        // Positive residual = V11 over-projecting (red), negative = pitchers
+        // outperforming projection (green).
+        const fill = meanDelta > 0.5 ? colors.neg : meanDelta < -0.5 ? colors.pos : colors.dim;
+        const opacity = Math.min(1, 0.3 + Math.abs(meanDelta) * 0.4);
         return (
           <g key={i}>
             <rect x={x+1} y={PAD.top+ch-h} width={bw-2} height={h}
@@ -953,7 +974,7 @@ function Dashboard({ dark }) {
           <span style={{ color:colors.faint }}>·</span>
           <span>YTD r {meta.ytdR}</span>
           <button onClick={() => exportCSV(sortedRows,
-            ['rank','mlbId','name','xfpV11','xfpV85','delta','stuffXfp','ipPremium','ipTrend','kPct','swstrPct','gs','fpActual','hasFG'],
+            ['rank','mlbId','name','xfpV11','fpTotal','fpActual','delta','stuffXfp','ipPremium','ipTrend','kPct','swstrPct','gs','hasFG'],
             'xfp_v11_projections.csv')}
             style={{ ...editorialBtn(colors), marginLeft:6 }}>CSV</button>
         </div>
@@ -1056,19 +1077,32 @@ function AnalysisTab({ rows, ytdRows, colors, hoverId, setHoverId }) {
           quadLabels={{ tr:'WORKHORSES', tl:'VOLUME ARMS', br:'STUFF SPECIALISTS', bl:'STREAMERS' }} />
       </div>
 
-      <SectionHeading num="III" label="K% Distribution · V11 vs V8.5"
-        right="bar fill = mean delta per K bucket" colors={colors} />
+      <SectionHeading num="III" label="K% Residual · V11 vs Actual"
+        right="bar fill = mean (V11 − actual FP/start)" colors={colors} />
       <div style={{ padding:'0 32px 32px' }}>
         <KDistributionChart data={rows} colors={colors} />
         <div style={{ paddingTop:12, fontSize:11, color:colors.dim, fontStyle:'italic' }}>
-          The k_bias warning was a cross-year artifact: V11 does <em>not</em> systematically lift
-          high-K pitchers at projection time. Mean V11−V8.5 delta is roughly flat across the K
-          distribution; in fact V11 trims a few high-K guys slightly. Each bar shows the count of
-          pitchers in that K bucket; the fill color shows the average xFP delta within that bucket.
+          Each bar = pitcher count in that K-bucket. Fill color = average residual
+          (V11 expected − 2026 actual FP/start) across pitchers with ≥ 5 GS.
+          Red = V11 over-projecting; green = pitchers outperforming projection.
         </div>
       </div>
     </>
   );
+}
+
+// Generic sort: numeric → numeric, string → localeCompare, nulls always last.
+function sortRows(rows, col, dir) {
+  return [...rows].sort((a, b) => {
+    const av = a[col], bv = b[col];
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    if (typeof av === 'string' && typeof bv === 'string') {
+      return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+    }
+    return dir === 'asc' ? av - bv : bv - av;
+  });
 }
 
 // ═══ My Team tab ══════════════════════════════════════════════════════════════
@@ -1076,9 +1110,17 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
   const rotation = myTeam.pitchers.filter(p => p.role === 'SP');
   const bullpen  = myTeam.pitchers.filter(p => p.role === 'RP');
 
-  // Roster pitchers, sorted by xFP V11 (nulls last)
-  const rotationSorted = [...rotation].sort((a, b) =>
-    (b.xfpV11 ?? -Infinity) - (a.xfpV11 ?? -Infinity));
+  // Per-table sort state — each table can be sorted independently.
+  const [rotSort, setRotSort]     = React.useState({ col: 'xfpV11',   dir: 'desc' });
+  const [availSort, setAvailSort] = React.useState({ col: 'xfpV11',   dir: 'desc' });
+  const [bpSort, setBpSort]       = React.useState({ col: 'fpTotal',  dir: 'desc' });
+
+  function makeSortHandler(state, setState) {
+    return (col) => {
+      if (state.col === col) setState({ col, dir: state.dir === 'desc' ? 'asc' : 'desc' });
+      else setState({ col, dir: 'desc' });
+    };
+  }
 
   // Mean xFP of my rotation (matched only)
   const matched = rotation.filter(p => p.xfpV11 != null);
@@ -1088,7 +1130,8 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
 
   // Add/Drop suggestions: top non-roster SPs vs bottom roster SPs
   const myIds = new Set(myTeam.pitchers.map(p => p.mlbId).filter(Boolean));
-  const available = allRows.filter(r => !myIds.has(r.mlbId)).slice(0, 25); // top 25 by xFP V11 already sorted
+  const allAvailable = allRows.filter(r => !myIds.has(r.mlbId));
+  const available = allAvailable.slice(0, 25); // top 25 by xFP V11 (allRows is pre-sorted)
   const myWeakest = matched.length
     ? [...matched].sort((a, b) => a.xfpV11 - b.xfpV11).slice(0, 5)
     : [];
@@ -1102,6 +1145,15 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
     }
   }
   swaps.sort((a, b) => b.gain - a.gain);
+
+  // Sorted views for the three on-screen tables.
+  const rotationDisplay = sortRows(rotation, rotSort.col, rotSort.dir);
+  const availableDisplay = sortRows(allAvailable, availSort.col, availSort.dir).slice(0, 15);
+  const bullpenDisplay  = sortRows(bullpen, bpSort.col, bpSort.dir);
+
+  const handleRotSort   = makeSortHandler(rotSort,   setRotSort);
+  const handleAvailSort = makeSortHandler(availSort, setAvailSort);
+  const handleBpSort    = makeSortHandler(bpSort,    setBpSort);
 
   return (
     <>
@@ -1167,21 +1219,29 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
 
       {/* Rotation table */}
       <SectionHeading num="I" label="My Rotation"
-        right={`${rotation.length} SP · ranked by xFP V11`} colors={colors} />
+        right={`${rotation.length} SP · CLICK ANY HEADER TO SORT`} colors={colors} />
       <div style={{ padding:'0 32px 8px', overflow:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
           <thead>
             <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
-              {['#','Pitcher','Team','xFP V11','Rank','K%','Trend','GS','2026 FP','ESPN FP/G','% Owned',''].map((h,i) => (
-                <th key={i} style={{ padding:'8px 8px',
-                       textAlign: i<=2 ? 'left' : 'right',
-                       fontSize:9, color:colors.dim, fontFamily:MONO,
-                       letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
-              ))}
+              <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
+                           fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
+              <SortTh col="name"      label="Pitcher"   align="l" width={170} sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="proTeam"   label="Team"      align="l" width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="xfpV11"    label="xFP V11"   width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="xfpRank"   label="Rank"      width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="kPct"      label="K%"        width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="ipTrend"   label="Trend"     width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="gs"        label="GS"        width={36}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="fpActual"  label="2026 FP"   width={60}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="fpPerGame" label="ESPN FP/G" width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="pctOwned"  label="% Owned"   width={64}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <th style={{ padding:'8px 8px', textAlign:'right', fontSize:9, color:colors.dim,
+                           fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}></th>
             </tr>
           </thead>
           <tbody>
-            {rotationSorted.map((p, idx) => {
+            {rotationDisplay.map((p, idx) => {
               const isFav = p.mlbId != null && favorites.includes(p.mlbId);
               const trendStyle = p.ipTrend === 'HIGH'
                 ? { color:colors.pos, border:`1px solid ${colors.pos}` }
@@ -1310,21 +1370,26 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
 
       {/* Available leaderboard */}
       <SectionHeading num="III" label="Top Available SPs"
-        right="NOT CURRENTLY ON YOUR ROSTER" colors={colors} />
+        right="NOT ON YOUR ROSTER · CLICK ANY HEADER TO SORT" colors={colors} />
       <div style={{ padding:'0 32px 8px' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
           <thead>
             <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
-              {['#','Pitcher','xFP V11','Stuff','IP Prem','Trend','K%','SwStr%','GS','2026 FP'].map((h,i) => (
-                <th key={i} style={{ padding:'8px 8px',
-                       textAlign: i<=1 ? 'left' : 'right',
-                       fontSize:9, color:colors.dim, fontFamily:MONO,
-                       letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
-              ))}
+              <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
+                           fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
+              <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="xfpV11"   label="xFP V11"   width={70}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="stuffXfp" label="Stuff"     width={56}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="ipPremium" label="IP Prem"  width={64}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="ipTrend"  label="Trend"     width={70}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="kPct"     label="K%"        width={50}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="swstrPct" label="SwStr%"    width={56}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="gs"       label="GS"        width={36}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="fpActual" label="2026 FP"   width={60}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
             </tr>
           </thead>
           <tbody>
-            {available.slice(0, 15).map((p, idx) => {
+            {availableDisplay.map((p, idx) => {
               const isFav = favorites.includes(p.mlbId);
               const trendStyle = p.ipTrend === 'HIGH'
                 ? { color:colors.pos, border:`1px solid ${colors.pos}` }
@@ -1382,21 +1447,23 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
       {bullpen.length > 0 && (
         <>
           <SectionHeading num="IV" label="My Bullpen"
-            right={`${bullpen.length} RP · NO xFP COVERAGE (SP-ONLY MODEL)`} colors={colors} />
+            right={`${bullpen.length} RP · CLICK ANY HEADER TO SORT`} colors={colors} />
           <div style={{ padding:'0 32px 24px' }}>
             <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
               <thead>
                 <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
-                  {['#','Pitcher','Team','GS/G','ESPN FP','ESPN FP/G','% Owned'].map((h,i) => (
-                    <th key={i} style={{ padding:'8px 8px',
-                           textAlign: i<=2 ? 'left' : 'right',
-                           fontSize:9, color:colors.dim, fontFamily:MONO,
-                           letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
-                  ))}
+                  <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
+                               fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
+                  <SortTh col="name"      label="Pitcher"   align="l" width={170} sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="proTeam"   label="Team"      align="l" width={50}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="gp"        label="GS/G"      width={50}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="fpTotal"   label="ESPN FP"   width={64}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="fpPerGame" label="ESPN FP/G" width={72}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="pctOwned"  label="% Owned"   width={64}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
                 </tr>
               </thead>
               <tbody>
-                {bullpen.map((p, idx) => (
+                {bullpenDisplay.map((p, idx) => (
                   <tr key={p.name} style={{ borderBottom:`1px solid ${colors.faint}` }}>
                     <td style={{ padding:'7px 8px', fontSize:13, fontFamily:SERIF, fontStyle:'italic', color:colors.dim }}>{idx + 1}</td>
                     <td style={{ padding:'7px 8px', fontSize:14, fontWeight:500 }}>{p.name}</td>

@@ -682,6 +682,25 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
   // Pitchers leaderboard role toggle
   const [pRole, setPRole]   = React.useState('all');
 
+  // ── Waiver hitters: filters ──
+  const [wHPos,    setWHPos]    = React.useState([]);     // position chips: ['OF', '1B'] etc.
+  const [wHMinPa,  setWHMinPa]  = React.useState(10);
+  const [wHSample, setWHSample] = React.useState('all');  // 'all' | 'Strong' | 'Okay' | 'Small' | 'Too Small'
+
+  // ── My Team table sort state (independent from leaderboard sorts) ──
+  const [mthSort, setMthSort] = React.useState('proc');
+  const [mthDir,  setMthDir]  = React.useState('desc');
+  const [mtpSort, setMtpSort] = React.useState('plv');
+  const [mtpDir,  setMtpDir]  = React.useState('desc');
+  function handleMthSort(col) {
+    if (mthSort === col) setMthDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setMthSort(col); setMthDir('desc'); }
+  }
+  function handleMtpSort(col) {
+    if (mtpSort === col) setMtpDir(d => d === 'desc' ? 'asc' : 'desc');
+    else { setMtpSort(col); setMtpDir('desc'); }
+  }
+
   // ── Pre-computed lookups ──
   const hitterLookup = React.useMemo(() => {
     const m = {};
@@ -769,7 +788,17 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
 
   // ── Sort waiver ──
   const sortedWaiver = React.useMemo(() => {
-    const rows = [...window.WAIVER].sort((a, b) => {
+    let rows = window.WAIVER.filter(h => {
+      if (typeof h.pa === 'number' && h.pa < wHMinPa) return false;
+      if (wHSample !== 'all' && (h.sample || '—') !== wHSample) return false;
+      if (wHPos.length > 0) {
+        const fposTokens = (h.fpos || '').split(/[,\s|]+/).map(t => t.trim()).filter(Boolean);
+        const all = [h.pos, ...fposTokens];
+        if (!wHPos.some(p => all.includes(p))) return false;
+      }
+      return true;
+    });
+    rows = [...rows].sort((a, b) => {
       const av = a[wSort], bv = b[wSort];
       const aNum = typeof av === 'number' ? av : -Infinity;
       const bNum = typeof bv === 'number' ? bv : -Infinity;
@@ -779,7 +808,7 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
       return wDir === 'asc' ? aNum - bNum : bNum - aNum;
     });
     return rows;
-  }, [wSort, wDir]);
+  }, [wSort, wDir, wHPos, wHMinPa, wHSample]);
 
   // ── Waiver pitchers sort/filter ──
   const sortedWaiverPitchers = React.useMemo(() => {
@@ -1318,6 +1347,50 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
                 Hitters with strong underlying process not yet reflected in results or ownership. Weight by sample tier.
               </p>
             </div>
+            {/* Filter strip — same visual language as the leaderboard tab */}
+            <div style={{ padding:'8px 32px', display:'flex', gap:18, alignItems:'center', fontSize:10,
+                          fontFamily:MONO, textTransform:'uppercase', letterSpacing:1.5,
+                          borderBottom:`1px solid ${colors.border}`, background:colors.stripe, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+                <span style={{ color:colors.dim, marginRight:4 }}>Pos</span>
+                {['All', ...POS_OPTIONS].map(p => {
+                  const active = p === 'All' ? wHPos.length === 0 : wHPos.includes(p);
+                  return (
+                    <span key={p} onClick={() => {
+                      if (p === 'All') setWHPos([]);
+                      else setWHPos(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p]);
+                    }} style={{
+                      padding:'2px 7px', borderRadius:2, cursor:'pointer', fontSize:10,
+                      fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
+                      border:`1px solid ${active ? colors.accent : colors.border}`,
+                      color: active ? colors.accent : colors.dim,
+                      background: active ? `${colors.accent}18` : 'transparent',
+                    }}>{p}</span>
+                  );
+                })}
+              </div>
+              <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min PA
+                <input type="number" value={wHMinPa} onChange={e => setWHMinPa(+e.target.value || 0)}
+                  style={{ width:48, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                           background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+              </label>
+              <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Sample
+                <select value={wHSample} onChange={e => setWHSample(e.target.value)}
+                  style={{ padding:'2px 4px', border:`1px solid ${colors.border}`, borderRadius:2,
+                           background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11 }}>
+                  <option value="all">All</option>
+                  <option value="Strong">Strong</option>
+                  <option value="Okay">Okay</option>
+                  <option value="Small">Small</option>
+                  <option value="Too Small">Too Small</option>
+                </select>
+              </label>
+              <span onClick={() => { setWHPos([]); setWHMinPa(10); setWHSample('all'); }}
+                style={{ padding:'3px 9px', cursor:'pointer', color:colors.dim, fontFamily:MONO,
+                         border:`1px solid ${colors.border}`, borderRadius:2 }}>Reset</span>
+              <div style={{ flex:1 }} />
+              <span style={{ color:colors.dim }}>{sortedWaiver.length} / {window.WAIVER.length} hitters</span>
+            </div>
             <div style={{ padding:'0 32px 32px' }}>
               <HittersTable
                 rows={sortedWaiver} colors={colors} editorialHeat={editorialHeat}
@@ -1406,17 +1479,18 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
       );
     }
 
-    // Sort hitters by Proc+ desc (NaN/"—" sink to bottom)
-    const sortedHitters = [...teamHitters].sort((a, b) => {
-      const av = typeof a.proc === 'number' ? a.proc : -Infinity;
-      const bv = typeof b.proc === 'number' ? b.proc : -Infinity;
-      return bv - av;
+    // Sort by user-selected column for each table; nulls / em-dashes sink.
+    const sortMyTeam = (rows, col, dir) => [...rows].sort((a, b) => {
+      const av = a[col], bv = b[col];
+      const aN = typeof av === 'number' ? av : -Infinity;
+      const bN = typeof bv === 'number' ? bv : -Infinity;
+      if (typeof av === 'string' && typeof bv === 'string') {
+        return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return dir === 'asc' ? aN - bN : bN - aN;
     });
-    const sortedPitchers = [...teamPitchers].sort((a, b) => {
-      const av = typeof a.plv === 'number' ? a.plv : -Infinity;
-      const bv = typeof b.plv === 'number' ? b.plv : -Infinity;
-      return bv - av;
-    });
+    const sortedHitters  = sortMyTeam(teamHitters,  mthSort, mthDir);
+    const sortedPitchers = sortMyTeam(teamPitchers, mtpSort, mtpDir);
 
     // Roster summary stats
     const statedHitters  = teamHitters.filter(h => typeof h.proc === 'number');
@@ -1462,7 +1536,7 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
               selected={selected} setSelected={setSelected}
               expanded={expanded} setExpanded={setExpanded}
               pinned={pinned} setPinned={setPinned}
-              sortCol="proc" sortDir="desc" onSort={() => {}}
+              sortCol={mthSort} sortDir={mthDir} onSort={handleMthSort}
               lastColLabel="ESPN Slot"
               renderLastCell={(h, c) => (
                 <span style={{ fontFamily:MONO, fontSize:10, color:c.dim, letterSpacing:1, textTransform:'uppercase' }}>
@@ -1486,15 +1560,17 @@ function VariantEditorialDense({ dark, activeTab, setActiveTab, pinned, setPinne
               <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
                 <thead>
                   <tr style={{ borderBottom: `2px solid ${colors.text}` }}>
-                    {[['Player','l',150], ['Slot','r',60], ['Team','r',46], ['Pitches','r',56],
-                      ['PLV','r',64], ['Whiff%','r',56], ['CS%','r',48], ['xwOBA','r',60], ['Pctile','r',56],
-                      ['FP','r',48], ['FP/G','r',48]].map(([lbl, a, w]) => (
-                      <th key={lbl} style={{
-                        textAlign: a === 'l' ? 'left' : 'right', padding:'8px 8px',
-                        fontSize:9, color:colors.dim, fontWeight:600, letterSpacing:1.5, textTransform:'uppercase',
-                        fontFamily:MONO, whiteSpace:'nowrap', minWidth:w,
-                      }}>{lbl}</th>
-                    ))}
+                    <SortTh col="name"      label="Player"  align="l" width={150} sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="espnPos"   label="Slot"    width={60}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="proTeam"   label="Team"    width={46}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="pitches"   label="Pitches" width={56}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="plv"       label="PLV"     width={64}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="whiff"     label="Whiff%"  width={56}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="cs"        label="CS%"     width={48}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="xwoba"     label="xwOBA"   width={60}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="pctile"    label="Pctile"  width={56}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="fpTotal"   label="FP"      width={48}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
+                    <SortTh col="fpPerGame" label="FP/G"    width={48}  sortCol={mtpSort} sortDir={mtpDir} onSort={handleMtpSort} colors={colors} />
                   </tr>
                 </thead>
                 <tbody>
