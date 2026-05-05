@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><title>xFP v7 - 2026 SP Rankings</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#0d1117;color:#e6edf3;padding:18px}
+.hdr{background:linear-gradient(135deg,#1a2332,#0d1b2a);border:1px solid #30363d;border-radius:8px;padding:14px 18px;margin-bottom:14px}
+.title{font-size:20px;font-weight:700;color:#58a6ff}.title span{color:#f0883e}
+.sub{font-size:11.5px;color:#8b949e;margin-top:4px;line-height:1.5}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.badge{border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;border:1px solid}
+.bg{border-color:#238636;color:#3fb950;background:rgba(35,134,54,.1)}
+.bb{border-color:#1f6feb;color:#58a6ff;background:rgba(31,111,235,.1)}
+.bo{border-color:#9e6a03;color:#f0883e;background:rgba(158,106,3,.1)}
+.bp{border-color:#6e40c9;color:#d2a8ff;background:rgba(110,64,201,.1)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.card{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:14px}
+.cardh{font-size:11px;font-weight:700;text-transform:uppercase;color:#8b949e;letter-spacing:.7px;margin-bottom:9px}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;padding:6px 6px;color:#8b949e;border-bottom:2px solid #21262d;font-weight:600}
+td{padding:5px 6px;border-bottom:1px solid #21262d;font-variant-numeric:tabular-nums}
+td.num{text-align:right}
+.t1{color:#ffd700;font-weight:700}.t2{color:#c0c0c0;font-weight:600}.t3{color:#cd7f32}
+.up{color:#3fb950}.dn{color:#f85149}
+.kv{display:flex;justify-content:space-between;padding:3px 0;font-size:11.5px}
+.kv-k{color:#8b949e}.kv-v{font-weight:700}
+</style></head><body>
+<div class="hdr">
+<div class="title">xFP <span>v7</span> - 2026 SP Model</div>
+<div class="sub">Cross-year-optimized rebuild (Ridge, n=6 features, all clean / non-circular). Under the deployment scenario (year-T metrics predicting year-T+1 FP) backward elimination from V6's kitchen sink left only avg_velo, o_swing_pct, swstr_pct, c_plus_swstr, xwoba_contact, z_swing_pct. Dropping abs_pfxz, avg_ext, zone_pct, xwoba_x_swstr and ip_resid_lag1 raised cross-year r from 0.55789 to 0.55973 despite all of those features helping same-year OOY r. The OOY-cross gap shrank by +0.0393. Nonlinear (XGBoost, RandomForest, GBM) tested at -0.0094 versus Ridge - Ridge optimal.</div>
+<div class="badges">
+<span class="badge bg">V7 cross-year r 0.55973</span>
+<span class="badge bb">V6 cross-year r 0.55789</span>
+<span class="badge bo">High-K bias 1.183</span>
+<span class="badge bp">Nonlin gap -0.0094 (Ridge wins)</span>
+</div></div>
+
+<div class="grid">
+<div class="card">
+<div class="cardh">Dual-validation panel (primary metric: cross-year r)</div>
+<div class="kv"><span class="kv-k">V6 OOY r (same-year)</span><span class="kv-v">0.86487</span></div>
+<div class="kv"><span class="kv-k">V6 cross-year r (deployment)</span><span class="kv-v">0.55789</span></div>
+<div class="kv"><span class="kv-k">V6 OOY-cross gap</span><span class="kv-v">+0.3070</span></div>
+<div class="kv"><span class="kv-k">V7 OOY r</span><span class="kv-v">0.82741</span></div>
+<div class="kv"><span class="kv-k">V7 cross-year r</span><span class="kv-v" style="color:#3fb950">0.55973</span></div>
+<div class="kv"><span class="kv-k">V7 OOY-cross gap</span><span class="kv-v">+0.2677</span></div>
+<div class="kv"><span class="kv-k">Gap reduction (V6 -&gt; V7)</span><span class="kv-v" style="color:#3fb950">+0.0393</span></div>
+<div class="kv"><span class="kv-k">V6 high-K bias (cross)</span><span class="kv-v">1.014</span></div>
+<div class="kv"><span class="kv-k">V7 high-K bias (cross)</span><span class="kv-v">1.183</span></div>
+<div class="kv"><span class="kv-k">2026 YTD r (V5/V6/V7, n=112)</span><span class="kv-v">0.30817 / 0.34738 / 0.3024</span></div>
+</div>
+
+<div class="card">
+<div class="cardh">K-rate decile residual (mean 2026 actual minus xFP)</div>
+<div id="kbias"><table><thead><tr><th>Decile</th><th class="num">K%</th><th>V5 resid</th><th>V6 resid</th><th>V7 resid</th></tr></thead><tbody>
+<tr><td>1</td><td class="num">0.135</td><td class="num">-5.25</td><td class="num">-5.98</td><td class="num">-5.12</td></tr>
+<tr><td>2</td><td class="num">0.178</td><td class="num">+0.64</td><td class="num">-0.21</td><td class="num">+0.74</td></tr>
+<tr><td>3</td><td class="num">0.210</td><td class="num">-1.29</td><td class="num">-0.62</td><td class="num">-1.14</td></tr>
+<tr><td>4</td><td class="num">0.249</td><td class="num">-0.17</td><td class="num">+0.38</td><td class="num">+0.11</td></tr>
+<tr><td>5</td><td class="num">0.299</td><td class="num">+2.08</td><td class="num">+1.09</td><td class="num">+2.21</td></tr>
+</tbody></table></div>
+<div style="margin-top:9px;font-size:10.5px;color:#8b949e">Smaller magnitude = less systematic bias in that K decile. Decile 5 = highest K rate.</div>
+</div>
+</div>
+
+<div class="card" style="margin-bottom:14px">
+<div class="cardh">Cameron Schlittler - V5 -&gt; V6 -&gt; V7 path</div>
+<div class="kv"><span class="kv-k">2026 YTD GS</span><span class="kv-v">7.0</span></div><div class="kv"><span class="kv-k">V5 rank / xFP</span><span class="kv-v">#61.0 / 11.64</span></div><div class="kv"><span class="kv-k">V6 rank / xFP</span><span class="kv-v">#nan / nan</span></div><div class="kv"><span class="kv-k">V7 rank / xFP</span><span class="kv-v" style="color:#3fb950">#51 / 11.65</span></div><div class="kv"><span class="kv-k">2026 YTD actual</span><span class="kv-v">19.49</span></div>
+</div>
+
+<div class="card">
+<div class="cardh">Top 141 2026 SP - V5 / V6 / V7 side-by-side</div>
+<table><thead><tr>
+<th>Rk V7</th><th>Pitcher</th>
+<th class="num">V5 xFP</th><th class="num">V6 xFP</th><th class="num">V7 xFP</th>
+<th class="num">D vs V6</th><th class="num">2026 GS</th><th class="num">2026 actual FP/start</th>
+</tr></thead><tbody>
+<tr><td class="t1">1</td><td>Woodruff, Brandon</td><td class="num">17.39</td><td class="num">18.01</td><td class="num"><b>17.52</b></td><td class="num dn">-0.49</td><td class="num">6.0</td><td class="num">10.62</td></tr>
+<tr><td class="t2">2</td><td>Skubal, Tarik</td><td class="num">17.48</td><td class="num">18.01</td><td class="num"><b>17.50</b></td><td class="num dn">-0.51</td><td class="num">7.0</td><td class="num">17.14</td></tr>
+<tr><td class="t3">3</td><td>Wheeler, Zack</td><td class="num">16.73</td><td class="num">17.01</td><td class="num"><b>16.37</b></td><td class="num dn">-0.64</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">4</td><td>Skenes, Paul</td><td class="num">16.15</td><td class="num">16.36</td><td class="num"><b>16.03</b></td><td class="num dn">-0.32</td><td class="num">6.0</td><td class="num">18.00</td></tr>
+<tr><td class="">5</td><td>Ohtani, Shohei</td><td class="num">15.93</td><td class="num">16.38</td><td class="num"><b>15.89</b></td><td class="num dn">-0.49</td><td class="num">5.0</td><td class="num">19.40</td></tr>
+<tr><td class="">6</td><td>Ragans, Cole</td><td class="num">15.91</td><td class="num">15.92</td><td class="num"><b>15.88</b></td><td class="num dn">-0.04</td><td class="num">6.0</td><td class="num">10.70</td></tr>
+<tr><td class="">7</td><td>Greene, Hunter</td><td class="num">15.79</td><td class="num">16.47</td><td class="num"><b>15.77</b></td><td class="num dn">-0.70</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">8</td><td>Crochet, Garrett</td><td class="num">15.80</td><td class="num">15.44</td><td class="num"><b>15.60</b></td><td class="num up">+0.16</td><td class="num">6.0</td><td class="num">7.33</td></tr>
+<tr><td class="">9</td><td>Sánchez, Cristopher</td><td class="num">15.54</td><td class="num">16.20</td><td class="num"><b>15.55</b></td><td class="num dn">-0.65</td><td class="num">7.0</td><td class="num">12.56</td></tr>
+<tr><td class="">10</td><td>Sale, Chris</td><td class="num">15.74</td><td class="num">15.77</td><td class="num"><b>15.52</b></td><td class="num dn">-0.25</td><td class="num">7.0</td><td class="num">17.94</td></tr>
+<tr><td class="">11</td><td>Yamamoto, Yoshinobu</td><td class="num">15.41</td><td class="num">15.32</td><td class="num"><b>15.23</b></td><td class="num dn">-0.08</td><td class="num">6.0</td><td class="num">15.18</td></tr>
+<tr><td class="">12</td><td>Gilbert, Logan</td><td class="num">15.09</td><td class="num">15.91</td><td class="num"><b>14.98</b></td><td class="num dn">-0.93</td><td class="num">7.0</td><td class="num">11.30</td></tr>
+<tr><td class="">13</td><td>Sheehan, Emmet</td><td class="num">14.88</td><td class="num">14.53</td><td class="num"><b>14.68</b></td><td class="num up">+0.15</td><td class="num">6.0</td><td class="num">11.02</td></tr>
+<tr><td class="">14</td><td>Woo, Bryan</td><td class="num">14.49</td><td class="num">14.64</td><td class="num"><b>14.43</b></td><td class="num dn">-0.20</td><td class="num">7.0</td><td class="num">10.17</td></tr>
+<tr><td class="">15</td><td>Eovaldi, Nathan</td><td class="num">14.47</td><td class="num">14.80</td><td class="num"><b>14.42</b></td><td class="num dn">-0.38</td><td class="num">7.0</td><td class="num">10.13</td></tr>
+<tr><td class="">16</td><td>deGrom, Jacob</td><td class="num">14.28</td><td class="num">14.78</td><td class="num"><b>14.29</b></td><td class="num dn">-0.49</td><td class="num">6.0</td><td class="num">16.18</td></tr>
+<tr><td class="">17</td><td>Luzardo, Jesús</td><td class="num">14.20</td><td class="num">14.39</td><td class="num"><b>14.17</b></td><td class="num dn">-0.22</td><td class="num">7.0</td><td class="num">13.00</td></tr>
+<tr><td class="">18</td><td>Bubic, Kris</td><td class="num">14.54</td><td class="num">14.43</td><td class="num"><b>14.02</b></td><td class="num dn">-0.41</td><td class="num">7.0</td><td class="num">13.99</td></tr>
+<tr><td class="">19</td><td>Schwellenbach, Spencer</td><td class="num">14.24</td><td class="num">14.73</td><td class="num"><b>13.86</b></td><td class="num dn">-0.87</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">20</td><td>Schmidt, Clarke</td><td class="num">13.56</td><td class="num">13.73</td><td class="num"><b>13.84</b></td><td class="num up">+0.11</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">21</td><td>Brown, Hunter</td><td class="num">14.08</td><td class="num">14.31</td><td class="num"><b>13.52</b></td><td class="num dn">-0.79</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">22</td><td>Misiorowski, Jacob</td><td class="num">14.05</td><td class="num">-</td><td class="num"><b>13.45</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">17.34</td></tr>
+<tr><td class="">23</td><td>Cease, Dylan</td><td class="num">13.28</td><td class="num">13.60</td><td class="num"><b>13.31</b></td><td class="num dn">-0.28</td><td class="num">7.0</td><td class="num">13.76</td></tr>
+<tr><td class="">24</td><td>Rodón, Carlos</td><td class="num">13.30</td><td class="num">13.44</td><td class="num"><b>13.27</b></td><td class="num dn">-0.17</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">25</td><td>Webb, Logan</td><td class="num">12.99</td><td class="num">14.33</td><td class="num"><b>13.25</b></td><td class="num dn">-1.08</td><td class="num">6.0</td><td class="num">12.60</td></tr>
+<tr><td class="">26</td><td>Rogers, Trevor</td><td class="num">13.26</td><td class="num">13.39</td><td class="num"><b>13.24</b></td><td class="num dn">-0.15</td><td class="num">6.0</td><td class="num">7.83</td></tr>
+<tr><td class="">27</td><td>Snell, Blake</td><td class="num">14.01</td><td class="num">13.32</td><td class="num"><b>13.23</b></td><td class="num dn">-0.09</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">28</td><td>Pérez, Eury</td><td class="num">13.28</td><td class="num">13.14</td><td class="num"><b>13.10</b></td><td class="num dn">-0.04</td><td class="num">7.0</td><td class="num">9.40</td></tr>
+<tr><td class="">29</td><td>Suarez, Ranger</td><td class="num">13.16</td><td class="num">12.92</td><td class="num"><b>13.03</b></td><td class="num up">+0.11</td><td class="num">7.0</td><td class="num">14.06</td></tr>
+<tr><td class="">30</td><td>Lodolo, Nick</td><td class="num">12.97</td><td class="num">12.92</td><td class="num"><b>12.89</b></td><td class="num dn">-0.03</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">31</td><td>Ryan, Joe</td><td class="num">12.90</td><td class="num">13.25</td><td class="num"><b>12.84</b></td><td class="num dn">-0.42</td><td class="num">7.0</td><td class="num">11.61</td></tr>
+<tr><td class="">32</td><td>Peralta, Freddy</td><td class="num">12.79</td><td class="num">13.11</td><td class="num"><b>12.74</b></td><td class="num dn">-0.37</td><td class="num">7.0</td><td class="num">14.07</td></tr>
+<tr><td class="">33</td><td>Gausman, Kevin</td><td class="num">12.65</td><td class="num">13.53</td><td class="num"><b>12.74</b></td><td class="num dn">-0.80</td><td class="num">7.0</td><td class="num">15.03</td></tr>
+<tr><td class="">34</td><td>Fried, Max</td><td class="num">12.62</td><td class="num">13.22</td><td class="num"><b>12.70</b></td><td class="num dn">-0.52</td><td class="num">7.0</td><td class="num">17.09</td></tr>
+<tr><td class="">35</td><td>Rasmussen, Drew</td><td class="num">12.83</td><td class="num">13.00</td><td class="num"><b>12.52</b></td><td class="num dn">-0.49</td><td class="num">6.0</td><td class="num">14.20</td></tr>
+<tr><td class="">36</td><td>Gray, Sonny</td><td class="num">12.51</td><td class="num">13.07</td><td class="num"><b>12.52</b></td><td class="num dn">-0.55</td><td class="num">5.0</td><td class="num">6.34</td></tr>
+<tr><td class="">37</td><td>Abbott, Andrew</td><td class="num">12.44</td><td class="num">12.68</td><td class="num"><b>12.46</b></td><td class="num dn">-0.21</td><td class="num">7.0</td><td class="num">5.01</td></tr>
+<tr><td class="">38</td><td>Mize, Casey</td><td class="num">12.39</td><td class="num">12.73</td><td class="num"><b>12.27</b></td><td class="num dn">-0.47</td><td class="num">6.0</td><td class="num">13.00</td></tr>
+<tr><td class="">39</td><td>Kirby, George</td><td class="num">12.08</td><td class="num">12.78</td><td class="num"><b>12.26</b></td><td class="num dn">-0.51</td><td class="num">7.0</td><td class="num">14.06</td></tr>
+<tr><td class="">40</td><td>Glasnow, Tyler</td><td class="num">12.96</td><td class="num">13.60</td><td class="num"><b>12.25</b></td><td class="num dn">-1.35</td><td class="num">6.0</td><td class="num">19.90</td></tr>
+<tr><td class="">41</td><td>Horton, Cade</td><td class="num">12.14</td><td class="num">-</td><td class="num"><b>12.08</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">42</td><td>Taillon, Jameson</td><td class="num">11.91</td><td class="num">12.65</td><td class="num"><b>11.88</b></td><td class="num dn">-0.77</td><td class="num">6.0</td><td class="num">11.20</td></tr>
+<tr><td class="">43</td><td>Soroka, Michael</td><td class="num">12.12</td><td class="num">-</td><td class="num"><b>11.79</b></td><td class="num ">-</td><td class="num">6.0</td><td class="num">9.33</td></tr>
+<tr><td class="">44</td><td>Ray, Robbie</td><td class="num">11.76</td><td class="num">11.97</td><td class="num"><b>11.78</b></td><td class="num dn">-0.20</td><td class="num">7.0</td><td class="num">14.39</td></tr>
+<tr><td class="">45</td><td>Cantillo, Joey</td><td class="num">12.55</td><td class="num">-</td><td class="num"><b>11.78</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">9.59</td></tr>
+<tr><td class="">46</td><td>Baz, Shane</td><td class="num">11.88</td><td class="num">12.31</td><td class="num"><b>11.73</b></td><td class="num dn">-0.58</td><td class="num">6.0</td><td class="num">8.67</td></tr>
+<tr><td class="">47</td><td>Cavalli, Cade</td><td class="num">12.18</td><td class="num">-</td><td class="num"><b>11.71</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">6.39</td></tr>
+<tr><td class="">48</td><td>Bibee, Tanner</td><td class="num">11.78</td><td class="num">12.13</td><td class="num"><b>11.67</b></td><td class="num dn">-0.46</td><td class="num">7.0</td><td class="num">9.94</td></tr>
+<tr><td class="">49</td><td>Lopez, Jacob</td><td class="num">12.08</td><td class="num">-</td><td class="num"><b>11.66</b></td><td class="num ">-</td><td class="num">6.0</td><td class="num">3.92</td></tr>
+<tr><td class="">50</td><td>Darvish, Yu</td><td class="num">11.75</td><td class="num">11.66</td><td class="num"><b>11.66</b></td><td class="num dn">-0.01</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">51</td><td>Schlittler, Cam</td><td class="num">11.64</td><td class="num">-</td><td class="num"><b>11.65</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">19.49</td></tr>
+<tr><td class="">52</td><td>Burnes, Corbin</td><td class="num">11.89</td><td class="num">12.43</td><td class="num"><b>11.63</b></td><td class="num dn">-0.80</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">53</td><td>Valdez, Framber</td><td class="num">11.71</td><td class="num">11.98</td><td class="num"><b>11.59</b></td><td class="num dn">-0.38</td><td class="num">7.0</td><td class="num">12.01</td></tr>
+<tr><td class="">54</td><td>Flaherty, Jack</td><td class="num">11.62</td><td class="num">12.10</td><td class="num"><b>11.58</b></td><td class="num dn">-0.52</td><td class="num">7.0</td><td class="num">4.93</td></tr>
+<tr><td class="">55</td><td>Cabrera, Edward</td><td class="num">11.97</td><td class="num">12.08</td><td class="num"><b>11.57</b></td><td class="num dn">-0.50</td><td class="num">6.0</td><td class="num">11.53</td></tr>
+<tr><td class="">56</td><td>Priester, Quinn</td><td class="num">11.66</td><td class="num">-</td><td class="num"><b>11.55</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">57</td><td>Pivetta, Nick</td><td class="num">11.79</td><td class="num">12.01</td><td class="num"><b>11.55</b></td><td class="num dn">-0.46</td><td class="num">4.0</td><td class="num">10.70</td></tr>
+<tr><td class="">58</td><td>Manaea, Sean</td><td class="num">11.81</td><td class="num">11.99</td><td class="num"><b>11.53</b></td><td class="num dn">-0.46</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">59</td><td>Megill, Tylor</td><td class="num">12.17</td><td class="num">12.29</td><td class="num"><b>11.53</b></td><td class="num dn">-0.76</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">60</td><td>Lauer, Eric</td><td class="num">11.25</td><td class="num">11.52</td><td class="num"><b>11.49</b></td><td class="num dn">-0.04</td><td class="num">5.0</td><td class="num">4.90</td></tr>
+<tr><td class="">61</td><td>Boyd, Matthew</td><td class="num">11.37</td><td class="num">10.97</td><td class="num"><b>11.40</b></td><td class="num up">+0.43</td><td class="num">5.0</td><td class="num">10.20</td></tr>
+<tr><td class="">62</td><td>Ginn, J.T.</td><td class="num">11.69</td><td class="num">-</td><td class="num"><b>11.34</b></td><td class="num ">-</td><td class="num">5.0</td><td class="num">8.94</td></tr>
+<tr><td class="">63</td><td>López, Pablo</td><td class="num">11.99</td><td class="num">12.13</td><td class="num"><b>11.33</b></td><td class="num dn">-0.80</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">64</td><td>Kelly, Merrill</td><td class="num">11.04</td><td class="num">11.49</td><td class="num"><b>11.16</b></td><td class="num dn">-0.33</td><td class="num">4.0</td><td class="num">-2.40</td></tr>
+<tr><td class="">65</td><td>Dobbins, Hunter</td><td class="num">11.20</td><td class="num">-</td><td class="num"><b>11.15</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">66</td><td>Nola, Aaron</td><td class="num">11.71</td><td class="num">11.93</td><td class="num"><b>11.13</b></td><td class="num dn">-0.80</td><td class="num">6.0</td><td class="num">7.72</td></tr>
+<tr><td class="">67</td><td>Castillo, Luis</td><td class="num">10.45</td><td class="num">10.85</td><td class="num"><b>11.06</b></td><td class="num up">+0.21</td><td class="num">7.0</td><td class="num">3.24</td></tr>
+<tr><td class="">68</td><td>Burrows, Mike</td><td class="num">11.03</td><td class="num">-</td><td class="num"><b>11.04</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">6.74</td></tr>
+<tr><td class="">69</td><td>Kremer, Dean</td><td class="num">11.05</td><td class="num">11.06</td><td class="num"><b>11.01</b></td><td class="num dn">-0.05</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">70</td><td>Patrick, Chad</td><td class="num">10.97</td><td class="num">-</td><td class="num"><b>10.92</b></td><td class="num ">-</td><td class="num">4.0</td><td class="num">12.55</td></tr>
+<tr><td class="">71</td><td>Nelson, Ryne</td><td class="num">11.08</td><td class="num">11.58</td><td class="num"><b>10.89</b></td><td class="num dn">-0.68</td><td class="num">6.0</td><td class="num">9.72</td></tr>
+<tr><td class="">72</td><td>Imanaga, Shota</td><td class="num">11.01</td><td class="num">10.75</td><td class="num"><b>10.84</b></td><td class="num up">+0.09</td><td class="num">7.0</td><td class="num">18.06</td></tr>
+<tr><td class="">73</td><td>Kershaw, Clayton</td><td class="num">11.13</td><td class="num">10.86</td><td class="num"><b>10.84</b></td><td class="num dn">-0.02</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">74</td><td>Brown, Ben</td><td class="num">11.09</td><td class="num">-</td><td class="num"><b>10.83</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">75</td><td>Pepiot, Ryan</td><td class="num">11.25</td><td class="num">11.06</td><td class="num"><b>10.82</b></td><td class="num dn">-0.24</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">76</td><td>Olson, Reese</td><td class="num">11.01</td><td class="num">10.70</td><td class="num"><b>10.82</b></td><td class="num up">+0.12</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">77</td><td>Woods Richardson, Simeon</td><td class="num">10.94</td><td class="num">10.57</td><td class="num"><b>10.74</b></td><td class="num up">+0.17</td><td class="num">7.0</td><td class="num">1.60</td></tr>
+<tr><td class="">78</td><td>Smith, Shane</td><td class="num">11.09</td><td class="num">-</td><td class="num"><b>10.74</b></td><td class="num ">-</td><td class="num">3.0</td><td class="num">-2.87</td></tr>
+<tr><td class="">79</td><td>Verlander, Justin</td><td class="num">10.47</td><td class="num">10.65</td><td class="num"><b>10.72</b></td><td class="num up">+0.06</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">80</td><td>Ortiz, Luis</td><td class="num">10.46</td><td class="num">11.81</td><td class="num"><b>10.69</b></td><td class="num dn">-1.12</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">81</td><td>Mlodzinski, Carmen</td><td class="num">10.69</td><td class="num">-</td><td class="num"><b>10.60</b></td><td class="num ">-</td><td class="num">6.0</td><td class="num">7.57</td></tr>
+<tr><td class="">82</td><td>Hendricks, Kyle</td><td class="num">10.54</td><td class="num">9.80</td><td class="num"><b>10.60</b></td><td class="num up">+0.80</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">83</td><td>Soriano, José</td><td class="num">10.90</td><td class="num">11.24</td><td class="num"><b>10.59</b></td><td class="num dn">-0.64</td><td class="num">7.0</td><td class="num">20.09</td></tr>
+<tr><td class="">84</td><td>Gore, MacKenzie</td><td class="num">10.61</td><td class="num">10.69</td><td class="num"><b>10.35</b></td><td class="num dn">-0.34</td><td class="num">7.0</td><td class="num">11.06</td></tr>
+<tr><td class="">85</td><td>King, Michael</td><td class="num">10.61</td><td class="num">10.62</td><td class="num"><b>10.33</b></td><td class="num dn">-0.30</td><td class="num">7.0</td><td class="num">14.23</td></tr>
+<tr><td class="">86</td><td>Gallen, Zac</td><td class="num">10.43</td><td class="num">10.90</td><td class="num"><b>10.28</b></td><td class="num dn">-0.61</td><td class="num">7.0</td><td class="num">6.50</td></tr>
+<tr><td class="">87</td><td>Young, Brandon</td><td class="num">10.04</td><td class="num">-</td><td class="num"><b>10.27</b></td><td class="num ">-</td><td class="num">3.0</td><td class="num">1.40</td></tr>
+<tr><td class="">88</td><td>Waldrep, Hurston</td><td class="num">10.49</td><td class="num">-</td><td class="num"><b>10.20</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">89</td><td>Roupp, Landen</td><td class="num">10.35</td><td class="num">-</td><td class="num"><b>10.20</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">14.40</td></tr>
+<tr><td class="">90</td><td>Matthews, Zebby</td><td class="num">10.41</td><td class="num">-</td><td class="num"><b>10.20</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">91</td><td>Houser, Adrian</td><td class="num">10.26</td><td class="num">10.51</td><td class="num"><b>10.18</b></td><td class="num dn">-0.33</td><td class="num">6.0</td><td class="num">1.80</td></tr>
+<tr><td class="">92</td><td>Mahle, Tyler</td><td class="num">10.46</td><td class="num">10.34</td><td class="num"><b>10.13</b></td><td class="num dn">-0.21</td><td class="num">7.0</td><td class="num">8.23</td></tr>
+<tr><td class="">93</td><td>Ober, Bailey</td><td class="num">10.76</td><td class="num">10.61</td><td class="num"><b>10.09</b></td><td class="num dn">-0.52</td><td class="num">7.0</td><td class="num">10.90</td></tr>
+<tr><td class="">94</td><td>Cameron, Noah</td><td class="num">10.54</td><td class="num">-</td><td class="num"><b>10.07</b></td><td class="num ">-</td><td class="num">6.0</td><td class="num">7.07</td></tr>
+<tr><td class="">95</td><td>Springs, Jeffrey</td><td class="num">10.26</td><td class="num">9.67</td><td class="num"><b>10.05</b></td><td class="num up">+0.38</td><td class="num">7.0</td><td class="num">12.21</td></tr>
+<tr><td class="">96</td><td>Scherzer, Max</td><td class="num">9.82</td><td class="num">10.23</td><td class="num"><b>10.05</b></td><td class="num dn">-0.18</td><td class="num">5.0</td><td class="num">0.06</td></tr>
+<tr><td class="">97</td><td>Bassitt, Chris</td><td class="num">9.95</td><td class="num">10.11</td><td class="num"><b>10.04</b></td><td class="num dn">-0.07</td><td class="num">6.0</td><td class="num">3.03</td></tr>
+<tr><td class="">98</td><td>Senga, Kodai</td><td class="num">10.54</td><td class="num">10.34</td><td class="num"><b>10.04</b></td><td class="num dn">-0.30</td><td class="num">5.0</td><td class="num">1.58</td></tr>
+<tr><td class="">99</td><td>Williams, Gavin</td><td class="num">10.37</td><td class="num">10.42</td><td class="num"><b>10.00</b></td><td class="num dn">-0.42</td><td class="num">7.0</td><td class="num">17.10</td></tr>
+<tr><td class="">100</td><td>Singer, Brady</td><td class="num">10.38</td><td class="num">10.84</td><td class="num"><b>9.98</b></td><td class="num dn">-0.86</td><td class="num">7.0</td><td class="num">3.79</td></tr>
+<tr><td class="">101</td><td>Civale, Aaron</td><td class="num">10.01</td><td class="num">9.60</td><td class="num"><b>9.95</b></td><td class="num up">+0.36</td><td class="num">7.0</td><td class="num">10.51</td></tr>
+<tr><td class="">102</td><td>Holmes, Grant</td><td class="num">9.86</td><td class="num">-</td><td class="num"><b>9.95</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">9.31</td></tr>
+<tr><td class="">103</td><td>Meyer, Max</td><td class="num">10.19</td><td class="num">10.46</td><td class="num"><b>9.95</b></td><td class="num dn">-0.51</td><td class="num">7.0</td><td class="num">14.16</td></tr>
+<tr><td class="">104</td><td>Martinez, Nick</td><td class="num">9.94</td><td class="num">9.56</td><td class="num"><b>9.81</b></td><td class="num up">+0.25</td><td class="num">6.0</td><td class="num">16.00</td></tr>
+<tr><td class="">105</td><td>Holmes, Clay</td><td class="num">9.95</td><td class="num">-</td><td class="num"><b>9.79</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">16.11</td></tr>
+<tr><td class="">106</td><td>Rea, Colin</td><td class="num">9.88</td><td class="num">10.51</td><td class="num"><b>9.78</b></td><td class="num dn">-0.73</td><td class="num">4.0</td><td class="num">9.78</td></tr>
+<tr><td class="">107</td><td>Junk, Janson</td><td class="num">9.77</td><td class="num">-</td><td class="num"><b>9.78</b></td><td class="num ">-</td><td class="num">6.0</td><td class="num">11.28</td></tr>
+<tr><td class="">108</td><td>Montero, Keider</td><td class="num">9.78</td><td class="num">10.28</td><td class="num"><b>9.75</b></td><td class="num dn">-0.54</td><td class="num">6.0</td><td class="num">13.17</td></tr>
+<tr><td class="">109</td><td>Wacha, Michael</td><td class="num">10.01</td><td class="num">10.09</td><td class="num"><b>9.74</b></td><td class="num dn">-0.35</td><td class="num">6.0</td><td class="num">14.32</td></tr>
+<tr><td class="">110</td><td>Bradley, Taj</td><td class="num">9.88</td><td class="num">10.07</td><td class="num"><b>9.66</b></td><td class="num dn">-0.41</td><td class="num">7.0</td><td class="num">14.76</td></tr>
+<tr><td class="">111</td><td>Keller, Mitch</td><td class="num">9.58</td><td class="num">10.16</td><td class="num"><b>9.62</b></td><td class="num dn">-0.54</td><td class="num">7.0</td><td class="num">13.27</td></tr>
+<tr><td class="">112</td><td>Sears, JP</td><td class="num">9.72</td><td class="num">9.78</td><td class="num"><b>9.59</b></td><td class="num dn">-0.19</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">113</td><td>Peterson, David</td><td class="num">9.77</td><td class="num">10.47</td><td class="num"><b>9.57</b></td><td class="num dn">-0.90</td><td class="num">5.0</td><td class="num">4.40</td></tr>
+<tr><td class="">114</td><td>Warren, Will</td><td class="num">9.71</td><td class="num">-</td><td class="num"><b>9.53</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">14.57</td></tr>
+<tr><td class="">115</td><td>Littell, Zack</td><td class="num">9.69</td><td class="num">9.46</td><td class="num"><b>9.52</b></td><td class="num up">+0.06</td><td class="num">5.0</td><td class="num">-1.20</td></tr>
+<tr><td class="">116</td><td>Morton, Charlie</td><td class="num">9.28</td><td class="num">9.55</td><td class="num"><b>9.51</b></td><td class="num dn">-0.04</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">117</td><td>Alcantara, Sandy</td><td class="num">9.36</td><td class="num">10.33</td><td class="num"><b>9.48</b></td><td class="num dn">-0.86</td><td class="num">7.0</td><td class="num">13.70</td></tr>
+<tr><td class="">118</td><td>Canning, Griffin</td><td class="num">9.46</td><td class="num">9.62</td><td class="num"><b>9.41</b></td><td class="num dn">-0.21</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">119</td><td>Leiter, Jack</td><td class="num">9.71</td><td class="num">-</td><td class="num"><b>9.40</b></td><td class="num ">-</td><td class="num">7.0</td><td class="num">9.46</td></tr>
+<tr><td class="">120</td><td>Bergert, Ryan</td><td class="num">9.60</td><td class="num">-</td><td class="num"><b>9.32</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">121</td><td>Kolek, Stephen</td><td class="num">9.28</td><td class="num">-</td><td class="num"><b>9.28</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">122</td><td>Hicks, Jordan</td><td class="num">9.49</td><td class="num">9.94</td><td class="num"><b>9.26</b></td><td class="num dn">-0.68</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">123</td><td>Gusto, Ryan</td><td class="num">9.30</td><td class="num">-</td><td class="num"><b>9.24</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">124</td><td>Eflin, Zach</td><td class="num">9.45</td><td class="num">9.34</td><td class="num"><b>9.16</b></td><td class="num dn">-0.18</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">125</td><td>Kikuchi, Yusei</td><td class="num">9.44</td><td class="num">9.48</td><td class="num"><b>9.09</b></td><td class="num dn">-0.39</td><td class="num">7.0</td><td class="num">6.60</td></tr>
+<tr><td class="">126</td><td>Festa, David</td><td class="num">9.51</td><td class="num">9.16</td><td class="num"><b>9.08</b></td><td class="num dn">-0.07</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">127</td><td>Lorenzen, Michael</td><td class="num">9.03</td><td class="num">9.02</td><td class="num"><b>9.03</b></td><td class="num up">+0.00</td><td class="num">7.0</td><td class="num">2.41</td></tr>
+<tr><td class="">128</td><td>Pallante, Andre</td><td class="num">8.99</td><td class="num">9.29</td><td class="num"><b>8.98</b></td><td class="num dn">-0.30</td><td class="num">6.0</td><td class="num">9.73</td></tr>
+<tr><td class="">129</td><td>Freeland, Kyle</td><td class="num">8.85</td><td class="num">9.22</td><td class="num"><b>8.92</b></td><td class="num dn">-0.30</td><td class="num">5.0</td><td class="num">8.50</td></tr>
+<tr><td class="">130</td><td>Rodriguez, Eduardo</td><td class="num">9.26</td><td class="num">9.18</td><td class="num"><b>8.91</b></td><td class="num dn">-0.27</td><td class="num">6.0</td><td class="num">10.30</td></tr>
+<tr><td class="">131</td><td>Bello, Brayan</td><td class="num">9.10</td><td class="num">9.29</td><td class="num"><b>8.88</b></td><td class="num dn">-0.41</td><td class="num">6.0</td><td class="num">-0.75</td></tr>
+<tr><td class="">132</td><td>Strider, Spencer</td><td class="num">9.27</td><td class="num">9.34</td><td class="num"><b>8.82</b></td><td class="num dn">-0.52</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">133</td><td>Corbin, Patrick</td><td class="num">9.26</td><td class="num">9.24</td><td class="num"><b>8.81</b></td><td class="num dn">-0.43</td><td class="num">5.0</td><td class="num">8.60</td></tr>
+<tr><td class="">134</td><td>Berríos, José</td><td class="num">8.73</td><td class="num">9.47</td><td class="num"><b>8.80</b></td><td class="num dn">-0.67</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">135</td><td>Wentz, Joey</td><td class="num">9.19</td><td class="num">8.74</td><td class="num"><b>8.76</b></td><td class="num up">+0.01</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">136</td><td>Elder, Bryce</td><td class="num">8.76</td><td class="num">8.61</td><td class="num"><b>8.67</b></td><td class="num up">+0.06</td><td class="num">7.0</td><td class="num">14.96</td></tr>
+<tr><td class="">137</td><td>Jobe, Jackson</td><td class="num">8.82</td><td class="num">-</td><td class="num"><b>8.67</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">138</td><td>Gordon, Colton</td><td class="num">8.92</td><td class="num">-</td><td class="num"><b>8.63</b></td><td class="num ">-</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">139</td><td>Williams, Trevor</td><td class="num">8.81</td><td class="num">8.38</td><td class="num"><b>8.57</b></td><td class="num up">+0.19</td><td class="num"></td><td class="num">-</td></tr>
+<tr><td class="">140</td><td>Liberatore, Matthew</td><td class="num">8.73</td><td class="num">8.78</td><td class="num"><b>8.55</b></td><td class="num dn">-0.23</td><td class="num">7.0</td><td class="num">6.93</td></tr>
+<tr><td class="">141</td><td>Alexander, Jason</td><td class="num">8.64</td><td class="num">8.54</td><td class="num"><b>8.55</b></td><td class="num up">+0.01</td><td class="num"></td><td class="num">-</td></tr>
+</tbody></table></div>
+
+</body></html>
