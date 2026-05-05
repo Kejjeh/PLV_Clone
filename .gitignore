@@ -53,6 +53,12 @@ data/models/*.pkl
 # Keep all JSON in data/models (calibration, scaling, positions, league config)
 !data/models/*.json
 
+# ── xFP cache: large Statcast parquets (regenerable via build_sp_multiyr.py) ─
+data/research/xfp_cache/*.parquet
+
+# Keep aggregated CSVs in xfp_cache (training reference, smaller)
+!data/research/xfp_cache/*.csv
+
 # IDE / OS
 .idea/
 .vscode/
