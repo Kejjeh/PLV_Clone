@@ -1,8 +1,13 @@
 """Build the redesigned xFP V11 dashboard (PLV-style UI).
 
 Generates a self-contained HTML file with React+Babel inline, embedded
-projection data, three tabs (Projections / Analysis / Model Info),
+projection data, four tabs (My Team / Projections / Analysis / Model Info),
 quadrant charts, favorites in localStorage, and PLV color/typography.
+
+The "My Team" tab pulls roster + ESPN data from the PLV process_report
+dashboard's MY_TEAM payload (fantasy team injected by the ESPN connector).
+SPs are matched by name to xFP V11 projections so you can compare your
+rotation to the league xFP leaderboard and spot add/drop swaps.
 
 Outputs:
   - data/outputs/xfp_v11_dashboard.html
@@ -10,7 +15,9 @@ Outputs:
 """
 from __future__ import annotations
 import json
+import re
 import shutil
+import unicodedata
 from datetime import date
 from pathlib import Path
 
@@ -21,11 +28,78 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_v11_projections.csv'
 MULTI_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'sp_multiyr_2015_2025.csv'
 MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v11_pipeline.pkl'
+PLV_HTML = ROOT / 'data' / 'outputs' / 'process_report_2026.html'
 OUT_PRIMARY = ROOT / 'data' / 'outputs' / 'xfp_v11_dashboard.html'
 OUT_DOCS = ROOT / 'xfp-model' / 'docs' / 'index.html'
 
 
-def build_records() -> list[dict]:
+# ─── Name normalization ───────────────────────────────────────────────────────
+
+def _strip_accents(s: str) -> str:
+    return ''.join(c for c in unicodedata.normalize('NFD', s)
+                   if unicodedata.category(c) != 'Mn')
+
+
+def _norm(s: str) -> str:
+    return re.sub(r'[^a-z]+', '', _strip_accents(s).lower())
+
+
+def xfp_name_key(name: str) -> tuple[str, str]:
+    """`Verlander, Justin` → (`verlander`, `justin`)."""
+    if ',' in name:
+        last, first = name.split(',', 1)
+    else:
+        parts = name.strip().split()
+        last, first = parts[-1], ' '.join(parts[:-1])
+    return (_norm(last), _norm(first))
+
+
+def plv_name_key(name: str) -> tuple[str, str]:
+    """`Max Fried` → (`fried`, `max`)."""
+    parts = name.strip().split()
+    if len(parts) < 2:
+        return (_norm(name), '')
+    return (_norm(parts[-1]), _norm(' '.join(parts[:-1])))
+
+
+def find_xfp_record(plv_name: str, by_key: dict) -> dict | None:
+    """Match a PLV-style name against the xFP records dict.
+
+    Strict (last, first) match after accent-stripping normalization. Fallback
+    accepts a unique last-name match only when the first names share a 3-char
+    prefix — this catches `Cam Schlittler ↔ Schlittler, Cam` while rejecting
+    the `Robert Suarez ↔ Ranger Suarez` collision.
+    """
+    last, first = plv_name_key(plv_name)
+    rec = by_key.get((last, first))
+    if rec is not None:
+        return rec
+    candidates = []
+    for k, v in by_key.items():
+        if k[0] != last:
+            continue
+        a, b = first or '', k[1] or ''
+        n = min(len(a), len(b), 3)
+        if n > 0 and a[:n] == b[:n]:
+            candidates.append((k, v))
+    return candidates[0][1] if len(candidates) == 1 else None
+
+
+# ─── ESPN payload extraction (from PLV dashboard) ─────────────────────────────
+
+def extract_my_team() -> dict | None:
+    if not PLV_HTML.exists():
+        return None
+    s = PLV_HTML.read_text(encoding='utf-8')
+    m = re.search(r'window\.MY_TEAM\s*=\s*(\{.+?\n\});', s, re.DOTALL)
+    if not m:
+        return None
+    return json.loads(m.group(1))
+
+
+# ─── Records ──────────────────────────────────────────────────────────────────
+
+def build_records() -> tuple[list[dict], dict]:
     proj = pd.read_csv(PROJ_CSV)
     multi = pd.read_csv(MULTI_CSV)
     latest = (
@@ -58,12 +132,64 @@ def build_records() -> list[dict]:
             'fpActual': num(r['fp_per_start_actual_2026'], 2),
             'hasFG': bool(r['v11_has_pitching_plus']),
             'rollingIp': num(r['rolling_ip_last5'], 2),
+            # ESPN fields (filled from MY_TEAM where available)
+            'roster': 'other',          # 'mine' | 'other'
+            'espnPos': None,
+            'proTeam': None,
+            'pctOwned': None,
+            'fpProjEspn': None,
+            'fpTotalEspn': None,
+            'fpPerGameEspn': None,
+            'gpEspn': None,
         })
 
     records.sort(key=lambda x: -x['xfpV11'])
     for i, rec in enumerate(records):
         rec['rank'] = i + 1
-    return records
+
+    # ESPN merge
+    by_key: dict[tuple[str, str], dict] = {xfp_name_key(r['name']): r for r in records}
+
+    my_team_raw = extract_my_team()
+    my_team_payload: dict = {'teamName': None, 'pitchers': []}
+
+    if my_team_raw:
+        my_team_payload['teamName'] = my_team_raw.get('teamName')
+        for p in my_team_raw.get('pitchers', []):
+            espn_pos = p.get('espnPos') or ''
+            role = 'SP' if 'SP' in espn_pos else ('RP' if 'RP' in espn_pos else (espn_pos or '—'))
+            # Only match SPs against the xFP universe (SP-only model).
+            xfp_rec = find_xfp_record(p['name'], by_key) if role == 'SP' else None
+            if xfp_rec is not None:
+                xfp_rec['roster'] = 'mine'
+                xfp_rec['espnPos'] = espn_pos
+                xfp_rec['proTeam'] = p.get('proTeam')
+                xfp_rec['pctOwned'] = p.get('pctOwned') if isinstance(p.get('pctOwned'), (int, float)) else None
+                xfp_rec['fpProjEspn'] = p.get('fpProj') if isinstance(p.get('fpProj'), (int, float)) else None
+                xfp_rec['fpTotalEspn'] = p.get('fpTotal') if isinstance(p.get('fpTotal'), (int, float)) else None
+                xfp_rec['fpPerGameEspn'] = p.get('fpPerGame') if isinstance(p.get('fpPerGame'), (int, float)) else None
+                xfp_rec['gpEspn'] = p.get('gp') if isinstance(p.get('gp'), int) else None
+
+            my_team_payload['pitchers'].append({
+                'name': p['name'],
+                'role': role,
+                'espnPos': espn_pos,
+                'proTeam': p.get('proTeam'),
+                'pctOwned': p.get('pctOwned') if isinstance(p.get('pctOwned'), (int, float)) else None,
+                'gp': p.get('gp') if isinstance(p.get('gp'), int) else None,
+                'fpTotal': p.get('fpTotal') if isinstance(p.get('fpTotal'), (int, float)) else None,
+                'fpProj': p.get('fpProj') if isinstance(p.get('fpProj'), (int, float)) else None,
+                'fpPerGame': p.get('fpPerGame') if isinstance(p.get('fpPerGame'), (int, float)) else None,
+                'mlbId': xfp_rec['mlbId'] if xfp_rec else None,
+                'xfpV11': xfp_rec['xfpV11'] if xfp_rec else None,
+                'xfpRank': xfp_rec['rank'] if xfp_rec else None,
+                'kPct': xfp_rec['kPct'] if xfp_rec else None,
+                'ipTrend': xfp_rec['ipTrend'] if xfp_rec else None,
+                'fpActual': xfp_rec['fpActual'] if xfp_rec else None,
+                'gs': xfp_rec['gs'] if xfp_rec else None,
+            })
+
+    return records, my_team_payload
 
 
 def build_meta() -> dict:
@@ -107,6 +233,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <script>
 window.XFP_META = __META_JSON__;
 window.XFP_PROJECTIONS = __PROJECTIONS_JSON__;
+window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -116,8 +243,8 @@ window.XFP_PROJECTIONS = __PROJECTIONS_JSON__;
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════
-const TABS = ['projections', 'analysis', 'model'];
-const TAB_LABELS = { projections: 'Projections', analysis: 'Analysis', model: 'Model Info' };
+const TABS = ['my-team', 'projections', 'analysis', 'model'];
+const TAB_LABELS = { 'my-team': 'My Team', projections: 'Projections', analysis: 'Analysis', model: 'Model Info' };
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
@@ -257,6 +384,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <SortTh col="swstrPct" label="SwStr%"    width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="gs"       label="GS"        width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="fpActual" label="2026 FP"   width={60}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="roster"  label="Own"        width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <th style={{ padding:'8px 8px', fontSize:9, color:colors.dim, fontWeight:600, letterSpacing:1.5, textTransform:'uppercase', fontFamily:MONO, textAlign:'center', width:30 }}>FG</th>
           </tr>
         </thead>
@@ -315,6 +443,17 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                   <td style={dataCell(colors, p.fpActual == null ? colors.faint : (p.gs ?? 0) >= 5 ? colors.text : colors.dim)}>
                     {(p.gs ?? 0) >= 5 ? fmt(p.fpActual, 2) : '—'}
                   </td>
+                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                    {p.roster === 'mine' ? (
+                      <span style={{ padding:'1px 6px', border:`1px solid ${colors.accent}`,
+                                     color:colors.accent, fontFamily:MONO, fontSize:9,
+                                     letterSpacing:1, borderRadius:2, whiteSpace:'nowrap' }}>
+                        ★ MINE
+                      </span>
+                    ) : (
+                      <span style={{ color:colors.faint, fontFamily:MONO, fontSize:9, letterSpacing:1 }}>—</span>
+                    )}
+                  </td>
                   <td style={{ padding:'7px 8px', textAlign:'center', fontSize:11,
                                color: p.hasFG ? colors.pos : colors.faint }}>
                     {p.hasFG ? '✓' : '·'}
@@ -322,7 +461,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                 </tr>
                 {isExp && (
                   <tr>
-                    <td colSpan={14} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
+                    <td colSpan={15} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:24 }}>
                         <div>
                           <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>Tier · {tier}</div>
@@ -577,7 +716,7 @@ function KDistributionChart({ data, colors }) {
 // ═══ Filter Bar ═══════════════════════════════════════════════════════════════
 function FilterBar({ search, setSearch, ipTrend, setIpTrend, kTier, setKTier,
                      xfpMin, setXfpMin, xfpMax, setXfpMax, favOnly, setFavOnly,
-                     onReset, count, total, colors }) {
+                     roster, setRoster, hasMyTeam, onReset, count, total, colors }) {
   return (
     <div style={{ padding:'10px 32px', display:'flex', gap:14, alignItems:'center',
                   fontSize:10, fontFamily:MONO, textTransform:'uppercase', letterSpacing:1.5,
@@ -622,6 +761,26 @@ function FilterBar({ search, setSearch, ipTrend, setIpTrend, kTier, setKTier,
           style={{ width:50, padding:'3px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
                    background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
       </label>
+
+      {hasMyTeam && (
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Roster
+          {[
+            { k:'all',   l:'All' },
+            { k:'mine',  l:'My Team' },
+            { k:'other', l:'Available' },
+          ].map(opt => (
+            <button key={opt.k} onClick={() => setRoster(opt.k)}
+              style={{ padding:'3px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1,
+                       textTransform:'uppercase',
+                       border:`1px solid ${roster===opt.k ? colors.accent : colors.border}`,
+                       borderRadius:2,
+                       background: roster===opt.k ? colors.accent : colors.panel,
+                       color: roster===opt.k ? '#fff' : colors.dim, cursor:'pointer' }}>
+              {opt.l}
+            </button>
+          ))}
+        </label>
+      )}
 
       <button onClick={() => setFavOnly(!favOnly)}
         style={{ padding:'3px 9px', fontSize:10, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
@@ -684,7 +843,9 @@ function Dashboard({ dark }) {
   };
   const editorialHeat = makeEditorialHeat(dark);
 
-  const [activeTab, setActiveTab] = React.useState('projections');
+  const myTeam = window.XFP_MY_TEAM || { teamName: null, pitchers: [] };
+  const hasMyTeam = !!(myTeam.teamName && myTeam.pitchers && myTeam.pitchers.length);
+  const [activeTab, setActiveTab] = React.useState(hasMyTeam ? 'my-team' : 'projections');
 
   // Favorites — localStorage-backed
   const [favorites, setFavorites] = React.useState(() => {
@@ -706,6 +867,7 @@ function Dashboard({ dark }) {
   const [xfpMin, setXfpMin]     = React.useState(0);
   const [xfpMax, setXfpMax]     = React.useState(20);
   const [favOnly, setFavOnly]   = React.useState(false);
+  const [roster, setRoster]     = React.useState('all'); // 'all' | 'mine' | 'other'
 
   // Projections sort + expand
   const [sortCol, setSortCol]   = React.useState('xfpV11');
@@ -717,7 +879,7 @@ function Dashboard({ dark }) {
 
   const onReset = () => {
     setSearch(''); setIpTrend('all'); setKTier('all');
-    setXfpMin(0); setXfpMax(20); setFavOnly(false);
+    setXfpMin(0); setXfpMax(20); setFavOnly(false); setRoster('all');
   };
 
   const allRows = window.XFP_PROJECTIONS;
@@ -732,10 +894,11 @@ function Dashboard({ dark }) {
       if (kFn && !kFn(p.kPct)) return false;
       if (p.xfpV11 < xfpMin || p.xfpV11 > xfpMax) return false;
       if (favOnly && !favorites.includes(p.mlbId)) return false;
+      if (roster !== 'all' && p.roster !== roster) return false;
       return true;
     });
     return rows;
-  }, [allRows, search, ipTrend, kTier, xfpMin, xfpMax, favOnly, favorites]);
+  }, [allRows, search, ipTrend, kTier, xfpMin, xfpMax, favOnly, favorites, roster]);
 
   // Sort rows
   const sortedRows = React.useMemo(() => {
@@ -776,6 +939,7 @@ function Dashboard({ dark }) {
         <div>
           <div style={{ fontSize:9, letterSpacing:4, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>
             V11 PRODUCTION · 2026 SEASON · BUILD {meta.trainedDate}
+            {hasMyTeam && <span style={{ color:colors.accent, marginLeft:10 }}>· {myTeam.teamName}</span>}
           </div>
           <h1 style={{ fontSize:32, fontWeight:400, margin:'2px 0 0', letterSpacing:-0.5, fontStyle:'italic', whiteSpace:'nowrap' }}>
             SP xFP Model
@@ -810,6 +974,13 @@ function Dashboard({ dark }) {
         ))}
       </div>
 
+      {activeTab === 'my-team' && (
+        <MyTeamTab myTeam={myTeam} allRows={allRows} colors={colors}
+          editorialHeat={editorialHeat} favorites={favorites}
+          toggleFavorite={toggleFavorite} setActiveTab={setActiveTab}
+          setSearch={setSearch} />
+      )}
+
       {(activeTab === 'projections' || activeTab === 'analysis') && (
         <>
           <FilterBar
@@ -819,6 +990,7 @@ function Dashboard({ dark }) {
             xfpMin={xfpMin} setXfpMin={setXfpMin}
             xfpMax={xfpMax} setXfpMax={setXfpMax}
             favOnly={favOnly} setFavOnly={setFavOnly}
+            roster={roster} setRoster={setRoster} hasMyTeam={hasMyTeam}
             onReset={onReset} count={filtered.length} total={allRows.length} colors={colors} />
           <WatchlistStrip favorites={favorites} allRows={allRows}
             toggleFavorite={toggleFavorite} colors={colors} />
@@ -895,6 +1067,351 @@ function AnalysisTab({ rows, ytdRows, colors, hoverId, setHoverId }) {
           pitchers in that K bucket; the fill color shows the average xFP delta within that bucket.
         </div>
       </div>
+    </>
+  );
+}
+
+// ═══ My Team tab ══════════════════════════════════════════════════════════════
+function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFavorite, setActiveTab, setSearch }) {
+  const rotation = myTeam.pitchers.filter(p => p.role === 'SP');
+  const bullpen  = myTeam.pitchers.filter(p => p.role === 'RP');
+
+  // Roster pitchers, sorted by xFP V11 (nulls last)
+  const rotationSorted = [...rotation].sort((a, b) =>
+    (b.xfpV11 ?? -Infinity) - (a.xfpV11 ?? -Infinity));
+
+  // Mean xFP of my rotation (matched only)
+  const matched = rotation.filter(p => p.xfpV11 != null);
+  const meanXfp = matched.length
+    ? matched.reduce((s, p) => s + p.xfpV11, 0) / matched.length
+    : null;
+
+  // Add/Drop suggestions: top non-roster SPs vs bottom roster SPs
+  const myIds = new Set(myTeam.pitchers.map(p => p.mlbId).filter(Boolean));
+  const available = allRows.filter(r => !myIds.has(r.mlbId)).slice(0, 25); // top 25 by xFP V11 already sorted
+  const myWeakest = matched.length
+    ? [...matched].sort((a, b) => a.xfpV11 - b.xfpV11).slice(0, 5)
+    : [];
+  const swaps = [];
+  for (const drop of myWeakest) {
+    for (const add of available) {
+      if (add.xfpV11 > drop.xfpV11 + 0.5) {
+        swaps.push({ drop, add, gain: add.xfpV11 - drop.xfpV11 });
+        break; // best available drop pair
+      }
+    }
+  }
+  swaps.sort((a, b) => b.gain - a.gain);
+
+  return (
+    <>
+      {/* Hero */}
+      <div style={{ padding:'24px 32px 18px', borderBottom:`1px solid ${colors.border}`,
+                    display:'grid', gridTemplateColumns:'1.2fr 1fr', gap:32 }}>
+        <div>
+          <div style={{ fontSize:10, letterSpacing:3, textTransform:'uppercase',
+                        color:colors.accent, fontFamily:MONO, marginBottom:8 }}>
+            Lede · ESPN Connector
+          </div>
+          <h2 style={{ fontSize:26, fontWeight:400, lineHeight:1.15, margin:0, letterSpacing:-0.5 }}>
+            <span style={{ fontStyle:'italic' }}>{myTeam.teamName}</span> ·{' '}
+            <span style={{ color:colors.accent, fontVariantNumeric:'tabular-nums' }}>
+              {rotation.length}
+            </span> SP /{' '}
+            <span style={{ color:colors.accent, fontVariantNumeric:'tabular-nums' }}>
+              {bullpen.length}
+            </span> RP
+          </h2>
+          <p style={{ fontSize:13, color:colors.dim, margin:'8px 0 0', fontStyle:'italic', lineHeight:1.5 }}>
+            Rotation averages an xFP V11 of{' '}
+            <span style={{ color:colors.accent, fontVariantNumeric:'tabular-nums' }}>
+              {meanXfp == null ? '—' : meanXfp.toFixed(2)}
+            </span>{' '}FP/start across {matched.length} of {rotation.length} arms with V11 coverage.
+            {' '}{swaps.length > 0 && (<>The model flags <strong>{swaps.length}</strong> potential xFP-positive swaps below.</>)}
+          </p>
+        </div>
+        <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px 24px' }}>
+          {[
+            { lbl:'Top Rotation Arm',
+              p: matched[0] ? matched.reduce((b,p) => p.xfpV11 > b.xfpV11 ? p : b, matched[0]) : null,
+              vKey: 'xfpV11' },
+            { lbl:'Weakest Slot',
+              p: myWeakest[0] || null, vKey: 'xfpV11' },
+            { lbl:'Best Available',
+              p: available[0] || null, vKey: 'xfpV11' },
+            { lbl:'Best Swap Gain',
+              custom: swaps[0]
+                ? `+${swaps[0].gain.toFixed(2)} FP/start (${(swaps[0].add.name || '').split(',')[0]} → ${(swaps[0].drop.name || '').split(' ').pop()})`
+                : '—' },
+          ].map((c, i) => (
+            <div key={i} style={{ borderTop:`1px solid ${colors.faint}`, paddingTop:6 }}>
+              <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>{c.lbl}</div>
+              {c.custom != null ? (
+                <div style={{ fontSize:14, marginTop:4, color:colors.accent, fontFamily:SERIF, fontStyle:'italic' }}>
+                  {c.custom}
+                </div>
+              ) : c.p ? (
+                <>
+                  <div style={{ fontSize:20, fontFamily:SERIF, fontStyle:'italic', color:colors.accent, lineHeight:1, marginTop:4 }}>
+                    {fmt(c.p[c.vKey], 2)}
+                  </div>
+                  <div style={{ fontSize:11, marginTop:4 }}>{c.p.name}</div>
+                </>
+              ) : (
+                <div style={{ fontSize:14, color:colors.dim, marginTop:4 }}>—</div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Rotation table */}
+      <SectionHeading num="I" label="My Rotation"
+        right={`${rotation.length} SP · ranked by xFP V11`} colors={colors} />
+      <div style={{ padding:'0 32px 8px', overflow:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+          <thead>
+            <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+              {['#','Pitcher','Team','xFP V11','Rank','K%','Trend','GS','2026 FP','ESPN FP/G','% Owned',''].map((h,i) => (
+                <th key={i} style={{ padding:'8px 8px',
+                       textAlign: i<=2 ? 'left' : 'right',
+                       fontSize:9, color:colors.dim, fontFamily:MONO,
+                       letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {rotationSorted.map((p, idx) => {
+              const isFav = p.mlbId != null && favorites.includes(p.mlbId);
+              const trendStyle = p.ipTrend === 'HIGH'
+                ? { color:colors.pos, border:`1px solid ${colors.pos}` }
+                : p.ipTrend === 'LOW'
+                ? { color:colors.warn, border:`1px solid ${colors.warn}` }
+                : { color:colors.dim, border:`1px solid ${colors.border}` };
+              return (
+                <tr key={p.name} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                  <td style={{ padding:'7px 8px', fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                               color: idx < 3 ? colors.accent : colors.dim }}>{idx + 1}</td>
+                  <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
+                    {p.mlbId != null && (
+                      <span onClick={() => toggleFavorite(p.mlbId)}
+                        style={{ color: isFav ? colors.accent : colors.faint,
+                                 cursor:'pointer', fontSize:11, marginRight:6 }}>★</span>
+                    )}
+                    <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
+                  </td>
+                  <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>
+                    {p.proTeam || '—'}
+                  </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(p.xfpV11, 8, 17) }}>
+                    <span style={{ fontSize:17, fontFamily:SERIF, fontStyle:'italic',
+                                   color: p.xfpV11 != null ? colors.accent : colors.faint }}>
+                      {p.xfpV11 == null ? '—' : fmt(p.xfpV11, 2)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>
+                    {p.xfpRank == null ? '—' : '#' + p.xfpRank}
+                  </td>
+                  <td style={dataCell(colors, p.kPct == null ? colors.faint : colors.text)}>
+                    {p.kPct == null ? '—' : fmtPct(p.kPct, 1)}
+                  </td>
+                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                    {p.ipTrend ? (
+                      <span style={{ ...trendStyle, padding:'1px 6px', fontFamily:MONO,
+                                     fontSize:9, letterSpacing:1, borderRadius:2 }}>
+                        {p.ipTrend}
+                      </span>
+                    ) : <span style={{ color:colors.faint }}>—</span>}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{p.gs == null ? '—' : p.gs}</td>
+                  <td style={dataCell(colors, p.fpActual == null ? colors.faint : colors.text)}>
+                    {p.fpActual == null || (p.gs ?? 0) < 5 ? '—' : fmt(p.fpActual, 2)}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>
+                    {p.fpPerGame == null ? '—' : fmt(p.fpPerGame, 2)}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>
+                    {p.pctOwned == null ? '—' : fmt(p.pctOwned, 1) + '%'}
+                  </td>
+                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                    {p.xfpV11 == null ? (
+                      <span style={{ color:colors.warn, fontSize:9, fontFamily:MONO,
+                                     letterSpacing:1, padding:'1px 6px',
+                                     border:`1px solid ${colors.warn}`, borderRadius:2 }}>
+                        NO V11
+                      </span>
+                    ) : (
+                      <span style={{ color:colors.faint, fontSize:9, fontFamily:MONO }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div style={{ paddingTop:6, fontSize:10, color:colors.dim, fontFamily:MONO,
+                      letterSpacing:1, fontStyle:'italic' }}>
+          ↳ "NO V11" tag = pitcher not in V11 universe (rookie debut without FG Pitching+ history)
+        </div>
+      </div>
+
+      {/* Add/Drop suggestions */}
+      <SectionHeading num="II" label="Add / Drop Targets"
+        right={swaps.length > 0 ? `${swaps.length} SUGGESTED` : 'NO POSITIVE SWAPS'} colors={colors} />
+      <div style={{ padding:'0 32px 8px' }}>
+        {swaps.length === 0 ? (
+          <div style={{ padding:'14px 0', fontSize:13, fontStyle:'italic', color:colors.dim }}>
+            Your rotation already projects above the available pool. No xFP-positive swaps to flag.
+          </div>
+        ) : (
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fit, minmax(360px, 1fr))', gap:14 }}>
+            {swaps.map((s, i) => (
+              <div key={i} style={{ borderTop:`2px solid ${colors.accent}`, paddingTop:10 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}>
+                  <span style={{ fontSize:9, letterSpacing:2, color:colors.dim, fontFamily:MONO,
+                                 textTransform:'uppercase' }}>Swap #{i + 1}</span>
+                  <span style={{ fontSize:14, fontStyle:'italic', fontFamily:SERIF, color:colors.pos }}>
+                    +{s.gain.toFixed(2)} FP/start
+                  </span>
+                </div>
+                <div style={{ marginTop:8, display:'grid', gridTemplateColumns:'1fr 24px 1fr', gap:8, alignItems:'center' }}>
+                  <div style={{ padding:'8px 10px', border:`1px solid ${colors.neg}`, borderRadius:2, background:colors.stripe }}>
+                    <div style={{ fontSize:9, letterSpacing:2, color:colors.neg, fontFamily:MONO,
+                                  textTransform:'uppercase' }}>Drop</div>
+                    <div style={{ fontSize:13, fontStyle:'italic', fontFamily:SERIF, color:colors.text, marginTop:2 }}>
+                      {s.drop.name}
+                    </div>
+                    <div style={{ fontSize:11, color:colors.dim, fontFamily:MONO, marginTop:4 }}>
+                      xFP {fmt(s.drop.xfpV11, 2)} · {s.drop.ipTrend ?? '—'} · #{s.drop.xfpRank ?? '—'}
+                    </div>
+                  </div>
+                  <div style={{ textAlign:'center', fontSize:18, color:colors.accent }}>→</div>
+                  <div style={{ padding:'8px 10px', border:`1px solid ${colors.pos}`, borderRadius:2, background:colors.stripe }}>
+                    <div style={{ fontSize:9, letterSpacing:2, color:colors.pos, fontFamily:MONO,
+                                  textTransform:'uppercase' }}>Add</div>
+                    <div style={{ fontSize:13, fontStyle:'italic', fontFamily:SERIF, color:colors.text, marginTop:2 }}>
+                      {s.add.name}
+                    </div>
+                    <div style={{ fontSize:11, color:colors.dim, fontFamily:MONO, marginTop:4 }}>
+                      xFP {fmt(s.add.xfpV11, 2)} · {s.add.ipTrend} · #{s.add.rank}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div style={{ padding:'4px 32px 18px', fontSize:11, fontStyle:'italic', color:colors.dim }}>
+        Caveat: "available" = any SP not currently on your roster. Some may be rostered on other
+        league teams. Verify ownership in ESPN before adding/dropping.
+      </div>
+
+      {/* Available leaderboard */}
+      <SectionHeading num="III" label="Top Available SPs"
+        right="NOT CURRENTLY ON YOUR ROSTER" colors={colors} />
+      <div style={{ padding:'0 32px 8px' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+          <thead>
+            <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+              {['#','Pitcher','xFP V11','Stuff','IP Prem','Trend','K%','SwStr%','GS','2026 FP'].map((h,i) => (
+                <th key={i} style={{ padding:'8px 8px',
+                       textAlign: i<=1 ? 'left' : 'right',
+                       fontSize:9, color:colors.dim, fontFamily:MONO,
+                       letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {available.slice(0, 15).map((p, idx) => {
+              const isFav = favorites.includes(p.mlbId);
+              const trendStyle = p.ipTrend === 'HIGH'
+                ? { color:colors.pos, border:`1px solid ${colors.pos}` }
+                : p.ipTrend === 'LOW'
+                ? { color:colors.warn, border:`1px solid ${colors.warn}` }
+                : { color:colors.dim, border:`1px solid ${colors.border}` };
+              return (
+                <tr key={p.mlbId} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                  <td style={{ padding:'7px 8px', fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                               color: idx < 3 ? colors.accent : colors.dim }}>{idx + 1}</td>
+                  <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
+                    <span onClick={() => toggleFavorite(p.mlbId)}
+                      style={{ color: isFav ? colors.accent : colors.faint,
+                               cursor:'pointer', fontSize:11, marginRight:6 }}>★</span>
+                    <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
+                  </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(p.xfpV11, 8, 17) }}>
+                    <span style={{ fontSize:16, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>
+                      {fmt(p.xfpV11, 2)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors)}>{fmt(p.stuffXfp, 2)}</td>
+                  <td style={dataCell(colors, p.ipPremium > 0.1 ? colors.pos : p.ipPremium < -0.1 ? colors.neg : colors.dim)}>
+                    {fmtSign(p.ipPremium, 2)}
+                  </td>
+                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                    <span style={{ ...trendStyle, padding:'1px 6px', fontFamily:MONO,
+                                   fontSize:9, letterSpacing:1, borderRadius:2 }}>
+                      {p.ipTrend}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors, p.kPct == null ? colors.faint : colors.text)}>
+                    {p.kPct == null ? '—' : fmtPct(p.kPct, 1)}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{p.swstrPct == null ? '—' : fmtPct(p.swstrPct, 1)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{p.gs ?? '—'}</td>
+                  <td style={dataCell(colors, p.fpActual == null || (p.gs ?? 0) < 5 ? colors.faint : colors.text)}>
+                    {p.fpActual == null || (p.gs ?? 0) < 5 ? '—' : fmt(p.fpActual, 2)}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div style={{ paddingTop:8, fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1 }}>
+          <span style={{ color:colors.accent, cursor:'pointer' }}
+            onClick={() => { setActiveTab('projections'); setSearch(''); }}>
+            ↳ See full projections leaderboard →
+          </span>
+        </div>
+      </div>
+
+      {/* Bullpen */}
+      {bullpen.length > 0 && (
+        <>
+          <SectionHeading num="IV" label="My Bullpen"
+            right={`${bullpen.length} RP · NO xFP COVERAGE (SP-ONLY MODEL)`} colors={colors} />
+          <div style={{ padding:'0 32px 24px' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+              <thead>
+                <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+                  {['#','Pitcher','Team','GS/G','ESPN FP','ESPN FP/G','% Owned'].map((h,i) => (
+                    <th key={i} style={{ padding:'8px 8px',
+                           textAlign: i<=2 ? 'left' : 'right',
+                           fontSize:9, color:colors.dim, fontFamily:MONO,
+                           letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {bullpen.map((p, idx) => (
+                  <tr key={p.name} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                    <td style={{ padding:'7px 8px', fontSize:13, fontFamily:SERIF, fontStyle:'italic', color:colors.dim }}>{idx + 1}</td>
+                    <td style={{ padding:'7px 8px', fontSize:14, fontWeight:500 }}>{p.name}</td>
+                    <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{p.proTeam || '—'}</td>
+                    <td style={dataCell(colors, colors.dim)}>{p.gp ?? '—'}</td>
+                    <td style={dataCell(colors)}>{p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)}</td>
+                    <td style={dataCell(colors)}>{p.fpPerGame == null ? '—' : fmt(p.fpPerGame, 2)}</td>
+                    <td style={dataCell(colors, colors.dim)}>{p.pctOwned == null ? '—' : fmt(p.pctOwned, 1) + '%'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -1109,14 +1626,16 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 
 def main():
-    records = build_records()
+    records, my_team = build_records()
     meta = build_meta()
     proj_json = json.dumps(records, separators=(',', ':'))
     meta_json = json.dumps(meta, separators=(',', ':'))
+    my_team_json = json.dumps(my_team, separators=(',', ':'))
 
     html = (HTML_TEMPLATE
             .replace('__PROJECTIONS_JSON__', proj_json)
-            .replace('__META_JSON__', meta_json))
+            .replace('__META_JSON__', meta_json)
+            .replace('__MY_TEAM_JSON__', my_team_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
     OUT_DOCS.parent.mkdir(parents=True, exist_ok=True)
@@ -1127,7 +1646,8 @@ def main():
     docs_bytes = OUT_DOCS.read_bytes()
     assert primary_bytes == docs_bytes, "primary and docs HTML are not byte-identical"
 
-    print(f"wrote {OUT_PRIMARY} ({size_kb} KB, {len(records)} pitchers)")
+    n_mine = sum(1 for r in records if r['roster'] == 'mine')
+    print(f"wrote {OUT_PRIMARY} ({size_kb} KB, {len(records)} pitchers, {n_mine} on '{my_team.get('teamName') or '—'}')")
     print(f"wrote {OUT_DOCS} (byte-identical)")
 
 
