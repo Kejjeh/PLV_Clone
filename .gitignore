@@ -9,6 +9,9 @@ dist/
 build/
 .eggs/
 
+# Claude Code session state (not for tracking)
+.claude/
+
 # Virtual environments
 .venv/
 venv/
