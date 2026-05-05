@@ -148,7 +148,14 @@ def run(
         exports["process_plus_rolling"] = rolling_hitter
         _write(rolling_hitter, cfg.outputs_dir / f"process_plus_rolling_{year}", output_format)
 
-        master_hitter = build_master_hitter(pp_df, min_pa=cfg.min_pa_process, batter_name_map=batter_name_map, position_map=position_map)
+        master_hitter = build_master_hitter(
+            pp_df,
+            min_pa=cfg.min_pa_process,
+            batter_name_map=batter_name_map,
+            position_map=position_map,
+            year=year,
+            outputs_dir=cfg.outputs_dir,
+        )
 
         exports["master_hitter"] = master_hitter
         if master_hitter.empty:
@@ -452,11 +459,15 @@ def build_master_hitter(
     min_pa: int = 150,
     batter_name_map: dict | None = None,
     position_map=None,
+    year: int | None = None,
+    outputs_dir: Path | None = None,
 ) -> pd.DataFrame:
     """Season-level hitter leaderboard with Process+ components + surface stats.
 
     Includes: Process+, Discipline+, Contact+, Power+, contact rate, chase rate,
-    swing rate, xwOBA actual vs expected.
+    swing rate, xwOBA actual vs expected. When `outputs_dir/fangraphs_batters_{year}.csv`
+    exists, the FanGraphs bat-tracking surface stats (blast_rate, avg_swing_speed,
+    squared_up_rate, swing_count) are merged in too.
     """
     from plv_clone.models.process_plus_model import ProcessPlusModel
     from plv_clone.config import get_config
@@ -526,6 +537,18 @@ def build_master_hitter(
         if col in master.columns:
             master[col] = master[col].round(3)
 
+    # Alias for downstream consumers (target boards, dashboard) that read
+    # `xwoba_on_contact`. Keep both names so existing readers of either work.
+    if "xwoba_actual" in master.columns and "xwoba_on_contact" not in master.columns:
+        master["xwoba_on_contact"] = master["xwoba_actual"]
+
+    # Sample-size weight derived from PA. Mirrors the historical 2024 / 2025
+    # cache pattern (range ~0.33 at 100 PA → ~0.73 at 700 PA), which is what
+    # `enrich_outputs.sample_tier` is calibrated against.
+    if "pa" in master.columns:
+        _pa = pd.to_numeric(master["pa"], errors="coerce").fillna(0)
+        master["blend_weight"] = (_pa / (_pa + 200.0)).round(3)
+
     # Add batter names from pre-built map (avoids redundant pybaseball call).
     # Be robust to both int-keyed and str-keyed maps (JSON cache always loads as str-keyed).
     name_map = batter_name_map or {}
@@ -539,6 +562,79 @@ def build_master_hitter(
     # Enrich with position data
     if position_map is not None and not position_map.empty:
         master = enrich_hitters(master, position_map, id_col="batter")
+
+    # ── FanGraphs bat-tracking merge ──────────────────────────────────────
+    # Brings in the bat-tracking surface stats (Blast%, AvgBatSpeed, etc.) the
+    # dashboard renders as the "Blast" / "EV" columns and that the pre-breakout
+    # target board filters on. Pulled by scripts/fetch_fangraphs.py and written
+    # to data/outputs/fangraphs_batters_{year}.csv. We never had a clean
+    # producer of these inside the scoring pipeline, so this merge is the
+    # bridge between the FG snapshot and master_hitter.
+    fg_path = (outputs_dir / f"fangraphs_batters_{year}.csv") if (outputs_dir and year) else None
+    if fg_path is not None and fg_path.exists():
+        try:
+            fg = pd.read_csv(fg_path)
+            keep = {
+                "mlb_id":               "batter",
+                "avg_bat_speed":        "avg_swing_speed",
+                "blast_swing_pct":      "blast_rate",
+                "blast_contact_pct":    "blast_contact_rate",
+                "squared_up_swing_pct": "squared_up_rate",
+                "max_ev":               "max_ev",
+            }
+            cols_present = {src: dst for src, dst in keep.items() if src in fg.columns}
+            if cols_present:
+                fg_sub = fg[list(cols_present.keys())].rename(columns=cols_present)
+                fg_sub["batter"] = pd.to_numeric(fg_sub["batter"], errors="coerce").astype("Int64")
+                # FG returns 0–100 percentages after _extract; convert blast/squared_up
+                # back to 0–1 fractions for consistency with our other rate columns.
+                for c in ("blast_rate", "blast_contact_rate", "squared_up_rate"):
+                    if c in fg_sub.columns:
+                        v = pd.to_numeric(fg_sub[c], errors="coerce")
+                        # If max > 1.5 we know we're on a 0–100 scale; rescale.
+                        if v.dropna().max() and v.dropna().max() > 1.5:
+                            fg_sub[c] = (v / 100.0).round(4)
+                fg_sub = fg_sub.dropna(subset=["batter"]).copy()
+                fg_sub["batter"] = fg_sub["batter"].astype(int)
+                # `swing_count` proxy: bat-tracking `pa` × competitive-swing fraction
+                # (~swing_pct minus chase_pct outside zone). Use raw FG PA when avail.
+                if "pa" in fg.columns:
+                    pa_map = (
+                        fg[["mlb_id", "pa"]]
+                        .dropna(subset=["mlb_id"])
+                        .assign(mlb_id=lambda d: pd.to_numeric(d["mlb_id"], errors="coerce").astype("Int64"))
+                        .dropna(subset=["mlb_id"])
+                        .assign(mlb_id=lambda d: d["mlb_id"].astype(int))
+                        .set_index("mlb_id")["pa"]
+                    )
+                    fg_sub["swing_count"] = (
+                        fg_sub["batter"].map(pa_map).fillna(0).astype(float).round().astype(int)
+                    )
+                # Drop any pre-existing copies before merging so we always
+                # take the FG snapshot as the source of truth.
+                drop_cols = [c for c in fg_sub.columns if c != "batter" and c in master.columns]
+                if drop_cols:
+                    master = master.drop(columns=drop_cols)
+                master = master.merge(fg_sub, on="batter", how="left")
+                logger.info(
+                    "Merged FanGraphs bat-tracking from %s: %d/%d hitters matched",
+                    fg_path.name,
+                    int(master["blast_rate"].notna().sum()) if "blast_rate" in master.columns else 0,
+                    len(master),
+                )
+        except Exception as exc:
+            logger.warning("FanGraphs bat-tracking merge failed (%s): %s", fg_path.name, exc)
+
+    # ── Positional Process+ z-score ───────────────────────────────────────
+    # Requires `primary_position` from the position-map merge above. Skipped
+    # silently when positions weren't enriched (so the column stays absent
+    # rather than NaN-filled, which downstream readers handle gracefully).
+    if "primary_position" in master.columns:
+        try:
+            from plv_clone.fantasy.hitter_points import compute_positional_zscores
+            master = compute_positional_zscores(master)
+        except Exception as exc:
+            logger.warning("Positional z-score computation failed: %s", exc)
 
     # Put name first
     pos_cols_order = ["primary_position", "fantasy_positions", "fantasy_positions_display",

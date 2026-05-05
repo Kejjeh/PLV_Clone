@@ -498,6 +498,13 @@ def update(
     for name, df in fantasy.items():
         typer.echo(f"  {name}: {len(df)} rows")
 
+    # Add the dashboard signal / risk_flag / sample_tier columns. Runs last
+    # so both master_hitter and pitcher_fantasy are present and get enriched
+    # in a single pass.
+    from plv_clone.pipelines.enrich_outputs import enrich_outputs as _enrich
+    typer.echo(f"\nEnriching exports for {target_year} …")
+    _enrich(target_year, cfg.outputs_dir)
+
     typer.echo(f"\nUpdate complete. All outputs written to: {cfg.outputs_dir}")
 
     # ── Commit + push ──────────────────────────────────────────────────────

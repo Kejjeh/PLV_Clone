@@ -262,14 +262,22 @@ def build_position_map(
     )
 
     # ── Write cache ───────────────────────────────────────────────────────────
-    if cache_path:
+    # Only persist when the build actually produced rows. Caching an empty
+    # frame (e.g. from a transient API failure early in the season) would
+    # poison every subsequent run because the cache age check would still
+    # consider the empty file "fresh", silently disabling position enrichment.
+    if cache_path and not df.empty:
         cache_path.parent.mkdir(parents=True, exist_ok=True)
-        # Convert bool to Python bool for JSON serialisation
         records = df.assign(is_multi_position=df["is_multi_position"].tolist()).to_dict(
             orient="records"
         )
         cache_path.write_text(json.dumps(records, indent=2))
         logger.info("Position map cached -> %s", cache_path)
+    elif cache_path and df.empty:
+        logger.warning(
+            "Position map empty for year=%d — refusing to overwrite cache.",
+            year,
+        )
 
     return df
 

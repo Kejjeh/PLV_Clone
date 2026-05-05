@@ -1,66 +1,69 @@
-batter_name,batter,pa,confidence,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rolling_decision_30d,tag,season_stage
-Jeremy Peña,665161,46,Watch,91.2,142.4,101.6,104.0,0.567,0.305,0.391,0.11982,Discipline+ elite (top 10%),early
-Blaze Alexander,677942,84,Signal,85.8,129.6,78.9,109.2,0.555,0.353,0.403,0.10535,Discipline+ elite (top 10%),early
-Andrew Mccutchen,457705,49,Watch,63.9,129.0,64.4,95.1,0.523,0.289,0.35,0.08697,Discipline+ elite (top 10%),early
-Jeremiah Jackson,669236,113,Signal,90.2,128.1,100.8,103.4,0.61,0.354,0.382,0.09342,Discipline+ elite (top 10%),early
-Jake Meyers,676694,50,Watch,86.2,127.3,106.5,97.1,0.53,0.306,0.368,0.08554,Discipline+ elite (top 10%),early
-Ty France,664034,57,Watch,112.7,125.3,124.7,113.7,0.563,0.311,0.428,0.0939,Discipline+ elite (top 10%); Process+ strong,early
-Ramón Laureano,657656,130,Signal,88.8,124.1,81.2,111.0,0.522,0.302,0.429,0.09144,Discipline+ elite (top 10%),early
-Jeff Mcneil,643446,120,Signal,79.6,124.0,105.6,91.2,0.535,0.309,0.327,0.09439,Discipline+ elite (top 10%),early
-Henry Davis,680779,89,Signal,62.5,123.7,96.3,79.4,0.525,0.313,0.277,0.09638,Discipline+ elite (top 10%),early
-James Outman,681546,43,Watch,57.2,122.9,86.1,79.0,0.561,0.302,0.25,0.08726,Discipline+ elite (top 10%),early
-Christian Yelich,592885,64,Watch,76.9,122.7,87.6,96.8,0.498,0.292,0.355,0.10744,Discipline+ elite (top 10%),early
-Everson Pereira,677592,74,Watch,96.5,122.6,88.5,114.9,0.599,0.357,0.429,0.09453,Discipline+ elite (top 10%),early
-Jorbit Vivas,678391,82,Signal,70.4,122.1,109.2,80.9,0.514,0.28,0.271,0.08903,Discipline+ elite (top 10%),early
-Jahmai Jones,663330,45,Watch,114.6,122.0,85.5,133.3,0.551,0.315,0.571,0.08803,Discipline+ elite (top 10%); Process+ strong,early
-Will Benson,666181,65,Watch,78.8,122.0,86.1,99.3,0.48,0.28,0.364,0.0863,Discipline+ elite (top 10%),early
-Nick Gonzales,693304,127,Signal,93.4,120.9,97.9,107.7,0.567,0.355,0.388,0.09426,Discipline+ elite (top 10%),early
-George Springer,543807,83,Signal,78.5,120.5,103.9,91.0,0.5,0.255,0.32,0.09743,Discipline+ elite (top 10%),early
-Miguel Vargas,678246,148,Signal,83.8,120.4,97.1,99.1,0.416,0.198,0.361,0.0886,Discipline+ elite (top 10%); selective swinger; low chase rate,early
-Ronald Acuña,660670,159,Signal,96.3,120.1,91.5,113.4,0.46,0.276,0.427,0.08644,Discipline+ elite (top 10%),early
-Christian Walker,572233,143,Signal,96.5,118.7,102.5,108.5,0.5,0.294,0.419,0.08938,Discipline+ elite (top 10%),early
-Zack Gelof,680869,40,Watch,77.6,118.5,97.8,92.9,0.503,0.244,0.349,0.08474,Discipline+ elite (top 10%),early
-Kyle Stowers,669065,48,Watch,77.5,118.4,90.8,96.0,0.569,0.296,0.334,0.08138,Discipline+ elite (top 10%),early
-Tyler O'Neill,641933,57,Watch,69.5,118.3,102.2,83.3,0.441,0.293,0.306,0.06906,Discipline+ elite (top 10%); selective swinger,early
-Corey Seager,608369,143,Signal,100.6,117.7,93.6,116.4,0.505,0.288,0.431,0.08691,Discipline+ elite (top 10%),early
-Nick Castellanos,592206,66,Watch,85.2,117.5,101.6,98.3,0.582,0.385,0.361,0.09197,Discipline+ elite (top 10%),early
-Marcus Semien,543760,136,Signal,79.8,117.5,105.7,91.3,0.525,0.28,0.326,0.08577,Discipline+ elite (top 10%),early
-Connor Norby,681393,115,Signal,72.1,116.9,81.8,95.0,0.463,0.259,0.36,0.0833,Discipline+ elite (top 10%),early
-Oswald Peraza,672724,99,Signal,93.0,116.6,90.7,110.6,0.541,0.314,0.413,0.0812,Discipline+ elite (top 10%),early
-Kyle Tucker,663656,148,Signal,80.1,116.5,98.7,94.8,0.495,0.255,0.345,0.0831,Discipline+ elite (top 10%),early
-Agustín Ramírez,682663,130,Signal,75.9,116.5,95.7,92.2,0.484,0.257,0.318,0.07253,Discipline+ elite (top 10%),early
-Spencer Torkelson,679529,139,Signal,96.8,116.0,85.1,116.8,0.4,0.218,0.463,0.08036,Discipline+ elite (top 10%); selective swinger; low chase rate,early
-Jackson Merrill,701538,132,Signal,88.6,115.8,96.5,103.8,0.576,0.379,0.363,0.07911,Discipline+ elite (top 10%),early
-Daulton Varsho,662139,125,Signal,84.5,115.7,103.0,97.0,0.561,0.319,0.323,0.08757,Discipline+ elite (top 10%),early
-Bryce Teodosio,669326,42,Watch,53.4,115.5,79.8,78.3,0.545,0.292,0.268,0.07335,Discipline+ elite (top 10%),early
-Vladimir Guerrero,665489,140,Signal,106.0,114.4,114.9,111.8,0.481,0.28,0.4,0.07969,Discipline+ strong (top 25%),early
-Heliot Ramos,671218,131,Signal,102.7,114.0,87.5,121.3,0.528,0.343,0.471,0.09328,Discipline+ strong (top 25%),early
-Rob Refsnyder,608701,45,Watch,79.2,113.6,96.9,94.8,0.42,0.241,0.367,0.09149,Discipline+ strong (top 25%); selective swinger,early
-Paul Goldschmidt,502671,49,Watch,99.0,113.4,90.0,116.5,0.445,0.274,0.44,0.08377,Discipline+ strong (top 25%); selective swinger,early
-Michael Conforto,624424,45,Watch,108.4,113.2,100.7,120.6,0.431,0.256,0.493,0.0692,Discipline+ strong (top 25%); selective swinger; Process+ strong,early
-Sal Stewart,701398,158,Signal,107.8,113.1,102.7,119.1,0.497,0.289,0.449,0.08303,Discipline+ strong (top 25%),early
-Bryce Harper,547180,147,Signal,106.0,112.8,103.2,117.2,0.53,0.349,0.425,0.07605,Discipline+ strong (top 25%),early
-Ryan Vilade,668723,46,Watch,73.1,112.8,97.9,88.6,0.503,0.326,0.278,0.07539,Discipline+ strong (top 25%),early
-Freddie Freeman,518692,143,Signal,102.1,112.6,108.2,111.2,0.523,0.307,0.412,0.07412,Discipline+ strong (top 25%),early
-Starling Marte,516782,40,Watch,84.8,112.5,96.6,100.2,0.538,0.333,0.376,0.091,Discipline+ strong (top 25%),early
-Adam Frazier,624428,71,Watch,61.7,112.4,85.5,83.5,0.503,0.259,0.278,0.08107,Discipline+ strong (top 25%),early
-Lawrence Butler,671732,117,Signal,86.0,111.8,92.1,103.3,0.472,0.298,0.371,0.07799,Discipline+ strong (top 25%),early
-Ozzie Albies,645277,157,Signal,84.2,111.8,107.5,94.7,0.556,0.355,0.32,0.07113,Discipline+ strong (top 25%),early
-Daylen Lile,695734,157,Signal,97.2,111.4,106.5,107.4,0.562,0.347,0.378,0.07965,Discipline+ strong (top 25%),early
-Fernando Tatís,665487,140,Signal,99.5,111.4,98.3,113.3,0.478,0.271,0.427,0.08421,Discipline+ strong (top 25%),early
-Kevin McGonigle,805808,156,Signal,101.5,111.1,107.8,110.9,0.423,0.268,0.418,0.0879,Discipline+ strong (top 25%); selective swinger,early
-Ramón Urías,602104,73,Watch,73.9,111.0,101.7,87.6,0.467,0.263,0.292,0.07248,Discipline+ strong (top 25%),early
-Kazuma Okamoto,672960,137,Signal,101.2,111.0,92.4,117.5,0.447,0.279,0.466,0.08297,Discipline+ strong (top 25%); selective swinger,early
-Freddy Fermin,666023,62,Watch,72.7,110.9,98.0,88.1,0.494,0.301,0.294,0.07271,Discipline+ strong (top 25%),early
-Matt Wallner,670242,117,Signal,86.1,110.3,84.0,107.2,0.512,0.286,0.402,0.07109,Discipline+ strong (top 25%),early
-Nick Loftin,679845,46,Watch,79.1,110.3,116.1,85.9,0.408,0.274,0.303,0.08117,Discipline+ strong (top 25%); selective swinger,early
-TJ Rumfield,681198,148,Signal,90.5,110.2,111.4,98.9,0.519,0.309,0.36,0.08159,Discipline+ strong (top 25%),early
-Thomas Saggese,695336,62,Watch,68.7,110.1,87.0,89.5,0.528,0.295,0.284,0.07358,Discipline+ strong (top 25%),early
-William Contreras,661388,146,Signal,94.6,109.9,120.0,98.8,0.455,0.275,0.362,0.07763,Discipline+ strong (top 25%),early
-Juan Soto,665742,81,Signal,119.8,109.8,107.3,128.3,0.434,0.288,0.505,0.06766,Discipline+ strong (top 25%); selective swinger; Process+ strong,early
-Edgar Quero,700337,91,Signal,63.3,109.8,100.4,78.2,0.48,0.282,0.256,0.07619,Discipline+ strong (top 25%),early
-Tyler Stephenson,663886,104,Signal,89.7,109.8,90.2,107.7,0.425,0.212,0.426,0.07561,Discipline+ strong (top 25%); selective swinger; low chase rate,early
-Jo Adell,666176,152,Signal,89.6,109.7,98.3,104.0,0.556,0.36,0.381,0.08224,Discipline+ strong (top 25%),early
-Dominic Smith,642086,80,Signal,111.2,109.2,118.4,115.1,0.543,0.326,0.439,0.07159,Discipline+ strong (top 25%); Process+ strong,early
-Ezequiel Tovar,678662,143,Signal,87.0,109.2,92.8,103.9,0.611,0.414,0.359,0.08087,Discipline+ strong (top 25%),early
-Austin Hedges,595978,45,Watch,81.5,109.0,104.3,93.6,0.458,0.272,0.35,0.08626,Discipline+ strong (top 25%),early
+batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rolling_decision_30d,tag,season_stage
+Jeremy Peña,665161,46,Watch,SS,SS,SS,91.2,142.4,101.6,104.0,0.567,0.305,0.391,0.12172,Discipline+ elite (top 10%),early
+Blaze Alexander,677942,88,Signal,3B,3B,3B,87.3,130.2,79.5,110.3,0.554,0.351,0.41,0.10667,Discipline+ elite (top 10%),early
+Andrew Mccutchen,457705,52,Watch,OF,OF,OF,61.8,130.0,66.5,92.3,0.519,0.289,0.337,0.0908,Discipline+ elite (top 10%),early
+Jake Meyers,676694,50,Watch,OF,OF,OF,86.2,127.3,106.5,97.1,0.53,0.306,0.368,0.07686,Discipline+ elite (top 10%),early
+Jeremiah Jackson,669236,117,Signal,2B,2B,2B,88.6,127.1,99.2,102.6,0.603,0.356,0.376,0.09096,Discipline+ elite (top 10%),early
+Jeff Mcneil,643446,124,Signal,2B,2B,2B,81.6,124.9,106.2,92.8,0.535,0.308,0.336,0.09514,Discipline+ elite (top 10%),early
+Henry Davis,680779,89,Signal,C,C,C,62.5,123.7,96.3,79.4,0.525,0.313,0.277,0.09902,Discipline+ elite (top 10%),early
+James Outman,681546,43,Watch,OF,OF,OF,57.2,122.9,86.1,79.0,0.561,0.302,0.25,0.09128,Discipline+ elite (top 10%),early
+Christian Yelich,592885,64,Watch,OF,OF|DH,"OF, DH",76.9,122.7,87.6,96.8,0.498,0.292,0.355,0.10744,Discipline+ elite (top 10%),early
+Everson Pereira,677592,74,Watch,OF,OF,OF,96.5,122.6,88.5,114.9,0.599,0.357,0.429,0.09453,Discipline+ elite (top 10%),early
+Jorbit Vivas,678391,85,Signal,3B,3B,3B,69.6,122.6,109.6,80.0,0.52,0.28,0.264,0.09057,Discipline+ elite (top 10%),early
+Jahmai Jones,663330,45,Watch,OF,OF,OF,114.6,122.0,85.5,133.3,0.551,0.315,0.571,0.08803,Discipline+ elite (top 10%); Process+ strong,early
+Will Benson,666181,68,Watch,OF,OF,OF,75.3,121.7,83.9,97.0,0.477,0.278,0.351,0.08354,Discipline+ elite (top 10%),early
+Miguel Vargas,678246,150,Signal,3B,3B,3B,82.7,120.9,96.1,98.5,0.419,0.197,0.359,0.08568,Discipline+ elite (top 10%); selective swinger; low chase rate,early
+Ramón Laureano,657656,134,Signal,OF,OF,OF,88.4,120.6,80.3,111.0,0.519,0.302,0.429,0.08616,Discipline+ elite (top 10%),early
+George Springer,543807,83,Signal,DH,DH,DH,78.5,120.5,103.9,91.0,0.5,0.255,0.32,0.09305,Discipline+ elite (top 10%),early
+Ty France,664034,61,Watch,1B,1B,1B,110.5,120.1,121.4,113.1,0.565,0.313,0.422,0.08716,Discipline+ elite (top 10%); Process+ strong,early
+Ronald Acuña,660670,159,Signal,OF,OF,OF,96.3,120.1,91.5,113.4,0.46,0.276,0.427,0.08733,Discipline+ elite (top 10%),early
+Nick Gonzales,693304,130,Signal,3B,3B,3B,92.7,119.9,98.7,106.7,0.568,0.355,0.384,0.0928,Discipline+ elite (top 10%),early
+Freddy Fermin,666023,65,Watch,C,C,C,69.4,119.3,95.4,86.3,0.498,0.302,0.284,0.08534,Discipline+ elite (top 10%),early
+Marcus Semien,543760,140,Signal,2B,2B,2B,78.7,117.8,104.1,91.0,0.527,0.28,0.323,0.08778,Discipline+ elite (top 10%),early
+Christian Walker,572233,147,Signal,1B,1B,1B,95.1,117.5,102.3,107.3,0.497,0.294,0.413,0.09057,Discipline+ elite (top 10%),early
+Nick Castellanos,592206,68,Watch,OF,OF,OF,88.6,117.2,103.1,100.8,0.579,0.385,0.373,0.0913,Discipline+ elite (top 10%),early
+Corey Seager,608369,147,Signal,SS,SS,SS,99.4,117.0,93.2,115.5,0.505,0.288,0.427,0.08708,Discipline+ elite (top 10%),early
+Bryce Harper,547180,152,Signal,1B,1B,1B,105.9,117.0,101.9,117.7,0.534,0.349,0.429,0.08512,Discipline+ elite (top 10%),early
+Agustín Ramírez,682663,134,Signal,C,C|DH,"C, DH",74.6,116.9,97.5,90.2,0.486,0.257,0.309,0.07436,Discipline+ elite (top 10%),early
+Kyle Tucker,663656,153,Signal,OF,OF,OF,80.0,116.8,100.1,94.1,0.497,0.255,0.341,0.08168,Discipline+ elite (top 10%),early
+Jackson Merrill,701538,136,Signal,OF,OF,OF,87.9,116.0,96.4,103.2,0.572,0.379,0.361,0.08047,Discipline+ elite (top 10%),early
+Zack Gelof,680869,44,Watch,OF,OF,OF,89.2,115.6,101.5,102.1,0.494,0.243,0.393,0.08182,Discipline+ elite (top 10%),early
+Paul Goldschmidt,502671,52,Watch,1B,1B,1B,99.4,115.6,91.8,116.2,0.456,0.275,0.439,0.08662,Discipline+ elite (top 10%),early
+Bryce Teodosio,669326,42,Watch,OF,OF,OF,53.4,115.5,79.8,78.3,0.545,0.292,0.268,0.07335,Discipline+ elite (top 10%),early
+Spencer Torkelson,679529,143,Signal,1B,1B,1B,98.7,115.5,84.1,118.9,0.404,0.217,0.474,0.07676,Discipline+ elite (top 10%); selective swinger; low chase rate,early
+Daulton Varsho,662139,129,Signal,OF,OF,OF,85.5,114.9,104.3,97.3,0.555,0.319,0.328,0.08843,Discipline+ strong (top 25%),early
+Connor Norby,681393,119,Signal,1B,1B,1B,71.4,114.9,80.8,94.8,0.464,0.259,0.357,0.07926,Discipline+ strong (top 25%),early
+Tyler O'Neill,641933,61,Watch,OF,OF,OF,66.1,114.8,102.2,80.1,0.437,0.29,0.29,0.06488,Discipline+ strong (top 25%); selective swinger,early
+Oswald Peraza,672724,103,Signal,2B,2B|3B,"2B, 3B",91.7,114.8,90.6,109.4,0.545,0.315,0.405,0.07424,Discipline+ strong (top 25%),early
+Heliot Ramos,671218,135,Signal,OF,OF,OF,102.3,114.4,88.4,120.4,0.531,0.343,0.466,0.09161,Discipline+ strong (top 25%),early
+Kyle Stowers,669065,50,Watch,OF,OF,OF,81.2,114.1,92.8,98.5,0.564,0.298,0.34,0.07692,Discipline+ strong (top 25%),early
+Vladimir Guerrero,665489,145,Signal,1B,1B,1B,104.7,113.7,113.5,111.3,0.474,0.281,0.397,0.07903,Discipline+ strong (top 25%),early
+Ozzie Albies,645277,162,Signal,2B,2B,2B,84.4,113.6,106.3,95.4,0.554,0.356,0.323,0.07434,Discipline+ strong (top 25%),early
+Michael Conforto,624424,45,Watch,OF,OF,OF,108.4,113.2,100.7,120.6,0.431,0.256,0.493,0.0692,Discipline+ strong (top 25%); selective swinger; Process+ strong,early
+Matt Wallner,670242,121,Signal,OF,OF,OF,89.0,112.6,84.8,109.6,0.519,0.287,0.414,0.07684,Discipline+ strong (top 25%),early
+Starling Marte,516782,40,Watch,OF,OF,OF,84.8,112.5,96.6,100.2,0.538,0.333,0.376,0.091,Discipline+ strong (top 25%),early
+Adam Frazier,624428,71,Watch,2B,2B,2B,61.7,112.4,85.5,83.5,0.503,0.259,0.278,0.08107,Discipline+ strong (top 25%),early
+Ramón Urías,602104,75,Watch,3B,3B,3B,74.8,112.4,102.0,88.4,0.474,0.263,0.297,0.07396,Discipline+ strong (top 25%),early
+Freddie Freeman,518692,148,Signal,1B,1B,1B,101.1,112.3,107.5,110.6,0.529,0.308,0.409,0.07367,Discipline+ strong (top 25%),early
+Sal Stewart,701398,162,Signal,1B,1B,1B,107.8,112.1,103.8,118.6,0.496,0.289,0.446,0.07956,Discipline+ strong (top 25%),early
+Jake Mccarthy,664983,87,Signal,OF,OF,OF,83.7,111.6,110.2,93.0,0.527,0.364,0.324,0.09135,Discipline+ strong (top 25%),early
+Andruw Monasterio,655316,63,Watch,SS,SS,SS,86.3,111.5,98.1,100.9,0.496,0.326,0.375,0.08207,Discipline+ strong (top 25%),early
+Kevin McGonigle,805808,160,Signal,SS,3B|SS,"3B, SS",100.8,111.4,108.3,110.0,0.426,0.267,0.414,0.08892,Discipline+ strong (top 25%); selective swinger,early
+Fernando Tatís,665487,140,Signal,OF,OF,OF,99.5,111.4,98.3,113.3,0.478,0.271,0.427,0.0839,Discipline+ strong (top 25%),early
+Jo Adell,666176,156,Signal,OF,OF,OF,89.2,111.1,97.7,103.9,0.563,0.36,0.38,0.08358,Discipline+ strong (top 25%),early
+Daylen Lile,695734,160,Signal,OF,OF,OF,96.3,111.1,105.9,106.8,0.562,0.348,0.376,0.07913,Discipline+ strong (top 25%),early
+Lawrence Butler,671732,119,Signal,OF,OF,OF,85.2,110.9,90.6,103.3,0.471,0.297,0.371,0.07527,Discipline+ strong (top 25%),early
+TJ Rumfield,681198,153,Signal,1B,1B,1B,92.8,110.8,111.0,101.2,0.522,0.309,0.372,0.08558,Discipline+ strong (top 25%),early
+Kazuma Okamoto,672960,142,Signal,3B,3B,3B,103.6,110.8,92.2,119.9,0.448,0.278,0.479,0.08366,Discipline+ strong (top 25%); selective swinger,early
+Ezequiel Tovar,678662,147,Signal,SS,SS,SS,86.0,110.6,93.7,102.7,0.615,0.414,0.356,0.08399,Discipline+ strong (top 25%),early
+Nick Loftin,679845,46,Watch,3B,3B,3B,79.1,110.3,116.1,85.9,0.408,0.274,0.303,0.08117,Discipline+ strong (top 25%); selective swinger,early
+Rob Refsnyder,608701,48,Watch,OF,OF,OF,75.7,110.3,96.0,91.9,0.419,0.241,0.355,0.08555,Discipline+ strong (top 25%); selective swinger,early
+Brent Rooker,667670,84,Signal,OF,OF|DH,"OF, DH",85.6,110.2,96.3,101.1,0.516,0.35,0.392,0.08684,Discipline+ strong (top 25%),early
+William Contreras,661388,150,Signal,C,C,C,94.7,110.2,120.2,98.8,0.46,0.275,0.362,0.078,Discipline+ strong (top 25%),early
+Thomas Saggese,695336,62,Watch,OF,OF,OF,68.7,110.1,87.0,89.5,0.528,0.295,0.284,0.08201,Discipline+ strong (top 25%),early
+Tyler Stephenson,663886,104,Signal,C,C,C,89.7,109.8,90.2,107.7,0.425,0.212,0.426,0.07277,Discipline+ strong (top 25%); selective swinger; low chase rate,early
+Ryan Vilade,668723,50,Watch,OF,OF,OF,73.5,109.7,96.6,89.6,0.502,0.324,0.281,0.07526,Discipline+ strong (top 25%),early
+Zach Neto,687263,168,Signal,SS,SS,SS,81.7,109.4,83.2,103.4,0.488,0.284,0.386,0.07625,Discipline+ strong (top 25%),early
+Dominic Smith,642086,80,Signal,1B,1B|DH,"1B, DH",111.2,109.2,118.4,115.1,0.543,0.326,0.439,0.06992,Discipline+ strong (top 25%); Process+ strong,early
+Kyle Higashioka,543309,57,Watch,C,C,C,82.0,109.2,98.5,96.7,0.429,0.294,0.344,0.08212,Discipline+ strong (top 25%); selective swinger,early
+Austin Hedges,595978,47,Watch,C,C,C,80.0,109.0,103.0,92.7,0.47,0.273,0.343,0.08604,Discipline+ strong (top 25%),early

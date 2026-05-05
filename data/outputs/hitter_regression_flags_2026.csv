@@ -1,6 +1,4 @@
-batter_name,batter,pa,confidence,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
-Derek Hill,656537,49,Watch,87.5,88.2,81.9,109.5,0.481,0.276,0.403,-0.238,cold,0.041,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
-Jorge Mateo,622761,50,Watch,91.8,95.9,87.1,111.1,0.53,0.347,0.428,-0.237,warm,0.049,surface xwOBA elite (top 25%); results ahead of process; Process+ below average,early
-Max Muncy,691777,113,Signal,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.217,cold,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
-Ryan Mcmahon,641857,91,Signal,82.0,95.6,91.1,100.1,0.44,0.283,0.368,-0.213,improving,-0.007,surface xwOBA above avg; results ahead of process; Process+ very weak — high regression risk,early
-Owen Caissie,683357,101,Signal,97.6,74.5,90.9,114.8,0.447,0.263,0.453,-0.204,cold,0.068,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
+Max Muncy,691777,113,Signal,3B,3B,3B,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.216,cold,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Hunter Feduccia,676439,47,Watch,C,C,C,84.2,82.4,78.7,107.8,0.433,0.279,0.38,-0.21,cold,0.032,surface xwOBA above avg; results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
+Derek Hill,656537,50,Watch,OF,OF,OF,97.2,90.3,82.2,118.4,0.489,0.277,0.45,-0.205,improving,0.086,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
