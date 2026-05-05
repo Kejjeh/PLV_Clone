@@ -526,8 +526,14 @@ def build_master_hitter(
         if col in master.columns:
             master[col] = master[col].round(3)
 
-    # Add batter names from pre-built map (avoids redundant pybaseball call)
+    # Add batter names from pre-built map (avoids redundant pybaseball call).
+    # Be robust to both int-keyed and str-keyed maps (JSON cache always loads as str-keyed).
     name_map = batter_name_map or {}
+    if name_map:
+        # Detect key type and normalize to a single int-keyed dict for the .map() below
+        sample_key = next(iter(name_map.keys()))
+        if isinstance(sample_key, str):
+            name_map = {int(k): v for k, v in name_map.items() if str(k).lstrip('-').isdigit()}
     master["batter_name"] = master["batter"].astype(int).map(name_map).fillna(master["batter"].astype(str))
 
     # Enrich with position data
