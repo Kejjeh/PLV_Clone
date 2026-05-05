@@ -69,3 +69,6 @@ data/research/xfp_cache/*.parquet
 *.swo
 .DS_Store
 Thumbs.db
+
+# Standalone xfp-model repo (separate git repo, copies of files)
+xfp-model/
