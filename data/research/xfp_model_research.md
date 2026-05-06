@@ -891,3 +891,110 @@ Under tolerance T=1.0 scoring, V11 ships cleanly (1.841 vs V8.5 1.800). On every
 4. The V8.1 mid-season blend automatically pulls in updated 2026 stats.
 
 V11 retraining is NOT needed in-season — only the input blend changes.
+
+---
+
+## H1 — Hitter Production Model (xFP H2)
+*Locked 2026-05-06 in one execution session, mirroring the pitcher V8→V11 arc.*
+
+The pitcher work shipped V11 (cross-year r 0.614). H2 is the hitter analog —
+direct Ridge prediction of `fp_per_pa_actual` (full ESPN scoring including R+RBI),
+with mid-season blend, Bayesian shrinkage on contact-quality, and a cross-year
+validation harness identical in spirit to the pitcher pipeline.
+
+### Final model: H2
+
+```python
+H2_FEATS = [
+    'iso', 'k_pct', 'hr_per_pa', 'hard_hit_pct', 'contact_pct', 'whiff_pct',
+    'swstr_pct', 'bb_pct', 'z_contact_pct', 'chase_pct', 'in_play_pct',
+    'sprint_speed', 'sb_per_pa',
+]
+# Ridge with StandardScaler + RidgeCV(alphas=logspace(-1,5,80), cv=5)
+# Trained on 2018-2025 hitter-seasons (drop 2020), PA >= 200, n_train = 2511
+```
+
+### Benchmarks
+
+| Metric | B_lag (naive) | V0 (hitter_points.project) | **H2 (production)** |
+|---|---|---|---|
+| Cross-year r (5 transitions, n~1127) | 0.516 | 0.259 | **0.543** |
+| Power_bias_hi (residual on hr/pa > 0.05) | -0.089 | -0.182 | -0.079 |
+| Team_context_bias (top-Q teams - bot-Q teams) | -0.031 | -0.084 | -0.039 |
+| Score (T=1.0 tolerance) | 1.547 | 0.776 | **1.630** |
+| 2026 YTD r (PA >= 80, n=253) | -- | -- | **0.589** |
+| 2026 YTD MAE (FP/PA) | -- | -- | **0.112** |
+
+V0 — the legacy `hitter_points.project()` calibration — actually scored *worse*
+than the naive prior-year-FP baseline (r 0.259 vs 0.516). Its rate-component
+sub-models are calibrated to in-season fit but cross-year deployment exposes
+the gap.
+
+### Research arc (one session)
+
+| Phase | Outcome |
+|---|---|
+| H0 | Built `data/research/xfp_cache/hitters_multiyr_2015_2026.csv` (9,636 batter-seasons, 12 years). MLB Stats API merge for R/RBI/SB/sprint_speed; FG bat-tracking merged when available (2026 only currently). |
+| H1 | Validation harness (`scripts/xfp/xfp_h_eval.py`) + V0 baseline. Discovered B_lag is the real bar to beat, not V0. |
+| H1.5 | Cross-year correlation pre-screen (`scripts/xfp/xfp_h_corr_screen.py`). Top single-feature cor: `xwoba_per_pa` (0.460), `c_plus_swstr` (-0.369), `avg_ev` (0.334). Dropped `z_swing_pct` and `hbp_pct` (sign flips, weak signal). |
+| H2 | Backward elimination from 19-feature pool. Final: 13 features. Cross-year r 0.543, score 1.630. Both decision gates passed. Notable: BE preferred rate-stat lags (k_pct, hr_per_pa, iso) over the Statcast contact-quality features (xwoba_per_pa, xwoba_on_contact dropped). |
+| H3 | Mid-season blend (`scripts/xfp/xfp_h2_midseason.py`). 2025+2026 PA-weighted blend with Bayesian shrinkage on xwoba_on_contact (PRIOR_N=80) and contact_pct (PRIOR_N=200). YTD r jumps from 0.315 (frozen 2025-only) to 0.589 (blended) — the largest single-step improvement. |
+| H4 | Production lock (`scripts/xfp/xfp_h2_lock.py`). Saved bundle includes both `pipeline_full` (predicting `full_fp_per_pa`) and `pipeline_core` (skill-only). Projections at `data/outputs/xfp_h2_projections.csv` (458 hitters). |
+| H5 | Unified xFP dashboard at `data/outputs/xfp_dashboard.html`. New tab structure: My Team / Pitchers / Hitters / Analysis / Model Info. All 13 my-team hitters matched to xFP H2. |
+| H6 | These notes + `CLAUDE_CODE_HANDOFF.md` updated. |
+
+### Architectural decisions (vs pitcher work)
+
+- **Direct prediction of full FP/PA** (no decomposition into HR/R/RBI/K/SB sub-models). V9 failed the equivalent for pitchers; we don't repeat that mistake.
+- **Two PA thresholds.** >= 300 PA for cross-year *evaluation* rows, >= 200 PA for *training* inclusion. Same hitter can be in training but not in a given evaluation transition.
+- **2020 dropped from training** (60-game season distorts R/RBI especially).
+- **Two bias metrics:** `power_bias_hi` (skill-side) and `team_context_bias` (lineup environment). Both reported, but only `power_bias_hi` gates.
+- **Bayesian shrinkage** applied to `xwoba_on_contact` (PRIOR_N=80, PRIOR_MEAN=0.305) and `contact_pct` (PRIOR_N=200, PRIOR_MEAN=0.755) in the mid-season blend.
+
+### Archetype callouts (validates the model on real 2026 outcomes)
+
+1. **HR leader — Aaron Judge (NYY).** xFP H2 #1 (0.884 FP/PA), actual 0.903. Ben Rice (NYY, #10 H2) is the more interesting case: H2 says 0.749, actual 1.015 — Yankees lineup boost showing up clearly.
+2. **Contact purist — Geraldo Perdomo (AZ).** Contact% 0.895, whiff% 0.105, xFP H2 0.697. Validates that the K-avoidance signal pulls weight; without `contact_pct` and `whiff_pct` in the model his profile would underprice.
+3. **Speed-only — Trea Turner (PHI).** Sprint speed 30.0, barrel% 0.056, xFP H2 0.597. `sprint_speed` survived BE despite weak cross-year cor (0.07) — its contribution is mostly through SB/R, which adds modest but consistent FP.
+4. **Lineup-context outlier — Christian Walker (HOU).** xFP H2 0.481 vs actual 0.799 (delta -0.318). Walker on a top-3-offense team. Direct evidence the model needs a team run-environment feature; flagged in `team_context_bias = -0.039` (small for now but should be tracked across the season).
+
+### Files (new from this phase)
+
+- `scripts/xfp/build_hitters_multiyr.py`
+- `scripts/xfp/xfp_h_eval.py`
+- `scripts/xfp/xfp_h_corr_screen.py`
+- `scripts/xfp/xfp_h2_pipeline.py`
+- `scripts/xfp/xfp_h2_midseason.py`
+- `scripts/xfp/xfp_h2_lock.py`
+- `data/research/xfp_cache/hitters_multiyr_2015_2026.csv` (9,636 rows)
+- `data/research/xfp_h_correlation_screen.csv`
+- `data/research/xfp_h2_be_log.csv`
+- `data/models/xfp_h2_pipeline.pkl` (full + core models bundled)
+- `data/outputs/xfp_h2_projections.csv` (458 rows)
+- `data/outputs/xfp_dashboard.html` (replaces `xfp_v11_dashboard.html` for production)
+
+### How to refresh during the season
+
+```bash
+# 1. Refresh substrate (pulls 2026 MLB Stats API counts, sprint speed, FG bat-tracking)
+python scripts/xfp/build_hitters_multiyr.py
+
+# 2. Re-lock the model (re-trains + re-projects with fresh blended 2026 inputs)
+python scripts/xfp/xfp_h2_lock.py
+
+# 3. Rebuild the unified dashboard
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+H2 retraining is fast (~5s); the substrate rebuild is the longest step (~30s if all caches are warm).
+
+### Next phase candidates
+
+- **H7: Team run-environment feature.** `team_context_bias` is small now (-0.039) but the
+  Christian Walker callout shows the model misses lineup boosts/drags. Adding `team_wrcplus`
+  (rolling 30-day, lagged appropriately) as a feature would directly target this gap.
+- **H8: Position-adjusted xFP.** The dashboard shows raw xFP H2 but a 0.55 SS vs a 0.55 OF
+  have very different fantasy value. Layer on `proc_plus_positional`-style z-scoring within position.
+- **H9: Bat-tracking back-history.** FG bat-tracking only goes back to 2024. Once 2024+2025
+  snapshots are pulled, retrain H2 with `avg_swing_speed` and `blast_rate` in the candidate
+  pool — they're plausibly stronger than ISO/HR/PA but currently invisible to the cross-year search.

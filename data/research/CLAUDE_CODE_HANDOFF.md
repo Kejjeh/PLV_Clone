@@ -1,10 +1,15 @@
 # xFP Model Optimization — Claude Code Handoff
 
-## **CURRENT PRODUCTION MODEL: V11**
-*Last updated 2026-05-05*
+## **PRODUCTION MODELS**
+*Last updated 2026-05-06*
 
-**V11 = V8.5 + pitching_plus + fp_strike_pct.** Cross-year r 0.614, YTD r 0.511, YTD MAE 3.393.
-Trained on 2020-2025 SP-seasons (n=768). Production bundle at `data/models/xfp_v11_pipeline.pkl`.
+| Model | Predicts | Cross-year r | YTD r | YTD MAE | Bundle |
+|---|---|---|---|---|---|
+| **V11** (pitchers, SP-only) | FP per start | 0.614 | 0.511 | 3.393 | `data/models/xfp_v11_pipeline.pkl` |
+| **H2** (hitters, all positions) | FP per PA | 0.543 | 0.589 | 0.112 | `data/models/xfp_h2_pipeline.pkl` |
+
+Unified dashboard at `data/outputs/xfp_dashboard.html` (mirrored to `xfp-model/docs/index.html`)
+includes both models + ESPN My Team merge.
 
 | Phase | Status | Outcome |
 |---|---|---|
@@ -12,6 +17,7 @@ Trained on 2020-2025 SP-seasons (n=768). Production bundle at `data/models/xfp_v
 | Phase 10 | COMPLETE | Marcel / archetype / BaseRuns negative results documented |
 | Phase 11 | COMPLETE | FG Stuff+/Pitching+ history pulled (undetected-chromedriver), V11 ships |
 | Phase 12 | COMPLETE (negative) | Residual correction architecture rejected |
+| **H0–H6** | **COMPLETE** | **Hitter xFP H2 ships; both models in unified dashboard** |
 
 ### Benchmark table (final)
 

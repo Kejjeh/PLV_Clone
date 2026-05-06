@@ -1,16 +1,16 @@
-"""Build the redesigned xFP V11 dashboard (PLV-style UI).
+"""Build the unified xFP dashboard (pitchers + hitters + ESPN My Team).
 
 Generates a self-contained HTML file with React+Babel inline, embedded
-projection data, four tabs (My Team / Projections / Analysis / Model Info),
-quadrant charts, favorites in localStorage, and PLV color/typography.
+pitcher AND hitter projection data, five tabs (My Team / Pitchers /
+Hitters / Analysis / Model Info), quadrant charts, favorites in
+localStorage, and PLV color/typography.
 
 The "My Team" tab pulls roster + ESPN data from the PLV process_report
-dashboard's MY_TEAM payload (fantasy team injected by the ESPN connector).
-SPs are matched by name to xFP V11 projections so you can compare your
-rotation to the league xFP leaderboard and spot add/drop swaps.
+dashboard's MY_TEAM payload. SPs are matched to xFP V11 and hitters
+to xFP H2 so you can compare your full roster to the league leaderboards.
 
 Outputs:
-  - data/outputs/xfp_v11_dashboard.html
+  - data/outputs/xfp_dashboard.html
   - xfp-model/docs/index.html  (byte-identical copy for GitHub Pages)
 """
 from __future__ import annotations
@@ -28,8 +28,10 @@ ROOT = Path(__file__).resolve().parents[2]
 PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_v11_projections.csv'
 MULTI_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'sp_multiyr_2015_2025.csv'
 MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v11_pipeline.pkl'
+H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
+H2_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_h2_pipeline.pkl'
 PLV_HTML = ROOT / 'data' / 'outputs' / 'process_report_2026.html'
-OUT_PRIMARY = ROOT / 'data' / 'outputs' / 'xfp_v11_dashboard.html'
+OUT_PRIMARY = ROOT / 'data' / 'outputs' / 'xfp_dashboard.html'
 OUT_DOCS = ROOT / 'xfp-model' / 'docs' / 'index.html'
 
 
@@ -208,6 +210,152 @@ def build_records() -> tuple[list[dict], dict]:
     return records, my_team_payload
 
 
+def build_hitter_records() -> tuple[list[dict], list[dict]]:
+    """Returns (hitter_records, my_team_hitter_payload)."""
+    if not H2_PROJ_CSV.exists():
+        return [], []
+
+    proj = pd.read_csv(H2_PROJ_CSV)
+
+    def num(v, dp=None):
+        if pd.isna(v):
+            return None
+        v = float(v)
+        return round(v, dp) if dp is not None else v
+
+    records: list[dict] = []
+    for _, r in proj.iterrows():
+        # FP total = xfp per PA × current PA (counting stat for the season so far)
+        # rather than projecting forward — matches what hitter_points UI shows
+        pa_2026 = num(r.get('pa_2026'))
+        fp_actual_per_pa = num(r.get('fp_per_pa_actual_2026'), 4)
+        fp_total_actual = num(r.get('fp_total_actual_2026'), 1)
+        # Residual: positive = H2 over-projects, negative = hitter outperforming
+        delta = (
+            round(num(r['xfp_h2_per_pa'], 4) - fp_actual_per_pa, 4)
+            if fp_actual_per_pa is not None and pa_2026 is not None and pa_2026 >= 50
+            else None
+        )
+        records.append({
+            'mlbId':        int(r['batter']),
+            'name':         r.get('player_name') or '',
+            'pos':          r.get('primary_position') if pd.notna(r.get('primary_position')) else None,
+            'fpos':         r.get('fantasy_positions_display') if pd.notna(r.get('fantasy_positions_display')) else None,
+            'team':         r.get('team_2026') if pd.notna(r.get('team_2026')) else None,
+            'xfpPerPa':     num(r['xfp_h2_per_pa'], 4),
+            'coreXfpPerPa': num(r.get('core_xfp_per_pa'), 4),
+            'xfpFullFp':    num(r.get('xfp_h2_full_fp'), 2),    # × 3.5 PA/game
+            'paPremium':    num(r.get('pa_premium'), 3),
+            'pa':           int(pa_2026) if pa_2026 is not None else None,
+            'fpPerPaActual': fp_actual_per_pa,
+            'fpTotal':      fp_total_actual,
+            'delta':        delta,
+            'r':            int(r['r_2026']) if pd.notna(r.get('r_2026')) else None,
+            'rbi':          int(r['rbi_2026']) if pd.notna(r.get('rbi_2026')) else None,
+            'hr':           int(r['hr_2026']) if pd.notna(r.get('hr_2026')) else None,
+            'cohort':       r.get('cohort'),
+            'weight2026':   num(r.get('weight_2026'), 3),
+            'hasBatTrack':  bool(r.get('has_bat_tracking', False)),
+            # ESPN-merge fields (filled per my-team match)
+            'roster':       'other',
+            'espnPos':      None,
+            'pctOwned':     None,
+            'fpProjEspn':   None,
+            'fpTotalEspn':  None,
+            'fpPerGameEspn':None,
+            'gpEspn':       None,
+        })
+
+    # Sort by xFP per PA descending and assign ranks
+    records.sort(key=lambda x: -(x['xfpPerPa'] if x['xfpPerPa'] is not None else 0))
+    for i, rec in enumerate(records):
+        rec['rank'] = i + 1
+
+    # ESPN merge — pull MY_TEAM hitters
+    by_key: dict[tuple[str, str], dict] = {}
+    for r in records:
+        # Hitter names are "First Last" (from master_hitter / Chadwick), so
+        # we use plv_name_key for both sides.
+        by_key[plv_name_key(r['name'])] = r
+
+    my_team_raw = extract_my_team()
+    hitter_payload: list[dict] = []
+    if my_team_raw:
+        for h in my_team_raw.get('hitters', []):
+            espn_pos = h.get('espnPos') or h.get('pos') or ''
+            xfp_rec = find_xfp_record(h.get('name', '') or h.get('cleanName', ''), by_key)
+            if xfp_rec is not None:
+                xfp_rec['roster']        = 'mine'
+                xfp_rec['espnPos']       = espn_pos
+                xfp_rec['pctOwned']      = h.get('pctOwned') if isinstance(h.get('pctOwned'), (int, float)) else None
+                xfp_rec['fpProjEspn']    = h.get('fpProj') if isinstance(h.get('fpProj'), (int, float)) else None
+                xfp_rec['fpTotalEspn']   = h.get('fpTotal') if isinstance(h.get('fpTotal'), (int, float)) else None
+                xfp_rec['fpPerGameEspn'] = h.get('fpPerGame') if isinstance(h.get('fpPerGame'), (int, float)) else None
+                xfp_rec['gpEspn']        = h.get('gp') if isinstance(h.get('gp'), int) else None
+
+            hitter_payload.append({
+                'name':       h.get('name') or h.get('cleanName'),
+                'cleanName':  h.get('cleanName') or h.get('name'),
+                'mlbId':      h.get('mlbId') or (xfp_rec['mlbId'] if xfp_rec else None),
+                'espnPos':    espn_pos,
+                'fpos':       h.get('fpos'),
+                'proTeam':    h.get('proTeam'),
+                'pctOwned':   h.get('pctOwned') if isinstance(h.get('pctOwned'), (int, float)) else None,
+                'gp':         h.get('gp') if isinstance(h.get('gp'), int) else None,
+                'fpTotal':    h.get('fpTotal') if isinstance(h.get('fpTotal'), (int, float)) else None,
+                'fpProj':     h.get('fpProj') if isinstance(h.get('fpProj'), (int, float)) else None,
+                'fpPerGame':  h.get('fpPerGame') if isinstance(h.get('fpPerGame'), (int, float)) else None,
+                # xFP fields when matched
+                'xfpPerPa':       xfp_rec['xfpPerPa'] if xfp_rec else None,
+                'coreXfpPerPa':   xfp_rec['coreXfpPerPa'] if xfp_rec else None,
+                'xfpFullFp':      xfp_rec['xfpFullFp'] if xfp_rec else None,
+                'xfpRank':        xfp_rec['rank'] if xfp_rec else None,
+                'pa':             xfp_rec['pa'] if xfp_rec else None,
+                'fpPerPaActual':  xfp_rec['fpPerPaActual'] if xfp_rec else None,
+                'cohort':         xfp_rec['cohort'] if xfp_rec else None,
+                'pos':            xfp_rec['pos'] if xfp_rec else h.get('pos'),
+                'team':           xfp_rec['team'] if xfp_rec else h.get('proTeam'),
+            })
+
+    return records, hitter_payload
+
+
+def build_h2_meta() -> dict:
+    if not H2_MODEL_PKL.exists():
+        return {}
+    bundle = joblib.load(H2_MODEL_PKL)
+    pipe_full = bundle['pipeline_full']
+    ridge = pipe_full.named_steps['r']
+    feats = bundle['features']
+    coefs = [
+        {'feat': f, 'coef': round(float(c), 4)}
+        for f, c in zip(feats, ridge.coef_)
+    ]
+    coefs.sort(key=lambda x: -abs(x['coef']))
+    return {
+        'version':         bundle.get('version', 'h2'),
+        'features':        feats,
+        'coefficients':    coefs,
+        'intercept':       round(float(ridge.intercept_), 4),
+        'alpha':           round(float(ridge.alpha_), 3),
+        'crossYearR':      round(float(bundle['cross_year_r']), 4),
+        'powerBiasHi':     round(float(bundle['power_bias_hi']), 4),
+        'teamContextBias': round(float(bundle['team_context_bias']), 4),
+        'scoreT1':         round(float(bundle['score_T1']), 4),
+        'formula':         bundle['formula'],
+        'trainedDate':     bundle['trained_date'],
+        'nTrain':          int(bundle['n_train_full']),
+        'trainingYears':   bundle['training_years'],
+        'paPerGame':       bundle['pa_per_game'],
+        'ytdR':            round(float(bundle.get('ytd_r_2026') or 0), 4),
+        'ytdMae':          round(float(bundle.get('ytd_mae_2026') or 0), 4),
+        'ytdN':            int(bundle.get('ytd_n_2026') or 0),
+        'priorXwoba':      list(bundle.get('prior_xwoba', [80, 0.305])),
+        'priorContact':    list(bundle.get('prior_contact', [200, 0.755])),
+        'note':            bundle.get('note', ''),
+    }
+
+
 def build_meta() -> dict:
     bundle = joblib.load(MODEL_PKL)
     pipe = bundle['pipeline']
@@ -248,7 +396,9 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <style>html,body{margin:0;padding:0;}*{box-sizing:border-box;}</style>
 <script>
 window.XFP_META = __META_JSON__;
+window.XFP_H2_META = __H2_META_JSON__;
 window.XFP_PROJECTIONS = __PROJECTIONS_JSON__;
+window.XFP_HITTERS = __HITTERS_JSON__;
 window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
@@ -259,8 +409,8 @@ window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════
-const TABS = ['my-team', 'projections', 'analysis', 'model'];
-const TAB_LABELS = { 'my-team': 'My Team', projections: 'Projections', analysis: 'Analysis', model: 'Model Info' };
+const TABS = ['my-team', 'projections', 'hitters', 'analysis', 'model'];
+const TAB_LABELS = { 'my-team': 'My Team', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', model: 'Model Info' };
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
@@ -905,6 +1055,8 @@ function Dashboard({ dark }) {
 
   const allRows = window.XFP_PROJECTIONS;
   const meta = window.XFP_META;
+  const hitterRows = window.XFP_HITTERS || [];
+  const h2Meta = window.XFP_H2_META || null;
 
   // Apply filters
   const filtered = React.useMemo(() => {
@@ -1040,11 +1192,18 @@ function Dashboard({ dark }) {
           hoverId={hoverId} setHoverId={setHoverId} setActiveTab={setActiveTab} />
       )}
 
-      {activeTab === 'model' && <ModelTab meta={meta} colors={colors} />}
+      {activeTab === 'hitters' && (
+        <HittersTab hitters={hitterRows} colors={colors} editorialHeat={editorialHeat}
+          favorites={favorites} toggleFavorite={toggleFavorite} h2Meta={h2Meta} />
+      )}
+
+      {activeTab === 'model' && (
+        <ModelTab meta={meta} h2Meta={h2Meta} colors={colors} />
+      )}
 
       <div style={{ padding:'24px 32px', borderTop:`1px solid ${colors.border}`, marginTop:32,
                     fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
-        SP-only model · Statcast + FanGraphs Pitching+ · separate from PLV dashboard ·
+        Pitchers: V11 (SP only, Statcast + FG Pitching+) · Hitters: H2 (Ridge, 13 features) ·
         <a href="https://github.com/Kejjeh/xfp-model" style={{ color:colors.accent, marginLeft:6 }}>github.com/Kejjeh/xfp-model</a>
       </div>
     </div>
@@ -1090,6 +1249,196 @@ function AnalysisTab({ rows, ytdRows, colors, hoverId, setHoverId }) {
     </>
   );
 }
+
+// ═══ Hitters tab ══════════════════════════════════════════════════════════════
+function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite, h2Meta }) {
+  const [hSort, setHSort] = React.useState({ col: 'xfpPerPa', dir: 'desc' });
+  const [hPos,  setHPos]  = React.useState('all');     // 'all' | 'C' | '1B' | ... | 'OF' | 'DH'
+  const [hMinPa, setHMinPa] = React.useState(50);
+  const [hRoster, setHRoster] = React.useState('all'); // 'all' | 'mine' | 'other'
+  const [hCohort, setHCohort] = React.useState('all'); // 'all' | 'blended' | '2025_only' | '2026_only'
+
+  const POS_OPTIONS = ['C', '1B', '2B', '3B', 'SS', 'OF', 'DH'];
+
+  const hasMine = hitters.some(h => h.roster === 'mine');
+
+  // Filter
+  const filtered = hitters.filter(h => {
+    if (hPos !== 'all') {
+      const pos = h.pos || '';
+      const fpos = (h.fpos || '').split(/[,\s|]+/).map(s => s.trim());
+      if (pos !== hPos && !fpos.includes(hPos)) return false;
+    }
+    if (hRoster === 'mine' && h.roster !== 'mine') return false;
+    if (hRoster === 'other' && h.roster === 'mine') return false;
+    if (hCohort !== 'all' && h.cohort !== hCohort) return false;
+    if (h.pa != null && h.pa < hMinPa) return false;
+    if (h.pa == null && hMinPa > 0) return false;  // skip 2025-only when min PA > 0
+    return true;
+  });
+  const sorted = sortRows(filtered, hSort.col, hSort.dir);
+
+  function handleSort(col) {
+    if (hSort.col === col) setHSort({ col, dir: hSort.dir === 'desc' ? 'asc' : 'desc' });
+    else setHSort({ col, dir: 'desc' });
+  }
+
+  return (
+    <>
+      {/* Filter bar */}
+      <div style={{ padding:'10px 32px', display:'flex', gap:14, alignItems:'center',
+                    fontSize:10, fontFamily:MONO, textTransform:'uppercase', letterSpacing:1.5,
+                    borderBottom:`1px solid ${colors.border}`, background:colors.stripe, flexWrap:'wrap' }}>
+        <div style={{ display:'flex', gap:4, alignItems:'center' }}>
+          <span style={{ color:colors.dim, marginRight:4 }}>Pos</span>
+          {['All', ...POS_OPTIONS].map(p => {
+            const active = (p === 'All' && hPos === 'all') || hPos === p;
+            return (
+              <span key={p} onClick={() => setHPos(p === 'All' ? 'all' : p)} style={{
+                padding:'2px 7px', borderRadius:2, cursor:'pointer', fontSize:10,
+                fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
+                border:`1px solid ${active ? colors.accent : colors.border}`,
+                color: active ? colors.accent : colors.dim,
+                background: active ? `${colors.accent}18` : 'transparent',
+              }}>{p}</span>
+            );
+          })}
+        </div>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Min PA
+          <input type="number" value={hMinPa} onChange={e => setHMinPa(+e.target.value || 0)}
+            style={{ width:48, padding:'2px 6px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11, textAlign:'right' }} />
+        </label>
+        <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Cohort
+          <select value={hCohort} onChange={e => setHCohort(e.target.value)}
+            style={{ padding:'2px 4px', border:`1px solid ${colors.border}`, borderRadius:2,
+                     background:colors.panel, color:colors.accent, fontFamily:MONO, fontSize:11 }}>
+            <option value="all">All</option>
+            <option value="blended">Blended (25+26)</option>
+            <option value="2025_only">2025 only</option>
+            <option value="2026_only">2026 only</option>
+          </select>
+        </label>
+        {hasMine && (
+          <label style={{ color:colors.dim, display:'flex', alignItems:'center', gap:6 }}>Roster
+            {[
+              { k:'all',   l:'All' },
+              { k:'mine',  l:'My Team' },
+              { k:'other', l:'Available' },
+            ].map(opt => (
+              <button key={opt.k} onClick={() => setHRoster(opt.k)}
+                style={{ padding:'3px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
+                         border:`1px solid ${hRoster===opt.k ? colors.accent : colors.border}`, borderRadius:2,
+                         background: hRoster===opt.k ? colors.accent : colors.panel,
+                         color: hRoster===opt.k ? '#fff' : colors.dim, cursor:'pointer' }}>{opt.l}</button>
+            ))}
+          </label>
+        )}
+        <button onClick={() => { setHPos('all'); setHMinPa(50); setHRoster('all'); setHCohort('all'); }}
+          style={editorialBtn(colors)}>Reset</button>
+        <div style={{ flex:1 }} />
+        <span style={{ color:colors.dim }}>{filtered.length} / {hitters.length} hitters</span>
+      </div>
+
+      <SectionHeading num="I" label="Hitter Projections (xFP H2)"
+        right={`SORTED BY ${hSort.col.toUpperCase()} ${hSort.dir === 'desc' ? '↓' : '↑'}`} colors={colors} />
+      <div style={{ padding:'0 32px 24px', overflow:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+          <thead>
+            <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+              <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
+                           fontWeight:600, letterSpacing:1.5, textTransform:'uppercase', fontFamily:MONO, width:30 }}>★</th>
+              <SortTh col="rank"          label="Rk"        align="l" width={36}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="name"          label="Hitter"    align="l" width={170} sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="pos"           label="Pos"       align="l" width={48}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="team"          label="Tm"        align="l" width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpPerPa"      label="xFP/PA"    width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpFullFp"     label="xFP/G"     width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="coreXfpPerPa"  label="Core/PA"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="paPremium"     label="PA Prem"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="pa"            label="PA"        width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="fpPerPaActual" label="Act/PA"    width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="delta"         label="Δ vs Act"  width={68}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="fpTotal"       label="FP Tot"    width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="hr"            label="HR"        width={36}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="cohort"        label="Cohort"    align="l" width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="roster"        label="Own"       width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((h, idx) => {
+              const isFav = favorites.includes(h.mlbId);
+              const cohortColor = h.cohort === 'blended' ? colors.pos
+                : h.cohort === '2026_only' ? colors.warn
+                : h.cohort === '2025_only' ? colors.dim : colors.faint;
+              return (
+                <tr key={h.mlbId} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                  <td style={{ padding:'7px 8px', textAlign:'center' }}>
+                    <span onClick={() => toggleFavorite(h.mlbId)}
+                      style={{ color: isFav ? colors.accent : colors.faint, cursor:'pointer', fontSize:13 }}>★</span>
+                  </td>
+                  <td style={{ padding:'7px 8px', fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                               color: h.rank <= 3 ? colors.accent : colors.dim }}>{h.rank}</td>
+                  <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
+                    <span style={{ fontSize:14, fontWeight:500 }}>{h.name}</span>
+                  </td>
+                  <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.pos || '—'}</td>
+                  <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.team || '—'}</td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(h.xfpPerPa, 0.3, 0.85) }}>
+                    <span style={{ fontSize:16, fontFamily:SERIF, fontStyle:'italic',
+                                   color: h.xfpPerPa != null ? colors.accent : colors.faint,
+                                   fontVariantNumeric:'tabular-nums' }}>
+                      {h.xfpPerPa == null ? '—' : h.xfpPerPa.toFixed(3)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors)}>{h.xfpFullFp == null ? '—' : h.xfpFullFp.toFixed(2)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.coreXfpPerPa == null ? '—' : h.coreXfpPerPa.toFixed(3)}</td>
+                  <td style={dataCell(colors, h.paPremium > 0.05 ? colors.pos : h.paPremium < -0.05 ? colors.neg : colors.dim)}>
+                    {h.paPremium == null ? '—' : fmtSign(h.paPremium, 2)}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{h.pa ?? '—'}</td>
+                  <td style={dataCell(colors, h.fpPerPaActual == null ? colors.faint : colors.text)}>
+                    {h.fpPerPaActual == null ? '—' : h.fpPerPaActual.toFixed(3)}
+                  </td>
+                  <td style={dataCell(colors, h.delta == null ? colors.faint : h.delta > 0.05 ? colors.neg : h.delta < -0.05 ? colors.pos : colors.dim)}>
+                    {h.delta == null ? '—' : fmtSign(h.delta, 3)}
+                  </td>
+                  <td style={dataCell(colors)}>{h.fpTotal == null ? '—' : h.fpTotal.toFixed(0)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.hr ?? '—'}</td>
+                  <td style={{ padding:'7px 8px', textAlign:'left', fontSize:9, fontFamily:MONO,
+                               letterSpacing:1, color: cohortColor }}>{h.cohort || '—'}</td>
+                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                    {h.roster === 'mine' ? (
+                      <span style={{ padding:'1px 6px', border:`1px solid ${colors.accent}`,
+                                     color:colors.accent, fontFamily:MONO, fontSize:9,
+                                     letterSpacing:1, borderRadius:2, whiteSpace:'nowrap' }}>★ MINE</span>
+                    ) : (
+                      <span style={{ color:colors.faint, fontFamily:MONO, fontSize:9 }}>—</span>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+        <div style={{ paddingTop:10, fontSize:10, color:colors.dim, fontFamily:MONO,
+                      letterSpacing:1, textAlign:'right' }}>
+          ↳ CLICK ANY HEADER TO SORT · ★ TO PIN · COHORT = BLENDED IS MOST RELIABLE
+        </div>
+        {h2Meta && (
+          <div style={{ marginTop:14, padding:'8px 12px', background:colors.stripe, borderLeft:`3px solid ${colors.accent}`,
+                        fontSize:11, color:colors.dim, fontStyle:'italic', lineHeight:1.5 }}>
+            xFP H2 (Ridge, {h2Meta.features.length} features). Cross-year r {h2Meta.crossYearR},
+            YTD r {h2Meta.ytdR} (n={h2Meta.ytdN}, PA ≥ 80).
+            Trained on {h2Meta.nTrain} hitter-seasons, mid-season blend with Bayesian shrinkage on contact-quality metrics.
+          </div>
+        )}
+      </div>
+    </>
+  );
+}
+
 
 // Generic sort: numeric → numeric, string → localeCompare, nulls always last.
 function sortRows(rows, col, dir) {
@@ -1479,12 +1828,114 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
           </div>
         </>
       )}
+
+      {/* ── My Lineup (hitters with xFP H2) ──────────────────────────────── */}
+      <MyLineupSection myTeam={myTeam} colors={colors} editorialHeat={editorialHeat}
+        favorites={favorites} toggleFavorite={toggleFavorite} />
+    </>
+  );
+}
+
+// ═══ My Lineup section (hitters within My Team tab) ═══════════════════════════
+function MyLineupSection({ myTeam, colors, editorialHeat, favorites, toggleFavorite }) {
+  const hitters = (myTeam.hitters || []);
+  if (hitters.length === 0) return null;
+
+  const [hSort, setHSort] = React.useState({ col: 'xfpPerPa', dir: 'desc' });
+  function handleSort(col) {
+    if (hSort.col === col) setHSort({ col, dir: hSort.dir === 'desc' ? 'asc' : 'desc' });
+    else setHSort({ col, dir: 'desc' });
+  }
+  const sorted = sortRows(hitters, hSort.col, hSort.dir);
+  const matched = hitters.filter(h => h.xfpPerPa != null);
+  const meanXfpPerPa = matched.length
+    ? matched.reduce((s, h) => s + h.xfpPerPa, 0) / matched.length
+    : null;
+
+  return (
+    <>
+      <SectionHeading num="V" label="My Lineup"
+        right={`${hitters.length} HITTERS · ${matched.length} WITH xFP H2 COVERAGE`} colors={colors} />
+      <div style={{ padding:'0 32px 8px' }}>
+        <div style={{ marginBottom:10, fontSize:12, fontStyle:'italic', color:colors.dim }}>
+          {meanXfpPerPa != null && (
+            <>
+              Mean xFP/PA across matched lineup: <span style={{ color:colors.accent, fontFamily:MONO, fontVariantNumeric:'tabular-nums' }}>{meanXfpPerPa.toFixed(3)}</span>
+              {' · '}× 3.5 PA/G ≈ <span style={{ color:colors.accent, fontFamily:MONO, fontVariantNumeric:'tabular-nums' }}>{(meanXfpPerPa * 3.5).toFixed(2)}</span> FP/game per slot.
+            </>
+          )}
+        </div>
+      </div>
+      <div style={{ padding:'0 32px 24px', overflow:'auto' }}>
+        <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
+          <thead>
+            <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+              <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
+              <SortTh col="name"          label="Hitter"  align="l" width={170} sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="espnPos"       label="Slot"    align="l" width={50}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="proTeam"       label="Tm"      align="l" width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpPerPa"      label="xFP/PA"  width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpFullFp"     label="xFP/G"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpRank"       label="Rk"      width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="pa"            label="PA"      width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="fpPerPaActual" label="Act/PA"  width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="cohort"        label="Cohort"  align="l" width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="fpTotal"       label="ESPN FP" width={68}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="fpPerGame"     label="ESPN FP/G" width={70} sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="pctOwned"      label="% Owned" width={62}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+            </tr>
+          </thead>
+          <tbody>
+            {sorted.map((h, idx) => {
+              const isFav = h.mlbId != null && favorites.includes(h.mlbId);
+              const cohortColor = h.cohort === 'blended' ? colors.pos
+                : h.cohort === '2026_only' ? colors.warn
+                : h.cohort === '2025_only' ? colors.dim : colors.faint;
+              return (
+                <tr key={h.name} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                  <td style={{ padding:'7px 8px', fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                               color: idx < 3 ? colors.accent : colors.dim }}>{idx + 1}</td>
+                  <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
+                    {h.mlbId != null && (
+                      <span onClick={() => toggleFavorite(h.mlbId)}
+                        style={{ color: isFav ? colors.accent : colors.faint, cursor:'pointer',
+                                 fontSize:11, marginRight:6 }}>★</span>
+                    )}
+                    <span style={{ fontSize:14, fontWeight:500 }}>{h.name}</span>
+                  </td>
+                  <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.espnPos || h.pos || '—'}</td>
+                  <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.proTeam || h.team || '—'}</td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(h.xfpPerPa, 0.3, 0.85) }}>
+                    <span style={{ fontSize:16, fontFamily:SERIF, fontStyle:'italic',
+                                   color: h.xfpPerPa != null ? colors.accent : colors.faint }}>
+                      {h.xfpPerPa == null ? '—' : h.xfpPerPa.toFixed(3)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors)}>{h.xfpFullFp == null ? '—' : h.xfpFullFp.toFixed(2)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.xfpRank == null ? '—' : '#' + h.xfpRank}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.pa ?? '—'}</td>
+                  <td style={dataCell(colors, h.fpPerPaActual == null ? colors.faint : colors.text)}>
+                    {h.fpPerPaActual == null ? '—' : h.fpPerPaActual.toFixed(3)}
+                  </td>
+                  <td style={{ padding:'7px 8px', textAlign:'left', fontSize:9, fontFamily:MONO, letterSpacing:1, color:cohortColor }}>
+                    {h.cohort || '—'}
+                  </td>
+                  <td style={dataCell(colors)}>{h.fpTotal == null ? '—' : fmt(h.fpTotal, 1)}</td>
+                  <td style={dataCell(colors)}>{h.fpPerGame == null ? '—' : fmt(h.fpPerGame, 2)}</td>
+                  <td style={dataCell(colors, colors.dim)}>{h.pctOwned == null ? '—' : fmt(h.pctOwned, 1) + '%'}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </>
   );
 }
 
 // ═══ Model Info tab ═══════════════════════════════════════════════════════════
-function ModelTab({ meta, colors }) {
+function ModelTab({ meta, h2Meta, colors }) {
   const accuracyRows = [
     { metric: 'Cross-year r',         v8: 0.558, v85: 0.600, v11: meta.crossYearR },
     { metric: 'k_bias_hi',            v8: 0.241, v85: 0.466, v11: meta.kBiasHi },
@@ -1648,6 +2099,78 @@ git -C xfp-model commit -m "data: refresh"
 git -C xfp-model push`}</pre>
         </div>
       </div>
+
+      {/* ── Hitter (H2) model section ───────────────────────────────────── */}
+      {h2Meta && h2Meta.features && (
+        <>
+          <SectionHeading num="VI" label="Hitter Model — H2 (parallel to V11)"
+            right={`${h2Meta.features.length} FEATURES · RIDGE`} colors={colors} />
+          <div style={{ padding:'0 32px 24px' }}>
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16, marginBottom:18 }}>
+              {[
+                { lbl: 'Cross-year r',   v: h2Meta.crossYearR, sub: 'leave-one-out 2018–2025 transitions' },
+                { lbl: '2026 YTD r',     v: h2Meta.ytdR, sub: `live deployment, PA ≥ 80, n=${h2Meta.ytdN}` },
+                { lbl: '2026 YTD MAE',   v: h2Meta.ytdMae, sub: 'mean absolute error, FP/PA' },
+              ].map(c => (
+                <div key={c.lbl} style={{ borderTop:`2px solid ${colors.accent}`, paddingTop:8 }}>
+                  <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>{c.lbl}</div>
+                  <div style={{ fontSize:30, fontFamily:SERIF, fontStyle:'italic', color:colors.accent, lineHeight:1.1, marginTop:4 }}>
+                    {typeof c.v === 'number' ? c.v.toFixed(3) : '—'}
+                  </div>
+                  <div style={{ fontSize:10, color:colors.dim, fontStyle:'italic', marginTop:4 }}>{c.sub}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
+              <div>
+                <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:8 }}>Bias diagnostics</div>
+                <div style={{ fontSize:13, fontFamily:MONO, color:colors.text, padding:'8px 12px',
+                              background:colors.stripe, borderLeft:`3px solid ${colors.accent}` }}>
+                  power_bias_hi: {h2Meta.powerBiasHi >= 0 ? '+' : ''}{h2Meta.powerBiasHi.toFixed(3)}<br/>
+                  team_context_bias: {h2Meta.teamContextBias >= 0 ? '+' : ''}{h2Meta.teamContextBias.toFixed(3)}<br/>
+                  score (T=1.0): {h2Meta.scoreT1.toFixed(3)}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:8 }}>Bayesian shrinkage priors</div>
+                <div style={{ fontSize:12, fontFamily:MONO, color:colors.text, padding:'8px 12px',
+                              background:colors.stripe, borderLeft:`3px solid ${colors.accent}` }}>
+                  xwoba_on_contact: PRIOR_N={h2Meta.priorXwoba[0]}, PRIOR_MEAN={h2Meta.priorXwoba[1]}<br/>
+                  contact_pct: PRIOR_N={h2Meta.priorContact[0]}, PRIOR_MEAN={h2Meta.priorContact[1]}<br/>
+                  pa_per_game (display): {h2Meta.paPerGame}
+                </div>
+              </div>
+            </div>
+            <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums', marginTop:18 }}>
+              <thead>
+                <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
+                  <th style={{ padding:'8px', textAlign:'left', fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase' }}>Feature</th>
+                  <th style={{ padding:'8px', textAlign:'right', fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase' }}>Standardized coef</th>
+                  <th style={{ padding:'8px', textAlign:'left', fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase' }}>Direction</th>
+                </tr>
+              </thead>
+              <tbody>
+                {h2Meta.coefficients.map(c => (
+                  <tr key={c.feat} style={{ borderBottom:`1px solid ${colors.faint}` }}>
+                    <td style={{ padding:'7px 8px', fontSize:13, fontFamily:MONO }}>{c.feat}</td>
+                    <td style={{ ...dataCell(colors, c.coef > 0 ? colors.pos : colors.neg), fontWeight:600 }}>
+                      {c.coef > 0 ? '+' : ''}{c.coef.toFixed(4)}
+                    </td>
+                    <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim }}>
+                      {c.coef > 0 ? '↑ raises xFP/PA' : '↓ lowers xFP/PA'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ marginTop:14, fontSize:11, color:colors.dim, fontStyle:'italic', lineHeight:1.6 }}>
+              <strong>Caveat — team context.</strong> H2 has no per-team run-environment feature.
+              R and RBI are noisy across teams (a hitter who moves Yankees → A's keeps his xwOBA but loses ~30 RBI of lineup protection).
+              The team_context_bias diagnostic above tracks this gap; if it grows past ±0.05 the model will need a team feature.
+            </div>
+          </div>
+        </>
+      )}
     </>
   );
 }
@@ -1694,14 +2217,22 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 def main():
     records, my_team = build_records()
+    hitter_records, hitter_payload = build_hitter_records()
+    my_team['hitters'] = hitter_payload  # combine into one MY_TEAM payload
     meta = build_meta()
-    proj_json = json.dumps(records, separators=(',', ':'))
-    meta_json = json.dumps(meta, separators=(',', ':'))
+    h2_meta = build_h2_meta()
+
+    proj_json    = json.dumps(records, separators=(',', ':'))
+    meta_json    = json.dumps(meta, separators=(',', ':'))
     my_team_json = json.dumps(my_team, separators=(',', ':'))
+    hitters_json = json.dumps(hitter_records, separators=(',', ':'))
+    h2_meta_json = json.dumps(h2_meta, separators=(',', ':'))
 
     html = (HTML_TEMPLATE
             .replace('__PROJECTIONS_JSON__', proj_json)
             .replace('__META_JSON__', meta_json)
+            .replace('__H2_META_JSON__', h2_meta_json)
+            .replace('__HITTERS_JSON__', hitters_json)
             .replace('__MY_TEAM_JSON__', my_team_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
@@ -1713,8 +2244,10 @@ def main():
     docs_bytes = OUT_DOCS.read_bytes()
     assert primary_bytes == docs_bytes, "primary and docs HTML are not byte-identical"
 
-    n_mine = sum(1 for r in records if r['roster'] == 'mine')
-    print(f"wrote {OUT_PRIMARY} ({size_kb} KB, {len(records)} pitchers, {n_mine} on '{my_team.get('teamName') or '—'}')")
+    n_mine_p = sum(1 for r in records if r['roster'] == 'mine')
+    n_mine_h = sum(1 for r in hitter_records if r['roster'] == 'mine')
+    print(f"wrote {OUT_PRIMARY} ({size_kb} KB, {len(records)} pitchers + {len(hitter_records)} hitters, "
+          f"{n_mine_p} P / {n_mine_h} H on '{my_team.get('teamName') or '—'}')")
     print(f"wrote {OUT_DOCS} (byte-identical)")
 
 
