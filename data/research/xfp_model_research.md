@@ -1541,3 +1541,207 @@ CLAUDE_CODE_HANDOFF table are unchanged.
 
 Both kept for audit. No new model bundles or projections — H2 production state
 preserved in full.
+
+---
+
+## Rest-of-Season Models (RH1 + RP1) — In-Season Predictor
+
+After H7/H8/H9 documented that the **cross-year** prediction ceiling is
+~0.55 with linear Ridge + Statcast features, the user articulated the
+actual product need: **rest-of-season predictions for in-season add/drop
+and roster management**, not year-over-year season aggregates.
+
+This is a structurally different prediction problem:
+- **Cross-year (H2 / V12)**: features for full year T → FP for full year T+1.
+  Use case: 2027 draft tool.
+- **Rest-of-Season (RH1 / RP1)**: features for year-T-to-date → FP for
+  year-T remainder. Use case: in-season management.
+
+Both have value and are now both shipped.
+
+### Substrate
+
+For each historical year (2018-2025, skip 2020) and split-day in
+{30, 60, 90, 120}, compute:
+- Features cumulated from season-start through (season_start + split_day)
+- Target FP/PA (hitters) or FP/start (pitchers) accumulated from
+  (split_day + 1) through season-end
+
+Sample of multiple split-days per batter-year gives the model exposure to
+different in-season sample-size regimes.
+
+| Substrate | Rows | Source |
+|---|---|---|
+| `rolling_hitters_2018_2026.csv` | 15,406 (batter, split) | per-pitch Statcast cumulative aggregations |
+| `rolling_pitchers_2018_2026.csv` | 5,251 (pitcher, split) | same, with start-level FP target |
+
+### RH1 — Rest-of-Season Hitter Model
+
+Features (15 total — H2 base + sample-size + season-progression):
+```python
+RH_FEATS = [
+    'iso_to', 'k_pct_to', 'hr_per_pa_to', 'hard_hit_pct_to',
+    'contact_pct_to', 'whiff_pct_to', 'swstr_pct_to', 'bb_pct_to',
+    'chase_pct_to', 'in_play_pct_to', 'sb_per_pa_to',
+    'xwoba_per_pa_to', 'barrel_pct_to',
+    'pa_to',          # the model learns to weight stats by sample size
+    'split_day',      # season progression
+]
+```
+Target: `ros_full_fp_per_pa` (FP/PA over the remainder of the season,
+including R+RBI from the per-batter season rate).
+
+**Cross-year leave-one-year-out validation** (held year ∈ {2018..2025\2020}):
+
+| Year held out | Cross-year r | MAE | n |
+|---|---|---|---|
+| 2018 | 0.557 | 0.086 | 1,160 |
+| 2019 | 0.594 | 0.102 | 1,144 |
+| 2021 | 0.524 | 0.094 | 1,193 |
+| 2022 | 0.576 | 0.089 | 1,193 |
+| 2023 | 0.511 | 0.089 | 1,221 |
+| 2024 | 0.518 | 0.092 | 1,198 |
+| 2025 | 0.534 | 0.090 | 1,166 |
+| **Overall** | **0.532** | **0.092** | **8,275** |
+
+**Cross-year r by split-day** (more in-season data → better predictions):
+- Day 30: r 0.488
+- Day 60: r 0.540
+- Day 90: r 0.568 (peak)
+- Day 120: r 0.563
+
+The model gets monotonically better through day 90 as more in-season data
+accumulates, then plateaus — exactly the right behaviour for in-season use.
+
+**Top H2 features by standardized coefficient:**
+- `pa_to` (+0.024) — top weight: PA-to-date is the model's sample-size signal
+- `k_pct_to` (-0.024)
+- `iso_to` (+0.019)
+- `hard_hit_pct_to` (+0.018)
+- `split_day` (-0.014) — small negative; later in season → less remaining to project
+- `xwoba_per_pa_to` (+0.013)
+
+Note: `pa_to` having the largest coefficient is interpretable — the model
+learns that high to-date PA hitters are likely to keep accumulating PA
+(they're regular starters), and low to-date PA hitters more likely
+back-of-roster pieces with both lower playing time AND lower per-PA value.
+This is captured implicitly via the empirical fit.
+
+### RP1 — Rest-of-Season Pitcher Model
+
+Features (13 total):
+```python
+RP_FEATS = [
+    'k_pct_to', 'bb_pct_to', 'swstr_pct_to', 'c_plus_swstr_to',
+    'zone_pct_to', 'z_swing_pct_to', 'o_swing_pct_to',
+    'avg_velo_to', 'xwoba_per_pa_to', 'xwoba_x_swstr_to',
+    'fp_per_start_to',  # prior in-season FP/start (most important feature)
+    'gs_to',            # number of starts so far
+    'split_day',
+]
+```
+Target: `ros_fp_per_start` (mean FP/start over remainder of season).
+
+**Cross-year leave-one-year-out:** overall r=0.485, mae=2.91 FP/start, n=4,174.
+
+| Year held out | Cross-year r |
+|---|---|
+| 2018 | (insufficient — n too small in earlier-year filtering) |
+| 2019 | 0.562 |
+| 2021 | 0.573 |
+| 2022 | 0.513 |
+| 2023 | 0.421 |
+| 2024 | 0.394 |
+| 2025 | 0.504 |
+
+**Standardized coefficients** (sorted by |coef|):
+
+| Feature | Coef |
+|---|---|
+| fp_per_start_to | +0.520 |
+| k_pct_to | +0.494 |
+| gs_to | +0.376 |
+| c_plus_swstr_to | +0.368 |
+| swstr_pct_to | +0.334 |
+| avg_velo_to | +0.318 |
+| xwoba_per_pa_to | -0.253 |
+| split_day | -0.210 |
+
+`fp_per_start_to` (in-season FP/start to-date) is the single strongest
+predictor — small surprise. Pitcher RoS is genuinely harder than hitter
+RoS because each pitcher has only 5-7 starts of season-to-date sample,
+making the feature averages noisy.
+
+### 2026 Top RoS Projections
+
+**Top 5 hitters by RoS FP/PA (split_day=30, ~1 month into season):**
+| Hitter | H2 (year T+1) | RoS (rest of 2026) | PA-to-date |
+|---|---|---|---|
+| Yordan Álvarez | 0.755 | **0.772** | 125 |
+| Carlos Cortes | 0.713 | 0.695 | 63 |
+| Ben Rice | 0.749 | **0.685** | 102 |
+| Mike Trout | 0.530 | **0.659** | 125 |
+| Sal Stewart | 0.733 | 0.654 | 119 |
+
+Trout is interesting — H2 (year-over-year prior baseline) was 0.530 (his
+recent injury-shortened seasons drag the projection down), but RoS sees
+his 2026 hot start in `pa_to=125` features and projects 0.659. The model
+correctly weighs in-season signal.
+
+**Top 5 pitchers by RoS FP/start:**
+| Pitcher | V12 (year T+1) | RoS (rest of 2026) | GS-to-date |
+|---|---|---|---|
+| Misiorowski, Jacob | 15.99 | **15.83** | 6 |
+| Schlittler, Cam | 15.94 | **15.04** | 6 |
+| Cease, Dylan | 13.92 | **14.81** | 5 |
+| Boyd, Matthew | 12.32 | **14.79** | 3 |
+| Lambert, Peter | 14.14 | **14.65** | 2 |
+
+The RoS model has clear in-season information: Cease's 14.81 (vs V12's
+13.92) reflects his strong 5-start to-date sample. Boyd / Lambert get
+sharp upgrades from in-season hot starts that the V12 cross-year model
+hasn't yet folded in.
+
+### Dashboard integration
+
+`build_v11_dashboard_v2.py` updated to merge in both projection sets:
+- Pitchers tab gains an **RoS** column (xFP/start over rest of season)
+  alongside V12 and a **GS-to** column showing season-to-date starts
+- Hitters tab gains **RoS/PA** + **RoS/G** columns alongside the
+  H2 (year T+1) projection
+
+Now the dashboard answers both questions:
+- "Who should I draft for 2027?" → V12 (pitchers) / H2 (hitters)
+- "Who should I start this week / pick up off waivers?" → RoS columns
+
+### Files
+
+- `scripts/xfp/build_rolling_hitters.py` (substrate builder)
+- `scripts/xfp/build_rolling_pitchers.py` (substrate builder)
+- `scripts/xfp/xfp_rh_pipeline.py` (hitter RoS train + project)
+- `scripts/xfp/xfp_rp_pipeline.py` (pitcher RoS train + project)
+- `data/research/xfp_cache/rolling_{hitters,pitchers}_2018_2026.csv`
+- `data/models/xfp_rh1_pipeline.pkl`, `xfp_rp1_pipeline.pkl`
+- `data/outputs/xfp_rh1_projections.csv` (282 hitters)
+- `data/outputs/xfp_rp1_projections.csv` (143 pitchers)
+
+### Refresh during the season
+
+```bash
+# 1. Refresh statcast cache for current year (build_sp_multiyr.py if newer dates)
+# 2. Rebuild rolling substrate (uses updated statcast):
+python scripts/xfp/build_rolling_hitters.py
+python scripts/xfp/build_rolling_pitchers.py
+
+# 3. Re-train + re-project RoS models:
+python scripts/xfp/xfp_rh_pipeline.py
+python scripts/xfp/xfp_rp_pipeline.py
+
+# 4. Rebuild dashboard:
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+As the season progresses, day-30 → day-60 → day-90 split predictions
+take over with progressively better accuracy. Once the season ends, the
+RoS models naturally retire for that year and the V12/H2 cross-year
+models become primary for the off-season / draft prep.

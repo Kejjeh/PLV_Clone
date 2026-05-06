@@ -34,6 +34,9 @@ MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v11_pipeline.pkl'
 V12_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v12_pipeline.pkl'
 H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 H2_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_h2_pipeline.pkl'
+# Rest-of-Season (within-season) projections — added 2026-05-06 for in-season use
+RH1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rh1_projections.csv'
+RP1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rp1_projections.csv'
 PLV_HTML = ROOT / 'data' / 'outputs' / 'process_report_2026.html'
 OUT_PRIMARY = ROOT / 'data' / 'outputs' / 'xfp_dashboard.html'
 OUT_DOCS = ROOT / 'xfp-model' / 'docs' / 'index.html'
@@ -124,6 +127,15 @@ def build_records() -> tuple[list[dict], dict]:
         v12_keep = [c for c in v12_keep if c in v12.columns]
         proj = proj.merge(v12[v12_keep], on='pitcher', how='left')
 
+    # RP1 — Rest-of-Season FP/start projection (in-season prediction).
+    # Distinct from V12: V12 predicts year T+1 from full year T data;
+    # RP1 predicts the REMAINDER of year T from year-T-to-date features.
+    if RP1_PROJ_CSV.exists():
+        rp1 = pd.read_csv(RP1_PROJ_CSV)
+        rp1_keep = ['pitcher', 'xfp_rp1_per_start', 'gs_to', 'fp_per_start_to']
+        rp1_keep = [c for c in rp1_keep if c in rp1.columns]
+        proj = proj.merge(rp1[rp1_keep], on='pitcher', how='left')
+
     def num(v, dp=None):
         if pd.isna(v):
             return None
@@ -151,12 +163,18 @@ def build_records() -> tuple[list[dict], dict]:
         )
         # IL feature value for transparency
         il60 = int(r['il_60_stints_lag1']) if pd.notna(r.get('il_60_stints_lag1')) else 0
+        # RP1 — Rest-of-Season prediction (within-season). Different from xfpV12
+        # which is a year-over-year season-aggregate projection.
+        ros_per_start = num(r.get('xfp_rp1_per_start'), 2) if pd.notna(r.get('xfp_rp1_per_start')) else None
+        gs_to_val = int(r['gs_to']) if pd.notna(r.get('gs_to')) else None
         records.append({
             'mlbId': int(r['pitcher']),
             'name': r['player_name'],
             'xfpV12': xfp_primary,
             'xfpV11': num(r['xfp_v11'], 2),
             'xfpV85': num(r['xfp_v8_5'], 2),
+            'xfpRoS': ros_per_start,        # Rest-of-Season FP/start projection
+            'gsToDate': gs_to_val,          # starts already made
             'deltaV12V11': round(xfp_primary - num(r['xfp_v11'], 2), 2)
                 if (xfp_primary is not None and pd.notna(r['xfp_v11'])) else None,
             'il60Lag1': il60,
@@ -238,6 +256,13 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
 
     proj = pd.read_csv(H2_PROJ_CSV)
 
+    # RH1 — Rest-of-Season FP/PA. Merge alongside H2 (year-T+1 projection).
+    if RH1_PROJ_CSV.exists():
+        rh1 = pd.read_csv(RH1_PROJ_CSV)
+        rh1_keep = ['batter', 'xfp_rh1_per_pa', 'pa_to']
+        rh1_keep = [c for c in rh1_keep if c in rh1.columns]
+        proj = proj.merge(rh1[rh1_keep], on='batter', how='left')
+
     def num(v, dp=None):
         if pd.isna(v):
             return None
@@ -257,6 +282,10 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
             if fp_actual_per_pa is not None and pa_2026 is not None and pa_2026 >= 50
             else None
         )
+        # RoS hitter projection (xfp_rh1) — within-season prediction
+        ros_per_pa = num(r.get('xfp_rh1_per_pa'), 4) if pd.notna(r.get('xfp_rh1_per_pa')) else None
+        ros_per_game = round(ros_per_pa * 3.5, 2) if ros_per_pa is not None else None
+        pa_to_date = int(r['pa_to']) if pd.notna(r.get('pa_to')) else None
         records.append({
             'mlbId':        int(r['batter']),
             'name':         r.get('player_name') or '',
@@ -266,6 +295,9 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
             'xfpPerPa':     num(r['xfp_h2_per_pa'], 4),
             'coreXfpPerPa': num(r.get('core_xfp_per_pa'), 4),
             'xfpFullFp':    num(r.get('xfp_h2_full_fp'), 2),    # × 3.5 PA/game
+            'xfpRoSPerPa':  ros_per_pa,                          # NEW: rest-of-season FP/PA
+            'xfpRoSFullFp': ros_per_game,                        # NEW: × 3.5 PA/game
+            'paToDate':     pa_to_date,                          # NEW: PA cumulated so far
             'paPremium':    num(r.get('pa_premium'), 3),
             'pa':           int(pa_2026) if pa_2026 is not None else None,
             'fpPerPaActual': fp_actual_per_pa,
@@ -562,6 +594,8 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <SortTh col="rank"     label="Rk"        align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="xfpV12"   label="xFP V12"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpRoS"   label="RoS"       width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="gsToDate" label="GS-to"     width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="xfpV11"   label="V11"       width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="il60Lag1" label="IL60"      width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="fpTotal"  label="FP Total"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
@@ -610,6 +644,14 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                       {fmt(p.xfpV12, 2)}
                     </span>
                   </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(p.xfpRoS, 8, 17) }}>
+                    <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                                   color: p.xfpRoS != null ? colors.text : colors.faint }}>
+                      {p.xfpRoS == null ? '—' : fmt(p.xfpRoS, 2)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{p.gsToDate ?? '—'}</td>
                   <td style={dataCell(colors, colors.dim)}>{fmt(p.xfpV11, 2)}</td>
                   <td style={dataCell(colors, p.il60Lag1 > 0 ? colors.warn : colors.faint)}>
                     {p.il60Lag1 > 0 ? p.il60Lag1 : '—'}
@@ -656,7 +698,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                 </tr>
                 {isExp && (
                   <tr>
-                    <td colSpan={17} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
+                    <td colSpan={19} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:24 }}>
                         <div>
                           <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>Tier · {tier}</div>
@@ -1380,6 +1422,8 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
               <SortTh col="pos"           label="Pos"       align="l" width={48}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="team"          label="Tm"        align="l" width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="xfpPerPa"      label="xFP/PA"    width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpRoSPerPa"   label="RoS/PA"    width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpRoSFullFp"  label="RoS/G"     width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="xfpFullFp"     label="xFP/G"     width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="coreXfpPerPa"  label="Core/PA"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="paPremium"     label="PA Prem"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
@@ -1419,6 +1463,15 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
                       {h.xfpPerPa == null ? '—' : h.xfpPerPa.toFixed(3)}
                     </span>
                   </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(h.xfpRoSPerPa, 0.3, 0.85) }}>
+                    <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                                   color: h.xfpRoSPerPa != null ? colors.text : colors.faint,
+                                   fontVariantNumeric:'tabular-nums' }}>
+                      {h.xfpRoSPerPa == null ? '—' : h.xfpRoSPerPa.toFixed(3)}
+                    </span>
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{h.xfpRoSFullFp == null ? '—' : h.xfpRoSFullFp.toFixed(2)}</td>
                   <td style={dataCell(colors)}>{h.xfpFullFp == null ? '—' : h.xfpFullFp.toFixed(2)}</td>
                   <td style={dataCell(colors, colors.dim)}>{h.coreXfpPerPa == null ? '—' : h.coreXfpPerPa.toFixed(3)}</td>
                   <td style={dataCell(colors, h.paPremium > 0.05 ? colors.pos : h.paPremium < -0.05 ? colors.neg : colors.dim)}>
