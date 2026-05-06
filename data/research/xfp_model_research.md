@@ -1394,3 +1394,150 @@ we'd need a different lever entirely:
 - `data/research/xfp_h{4,5,6}_be_log.csv` (full BE traces)
 
 H2 production status unchanged. Dashboard / projections / model bundle all stay.
+
+---
+
+## H7 / H9 — Two More Negative Results (H8 deferred)
+
+The H4/H5/H6 research note ended by listing three remaining levers worth
+testing: **gradient boosting (H7)**, **30-day rolling target (H8)**, and
+**cohort decomposition (H9)**. H7 and H9 are quick to test; H8 is a
+substrate rebuild and is deferred.
+
+### H7 — Gradient Boosting
+
+Compendium §10.7 explicitly mentions tree models for talent projection.
+Tested XGBoost (4×3×2 = 24 hyperparameter cells: depth ∈ {3,4,5,6}, n_est ∈
+{200,400,600}, lr ∈ {0.03,0.05}) and LightGBM (3×3×2 = 18 cells: leaves ∈
+{15,31,63}, n_est ∈ {400,600,800}, lr ∈ {0.03,0.05}) on multiple feature pools.
+
+**Phase 1 — expanded H6 pool (30 features)**:
+
+| Model | Cross-year r | Score (T=1) |
+|---|---|---|
+| H2 Ridge (13 feats, native sample) | 0.5433 | 1.6300 |
+| H2 Ridge (13 feats, H7 sample n=1127) | 0.5430 | 1.6290 |
+| Ridge expanded (30 feats) | 0.5219 | 1.5657 |
+| **Best XGBoost** | **0.5187** | **1.5560** |
+| **Best LightGBM** | **0.5184** | **1.5552** |
+
+The expanded pool *itself* hurts r by 0.02 even with Ridge — the extra
+features add noise without signal. Tree models add no further lift.
+
+**Phase 2 — apples-to-apples on the SAME 13 H2 features**:
+
+| Model | Cross-year r | Score |
+|---|---|---|
+| **Ridge (production)** | **0.5433** | **1.6300** |
+| XGBoost (best, depth=3) | 0.5352 | 1.6055 |
+| LightGBM (best, leaves=15) | 0.5329 | 1.5986 |
+
+Even on the exact same 13 features, gradient boosting is **0.008-0.010 r
+worse** than Ridge.
+
+**Why GB underperforms here:**
+
+1. **Aggregated season targets are smooth.** FP/PA is a season aggregate
+   over ~600 PAs per hitter — noise smooths out, residuals are gaussian-like,
+   and the relationship between features and target is approximately linear.
+   Ridge's natural domain.
+2. **Feature interactions are weak.** The signal from `iso × whiff_pct`
+   doesn't add meaningfully on top of main effects. Trees model these
+   interactions but spend capacity discovering they're not useful.
+3. **Sample size is small.** Each cross-year transition has 150-250
+   evaluation rows with ~700-1000 training rows. Trees overfit at this
+   scale even with regularization.
+4. **Features are already engineered as rates.** Roughly normally
+   distributed and additive. Trees' splitting machinery doesn't help when
+   the underlying surface is approximately linear.
+
+**Decision: H7 does NOT ship. The compendium's GB recommendation is true
+for in-game / per-PA prediction; for season-aggregate cross-year prediction,
+linear regularized regression is empirically the right tool.**
+
+### H9 — Cohort Decomposition by Position Group
+
+Two architectures tested:
+
+- **H9a**: Add primary_position as one-hot encoded feature to H2 pool
+- **H9b**: Train separate Ridge models per position group (C / IF / OF / DH)
+
+| Variant | Cross-year r | Δ vs H2 | Score Δ |
+|---|---|---|---|
+| H2 unified | 0.5433 | — | — |
+| H9a (+ position OH) | **0.5438** | **+0.0005** | +0.0014 |
+| H9b (per-cohort) | 0.5124 | -0.0309 | -0.0928 |
+
+Per-cohort breakdown:
+- C (catchers): r 0.216 (n=27 — too small)
+- IF: r 0.552 (n=111)
+- OF: r 0.523 (n=89)
+- DH: insufficient data
+
+**H9a fails by a hair** — position dummy variables add no signal. Ridge
+already absorbs whatever position-level information matters via the
+existing 13 features (e.g., catchers tend to have lower xwoba_per_pa,
+which is already a feature).
+
+**H9b fails decisively** — per-cohort models lose to the unified model
+because (a) the per-cohort training set is much smaller, and (b) the
+H2 features generalize across positions. Splitting hurts.
+
+Coverage caveat: only 1,735 of 9,636 substrate rows have a `primary_position`
+because the MLB Stats API roster cache only covers 2024+. Older years
+default to NULL and drop out. This is a real data-coverage problem, not
+a fundamental cohort-modeling failure — H9b might fare differently with
+full position coverage. But H9a doesn't depend on that, and H9a barely
+moves either, so the conclusion stands.
+
+### H8 — 30-Day Rolling Target (DEFERRED)
+
+H8 is the one remaining path with genuine upside potential. The H3
+mid-season blend's huge YTD r boost (0.32 → 0.59) suggests in-season
+short-window signals are much stronger than season-aggregate signals
+year-over-year. But H8 requires:
+
+- Building a per-(batter, rolling_window) substrate from pitch-level Statcast
+- Defining a new prediction target ("next 30-day FP/PA from prior 30-day features")
+- A new validation framework (within-batter rolling-window cross-validation,
+  or a held-out future-month protocol)
+
+Estimated effort: 1-2 hours of clean substrate + modeling work. This
+genuinely changes the prediction problem — the dashboard's xFP would mean
+"next-30-day xFP" rather than "next-season xFP" — and is worth a separate
+focused session.
+
+### Final verdict — six attempts, one local optimum
+
+H2 has now been tested against six distinct improvement hypotheses across
+two sessions:
+
+| Phase | Hypothesis | Result |
+|---|---|---|
+| H3 | Compendium-aligned Statcast features (EV90, Sweet Spot%, spray) | Saturated — BE prunes them |
+| H4 | Team run-environment lag-1 | Marginal (+0.003 r); fails strict gate |
+| H5 | Marcel-style multi-year weighting | **Hurts** (-0.04 to -0.06 r) |
+| H6 | Savant expected-stats labels (xwoba/xba/xslg) | Redundant — BE prunes them |
+| H7 | Gradient boosting (XGB / LightGBM) | **Hurts** (-0.01 r even on same features) |
+| H9 | Cohort decomposition (position one-hot or per-cohort) | Negligible (+0.0005 OH) or hurts (-0.03 per-cohort) |
+
+**The pattern is clear: linear Ridge + 13 H2 features captures essentially
+all the cross-year predictive signal available in our season-aggregate
+hitter substrate.** The cross-year r ceiling is ~0.55 and we're at it.
+
+To exceed 0.55, the only remaining lever is a fundamentally different
+prediction problem (H8: rolling within-season target, separate model for
+"week-to-week" prediction rather than year-to-year), or genuinely new
+data (DRC+ from BP, FG historical bat-tracking back to 2020 — both
+currently blocked by access).
+
+H2 stays as production. The dashboard, projections, model bundle, and
+CLAUDE_CODE_HANDOFF table are unchanged.
+
+### Files
+
+- `scripts/xfp/xfp_h7_pipeline.py` (gradient boosting grid search)
+- `scripts/xfp/xfp_h9_pipeline.py` (cohort decomposition test)
+
+Both kept for audit. No new model bundles or projections — H2 production state
+preserved in full.
