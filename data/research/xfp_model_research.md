@@ -1229,3 +1229,168 @@ The substrate now has 4 new features (EV90, Sweet Spot%, Pull/Cent/Oppo%, Pull-F
   - **Team run-environment feature** (compendium §10.5 confounders) — addresses team_context_bias directly
   - **Multi-year weighting** (compendium §10.4 Marcel-style 5/4/3/2) — uses 3 years of history vs 1
   - **DRC+ / wRC+ historical pulls** — once FG scraping is unblocked, these are direct talent labels
+
+---
+
+## H4 / H5 / H6 — Three Attempts to Beat H2 (all negative or marginal)
+
+After H3 (compendium-aligned features) failed to improve on H2, three more
+phases tested distinct hypotheses for why H2 might be improvable. The plan
+flagged each as a "next phase candidate" in the H6 research note.
+
+### H4 — Team Run-Environment (lag-1)
+
+Targets the documented `team_context_bias = -0.039` (Christian Walker /
+Houston-lineup-bonus archetype).
+
+Feature: `team_run_env_lag1` = mean `fp_per_pa_actual` in year T-1 for the
+batter's year-T team, computed across all qualified (≥ 200 PA) hitters on
+that team **excluding the focal batter** (so the feature is non-circular at
+training time).
+
+Coverage on the ≥ 300 PA evaluation cohort: 2,505 / 2,774 (90%).
+
+**BE outcome**: H4 winner = H2's 13 features minus `z_contact_pct` plus
+`team_run_env_lag1` (13 features total).
+
+| Metric | H2 | H4 | Δ |
+|---|---|---|---|
+| Cross-year r | 0.5433 | 0.5467 | +0.0034 |
+| score (T=1) | 1.630 | 1.640 | +0.010 |
+| team_context_bias | -0.039 | -0.036 | shrunk 9% |
+| power_bias_hi | -0.079 | -0.078 | flat |
+
+**Decision gate**: passes the score gate (+0.010, the V12 / Phase-13
+threshold) but **fails the strict r gate** (needed +0.010, got +0.003).
+Per the conservative ship rule, **H4 does not ship**. Team run-environment
+adds real but small lift; the team_context_bias feature shrinks 9% but
+remains in the same neighborhood. Documented as marginal positive.
+
+### H5 — Marcel-Style Multi-Year Weighting
+
+Compendium §10.4: "Most-recent-year weight on a 5/4/3/2 sliding scale across
+last 4 years, then regress to league-mean by stat-specific k."
+
+For each (batter, year=T), each H2 feature is replaced by a weighted average:
+`marcel(f) = (5*f_T-1 + 4*f_T-2 + 3*f_T-3 + 2*f_T-4) / sum(weights present)`.
+
+Tested four variants:
+
+| Variant | Cross-year r | Δ vs H2 | Score Δ |
+|---|---|---|---|
+| H5 (Marcel-only on all 13 H2 features) | 0.479 | **-0.064** | **-0.194** |
+| H5+H4 (Marcel + team_env) | 0.479 | -0.064 | -0.192 |
+| H5-hybrid (Marcel for stable feats only, lag-1 for plate-disc) | 0.502 | -0.041 | -0.126 |
+| H5-hybrid + team_env | 0.503 | -0.041 | -0.121 |
+
+**All four variants WORSE than H2.** Documenting as negative.
+
+Why Marcel hurts here:
+1. **Sample loss** — eval set drops from 1,127 to 994 (-12%) because
+   batters with < 3 years of qualifying history can't be Marcel-weighted.
+   These rookies / recent-debut hitters are precisely where the model was
+   getting *some* signal from year-T-1 alone.
+2. **Information dilution** — year-T-1 stats already encode most of the
+   signal for predicting year T. Adding T-2/T-3/T-4 dilutes that signal
+   for players who change phase (decline, breakout, mechanical adjustment,
+   age). The weighted average smooths through real recent shifts.
+3. **The compendium framing is for projection of summary stats** (wOBA,
+   ISO) when no other data is available. Once we have 13 rich features
+   capturing different skill axes, the lag-1 signal is already saturated.
+
+The compendium's footnote — "skill metrics that age fast (speed, K-rate)
+deserve heavier recency weights" — was tested via the H5-hybrid variant
+that uses Marcel only for the stable metrics. Even that hurts r by 0.04.
+Marcel is wrong tool for this task.
+
+### H6 — Savant Expected-Stats Features
+
+FG was blocked by Cloudflare in this session, but Baseball Savant's
+expected_statistics endpoint is open and provides the same underlying
+data: xBA, xSLG, xwOBA are all computed by Statcast and surface on
+Savant directly.
+
+Pulled per-(batter, year) for 2015-2026:
+`sav_ba`, `sav_xba`, `sav_slg`, `sav_xslg`, `sav_woba`, `sav_xwoba`, plus
+the (xstat - actual) diff columns.
+
+**Single-feature cross-year correlations** were the strongest yet seen:
+
+| Feature | Mean cross-year r |
+|---|---|
+| `sav_xwoba` | **+0.452** |
+| `sav_woba` | +0.447 |
+| `sav_slg` | +0.414 |
+| `sav_xslg` | +0.414 |
+| `sav_ba` | +0.357 |
+| `sav_xba` | +0.357 |
+| diffs (xstat − stat) | ~0.000 (pure noise — DROP) |
+
+For comparison, H2's strongest single feature was `xwoba_per_pa` at +0.460.
+Savant features are right at that ceiling.
+
+**BE outcome**: started from a 19-feature pool (H2 + 6 Savant). BE
+**dropped every Savant feature** by step 8 — fully redundant with the
+H2 combination of `iso`, `k_pct`, `hard_hit_pct`, `xwoba_per_pa` etc.
+
+| Variant | Cross-year r | Score | Δ score vs H2 |
+|---|---|---|---|
+| H6 winner (10 H2 features after BE pruning) | 0.5428 | 1.628 | -0.002 |
+| H6 + team_run_env_lag1 (full combo) | 0.5460 | 1.638 | +0.008 |
+
+**The Savant features add nothing on top of H2** — they encode the same
+talent signal as `xwoba_per_pa` + `hard_hit_pct` + `iso` already do.
+The xstat-minus-stat diff features are pure year-to-year noise (regression
+candidates? possibly, but in a model context they don't predict).
+
+H6 alone fails both gates. H6 + team_env is essentially equivalent to H4
+alone (also +0.003 r, +0.008-0.010 score).
+
+### Combined verdict
+
+**None of H4/H5/H6 ships.** H2 remains the production hitter model.
+
+| Phase | Cross-year r | Score | Decision |
+|---|---|---|---|
+| **H2 (production)** | **0.5433** | **1.630** | — |
+| H4 (team_env) | 0.5467 | 1.640 | marginal positive (score gate passes, r gate fails) |
+| H5 (Marcel) | 0.479 | 1.436 | **NEGATIVE** (hurts r by 0.06) |
+| H5-hybrid | 0.502 | 1.504 | **NEGATIVE** (hurts r by 0.04) |
+| H6 (Savant) | 0.543 | 1.628 | redundant — BE prunes all Savant features |
+| H6 + team_env | 0.546 | 1.638 | marginal positive (= H4) |
+
+### What this rules out
+
+After H3 + H4 + H5 + H6, four distinct improvement hypotheses have all
+failed to materially beat H2:
+
+1. **Statcast feature refinement** (H3 — EV90, Sweet Spot%, spray angles): saturated.
+2. **Team run-environment** (H4): real but tiny lift; team_bias shrinks 9%.
+3. **Multi-year history weighting** (H5): hurts; Marcel framing is wrong for this target.
+4. **External Tier-S talent labels** (H6 — Savant xwoba/xba/xslg): redundant
+   with H2's existing feature combination.
+
+The cross-year r ceiling on FP/PA prediction with linear Ridge appears to
+be around **0.55** for our 2018-2025 substrate. To meaningfully exceed it,
+we'd need a different lever entirely:
+
+- **Different model class** — gradient boosting (XGBoost/LightGBM) on the
+  expanded H6 pool. Compendium §10.7 explicitly mentions tree models for
+  the talent-projection task. Worth testing.
+- **Different target decomposition** — predict short-window FP/PA (rolling
+  30-day) instead of season FP/PA. Different bias/variance tradeoff.
+- **Different cohort** — separate models by lineup spot or by position
+  group (compendium hints at this in §10.5 confounders).
+- **In-season blender re-tuning** — the H3 mid-season blend already gave
+  the biggest single lift (YTD r 0.32 → 0.59); re-tuning the blend priors
+  with more 2026 data accumulating may extend that.
+
+### Files
+
+- `scripts/xfp/xfp_h4_pipeline.py` (team_run_env feature + BE)
+- `scripts/xfp/xfp_h5_pipeline.py` (Marcel weighting variants)
+- `scripts/xfp/xfp_h6_pipeline.py` (Savant pull + BE)
+- `data/research/xfp_cache/savant_expected_batter_{year}.csv` × 12 (kept; useful for future work)
+- `data/research/xfp_h{4,5,6}_be_log.csv` (full BE traces)
+
+H2 production status unchanged. Dashboard / projections / model bundle all stay.

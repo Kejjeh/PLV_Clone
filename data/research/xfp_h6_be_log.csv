@@ -1,0 +1,16 @@
+n_feats,features,r,power_bias_hi,team_context_bias,rmse,mae,n,score_T1
+19,iso|k_pct|hr_per_pa|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|z_contact_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xslg|sav_xba|sav_woba|sav_slg|sav_ba,0.51876,-0.0873,-0.0391,0.115,0.0901,1127,1.55628
+18,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|z_contact_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xslg|sav_xba|sav_woba|sav_slg|sav_ba,0.52078,-0.0871,-0.039,0.1147,0.09,1127,1.56234
+17,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|z_contact_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xslg|sav_xba|sav_slg|sav_ba,0.52113,-0.0872,-0.039,0.1146,0.0899,1127,1.56339
+16,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|z_contact_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xba|sav_slg|sav_ba,0.5234,-0.0865,-0.0389,0.1144,0.0897,1127,1.5701999999999998
+15,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xba|sav_slg|sav_ba,0.52388,-0.0865,-0.0386,0.1143,0.0897,1127,1.57164
+14,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xba|sav_ba,0.52396,-0.0864,-0.039,0.1143,0.0897,1127,1.57188
+13,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba|sav_xba,0.5359,-0.0858,-0.0413,0.1118,0.0872,1127,1.6077000000000001
+12,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa|sav_xwoba,0.5404,-0.08,-0.041,0.1113,0.087,1127,1.6212
+11,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|chase_pct|in_play_pct|sprint_speed|sb_per_pa,0.54273,-0.0781,-0.0393,0.1109,0.0865,1127,1.62819
+10,iso|k_pct|hard_hit_pct|contact_pct|whiff_pct|swstr_pct|bb_pct|in_play_pct|sprint_speed|sb_per_pa,0.54281,-0.0781,-0.0394,0.111,0.0865,1127,1.62843
+9,iso|k_pct|hard_hit_pct|whiff_pct|swstr_pct|bb_pct|in_play_pct|sprint_speed|sb_per_pa,0.54281,-0.0781,-0.0394,0.111,0.0865,1127,1.62843
+8,iso|k_pct|hard_hit_pct|whiff_pct|swstr_pct|bb_pct|sprint_speed|sb_per_pa,0.54181,-0.0779,-0.0393,0.1111,0.0866,1127,1.6254300000000002
+7,iso|k_pct|hard_hit_pct|swstr_pct|bb_pct|sprint_speed|sb_per_pa,0.54048,-0.0782,-0.0392,0.1113,0.0867,1127,1.6214399999999998
+6,iso|k_pct|hard_hit_pct|bb_pct|sprint_speed|sb_per_pa,0.54053,-0.0785,-0.0393,0.1112,0.0867,1127,1.6215899999999999
+5,iso|k_pct|hard_hit_pct|bb_pct|sb_per_pa,0.53646,-0.0795,-0.04,0.1116,0.0868,1127,1.6093800000000003
