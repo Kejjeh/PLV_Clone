@@ -19,26 +19,30 @@ OUT = ROOT / 'data' / 'research' / 'xfp_h_correlation_screen.csv'
 TRANSITIONS = [(2018, 2019), (2021, 2022), (2022, 2023), (2023, 2024), (2024, 2025)]
 EVAL_MIN_PA = 300
 
-# Candidate H2 pool (per the plan, ~21 features)
+# Candidate H3 pool (compendium-aligned; expanded vs H2)
+# Drops: hbp_pct (H2 screen flagged DROP), z_swing_pct (DROP), and explicitly LD%
+# (compendium §10.2: Y/Y r ~0.22, mostly noise — never include).
 CANDIDATES = [
     # Plate discipline (Statcast pitch-level rates)
     'swing_pct', 'chase_pct', 'contact_pct', 'whiff_pct', 'in_play_pct',
-    'zone_pct', 'o_swing_pct', 'z_swing_pct', 'z_contact_pct',
+    'zone_pct', 'o_swing_pct', 'z_contact_pct',
     'swstr_pct', 'c_plus_swstr',
-    # Contact quality
+    # Contact quality (compendium Tier S/A)
     'xwoba_on_contact', 'xwoba_per_pa',
-    'hard_hit_pct', 'barrel_pct', 'avg_ev',
+    'hard_hit_pct', 'barrel_pct',
+    'ev90',           # NEW — compendium §3, §10.1: outperforms mean EV
+    'sweet_spot_pct', # NEW — compendium Tier A
+    'avg_ev',         # kept for comparison; expected to lose to ev90
+    # Spray angle (compendium Tier B — drives HR projection via FB-pull)
+    'pull_pct', 'cent_pct', 'oppo_pct', 'pull_fb_pct',  # NEW
     # Outcome rate stats (semi-circular but year-stable)
     'k_pct',     # → labelled k_pct_lag1 in the H2 search
     'bb_pct',    # → labelled bb_pct_lag1
-    'hbp_pct',   # → labelled hbp_pct_lag1
     'hr_per_pa', # → labelled hr_per_pa_lag1
     'iso',       # → labelled iso_lag1
     'sb_per_pa', # → labelled sb_per_pa_lag1
-    # Speed (Statcast — process not outcome)
+    # Speed (Statcast — process not outcome; compendium Y/Y r >0.85)
     'sprint_speed',
-    # FG bat-tracking (only present for 2026 currently — won't have cross-year coverage)
-    # 'avg_swing_speed', 'blast_rate', 'squared_up_rate',  # noted but excluded from screen
 ]
 
 

@@ -1135,3 +1135,97 @@ python scripts/xfp/build_v11_dashboard_v2.py
 - **Phase 13.5**: Use *same-year* IL events (not just lag-1) once a pitcher has logged a 2026 IL stint. The current V12 only knows about 2025 IL history. Add a "currently-on-IL" indicator that suppresses projection in real-time.
 - **Phase 14**: Days-since-IL as a continuous feature within the same year (currently we use it as a year-end snapshot which loses early-season signal).
 - **Phase 15**: Workload trajectory (pitch-count trends, rolling IP) as a leading indicator of injury risk — predict the IL placement before it happens.
+
+---
+
+## H3 — Compendium-Aligned Hitter Pool (NEGATIVE RESULT)
+*Run 2026-05-06 — does not ship; H2 stays as production.*
+
+After H2 was locked, [data/reference/baseball_stats_compendium.md](../reference/baseball_stats_compendium.md) was added with a tiered hitter feature framework. H3 tested whether adding the compendium's Tier S/A Statcast-derivable features (EV90, Sweet Spot%, Pull/Cent/Oppo%) would beat H2's cross-year score.
+
+### Substrate improvements (kept regardless of model outcome)
+
+[scripts/xfp/build_hitters_multiyr.py](../../scripts/xfp/build_hitters_multiyr.py) extended with:
+- **EV90** — 90th-percentile launch_speed per BBE (compendium §3, §10.1)
+- **Sweet Spot%** — fraction of BIP with launch angle in [8°, 32°]
+- **Pull% / Cent% / Oppo%** — derived from Statcast `hc_x`/`hc_y` and `stand`. Pull is normalized so positive = pull-side regardless of handedness.
+- **Pull-FB%** — pulled batted balls with LA in [20°, 35°] (the compendium's HR-projection sub-feature)
+- **Batter name resolution fix** — Statcast's `player_name` column is the pitcher, not the batter. Names are now pulled from MLB Stats API `fullName`. Fixed cases like "McHugh, Collin" being mis-applied to Joey Gallo's batter ID 608336.
+
+### Correlation screen (H1.5 rerun)
+
+| Feature | Mean cross-year cor | Recommendation |
+|---|---|---|
+| `xwoba_per_pa` | 0.460 | KEEP |
+| `c_plus_swstr` | -0.369 | KEEP |
+| `avg_ev` | **0.334** | KEEP |
+| `iso` | 0.314 | KEEP |
+| `k_pct` | -0.312 | KEEP |
+| ... (all H1.5 KEEP features) | | |
+| `ev90` | **0.202** | KEEP (but weaker than `avg_ev`) |
+| `xwoba_on_contact` | 0.199 | KEEP |
+| `barrel_pct` | 0.181 | KEEP |
+| `pull_fb_pct` | 0.049 | DROP (sign flip) |
+| `oppo_pct` | -0.079 | WATCH |
+| `pull_pct` | 0.059 | WATCH |
+| `cent_pct` | 0.021 | DROP (sign flip) |
+| **`sweet_spot_pct`** | **0.038** | **DROP (sign flip)** |
+
+**Key finding** — EV90 underperforms mean EV cross-year in this dataset (mean cor 0.20 vs 0.33). The compendium's claim that EV90 > mean EV holds for predicting future *wOBAcon / ISO* (which is what Clemens FG 2022 / Salorio 2024 tested), but our target is full FP/PA which folds in BB/K/HBP/SB/R/RBI. EV90's strength is the upper-tail-of-contact signal; for an aggregate per-PA target, mean EV's full-distribution signal correlates better year-to-year. Both are kept in the H3 pool to let BE choose.
+
+Sweet Spot% lands in DROP (mean cor 0.038, sign flips) — the LA-8-32° band catches too many lazy line drives and warning-track flies that don't translate cross-year. The compendium's Tier-A label reflects in-season correlation with HR/ISO, not next-year predictive value on FP.
+
+Pull%/Cent%/Oppo% all land in WATCH/DROP. The compendium correctly notes pull-FB% drives HR projection within-year, but year-to-year a hitter's spray pattern shifts (mechanical adjustments, opposing shifts, lefty/righty matchup distribution) — so it doesn't add cross-year lift over barrel%/EV which capture the same upstream skill.
+
+### H3 backward elimination
+
+Pool: 21 features (H2's 13 + EV90, avg_ev, barrel_pct, xwoba_per_pa, xwoba_on_contact, c_plus_swstr, o_swing_pct, zone_pct, swstr_pct).
+
+| Step | Feature dropped | Cross-year r | Score (T=1) |
+|---|---|---|---|
+| 0 (full pool) | — | 0.5342 | 1.603 |
+| 1 | barrel_pct | 0.5380 | 1.614 |
+| 2 | avg_ev | 0.5398 | 1.619 |
+| 3 | **ev90** | 0.5406 | 1.622 |
+| 4 | bb_pct | 0.5414 | 1.624 |
+| 8 | swstr_pct | 0.5431 | **1.629 (best)** |
+| ... (no further improvement) | | | |
+
+**Winner: 13 features, score 1.629, cross-year r 0.5431.**
+
+### Decision gate — FAIL
+
+| Gate | Threshold | H3 actual | Pass |
+|---|---|---|---|
+| Cross-year r | ≥ H2 (0.5433) + 0.01 = 0.5533 | 0.5431 | **FAIL** (within rounding of H2) |
+| \|power_bias_hi\| | ≤ 1.0 | 0.082 | PASS |
+| Score (T=1.0) | > H2's 1.6300 | 1.6294 | **FAIL** (-0.0006) |
+
+**H3 effectively ties H2 — no measurable improvement.** Per the plan's documented protocol, H3 does NOT ship; H2 remains the production hitter model.
+
+### Why H3 didn't help (interpretation)
+
+The new features (EV90, Sweet Spot%, Pull/Cent/Oppo%) test as **redundant given H2's already-included features**:
+
+- EV90, avg_ev, barrel_pct, hard_hit_pct, xwoba_on_contact, xwoba_per_pa all describe the same underlying "contact quality" axis. Once the model has 2-3 of those, adding more saturates.
+- Pull/Cent/Oppo% encode information that's already in barrel_pct + hard_hit_pct + iso. Pulled fly balls with high EV become barrels; the model doesn't need a separate spray-angle feature to find them cross-year.
+- Sweet Spot% captures launch angle distribution but the rate features (hr_per_pa, iso, hard_hit_pct) already encode the productive part of that distribution.
+
+This is consistent with the V12 finding: after a certain feature density, BE prunes overlapping signals. The compendium's tier list reflects within-year explanatory power, not cross-year marginal lift.
+
+### What did improve
+
+The substrate now has 4 new features (EV90, Sweet Spot%, Pull/Cent/Oppo%, Pull-FB%) and a critical bug fix (batter names). These flow into the dashboard payload and are available for any future H4/H5 effort that needs them — for instance, a model that targets HR/PA specifically rather than full FP/PA might find pull_fb_pct useful.
+
+### Files
+
+- `scripts/xfp/xfp_h3_pipeline.py` — H3 BE script (kept for the negative-result audit)
+- `data/research/xfp_h3_be_log.csv` — backward elimination history
+
+### What this rules out
+
+- Compendium Tier-S/A Statcast-derivable hitter features add no cross-year FP/PA lift beyond H2's pool.
+- The next attempts to beat H2 should target *different signal sources*, not more Statcast contact-quality refinements:
+  - **Team run-environment feature** (compendium §10.5 confounders) — addresses team_context_bias directly
+  - **Multi-year weighting** (compendium §10.4 Marcel-style 5/4/3/2) — uses 3 years of history vs 1
+  - **DRC+ / wRC+ historical pulls** — once FG scraping is unblocked, these are direct talent labels

@@ -97,7 +97,7 @@ def aggregate_year(df: pd.DataFrame, year: int) -> pd.DataFrame:
     d['is_bip']    = d['is_pa'] & ~d['is_k'] & ~d['is_bb'] & ~d['is_hbp']
     d['tb']        = ev.map(TB_MAP).fillna(0).astype(int)
 
-    # Batted-ball quality
+    # Batted-ball quality (compendium-aligned)
     ls = pd.to_numeric(d.get('launch_speed'), errors='coerce')
     la = pd.to_numeric(d.get('launch_angle'), errors='coerce')
     d['hard_hit'] = (ls >= 95) & d['is_bip']
@@ -105,6 +105,34 @@ def aggregate_year(df: pd.DataFrame, year: int) -> pd.DataFrame:
         d['barrel'] = (pd.to_numeric(d['launch_speed_angle'], errors='coerce') == 6) & d['is_bip']
     else:
         d['barrel'] = (ls >= 98) & la.between(26, 30) & d['is_bip']
+    # Sweet Spot% — BBE with LA in [8, 32]° (compendium §3, §10.1)
+    d['sweet_spot'] = la.between(8, 32) & d['is_bip']
+    # Stash launch_speed values restricted to BIP for EV90 quantile aggregation
+    d['ls_bip'] = ls.where(d['is_bip'])
+
+    # Spray angle for Pull/Cent/Oppo (compendium §3 — uses Statcast horizontal angle).
+    # Approximation: hc_x / hc_y are field coordinates; compute angle from home plate.
+    # Convention: home plate ≈ (125.42, 198.27); arctan2 of (hc_x − 125.42, 198.27 − hc_y).
+    # For a RHB, negative angles = pull (LF), positive = oppo (RF). Flip for LHB.
+    if 'hc_x' in d.columns and 'hc_y' in d.columns and 'stand' in d.columns:
+        hcx = pd.to_numeric(d['hc_x'], errors='coerce')
+        hcy = pd.to_numeric(d['hc_y'], errors='coerce')
+        spray_rad = np.arctan2(hcx - 125.42, 198.27 - hcy)
+        spray_deg = np.degrees(spray_rad)  # − = LF, 0 = CF, + = RF
+        # Flip LHB so positive = pull-side regardless of handedness
+        sign = np.where(d['stand'] == 'L', 1.0, -1.0)
+        d['spray_pull_deg'] = spray_deg * sign  # positive = pull, negative = oppo
+        # Bin: pull (>15°), cent (-15..15), oppo (<-15°)
+        d['is_pull'] = (d['spray_pull_deg'] >  15) & d['is_bip']
+        d['is_cent'] = (d['spray_pull_deg'].between(-15, 15)) & d['is_bip']
+        d['is_oppo'] = (d['spray_pull_deg'] < -15) & d['is_bip']
+        # Pulled fly balls (LA 20-35°) — what compendium calls out for HR projection
+        d['is_pull_fb'] = d['is_pull'] & la.between(20, 35)
+    else:
+        d['is_pull'] = False
+        d['is_cent'] = False
+        d['is_oppo'] = False
+        d['is_pull_fb'] = False
 
     # xwOBA on contact (BIP-only) and per-PA xwOBA (research-doc convention)
     xwoba_con = pd.to_numeric(d.get('estimated_woba_using_speedangle'), errors='coerce')
@@ -149,10 +177,22 @@ def aggregate_year(df: pd.DataFrame, year: int) -> pd.DataFrame:
         avg_ev       =('launch_speed','mean'),
         hard_hit_n   =('hard_hit','sum'),
         barrel_n     =('barrel','sum'),
+        sweet_spot_n =('sweet_spot','sum'),
+        pull_n       =('is_pull','sum'),
+        cent_n       =('is_cent','sum'),
+        oppo_n       =('is_oppo','sum'),
+        pull_fb_n    =('is_pull_fb','sum'),
         xwoba_bip    =('xwoba_con_val','mean'),
         woba_v_sum   =('woba_v_pa','sum'),
         woba_d_sum   =('woba_d_pa','sum'),
     ).reset_index()
+    # EV90 — 90th-percentile launch_speed on BIP (compendium §3, §10.1).
+    # Computed separately because pandas .agg doesn't support quantile cleanly here.
+    ev90 = (d[d['is_bip']].dropna(subset=['ls_bip'])
+              .groupby('batter')['ls_bip']
+              .quantile(0.90)
+              .rename('ev90')).reset_index()
+    agg = agg.merge(ev90, on='batter', how='left')
 
     # Player names + team modes
     name_map = d.dropna(subset=['player_name']).groupby('batter')['player_name'].first()
@@ -181,6 +221,12 @@ def aggregate_year(df: pd.DataFrame, year: int) -> pd.DataFrame:
     agg['in_play_pct']   = agg['bip'] / agg['pitches']
     agg['hard_hit_pct']  = agg['hard_hit_n'] / agg['bip'].replace(0, np.nan)
     agg['barrel_pct']    = agg['barrel_n'] / agg['bip'].replace(0, np.nan)
+    # Compendium-aligned new rates
+    agg['sweet_spot_pct']= agg['sweet_spot_n'] / agg['bip'].replace(0, np.nan)
+    agg['pull_pct']      = agg['pull_n'] / agg['bip'].replace(0, np.nan)
+    agg['cent_pct']      = agg['cent_n'] / agg['bip'].replace(0, np.nan)
+    agg['oppo_pct']      = agg['oppo_n'] / agg['bip'].replace(0, np.nan)
+    agg['pull_fb_pct']   = agg['pull_fb_n'] / agg['bip'].replace(0, np.nan)
     agg['k_pct']         = agg['k'] / agg['pa'].replace(0, np.nan)
     agg['bb_pct']        = agg['bb'] / agg['pa'].replace(0, np.nan)
     agg['hbp_pct']       = agg['hbp'] / agg['pa'].replace(0, np.nan)
@@ -236,6 +282,9 @@ def fetch_counting_stats(year: int) -> pd.DataFrame:
                 continue
             rows.append({
                 'batter': int(pid),
+                # Canonical batter name — Statcast's player_name column is the
+                # pitcher, not the batter, so we resolve names from MLB Stats API.
+                'mlb_name': p.get('fullName'),
                 'mlb_pa':  int(stat.get('plateAppearances', 0) or 0),
                 'mlb_ab':  int(stat.get('atBats', 0) or 0),
                 'mlb_r':   int(stat.get('runs', 0) or 0),
@@ -330,6 +379,10 @@ def build():
             # (Statcast `events` column doesn't fire on SBs because they aren't
             # PA-ending events, so the in-aggregate sb_per_pa was always 0.)
             season['sb_per_pa'] = season['sb'] / season['pa'].replace(0, np.nan)
+            # Canonical batter name from MLB API replaces Statcast's player_name
+            # (Statcast's player_name is the pitcher, not the batter).
+            if 'mlb_name' in season.columns:
+                season['player_name'] = season['mlb_name'].fillna(season['player_name'])
         else:
             season['r'] = 0
             season['rbi'] = 0
