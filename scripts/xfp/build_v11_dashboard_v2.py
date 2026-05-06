@@ -25,9 +25,13 @@ import joblib
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
-PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_v11_projections.csv'
+# V12 is now the primary pitcher projection (V11 + il_60_stints_lag1).
+# V11 stays in the dataset as a comparison column.
+V12_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_v12_projections.csv'
+PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_v11_projections.csv'  # legacy fallback
 MULTI_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'sp_multiyr_2015_2025.csv'
 MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v11_pipeline.pkl'
+V12_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v12_pipeline.pkl'
 H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 H2_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_h2_pipeline.pkl'
 PLV_HTML = ROOT / 'data' / 'outputs' / 'process_report_2026.html'
@@ -111,6 +115,15 @@ def build_records() -> tuple[list[dict], dict]:
     )
     proj = proj.merge(latest, on='pitcher', how='left')
 
+    # V12 — the new primary projection (V11 + il_60_stints_lag1).
+    # Merge xfp_v12 + il_60_stints_lag1 as new columns on top of the V11 base
+    # so existing fields (stuff_xfp, ip_premium, ip_trend) still flow through.
+    if V12_PROJ_CSV.exists():
+        v12 = pd.read_csv(V12_PROJ_CSV)
+        v12_keep = ['pitcher', 'xfp_v12', 'il_60_stints_lag1', 'rank_v12']
+        v12_keep = [c for c in v12_keep if c in v12.columns]
+        proj = proj.merge(v12[v12_keep], on='pitcher', how='left')
+
     def num(v, dp=None):
         if pd.isna(v):
             return None
@@ -127,18 +140,26 @@ def build_records() -> tuple[list[dict], dict]:
             if gs_val is not None and gs_val >= 5 and fp_actual_val is not None
             else None
         )
-        # Residual: how far off the V11 projection is from per-start actual.
-        # Positive = V11 over-projects, Negative = pitcher outperforming V11.
+        # V12 is the new primary projection. Falls back to V11 for pitchers V12 doesn't cover.
+        xfp_primary = num(r.get('xfp_v12'), 2) if pd.notna(r.get('xfp_v12')) else num(r['xfp_v11'], 2)
+        # Residual: how far off the primary projection is from per-start actual.
+        # Positive = over-projection, Negative = pitcher outperforming.
         residual_val = (
-            round(num(r['xfp_v11'], 2) - fp_actual_val, 2)
-            if fp_actual_val is not None and gs_val is not None and gs_val >= 5
+            round(xfp_primary - fp_actual_val, 2)
+            if fp_actual_val is not None and gs_val is not None and gs_val >= 5 and xfp_primary is not None
             else None
         )
+        # IL feature value for transparency
+        il60 = int(r['il_60_stints_lag1']) if pd.notna(r.get('il_60_stints_lag1')) else 0
         records.append({
             'mlbId': int(r['pitcher']),
             'name': r['player_name'],
+            'xfpV12': xfp_primary,
             'xfpV11': num(r['xfp_v11'], 2),
             'xfpV85': num(r['xfp_v8_5'], 2),
+            'deltaV12V11': round(xfp_primary - num(r['xfp_v11'], 2), 2)
+                if (xfp_primary is not None and pd.notna(r['xfp_v11'])) else None,
+            'il60Lag1': il60,
             'delta': residual_val,
             'fpTotal': fp_total_val,
             'stuffXfp': num(r['stuff_xfp'], 2),
@@ -540,7 +561,9 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <th style={{ padding:'8px 8px', fontSize:11, color:colors.dim, width:30, textAlign:'left' }}>★</th>
             <SortTh col="rank"     label="Rk"        align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpV11"   label="xFP V11"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpV12"   label="xFP V12"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpV11"   label="V11"       width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="il60Lag1" label="IL60"      width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="fpTotal"  label="FP Total"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="delta"    label="Δ vs Act"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="stuffXfp" label="Stuff"     width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
@@ -558,7 +581,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
           {rows.map((p, idx) => {
             const isFav = favorites.includes(p.mlbId);
             const isExp = expanded === p.mlbId;
-            const tier = TIER(p.xfpV11);
+            const tier = TIER(p.xfpV12);
             const tierColor = tier === 'Elite' ? colors.accent : tier === 'Strong' ? colors.pos : tier === 'Solid' ? colors.text : colors.dim;
             const trendStyle = p.ipTrend === 'HIGH'
               ? { color:colors.pos, border:`1px solid ${colors.pos}` }
@@ -581,11 +604,15 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                     <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
                   </td>
                   <td style={{ padding:'5px 8px', textAlign:'right',
-                               background: editorialHeat(p.xfpV11, 8, 17) }}>
+                               background: editorialHeat(p.xfpV12, 8, 17) }}>
                     <span style={{ fontSize:17, fontFamily:SERIF, fontStyle:'italic',
                                    color:tierColor, fontVariantNumeric:'tabular-nums' }}>
-                      {fmt(p.xfpV11, 2)}
+                      {fmt(p.xfpV12, 2)}
                     </span>
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{fmt(p.xfpV11, 2)}</td>
+                  <td style={dataCell(colors, p.il60Lag1 > 0 ? colors.warn : colors.faint)}>
+                    {p.il60Lag1 > 0 ? p.il60Lag1 : '—'}
                   </td>
                   <td style={dataCell(colors, p.fpTotal == null ? colors.faint : colors.text)}>
                     {p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)}
@@ -629,7 +656,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                 </tr>
                 {isExp && (
                   <tr>
-                    <td colSpan={15} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
+                    <td colSpan={17} style={{ padding:'14px 24px', background:colors.stripe, borderBottom:`1px solid ${colors.faint}` }}>
                       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:24 }}>
                         <div>
                           <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>Tier · {tier}</div>
@@ -1041,7 +1068,7 @@ function Dashboard({ dark }) {
   const [roster, setRoster]     = React.useState('all'); // 'all' | 'mine' | 'other'
 
   // Projections sort + expand
-  const [sortCol, setSortCol]   = React.useState('xfpV11');
+  const [sortCol, setSortCol]   = React.useState('xfpV12');
   const [sortDir, setSortDir]   = React.useState('desc');
   const [expanded, setExpanded] = React.useState(null);
 
@@ -1111,7 +1138,7 @@ function Dashboard({ dark }) {
                     display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:24, flexWrap:'wrap' }}>
         <div>
           <div style={{ fontSize:9, letterSpacing:4, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>
-            V11 PRODUCTION · 2026 SEASON · BUILD {meta.trainedDate}
+            V12 PRODUCTION (V11 + IL) · 2026 SEASON · BUILD {meta.trainedDate}
             {hasMyTeam && <span style={{ color:colors.accent, marginLeft:10 }}>· {myTeam.teamName}</span>}
           </div>
           <h1 style={{ fontSize:32, fontWeight:400, margin:'2px 0 0', letterSpacing:-0.5, fontStyle:'italic', whiteSpace:'nowrap' }}>

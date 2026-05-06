@@ -1,11 +1,12 @@
 # xFP Model Optimization — Claude Code Handoff
 
 ## **PRODUCTION MODELS**
-*Last updated 2026-05-06*
+*Last updated 2026-05-06 (Phase 13 ships)*
 
 | Model | Predicts | Cross-year r | YTD r | YTD MAE | Bundle |
 |---|---|---|---|---|---|
-| **V11** (pitchers, SP-only) | FP per start | 0.614 | 0.511 | 3.393 | `data/models/xfp_v11_pipeline.pkl` |
+| **V12** (pitchers, SP-only) | FP per start | **0.656** | TBD | TBD | `data/models/xfp_v12_pipeline.pkl` |
+| V11 (pitchers, superseded) | FP per start | 0.614 | 0.511 | 3.393 | `data/models/xfp_v11_pipeline.pkl` |
 | **H2** (hitters, all positions) | FP per PA | 0.543 | 0.589 | 0.112 | `data/models/xfp_h2_pipeline.pkl` |
 
 Unified dashboard at `data/outputs/xfp_dashboard.html` (mirrored to `xfp-model/docs/index.html`)
@@ -18,6 +19,7 @@ includes both models + ESPN My Team merge.
 | Phase 11 | COMPLETE | FG Stuff+/Pitching+ history pulled (undetected-chromedriver), V11 ships |
 | Phase 12 | COMPLETE (negative) | Residual correction architecture rejected |
 | **H0–H6** | **COMPLETE** | **Hitter xFP H2 ships; both models in unified dashboard** |
+| **Phase 13** | **COMPLETE** | **V12 = pruned V11 + il_60_stints_lag1; cross-year r 0.620 → 0.656** |
 
 ### Benchmark table (final)
 

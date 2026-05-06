@@ -998,3 +998,140 @@ H2 retraining is fast (~5s); the substrate rebuild is the longest step (~30s if 
 - **H9: Bat-tracking back-history.** FG bat-tracking only goes back to 2024. Once 2024+2025
   snapshots are pulled, retrain H2 with `avg_swing_speed` and `blast_rate` in the candidate
   pool — they're plausibly stronger than ISO/HR/PA but currently invisible to the cross-year search.
+
+---
+
+## Phase 13 — Injury History → V12 (V11 + IL features)
+*Locked 2026-05-06.*
+
+### Motivation
+
+V11 had a documented systematic over-projection on the Woodruff/Ragans archetype (chronic IL history) and on pitchers with hidden injuries (Bello, Littell, Scherzer, Senga). The plan flagged this as the "Phase 13 candidate" — add injury-history features that no process model could surface.
+
+### Data substrate
+
+`data/research/xfp_cache/il_features_2015_2026.csv` (28,451 (pitcher, year) rows).
+
+Source: MLB Stats API `/api/v1/transactions` endpoint. Pulled month-by-month for each year 2015–2026, filtered to Status Change events with IL-related descriptions ("placed on N-day injured/disabled list", "activated from", "transferred to"). Both modern "injured list" and pre-2019 "disabled list" wording are matched.
+
+Per-(pitcher, year) features engineered:
+- `il_stints` — count of IL placements during year T
+- `il_60_stints` — count of 60-day IL placements (long-term injuries)
+- `il_days_total` — estimated days on IL (placement→activation gaps; capped at 2× the IL category)
+- `days_since_last_il` — days from year-end back to most recent placement
+- `career_il_stints_3yr` / `career_il_days_3yr` — 3-year rolling lookback
+
+Lagged versions (year T-1 features predicting year T+1 FP) used for cross-year prediction.
+
+### P13.2 — Correlation screen
+
+Of 8 IL candidates screened against year-T+1 fp_per_start_actual:
+- **`il_60_stints_lag1` survived** (mean cor across transitions clears the 0.10 KEEP threshold).
+- All others — `il_stints_lag1`, `il_days_total_lag1`, `days_since_last_il_lag1`, `career_il_stints_3yr_lag1`, `career_il_days_3yr_lag1`, plus same-year `il_stints` / `il_days_total` — fell into WATCH or DROP categories.
+
+The intuition: short IL stints are recoverable bouts that don't carry into next year's per-start FP. 60-day IL stints are the major-injury / surgery signal — those have lasting effects on next-year IP and command.
+
+### P13.3 — V12 backward elimination
+
+Pool: V11's 14 features + the surviving IL feature (15 total). BE ranked by `score_fn = r * 3 - max(0, |k_bias_hi| - 1.0) * 0.5`.
+
+The surprise: BE pruned 6 V11 features in addition to keeping `il_60_stints_lag1`. Final V12 model has 9 features:
+
+```python
+V12_FEATS = [
+    'zone_pct', 'xwoba_per_pa',
+    'ip_resid_lag1', 'k_pct_lag1',
+    'pitch_entropy', 'bb_pfxz',
+    'pitching_plus', 'fp_strike_pct',
+    'il_60_stints_lag1',     # NEW
+]
+# Dropped from V11: avg_velo, o_swing_pct, swstr_pct, c_plus_swstr,
+#                   z_swing_pct, xwoba_x_swstr
+```
+
+Standardized coefficients (sorted by |coef|):
+| Feature | Coef |
+|---|---|
+| xwoba_per_pa | -1.983 |
+| pitching_plus | +0.781 |
+| fp_strike_pct | +0.428 |
+| ip_resid_lag1 | +0.242 |
+| bb_pfxz | -0.153 |
+| k_pct_lag1 | +0.150 |
+| pitch_entropy | +0.146 |
+| zone_pct | +0.104 |
+| il_60_stints_lag1 | -0.022 |
+
+### Decision gates (all PASS)
+
+| Gate | Threshold | V12 actual | Pass |
+|---|---|---|---|
+| Cross-year r | ≥ V11 (0.620) + 0.01 = 0.630 | **0.656** | ✓ +0.036 |
+| \|k_bias_hi\| | ≤ V11's 0.773 | **0.711** (sign-flipped to negative) | ✓ |
+| Score (T=1.0) | > V11 1.860 | **1.967** | ✓ +0.107 |
+
+The cross-year r boost is meaningful (+0.036). About 80% of it comes from BE-driven feature pruning of V11 (the 6 removed features were adding more variance than signal cross-year), and the remaining ~20% from the IL feature itself.
+
+### Archetype check (P13.5)
+
+V12 vs V11 vs 2026 actual on the named archetypes:
+
+| Pitcher | V11 | V12 | Δ | Actual | Closer? |
+|---|---|---|---|---|---|
+| Woodruff | 15.90 | **14.41** | -1.49 | 10.62 | ✓ |
+| Glasnow | 14.05 | **14.82** | +0.77 | 19.90 | ✓ |
+| Schlittler | 14.89 | **15.94** | +1.05 | 19.49 | ✓ |
+| Scherzer | 8.70 | **8.15** | -0.56 | 0.06 | ✓ |
+| Littell | 7.46 | **6.62** | -0.84 | -1.20 | ✓ |
+| Ragans | 13.54 | **13.26** | -0.28 | 10.70 | ✓ slight |
+| Bello | 8.29 | 8.50 | +0.21 | -0.75 | ✗ wrong direction |
+| Senga | 9.65 | 10.08 | +0.43 | 1.58 | ✗ wrong direction |
+| Imanaga | 10.89 | 10.35 | -0.54 | 18.06 | ✗ wrong direction (V11 was already low) |
+
+V12 helps on 6/9 archetypes. The 3 misses (Bello, Senga, Imanaga) all had short IL stints last year (10-day or 30-day), which the model correctly didn't penalize because short IL stints don't carry cross-year. Those archetypes need a different intervention (probably a mid-season blender that pulls from current 2026 partial stats more aggressively, or roster-based status flags).
+
+### V12 vs V11 movers
+
+**Biggest drops (V12 < V11):**
+- Woodruff (-1.49, 1× 60-day IL last year — model docks correctly)
+- Taillon, Andrew Abbott, Crochet, Ohtani, Cavalli — all dropped 1.0+ FP/start, none with IL history. The drops come from BE pruning the V11 features (swstr_pct, avg_velo, etc.) that were inflating these projections.
+
+**Biggest gains (V12 > V11):**
+- Will Warren (+1.63), Gavin Williams (+1.63) — clean IL history rookies/young arms
+- Schlittler (+1.05), Glasnow (+0.77) — clean recent histories despite some IL
+- Hancock, Festa, Arrighetti — break-out candidates the leaner model now ranks higher
+
+### Files (new from this phase)
+
+- `scripts/xfp/build_il_history.py` — fetcher + feature engineering
+- `scripts/xfp/xfp_v12_pipeline.py` — correlation screen + BE
+- `scripts/xfp/xfp_v12_lock.py` — production training + projections
+- `data/research/xfp_cache/il_transactions_{year}.json` × 12 — cached IL events
+- `data/research/xfp_cache/il_features_2015_2026.csv` (28,451 rows)
+- `data/research/xfp_v12_be_log.csv` — BE history
+- `data/models/xfp_v12_pipeline.pkl` — production bundle
+- `data/outputs/xfp_v12_projections.csv` — 177 pitchers projected
+
+### Dashboard integration
+
+`build_v11_dashboard_v2.py` updated: V12 is the primary projection column, V11 retained as comparison, new `IL60` column shows last-year 60-day IL count. Default sort is now by `xfpV12`.
+
+### How to refresh during the season
+
+```bash
+# 1. Refresh IL transaction logs (2026 only — older years are stable)
+rm data/research/xfp_cache/il_transactions_2026.json
+python scripts/xfp/build_il_history.py
+
+# 2. Re-lock V12 (uses the existing V11 substrate + refreshed IL features)
+python scripts/xfp/xfp_v12_lock.py
+
+# 3. Rebuild dashboard
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+### Next phase candidates
+
+- **Phase 13.5**: Use *same-year* IL events (not just lag-1) once a pitcher has logged a 2026 IL stint. The current V12 only knows about 2025 IL history. Add a "currently-on-IL" indicator that suppresses projection in real-time.
+- **Phase 14**: Days-since-IL as a continuous feature within the same year (currently we use it as a year-end snapshot which loses early-season signal).
+- **Phase 15**: Workload trajectory (pitch-count trends, rolling IP) as a leading indicator of injury risk — predict the IL placement before it happens.

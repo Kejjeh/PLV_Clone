@@ -1,0 +1,11 @@
+n_feats,features,r,k_bias_hi,rmse,mae,n,score_T1
+15,avg_velo|zone_pct|o_swing_pct|swstr_pct|c_plus_swstr|xwoba_per_pa|z_swing_pct|xwoba_x_swstr|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.63482,-0.6909,2.5836,2.1224,349,1.9044600000000003
+14,avg_velo|zone_pct|o_swing_pct|swstr_pct|c_plus_swstr|xwoba_per_pa|z_swing_pct|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.63981,-0.8924,2.5603,2.1146,349,1.91943
+13,avg_velo|zone_pct|o_swing_pct|c_plus_swstr|xwoba_per_pa|z_swing_pct|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65022,-0.804,2.5075,2.0311,349,1.95066
+12,zone_pct|o_swing_pct|c_plus_swstr|xwoba_per_pa|z_swing_pct|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65253,-0.7755,2.5012,2.0288,349,1.9575900000000002
+11,zone_pct|c_plus_swstr|xwoba_per_pa|z_swing_pct|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65354,-0.7737,2.4937,2.027,349,1.96062
+10,zone_pct|xwoba_per_pa|z_swing_pct|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65428,-0.7306,2.5028,2.0332,349,1.96284
+9,zone_pct|xwoba_per_pa|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65581,-0.7106,2.4987,2.0256,349,1.96743
+8,xwoba_per_pa|ip_resid_lag1|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65557,-0.7146,2.499,2.0239,349,1.96671
+7,xwoba_per_pa|k_pct_lag1|pitch_entropy|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65464,-0.772,2.5003,2.0063,349,1.9639199999999999
+6,xwoba_per_pa|k_pct_lag1|bb_pfxz|pitching_plus|fp_strike_pct|il_60_stints_lag1,0.65329,-0.788,2.4996,1.9957,349,1.95987
