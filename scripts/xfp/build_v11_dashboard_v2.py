@@ -2716,8 +2716,179 @@ function App() {
   );
 }
 
+// ═══ Compare View — me vs one opponent + sneaky trade suggestions ═══════════
+function CompareView({ myName, oppName, myBuckets, oppBuckets, trades, colors, posOrder, posLabel }) {
+  const fmt = (v, dp = 2) => v == null || isNaN(v) ? '—' : Number(v).toFixed(dp);
+  const fmtPct = (v) => v == null || isNaN(v) ? '—' : `${Number(v).toFixed(0)}%`;
+
+  // Compact player line for comparison (smaller than full PlayerRow)
+  const CompareRow = ({ p }) => {
+    if (!p) return <div style={{ padding:'8px 10px', color:colors.faint, fontFamily:MONO, fontSize:10, fontStyle:'italic' }}>(empty slot)</div>;
+    const fpLabel = (p.role === 'SP' || p.role === 'RP')
+      ? (p.role === 'SP' ? 'fp/start' : 'fp/G')
+      : 'fp/G';
+    const sampleTxt = p.role === 'SP' ? `${p.sample}GS`
+                    : p.role === 'RP' ? `${p.sample}G`
+                    : `${p.sample}PA`;
+    const fpVal = p.fp_per != null ? fmt(p.fp_per, 2)
+                  : (p.marcel_3yr != null ? fmt(p.marcel_3yr, 2) + '*' : '—');
+    return (
+      <div style={{ padding:'7px 10px', borderBottom:`1px solid ${colors.faint}` }}>
+        <div style={{ display:'flex', alignItems:'center', gap:6, flexWrap:'wrap' }}>
+          <span style={{ fontSize:13, fontWeight:500 }}>{p.name}</span>
+          {p.rank != null && (
+            <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO }}>#{p.rank}</span>
+          )}
+          {p.signal === 'add' && (
+            <span style={{ fontSize:8, padding:'1px 4px', border:`1px solid ${colors.accent}`,
+                           color:colors.accent, borderRadius:2, fontFamily:MONO }}>ADD</span>
+          )}
+          {p.signal === 'drop' && (
+            <span style={{ fontSize:8, padding:'1px 4px', border:`1px solid ${colors.warn}`,
+                           color:colors.warn, borderRadius:2, fontFamily:MONO }}>DROP</span>
+          )}
+          {p.slump_pct != null && p.slump_pct < 20 && p.slump_bounce >= 80 && (
+            <span style={{ fontSize:8, padding:'1px 4px', border:`1px solid ${colors.pos}`,
+                           color:colors.pos, borderRadius:2, fontFamily:MONO }}>BUY-LOW</span>
+          )}
+          {p.slump_pct != null && p.slump_pct >= 90 && p.slump_bounce != null && p.slump_bounce < 60 && (
+            <span style={{ fontSize:8, padding:'1px 4px', border:`1px solid ${colors.warn}`,
+                           color:colors.warn, borderRadius:2, fontFamily:MONO }}>SELL-HIGH</span>
+          )}
+        </div>
+        <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO, marginTop:2 }}>
+          {fpVal} {fpLabel} · {sampleTxt}
+          {p.ytd_fp != null && p.ytd_fp > 0 && (<> · YTD <span style={{ color:colors.text }}>{fmt(p.ytd_fp, 0)}</span></>)}
+          {p.ros_fp != null && p.ros_fp > 0 && (<> · RoS <span style={{ color:colors.accent }}>{fmt(p.ros_fp, 0)}</span></>)}
+        </div>
+      </div>
+    );
+  };
+
+  // Compute team-level RoS totals for the header
+  const sumRos = (bucks) => {
+    let t = 0;
+    for (const k of posOrder) for (const p of (bucks[k] || [])) t += (p.ros_fp || 0);
+    return t;
+  };
+  const myRos = sumRos(myBuckets);
+  const oppRos = sumRos(oppBuckets);
+
+  // Sneaky trade card
+  const TradeCard = ({ t }) => (
+    <div style={{ padding:'12px 14px', border:`1px solid ${colors.border}`, borderRadius:4,
+                  marginBottom:10, background:colors.panel }}>
+      <div style={{ display:'flex', alignItems:'baseline', gap:10, marginBottom:6 }}>
+        <span style={{ fontSize:9, fontFamily:MONO, color:colors.dim, letterSpacing:1.5,
+                       textTransform:'uppercase' }}>{t.bucket} swap</span>
+        <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic', color:colors.accent }}>
+          edge for me: +{t.edge_for_me} FP
+        </span>
+        <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, marginLeft:'auto' }}>
+          (perceived diff {t.perceived_diff >= 0 ? '+' : ''}{t.perceived_diff} · model diff {t.model_diff >= 0 ? '+' : ''}{t.model_diff})
+        </span>
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr auto 1fr', gap:12, alignItems:'center' }}>
+        <div style={{ textAlign:'right' }}>
+          <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
+            you send
+          </div>
+          <div style={{ fontSize:14, fontWeight:500 }}>{t.mine.name}
+            <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO, marginLeft:6 }}>#{t.mine.rank}</span>
+          </div>
+          <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO }}>
+            YTD {fmt(t.mine.ytd_fp, 0)} · RoS {fmt(t.mine.ros_fp, 0)}
+            {t.mine.slump_pct != null && (<> · slump {fmtPct(t.mine.slump_pct)}/bnc {fmtPct(t.mine.slump_bounce)}</>)}
+          </div>
+        </div>
+        <div style={{ fontSize:14, color:colors.accent, fontFamily:MONO }}>↔</div>
+        <div>
+          <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
+            you receive
+          </div>
+          <div style={{ fontSize:14, fontWeight:500 }}>{t.theirs.name}
+            <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO, marginLeft:6 }}>#{t.theirs.rank}</span>
+          </div>
+          <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO }}>
+            YTD {fmt(t.theirs.ytd_fp, 0)} · RoS {fmt(t.theirs.ros_fp, 0)}
+            {t.theirs.slump_pct != null && (<> · slump {fmtPct(t.theirs.slump_pct)}/bnc {fmtPct(t.theirs.slump_bounce)}</>)}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop:8, marginBottom:24, padding:16, border:`1px solid ${colors.border}`,
+                  background:colors.panel, borderRadius:6 }}>
+      <div style={{ display:'flex', alignItems:'baseline', gap:18, marginBottom:14 }}>
+        <h2 style={{ fontSize:20, margin:0, fontWeight:400, fontFamily:SERIF, fontStyle:'italic' }}>
+          {myName} <span style={{ color:colors.dim }}>vs</span> {oppName}
+        </h2>
+        <span style={{ fontSize:11, fontFamily:MONO, color:colors.dim, letterSpacing:1 }}>
+          RoS FP: {fmt(myRos, 0)} vs {fmt(oppRos, 0)}
+          {myRos > oppRos
+            ? <span style={{ color:colors.pos, marginLeft:6 }}>(+{fmt(myRos - oppRos, 0)} edge)</span>
+            : <span style={{ color:colors.warn, marginLeft:6 }}>({fmt(myRos - oppRos, 0)} deficit)</span>}
+        </span>
+      </div>
+
+      {/* Trade suggestions */}
+      {trades && trades.length > 0 ? (
+        <div style={{ marginBottom:18 }}>
+          <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:2,
+                        textTransform:'uppercase', marginBottom:8 }}>
+            Top sneaky trade ideas — fair-looking by YTD totals, model says I gain RoS
+          </div>
+          {trades.slice(0, 5).map((t, i) => <TradeCard key={i} t={t} />)}
+          {trades.length === 0 && (
+            <div style={{ fontSize:11, color:colors.dim, fontFamily:MONO }}>
+              No qualifying trades found (need edge ≥ 25 FP, perceived gap ≤ 30 FP).
+            </div>
+          )}
+        </div>
+      ) : (
+        <div style={{ padding:'10px 12px', color:colors.dim, fontFamily:MONO, fontSize:11,
+                      marginBottom:18 }}>
+          No qualifying trades found (need edge ≥ 25 FP, perceived gap ≤ 30 FP).
+        </div>
+      )}
+
+      {/* Side-by-side roster */}
+      <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:2,
+                    textTransform:'uppercase', marginBottom:8, paddingBottom:4,
+                    borderBottom:`1px solid ${colors.faint}` }}>
+        Position-by-position roster
+      </div>
+      {posOrder.map(pos => {
+        const mine = myBuckets[pos] || [];
+        const theirs = oppBuckets[pos] || [];
+        if (mine.length === 0 && theirs.length === 0) return null;
+        const maxRows = Math.max(mine.length, theirs.length);
+        return (
+          <div key={pos} style={{ marginTop:14 }}>
+            <div style={{ fontSize:11, fontFamily:MONO, color:colors.text, letterSpacing:1.5,
+                          textTransform:'uppercase', marginBottom:4 }}>
+              {posLabel[pos]}
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:18 }}>
+              <div>
+                {Array.from({length: maxRows}).map((_, i) => <CompareRow key={i} p={mine[i]} />)}
+              </div>
+              <div>
+                {Array.from({length: maxRows}).map((_, i) => <CompareRow key={i} p={theirs[i]} />)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ═══ Team Audit Tab ═══════════════════════════════════════════════════════════
 function AuditTab({ audit, colors }) {
+  const [selectedOpp, setSelectedOpp] = React.useState(null);
   if (!audit || audit.error || !audit.roster_buckets) {
     return (
       <div style={{ padding:'24px 32px', color:colors.dim, fontFamily:MONO }}>
@@ -2827,20 +2998,46 @@ function AuditTab({ audit, colors }) {
       <SectionHeading num="A" label={`${audit.my_team_name} — Team Audit`}
         right={`AS OF ${audit.as_of_date.toUpperCase()}`} colors={colors} />
 
-      {/* Standings strip */}
+      {/* Standings strip — opponent tiles clickable to launch compare view */}
       {audit.standings && audit.standings.length > 0 && (
         <div style={{ display:'flex', flexWrap:'wrap', gap:8, padding:'12px 0', marginBottom:16 }}>
-          {audit.standings.map((s, i) => (
-            <div key={s.team_name} style={{
-              padding:'6px 10px', fontFamily:MONO, fontSize:11,
-              border:`1px solid ${s.is_mine ? colors.accent : colors.faint}`,
-              color: s.is_mine ? colors.accent : colors.dim,
-              fontWeight: s.is_mine ? 600 : 400, borderRadius:3,
-            }}>
-              {i+1}. {s.team_name} ({s.wins}-{s.losses})
-            </div>
-          ))}
+          {audit.standings.map((s, i) => {
+            const isOpp = !s.is_mine;
+            const isSelected = selectedOpp === s.team_name;
+            return (
+              <div key={s.team_name}
+                   onClick={isOpp ? () => setSelectedOpp(isSelected ? null : s.team_name) : undefined}
+                   style={{
+                     padding:'6px 10px', fontFamily:MONO, fontSize:11,
+                     border:`1px solid ${s.is_mine ? colors.accent : (isSelected ? colors.text : colors.faint)}`,
+                     color: s.is_mine ? colors.accent : (isSelected ? colors.text : colors.dim),
+                     fontWeight: (s.is_mine || isSelected) ? 600 : 400,
+                     borderRadius:3,
+                     cursor: isOpp ? 'pointer' : 'default',
+                     background: isSelected ? colors.panel : 'transparent',
+                   }}
+                   title={isOpp ? `Click to compare vs ${s.team_name} + see trade suggestions` : ''}>
+                {i+1}. {s.team_name} ({s.wins}-{s.losses})
+                {isOpp && !isSelected && <span style={{ marginLeft:6, opacity:0.5 }}>↔</span>}
+                {isSelected && <span style={{ marginLeft:6 }}>✕</span>}
+              </div>
+            );
+          })}
         </div>
+      )}
+
+      {/* Compare view (only when an opponent is selected) */}
+      {selectedOpp && audit.all_team_buckets && audit.all_team_buckets[selectedOpp] && (
+        <CompareView
+          myName={audit.my_team_name}
+          oppName={selectedOpp}
+          myBuckets={audit.roster_buckets}
+          oppBuckets={audit.all_team_buckets[selectedOpp]}
+          trades={(audit.trades_vs && audit.trades_vs[selectedOpp]) || []}
+          colors={colors}
+          posOrder={POS_ORDER}
+          posLabel={POS_LABEL}
+        />
       )}
 
       {/* Position-by-position */}
@@ -3056,10 +3253,21 @@ def build_team_audit() -> dict:
     rp_roll['key'] = rp_roll['name'].fillna('').apply(_norm_audit)
     rp_lookup = {r['key']: r.to_dict() for _, r in rp_roll.iterrows() if r['key']}
 
-    # Multi-year sources for Marcel of IL/no-2026 players
+    # Multi-year sources for Marcel of IL/no-2026 players + actual YTD totals
     sp_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/sp_multiyr_2015_2025.csv')
     rp_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/relievers_multiyr_2018_2026.csv')
     h_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv')
+    # 2026 actual YTD totals for hitters (perceived value)
+    h_2026 = h_multiyr[h_multiyr['year'] == 2026][['batter', 'pa', 'fp_total']].rename(
+        columns={'pa': 'pa_2026', 'fp_total': 'fp_total_2026'})
+    if not h_2026.empty:
+        rh = rh.merge(h_2026, on='batter', how='left')
+        rh_dedup = rh.sort_values(['key', 'pa_to'], ascending=[True, False]).drop_duplicates('key', keep='first')
+        rh_lookup = {r['key']: r.to_dict() for _, r in rh_dedup.iterrows()}
+
+    # SP remaining-starts factor (matches dashboard SP RoS calc)
+    SP_REM_FACTOR = 1.42
+    RP_REM_FACTOR = 1.42
 
     # Slump precedent merges (already in rh3/rp3)
     def _eval_player(name: str, espn_pos: str) -> dict:
@@ -3069,15 +3277,21 @@ def build_team_audit() -> dict:
                'rank': None, 'fp_per': None, 'sample': 0,
                'signal': None, 'slump_pct': None, 'slump_n': None,
                'slump_bounce': None, 'slump_next': None,
-               'marcel_3yr': None, 'marcel_years': None, 'role': None}
+               'marcel_3yr': None, 'marcel_years': None, 'role': None,
+               'ytd_fp': 0.0, 'ros_fp': 0.0}
         if bucket == 'SP':
             r = sp_lookup.get(k)
             if r and pd.notna(r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start')):
+                fp_per = float(r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start'))
+                gs = int(r.get('gs_to') or 0)
                 out['rank'] = int(r['rank'])
-                out['fp_per'] = float(r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start'))
-                out['sample'] = int(r.get('gs_to') or 0)
+                out['fp_per'] = fp_per
+                out['sample'] = gs
                 out['signal'] = r.get('signal')
                 out['role'] = 'SP'
+                ytd_per = float(r.get('fp_per_start_to') or fp_per)
+                out['ytd_fp'] = ytd_per * gs
+                out['ros_fp'] = fp_per * gs * SP_REM_FACTOR
                 if pd.notna(r.get('slump_pct_rank')):
                     out['slump_pct'] = float(r['slump_pct_rank'])
                 if pd.notna(r.get('slump_n_comparable')):
@@ -3087,7 +3301,6 @@ def build_team_audit() -> dict:
                 if pd.notna(r.get('slump_next_rate')):
                     out['slump_next'] = float(r['slump_next_rate'])
             else:
-                # No 2026 sample — try Marcel from sp_multiyr by name match
                 row = sp_multiyr[sp_multiyr['player_name'].str.replace(' ', '').str.lower()
                                  .apply(lambda s: _norm_audit(s) == k if pd.notna(s) else False)]
                 if not row.empty:
@@ -3097,15 +3310,19 @@ def build_team_audit() -> dict:
                     if m:
                         out.update(m)
                         out['role'] = 'SP'
+                        # IL stash projected over remaining ~14 starts (rough)
+                        out['ros_fp'] = float(m['marcel_3yr']) * 14
         elif bucket == 'RP':
             r = rp_lookup.get(k)
             if r:
+                fp_to = float(r.get('fp_with_role_to') or 0)
                 out['rank'] = int(r['rp_rank'])
-                out['fp_per'] = float(r.get('fp_with_role_to') or 0)
+                out['fp_per'] = fp_to
                 out['sample'] = int(r.get('g_to') or 0)
                 out['role'] = 'RP'
+                out['ytd_fp'] = fp_to
+                out['ros_fp'] = fp_to * RP_REM_FACTOR
             else:
-                # Marcel from RP multiyr
                 row = rp_multiyr[rp_multiyr['name'].fillna('').apply(lambda s: _norm_audit(s) == k)]
                 if not row.empty:
                     pid = int(row['pitcher'].iloc[0])
@@ -3113,6 +3330,7 @@ def build_team_audit() -> dict:
                     if m:
                         out.update(m)
                         out['role'] = 'RP'
+                        out['ros_fp'] = float(m['marcel_3yr']) * 30
         else:
             r = rh_lookup.get(k)
             if r and pd.notna(r.get('xfp_rh3_per_game')):
@@ -3121,7 +3339,13 @@ def build_team_audit() -> dict:
                 out['sample'] = int(r.get('pa_to') or 0)
                 out['signal'] = r.get('signal')
                 out['role'] = 'H'
-                out['ros_total'] = float(r.get('expected_total_fp_remaining') or 0)
+                out['ros_fp'] = float(r.get('expected_total_fp_remaining') or 0)
+                # Actual YTD totals from hitters_multiyr 2026 (joined above as fp_total_2026)
+                actual_ytd = r.get('fp_total_2026')
+                if pd.notna(actual_ytd) and actual_ytd:
+                    out['ytd_fp'] = float(actual_ytd)
+                else:
+                    out['ytd_fp'] = float(r.get('xfp_rh3_per_pa') or 0) * out['sample']
                 out['repl_delta'] = float(r.get('replacement_delta') or 0)
                 if pd.notna(r.get('slump_pct_rank')):
                     out['slump_pct'] = float(r['slump_pct_rank'])
@@ -3140,6 +3364,7 @@ def build_team_audit() -> dict:
                     if m:
                         out.update(m)
                         out['role'] = 'H'
+                        out['ros_fp'] = float(m['marcel_3yr']) * 400
         out['commentary'] = _commentary(out)
         return out
 
@@ -3147,18 +3372,20 @@ def build_team_audit() -> dict:
     my_team_name = 'New York Ligers'
     rostered_keys = set(teams['player_name'].apply(_norm_audit))
 
-    my_roster = []
-    for _, p in teams[teams['team_name'] == my_team_name].iterrows():
-        my_roster.append(_eval_player(p['player_name'], p['position']))
+    # Compute roster_buckets for EVERY team (mine + 7 opponents)
+    all_team_buckets = {}
+    for tname, grp in teams.groupby('team_name'):
+        b = {'C': [], '1B': [], '2B': [], '3B': [], 'SS': [], 'OF': [], 'SP': [], 'RP': []}
+        for _, p in grp.iterrows():
+            ev = _eval_player(p['player_name'], p['position'])
+            bk = ev['bucket']
+            if bk in b:
+                b[bk].append(ev)
+            else:
+                b.setdefault(bk, []).append(ev)
+        all_team_buckets[tname] = b
 
-    # Group by bucket
-    buckets = {'C': [], '1B': [], '2B': [], '3B': [], 'SS': [], 'OF': [], 'SP': [], 'RP': []}
-    for pl in my_roster:
-        b = pl['bucket']
-        if b in buckets:
-            buckets[b].append(pl)
-        else:
-            buckets.setdefault(b, []).append(pl)
+    buckets = all_team_buckets.get(my_team_name, {})
 
     # FA leaderboards by position
     def _fa_hitters(pos_filter, n=5) -> list[dict]:
@@ -3244,12 +3471,79 @@ def build_team_audit() -> dict:
                 'is_mine': r['team_name'] == my_team_name,
             })
 
+    # ── Trade finder ─────────────────────────────────────────────────────────
+    # Goal: surface 1-for-1 swaps where (a) the model says I gain forward RoS FP
+    # and (b) the trade looks roughly fair from the season-to-date totals,
+    # so the opposing team is plausibly willing to accept.
+    #
+    # Definitions:
+    #   ytd_diff   = ytd_fp(theirs) - ytd_fp(mine)    rear-view "perceived" delta
+    #   model_gain = ros_fp(theirs) - ros_fp(mine)    forward-looking edge for me
+    #
+    # Required filters:
+    #   - both players have a model rank (no IL-only deals we can't price)
+    #   - model_gain >= 25 FP                meaningful forward edge
+    #   - |ytd_diff| <= 30 FP                looks roughly fair on rear-view
+    #     (positive = they think they're losing YTD; negative = I think I'm losing.
+    #      Both extremes get filtered so the trade is "plausibly proposable")
+    # Same-bucket only for v1 (catcher-for-catcher, OF-for-OF, etc.)
+
+    def _trade_pairs(my_buckets: dict, their_buckets: dict, max_total: int = 25) -> list[dict]:
+        suggestions = []
+        for bk in ['C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP']:
+            mine_list = my_buckets.get(bk, [])
+            theirs_list = their_buckets.get(bk, [])
+            for mine in mine_list:
+                if mine.get('rank') is None or (mine.get('ros_fp') or 0) <= 0:
+                    continue
+                for theirs in theirs_list:
+                    if theirs.get('rank') is None or (theirs.get('ros_fp') or 0) <= 0:
+                        continue
+                    ytd_diff = (theirs.get('ytd_fp') or 0) - (mine.get('ytd_fp') or 0)
+                    model_gain = (theirs.get('ros_fp') or 0) - (mine.get('ros_fp') or 0)
+                    if model_gain < 25:
+                        continue
+                    if abs(ytd_diff) > 30:
+                        continue
+                    suggestions.append({
+                        'bucket': bk,
+                        'mine': {
+                            'name': mine['name'], 'rank': mine.get('rank'),
+                            'ytd_fp': round(mine.get('ytd_fp') or 0, 1),
+                            'ros_fp': round(mine.get('ros_fp') or 0, 1),
+                            'slump_pct': mine.get('slump_pct'),
+                            'slump_bounce': mine.get('slump_bounce'),
+                            'signal': mine.get('signal'),
+                        },
+                        'theirs': {
+                            'name': theirs['name'], 'rank': theirs.get('rank'),
+                            'ytd_fp': round(theirs.get('ytd_fp') or 0, 1),
+                            'ros_fp': round(theirs.get('ros_fp') or 0, 1),
+                            'slump_pct': theirs.get('slump_pct'),
+                            'slump_bounce': theirs.get('slump_bounce'),
+                            'signal': theirs.get('signal'),
+                        },
+                        'perceived_diff': round(ytd_diff, 1),
+                        'model_diff': round(model_gain, 1),
+                        'edge_for_me': round(model_gain, 1),  # the actual RoS upside I gain
+                    })
+        suggestions.sort(key=lambda s: -s['edge_for_me'])
+        return suggestions[:max_total]
+
+    trades = {}
+    for tname in all_team_buckets:
+        if tname == my_team_name:
+            continue
+        trades[tname] = _trade_pairs(buckets, all_team_buckets[tname])
+
     return {
         'my_team_name': my_team_name,
         'as_of_date': str(date.today()),
         'standings': st_rows,
         'roster_buckets': buckets,
+        'all_team_buckets': all_team_buckets,
         'fa': fa,
+        'trades_vs': trades,
     }
 
 
