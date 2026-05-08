@@ -35,8 +35,14 @@ V12_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_v12_pipeline.pkl'
 H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 H2_MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_h2_pipeline.pkl'
 # Rest-of-Season (within-season) projections — added 2026-05-06 for in-season use
-RH1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rh1_projections.csv'
-RP1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rp1_projections.csv'
+RH1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'
+RP1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'
+# Reliever projections — added 2026-05-06
+# RP-RS2 (current): RP-RS1 + statcast-derived in-season role-usage features
+# (gf_pct_to, sv_per_g_to, hld_per_g_to). Stratified-validated +0.033 overall,
+# +0.074 on role-change subset.
+RP_RPRS1_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv'  # in-season RoS
+RP_RPS1_PROJ_CSV  = ROOT / 'data' / 'outputs' / 'xfp_rps1_projections.csv'   # cross-year
 PLV_HTML = ROOT / 'data' / 'outputs' / 'process_report_2026.html'
 OUT_PRIMARY = ROOT / 'data' / 'outputs' / 'xfp_dashboard.html'
 OUT_DOCS = ROOT / 'xfp-model' / 'docs' / 'index.html'
@@ -108,7 +114,7 @@ def extract_my_team() -> dict | None:
 
 # ─── Records ──────────────────────────────────────────────────────────────────
 
-def build_records() -> tuple[list[dict], dict]:
+def build_records() -> tuple[list[dict], dict, list[dict]]:
     proj = pd.read_csv(PROJ_CSV)
     multi = pd.read_csv(MULTI_CSV)
     latest = (
@@ -132,9 +138,24 @@ def build_records() -> tuple[list[dict], dict]:
     # RP1 predicts the REMAINDER of year T from year-T-to-date features.
     if RP1_PROJ_CSV.exists():
         rp1 = pd.read_csv(RP1_PROJ_CSV)
-        rp1_keep = ['pitcher', 'xfp_rp1_per_start', 'gs_to', 'fp_per_start_to']
+        rp1_keep = ['pitcher', 'xfp_rp3_per_start', 'gs_to', 'fp_per_start_to',
+                    'fp_per_start_last21', 'recency_form_gap',
+                    'xfp_rp3_p25', 'xfp_rp3_p75', 'xfp_rp3_sigma',
+                    'next_opp_team', 'next2_avg_bat_index',
+                    'xfp_rp3_per_start_sched', 'is_on_il_at_split',
+                    'replacement_xfp_per_start', 'replacement_delta', 'signal',
+                    'prior_source', 'player_name',
+                    'slump_pct_rank', 'slump_n_comparable', 'slump_bounce_pct',
+                    'slump_next_rate', 'slump_delta']
         rp1_keep = [c for c in rp1_keep if c in rp1.columns]
-        proj = proj.merge(rp1[rp1_keep], on='pitcher', how='left')
+        # Rename rp1's player_name so it doesn't collide; we'll use it as a fallback
+        rp1_subset = rp1[rp1_keep].rename(columns={'player_name': 'rp1_player_name'})
+        proj = proj.merge(rp1_subset, on='pitcher', how='outer')
+        if 'xfp_rp3_per_start' in proj.columns:
+            proj = proj.rename(columns={'xfp_rp3_per_start': 'xfp_rp1_per_start'})
+        # For rookie rows that only exist in rp1 (MiLB-derived), backfill name
+        if 'rp1_player_name' in proj.columns:
+            proj['player_name'] = proj['player_name'].fillna(proj['rp1_player_name'])
 
     def num(v, dp=None):
         if pd.isna(v):
@@ -144,8 +165,14 @@ def build_records() -> tuple[list[dict], dict]:
 
     records = []
     for _, r in proj.iterrows():
-        gs_val = int(r['gs_2026']) if pd.notna(r['gs_2026']) else None
-        fp_actual_val = num(r['fp_per_start_actual_2026'], 2)
+        # Skip rows with no pitcher id (corrupt) or no usable name
+        if pd.isna(r.get('pitcher')):
+            continue
+        if pd.isna(r.get('player_name')):
+            # Rookie / minor-leaguer with no MLB name source — drop quietly
+            continue
+        gs_val = int(r['gs_2026']) if pd.notna(r.get('gs_2026')) else None
+        fp_actual_val = num(r.get('fp_per_start_actual_2026'), 2)
         # Cumulative FP for the season (≥ 5 GS gate so the number is meaningful).
         fp_total_val = (
             round(gs_val * fp_actual_val, 1)
@@ -153,7 +180,8 @@ def build_records() -> tuple[list[dict], dict]:
             else None
         )
         # V12 is the new primary projection. Falls back to V11 for pitchers V12 doesn't cover.
-        xfp_primary = num(r.get('xfp_v12'), 2) if pd.notna(r.get('xfp_v12')) else num(r['xfp_v11'], 2)
+        xfp_v11_val = num(r.get('xfp_v11'), 2) if pd.notna(r.get('xfp_v11')) else None
+        xfp_primary = num(r.get('xfp_v12'), 2) if pd.notna(r.get('xfp_v12')) else xfp_v11_val
         # Residual: how far off the primary projection is from per-start actual.
         # Positive = over-projection, Negative = pitcher outperforming.
         residual_val = (
@@ -167,28 +195,62 @@ def build_records() -> tuple[list[dict], dict]:
         # which is a year-over-year season-aggregate projection.
         ros_per_start = num(r.get('xfp_rp1_per_start'), 2) if pd.notna(r.get('xfp_rp1_per_start')) else None
         gs_to_val = int(r['gs_to']) if pd.notna(r.get('gs_to')) else None
+        # RoS-decision-layer columns (R3): CI bounds, schedule adjustment, signal
+        ros_p25 = num(r.get('xfp_rp3_p25'), 2)
+        ros_p75 = num(r.get('xfp_rp3_p75'), 2)
+        ros_sched = num(r.get('xfp_rp3_per_start_sched'), 2)
+        ros_recency_gap = num(r.get('recency_form_gap'), 2)
+        ros_repl = num(r.get('replacement_xfp_per_start'), 2)
+        ros_repl_delta = num(r.get('replacement_delta'), 2)
+        next_opp = r.get('next_opp_team') if pd.notna(r.get('next_opp_team')) else None
+        next2_idx = num(r.get('next2_avg_bat_index'), 3)
+        _il_val = r.get('is_on_il_at_split')
+        on_il = bool(int(_il_val)) if pd.notna(_il_val) else False
+        signal = r.get('signal') if pd.notna(r.get('signal')) else 'hold'
+        prior_source = r.get('prior_source') if pd.notna(r.get('prior_source')) else None
+        slump_pct = num(r.get('slump_pct_rank'), 1)
+        slump_n = int(r['slump_n_comparable']) if pd.notna(r.get('slump_n_comparable')) else None
+        slump_bounce = num(r.get('slump_bounce_pct'), 1)
+        slump_next = num(r.get('slump_next_rate'), 3)
+        slump_delta = num(r.get('slump_delta'), 3)
         records.append({
             'mlbId': int(r['pitcher']),
             'name': r['player_name'],
             'xfpV12': xfp_primary,
-            'xfpV11': num(r['xfp_v11'], 2),
+            'xfpV11': xfp_v11_val,
             'xfpV85': num(r['xfp_v8_5'], 2),
             'xfpRoS': ros_per_start,        # Rest-of-Season FP/start projection
+            'xfpRoSp25': ros_p25,
+            'xfpRoSp75': ros_p75,
+            'xfpRoSSched': ros_sched,
+            'recencyGap': ros_recency_gap,
+            'nextOpp': next_opp,
+            'next2OppIdx': next2_idx,
+            'onIL': on_il,
+            'replXfp': ros_repl,
+            'replDelta': ros_repl_delta,
+            'signal': signal,
+            'priorSource': prior_source,    # 'mlb_lag' | 'milb_translation' | 'league_mean'
+            'slumpPct': slump_pct,          # 0-100; lower = rarer in own career
+            'slumpN': slump_n,
+            'slumpBouncePct': slump_bounce,
+            'slumpNextRate': slump_next,
+            'slumpDelta': slump_delta,
             'gsToDate': gs_to_val,          # starts already made
-            'deltaV12V11': round(xfp_primary - num(r['xfp_v11'], 2), 2)
-                if (xfp_primary is not None and pd.notna(r['xfp_v11'])) else None,
+            'deltaV12V11': round(xfp_primary - xfp_v11_val, 2)
+                if (xfp_primary is not None and xfp_v11_val is not None) else None,
             'il60Lag1': il60,
             'delta': residual_val,
             'fpTotal': fp_total_val,
-            'stuffXfp': num(r['stuff_xfp'], 2),
-            'ipPremium': num(r['ip_premium'], 2),
-            'ipTrend': r['ip_trend'],
-            'kPct': num(r['k_pct_2026'], 3),
+            'stuffXfp': num(r.get('stuff_xfp'), 2),
+            'ipPremium': num(r.get('ip_premium'), 2),
+            'ipTrend': r.get('ip_trend'),
+            'kPct': num(r.get('k_pct_2026'), 3),
             'swstrPct': num(r.get('swstr_pct'), 3),
             'gs': gs_val,
             'fpActual': fp_actual_val,
-            'hasFG': bool(r['v11_has_pitching_plus']),
-            'rollingIp': num(r['rolling_ip_last5'], 2),
+            'hasFG': bool(r['v11_has_pitching_plus']) if pd.notna(r.get('v11_has_pitching_plus')) else False,
+            'rollingIp': num(r.get('rolling_ip_last5'), 2),
             # ESPN fields (filled from MY_TEAM where available)
             'roster': 'other',          # 'mine' | 'other'
             'espnPos': None,
@@ -200,9 +262,77 @@ def build_records() -> tuple[list[dict], dict]:
             'gpEspn': None,
         })
 
-    records.sort(key=lambda x: -x['xfpV11'])
+    # Compute SP projected RoS TOTAL FP = xfpRoS × estimated remaining starts.
+    # Estimated remaining starts uses elapsed-fraction extrapolation, calibrated
+    # against historical actuals. Empirical calibration ratios (actual/formula),
+    # measured on 2018-2025 data:
+    #   split  formula            actual ratio
+    #   30     gs × 5.17           0.87  (formula over-predicts)
+    #   60     gs × 2.08           1.08  (slight under)
+    #   90     gs × 1.06           1.29
+    #   120    gs × 0.54           1.66  (formula under-predicts; surviving SPs stay healthy)
+    # We interpolate between these for the current elapsed_days.
+    from datetime import date as _date
+    season_start = pd.Timestamp('2026-03-26')
+    elapsed_days = max((pd.Timestamp(_date.today()) - season_start).days, 1)
+    season_days = 185
+    fraction_played = min(elapsed_days / season_days, 0.95)
+    raw_factor = (1.0 / fraction_played - 1.0)
+
+    # Calibration interpolation table
+    _calib_table = [(30, 0.87), (60, 1.08), (90, 1.29), (120, 1.66)]
+    if elapsed_days <= 30:
+        calib = 0.87
+    elif elapsed_days >= 120:
+        calib = 1.66
+    else:
+        for (a, ca), (b, cb) in zip(_calib_table[:-1], _calib_table[1:]):
+            if a <= elapsed_days <= b:
+                calib = ca + (cb - ca) * (elapsed_days - a) / (b - a)
+                break
+        else:
+            calib = 1.0
+    sp_remaining_factor = raw_factor * calib
+
+    for rec in records:
+        gs = rec.get('gsToDate')
+        ros = rec.get('xfpRoS')
+        if gs is None or ros is None or gs == 0:
+            rec['rosTotalFp'] = None
+            rec['rosTotalFpSched'] = None
+        else:
+            # Cap at max plausible remaining starts (32 max minus what's done)
+            rem_starts = min(gs * sp_remaining_factor, max(32 - gs, 0))
+            rec['rosTotalFp'] = round(ros * rem_starts, 1)
+            sched = rec.get('xfpRoSSched')
+            rec['rosTotalFpSched'] = round(sched * rem_starts, 1) if sched is not None else None
+
+    # Position-aware total replacement: top-60 SPs by rosTotalFp = replacement
+    sp_with_total = [r for r in records if r.get('rosTotalFp') is not None]
+    sp_with_total.sort(key=lambda r: -r['rosTotalFp'])
+    from league_config import SP_REPLACEMENT_RANK as SP_REPL_RANK
+    if len(sp_with_total) >= SP_REPL_RANK:
+        sp_repl_total = float(sp_with_total[SP_REPL_RANK - 1]['rosTotalFp'])
+    elif sp_with_total:
+        sp_repl_total = float(sp_with_total[-1]['rosTotalFp'])
+    else:
+        sp_repl_total = 0.0
+    for rec in records:
+        if rec.get('rosTotalFp') is not None:
+            rec['rosReplTotal'] = round(sp_repl_total, 1)
+            rec['rosReplDeltaTotal'] = round(rec['rosTotalFp'] - sp_repl_total, 1)
+        else:
+            rec['rosReplTotal'] = None
+            rec['rosReplDeltaTotal'] = None
+
+    # Default SP sort = projected RoS TOTAL FP (matches hitter behaviour).
+    records.sort(key=lambda x: -(x['rosTotalFp'] if x['rosTotalFp'] is not None else -1))
     for i, rec in enumerate(records):
         rec['rank'] = i + 1
+
+    # Reliever records (separate model — RP-RS1 RoS + RP-S1 cross-year)
+    rp_records = build_reliever_records()
+    rp_by_key: dict[tuple[str, str], dict] = {xfp_name_key(r['name']): r for r in rp_records}
 
     # ESPN merge
     by_key: dict[tuple[str, str], dict] = {xfp_name_key(r['name']): r for r in records}
@@ -215,8 +345,9 @@ def build_records() -> tuple[list[dict], dict]:
         for p in my_team_raw.get('pitchers', []):
             espn_pos = p.get('espnPos') or ''
             role = 'SP' if 'SP' in espn_pos else ('RP' if 'RP' in espn_pos else (espn_pos or '—'))
-            # Only match SPs against the xFP universe (SP-only model).
+            # Match SPs against the SP xFP universe; RPs against the RP universe.
             xfp_rec = find_xfp_record(p['name'], by_key) if role == 'SP' else None
+            rp_rec  = find_xfp_record(p['name'], rp_by_key) if role == 'RP' else None
             if xfp_rec is not None:
                 xfp_rec['roster'] = 'mine'
                 xfp_rec['espnPos'] = espn_pos
@@ -226,6 +357,11 @@ def build_records() -> tuple[list[dict], dict]:
                 xfp_rec['fpTotalEspn'] = p.get('fpTotal') if isinstance(p.get('fpTotal'), (int, float)) else None
                 xfp_rec['fpPerGameEspn'] = p.get('fpPerGame') if isinstance(p.get('fpPerGame'), (int, float)) else None
                 xfp_rec['gpEspn'] = p.get('gp') if isinstance(p.get('gp'), int) else None
+            if rp_rec is not None:
+                rp_rec['roster'] = 'mine'
+                rp_rec['espnPos'] = espn_pos
+                rp_rec['proTeam'] = p.get('proTeam')
+                rp_rec['pctOwned'] = p.get('pctOwned') if isinstance(p.get('pctOwned'), (int, float)) else None
 
             my_team_payload['pitchers'].append({
                 'name': p['name'],
@@ -237,16 +373,75 @@ def build_records() -> tuple[list[dict], dict]:
                 'fpTotal': p.get('fpTotal') if isinstance(p.get('fpTotal'), (int, float)) else None,
                 'fpProj': p.get('fpProj') if isinstance(p.get('fpProj'), (int, float)) else None,
                 'fpPerGame': p.get('fpPerGame') if isinstance(p.get('fpPerGame'), (int, float)) else None,
-                'mlbId': xfp_rec['mlbId'] if xfp_rec else None,
+                'mlbId': xfp_rec['mlbId'] if xfp_rec else (rp_rec['mlbId'] if rp_rec else None),
                 'xfpV11': xfp_rec['xfpV11'] if xfp_rec else None,
-                'xfpRank': xfp_rec['rank'] if xfp_rec else None,
+                'xfpRank': xfp_rec['rank'] if xfp_rec else (rp_rec['rank'] if rp_rec else None),
                 'kPct': xfp_rec['kPct'] if xfp_rec else None,
                 'ipTrend': xfp_rec['ipTrend'] if xfp_rec else None,
                 'fpActual': xfp_rec['fpActual'] if xfp_rec else None,
                 'gs': xfp_rec['gs'] if xfp_rec else None,
+                # RP-specific model output (RP-RS1)
+                'rpRoSFp': rp_rec['rpRoSFp'] if rp_rec else None,
+                'rpFullYear': rp_rec['rpFullYear'] if rp_rec else None,
+                'rpReplDelta': rp_rec['rpReplDelta'] if rp_rec else None,
+                'rpSignal': rp_rec['rpSignal'] if rp_rec else None,
+                'rpRolePrior': rp_rec['rpRolePrior'] if rp_rec else None,
             })
 
-    return records, my_team_payload
+    return records, my_team_payload, rp_records
+
+
+def build_reliever_records() -> list[dict]:
+    """Build reliever records from RP-RS1 (RoS) + RP-S1 (cross-year) projections.
+
+    Returns a list of dicts with model output for each covered RP. Used to
+    populate dashboard My-Team RP rows and the reliever leaderboard.
+    """
+    if not RP_RPRS1_PROJ_CSV.exists():
+        return []
+    ros = pd.read_csv(RP_RPRS1_PROJ_CSV)
+    cy = pd.read_csv(RP_RPS1_PROJ_CSV) if RP_RPS1_PROJ_CSV.exists() else pd.DataFrame()
+
+    if not cy.empty:
+        cy_keep = cy[['pitcher', 'xfp_rps1_total']].rename(
+            columns={'xfp_rps1_total': 'xfp_cross_year'})
+        ros = ros.merge(cy_keep, on='pitcher', how='left')
+
+    def num(v, dp=None):
+        if pd.isna(v):
+            return None
+        v = float(v)
+        return round(v, dp) if dp is not None else v
+
+    records = []
+    for _, r in ros.iterrows():
+        records.append({
+            'mlbId':         int(r['pitcher']),
+            'name':          r.get('name_api') or '',
+            'rank':          int(r['rank']),
+            'rpRolePrior':   r.get('role_lag1'),
+            'svPriorYr':     int(r['sv_lag1']) if pd.notna(r.get('sv_lag1')) else None,
+            'hldPriorYr':    int(r['hld_lag1']) if pd.notna(r.get('hld_lag1')) else None,
+            'gToDate':       int(r['g_to']) if pd.notna(r.get('g_to')) else None,
+            'sv2026':        int(r['sv_2026']) if pd.notna(r.get('sv_2026')) else None,
+            'hld2026':       int(r['hld_2026']) if pd.notna(r.get('hld_2026')) else None,
+            'fpActual':      num(r.get('fp_actual_2026'), 1),
+            'rpFullYear':    num(r.get('xfp_full_year'), 1),
+            'rpFullYearP25': num(r.get('xfp_p25'), 1),
+            'rpFullYearP75': num(r.get('xfp_p75'), 1),
+            'rpRoSFp':       num(r.get('xfp_ros'), 1),
+            'rpRoSFpP25':    num(r.get('xfp_ros_p25'), 1),
+            'rpRoSFpP75':    num(r.get('xfp_ros_p75'), 1),
+            'rpReplXfp':     num(r.get('replacement_xfp'), 1),
+            'rpReplDelta':   num(r.get('replacement_delta'), 1),
+            'rpSignal':      r.get('signal') or 'hold',
+            'rpCrossYear':   num(r.get('xfp_cross_year'), 1),
+            'roster':        'other',
+            'espnPos':       None,
+            'proTeam':       None,
+            'pctOwned':      None,
+        })
+    return records
 
 
 def build_hitter_records() -> tuple[list[dict], list[dict]]:
@@ -259,9 +454,17 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
     # RH1 — Rest-of-Season FP/PA. Merge alongside H2 (year-T+1 projection).
     if RH1_PROJ_CSV.exists():
         rh1 = pd.read_csv(RH1_PROJ_CSV)
-        rh1_keep = ['batter', 'xfp_rh1_per_pa', 'pa_to']
+        rh1_keep = ['batter', 'xfp_rh3_per_pa', 'pa_to', 'pa_last21',
+                    'xfp_rh3_p25', 'xfp_rh3_p75', 'xfp_rh3_sigma',
+                    'recency_form_gap',
+                    'expected_pa_remaining', 'expected_total_fp_remaining',
+                    'replacement_xfp_per_pa', 'replacement_delta', 'signal',
+                    'slump_pct_rank', 'slump_n_comparable', 'slump_bounce_pct',
+                    'slump_next_rate', 'slump_delta']
         rh1_keep = [c for c in rh1_keep if c in rh1.columns]
         proj = proj.merge(rh1[rh1_keep], on='batter', how='left')
+        if 'xfp_rh3_per_pa' in proj.columns:
+            proj = proj.rename(columns={'xfp_rh3_per_pa': 'xfp_rh1_per_pa'})
 
     def num(v, dp=None):
         if pd.isna(v):
@@ -286,17 +489,46 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
         ros_per_pa = num(r.get('xfp_rh1_per_pa'), 4) if pd.notna(r.get('xfp_rh1_per_pa')) else None
         ros_per_game = round(ros_per_pa * 3.5, 2) if ros_per_pa is not None else None
         pa_to_date = int(r['pa_to']) if pd.notna(r.get('pa_to')) else None
+        # R3 decision-layer: CIs, recency form, replacement-level deltas, PA-aware total
+        ros_p25 = num(r.get('xfp_rh3_p25'), 4)
+        ros_p75 = num(r.get('xfp_rh3_p75'), 4)
+        recency_gap = num(r.get('recency_form_gap'), 4)
+        repl_xfp = num(r.get('replacement_xfp_per_pa'), 4)
+        repl_delta = num(r.get('replacement_delta'), 4)
+        exp_pa_rem = num(r.get('expected_pa_remaining'))
+        exp_total_fp = num(r.get('expected_total_fp_remaining'), 1)
+        signal_h = r.get('signal') if pd.notna(r.get('signal')) else 'hold'
+        pa_last21 = num(r.get('pa_last21'))
+        slump_pct_h = num(r.get('slump_pct_rank'), 1)
+        slump_n_h = int(r['slump_n_comparable']) if pd.notna(r.get('slump_n_comparable')) else None
+        slump_bounce_h = num(r.get('slump_bounce_pct'), 1)
+        slump_next_h = num(r.get('slump_next_rate'), 3)
+        slump_delta_h = num(r.get('slump_delta'), 3)
         records.append({
             'mlbId':        int(r['batter']),
             'name':         r.get('player_name') or '',
             'pos':          r.get('primary_position') if pd.notna(r.get('primary_position')) else None,
             'fpos':         r.get('fantasy_positions_display') if pd.notna(r.get('fantasy_positions_display')) else None,
             'team':         r.get('team_2026') if pd.notna(r.get('team_2026')) else None,
+            'slumpPct':     slump_pct_h,
+            'slumpN':       slump_n_h,
+            'slumpBouncePct': slump_bounce_h,
+            'slumpNextRate':  slump_next_h,
+            'slumpDelta':     slump_delta_h,
             'xfpPerPa':     num(r['xfp_h2_per_pa'], 4),
             'coreXfpPerPa': num(r.get('core_xfp_per_pa'), 4),
             'xfpFullFp':    num(r.get('xfp_h2_full_fp'), 2),    # × 3.5 PA/game
             'xfpRoSPerPa':  ros_per_pa,                          # NEW: rest-of-season FP/PA
             'xfpRoSFullFp': ros_per_game,                        # NEW: × 3.5 PA/game
+            'xfpRoSp25':    ros_p25,                             # CI lower (FP/PA)
+            'xfpRoSp75':    ros_p75,                             # CI upper (FP/PA)
+            'recencyGap':   recency_gap,                         # last21 xwoba − season-to-date
+            'paLast21':     pa_last21,
+            'expPaRem':     exp_pa_rem,                          # projected PA over rest of season
+            'expTotalFp':   exp_total_fp,                        # projected total FP rest-of-season
+            'replXfp':      repl_xfp,
+            'replDelta':    repl_delta,                          # xfp − replacement (FP/PA)
+            'signal':       signal_h,                            # 'add'|'hold'|'drop'
             'paToDate':     pa_to_date,                          # NEW: PA cumulated so far
             'paPremium':    num(r.get('pa_premium'), 3),
             'pa':           int(pa_2026) if pa_2026 is not None else None,
@@ -319,8 +551,48 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
             'gpEspn':       None,
         })
 
-    # Sort by xFP per PA descending and assign ranks
-    records.sort(key=lambda x: -(x['xfpPerPa'] if x['xfpPerPa'] is not None else 0))
+    # Compute position-aware TOTAL-FP replacement levels and Δ.
+    # Source: league_config.HITTER_REPLACEMENT_RANK (8-team — this user's league)
+    import sys as _sys
+    from pathlib import Path as _Path
+    _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+    from league_config import HITTER_REPLACEMENT_RANK as REPL_RANK_TOTAL
+
+    def _norm_pos(p):
+        if not isinstance(p, str): return 'UTIL'
+        p = p.upper().strip()
+        if p in ('LF','CF','RF','OF'): return 'OF'
+        if p in ('C','1B','2B','SS','3B','DH'): return p
+        return 'UTIL'
+
+    by_pos: dict[str, list] = {}
+    for rec in records:
+        if rec.get('expTotalFp') is None:
+            continue
+        pos = _norm_pos(rec.get('pos'))
+        by_pos.setdefault(pos, []).append(rec)
+    repl_total: dict[str, float] = {}
+    for pos, lst in by_pos.items():
+        lst.sort(key=lambda r: -(r['expTotalFp'] or 0))
+        n = REPL_RANK_TOTAL.get(pos, 24)
+        if len(lst) >= n:
+            repl_total[pos] = float(lst[n - 1]['expTotalFp'] or 0)
+        elif lst:
+            repl_total[pos] = float(lst[-1]['expTotalFp'] or 0)
+        else:
+            repl_total[pos] = 0.0
+    for rec in records:
+        if rec.get('expTotalFp') is None:
+            rec['replTotal'] = None
+            rec['replDeltaTotal'] = None
+            continue
+        pos = _norm_pos(rec.get('pos'))
+        rec['replTotal'] = round(repl_total.get(pos, 0.0), 1)
+        rec['replDeltaTotal'] = round(rec['expTotalFp'] - rec['replTotal'], 1)
+
+    # Default sort = TOTAL projected FP (the metric fantasy decisions actually rank on)
+    # Hitters without expTotalFp (insufficient PA) sort to the bottom.
+    records.sort(key=lambda x: -(x['expTotalFp'] if x['expTotalFp'] is not None else -1))
     for i, rec in enumerate(records):
         rec['rank'] = i + 1
 
@@ -452,7 +724,9 @@ window.XFP_META = __META_JSON__;
 window.XFP_H2_META = __H2_META_JSON__;
 window.XFP_PROJECTIONS = __PROJECTIONS_JSON__;
 window.XFP_HITTERS = __HITTERS_JSON__;
+window.XFP_RELIEVERS = __RELIEVERS_JSON__;
 window.XFP_MY_TEAM = __MY_TEAM_JSON__;
+window.XFP_AUDIT = __AUDIT_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -462,8 +736,8 @@ window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════
-const TABS = ['my-team', 'projections', 'hitters', 'analysis', 'model'];
-const TAB_LABELS = { 'my-team': 'My Team', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', model: 'Model Info' };
+const TABS = ['my-team', 'audit', 'projections', 'hitters', 'analysis', 'model'];
+const TAB_LABELS = { 'my-team': 'My Team', audit: 'Team Audit', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', model: 'Model Info' };
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
@@ -593,9 +867,15 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <th style={{ padding:'8px 8px', fontSize:11, color:colors.dim, width:30, textAlign:'left' }}>★</th>
             <SortTh col="rank"     label="Rk"        align="l" width={36}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpV12"   label="xFP V12"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpRoS"   label="RoS"       width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="rosTotalFp"     label="Proj FP"   width={86}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="rosReplDeltaTotal" label="Δ Repl FP" width={80}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="signal"   label="Sig"       width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpRoS"   label="RoS/St"    width={86}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpRoSSched" label="Sched"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="recencyGap" label="L21Δ"    width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="gsToDate" label="GS-to"     width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpV12"   label="xFP V12"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="replDelta" label="Δ Repl/St" width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="xfpV11"   label="V11"       width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="il60Lag1" label="IL60"      width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="fpTotal"  label="FP Total"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
@@ -636,22 +916,100 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                                color: p.rank <= 3 ? colors.accent : colors.dim }}>{p.rank}</td>
                   <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
                     <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
+                    {p.priorSource === 'milb_translation' && (
+                      <span title="Prior derived from AAA stats (no recent MLB sample)"
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.accent}`,
+                                     color:colors.accent, borderRadius:2 }}>MiLB</span>
+                    )}
+                    {p.slumpPct != null && p.slumpPct < 20 && p.slumpBouncePct != null && p.slumpBouncePct >= 70 && (
+                      <span title={`Cold streak at ${p.slumpPct}-th percentile of his career; ${p.slumpBouncePct}% historical bounce-back over next 100 IP`}
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.pos}`,
+                                     color:colors.pos, borderRadius:2 }}>BUY-LOW</span>
+                    )}
+                    {p.slumpPct != null && p.slumpPct < 5 && p.slumpBouncePct != null && p.slumpBouncePct < 50 && (
+                      <span title={`Cold streak at ${p.slumpPct}-th percentile; only ${p.slumpBouncePct}% bounce-back rate — possible regime change`}
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.warn}`,
+                                     color:colors.warn, borderRadius:2 }}>FADE</span>
+                    )}
                   </td>
+                  {/* HEADLINE: Projected total RoS FP (= xfpRoS × est remaining starts) */}
                   <td style={{ padding:'5px 8px', textAlign:'right',
-                               background: editorialHeat(p.xfpV12, 8, 17) }}>
+                               background: editorialHeat(p.rosTotalFp, 100, 350) }}>
                     <span style={{ fontSize:17, fontFamily:SERIF, fontStyle:'italic',
+                                   color: p.rosTotalFp != null ? colors.accent : colors.faint,
+                                   fontVariantNumeric:'tabular-nums' }}>
+                      {p.rosTotalFp == null ? '—' : fmt(p.rosTotalFp, 0)}
+                    </span>
+                  </td>
+                  {/* Δ Repl FP (total) */}
+                  <td style={dataCell(colors,
+                      p.rosReplDeltaTotal == null ? colors.faint :
+                      p.rosReplDeltaTotal > 0 ? colors.pos : colors.warn)}>
+                    {p.rosReplDeltaTotal == null ? '—' : fmtSign(p.rosReplDeltaTotal, 0)}
+                  </td>
+                  <td style={{ padding:'5px 6px', textAlign:'center' }}>
+                    {(() => {
+                      const s = p.signal || 'hold';
+                      const styles = {
+                        add:  { color:colors.accent, border:`1px solid ${colors.accent}` },
+                        hold: { color:colors.dim,    border:`1px solid ${colors.border}` },
+                        drop: { color:colors.warn,   border:`1px solid ${colors.warn}` },
+                        il:   { color:colors.neg,    border:`1px solid ${colors.neg}` },
+                      };
+                      const lbl = s === 'il' ? 'IL' : s.toUpperCase();
+                      return (
+                        <span style={{ ...(styles[s] || styles.hold), padding:'1px 6px',
+                                       fontFamily:MONO, fontSize:9, letterSpacing:1, borderRadius:2,
+                                       whiteSpace:'nowrap' }}>
+                          {lbl}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  {/* Per-start RoS rate (with CI bounds) */}
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(p.xfpRoS, 8, 17) }}>
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', lineHeight:1.0 }}>
+                      <span style={{ fontSize:13, fontFamily:SERIF, fontStyle:'italic',
+                                     color: p.xfpRoS != null ? colors.text : colors.faint }}>
+                        {p.xfpRoS == null ? '—' : fmt(p.xfpRoS, 2)}
+                      </span>
+                      {p.xfpRoSp25 != null && p.xfpRoSp75 != null && (
+                        <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO, marginTop:2 }}>
+                          {fmt(p.xfpRoSp25, 1)}–{fmt(p.xfpRoSp75, 1)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={dataCell(colors,
+                      p.xfpRoSSched == null ? colors.faint : colors.text)}>
+                    {p.xfpRoSSched == null ? '—' :
+                      <span title={p.nextOpp ? `next: ${p.nextOpp}` : ''}>
+                        {fmt(p.xfpRoSSched, 2)}
+                      </span>}
+                  </td>
+                  <td style={dataCell(colors,
+                      p.recencyGap == null ? colors.faint :
+                      p.recencyGap > 0.5 ? colors.pos :
+                      p.recencyGap < -0.5 ? colors.warn : colors.dim)}>
+                    {p.recencyGap == null ? '—' : fmtSign(p.recencyGap, 1)}
+                  </td>
+                  <td style={dataCell(colors, colors.dim)}>{p.gsToDate ?? '—'}</td>
+                  <td style={{ padding:'5px 8px', textAlign:'right' }}>
+                    <span style={{ fontSize:13, fontFamily:SERIF, fontStyle:'italic',
                                    color:tierColor, fontVariantNumeric:'tabular-nums' }}>
                       {fmt(p.xfpV12, 2)}
                     </span>
                   </td>
-                  <td style={{ padding:'5px 8px', textAlign:'right',
-                               background: editorialHeat(p.xfpRoS, 8, 17) }}>
-                    <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic',
-                                   color: p.xfpRoS != null ? colors.text : colors.faint }}>
-                      {p.xfpRoS == null ? '—' : fmt(p.xfpRoS, 2)}
-                    </span>
+                  <td style={dataCell(colors,
+                      p.replDelta == null ? colors.faint :
+                      p.replDelta > 0 ? colors.pos :
+                      colors.warn)}>
+                    {p.replDelta == null ? '—' : fmtSign(p.replDelta, 2)}
                   </td>
-                  <td style={dataCell(colors, colors.dim)}>{p.gsToDate ?? '—'}</td>
                   <td style={dataCell(colors, colors.dim)}>{fmt(p.xfpV11, 2)}</td>
                   <td style={dataCell(colors, p.il60Lag1 > 0 ? colors.warn : colors.faint)}>
                     {p.il60Lag1 > 0 ? p.il60Lag1 : '—'}
@@ -1110,7 +1468,7 @@ function Dashboard({ dark }) {
   const [roster, setRoster]     = React.useState('all'); // 'all' | 'mine' | 'other'
 
   // Projections sort + expand
-  const [sortCol, setSortCol]   = React.useState('xfpV12');
+  const [sortCol, setSortCol]   = React.useState('rosTotalFp');
   const [sortDir, setSortDir]   = React.useState('desc');
   const [expanded, setExpanded] = React.useState(null);
 
@@ -1270,6 +1628,10 @@ function Dashboard({ dark }) {
         <ModelTab meta={meta} h2Meta={h2Meta} colors={colors} />
       )}
 
+      {activeTab === 'audit' && (
+        <AuditTab audit={window.XFP_AUDIT} colors={colors} />
+      )}
+
       <div style={{ padding:'24px 32px', borderTop:`1px solid ${colors.border}`, marginTop:32,
                     fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
         Pitchers: V11 (SP only, Statcast + FG Pitching+) · Hitters: H2 (Ridge, 13 features) ·
@@ -1321,7 +1683,7 @@ function AnalysisTab({ rows, ytdRows, colors, hoverId, setHoverId }) {
 
 // ═══ Hitters tab ══════════════════════════════════════════════════════════════
 function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite, h2Meta }) {
-  const [hSort, setHSort] = React.useState({ col: 'xfpPerPa', dir: 'desc' });
+  const [hSort, setHSort] = React.useState({ col: 'expTotalFp', dir: 'desc' });
   const [hPos,  setHPos]  = React.useState('all');     // 'all' | 'C' | '1B' | ... | 'OF' | 'DH'
   const [hMinPa, setHMinPa] = React.useState(50);
   const [hRoster, setHRoster] = React.useState('all'); // 'all' | 'mine' | 'other'
@@ -1421,8 +1783,13 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
               <SortTh col="name"          label="Hitter"    align="l" width={170} sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="pos"           label="Pos"       align="l" width={48}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="team"          label="Tm"        align="l" width={42}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="expTotalFp"    label="Proj FP"     width={86}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="replDeltaTotal" label="Δ Repl FP" width={80}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="signal"        label="Sig"       width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="xfpRoSPerPa"   label="RoS/PA"    width={86}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="recencyGap"    label="L21Δ"      width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="xfpPerPa"      label="xFP/PA"    width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
-              <SortTh col="xfpRoSPerPa"   label="RoS/PA"    width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
+              <SortTh col="replDelta"     label="Δ Repl/PA" width={70}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="xfpRoSFullFp"  label="RoS/G"     width={56}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="xfpFullFp"     label="xFP/G"     width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
               <SortTh col="coreXfpPerPa"  label="Core/PA"   width={64}  sortCol={hSort.col} sortDir={hSort.dir} onSort={handleSort} colors={colors} />
@@ -1452,24 +1819,85 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
                                color: h.rank <= 3 ? colors.accent : colors.dim }}>{h.rank}</td>
                   <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
                     <span style={{ fontSize:14, fontWeight:500 }}>{h.name}</span>
+                    {h.slumpPct != null && h.slumpPct < 20 && h.slumpBouncePct != null && h.slumpBouncePct >= 80 && (
+                      <span title={`Cold streak at ${h.slumpPct}-th percentile of his career; ${h.slumpBouncePct}% historical bounce-back over next 200 PA`}
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.pos}`,
+                                     color:colors.pos, borderRadius:2 }}>BUY-LOW</span>
+                    )}
+                    {h.slumpPct != null && h.slumpPct < 5 && h.slumpBouncePct != null && h.slumpBouncePct < 60 && (
+                      <span title={`Cold streak at ${h.slumpPct}-th percentile; only ${h.slumpBouncePct}% bounce-back rate — possible regime change`}
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.warn}`,
+                                     color:colors.warn, borderRadius:2 }}>FADE</span>
+                    )}
                   </td>
                   <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.pos || '—'}</td>
                   <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{h.team || '—'}</td>
+                  {/* HEADLINE: Projected total FP rest of season */}
                   <td style={{ padding:'5px 8px', textAlign:'right',
-                               background: editorialHeat(h.xfpPerPa, 0.3, 0.85) }}>
-                    <span style={{ fontSize:16, fontFamily:SERIF, fontStyle:'italic',
-                                   color: h.xfpPerPa != null ? colors.accent : colors.faint,
+                               background: editorialHeat(h.expTotalFp, 100, 350) }}>
+                    <span style={{ fontSize:17, fontFamily:SERIF, fontStyle:'italic',
+                                   color: h.expTotalFp != null ? colors.accent : colors.faint,
+                                   fontVariantNumeric:'tabular-nums' }}>
+                      {h.expTotalFp == null ? '—' : h.expTotalFp.toFixed(0)}
+                    </span>
+                  </td>
+                  {/* Δ Repl FP — total-FP version */}
+                  <td style={dataCell(colors,
+                      h.replDeltaTotal == null ? colors.faint :
+                      h.replDeltaTotal > 0 ? colors.pos : colors.warn)}>
+                    {h.replDeltaTotal == null ? '—' : fmtSign(h.replDeltaTotal, 0)}
+                  </td>
+                  <td style={{ padding:'5px 6px', textAlign:'center' }}>
+                    {(() => {
+                      const s = h.signal || 'hold';
+                      const styles = {
+                        add:  { color:colors.accent, border:`1px solid ${colors.accent}` },
+                        hold: { color:colors.dim,    border:`1px solid ${colors.border}` },
+                        drop: { color:colors.warn,   border:`1px solid ${colors.warn}` },
+                      };
+                      return (
+                        <span style={{ ...(styles[s] || styles.hold), padding:'1px 6px',
+                                       fontFamily:MONO, fontSize:9, letterSpacing:1, borderRadius:2,
+                                       whiteSpace:'nowrap' }}>
+                          {s.toUpperCase()}
+                        </span>
+                      );
+                    })()}
+                  </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right',
+                               background: editorialHeat(h.xfpRoSPerPa, 0.3, 0.85) }}>
+                    <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', lineHeight:1.0 }}>
+                      <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic',
+                                     color: h.xfpRoSPerPa != null ? colors.text : colors.faint,
+                                     fontVariantNumeric:'tabular-nums' }}>
+                        {h.xfpRoSPerPa == null ? '—' : h.xfpRoSPerPa.toFixed(3)}
+                      </span>
+                      {h.xfpRoSp25 != null && h.xfpRoSp75 != null && (
+                        <span style={{ fontSize:9, color:colors.dim, fontFamily:MONO, marginTop:2 }}>
+                          {h.xfpRoSp25.toFixed(2)}–{h.xfpRoSp75.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td style={dataCell(colors,
+                      h.recencyGap == null ? colors.faint :
+                      h.recencyGap > 0.02 ? colors.pos :
+                      h.recencyGap < -0.02 ? colors.warn : colors.dim)}>
+                    {h.recencyGap == null ? '—' : fmtSign(h.recencyGap, 3)}
+                  </td>
+                  <td style={{ padding:'5px 8px', textAlign:'right' }}>
+                    <span style={{ fontSize:13, fontFamily:SERIF, fontStyle:'italic',
+                                   color: h.xfpPerPa != null ? colors.dim : colors.faint,
                                    fontVariantNumeric:'tabular-nums' }}>
                       {h.xfpPerPa == null ? '—' : h.xfpPerPa.toFixed(3)}
                     </span>
                   </td>
-                  <td style={{ padding:'5px 8px', textAlign:'right',
-                               background: editorialHeat(h.xfpRoSPerPa, 0.3, 0.85) }}>
-                    <span style={{ fontSize:14, fontFamily:SERIF, fontStyle:'italic',
-                                   color: h.xfpRoSPerPa != null ? colors.text : colors.faint,
-                                   fontVariantNumeric:'tabular-nums' }}>
-                      {h.xfpRoSPerPa == null ? '—' : h.xfpRoSPerPa.toFixed(3)}
-                    </span>
+                  <td style={dataCell(colors,
+                      h.replDelta == null ? colors.faint :
+                      h.replDelta > 0 ? colors.pos : colors.warn)}>
+                    {h.replDelta == null ? '—' : fmtSign(h.replDelta, 3)}
                   </td>
                   <td style={dataCell(colors, colors.dim)}>{h.xfpRoSFullFp == null ? '—' : h.xfpRoSFullFp.toFixed(2)}</td>
                   <td style={dataCell(colors)}>{h.xfpFullFp == null ? '—' : h.xfpFullFp.toFixed(2)}</td>
@@ -1921,7 +2349,7 @@ function MyLineupSection({ myTeam, colors, editorialHeat, favorites, toggleFavor
   const hitters = (myTeam.hitters || []);
   if (hitters.length === 0) return null;
 
-  const [hSort, setHSort] = React.useState({ col: 'xfpPerPa', dir: 'desc' });
+  const [hSort, setHSort] = React.useState({ col: 'expTotalFp', dir: 'desc' });
   function handleSort(col) {
     if (hSort.col === col) setHSort({ col, dir: hSort.dir === 'desc' ? 'asc' : 'desc' });
     else setHSort({ col, dir: 'desc' });
@@ -2288,6 +2716,192 @@ function App() {
   );
 }
 
+// ═══ Team Audit Tab ═══════════════════════════════════════════════════════════
+function AuditTab({ audit, colors }) {
+  if (!audit || audit.error || !audit.roster_buckets) {
+    return (
+      <div style={{ padding:'24px 32px', color:colors.dim, fontFamily:MONO }}>
+        Team audit unavailable. {audit?.error || ''}
+      </div>
+    );
+  }
+  const POS_ORDER = ['C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP'];
+  const POS_LABEL = { C: 'Catcher', '1B': 'First Base', '2B': 'Second Base',
+                       '3B': 'Third Base', SS: 'Shortstop', OF: 'Outfield',
+                       SP: 'Starting Pitching', RP: 'Relief Pitching' };
+
+  const fmt = (v, dp = 2) => v == null || isNaN(v) ? '—' : Number(v).toFixed(dp);
+  const fmtPct = (v) => v == null || isNaN(v) ? '—' : `${Number(v).toFixed(0)}%`;
+
+  const slumpBadge = (sp, bp) => {
+    if (sp == null || bp == null) return null;
+    if (sp < 20 && bp >= 90) {
+      return <span title={`Cold streak ${sp.toFixed(0)}-th pct, ${bp.toFixed(0)}% bounce`}
+                   style={{ marginLeft:6, fontSize:9, fontFamily:MONO, padding:'1px 5px',
+                            border:`1px solid ${colors.pos}`, color:colors.pos, borderRadius:2 }}>BUY-LOW</span>;
+    }
+    if (sp < 5 && bp < 60) {
+      return <span title={`Cold streak ${sp.toFixed(0)}-th pct, only ${bp.toFixed(0)}% bounce`}
+                   style={{ marginLeft:6, fontSize:9, fontFamily:MONO, padding:'1px 5px',
+                            border:`1px solid ${colors.warn}`, color:colors.warn, borderRadius:2 }}>FADE</span>;
+    }
+    if (sp >= 90 && bp != null && bp < 60) {
+      return <span title={`Peak ${sp.toFixed(0)}-th pct, only ${bp.toFixed(0)}% sustain`}
+                   style={{ marginLeft:6, fontSize:9, fontFamily:MONO, padding:'1px 5px',
+                            border:`1px solid ${colors.warn}`, color:colors.warn, borderRadius:2 }}>SELL-HIGH</span>;
+    }
+    return null;
+  };
+
+  const ilBadge = (player) => {
+    if (player.marcel_3yr != null && player.rank == null) {
+      return <span title="No 2026 sample (likely IL); 3-yr Marcel projection shown"
+                   style={{ marginLeft:6, fontSize:9, fontFamily:MONO, padding:'1px 5px',
+                            border:`1px solid ${colors.dim}`, color:colors.dim, borderRadius:2 }}>IL/MARCEL</span>;
+    }
+    return null;
+  };
+
+  const PlayerRow = ({ p, isFA = false }) => {
+    const fpLabel = (p.role === 'SP' || p.role === 'RP') ? 'fp/start' : 'fp/G';
+    const sampleLabel = (p.role === 'SP') ? `${p.sample} GS`
+                       : (p.role === 'RP') ? `${p.sample} G`
+                       : `${p.sample} PA`;
+    const fpDisplay = p.fp_per != null
+      ? `${fmt(p.fp_per, 2)} ${fpLabel}`
+      : (p.marcel_3yr != null ? `${fmt(p.marcel_3yr, 2)} ${fpLabel} (3yr Marcel)` : '—');
+    const rankDisplay = p.rank != null ? `mdl #${p.rank}` : '—';
+    return (
+      <div style={{ borderBottom:`1px solid ${colors.faint}`, padding:'10px 12px',
+                    display:'flex', flexDirection:'column', gap:4, background: isFA ? colors.panel : 'transparent' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:8, flexWrap:'wrap' }}>
+          <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
+          {isFA && p.team && (
+            <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO }}>{p.team}</span>
+          )}
+          <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:1 }}>
+            {p.espn_pos || p.pos || '—'}
+          </span>
+          {ilBadge(p)}
+          {slumpBadge(p.slump_pct, p.slump_bounce)}
+          {p.signal === 'add' && (
+            <span style={{ fontSize:9, padding:'1px 5px', border:`1px solid ${colors.accent}`,
+                           color:colors.accent, borderRadius:2, fontFamily:MONO }}>ADD</span>
+          )}
+          {p.signal === 'drop' && (
+            <span style={{ fontSize:9, padding:'1px 5px', border:`1px solid ${colors.warn}`,
+                           color:colors.warn, borderRadius:2, fontFamily:MONO }}>DROP</span>
+          )}
+        </div>
+        <div style={{ fontSize:11, color:colors.dim, fontFamily:MONO, letterSpacing:0.5 }}>
+          {rankDisplay} · {fpDisplay} · {sampleLabel}
+          {p.slump_pct != null && (
+            <> · slump <span style={{ color:colors.text }}>{fmtPct(p.slump_pct)}</span> /
+               bnc <span style={{ color:colors.text }}>{fmtPct(p.slump_bounce)}</span>
+               {p.slump_n != null && p.slump_n > 0 ? ` (n=${p.slump_n})` : ''}</>
+          )}
+          {p.repl_delta != null && (
+            <> · ΔRepl <span style={{ color: p.repl_delta > 0 ? colors.pos : colors.warn }}>
+              {p.repl_delta >= 0 ? '+' : ''}{fmt(p.repl_delta, 3)}</span></>
+          )}
+          {p.ros_total != null && (
+            <> · RoS <span style={{ color:colors.text }}>{fmt(p.ros_total, 0)} FP</span></>
+          )}
+        </div>
+        {p.commentary && !isFA && (
+          <div style={{ fontSize:11, color:colors.text, fontFamily:SERIF, fontStyle:'italic', lineHeight:1.4 }}>
+            {p.commentary}
+          </div>
+        )}
+        {isFA && p.slump_next != null && (
+          <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO }}>
+            Median next-window rate: {fmt(p.slump_next, 3)}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ padding:'0 32px 32px' }}>
+      <SectionHeading num="A" label={`${audit.my_team_name} — Team Audit`}
+        right={`AS OF ${audit.as_of_date.toUpperCase()}`} colors={colors} />
+
+      {/* Standings strip */}
+      {audit.standings && audit.standings.length > 0 && (
+        <div style={{ display:'flex', flexWrap:'wrap', gap:8, padding:'12px 0', marginBottom:16 }}>
+          {audit.standings.map((s, i) => (
+            <div key={s.team_name} style={{
+              padding:'6px 10px', fontFamily:MONO, fontSize:11,
+              border:`1px solid ${s.is_mine ? colors.accent : colors.faint}`,
+              color: s.is_mine ? colors.accent : colors.dim,
+              fontWeight: s.is_mine ? 600 : 400, borderRadius:3,
+            }}>
+              {i+1}. {s.team_name} ({s.wins}-{s.losses})
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Position-by-position */}
+      {POS_ORDER.map(pos => {
+        const players = audit.roster_buckets[pos] || [];
+        const fa = (audit.fa && audit.fa[pos]) || [];
+        if (players.length === 0 && fa.length === 0) return null;
+        return (
+          <div key={pos} style={{ marginTop:32, borderTop:`1px solid ${colors.border}`, paddingTop:16 }}>
+            <div style={{ display:'flex', alignItems:'baseline', gap:12, marginBottom:8 }}>
+              <h2 style={{ fontSize:20, fontWeight:400, margin:0, fontFamily:SERIF, fontStyle:'italic' }}>
+                {POS_LABEL[pos] || pos}
+              </h2>
+              <span style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:2,
+                             textTransform:'uppercase' }}>
+                Roster: {players.length} · FA pool: {fa.length}
+              </span>
+            </div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:24 }}>
+              <div>
+                <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:2,
+                              textTransform:'uppercase', marginBottom:6, paddingBottom:4,
+                              borderBottom:`1px solid ${colors.faint}` }}>
+                  Your Roster
+                </div>
+                {players.length === 0 && (
+                  <div style={{ padding:'12px 12px', color:colors.dim, fontFamily:MONO, fontSize:11 }}>
+                    (none rostered at this position)
+                  </div>
+                )}
+                {players.map((p, idx) => <PlayerRow key={idx} p={p} />)}
+              </div>
+              <div>
+                <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO, letterSpacing:2,
+                              textTransform:'uppercase', marginBottom:6, paddingBottom:4,
+                              borderBottom:`1px solid ${colors.faint}` }}>
+                  Top Free-Agent Replacements
+                </div>
+                {fa.length === 0 && (
+                  <div style={{ padding:'12px 12px', color:colors.dim, fontFamily:MONO, fontSize:11 }}>
+                    (no qualifying FAs)
+                  </div>
+                )}
+                {fa.map((p, idx) => <PlayerRow key={idx} p={p} isFA />)}
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <div style={{ marginTop:32, padding:'16px 0', borderTop:`1px solid ${colors.border}`,
+                    fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
+        ↳ BUY-LOW = ≤20-pct slump + ≥90% career bounce-back ·
+        FADE = ≤5-pct + &lt;60% bounce ·
+        SELL-HIGH = ≥90-pct hot streak + &lt;60% sustain ·
+        IL/MARCEL = no 2026 sample, projected via 3-year weighted Marcel
+      </div>
+    </div>
+  );
+}
+
 ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 </script>
 </body>
@@ -2295,25 +2909,374 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 """
 
 
+# ═══════════════════════════════════════════════════════════════════════════════
+# Team Audit payload — position-by-position roster eval + FA leaderboards
+# ═══════════════════════════════════════════════════════════════════════════════
+
+def _norm_audit(s: str) -> str:
+    if pd.isna(s):
+        return ''
+    s = unicodedata.normalize('NFD', str(s))
+    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
+    if ',' in s:
+        last, first = s.split(',', 1)
+        s = first.strip() + ' ' + last.strip()
+    return re.sub(r'[^a-z]+', '', s)
+
+
+def _marcel_fp(multiyr: pd.DataFrame, player_id: int, id_col: str,
+               fp_col: str, gs_col: str, year_col: str = 'year') -> dict | None:
+    """Compute 3-year weighted Marcel for a player, weights 5/4/3 on yr T-1/T-2/T-3."""
+    sub = multiyr[multiyr[id_col] == player_id].sort_values(year_col)
+    if sub.empty:
+        return None
+    last_y = int(sub[year_col].max())
+    target_years = [last_y, last_y - 1, last_y - 2]
+    target_years = [y for y in target_years if y != 2020]
+    weights = {target_years[0]: 5}
+    if len(target_years) > 1:
+        weights[target_years[1]] = 4
+    if len(target_years) > 2:
+        weights[target_years[2]] = 3
+    num = den = 0.0
+    yrs_used = []
+    for y, w in weights.items():
+        row = sub[sub[year_col] == y]
+        if row.empty:
+            continue
+        fp = float(row[fp_col].iloc[0])
+        gs = float(row[gs_col].iloc[0])
+        num += fp * w * gs
+        den += w * gs
+        yrs_used.append(y)
+    if den == 0:
+        return None
+    return {'marcel_3yr': round(num / den, 2),
+            'marcel_years': yrs_used,
+            'marcel_basis': 'gs-weighted' if 'gs' in gs_col.lower() else 'sample-weighted'}
+
+
+def _bucket_position(espn_pos: str | None) -> str:
+    p = (espn_pos or '').upper()
+    if p in ('SP', 'P'):
+        return 'SP'
+    if p == 'RP':
+        return 'RP'
+    if p == 'C':
+        return 'C'
+    if p == '1B':
+        return '1B'
+    if p == '2B':
+        return '2B'
+    if p == '3B':
+        return '3B'
+    if p == 'SS':
+        return 'SS'
+    if p in ('OF', 'LF', 'CF', 'RF', 'DH'):
+        return 'OF'
+    return p or 'UTIL'
+
+
+def _commentary(player: dict) -> str:
+    """Auto-generate one-line commentary from rank/slump fields."""
+    rk = player.get('rank')
+    sig = player.get('signal')
+    sp = player.get('slump_pct')
+    bp = player.get('slump_bounce')
+    role = player.get('role')
+
+    if player.get('marcel_3yr') is not None and player.get('rank') is None:
+        return (f"On IL or no 2026 sample. 3-year weighted Marcel projects "
+                f"{player['marcel_3yr']:.2f} FP/start when activated.")
+
+    parts = []
+    if sig == 'add':
+        parts.append("ADD signal — currently producing above replacement.")
+    elif sig == 'drop':
+        parts.append("DROP signal — currently below replacement.")
+    if sp is not None and bp is not None:
+        if sp < 20 and bp >= 90:
+            parts.append(f"Buy-low signature: {sp:.0f}-th percentile cold streak, "
+                         f"{bp:.0f}% historical bounce-back.")
+        elif sp < 5 and bp < 60:
+            parts.append(f"FADE warning: {sp:.0f}-th percentile, only {bp:.0f}% bounce.")
+        elif sp >= 90 and bp < 60:
+            parts.append(f"Peak performance ({sp:.0f}-th percentile) with only {bp:.0f}% sustain — fade risk.")
+        elif sp >= 90:
+            parts.append(f"At peak ({sp:.0f}-th percentile of own career).")
+    if rk is not None:
+        rank_text = f"Mdl rank #{rk}"
+        if role in ('SP', 'RP'):
+            rank_text += f" {role}"
+        parts.append(rank_text + ".")
+    return ' '.join(parts) if parts else 'No commentary available.'
+
+
+def build_team_audit() -> dict:
+    """Build the full Team Audit payload for the dashboard."""
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT))
+        from app import espn_connector as ec
+    except Exception as e:
+        print(f'[audit] espn_connector unavailable: {e}')
+        return {'error': str(e)}
+
+    try:
+        teams = ec.get_all_teams()
+        standings = ec.get_league_standings()
+    except Exception as e:
+        print(f'[audit] ESPN fetch failed: {e}')
+        return {'error': str(e)}
+
+    if teams.empty:
+        return {'error': 'no teams returned'}
+
+    # Build lookups
+    rh = pd.read_csv(ROOT / 'data/outputs/xfp_rh3_projections.csv')
+    rh['key'] = rh['player_name'].apply(_norm_audit)
+    rh_dedup = rh.sort_values(['key', 'pa_to'], ascending=[True, False]).drop_duplicates('key', keep='first')
+    rh_lookup = {r['key']: r.to_dict() for _, r in rh_dedup.iterrows()}
+
+    rp_sp = pd.read_csv(ROOT / 'data/outputs/xfp_rp3_projections.csv')
+    rp_sp['key'] = rp_sp['player_name'].apply(_norm_audit)
+    sp_lookup = {r['key']: r.to_dict() for _, r in rp_sp.iterrows()}
+
+    pcs_path = ROOT / 'data/research/xfp_cache/pitcher_counting_stats_2026.json'
+    if pcs_path.exists():
+        with open(pcs_path) as f:
+            pcs = pd.DataFrame(json.load(f))[['pitcher', 'name']]
+    else:
+        pcs = pd.DataFrame(columns=['pitcher', 'name'])
+    rp_roll = pd.read_csv(ROOT / 'data/research/xfp_cache/rolling_relievers_2018_2026.csv')
+    rp_roll = rp_roll[rp_roll['year'] == 2026].sort_values('split_day').drop_duplicates('pitcher', keep='last')
+    rp_roll = rp_roll.merge(pcs, on='pitcher', how='left')
+    rp_roll = rp_roll.sort_values('fp_with_role_to', ascending=False).reset_index(drop=True)
+    rp_roll['rp_rank'] = rp_roll.index + 1
+    rp_roll['key'] = rp_roll['name'].fillna('').apply(_norm_audit)
+    rp_lookup = {r['key']: r.to_dict() for _, r in rp_roll.iterrows() if r['key']}
+
+    # Multi-year sources for Marcel of IL/no-2026 players
+    sp_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/sp_multiyr_2015_2025.csv')
+    rp_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/relievers_multiyr_2018_2026.csv')
+    h_multiyr = pd.read_csv(ROOT / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv')
+
+    # Slump precedent merges (already in rh3/rp3)
+    def _eval_player(name: str, espn_pos: str) -> dict:
+        k = _norm_audit(name)
+        bucket = _bucket_position(espn_pos)
+        out = {'name': name, 'espn_pos': espn_pos, 'bucket': bucket,
+               'rank': None, 'fp_per': None, 'sample': 0,
+               'signal': None, 'slump_pct': None, 'slump_n': None,
+               'slump_bounce': None, 'slump_next': None,
+               'marcel_3yr': None, 'marcel_years': None, 'role': None}
+        if bucket == 'SP':
+            r = sp_lookup.get(k)
+            if r and pd.notna(r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start')):
+                out['rank'] = int(r['rank'])
+                out['fp_per'] = float(r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start'))
+                out['sample'] = int(r.get('gs_to') or 0)
+                out['signal'] = r.get('signal')
+                out['role'] = 'SP'
+                if pd.notna(r.get('slump_pct_rank')):
+                    out['slump_pct'] = float(r['slump_pct_rank'])
+                if pd.notna(r.get('slump_n_comparable')):
+                    out['slump_n'] = int(r['slump_n_comparable'])
+                if pd.notna(r.get('slump_bounce_pct')):
+                    out['slump_bounce'] = float(r['slump_bounce_pct'])
+                if pd.notna(r.get('slump_next_rate')):
+                    out['slump_next'] = float(r['slump_next_rate'])
+            else:
+                # No 2026 sample — try Marcel from sp_multiyr by name match
+                row = sp_multiyr[sp_multiyr['player_name'].str.replace(' ', '').str.lower()
+                                 .apply(lambda s: _norm_audit(s) == k if pd.notna(s) else False)]
+                if not row.empty:
+                    pid = int(row['pitcher'].iloc[0])
+                    m = _marcel_fp(sp_multiyr, pid, 'pitcher',
+                                   'fp_per_start_actual', 'gs')
+                    if m:
+                        out.update(m)
+                        out['role'] = 'SP'
+        elif bucket == 'RP':
+            r = rp_lookup.get(k)
+            if r:
+                out['rank'] = int(r['rp_rank'])
+                out['fp_per'] = float(r.get('fp_with_role_to') or 0)
+                out['sample'] = int(r.get('g_to') or 0)
+                out['role'] = 'RP'
+            else:
+                # Marcel from RP multiyr
+                row = rp_multiyr[rp_multiyr['name'].fillna('').apply(lambda s: _norm_audit(s) == k)]
+                if not row.empty:
+                    pid = int(row['pitcher'].iloc[0])
+                    m = _marcel_fp(rp_multiyr, pid, 'pitcher', 'fp_per_g', 'g', year_col='season')
+                    if m:
+                        out.update(m)
+                        out['role'] = 'RP'
+        else:
+            r = rh_lookup.get(k)
+            if r and pd.notna(r.get('xfp_rh3_per_game')):
+                out['rank'] = int(r['rank'])
+                out['fp_per'] = float(r['xfp_rh3_per_game'])
+                out['sample'] = int(r.get('pa_to') or 0)
+                out['signal'] = r.get('signal')
+                out['role'] = 'H'
+                out['ros_total'] = float(r.get('expected_total_fp_remaining') or 0)
+                out['repl_delta'] = float(r.get('replacement_delta') or 0)
+                if pd.notna(r.get('slump_pct_rank')):
+                    out['slump_pct'] = float(r['slump_pct_rank'])
+                if pd.notna(r.get('slump_n_comparable')):
+                    out['slump_n'] = int(r['slump_n_comparable'])
+                if pd.notna(r.get('slump_bounce_pct')):
+                    out['slump_bounce'] = float(r['slump_bounce_pct'])
+                if pd.notna(r.get('slump_next_rate')):
+                    out['slump_next'] = float(r['slump_next_rate'])
+            else:
+                row = h_multiyr[h_multiyr['player_name'].fillna('')
+                                .apply(lambda s: _norm_audit(s) == k)]
+                if not row.empty:
+                    bid = int(row['batter'].iloc[0])
+                    m = _marcel_fp(h_multiyr, bid, 'batter', 'fp_per_pa_actual', 'pa')
+                    if m:
+                        out.update(m)
+                        out['role'] = 'H'
+        out['commentary'] = _commentary(out)
+        return out
+
+    # Determine MY_TEAM
+    my_team_name = 'New York Ligers'
+    rostered_keys = set(teams['player_name'].apply(_norm_audit))
+
+    my_roster = []
+    for _, p in teams[teams['team_name'] == my_team_name].iterrows():
+        my_roster.append(_eval_player(p['player_name'], p['position']))
+
+    # Group by bucket
+    buckets = {'C': [], '1B': [], '2B': [], '3B': [], 'SS': [], 'OF': [], 'SP': [], 'RP': []}
+    for pl in my_roster:
+        b = pl['bucket']
+        if b in buckets:
+            buckets[b].append(pl)
+        else:
+            buckets.setdefault(b, []).append(pl)
+
+    # FA leaderboards by position
+    def _fa_hitters(pos_filter, n=5) -> list[dict]:
+        cands = []
+        for _, r in rh.iterrows():
+            if r['key'] in rostered_keys:
+                continue
+            prim = (r.get('primary_position') or '').upper()
+            if pos_filter == 'OF':
+                if not (prim in ('OF', 'LF', 'CF', 'RF') or 'OF' in prim):
+                    continue
+            elif prim != pos_filter:
+                continue
+            cands.append({
+                'name': r['player_name'],
+                'team': r.get('team'),
+                'pos': prim,
+                'rank': int(r['rank']),
+                'fp_per': float(r.get('xfp_rh3_per_game') or 0),
+                'ros_total': float(r.get('expected_total_fp_remaining') or 0),
+                'repl_delta': float(r.get('replacement_delta') or 0),
+                'signal': r.get('signal'),
+                'slump_pct': float(r['slump_pct_rank']) if pd.notna(r.get('slump_pct_rank')) else None,
+                'slump_bounce': float(r['slump_bounce_pct']) if pd.notna(r.get('slump_bounce_pct')) else None,
+                'slump_next': float(r['slump_next_rate']) if pd.notna(r.get('slump_next_rate')) else None,
+            })
+        return sorted(cands, key=lambda x: -x['ros_total'])[:n]
+
+    fa_sp = []
+    for _, r in rp_sp.iterrows():
+        if r['key'] in rostered_keys:
+            continue
+        v = r.get('xfp_rp3_per_start_sched') or r.get('xfp_rp3_per_start')
+        if pd.isna(v):
+            continue
+        fa_sp.append({
+            'name': r['player_name'],
+            'rank': int(r['rank']),
+            'fp_per': float(v),
+            'sample': int(r.get('gs_to') or 0),
+            'signal': r.get('signal'),
+            'repl_delta': float(r.get('replacement_delta') or 0),
+            'slump_pct': float(r['slump_pct_rank']) if pd.notna(r.get('slump_pct_rank')) else None,
+            'slump_bounce': float(r['slump_bounce_pct']) if pd.notna(r.get('slump_bounce_pct')) else None,
+            'slump_next': float(r['slump_next_rate']) if pd.notna(r.get('slump_next_rate')) else None,
+        })
+    fa_sp = sorted(fa_sp, key=lambda x: -x['fp_per'])[:10]
+
+    fa_rp = []
+    for _, r in rp_roll.iterrows():
+        if r['key'] in rostered_keys or not r.get('name'):
+            continue
+        fa_rp.append({
+            'name': r['name'],
+            'rank': int(r['rp_rank']),
+            'fp_per': float(r.get('fp_with_role_to') or 0),
+            'sample': int(r.get('g_to') or 0),
+            'role': r.get('role_lag1'),
+            'sv': int(r.get('sv_to') or 0),
+            'hld': int(r.get('hld_to') or 0),
+        })
+    fa_rp = sorted(fa_rp, key=lambda x: -x['fp_per'])[:10]
+
+    fa = {
+        'C':  _fa_hitters('C'),
+        '1B': _fa_hitters('1B'),
+        '2B': _fa_hitters('2B'),
+        '3B': _fa_hitters('3B'),
+        'SS': _fa_hitters('SS'),
+        'OF': _fa_hitters('OF'),
+        'SP': fa_sp,
+        'RP': fa_rp,
+    }
+
+    # Standings (for context)
+    st_rows = []
+    if not standings.empty:
+        for _, r in standings.iterrows():
+            st_rows.append({
+                'team_name': r['team_name'],
+                'wins': int(r.get('wins') or 0),
+                'losses': int(r.get('losses') or 0),
+                'is_mine': r['team_name'] == my_team_name,
+            })
+
+    return {
+        'my_team_name': my_team_name,
+        'as_of_date': str(date.today()),
+        'standings': st_rows,
+        'roster_buckets': buckets,
+        'fa': fa,
+    }
+
+
 def main():
-    records, my_team = build_records()
+    records, my_team, rp_records = build_records()
     hitter_records, hitter_payload = build_hitter_records()
     my_team['hitters'] = hitter_payload  # combine into one MY_TEAM payload
     meta = build_meta()
     h2_meta = build_h2_meta()
+    audit = build_team_audit()
 
-    proj_json    = json.dumps(records, separators=(',', ':'))
-    meta_json    = json.dumps(meta, separators=(',', ':'))
-    my_team_json = json.dumps(my_team, separators=(',', ':'))
-    hitters_json = json.dumps(hitter_records, separators=(',', ':'))
-    h2_meta_json = json.dumps(h2_meta, separators=(',', ':'))
+    proj_json     = json.dumps(records, separators=(',', ':'))
+    meta_json     = json.dumps(meta, separators=(',', ':'))
+    my_team_json  = json.dumps(my_team, separators=(',', ':'))
+    hitters_json  = json.dumps(hitter_records, separators=(',', ':'))
+    relievers_json= json.dumps(rp_records, separators=(',', ':'))
+    h2_meta_json  = json.dumps(h2_meta, separators=(',', ':'))
+    audit_json    = json.dumps(audit, separators=(',', ':'))
 
     html = (HTML_TEMPLATE
             .replace('__PROJECTIONS_JSON__', proj_json)
             .replace('__META_JSON__', meta_json)
             .replace('__H2_META_JSON__', h2_meta_json)
             .replace('__HITTERS_JSON__', hitters_json)
-            .replace('__MY_TEAM_JSON__', my_team_json))
+            .replace('__RELIEVERS_JSON__', relievers_json)
+            .replace('__MY_TEAM_JSON__', my_team_json)
+            .replace('__AUDIT_JSON__', audit_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
     OUT_DOCS.parent.mkdir(parents=True, exist_ok=True)

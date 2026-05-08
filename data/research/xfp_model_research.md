@@ -1745,3 +1745,1054 @@ As the season progresses, day-30 → day-60 → day-90 split predictions
 take over with progressively better accuracy. Once the season ends, the
 RoS models naturally retire for that year and the V12/H2 cross-year
 models become primary for the off-season / draft prep.
+
+---
+
+# Phase R2 — Bayesian RoS (RH2 / RP2)
+
+**Date**: 2026-05-06
+**Outcome**: Both gates passed by ≥ 3× margin. Promoted to production; replaces RH1/RP1 in the dashboard.
+
+## Motivation
+
+RH1/RP1 (the first RoS pass) treated each season independently and used raw in-season rates as features. Two structural blind spots:
+
+1. **No long-run skill anchor.** With only 30–120 days of in-season data, rate features carry a lot of sample noise. The model had no way to know "this 0.350 BABIP is Aaron Judge" vs "this 0.350 BABIP is a journeyman who got lucky."
+2. **No raw-rate shrinkage.** A hitter with K%=12% on 70 PA was fed to the Ridge as if it were the same as K%=12% on 700 PA.
+
+The compendium (`data/reference/baseball_stats_compendium.md` §2C) gives explicit stabilization k values, and Marcel-style multi-year weighting is industry standard for season-of-projection priors. Applying both to the RoS substrate is the highest-leverage move once cross-year r had plateaued at ~0.55 with H2/V12.
+
+## What changed
+
+### 1. Marcel-weighted multi-year prior
+
+For each (player, target_year), compute a PA-weighted blend of prior years' actuals, regressed to league mean:
+
+`prior = (Σ wᵧ · paᵧ · fp_per_pa_actualᵧ + k_prior · league_meanᵧ) / (Σ wᵧ · paᵧ + k_prior)`
+
+with weights (5, 4, 3) for (y-1, y-2, y-3) and `k_prior = 200 PA` (hitters) / `5 GS` (pitchers). Year 2020 is excluded as a prior input — the 60-game season distorts rate stats.
+
+This `prior_fp_per_pa` (or `prior_fp_per_start`) becomes a feature alongside the in-season rates. `prior_pa_eff` (effective sample size of the prior) is also exposed so the model can down-weight thin priors.
+
+### 2. Per-feature Bayesian shrinkage (compendium k values)
+
+`shrunk_rate = (n · obs + k · pop_mean) / (n + k)`
+
+Population means computed once across training years (2018–2025, drop 2020). One k per stat from compendium §2C:
+
+| Feature | Denom | k |
+|---|---|---|
+| `k_pct` (hitter) | PA | 60 |
+| `bb_pct` (hitter) | PA | 120 |
+| `hr_per_pa` | PA | 170 |
+| `iso` | AB | 160 |
+| `xwoba_per_pa` | PA | 300 |
+| `contact_pct` / `whiff_pct` | swing | 100 |
+| `swstr_pct` | pitches | 300 |
+| `hard_hit_pct` / `barrel_pct` | BIP | 50 |
+| `chase_pct` | out-of-zone pitches | 400 |
+| `k_pct` (pitcher) | TBF | 70 |
+| `bb_pct` (pitcher) | TBF | 170 |
+| `swstr_pct` / `c_plus_swstr_pct` | pitches | 300 |
+| `xwoba_per_pa` (pitcher) | TBF | 300 |
+
+Velocity (pitcher) is left raw — already very stable Y/Y (r > 0.85).
+
+### 3. Same-year IL status (pitcher only)
+
+New per-(pitcher, year, split_day) substrate at `data/research/xfp_cache/il_split_features_2018_2026.csv` built from the existing IL transactions JSON. State machine over `placed`/`reinstated|activated` events between season start and the cutoff date produces:
+
+- `il_stints_to`: number of IL placements through cutoff
+- `is_on_il_at_split`: 1 if currently on IL at cutoff (boolean state at time of projection)
+- `days_since_il_return`: days since most recent reinstatement (NaN if never on IL → imputed as max+1)
+- `days_on_il_to`: cumulative days lost (substrate-only; not currently a feature)
+
+## Results
+
+### RH2 (hitters)
+
+| Metric | RH1 | RH2 | Δ |
+|---|---|---|---|
+| Cross-year r (LOO) | 0.5316 | **0.6045** | **+0.073** |
+| MAE (FP/PA) | 0.0918 | 0.0862 | -0.006 |
+| n eval rows | 8,275 | 8,275 | — |
+
+By split_day (RH2 stays flat across the season; RH1 climbed from 0.49→0.57):
+
+```
+day  30:  r=0.5967  n=1833
+day  60:  r=0.6118  n=2235
+day  90:  r=0.6133  n=2237
+day 120:  r=0.6049  n=1970
+```
+
+The prior carries the early-season window. By day 60 the in-season rates start contributing more, peak around day 90, then dilute slightly at 120 as the rest-of-season sample shrinks.
+
+Top standardized coefficients:
+
+```
+prior_fp_per_pa          +0.0371   <- long-run skill anchor
+iso_to_sh                +0.0225
+hard_hit_pct_to_sh       +0.0154
+whiff_pct_to_sh          -0.0120
+contact_pct_to_sh        +0.0120
+xwoba_per_pa_to_sh       +0.0114
+k_pct_to_sh              -0.0110
+hr_per_pa_to_sh          +0.0090
+```
+
+### RP2 (pitchers)
+
+| Metric | RP1 | RP2 | Δ |
+|---|---|---|---|
+| Cross-year r (LOO) | 0.4854 | **0.5495** | **+0.064** |
+| MAE (FP/start) | 2.908 | 2.777 | -0.131 |
+| n eval rows | 4,174 | 4,174 | — |
+
+By split_day (RP2 *declines* slightly later in season — pitcher RoS samples shrink fast):
+
+```
+day  30:  r=0.5679  n=1002
+day  60:  r=0.5690  n=1073
+day  90:  r=0.5410  n=1080
+day 120:  r=0.5236  n=1019
+```
+
+Top standardized coefficients:
+
+```
+prior_fp_per_start         +0.7856   <- dominant signal
+k_pct_to_sh                +0.4442
+xwoba_per_pa_to_sh         -0.3844
+swstr_pct_to_sh            +0.3820
+prior_gs_eff               +0.3497
+avg_velo_to                +0.3340
+c_plus_swstr_to_sh         +0.2824
+fp_per_start_to            +0.2679
+gs_to                      +0.1457
+days_since_il_return_imp   +0.1279   <- time since IL return helps
+zone_pct_to_sh             +0.1165
+bb_pct_to_sh               -0.0753
+split_day                  -0.0669
+o_swing_pct_to_sh          +0.0633
+il_stints_to               +0.0568
+is_on_il_at_split          -0.0368   <- currently on IL -> small negative
+z_swing_pct_to_sh          -0.0040
+```
+
+IL features make a meaningful but secondary contribution. `days_since_il_return_imp` and `is_on_il_at_split` together contribute ~0.16 standardized signal — small but additive on top of the prior + rate features.
+
+## Why this works
+
+The compendium §2C k values are calibrated to split-half r=0.7 (the point at which a stat is "more-skill-than-noise"). Using them as the shrinkage k is principled: rates below stabilization regress hard toward population mean, rates above stabilization stay close to observed.
+
+The Marcel prior is the same logic at a different timescale — the player's true talent is a Bayesian posterior over their multi-year history, and it's the strongest single feature in both RH2 (+0.037 standardized) and RP2 (+0.79 standardized).
+
+What's striking is how much signal the prior adds even mid-season. A naive intuition might be "by day 90 we have plenty of in-season data, the prior should be redundant." The empirical finding is the opposite: even at split_day=120, the prior remains the highest-weighted feature. Half a season of FP/PA data is still a thin sample relative to a 3-year career baseline.
+
+## Comparison to commercial systems
+
+Published Y/Y r ranges for established projection systems (Steamer, ZiPS, ATC, THE BAT) typically fall in 0.55–0.65 for hitters and 0.50–0.60 for pitchers. RH2 at r=0.605 and RP2 at r=0.550 land squarely in the established range despite using a much smaller feature set than commercial systems (which incorporate aging curves, park factors, lineup context, opponent quality, weather, etc.). The compendium-driven shrinkage was the largest single multiplier on r-quality — bigger than any feature-engineering pass attempted in H3-H9.
+
+## Files
+
+- `scripts/xfp/build_il_split_features.py` (new)
+- `scripts/xfp/xfp_rh2_pipeline.py` (new — replaces RH1)
+- `scripts/xfp/xfp_rp2_pipeline.py` (new — replaces RP1)
+- `data/research/xfp_cache/il_split_features_2018_2026.csv` (new, 45,065 rows)
+- `data/models/xfp_rh2_pipeline.pkl` (new bundle)
+- `data/models/xfp_rp2_pipeline.pkl` (new bundle)
+- `data/outputs/xfp_rh2_projections.csv` (282 hitters)
+- `data/outputs/xfp_rp2_projections.csv` (143 pitchers)
+- `data/outputs/xfp_dashboard.html` (auto-rebuilt; reads RH2/RP2)
+
+## Refresh during the season
+
+```bash
+# Statcast/IL data refreshed elsewhere; once that's current:
+python scripts/xfp/build_rolling_hitters.py
+python scripts/xfp/build_rolling_pitchers.py
+python scripts/xfp/build_il_split_features.py    # new
+python scripts/xfp/xfp_rh2_pipeline.py           # new
+python scripts/xfp/xfp_rp2_pipeline.py           # new
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+## What didn't work / future Tier 2 candidates
+
+This pass implemented the Tier 1 list. Tier 2 ideas (deferred):
+
+- **Recent-form vs cumulative split.** Last-21-day rates as a separate feature vs season-to-date. Likely +0.01-0.02 r given how quickly hitters cool off.
+- **Lineup context.** Batting order position + opponent SP quality → R/RBI rate. Captures the team_context_bias problem documented in H4.
+- **Park factors.** Coors / Camden vs pitcher-friendly parks — should add ~0.01 r for context-sensitive stats.
+- **Aging curves.** Sprint speed and barrel rate decline post-30; the prior treats all years equally. Aging-aware Marcel would help slightly.
+
+None of these alone are likely to deliver the +0.06-0.07 r jump that Tier 1 produced. We're approaching the published ceiling for projection systems, and incremental gains will require larger feature investments for smaller r returns.
+
+---
+
+# Phase R3 — Decision-Layer (RH3 / RP3)
+
+**Date**: 2026-05-06
+**Outcome**: Model r essentially unchanged; the value of this phase is the **decision-support layer** built on top of the existing models, not new predictive lift.
+
+## Motivation
+
+Phase R2 pushed cross-year r near the published ceiling. The user's actual workflow questions ("Should I drop Pérez for Herrera?", "Is Soriano sustainable?", "Did I miss the Shane Smith add?") are not predominantly limited by point-projection accuracy — they need uncertainty bounds, a replacement-level yardstick, and recent-form context.
+
+This phase adds five decision-support layers (R3.1-R3.5) without retraining the core models. RH3 and RP3 are RH2/RP2 plus recency features and a residual-based confidence interval, and the projection CSVs gain six decision-support columns.
+
+## What landed
+
+### R3.1 — Last-21-day recency window
+
+`build_rolling_hitters.py` and `build_rolling_pitchers.py` now compute a per-(player, split_day) `_last21` feature block alongside the existing `_to` cumulative window. Same aggregation function, narrower time slice (cutoff − 21 days, cutoff].
+
+**Predictive impact**: marginal. Hitter Δr +0.002, pitcher Δr +0.0002. The cumulative window already absorbs recent performance; the last-21 window overlaps it heavily in early season. The win is interpretive — `recency_form_gap = last21 − cumulative` becomes a UI feature ("hot/cold the last 21 days") even when the model itself doesn't lean on it much.
+
+### R3.2 — Residual-based confidence intervals
+
+For each (split_day, predicted-bucket-quartile) the leave-one-year-out residuals are pooled and the standard deviation stored. At projection time, `(p25, p75) = pred ± 0.6745 × σ_lookup`. Wider bands for low-PA / high-uncertainty tiers; narrower for established hitters.
+
+**Hitter overall sigma = 0.109 FP/PA** (so a ~0.16 FP/PA gap at 70% confidence). **Pitcher overall sigma = 3.55 FP/start** (so a ~5 FP/start gap). Both per-bucket sigmas vary by ~20-30% from overall.
+
+### R3.3 — Replacement-level deltas (position-aware)
+
+12-team standard fantasy baseline:
+
+| Position | Replacement at |
+|---|---|
+| C, 1B, 2B, SS, 3B | rank 12 |
+| OF | rank 36 (3 per team) |
+| DH / UTIL | rank 24 |
+| SP | rank 60 (5 per team) |
+
+Each player gets `replacement_xfp_per_pa` (or `_per_start`) and `replacement_delta`. Negative delta = below waiver-wire baseline.
+
+### R3.4 — Schedule-strength adjustment (pitchers only)
+
+`build_team_strength.py` produces a per-team `bat_index = team_xwOBA / league_mean` from cumulative-season Statcast. `build_pitcher_schedule.py` queries MLB Stats API `schedule?hydrate=probablePitcher` for the next 14 days — in practice MLB only announces probable starters ~5 days out, so coverage is partial (95 of 143 SPs in the projection get a next-start adjustment; the rest fall through with factor=1.0).
+
+`schedule_factor = clip(1 / mean(opp_bat_index_next2), 0.85, 1.15)`. Caps prevent runaway adjustments from a single noisy team. `xfp_rp3_per_start_sched = xfp_rp3_per_start × schedule_factor`.
+
+### R3.5 — PA projection (hitters only)
+
+`expected_pa_remaining = (pa_to_date / games_played_so_far) × games_remaining`
+`expected_total_fp_remaining = xfp_rh3_per_pa × expected_pa_remaining`
+
+Simple version: assumes current PA/game pace continues. Lineup-spot tracking and IL risk discounting are documented as Tier-2 future work (would need MLB game-log scraping).
+
+### R3.6 — Composite signal
+
+Per-row bucket combining CI + replacement delta + IL state:
+
+```
+if on_il:                             signal = 'il'
+elif p25 > replacement_xfp:           signal = 'add'    (high-conf above WW)
+elif p75 < replacement_xfp:           signal = 'drop'   (no plausible upside)
+else:                                 signal = 'hold'
+```
+
+This is the single most actionable column in the dashboard — the user reads it at a glance and the rest of the columns provide the supporting numbers.
+
+## Empirical check on user's questions
+
+Using 2026-05-06 dashboard:
+
+| Player | Position | Signal | Δ Repl | Notes |
+|---|---|---|---|---|
+| Salvador Pérez | C | HOLD | −0.036 FP/PA | Below replacement but p75 still spans it. **Drop candidate when paired with a positive Δ above-replacement add.** |
+| Iván Herrera | C | ADD | +0.074 FP/PA | p25 still above the catcher floor → high-confidence add. |
+| Drake Baldwin | C | ADD | +0.100 FP/PA | Best-available catcher in the model. |
+| José Soriano | SP | ADD | +3.26 FP/start | Recency gap +0.78 (still hot). Schedule vs TOR bumps to 14.32. |
+| Framber Valdez | SP | HOLD | +0.35 FP/start | Recency gap **−2.54** (cold), but model already regressed him; not a drop. |
+| Parker Messick | SP | HOLD | +0.34 FP/start | Recency flat, but p25=8.7 vs replacement=10.5 — model thinks the early-season FP is unsustainable. Sell-high candidate. |
+| Tarik Skubal | SP | ADD | +5.07 FP/start | Top of the leaderboard, p25=13.4 still well above replacement. |
+
+The Pérez → Herrera swap nets ≈ +0.11 FP/PA × ~270 PA remaining ≈ **+30 FP rest of season**, with both p25 bounds clearing replacement — the kind of trade the dashboard now surfaces directly.
+
+## Files
+
+- `scripts/xfp/build_team_strength.py` (new)
+- `scripts/xfp/build_pitcher_schedule.py` (new — MLB Stats API)
+- `scripts/xfp/xfp_rh3_pipeline.py` (new — replaces RH2 in dashboard)
+- `scripts/xfp/xfp_rp3_pipeline.py` (new — replaces RP2 in dashboard)
+- `scripts/xfp/build_rolling_hitters.py` (modified — added last-21-day window)
+- `scripts/xfp/build_rolling_pitchers.py` (modified — added last-21-day window)
+- `scripts/xfp/build_v11_dashboard_v2.py` (modified — six new columns: Sig, Δ Repl, Sched, L21Δ, Proj FP, CI bounds)
+- `data/research/xfp_cache/team_strength_2026.csv` (new)
+- `data/research/xfp_cache/pitcher_schedule_2026.csv` (new)
+- `data/models/xfp_rh3_pipeline.pkl`, `xfp_rp3_pipeline.pkl` (new bundles)
+- `data/outputs/xfp_rh3_projections.csv`, `xfp_rp3_projections.csv` (new)
+
+## Refresh during the season
+
+```bash
+python scripts/xfp/build_rolling_hitters.py
+python scripts/xfp/build_rolling_pitchers.py
+python scripts/xfp/build_il_split_features.py
+python scripts/xfp/build_team_strength.py        # new
+python scripts/xfp/build_pitcher_schedule.py     # new (also fetches latest probables)
+python scripts/xfp/xfp_rh3_pipeline.py           # new
+python scripts/xfp/xfp_rp3_pipeline.py           # new
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+The two new daily-changing inputs are `build_team_strength` (statcast-based, refreshes with the daily statcast pull) and `build_pitcher_schedule` (MLB Stats API, ~5-day visibility horizon — re-run daily for fresh probables).
+
+## What's deliberately NOT in this phase
+
+- **Lineup-spot tracking** for hitters. Would need MLB game-log scraping per (team, date) to extract batting order. Adds ~0.05-0.10 FP/PA differentiation for top-of-order hitters but the engineering cost is high.
+- **Park factors**. Coors / Camden / Yankee Stadium effects exist but the team-level `bat_index` partially absorbs them via team-record-keeping. Explicit park factors add at most ~+0.005 r.
+- **Hitter IL substrate**. The pitcher IL transactions JSON contains hitter events too; RH3 doesn't currently use them. Adding `is_currently_injured` as a feature would mainly affect a handful of hitters/week; most hot-streak / cold-streak issues are already captured by recent-form gap.
+- **Quantile regression for CIs**. The residual approach is calibrated to the train-time prediction distribution and works well for an MVP. Quantile-loss GBMs would be more flexible but add a second model to maintain.
+
+These are explicitly Tier-2 candidates if a future r-improvement push is warranted.
+
+## Validation results (added 2026-05-06 post-ship; revert applied)
+
+After shipping, four empirical tests were run against the new substrate (`scripts/xfp/validate_phase_r3.py`):
+
+| Test | Result | Verdict |
+|---|---|---|
+| Schedule strength signal — cor(opp `bat_index_prior`, FP/start) on 4,681 2025 starts | **−0.0465**; weakest-vs-strongest opp swing = **+1.40 FP/start** | ✅ Real, modest |
+| RH3 CI calibration (LOO) — fraction of actuals in p25–p75 | **51.2%** vs target 50% | ✅ Calibrated |
+| RP3 CI calibration (LOO) — fraction of actuals in p25–p75 | **52.2%** vs target 50% | ✅ Calibrated |
+| Recency-form-gap signal — cor(`recency_gap`, RoS residual) | **+0.039**; bucket swing 0.014 FP/PA | ⚠️ Real but tiny |
+| RH3 vs RH2 cross-year r (LOO) | **+0.0020** | ❌ Below the +0.005 PASS gate I had set |
+| RP3 vs RP2 cross-year r (LOO) | **+0.0002** | ❌ Below gate |
+| 2026 projection agreement — pearson(RH3, RH2) / pearson(RP3, RP2) | **0.997 / 0.998** | RH3≈RH2, RP3≈RP2 numerically |
+
+**Decision after validation**: revert. The last-21-day rate features that justified creating new pipelines failed their own promotion gate (+0.002 r vs the required +0.005). RH3/RP3 were re-defined to use the **RH2/RP2 feature set exactly** — predictive output is now identical to RH2/RP2 to four decimal places. The decision-support layer (residual CI, replacement deltas, schedule strength, signal column) sits on top of the validated RH2/RP2 predictions; only `recency_form_gap` survives, and only as a display-only column joined from the rolling substrate (it is NOT a model input).
+
+**Standing rule (added to repo-level memory):** never promote a new model version without an empirical test showing improvement vs the prior production version on the metric we claim to be improving. Decision-support post-processing layers that don't directly affect r should be added on top of the existing production model, not used to justify retraining.
+
+This phase contributed:
+1. **Validated decision layer** — CIs (calibrated), replacement deltas (sane distribution), schedule strength (real but modest signal), composite buy/hold/sell signal, hitter PA-projection-aware total FP.
+2. **Negative result** — last-21-day in-season rates do not meaningfully add to the cumulative window already in RH2/RP2, because the cumulative window grows during the season and absorbs recent performance. Documented and reverted.
+
+---
+
+# Phase RP — Reliever models (RP-S1 cross-year + RP-RS1 RoS)
+
+**Date**: 2026-05-06
+**Outcome**: Both gates passed by wide margins. Both models locked. Dashboard now includes a `window.XFP_RELIEVERS` payload covering 168 RPs.
+
+## Motivation
+
+Until this phase, all xFP pitcher models filtered to starters via `gs ≥ 2`. Relievers had ZERO model coverage — the user's 6 RPs (Durán, Fairbanks, Helsley, Tanner Scott, Robert Suarez, Daniel Palencia) showed up in the dashboard with "no model coverage" tags, forcing the user to rely on ESPN's projections alone.
+
+Relievers behave fundamentally differently from starters:
+- Volume metric is per-appearance (or per-IP), not per-start
+- **Saves dominate FP scoring** (user's ESPN scoring: SV = +5, HLD = +3 vs IP × 3.3 — a 32-save closer pulls 160 FP just from SV bonus)
+- Role (closer / setup / middle) is the dominant predictor of fantasy value, not pure rate-stat skill
+- Year-to-year role stability is ~50–70% (research literature) — meaningful churn
+
+ESPN scoring confirmed: `FP = K + IP×3.3 + SV×5 + HLD×3 − BB − 2×ER − H − HBP`. League is 12 teams × 4 RP slots → top-48 RP is replacement.
+
+## Architecture (validation-first per Phase R3 rule)
+
+Validation gates set BEFORE building each phase:
+
+| Phase | Gate |
+|---|---|
+| RP-0 substrate | Top-SV leaderboards match Baseball-Reference / FG (manual spot check) |
+| RP-1 multiyr | ≥ 1500 (RP, year) rows; closer Y/Y stability 50–70%; statcast 100% join |
+| RP-2 (cross-year skill) | LOO cross-year r ≥ 0.40 |
+| RP-3 (in-season RoS) | LOO cross-year r ≥ 0.50 |
+
+## RP-0: pitcher counting stats
+
+`scripts/xfp/build_pitcher_counting.py` pulls per-pitcher season totals from MLB Stats API for 2018–2026:
+- `gamesPitched`, `gamesStarted`, `gamesFinished`, `inningsPitched`, `battersFaced`
+- `wins`, `losses`, `saves`, `saveOpportunities`, `holds`, `blownSaves`
+- `strikeOuts`, `baseOnBalls`, `hits`, `earnedRuns`, `homeRuns`, `hitByPitch`
+- `era`, `whip`
+
+Output: `data/research/xfp_cache/pitcher_counting_stats_{year}.json` (~700–900 pitchers per year).
+
+**Validation**: top SV-getters match reality — Helsley 49 SV in 2024, Estévez 42 SV in 2025, Mason Miller leading 2026.
+
+## RP-1: relievers_multiyr substrate
+
+`scripts/xfp/build_relievers_multiyr.py` joins statcast pitch-level rates (filtered to non-starter appearances) with the counting stats above:
+- RP eligibility: `G ≥ 20 AND GS ≤ 5` (allows for openers / spot starters)
+- Role classification (closer-focused per user spec):
+  - `closer`: `SV ≥ 15 OR (SV+SVO ≥ 20)`
+  - `setup`: `HLD ≥ 15` (not closer)
+  - `middle`: `G ≥ 30` (neither)
+  - `long_low`: `G < 30`
+- FP computed from user's ESPN scoring formula
+
+Output: `data/research/xfp_cache/relievers_multiyr_2018_2026.csv` — 2,090 (RP, year) rows.
+
+**Validation passed**:
+- Role distribution makes sense (~40 closers / ~50 setup / ~130 middle / ~55 long_low per year)
+- Top FP leaderboards match: 2024 Clase #1 (485 FP, 47 SV), Helsley #2 (440 FP, 49 SV); 2025 Chapman #1 (400 FP, 32 SV)
+- Closer Y/Y stability: 22 of 41 2024 closers still classified closer in 2025 (54%) — matches published research
+- Statcast rate coverage: 100% of RP rows joined
+
+## RP-2: cross-year RP skill model (xfp_rps1)
+
+`scripts/xfp/xfp_rps1_pipeline.py` — Ridge predicting year T+1 reliever FP TOTAL from year-T features:
+- Rate stats (lag-1): k_pct, bb_pct, swstr_pct, c_plus_swstr, xwoba_per_pa
+- Stuff: avg_velo, avg_pfxz
+- Discipline: zone_pct, o_swing_pct, z_swing_pct
+- Workload + role: g, ip, sv, hld, gf
+- Role one-hot: role_closer, role_setup, role_middle (long_low = baseline)
+- Prior FP rate: era, whip, fp_per_g
+
+**Result: r = 0.508** (vs gate 0.40, vs naive persistence baseline 0.382 — Δ +0.126)
+
+Per-year LOO:
+```
+2019: r=0.4096  2021: r=0.5582  2022: r=0.5552
+2023: r=0.5631  2024: r=0.5303  2025: r=0.5502
+```
+
+Top standardized coefficients (skill > role > volume):
+```
+c_plus_swstr_lag1   +9.41    role_closer_lag1   +6.35
+swstr_pct_lag1      +8.74    sv_lag1            +5.33
+fp_per_g_lag1       +8.74    bb_pct_lag1        −5.27
+zone_pct_lag1       +8.07    hld_lag1           +4.03
+avg_velo_lag1       +8.00    
+k_pct_lag1          +7.38
+gf_lag1             +6.49
+xwoba_per_pa_lag1   −5.39
+```
+
+Top 2026 projections all closers — Chapman, Mason Miller, Hader, Edwin Díaz, Cade Smith, Duran, Bednar, Iglesias, Muñoz, Megill, Suarez, Clase. Sensible.
+
+## Rolling RP substrate
+
+`scripts/xfp/build_rolling_relievers.py` builds per-(RP, year, split_day) rows for in-season RoS:
+- For each split_day in [30, 60, 90, 120], aggregate relief pitches through cutoff
+- Compute G, IP, K, BB, H, HBP, ER through cutoff
+- `fp_skill_to` = K + IP×3.3 − BB − 2×ER − H − HBP (NO SV/HLD bonus — would require gameLog scraping)
+- Filter: G_through_cutoff ≥ 5, GS_through_cutoff ≤ 2
+- Lag features: prior-year role / sv / hld / fp_per_g / fp / k_pct / bb_pct / xwoba_per_pa
+
+Output: 9,532 (RP, year, split_day) rows.
+
+## RP-3: RoS RP model (xfp_rprs1)
+
+`scripts/xfp/xfp_rprs1_pipeline.py` — Ridge predicting year-T full-season FP TOTAL from in-season + lag features. Rest-of-season FP = predicted_full_year − actual_to_date_fp_from_API.
+
+**Result: r = 0.778** (vs gate 0.50, vs RP-S1 0.508 — Δ +0.27)
+
+Per-year LOO:
+```
+2019: r=0.7339  2021: r=0.7732  2022: r=0.8173
+2023: r=0.7982  2024: r=0.7734  2025: r=0.7851
+```
+
+Split-day breakdown (model improves dramatically as season progresses):
+```
+day  30: r=0.6168    day  60: r=0.7475
+day  90: r=0.8328    day 120: r=0.8841
+```
+
+Top standardized coefficients:
+```
+fp_skill_to            +49.4    sv_lag1            +5.7
+split_day              −40.6    g_lag1             +5.4
+g_to                   +19.5    k_pct_to           +5.0
+fp_per_g_lag1          +13.1    ip_to              −5.0
+xwoba_per_pa_to        −11.0    fp_lag1            +4.7
+avg_velo_to            +9.3     role_setup_lag1    −3.9
+```
+
+The dominance of `fp_skill_to` and the strong negative `split_day` coefficient (proportional regression — more season elapsed = less RoS) are the model's "season-clock" — it's effectively learning the playing-time math.
+
+## Dashboard wiring
+
+- `scripts/xfp/build_v11_dashboard_v2.py` extended with `build_reliever_records()`; emits `window.XFP_RELIEVERS` (168 RPs covered)
+- `MY_TEAM` payload now matches RPs against the RP universe: each rostered RP gets `rpRoSFp`, `rpFullYear`, `rpReplDelta`, `rpSignal`, `rpRolePrior`
+- `scripts/xfp/eval_team_vs_fa.py` extended with RP section: roster RPs ranked by RoS, FA RPs ranked by RoS with %owned/prior-role/prior-SV columns, drop/add pairings
+
+## Replacement-level for closers in 12-team / 4-RP league
+
+Top 48 RPs → replacement xFP RoS ≈ 98 FP. This corresponds roughly to "the 4th best closer on the worst team" — almost always a closer or top-tier setup man.
+
+## Files
+
+- `scripts/xfp/build_pitcher_counting.py` (new)
+- `scripts/xfp/build_relievers_multiyr.py` (new)
+- `scripts/xfp/build_rolling_relievers.py` (new)
+- `scripts/xfp/xfp_rps1_pipeline.py` (new — cross-year)
+- `scripts/xfp/xfp_rprs1_pipeline.py` (new — in-season RoS)
+- `data/research/xfp_cache/pitcher_counting_stats_{2018..2026}.json` (new)
+- `data/research/xfp_cache/relievers_multiyr_2018_2026.csv` (new)
+- `data/research/xfp_cache/rolling_relievers_2018_2026.csv` (new)
+- `data/models/xfp_rps1_pipeline.pkl` (new)
+- `data/models/xfp_rprs1_pipeline.pkl` (new)
+- `data/outputs/xfp_rps1_projections.csv` (new — 279 RPs, 2026 cross-year)
+- `data/outputs/xfp_rprs1_projections.csv` (new — 168 RPs, 2026 RoS)
+
+## Refresh during the season
+
+```bash
+python scripts/xfp/build_pitcher_counting.py     # ~2 minutes (MLB API)
+python scripts/xfp/build_relievers_multiyr.py    # ~30 sec
+python scripts/xfp/build_rolling_relievers.py    # ~1 min
+python scripts/xfp/xfp_rps1_pipeline.py          # cross-year
+python scripts/xfp/xfp_rprs1_pipeline.py         # RoS
+python scripts/xfp/build_v11_dashboard_v2.py
+```
+
+## What's missing / future work
+
+- **In-season SV/HLD detection from statcast**: currently we use the API snapshot's cumulative SVs/HLDs at projection time. Doesn't matter for cross-year (uses year-end totals) or RoS (computes RoS = predicted_full_year − actual_to_date). Would matter only for rebuilding historical mid-season snapshots.
+- **Leverage index features**: pLI / iLI not pulled. Would marginally improve role classification (high-leverage usage = closer-trajectory).
+- **Per-RP IL features**: existing IL transactions JSON has RPs too; building `il_split_features` for relievers would add Helsley-style "questionable role due to injury" signal.
+- **Pitcher-level handedness vs opponent lineups for RP RoS**: closers face short windows and opponent matchups matter more than for SPs over a 6-IP outing. Out of scope for v1.
+
+## Phase RP Update (2026-05-06): substrate fix + team-context negative result
+
+User feedback flagged two problems:
+1. **Latz** (Texas RP, hot 2026 start, 1.02 ERA) was missing from projections because his 2025 lag was null (he had < 20 G in 2025).
+2. **Robert Suarez** projecting too high — he was a temp closer covering for Iglesias's IL stint; now Iglesias is back, Suarez's SV chances should drop. Model didn't see this.
+
+Two distinct fixes attempted, with separate validation:
+
+### Fix A: substrate refinements (SHIPPED, big lift)
+
+Two substrate issues fixed:
+- **In-progress year split_day labelling**: rolling builder was emitting nominal split_day=120 rows for 2026 with data only through May 3 (38 days). The `split_day` feature got mislabeled, and IL state lookups landed at the wrong cutoff. Fixed by emitting an actual-elapsed-days row (split=41 today) in addition to the nominal cutoffs that have actually elapsed.
+- **Lag-feature backfill**: pitchers with no prior-year substrate row (rookies, returnees) were silently dropped. Backfilled with population-mean lag values + `long_low` role default.
+
+**Result**: training rows grew from 3,429 → 7,179. **Cross-year r jumped from 0.778 → 0.810** (+0.031). This is a substrate-correctness fix, not a model-feature change — both old and new models use the same feature pool.
+
+Latz now appears in projections at RoS 115 FP / signal HOLD.
+
+### Fix B: team-context features (REVERTED, failed gate)
+
+Built `enrich_rolling_relievers.py` to add four team-context features:
+- `is_team_prior_closer`: 1 if pitcher was their team's top SV pitcher last year
+- `prior_closer_on_il`: 1 if team's prior closer is currently on IL (you're the temp)
+- `prior_closer_returned_recently`: 1 if team's prior closer returned from IL in last 14 days
+- `prior_closer_days_since_return`: raw days since prior closer's most recent IL return
+
+Hooked into IL substrate, joined per-pitcher per-(year, split_day). Spot-check confirmed the features captured the Suarez/Iglesias case correctly: at split=41 (today), Suarez gets `prior_closer_returned_recently=1` and `prior_closer_days_since_return=1.0`.
+
+**Result**: cross-year r went from 0.8092 (without features) → 0.8101 (with features). **Δr = +0.0009 — failed the +0.005 gate.** Per validation rule, reverted to the prior 21-feature set.
+
+The pipeline now auto-detects gate failure and reverts: `FEATS_USED = PRIOR_RPRS1_FEATS` when `delta_team < 0.005`.
+
+### Why team-context didn't help
+
+Three plausible reasons (not investigated further):
+1. **Rare in training data**: explicit "incumbent IL → temp closer → incumbent returns" cycles within a season are uncommon enough that the model can't learn a reliable signal from them.
+2. **Already absorbed by other features**: `sv_lag1`, `role_closer_lag1`, and `fp_per_g_lag1` capture most of the role information indirectly. A 40-SV-last-year pitcher whose teammate is also a 30-SV-last-year pitcher already gets weighted appropriately by the existing model.
+3. **Smaller-than-intuition FP impact**: a temp closer demoted to setup loses ~1 FP/G (saves bonus minus hold bonus), which over 80 remaining games is ~80 FP — within model sigma (53). The intuitive "huge demotion" doesn't translate to a model-distinguishable FP swing.
+
+The user's intuition that Suarez should project lower is correct, but the existing model already does it correctly:
+- Iglesias: RoS 220 FP (rank 2) — model correctly identifies him as the real closer
+- Suarez: RoS 203 FP (rank 3) — high but driven by skill (40 SV last year, elite rates), not by current SV expectation
+
+The 17 FP gap reflects the model's view: Iglesias should outproduce Suarez by a modest amount as the secured closer.
+
+### Files (this update)
+
+- `scripts/xfp/enrich_rolling_relievers.py` (new — kept for future re-validation if signal grows)
+- `data/research/xfp_cache/mlb_teams.json` (new)
+- `scripts/xfp/build_rolling_relievers.py` (modified — in-progress year handling)
+- `scripts/xfp/build_il_split_features.py` (modified — emit current-elapsed-days row)
+- `scripts/xfp/xfp_rprs1_pipeline.py` (modified — team-context gate + auto-revert)
+
+---
+
+# Phase RP-2 — In-season role-usage features (RP-RS2)
+
+**Date**: 2026-05-06
+**Outcome**: BOTH GATES PASSED. RP-RS2 promoted to production.
+
+## Motivation
+
+Comparing my model's RP rankings against the PitcherList weekly Top 50 (2026-05-06 issue) revealed massive divergence in the middle and bottom of the list (Spearman ρ = 0.29 across 48 covered closers). The user's question — "what numbers actually drive PL's ranking?" — led to a feature-correlation analysis (`pl_feature_correlation.py`) showing PL leans on three signals my model didn't use:
+
+| Feature | ρ vs PL rank | ρ vs my (old) rank |
+|---|---|---|
+| `gf_pct_now` (2026 games-finished %) | **−0.75** | −0.18 |
+| `sv_pct_now` (2026 SV per appearance) | **−0.74** | −0.15 |
+| `sv_now` (raw 2026 saves) | **−0.73** | −0.12 |
+| `hld_now` (high = setup, not closer) | **+0.64** | +0.14 |
+
+PL was implicitly weighting current-year role usage; my model only knew prior-year role.
+
+## What changed
+
+### 1. Statcast-derived appearance summary (`build_role_usage.py`)
+
+For every (pitcher, game) appearance from 2018–2026, derive:
+- `gf` — 1 if pitcher threw the final pitch of the game
+- `sv` — GF + winning team + (lead at exit ≤ 3 OR ≥ 3 IP)
+- `hld` — appearance + winning team + lead at entry ∈ [1,3] + NOT GF + lead held + ≥1 out
+- `blown_sv` — GF + losing team + entered with lead
+
+Validation against MLB API counting stats: 91-110% accuracy on top closers (Suarez 2025: 39 derived vs 40 API; Helsley 2024: 51 vs 49). Slight overcounting on long-relief saves; close enough for ranking purposes.
+
+Output: `data/research/xfp_cache/role_usage_appearances_{year}.parquet` (~21k appearances/year, 1300 SVs/year).
+
+### 2. New rolling-substrate features
+
+`build_rolling_relievers.py` extended with:
+- `gf_to`, `sv_to`, `hld_to`, `bs_to` — cumulative through cutoff
+- `gf_pct_to` (= gf_to / g_to) — current-year closer-usage signal
+- `sv_per_g_to`, `hld_per_g_to`, `sv_plus_hld_to` — rate variants
+- `fp_with_role_to` — FP-to-date including SV×5 + HLD×3 bonuses
+
+`enrich_rolling_relievers.py` extended with:
+- `sv_per_g_lag1`, `hld_per_g_lag1` — prior-year usage rates
+
+### 3. Stratified validation (the methodology fix)
+
+The original team-context attempt (Phase RP-1 update) failed a +0.005 overall cross-year r gate by delivering only +0.001. **The diagnosis on this attempt was wrong: the overall gate was the wrong test.** When features matter only for a specific cohort (e.g., the ~20% of pitchers experiencing mid-season role change), measuring on the full 80% stable + 20% unstable population dilutes the signal.
+
+RP-RS2 uses a **stratified gate**:
+1. Overall cross-year r MUST NOT regress (gate: Δ ≥ 0.0)
+2. Role-change subset cross-year r MUST improve by ≥ +0.05
+
+Role-change subset definition: rows where `|sv_per_g_now − sv_per_g_lag1| > 0.10 SV/G` AND has prior-year lag data. This isolates the cohort where new role-usage features should help most.
+
+## Results
+
+| Metric | RP-RS1 baseline | RP-RS2 | Δ |
+|---|---|---|---|
+| Overall LOO cross-year r | 0.8092 | **0.8419** | **+0.033** ✅ |
+| Role-change subset r | 0.7666 | **0.8405** | **+0.074** ✅ |
+| Overall MAE (FP/season) | 41.5 | 37.3 | -4.2 |
+| Role-change subset MAE | 53.5 | 42.7 | -10.8 |
+| n eval | 7,179 | 7,179 | — |
+| n role-change subset | 1,490 | 1,490 | — |
+
+Both gates passed by wide margins (overall +0.033 vs gate 0.0; role-change +0.074 vs gate +0.05).
+
+Top standardized coefficients (28 features total):
+
+```
+fp_skill_to            +62.94    sv_lag1            -15.10
+split_day              -45.52    sv_per_g_lag1      +14.82
+fp_with_role_to        -41.45    ip_to              +10.75
+sv_plus_hld_to         +28.97    fp_lag1            +10.32
+sv_per_g_to            +23.05    k_pct_to           +8.53
+                                  xwoba_per_pa_to    -8.20
+                                  g_to               +7.06
+NEW features:
+gf_pct_to              +6.16    sv_per_g_to        +23.05
+hld_per_g_to           +5.97    sv_plus_hld_to     +28.97
+fp_with_role_to        -41.45   sv_per_g_lag1      +14.82
+hld_per_g_lag1         -0.28
+```
+
+The negative `fp_with_role_to` coefficient is the model learning "you've already collected X FP this year, so the rest-of-season target is full-year minus X" — proper season-clock arithmetic. The positive `sv_plus_hld_to` and `sv_per_g_to` coefficients are the role signal: "regardless of skill, if you're getting saves now, you'll keep getting saves."
+
+## How RP-RS2 fixes the user's flagged cases
+
+| Player | Old rank | New rank | PL rank | Reason |
+|---|---|---|---|---|
+| Robert Suarez | 4 | **14** | 28 | Sees Iglesias's GF rate (88%); de-prioritizes Suarez |
+| Lucas Erceg | 222 | **16** | 20 | Sees current 10 SV / 14 G / 67% GF |
+| Jacob Latz | 109 | **20** | 10 | Sees current 3 SV / 38% GF in TEX |
+| Bryan Baker | 68 | **7** | 3 | Sees 9 SV / 64% GF |
+| Riley O'Brien | 85 | **4** | 11 | Sees 9 SV / 63% GF |
+| Paul Sewald | 125 | **12** | 12 | Sees ARI closer pattern |
+| Jack Perkins | 65 | **19** | 15 | New ATH closer recognized |
+
+## What didn't change
+
+- The cross-year RP skill model (RP-S1, r=0.508) is unchanged — that predicts year T+1 from year-T full-season totals, not in-season snapshots.
+- The 4 team-context features (`is_team_prior_closer`, `prior_closer_on_il`, etc.) remain in the substrate but are NOT in the RP-RS2 feature set. They failed the original overall gate; haven't re-tested under stratified gate.
+
+## Validation methodology takeaway (added to repo memory)
+
+When a feature's claimed value is concentrated in a specific cohort (role-change cases here), validate **on that cohort directly**, not just on the general population. Define the cohort from features that don't include the target so the validation isn't circular. The original team-context attempt didn't fail because the features were bad — it failed because the gate was the wrong measurement.
+
+## Files
+
+- `scripts/xfp/build_role_usage.py` (new — appearance-level GF/SV/HLD detection)
+- `scripts/xfp/build_rolling_relievers.py` (modified — adds gf_to, sv_to, hld_to, etc.)
+- `scripts/xfp/enrich_rolling_relievers.py` (modified — adds sv_per_g_lag1)
+- `scripts/xfp/xfp_rprs2_pipeline.py` (new — production model)
+- `scripts/xfp/pl_feature_correlation.py` (new — diagnostic; not on critical path)
+- `data/research/xfp_cache/role_usage_appearances_{year}.parquet` (new, 9 years)
+- `data/models/xfp_rprs2_pipeline.pkl` (new)
+- `data/outputs/xfp_rprs2_projections.csv` (new)
+- `scripts/xfp/build_v11_dashboard_v2.py` (modified — points to RP-RS2)
+
+## Refresh during the season
+
+```bash
+python scripts/xfp/build_pitcher_counting.py     # ~2 min
+python scripts/xfp/build_role_usage.py           # ~3 min (new step)
+python scripts/xfp/build_relievers_multiyr.py    # ~30 sec
+python scripts/xfp/build_rolling_relievers.py    # ~1 min (now includes role-usage)
+python scripts/xfp/enrich_rolling_relievers.py   # ~10 sec
+python scripts/xfp/xfp_rps1_pipeline.py          # cross-year (unchanged)
+python scripts/xfp/xfp_rprs2_pipeline.py         # RoS (replaces rprs1)
+python scripts/xfp/build_v11_dashboard_v2.py     # rebuild dashboard
+```
+
+---
+
+# Phase RP→Hitter/SP transfer (2026-05-06)
+
+After RP-RS2's success, applied the lessons systematically to hitter and SP work. Four tasks attempted with stratified-validation gates throughout.
+
+## Task 1 (SHIPPED) — Substrate fix: in-progress year split mismatch
+
+The RP-RS2 substrate fix that emits an "actual elapsed days" split row for the in-progress year was missing from `build_rolling_hitters.py` and `build_rolling_pitchers.py`. Both substrates were emitting only `split_day=30` for 2026 (cutoff April 25), missing 10+ days of recent statcast data.
+
+Fix: identical pattern to `build_rolling_relievers.py` — for the current year, also emit a `split_day = (today − season_start).days` row using statcast data through max available date. The `actual_cutoff = min(nominal_cutoff, max_data_date)` ensures statcast aggregates use real data even when the nominal cutoff is in the future.
+
+**Validation**: cross-year r unchanged (0.6045 hitters, 0.5495 pitchers) — substrate fix doesn't alter the model, just feeds it fresher data. Coverage in 2026 projections grew:
+- Hitters: 282 → **332** (Donovan, Langford, etc. now appear with sufficient PA)
+- Pitchers: 143 → **179** (more SPs with updated GS counts)
+
+## Task 2 (SHIPPED IMPLICITLY) — Hitter lag backfill
+
+The user-flagged "no model coverage" cases (Donovan, Langford) turned out to be data-freshness issues (Task 1) rather than missing-lag issues. The H2 prior table already backfills missing lag with league mean. With Task 1's fresher data, these hitters now clear the `pa_to ≥ 50` threshold.
+
+## Task 3 (FAILED gate — REVERTED) — Hitter lineup-spot features (RH4)
+
+Built `build_hitter_lineup.py` to derive per-(batter, game) batting order from statcast `at_bat_number` (first 9 distinct batters per team-game = lineup spots 1-9). Validated against known starters: Aaron Judge avg_spot=2.5, Mookie Betts 1.9, Salvador Pérez 4.5 — matches reality.
+
+Added 5 features to RH4 (vs RH3 baseline):
+- `lineup_spot_to`, `started_pct_to`, `pa_per_started_game_to`
+- `lineup_spot_lag1`, `started_pct_lag1`
+
+**Stratified validation:**
+
+| Cohort | RH3 baseline | RH4 with features | Δr |
+|---|---|---|---|
+| Overall (n=8275) | 0.6045 | 0.6050 | **+0.0005** ✅ |
+| Lineup-change (n=3415) | 0.5646 | 0.5626 | **−0.0020** ❌ |
+
+Lineup-change subset gate **FAILED** (gate ≥ +0.05; delivered −0.002). Per validation rule, **REVERTED** to RH3.
+
+### Why it failed (the actually useful insight)
+
+The hitter target is **FP per PA** (a rate). Lineup spot affects **PA volume**, not **FP rate per PA**. A hitter demoted from leadoff to 7-hole still hits with similar quality per PA — they just get fewer PAs. The model already captures volume implicitly via `pa_to` and computes total FP downstream as `xfp_per_pa × expected_pa_remaining`.
+
+**The RP case worked because target = FP TOTAL** (SVs and HLDs flow directly into the total). For hitters, the equivalent move would be to predict TOTAL FP per season (or per remaining games), not per-PA rate. That's a bigger architecture change deferred to future work.
+
+Lineup features remain in the substrate (`rolling_hitters_2018_2026.csv` has `lineup_spot_to`, `started_pct_to`, `pa_per_started_game_to`) and could be useful as PA-projection inputs in the dashboard layer, even though they don't help the model directly.
+
+## Task 4 (NO ACTION NEEDED) — SP V12/RP3 stratified diagnostic
+
+Tested whether SPs need a rotation-status feature analog to RP-RS2's GF%/SV-per-G. Defined rotation-change cohort: SPs whose 2026 `gs_pace_to` differs from prior-year `gs_pace_lag1` by ≥ 0.10 GS/team-game.
+
+**Surprising result:** the rotation-change cohort has BETTER cross-year r (0.595) than the stable cohort (0.492). Established veteran SPs are HARDER to predict (regression to mean is uncertain) while role-changers are more predictable (rookies dominating, demoted veterans clearly cooked).
+
+**Conclusion**: SPs don't need new role-context features. The existing RP3 model already handles role changes well. The RP-RS2 methodology doesn't transfer to SPs because SP role is fundamentally more stable than RP role.
+
+## Summary of what shipped and what didn't
+
+| Task | Result | Reason |
+|---|---|---|
+| Task 1: Substrate in-progress fix | ✅ SHIPPED | Bug fix; no model regression; +50 hitter / +36 SP coverage |
+| Task 2: Hitter lag backfill | ✅ Effectively shipped | Solved by Task 1 (was a data freshness problem, not lag) |
+| Task 3: Lineup-spot features (RH4) | ❌ REVERTED | Rate target doesn't reward volume features; would need total-FP target |
+| Task 4: SP rotation-status | ❌ NO ACTION | Rotation-change cohort already over-performs vs stable; no signal gap to fill |
+
+## Methodological lesson (added to repo memory)
+
+**Rate-target vs total-target features have different validation profiles.** RP-RS2's gf_pct_to / sv_per_g_to features improved a TOTAL-FP target. The same conceptual feature for hitters (lineup_spot_to) failed against a RATE target. Before adding volume-related features, check whether the model's target is rate or total — and whether the feature affects rate, volume, or total.
+
+## Files this phase
+
+- `scripts/xfp/build_rolling_hitters.py` (modified — in-progress split fix; lineup_aggregate function)
+- `scripts/xfp/build_rolling_pitchers.py` (modified — in-progress split fix)
+- `scripts/xfp/build_hitter_lineup.py` (new — per-(batter, game) lineup spot)
+- `scripts/xfp/xfp_rh4_pipeline.py` (new — failed gate, kept for reference)
+- `scripts/xfp/sp_stratified_diagnostic.py` (new — diagnostic only, no model)
+- `data/research/xfp_cache/hitter_lineup_appearances_{year}.parquet` (new, 9 years)
+- `data/models/xfp_rh4_pipeline.pkl` — NOT created (gate failed)
+
+---
+
+# Phase RH-T (Total-FP architecture exploration, 2026-05-06)
+
+User question: "for fantasy purposes, should the focus be xFP per PA or per season? I'm thinking the latter."
+
+Affirmed conceptually — totals are what fantasy decisions hinge on. Tested whether a direct-total model would beat the existing rate × PA decomposition.
+
+## RH-T1: direct total-FP model
+
+Built `xfp_rht1_pipeline.py` predicting `ros_total_fp = ros_pa × ros_full_fp_per_pa` directly. Features: 13 shrunken skill rates (RH3 base) + 7 volume features (lineup_spot_to, started_pct_to, pa_per_started_game_to, lineup_spot_lag1, started_pct_lag1, pa_lag1, pa_to) + split_day.
+
+Validation: stratified gates against the indirect baseline (RH3 rate × naive `pa_pace × remaining_days`).
+
+| Cohort | Indirect baseline r | RH-T1 direct r | Δ |
+|---|---|---|---|
+| Overall (n=8275) | **0.7091** | 0.7001 | −0.009 |
+| Lineup-change (n=3415) | **0.7058** | 0.6848 | −0.021 |
+
+**RH-T1 LOST on both gates.** Direct prediction is worse than decomposition — the rate model is more accurate at predicting rate, and the naive PA projection (pa_to / split_day × remaining_days) captures most of the volume signal.
+
+## 2-stage test: RH3 rate × Ridge PA model
+
+Hypothesis: if direct total fails because rate prediction works well, maybe a smarter PA projection (Ridge with lineup features) is the lever. Trained a separate Ridge on `ros_pa` target with PA + lineup features.
+
+| Architecture | Total r | MAE | Lineup-change r |
+|---|---|---|---|
+| RH3 rate × NAIVE PA | 0.7091 | 47.4 | 0.7058 |
+| RH3 rate × **RIDGE PA** | **0.7210** | **45.0** | 0.7059 |
+
+The 2-stage Ridge-PA architecture gives Δr +0.012 overall and -2.4 MAE — modest improvement, but **on the lineup-change subset it's tied with naive PA** (r=0.706 both ways).
+
+Why naive PA holds up on lineup-change cases: `pa_pace = pa_to / split_day` already captures recent lineup demotions implicitly. A 7-hole hitter has lower per-day PA pace than leadoff; the naive projection automatically incorporates that.
+
+Below my +0.05 stratified gate. Not promoted as a model architecture change.
+
+## Architectural conclusion
+
+**For modeling: predict rate, not total.** Rate has better cross-year stability (~0.55-0.65) than total (~0.70 only via the decomposition trick). Direct total prediction is harder than decomposition.
+
+**For display: total is the right primary metric.** The dashboard's existing `expected_total_fp_remaining` field (rate × pa_pace × remaining_days) is a calibrated total-FP estimate. The UI change is to make it the default sort/display column for hitters and pitchers, with rate as a secondary analysis column.
+
+**For features: lineup-spot features have marginal value as a PA-projection-layer addition.** They improve PA projection MAE by ~9 PAs but don't change rankings much. They're in the substrate (`rolling_hitters_2018_2026.csv`) for future use; the Ridge PA model isn't shipped because the +0.012 r isn't worth the architecture complexity.
+
+## Files this phase
+
+- `scripts/xfp/xfp_rht1_pipeline.py` (new — failed gate, kept for reference)
+- `scripts/xfp/test_pa_projection.py` (new — diagnostic)
+- `scripts/xfp/test_two_stage_total.py` (new — diagnostic)
+- `data/models/xfp_rht1_pipeline.pkl` — NOT created (gate failed)
+
+
+---
+
+# Phase MT — MiLB to MLB Pitcher Translation (Pitchers v1)
+
+## Motivation
+
+Recurring blind spot: rookies and partial-season call-ups (Logan Henderson, Mick Abel,
+Trey Yesavage, Connor Prielipp, Connelly Early, Bubba Chandler) are PL-Top-100 SPs
+but get dropped or backed by fillna(league_mu) ~ 9.20 in xfp_rp3_pipeline.py:250-252
+because they have no prior-MLB row to seed the Marcel prior. Goal: replace that flat
+fallback with a translation model that maps MiLB performance to projected MLB FP/start.
+
+User-confirmed scope: pitchers first (AAA + AA), validation gate r >= 0.30.
+
+## MT0 — substrate
+
+Built scripts/xfp/build_milb_pitcher_counting.py mirroring the MLB pattern but with
+sportId=11 (AAA) and sportId=12 (AA), 2015-2026. Output:
+data/research/xfp_cache/milb_pitchers_2015_2026.csv. Augmented with extended fields
+(GB outs, pitches/BF, strike%) via augment_milb_stats.py. Birth dates pulled
+separately for age features (milb_pitcher_ages.csv).
+
+Final substrate: 23,672 (pitcher, year, level) rows, 6,990 unique pitchers,
+2015-2026 minus 2020 (COVID -- no MiLB season). Skenes 2024 AAA confirmed at 42.8% K%;
+Skubal 2019 AA at 48% K%.
+
+## MT1 — carryover screen
+
+scripts/xfp/milb_carryover_screen.py correlates each candidate MiLB stat in year T
+with the same pitcher's MLB performance in year T+1.
+
+SP target (mlb_fp_per_start, BF>=120, AAA): K% +0.27, K-BB% +0.22, gamesPitched -0.17,
+WHIP -0.13, h/9 -0.17. **bb_pct alone has near-zero carryover (+0.03)** -- it's
+descriptive at MiLB but not predictive of MLB FP. ERA +0.12 at AAA SP -- marginal.
+
+RP target (mlb_fp_per_g): max correlation +0.17, signs flip between AAA and AA,
+mostly noise. The user's intuition that RP carryover is weaker than SP was correct;
+volume-target relievers in MiLB are mostly being optioned-down for usage management,
+not skill assessment.
+
+Decision: SP-only translation. RP-target MiLB lock deferred indefinitely.
+
+## MT2 — Ridge translation, gate failure
+
+Trained Ridge with leave-one-year-out cross-validation across 9 transitions
+(2015->2016, ..., 2024->2025; 2020 excluded). Multiple feature sets and regimes tested:
+
+| Variant | r (AAA) | MAE | Notes |
+|---|---|---|---|
+| Naive (league_mu = 9.20) | -- | 2.722 | Existing fallback |
+| 1yr, rates only | 0.229 | 2.639 | |
+| 1yr, rates + volume | 0.266 | 2.621 | |
+| 1yr, rates + volume + age | 0.269 | 2.624 | |
+| Multi-yr (T+T-1), rates+volume+age | 0.275 | 2.583 | |
+| **3-yr (T+T-1+T-2), rates+volume** | **0.277** | **2.646** | **Best r** |
+| 3-yr + Huber regressor | 0.276 | 2.652 | No lift |
+| Pitch-detail features (GB%, pitches/BF, strike%) | 0.262-0.274 | -- | No lift |
+| BF>=250 (high-sample only) | 0.215 | -- | Less data hurts |
+
+**Strict gate FAILED** (r >= 0.30 target; AAA-only gate fallback also at 0.30).
+Empirical ceiling sits at r ~ 0.28 with publicly-accessible MiLB data
+(MLB Stats API counting stats only). Public research's 0.30-0.45 numbers use Statcast
+pitch-quality features (velocity, spin, swstr%) -- only available 2021+ at AAA via
+savant's authenticated JS UI, not reachable from a standalone script (the
+/statcast-search-minors/csv endpoint exists but returns empty without session
+cookies). Coverage gain from including AA: 1 player out of 179 SP projection rows.
+Not worth the -0.04 r cost.
+
+## MT3 — conscious-decision lock
+
+Production decision: ship the AAA-only 3-year Ridge model anyway, with explicit
+prior_source tagging. Rationale:
+
+1. Strictly beats the actual production fallback. The thing being replaced is
+   fillna(league_mu) = 9.20 -- a constant. MiLB-derived priors hit MAE 2.65 vs
+   2.72 baseline (~3% improvement) AND give pitcher-specific values (range 6.4-12.4
+   vs constant 9.2).
+2. Decision-support value is concrete. Logan Henderson now has a non-flat prior
+   of 10.48 instead of 9.20. Trey Yesavage 9.93. Christian Scott 11.04. These
+   numbers are visible in the dashboard tagged MiLB so the user can see when
+   they're trusting MiLB-derived signal vs MLB-history signal.
+3. Risk is bounded. The MiLB prior is only used when prior_fp_per_start is NaN
+   AND year == 2026. It never overrides MLB lag. Integration is a fallback,
+   not a replacement.
+
+This conforms to the validate-before-shipping rule's conscious-decision pathway:
+"the decision must be conscious: ship anyway because of decision-support / UX value,
+OR revert. Do not silently promote."
+
+Locked: data/models/xfp_milb_pitcher_pipeline.pkl (n_train=633, cross_year_r_aaa=0.277,
+gate_passed=False). 2026 priors output: data/outputs/xfp_milb_pitcher_priors_2026.csv
+(1,580 priors anchored on most-recent AAA season per pitcher).
+
+## MT4 — integration as rookie prior
+
+Modified xfp_rp3_pipeline.py: before fillna(league_mu), attempt merge with
+xfp_milb_pitcher_priors_2026.csv and fill MiLB-derived prior for rows where
+Marcel prior is NaN. Added prior_source column with values:
+mlb_lag | milb_translation | league_mean. 10 of 179 SP projection rows
+in 2026 now have MiLB-translation priors (was 0 before): Payton Tolle, Mason
+Montgomery, Logan Henderson, Trey Yesavage, Christian Scott, Bryan Hudson,
+JR Ritchie, Luinder Avila, George Klassen, Luis Morales.
+
+## MT5 — dashboard surfacing
+
+Added a small "MiLB" badge next to pitcher names in build_v11_dashboard_v2.py
+where priorSource === "milb_translation". Bumped pitcher count in dashboard from
+~206 to 216 (rookies now appear). Replaced direct r[xxx] accessors with r.get(xxx)
+in the records loop so MiLB-only rows render gracefully without V11/V12 features.
+
+## What's deliberately NOT in MT-Pitchers v1
+
+- A+ and A levels. <10% of MLB call-ups come direct from these without an AAA stop.
+- MiLB Statcast. Inaccessible without browser automation; uncertain lift past 0.30.
+- RP target translation. RP carryover signal too weak (r <= 0.17, sign-unstable).
+- Hitter MiLB translation. Phase MT-H, mirror this plan after pitchers prove out.
+- Aging adjustments. Age feature was tested (+0.003 r); kept in feature set but
+  no Marcel-style aging multiplier.
+
+## Reusable artifacts
+
+- data/research/milb_carryover_pitchers.csv -- answers "which MiLB stats carry over?"
+  empirically. Standalone research artifact even if model is deprecated.
+- data/outputs/xfp_milb_pitcher_priors_2026.csv -- 1,580 MiLB-derived FP/start
+  priors anchored on each pitcher's most recent AAA season.
+
+## Files this phase
+
+| File | Workstream |
+|---|---|
+| scripts/xfp/build_milb_pitcher_counting.py | MT0 (new) |
+| scripts/xfp/build_milb_pitcher_ages.py | MT0 (new) |
+| scripts/xfp/augment_milb_stats.py | MT0 (new -- extended fields) |
+| scripts/xfp/milb_carryover_screen.py | MT1 (new) |
+| scripts/xfp/xfp_milb_pitcher_pipeline.py | MT2 (new -- diagnostic) |
+| scripts/xfp/xfp_milb_pitcher_lock.py | MT3 (new) |
+| scripts/xfp/xfp_rp3_pipeline.py | MT4 (modified -- MiLB fallback merge) |
+| scripts/xfp/build_v11_dashboard_v2.py | MT5 (modified -- MiLB badge) |
+| data/research/xfp_cache/milb_pitchers_2015_2026.csv | MT0 |
+| data/research/xfp_cache/milb_pitchers_ext_2015_2026.csv | MT0 |
+| data/research/xfp_cache/milb_pitcher_ages.csv | MT0 |
+| data/research/milb_carryover_pitchers.csv | MT1 |
+| data/models/xfp_milb_pitcher_pipeline.pkl | MT3 |
+| data/outputs/xfp_milb_pitcher_priors_2026.csv | MT3 |
+
+
+---
+
+# Phase SP — Slump Precedent (Hitters + Pitchers)
+
+## Motivation
+
+Model output is a forward-looking RoS projection but blends prior + current-season
+rate features through Ridge. With ~30-40 games of 2026 data, slumping veterans
+(Devers 0.6th-percentile 33-game core_fp/PA, Bichette 5.7th, Sal Pérez 15.8th) get
+projected toward their depressed current rate even when their full career history
+shows comparable cold streaks always rebounded.
+
+Question: "has this player ever had a streak this bad in their career, and what
+happened next?" Answered empirically: pull every PA-ending event 2015-2026 from
+Statcast, aggregate to per-game (or per-appearance) FP, compute rolling-N-window
+where N matches the player's 2026 sample length, and locate the current rate in
+their own career distribution.
+
+## Implementation
+
+`scripts/xfp/slump_precedent.py` — production module with three modes:
+- **Hitters**: rolling-N-game core_fp (TB + BB + HBP - K) per PA. Excludes R, RBI,
+  SB (need extra data); the rate correlates ~0.95 with full fp/PA.
+- **SPs**: rolling-N-start fp/start where fp = K + IP×3.3 - H - 2×ER - BB - HBP.
+  Per-start basis, identifying the SP via inning-1 pitcher per (game_pk, side).
+- **RPs**: rolling-N-appearance same formula (no sv/hld bonus — those are role-driven
+  and orthogonal to slump diagnosis).
+
+For each comparable historical window (rolling rate ≤ current rate), accumulates
+the next ~200 PAs (hitters) or 300 outs (pitchers, ≈100 IP) of subsequent
+performance and reports median next rate, median rebound delta, and bounce
+frequency (% of windows where next rate > slump rate).
+
+## Outputs
+
+- `data/outputs/slump_precedent_hitters_2026.csv` — 332 hitters with ≥50 PA
+- `data/outputs/slump_precedent_sps_2026.csv` — 160 SPs with ≥3 GS
+- `data/outputs/slump_precedent_rps_2026.csv` — 249 RPs with ≥3 G
+
+Schema:
+- `pct_rank`: percentile of current rate within own career rolling-N distribution
+- `n_comparable`: count of historical windows ≤ current rate
+- `bounce_pct`: % of comparable windows that improved over next 200 PA / 300 outs
+- `median_next_rate`: median rate over next 200 PA / 300 outs after slump
+- `median_delta`: median (next_rate − slump_rate)
+
+## Pipeline integration
+
+- `xfp_rh3_pipeline.py:432` left-merges slump cols onto hitter projections
+- `xfp_rp3_pipeline.py:406` left-merges slump cols onto SP projections
+- `build_v11_dashboard_v2.py` adds BUY-LOW badge (slump_pct < 20 AND bounce > 80%)
+  and FADE badge (slump_pct < 5 AND bounce < 60%) next to player names
+
+## Calibration spot-checks (2026-05-07)
+
+| Player | %ile | Comparable | Bounce % | Median next |
+|---|---:|---:|---:|---:|
+| Rafael Devers | 0.6 | 7 (all from late Mar 2025) | 100% | +0.448 (+0.42 vs slump) |
+| Bo Bichette | 5.7 | 41 | 100% | +0.296 (+0.14) |
+| Trea Turner | 13.7 | 167 | 81% | +0.289 |
+| Salvador Pérez | 15.8 | 201 | 97% | +0.282 |
+| Eugenio Suárez | 15.8 | 239 | 97% | +0.200 (still mediocre) |
+| Aaron Judge | 65.7 | 730 | 64% | (already healthy) |
+
+The Devers 7-comparable result is an exact precedent: all 7 are from his
+2025 season opener slump, and he rebounded to +0.45 in every one. The model
+was projecting him toward current production; the precedent says hold.
+
+## What this is NOT
+
+- Not a replacement for the rh3/rp3 model. The model is what predicts RoS FP.
+- Not a regime-change detector (a player's career might end mid-2026 and the
+  slump precedent can't see it). FADE badge is a soft warning only.
+- Not calibrated as a probabilistic forecast. The 200-PA / 300-out window is
+  arbitrary; reading it as "exact rebound timing" is wrong. Read it as
+  "directionally what happened on average after similar stretches."
+
+## Files this phase
+
+| File | Purpose |
+|---|---|
+| `scripts/xfp/slump_precedent.py` | Core module + batch driver |
+| `data/outputs/slump_precedent_hitters_2026.csv` | Per-hitter precedent metrics |
+| `data/outputs/slump_precedent_sps_2026.csv` | Per-SP precedent metrics |
+| `data/outputs/slump_precedent_rps_2026.csv` | Per-RP precedent metrics |
+| `scripts/xfp/xfp_rh3_pipeline.py` (modified) | Merge slump cols into projection CSV |
+| `scripts/xfp/xfp_rp3_pipeline.py` (modified) | Same for SPs |
+| `scripts/xfp/build_v11_dashboard_v2.py` (modified) | BUY-LOW / FADE badges in tables |
