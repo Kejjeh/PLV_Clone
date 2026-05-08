@@ -44,6 +44,36 @@ SWSTR_DESC = {'swinging_strike','swinging_strike_blocked','foul_tip','missed_bun
 SPLIT_DAYS_OF_SEASON = [30, 60, 90, 120]  # days into season
 
 
+def lineup_aggregate(year: int, cutoff: pd.Timestamp,
+                     eligible_batters: set | None = None) -> pd.DataFrame:
+    """Aggregate per-(batter, year, cutoff) lineup-spot features.
+
+    Returns columns: lineup_spot_to (mean across started games),
+    started_pct_to (started / total apps), pa_per_started_game_to.
+    """
+    path = CACHE / f'hitter_lineup_appearances_{year}.parquet'
+    if not path.exists():
+        return pd.DataFrame(columns=['batter','lineup_spot_to','started_pct_to','pa_per_started_game_to'])
+    df = pd.read_parquet(path)
+    df['game_date'] = pd.to_datetime(df['game_date'])
+    df = df[df['game_date'] <= cutoff]
+    if eligible_batters is not None:
+        df = df[df['batter'].isin(eligible_batters)]
+    starters = df[df['started_game']]
+    by_b = df.groupby('batter').agg(
+        total_apps=('game_pk', 'nunique'),
+    ).reset_index()
+    by_s = starters.groupby('batter').agg(
+        starts=('game_pk', 'nunique'),
+        lineup_spot_to=('lineup_spot', 'mean'),
+        pa_per_started_game_to=('pa_in_game', 'mean'),
+    ).reset_index()
+    out = by_b.merge(by_s, on='batter', how='left')
+    out['starts'] = out['starts'].fillna(0).astype(int)
+    out['started_pct_to'] = out['starts'] / out['total_apps'].replace(0, np.nan)
+    return out[['batter','lineup_spot_to','started_pct_to','pa_per_started_game_to']]
+
+
 def annotate_pitches(d: pd.DataFrame) -> pd.DataFrame:
     """Add boolean event flags + tb that the per-batter aggregator needs."""
     desc = d['description'].fillna('')
@@ -159,6 +189,7 @@ def fp_per_pa_with_rrbi(window_agg: pd.DataFrame, rrbi_rates: pd.Series) -> pd.S
 
 def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     """For one year, build rows for each (batter, split_day) pair."""
+    from datetime import date as _date
     sc_path = CACHE / f'statcast_{year}.parquet'
     if not sc_path.exists():
         return pd.DataFrame()
@@ -166,6 +197,11 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     pitches = pd.read_parquet(sc_path)
     pitches['game_date'] = pd.to_datetime(pitches['game_date'])
     pitches = annotate_pitches(pitches)
+    # For in-progress year, also emit an actual-elapsed-days split row so the
+    # projection uses today's snapshot (not just the 30-day cutoff that's
+    # already 11 days stale). Mirror of fix in build_rolling_relievers.py.
+    today = pd.Timestamp(_date.today())
+    is_in_progress = year >= today.year
 
     # MLB API per-batter R/RBI rates from existing counting-stats cache
     rrbi_rates: pd.Series
@@ -181,31 +217,77 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     else:
         rrbi_rates = pd.Series(dtype=float)
 
+    # Build the list of split_days to actually use. For complete past years,
+    # this is just SPLIT_DAYS_OF_SEASON. For in-progress year, only use the
+    # cutoffs that have actually elapsed, plus an "actual-elapsed-days" row
+    # so the projection uses today's snapshot at today's time (not split=30
+    # cutoff data labeled with stale day count).
+    max_data_date = pitches['game_date'].max()
+    if is_in_progress:
+        elapsed_days = int((today - season_start).days)
+        splits_to_use = [s for s in SPLIT_DAYS_OF_SEASON
+                         if season_start + pd.Timedelta(days=s) <= max_data_date]
+        if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
+            splits_to_use = list(splits_to_use) + [elapsed_days]
+        print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
+              f'elapsed={elapsed_days}d -> splits {splits_to_use}', flush=True)
+    else:
+        splits_to_use = SPLIT_DAYS_OF_SEASON
+
     rows = []
-    for split_day in SPLIT_DAYS_OF_SEASON:
+    for split_day in splits_to_use:
         cutoff = season_start + pd.Timedelta(days=split_day)
-        before = pitches[pitches['game_date'] <= cutoff]
-        after  = pitches[pitches['game_date'] >  cutoff]
-        if before.empty or after.empty:
+        # For in-progress year + elapsed-days split, cap cutoff at max data date
+        actual_cutoff = min(cutoff, max_data_date) if is_in_progress else cutoff
+        before = pitches[pitches['game_date'] <= actual_cutoff]
+        after  = pitches[pitches['game_date'] >  actual_cutoff]
+        if before.empty:
             continue
+        # For training rows we need the after-window (target). For the in-progress
+        # current snapshot row, the after-window may be empty (we're in season).
+        # Skip target computation in that case.
+        in_progress_row = is_in_progress and after.empty
 
         feat = aggregate_window(before)
         feat = feat.add_suffix('_to')
         feat['batter'] = feat['batter_to']
         feat = feat.drop(columns=['batter_to'])
 
-        target = aggregate_window(after)[['batter', 'pa', 'fp_total']].rename(
-            columns={'pa': 'pa_after', 'fp_total': 'fp_after_core'})
-        target['ros_pa'] = target['pa_after']
-        target['ros_core_fp_per_pa'] = target['fp_after_core'] / target['pa_after'].replace(0, np.nan)
+        # Last-21-day window — captures recent form (hot/cold streaks).
+        recent_start = actual_cutoff - pd.Timedelta(days=21)
+        recent = pitches[(pitches['game_date'] > recent_start)
+                         & (pitches['game_date'] <= actual_cutoff)]
+        if not recent.empty:
+            feat21 = aggregate_window(recent).add_suffix('_last21')
+            feat21['batter'] = feat21['batter_last21']
+            feat21 = feat21.drop(columns=['batter_last21'])
+            feat = feat.merge(feat21, on='batter', how='left')
 
-        merged = feat.merge(target, on='batter', how='inner')
-        merged['ros_full_fp_per_pa'] = (
-            merged['ros_core_fp_per_pa'] + merged['batter'].map(rrbi_rates).fillna(0.0)
-        ).round(4)
+        if in_progress_row:
+            # No target available (we're at season-current cutoff). Emit feature
+            # row with ros_pa/ros_full_fp_per_pa as NaN — used only for projection.
+            merged = feat.copy()
+            merged['ros_pa'] = np.nan
+            merged['ros_core_fp_per_pa'] = np.nan
+            merged['ros_full_fp_per_pa'] = np.nan
+        else:
+            target = aggregate_window(after)[['batter', 'pa', 'fp_total']].rename(
+                columns={'pa': 'pa_after', 'fp_total': 'fp_after_core'})
+            target['ros_pa'] = target['pa_after']
+            target['ros_core_fp_per_pa'] = target['fp_after_core'] / target['pa_after'].replace(0, np.nan)
+            merged = feat.merge(target, on='batter', how='inner')
+            merged['ros_full_fp_per_pa'] = (
+                merged['ros_core_fp_per_pa'] + merged['batter'].map(rrbi_rates).fillna(0.0)
+            ).round(4)
+
+        # Lineup-spot features (statcast-derived per-game)
+        lineup = lineup_aggregate(year, actual_cutoff,
+                                  eligible_batters=set(merged['batter']))
+        merged = merged.merge(lineup, on='batter', how='left')
+
         merged['year'] = year
         merged['split_day'] = split_day
-        merged['cutoff_date'] = cutoff.date()
+        merged['cutoff_date'] = actual_cutoff.date()
         rows.append(merged)
 
     return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()

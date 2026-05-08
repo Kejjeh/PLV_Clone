@@ -146,6 +146,7 @@ def aggregate_starts(pitches_full: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
+    from datetime import date as _date
     sc_path = CACHE / f'statcast_{year}.parquet'
     if not sc_path.exists():
         return pd.DataFrame()
@@ -153,34 +154,66 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     pitches = pd.read_parquet(sc_path)
     pitches['game_date'] = pd.to_datetime(pitches['game_date'])
     pitches_anno = annotate_pitches(pitches)
+    today = pd.Timestamp(_date.today())
+    is_in_progress = year >= today.year
+    max_data_date = pitches['game_date'].max()
+    if is_in_progress:
+        elapsed_days = int((today - season_start).days)
+        splits_to_use = [s for s in SPLIT_DAYS_OF_SEASON
+                         if season_start + pd.Timedelta(days=s) <= max_data_date]
+        if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
+            splits_to_use = list(splits_to_use) + [elapsed_days]
+        print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
+              f'elapsed={elapsed_days}d -> splits {splits_to_use}', flush=True)
+    else:
+        splits_to_use = SPLIT_DAYS_OF_SEASON
 
     rows = []
-    for split_day in SPLIT_DAYS_OF_SEASON:
+    for split_day in splits_to_use:
         cutoff = season_start + pd.Timedelta(days=split_day)
-        before_anno = pitches_anno[pitches_anno['game_date'] <= cutoff]
-        before_full = pitches[pitches['game_date'] <= cutoff]
-        after_full  = pitches[pitches['game_date'] >  cutoff]
-        if before_anno.empty or after_full.empty:
+        actual_cutoff = min(cutoff, max_data_date) if is_in_progress else cutoff
+        before_anno = pitches_anno[pitches_anno['game_date'] <= actual_cutoff]
+        before_full = pitches[pitches['game_date'] <= actual_cutoff]
+        after_full  = pitches[pitches['game_date'] >  actual_cutoff]
+        if before_anno.empty:
             continue
+        in_progress_row = is_in_progress and after_full.empty
 
         feat = aggregate_window(before_anno).add_suffix('_to')
         feat['pitcher'] = feat['pitcher_to']
         feat = feat.drop(columns=['pitcher_to'])
 
-        # Filter to pitchers who started ≥ 2 games in the BEFORE window
-        # (so the cumulative features represent SP behaviour, not relief)
+        # Last-21-day pitch-level rates — captures recent form
+        recent_start = actual_cutoff - pd.Timedelta(days=21)
+        recent_anno = pitches_anno[(pitches_anno['game_date'] > recent_start)
+                                   & (pitches_anno['game_date'] <= actual_cutoff)]
+        if not recent_anno.empty:
+            feat21 = aggregate_window(recent_anno).add_suffix('_last21')
+            feat21['pitcher'] = feat21['pitcher_last21']
+            feat21 = feat21.drop(columns=['pitcher_last21'])
+            feat = feat.merge(feat21, on='pitcher', how='left')
+            recent_full = pitches[(pitches['game_date'] > recent_start)
+                                  & (pitches['game_date'] <= actual_cutoff)]
+            recent_starts = aggregate_starts(recent_full).rename(
+                columns={'gs': 'gs_last21', 'fp_per_start': 'fp_per_start_last21'})
+            feat = feat.merge(recent_starts, on='pitcher', how='left')
+
         before_starts = aggregate_starts(before_full).rename(
             columns={'gs': 'gs_to', 'fp_per_start': 'fp_per_start_to'})
         feat = feat.merge(before_starts, on='pitcher', how='inner')
         feat = feat[feat['gs_to'] >= 2]
 
-        target = aggregate_starts(after_full).rename(
-            columns={'gs': 'ros_gs', 'fp_per_start': 'ros_fp_per_start'})
-
-        merged = feat.merge(target, on='pitcher', how='inner')
+        if in_progress_row:
+            merged = feat.copy()
+            merged['ros_gs'] = np.nan
+            merged['ros_fp_per_start'] = np.nan
+        else:
+            target = aggregate_starts(after_full).rename(
+                columns={'gs': 'ros_gs', 'fp_per_start': 'ros_fp_per_start'})
+            merged = feat.merge(target, on='pitcher', how='inner')
         merged['year'] = year
         merged['split_day'] = split_day
-        merged['cutoff_date'] = cutoff.date()
+        merged['cutoff_date'] = actual_cutoff.date()
         rows.append(merged)
     return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
 
