@@ -1,0 +1,38 @@
+════════════════════════════════════════════════════════════════════════
+PRODUCTION MODEL DRIFT REPORT — 2026-05-06
+════════════════════════════════════════════════════════════════════════
+
+--- RH3 (hitter rate × naive PA) ---
+  RH3 (FP/PA) — n=253 | r=0.7705 | MAE=0.098 | bias=-0.019 (pred − act)
+    Calibration by predicted quartile:
+      Q1: pred=0.392  act=0.350  gap=+0.043  n=64
+      Q2: pred=0.456  act=0.443  gap=+0.013  n=63
+      Q3: pred=0.506  act=0.539  gap=-0.033  n=63
+      Q4: pred=0.581  act=0.678  gap=-0.097  n=63
+  RH3 2026 r=0.770  (training cross-year r=0.543)
+    OK — calibration within tolerances
+
+--- RP3 (SP per-start RoS) ---
+  RP3 (FP/start) — n=134 | r=0.7300 | MAE=2.962 | bias=-0.166 (pred − act)
+    Calibration by predicted quartile:
+      Q1: pred=7.733  act=5.768  gap=+1.966  n=34
+      Q2: pred=9.421  act=9.147  gap=+0.274  n=33
+      Q3: pred=10.797  act=12.129  gap=-1.332  n=33
+      Q4: pred=13.023  act=14.616  gap=-1.593  n=34
+  RP3 2026 r=0.730  (training cross-year r=0.549)
+    OK — calibration within tolerances
+
+--- RP-RS2 (RP total RoS) ---
+  RP-RS2 (full-year FP, extrapolated from to-date) — n=234 | r=0.8422 | MAE=57.240 | bias=-33.500 (pred − act)
+    Calibration by predicted quartile:
+      Q1: pred=105.239  act=88.982  gap=+16.257  n=59
+      Q2: pred=140.934  act=167.208  gap=-26.273  n=58
+      Q3: pred=169.431  act=225.236  gap=-55.805  n=58
+      Q4: pred=226.000  act=294.432  gap=-68.432  n=59
+  RP-RS2 2026 r=0.842  (training cross-year r=0.842)
+    DRIFT: BIAS=-33.500 (>20.00), TOP-QUARTILE GAP=-68.432 (>40.00)  → investigate substrate / retrain
+
+════════════════════════════════════════════════════════════════════════
+Drift threshold: |Δr| > 0.10 from training cross-year r → flagged
+Action on DRIFT: investigate substrate freshness, retrain if persistent
+════════════════════════════════════════════════════════════════════════
