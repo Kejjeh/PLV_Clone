@@ -93,7 +93,12 @@ RH3_FEATS = [
     'xwoba_per_pa_to_sh', 'barrel_pct_to_sh',
     # Prior + sample-size cues
     'prior_fp_per_pa', 'prior_pa_eff', 'pa_to', 'split_day',
+    # H2 lift career profile (locked variant: Aug-01 cutoff, min_pa=150)
+    # Cross-year r-lift +0.024 (the only career-profile feature that survived
+    # the empirical r-improvement gate in feature-lift validation 2026-05-09).
+    'lift_h2_aug150',
 ]
+H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
@@ -279,6 +284,18 @@ def main():
     league_mu = float(multiyr[multiyr['pa'] >= 200]['fp_per_pa_actual'].mean())
     rolling['prior_fp_per_pa'] = rolling['prior_fp_per_pa'].fillna(league_mu)
     rolling['prior_pa_eff']    = rolling['prior_pa_eff'].fillna(0.0)
+
+    # H2-locked career profile feature (Aug-01 cutoff, min 150 PA per half)
+    if H2_LOCKED_CSV.exists():
+        h2_locked = pd.read_csv(H2_LOCKED_CSV)[['batter', 'lift_h2_aug150']]
+        rolling = rolling.merge(h2_locked, on='batter', how='left')
+        # Players without enough career data: fill with 0 (no seasonal tilt assumed)
+        n_with = rolling['lift_h2_aug150'].notna().sum()
+        rolling['lift_h2_aug150'] = rolling['lift_h2_aug150'].fillna(0.0)
+        print(f'  merged H2-locked feature: {n_with}/{len(rolling)} rows have career data')
+    else:
+        print(f'  WARNING: {H2_LOCKED_CSV} missing — fill lift_h2_aug150=0')
+        rolling['lift_h2_aug150'] = 0.0
 
     # Shrinkage on both windows
     print('Shrinkage (cumulative + last21)...')
