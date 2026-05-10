@@ -97,8 +97,14 @@ RH3_FEATS = [
     # Cross-year r-lift +0.024 (the only career-profile feature that survived
     # the empirical r-improvement gate in feature-lift validation 2026-05-09).
     'lift_h2_aug150',
+    # xwOBA residual (career-level luck-adjustment signal, 2018-2025 window).
+    # Cross-year r-lift +0.0051 on top of RH3 baseline (validated 2026-05-10).
+    # Tier-S leading-style predictor: positive residual = career xwOBA exceeds
+    # actual wOBA = "unlucky" → mild bump in expected fp.
+    'xwoba_residual_career',
 ]
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
+XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
 
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
@@ -296,6 +302,17 @@ def main():
     else:
         print(f'  WARNING: {H2_LOCKED_CSV} missing — fill lift_h2_aug150=0')
         rolling['lift_h2_aug150'] = 0.0
+
+    # xwOBA residual career feature (2018-2025 window)
+    if XWOBA_RESID_CSV.exists():
+        xw = pd.read_csv(XWOBA_RESID_CSV)[['batter', 'xwoba_residual_career']]
+        rolling = rolling.merge(xw, on='batter', how='left')
+        n_with = rolling['xwoba_residual_career'].notna().sum()
+        rolling['xwoba_residual_career'] = rolling['xwoba_residual_career'].fillna(0.0)
+        print(f'  merged xwOBA residual feature: {n_with}/{len(rolling)} rows have career data')
+    else:
+        print(f'  WARNING: {XWOBA_RESID_CSV} missing — fill xwoba_residual_career=0')
+        rolling['xwoba_residual_career'] = 0.0
 
     # Shrinkage on both windows
     print('Shrinkage (cumulative + last21)...')
