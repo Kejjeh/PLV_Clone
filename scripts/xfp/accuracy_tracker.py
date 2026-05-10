@@ -63,7 +63,14 @@ def load_actual_fp(year: int, since_date: pd.Timestamp) -> pd.DataFrame:
 
 
 def evaluate_snapshot(snap_date: str) -> dict | None:
-    """Compare projections on snap_date to fp accumulated since."""
+    """Compare projections on snap_date to actual fp/PA outcome.
+
+    Two-mode evaluation:
+      A) RETRO snapshots: file already contains ros_full_fp_per_pa (true target
+         matching the projection's scale). Use directly. Most accurate.
+      B) LIVE snapshots: compute core_fp from statcast since snap_date.
+         Approximate (misses R/RBI/SB) but works for future fills.
+    """
     snap_dir = SNAP / snap_date
     rh_path = snap_dir / 'xfp_rh3_projections.csv'
     if not rh_path.exists():
@@ -71,17 +78,27 @@ def evaluate_snapshot(snap_date: str) -> dict | None:
     rh = pd.read_csv(rh_path)
     since = pd.Timestamp(snap_date)
     year = since.year
-    actual = load_actual_fp(year, since)
-    if actual.empty:
-        return None
 
-    merged = rh.merge(actual, on='batter', how='inner')
-    merged = merged[merged['actual_pa'] >= MIN_PA_FOR_EVAL]
-    if len(merged) < 10:
-        return None
-
-    pred = merged['xfp_rh3_per_pa']
-    act = merged['actual_core_fp_per_pa']
+    # Mode A: retro snapshot with embedded actual target
+    if 'ros_full_fp_per_pa' in rh.columns and rh['ros_full_fp_per_pa'].notna().sum() >= 10:
+        merged = rh[rh['ros_full_fp_per_pa'].notna() & rh['ros_pa'].fillna(0).ge(50)].copy()
+        if len(merged) < 10:
+            return None
+        pred = merged['xfp_rh3_per_pa']
+        act = merged['ros_full_fp_per_pa']
+        mode = 'retro_substrate'
+    else:
+        # Mode B: live snapshot — derive from statcast going forward
+        actual = load_actual_fp(year, since)
+        if actual.empty:
+            return None
+        merged = rh.merge(actual, on='batter', how='inner')
+        merged = merged[merged['actual_pa'] >= MIN_PA_FOR_EVAL]
+        if len(merged) < 10:
+            return None
+        pred = merged['xfp_rh3_per_pa']
+        act = merged['actual_core_fp_per_pa']
+        mode = 'live_statcast'
     r = float(np.corrcoef(pred, act)[0, 1])
     mae = float(np.mean(np.abs(pred - act)))
 
@@ -93,9 +110,10 @@ def evaluate_snapshot(snap_date: str) -> dict | None:
     bias_bot = float(merged[merged['xfp_rh3_per_pa'] <= q_lo]['resid'].mean())
 
     # Signal accuracy: did "add" players outperform "drop" players?
+    actual_col = 'ros_full_fp_per_pa' if mode == 'retro_substrate' else 'actual_core_fp_per_pa'
     if 'signal' in merged.columns:
-        add_act = merged[merged['signal'] == 'add']['actual_core_fp_per_pa'].mean()
-        drop_act = merged[merged['signal'] == 'drop']['actual_core_fp_per_pa'].mean()
+        add_act = merged[merged['signal'] == 'add'][actual_col].mean()
+        drop_act = merged[merged['signal'] == 'drop'][actual_col].mean()
         signal_gap = float(add_act - drop_act) if pd.notna(add_act) and pd.notna(drop_act) else np.nan
     else:
         signal_gap = np.nan
@@ -106,13 +124,15 @@ def evaluate_snapshot(snap_date: str) -> dict | None:
         buy_low = merged[(merged['slump_pct_rank'].fillna(50) <= 25)
                          & (merged['slump_bounce_pct'].fillna(0) >= 70)]
         if len(buy_low) >= 5 and 'prior_fp_per_pa' in buy_low.columns:
-            slump_lift = float(buy_low['actual_core_fp_per_pa'].mean()
-                               - buy_low['prior_fp_per_pa'].mean())
+            slump_lift = float(buy_low[actual_col].mean() - buy_low['prior_fp_per_pa'].mean())
 
+    mean_pa = float(merged['ros_pa'].mean()) if 'ros_pa' in merged.columns else (
+        float(merged['actual_pa'].mean()) if 'actual_pa' in merged.columns else np.nan)
     return {
         'snap_date': snap_date,
+        'mode': mode,
         'n_batters': len(merged),
-        'mean_actual_pa': float(merged['actual_pa'].mean()),
+        'mean_pa_window': round(mean_pa, 1) if not np.isnan(mean_pa) else None,
         'r': round(r, 4),
         'mae': round(mae, 4),
         'bias_top_quartile': round(bias_top, 4),
@@ -143,7 +163,7 @@ def main():
             print(f'  {sd}: insufficient data')
             continue
         rows.append(res)
-        print(f"  {sd}: n={res['n_batters']:>3}, r={res['r']:+.4f}, mae={res['mae']:.4f}, "
+        print(f"  {sd} [{res['mode']:>14s}]: n={res['n_batters']:>3}, r={res['r']:+.4f}, mae={res['mae']:.4f}, "
               f"bias_top={res['bias_top_quartile']:+.4f}, bias_bot={res['bias_bot_quartile']:+.4f}, "
               f"add−drop_gap={res['add_vs_drop_actual_gap'] if res['add_vs_drop_actual_gap'] is not None else 'n/a'}")
 
