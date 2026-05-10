@@ -102,6 +102,42 @@ def find_xfp_record(plv_name: str, by_key: dict) -> dict | None:
 
 # ─── ESPN payload extraction (from PLV dashboard) ─────────────────────────────
 
+def _label_roster_status(records: list[dict], name_key_fn,
+                          my_team_name: str = 'New York Ligers') -> None:
+    """In-place: set rec['roster'] to 'mine' | 'taken' | 'fa' based on ESPN league rosters.
+
+    Default-fall-through is 'fa'. Player on my team -> 'mine'.
+    Player on any other team -> 'taken'. Both name-keys are normalized.
+    """
+    try:
+        import sys as _sys
+        _sys.path.insert(0, str(ROOT))
+        from app import espn_connector as ec
+        teams = ec.get_all_teams()
+    except Exception as e:
+        print(f'  [_label_roster_status] ESPN unavailable, defaulting to fa: {e}')
+        return  # ESPN unavailable; leave existing labels
+
+    # Build {normalized_name_key: team_name} across the league
+    league_roster = {}
+    for _, p in teams.iterrows():
+        key = name_key_fn(p['player_name'])
+        league_roster[key] = p['team_name']
+
+    for rec in records:
+        if rec.get('roster') == 'mine':
+            continue  # preserve my-team merge's existing label
+        key = name_key_fn(rec.get('name') or rec.get('player_name') or '')
+        team = league_roster.get(key)
+        if team is None:
+            rec['roster'] = 'fa'
+        elif team == my_team_name:
+            rec['roster'] = 'mine'
+        else:
+            rec['roster'] = 'taken'
+            rec['taken_by_team'] = team
+
+
 def extract_my_team() -> dict | None:
     if not PLV_HTML.exists():
         return None
@@ -252,7 +288,7 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
             'hasFG': bool(r['v11_has_pitching_plus']) if pd.notna(r.get('v11_has_pitching_plus')) else False,
             'rollingIp': num(r.get('rolling_ip_last5'), 2),
             # ESPN fields (filled from MY_TEAM where available)
-            'roster': 'other',          # 'mine' | 'other'
+            'roster': 'fa',             # 'mine' | 'taken' | 'fa' (set finally by _label_roster_status)
             'espnPos': None,
             'proTeam': None,
             'pctOwned': None,
@@ -388,6 +424,9 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
                 'rpRolePrior': rp_rec['rpRolePrior'] if rp_rec else None,
             })
 
+    # Tag every record with league-wide roster status (mine / taken / fa)
+    _label_roster_status(records, xfp_name_key)
+    _label_roster_status(rp_records, xfp_name_key)
     return records, my_team_payload, rp_records
 
 
@@ -436,7 +475,7 @@ def build_reliever_records() -> list[dict]:
             'rpReplDelta':   num(r.get('replacement_delta'), 1),
             'rpSignal':      r.get('signal') or 'hold',
             'rpCrossYear':   num(r.get('xfp_cross_year'), 1),
-            'roster':        'other',
+            'roster':       'fa',
             'espnPos':       None,
             'proTeam':       None,
             'pctOwned':      None,
@@ -542,7 +581,7 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
             'weight2026':   num(r.get('weight_2026'), 3),
             'hasBatTrack':  bool(r.get('has_bat_tracking', False)),
             # ESPN-merge fields (filled per my-team match)
-            'roster':       'other',
+            'roster':       'fa',
             'espnPos':      None,
             'pctOwned':     None,
             'fpProjEspn':   None,
@@ -642,6 +681,8 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
                 'team':           xfp_rec['team'] if xfp_rec else h.get('proTeam'),
             })
 
+    # Tag every hitter record with league-wide roster status
+    _label_roster_status(records, xfp_name_key)
     return records, hitter_payload
 
 
@@ -728,6 +769,7 @@ window.XFP_RELIEVERS = __RELIEVERS_JSON__;
 window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 window.XFP_AUDIT = __AUDIT_JSON__;
 window.XFP_ADVISORY = __ADVISORY_JSON__;
+window.XFP_WEEKLY = __WEEKLY_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -1366,7 +1408,8 @@ function FilterBar({ search, setSearch, ipTrend, setIpTrend, kTier, setKTier,
           {[
             { k:'all',   l:'All' },
             { k:'mine',  l:'My Team' },
-            { k:'other', l:'Available' },
+            { k:'fa',    l:'Free Agents' },
+            { k:'taken', l:'Other Teams' },
           ].map(opt => (
             <button key={opt.k} onClick={() => setRoster(opt.k)}
               style={{ padding:'3px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1,
@@ -1705,8 +1748,7 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
       const fpos = (h.fpos || '').split(/[,\s|]+/).map(s => s.trim());
       if (pos !== hPos && !fpos.includes(hPos)) return false;
     }
-    if (hRoster === 'mine' && h.roster !== 'mine') return false;
-    if (hRoster === 'other' && h.roster === 'mine') return false;
+    if (hRoster !== 'all' && h.roster !== hRoster) return false;
     if (hCohort !== 'all' && h.cohort !== hCohort) return false;
     if (h.pa != null && h.pa < hMinPa) return false;
     if (h.pa == null && hMinPa > 0) return false;  // skip 2025-only when min PA > 0
@@ -1760,7 +1802,8 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
             {[
               { k:'all',   l:'All' },
               { k:'mine',  l:'My Team' },
-              { k:'other', l:'Available' },
+              { k:'fa',    l:'Free Agents' },
+              { k:'taken', l:'Other Teams' },
             ].map(opt => (
               <button key={opt.k} onClick={() => setHRoster(opt.k)}
                 style={{ padding:'3px 8px', fontSize:10, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase',
@@ -1990,9 +2033,11 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
     ? matched.reduce((s, p) => s + p.xfpV11, 0) / matched.length
     : null;
 
-  // Add/Drop suggestions: top non-roster SPs vs bottom roster SPs
-  const myIds = new Set(myTeam.pitchers.map(p => p.mlbId).filter(Boolean));
-  const allAvailable = allRows.filter(r => !myIds.has(r.mlbId));
+  // Add/Drop suggestions: only TRUE free agents (not on any league roster).
+  // r.roster is set by _label_roster_status in the Python builder to
+  // 'mine' | 'taken' | 'fa'. We only suggest FAs since "taken" players can't
+  // actually be picked up — comparing against owned players is misleading.
+  const allAvailable = allRows.filter(r => r.roster === 'fa');
   const available = allAvailable.slice(0, 25); // top 25 by xFP V11 (allRows is pre-sorted)
   const myWeakest = matched.length
     ? [...matched].sort((a, b) => a.xfpV11 - b.xfpV11).slice(0, 5)
@@ -2892,6 +2937,193 @@ function CompareView({ myName, oppName, myBuckets, oppBuckets, trades, colors, p
 }
 
 // ═══ Team Audit Tab ═══════════════════════════════════════════════════════════
+// ═══ Trade Simulator (used inside AdvisoryTab) ═══════════════════════════════
+function TradeSimulator({ weekly, myTeam, colors }) {
+  const players = weekly.players || [];
+  const playerByPid = React.useMemo(() => {
+    const m = {};
+    for (const p of players) m[p.pid] = p;
+    return m;
+  }, [players]);
+
+  const [giveQ, setGiveQ] = React.useState('');
+  const [getQ, setGetQ] = React.useState('');
+  const [givePid, setGivePid] = React.useState(null);
+  const [getPid, setGetPid] = React.useState(null);
+  const [year, setYear] = React.useState('2025');
+  const [weekIdx, setWeekIdx] = React.useState(0);
+
+  const yearWeeks = (weekly.weeks || {})[year] || [];
+
+  const matchOptions = (q) => {
+    if (q.length < 2) return [];
+    const qn = q.toLowerCase();
+    return players.filter(p => (p.name || '').toLowerCase().includes(qn)).slice(0, 8);
+  };
+  const giveOpts = matchOptions(giveQ);
+  const getOpts = matchOptions(getQ);
+
+  const giveP = givePid != null ? playerByPid[givePid] : null;
+  const getP  = getPid  != null ? playerByPid[getPid]  : null;
+
+  const computeReplay = (player) => {
+    if (!player) return { weekly_after: [], cumulative: 0, total_pa: 0 };
+    const arr = (player.weekly_fp && player.weekly_fp[year]) || [];
+    const after = arr.slice(weekIdx);
+    const cum = after.reduce((s, v) => s + (v || 0), 0);
+    return { weekly_after: after, cumulative: cum };
+  };
+
+  const giveR = computeReplay(giveP);
+  const getR  = computeReplay(getP);
+  const deltaCum = (getR.cumulative || 0) - (giveR.cumulative || 0);
+  const weekLabels = yearWeeks.slice(weekIdx);
+
+  const cellStyle = { padding:'4px 8px', borderBottom:`1px solid ${colors.border}`,
+                      fontFamily:MONO, fontSize:11, fontVariantNumeric:'tabular-nums' };
+  const headStyle = { ...cellStyle, fontWeight:600, color:colors.dim,
+                      textTransform:'uppercase', fontSize:9, letterSpacing:0.5 };
+  const inputStyle = { padding:'4px 8px', fontSize:12, fontFamily:MONO,
+                       border:`1px solid ${colors.border}`,
+                       background:colors.panel, color:colors.text, width:240 };
+  const btnStyle = (active) => ({
+    padding:'4px 10px', fontSize:11, fontFamily:MONO, cursor:'pointer',
+    border:`1px solid ${active ? colors.accent : colors.border}`,
+    background: active ? colors.accent : colors.panel,
+    color: active ? '#fff' : colors.dim, marginRight:4,
+  });
+
+  return (
+    <div>
+      <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, marginBottom:12 }}>
+        Pick give/get/date and see what would have actually happened.
+        FP uses league formulas (TB+R+RBI+BB+HBP+SB−K for hitters;
+        K+IP*3.3−H−2*ER−BB−HBP for pitchers). R is HR-based proxy and SB is
+        rate-based, so absolute totals run ~15% low — relative comparison
+        between two players is what matters.
+      </div>
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:16, marginBottom:16 }}>
+        <div>
+          <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Give up (Player you'd trade away)</div>
+          <input value={giveQ} onChange={e => { setGiveQ(e.target.value); setGivePid(null); }}
+                 style={inputStyle} placeholder="Type to search…" />
+          {giveOpts.length > 0 && givePid == null && (
+            <div style={{ marginTop:4, maxHeight:160, overflowY:'auto', border:`1px solid ${colors.border}` }}>
+              {giveOpts.map(p => (
+                <div key={p.pid} onClick={() => { setGivePid(p.pid); setGiveQ(p.name); }}
+                     style={{ padding:'4px 8px', cursor:'pointer', fontFamily:MONO, fontSize:11,
+                              background: colors.panel, borderBottom:`1px solid ${colors.faint}` }}>
+                  {p.name} <span style={{ color:colors.dim }}>({p.role})</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {giveP && <div style={{ marginTop:4, fontSize:11, fontFamily:MONO, color:colors.accent }}>
+            ✓ {giveP.name} ({giveP.role}) {' '}
+            <span onClick={() => { setGivePid(null); setGiveQ(''); }} style={{ cursor:'pointer', color:colors.dim }}>(clear)</span>
+          </div>}
+        </div>
+        <div>
+          <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Get (Player you'd receive)</div>
+          <input value={getQ} onChange={e => { setGetQ(e.target.value); setGetPid(null); }}
+                 style={inputStyle} placeholder="Type to search…" />
+          {getOpts.length > 0 && getPid == null && (
+            <div style={{ marginTop:4, maxHeight:160, overflowY:'auto', border:`1px solid ${colors.border}` }}>
+              {getOpts.map(p => (
+                <div key={p.pid} onClick={() => { setGetPid(p.pid); setGetQ(p.name); }}
+                     style={{ padding:'4px 8px', cursor:'pointer', fontFamily:MONO, fontSize:11,
+                              background: colors.panel, borderBottom:`1px solid ${colors.faint}` }}>
+                  {p.name} <span style={{ color:colors.dim }}>({p.role})</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {getP && <div style={{ marginTop:4, fontSize:11, fontFamily:MONO, color:colors.accent }}>
+            ✓ {getP.name} ({getP.role}) {' '}
+            <span onClick={() => { setGetPid(null); setGetQ(''); }} style={{ cursor:'pointer', color:colors.dim }}>(clear)</span>
+          </div>}
+        </div>
+        <div>
+          <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Year</div>
+          <div style={{ marginBottom:8 }}>
+            {Object.keys(weekly.weeks || {}).sort().map(y => (
+              <button key={y} onClick={() => { setYear(y); setWeekIdx(0); }} style={btnStyle(year === y)}>{y}</button>
+            ))}
+          </div>
+          <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase', marginBottom:4 }}>Trade week (start)</div>
+          <select value={weekIdx} onChange={e => setWeekIdx(parseInt(e.target.value))}
+                  style={{...inputStyle, width:200 }}>
+            {yearWeeks.map((w, i) => <option key={i} value={i}>{w}</option>)}
+          </select>
+        </div>
+      </div>
+
+      {giveP && getP && yearWeeks.length > 0 && (
+        <div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:24, marginBottom:16 }}>
+            <div style={{ padding:12, border:`1px solid ${colors.border}` }}>
+              <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase' }}>GIVE: {giveP.name}</div>
+              <div style={{ fontSize:24, fontFamily:MONO, marginTop:4 }}>{Number(giveR.cumulative || 0).toFixed(1)} FP</div>
+              <div style={{ fontSize:10, color:colors.dim }}>from {weekLabels[0] || '—'} on ({weekLabels.length} wk)</div>
+            </div>
+            <div style={{ padding:12, border:`1px solid ${colors.border}` }}>
+              <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase' }}>GET: {getP.name}</div>
+              <div style={{ fontSize:24, fontFamily:MONO, marginTop:4 }}>{Number(getR.cumulative || 0).toFixed(1)} FP</div>
+              <div style={{ fontSize:10, color:colors.dim }}>same window</div>
+            </div>
+            <div style={{ padding:12, border:`2px solid ${deltaCum >= 0 ? '#33aa44' : '#cc5544'}` }}>
+              <div style={{ fontSize:9, color:colors.dim, fontFamily:MONO, letterSpacing:1, textTransform:'uppercase' }}>NET (got − gave)</div>
+              <div style={{ fontSize:28, fontFamily:MONO, marginTop:4, color: deltaCum >= 0 ? '#33aa44' : '#cc5544' }}>
+                {deltaCum >= 0 ? '+' : ''}{Number(deltaCum).toFixed(1)} FP
+              </div>
+              <div style={{ fontSize:11, fontFamily:MONO, marginTop:2 }}>{deltaCum >= 0 ? 'WIN' : 'LOSS'} for the trade</div>
+            </div>
+          </div>
+
+          <div style={{ overflowX:'auto' }}>
+            <table style={{ width:'100%', borderCollapse:'collapse' }}>
+              <thead><tr>
+                <th style={headStyle}>Week</th>
+                <th style={{...headStyle, textAlign:'right'}}>GIVE fp</th>
+                <th style={{...headStyle, textAlign:'right'}}>GET fp</th>
+                <th style={{...headStyle, textAlign:'right'}}>Δ (week)</th>
+                <th style={{...headStyle, textAlign:'right'}}>Δ cumulative</th>
+              </tr></thead>
+              <tbody>
+                {weekLabels.map((w, i) => {
+                  const gv = giveR.weekly_after[i] || 0;
+                  const gt = getR.weekly_after[i] || 0;
+                  const d = gt - gv;
+                  const cumThru = (giveR.weekly_after.slice(0, i+1).reduce((s, v) => s + (v||0), 0)
+                                    - getR.weekly_after.slice(0, i+1).reduce((s, v) => s + (v||0), 0));
+                  return (
+                    <tr key={i}>
+                      <td style={cellStyle}>{w}</td>
+                      <td style={{...cellStyle, textAlign:'right'}}>{gv.toFixed(1)}</td>
+                      <td style={{...cellStyle, textAlign:'right'}}>{gt.toFixed(1)}</td>
+                      <td style={{...cellStyle, textAlign:'right', color: d >= 0 ? '#33aa44' : '#cc5544' }}>
+                        {d >= 0 ? '+' : ''}{d.toFixed(1)}
+                      </td>
+                      <td style={{...cellStyle, textAlign:'right', color: -cumThru >= 0 ? '#33aa44' : '#cc5544' }}>
+                        {(-cumThru) >= 0 ? '+' : ''}{(-cumThru).toFixed(1)}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+      {(!giveP || !getP) && (
+        <div style={{ padding:'16px 0', fontSize:11, fontFamily:MONO, color:colors.dim }}>
+          Pick both players above to run the replay.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═══ Advisory tab ═════════════════════════════════════════════════════════════
 function AdvisoryTab({ advisory, myTeam, colors }) {
   const [ligersOnly, setLigersOnly] = React.useState(false);
@@ -3117,7 +3349,11 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
         </div>
       ) : <div style={subH}>(run scripts/xfp/opponent_scouting.py to populate)</div>}
 
-      <h3 style={sectionH}>8. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>8. Trade simulator — counterfactual week-by-week replay</h3>
+      <TradeSimulator weekly={window.XFP_WEEKLY || {players:[],weeks:{}}}
+                       myTeam={myTeam} colors={colors} />
+
+      <h3 style={sectionH}>9. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -3929,6 +4165,14 @@ def main():
     audit_json    = json.dumps(audit, separators=(',', ':'))
     advisory_json = json.dumps(advisory, separators=(',', ':'))
 
+    # Weekly fp substrate for trade simulator UI
+    weekly_path = ROOT / 'data' / 'outputs' / 'weekly_fp_substrate.json'
+    if weekly_path.exists():
+        with open(weekly_path, 'r', encoding='utf-8') as f:
+            weekly_json = f.read()
+    else:
+        weekly_json = '{"weeks":{},"players":[]}'
+
     html = (HTML_TEMPLATE
             .replace('__PROJECTIONS_JSON__', proj_json)
             .replace('__META_JSON__', meta_json)
@@ -3937,7 +4181,8 @@ def main():
             .replace('__RELIEVERS_JSON__', relievers_json)
             .replace('__MY_TEAM_JSON__', my_team_json)
             .replace('__AUDIT_JSON__', audit_json)
-            .replace('__ADVISORY_JSON__', advisory_json))
+            .replace('__ADVISORY_JSON__', advisory_json)
+            .replace('__WEEKLY_JSON__', weekly_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
     OUT_DOCS.parent.mkdir(parents=True, exist_ok=True)
