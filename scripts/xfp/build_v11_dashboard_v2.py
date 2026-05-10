@@ -3067,7 +3067,57 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
       <div style={subH}>Team RP fp/IP through current date. Bad bullpens = SPs less likely to get wins (less reliable cleanups); also affects RP holds/saves leverage.</div>
       <Table rows={bp} columns={bpCols} keyCol="team" />
 
-      <h3 style={sectionH}>6. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>6. Lineup optimizer — this week's SP cap picture</h3>
+      {advisory.lineup_optimizer ? (
+        <div>
+          <div style={subH}>
+            As of {advisory.lineup_optimizer.as_of}. Cap: {advisory.lineup_optimizer.cap} SP starts/wk.
+            Total projected starts: <strong>{advisory.lineup_optimizer.total_starts}</strong>
+            {' • '}counting toward score: <strong>{advisory.lineup_optimizer.counting_starts}</strong>
+            {' • '}expected fp from counting starts: <strong>{advisory.lineup_optimizer.expected_counting_fp}</strong>
+            {advisory.lineup_optimizer.total_starts > advisory.lineup_optimizer.cap &&
+              <span style={{ color:'#cc5544', marginLeft:8 }}>
+                ⚠ OVER CAP — bench-loss if unoptimized: {advisory.lineup_optimizer.bench_loss_if_unoptimized} fp
+              </span>}
+          </div>
+          <Table rows={advisory.lineup_optimizer.starts || []} keyCol="gamePk" columns={[
+            { key:'date', label:'Date' },
+            { key:'pitcher', label:'Pitcher' },
+            { key:'team_abbr', label:'Team', align:'center' },
+            { key:'opp_team_abbr', label:'vs', align:'center' },
+            { key:'is_home', label:'Home', align:'center', render: r => r.is_home ? 'H' : 'A' },
+            { key:'xfp_per_start', label:'Base fp/G', align:'right', render: r => fmt(r.xfp_per_start, 2) },
+            { key:'xfp_per_start_sched', label:'Adj fp/G', align:'right', render: r => fmt(r.xfp_per_start_sched, 2) },
+            { key:'rank', label:'Rank', align:'center' },
+            { key:'decision', label:'Action', align:'center',
+              color: v => v === 'START' ? '#33aa44' : '#cc5544' },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/lineup_optimizer.py to populate)</div>}
+
+      <h3 style={sectionH}>7. Opponent scouting — league-wide roster value vs standing</h3>
+      {advisory.opponent_scouting ? (
+        <div>
+          <div style={subH}>
+            Underperformers (value-rank ≪ standing-rank) may be trade targets;
+            overperformers (value-rank ≫ standing-rank) are likely to regress.
+          </div>
+          <Table rows={advisory.opponent_scouting} keyCol="team_id" columns={[
+            { key:'team_name', label:'Team' },
+            { key:'wins', label:'W', align:'right' },
+            { key:'losses', label:'L', align:'right' },
+            { key:'standing', label:'Rank', align:'right' },
+            { key:'total_value', label:'Total Value', align:'right', render: r => fmt(r.total_value, 0) },
+            { key:'hitter_ros_fp_total', label:'Hitter RoS', align:'right', render: r => fmt(r.hitter_ros_fp_total, 0) },
+            { key:'sp_value_proxy', label:'SP Proxy', align:'right', render: r => fmt(r.sp_value_proxy, 0) },
+            { key:'adds_30d', label:'Adds/30d', align:'right' },
+            { key:'drops_30d', label:'Drops/30d', align:'right' },
+            { key:'trades_30d', label:'Trades/30d', align:'right' },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/opponent_scouting.py to populate)</div>}
+
+      <h3 style={sectionH}>8. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -3837,6 +3887,26 @@ def build_advisory_payload():
             top = sub.sort_values('whiff_per_swing', ascending=False).head(20)
             for r in top[['player_name', 'ptg', 'swings', 'whiff_per_swing', 'xwoba_avg']].to_dict(orient='records'):
                 out['pitch_weakness_top'].append(_round(r, ['whiff_per_swing', 'xwoba_avg'], 3))
+
+    # 6. Lineup optimizer (Tier 2)
+    p = out_dir / 'lineup_optimizer.json'
+    if p.exists():
+        try:
+            import json as _json
+            with open(p, 'r', encoding='utf-8') as f:
+                out['lineup_optimizer'] = _json.load(f)
+        except Exception:
+            out['lineup_optimizer'] = None
+
+    # 7. Opponent scouting (Tier 2)
+    p = out_dir / 'opponent_scouting.json'
+    if p.exists():
+        try:
+            import json as _json
+            with open(p, 'r', encoding='utf-8') as f:
+                out['opponent_scouting'] = _json.load(f)
+        except Exception:
+            out['opponent_scouting'] = None
 
     return out
 

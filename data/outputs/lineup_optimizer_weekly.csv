@@ -1,0 +1,7 @@
+date,pitcher,team_abbr,opp_team_abbr,is_home,gamePk,xfp_per_start,xfp_per_start_sched,rank,count_toward_cap,decision
+2026-05-10,Carlos Rodon,NYY,MIL,False,823793,10.0,10.0,6,True,START
+2026-05-10,Jose Soriano,LAA,TOR,False,822819,13.294917625146516,14.01,1,True,START
+2026-05-12,Freddy Peralta,NYM,DET,True,823632,12.795391633404792,12.8,2,True,START
+2026-05-12,Will Warren,NYY,BAL,False,824843,11.258743514279248,11.26,5,True,START
+2026-05-13,Max Fried,NYY,BAL,False,824841,12.674818133270712,12.67,3,True,START
+2026-05-13,Parker Messick,CLE,LAA,True,824438,11.397319132983334,11.56,4,True,START
