@@ -2937,6 +2937,138 @@ function CompareView({ myName, oppName, myBuckets, oppBuckets, trades, colors, p
 }
 
 // ═══ Team Audit Tab ═══════════════════════════════════════════════════════════
+// ═══ Lineup Overlap Analyzer (used inside AdvisoryTab) ═══════════════════════
+function LineupOverlap({ overlap, colors }) {
+  const [selectedOpp, setSelectedOpp] = React.useState(null);
+  if (!overlap || !overlap.opponents) {
+    return <div style={{ fontSize:11, fontFamily:MONO, color:colors.dim }}>
+      (run scripts/xfp/opponent_lineup_overlap.py to populate)
+    </div>;
+  }
+
+  const POS_ORDER = ['C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP'];
+  const fmt = (v, d = 1) => v == null || isNaN(v) ? '—' : Number(v).toFixed(d);
+  const sign = (v, d = 1) => {
+    if (v == null || isNaN(v)) return '—';
+    const n = Number(v);
+    return (n >= 0 ? '+' : '') + n.toFixed(d);
+  };
+
+  const cellStyle = { padding:'4px 8px', borderBottom:`1px solid ${colors.border}`,
+                      fontFamily:MONO, fontSize:11, fontVariantNumeric:'tabular-nums' };
+  const headStyle = { ...cellStyle, fontWeight:600, color:colors.dim, textTransform:'uppercase',
+                      fontSize:9, letterSpacing:0.5 };
+  const edgeColor = (e) => e == null ? colors.text : e > 0 ? '#33aa44' : e < 0 ? '#cc5544' : colors.text;
+  const detail = selectedOpp ? overlap.opponents.find(o => o.opp_name === selectedOpp) : null;
+
+  return (
+    <div>
+      <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, marginBottom:8 }}>
+        Per-position projected RoS FP value for each opposing team's STARTING
+        lineup (1 C, 1 1B, 1 2B, 1 3B, 1 SS, 3 OF, 5 SP, 3 RP).
+        Edge = (my position value − their position value). Sum total = expected
+        weekly fp gap before luck/scheduling. Click a row for per-position detail.
+      </div>
+
+      <div style={{ overflowX:'auto', marginBottom:16 }}>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead><tr>
+            <th style={headStyle}>Opponent</th>
+            <th style={{...headStyle, textAlign:'center'}}>Standing</th>
+            <th style={{...headStyle, textAlign:'center'}}>H2H</th>
+            <th style={{...headStyle, textAlign:'right'}}>Total Edge</th>
+            <th style={headStyle}>Biggest Strength</th>
+            <th style={headStyle}>Biggest Weakness</th>
+            <th style={{...headStyle, textAlign:'right'}}>Top Trade Tgt</th>
+          </tr></thead>
+          <tbody>
+            {overlap.opponents.map(o => {
+              const isSel = selectedOpp === o.opp_name;
+              const tgt = (o.trade_targets && o.trade_targets[0]) || null;
+              return (
+                <tr key={o.opp_name}
+                    onClick={() => setSelectedOpp(isSel ? null : o.opp_name)}
+                    style={{ cursor:'pointer', background: isSel ? colors.faint : 'transparent' }}>
+                  <td style={cellStyle}>{o.opp_name}</td>
+                  <td style={{...cellStyle, textAlign:'center'}}>{o.standing ?? '—'}</td>
+                  <td style={{...cellStyle, textAlign:'center'}}>{o.h2h_record || '—'}</td>
+                  <td style={{...cellStyle, textAlign:'right', color: edgeColor(o.total_edge), fontWeight:600}}>
+                    {sign(o.total_edge, 1)}
+                  </td>
+                  <td style={cellStyle}>
+                    {o.biggest_advantage} <span style={{ color:edgeColor(o.biggest_advantage_edge) }}>
+                      ({sign(o.biggest_advantage_edge, 0)})
+                    </span>
+                  </td>
+                  <td style={cellStyle}>
+                    {o.biggest_weakness} <span style={{ color:edgeColor(o.biggest_weakness_edge) }}>
+                      ({sign(o.biggest_weakness_edge, 0)})
+                    </span>
+                  </td>
+                  <td style={{...cellStyle, textAlign:'right'}}>
+                    {tgt ? `${tgt.position} (edge ${sign(tgt.my_edge,0)})` : '—'}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {detail && (
+        <div style={{ border:`1px solid ${colors.border}`, padding:12, marginBottom:12 }}>
+          <div style={{ fontSize:12, fontFamily:MONO, fontWeight:600, marginBottom:6 }}>
+            Detail: Ligers vs {detail.opp_name}
+          </div>
+          <table style={{ width:'100%', borderCollapse:'collapse' }}>
+            <thead><tr>
+              <th style={headStyle}>Pos</th>
+              <th style={{...headStyle, textAlign:'right'}}>My RoS FP</th>
+              <th style={headStyle}>My Starters</th>
+              <th style={{...headStyle, textAlign:'right'}}>Their RoS FP</th>
+              <th style={headStyle}>Their Starters</th>
+              <th style={{...headStyle, textAlign:'right'}}>Edge</th>
+            </tr></thead>
+            <tbody>
+              {POS_ORDER.map(slot => {
+                const pp = detail.per_position && detail.per_position[slot];
+                if (!pp) return null;
+                return (
+                  <tr key={slot}>
+                    <td style={{...cellStyle, fontWeight:600}}>{slot}</td>
+                    <td style={{...cellStyle, textAlign:'right'}}>{fmt(pp.my_value)}</td>
+                    <td style={cellStyle}>{(pp.my_starters || []).join(', ') || '—'}</td>
+                    <td style={{...cellStyle, textAlign:'right'}}>{fmt(pp.opp_value)}</td>
+                    <td style={cellStyle}>{(pp.opp_starters || []).join(', ') || '—'}</td>
+                    <td style={{...cellStyle, textAlign:'right', color: edgeColor(pp.edge), fontWeight:600}}>
+                      {sign(pp.edge, 1)}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {detail.trade_targets && detail.trade_targets.length > 0 && (
+            <div style={{ marginTop:10 }}>
+              <div style={{ fontSize:10, color:colors.dim, fontFamily:MONO, marginBottom:4,
+                            textTransform:'uppercase', letterSpacing:0.5 }}>
+                Trade-target positions (they have surplus, we're thin)
+              </div>
+              {detail.trade_targets.map((t, i) => (
+                <div key={i} style={{ fontSize:11, fontFamily:MONO, marginBottom:2 }}>
+                  <strong>{t.position}</strong>: my edge {sign(t.my_edge,0)} FP;
+                  their bench at this pos has {fmt(t.their_bench_value)} FP of surplus.
+                  Surplus starters: {(t.their_starters || []).join(', ')}.
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ═══ Trade Simulator (used inside AdvisoryTab) ═══════════════════════════════
 function TradeSimulator({ weekly, myTeam, colors }) {
   const players = weekly.players || [];
@@ -3349,11 +3481,14 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
         </div>
       ) : <div style={subH}>(run scripts/xfp/opponent_scouting.py to populate)</div>}
 
-      <h3 style={sectionH}>8. Trade simulator — counterfactual week-by-week replay</h3>
+      <h3 style={sectionH}>8. Lineup overlap — per-opponent positional edge map</h3>
+      <LineupOverlap overlap={advisory.lineup_overlap} colors={colors} />
+
+      <h3 style={sectionH}>9. Trade simulator — counterfactual week-by-week replay</h3>
       <TradeSimulator weekly={window.XFP_WEEKLY || {players:[],weeks:{}}}
                        myTeam={myTeam} colors={colors} />
 
-      <h3 style={sectionH}>9. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>10. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -4143,6 +4278,16 @@ def build_advisory_payload():
                 out['opponent_scouting'] = _json.load(f)
         except Exception:
             out['opponent_scouting'] = None
+
+    # 8. Opponent lineup overlap (Tier 2 deepening)
+    p = out_dir / 'opponent_lineup_overlap.json'
+    if p.exists():
+        try:
+            import json as _json
+            with open(p, 'r', encoding='utf-8') as f:
+                out['lineup_overlap'] = _json.load(f)
+        except Exception:
+            out['lineup_overlap'] = None
 
     return out
 
