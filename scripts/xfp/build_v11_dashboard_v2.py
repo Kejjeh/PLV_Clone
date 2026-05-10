@@ -3485,11 +3485,42 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
       <h3 style={sectionH}>8. Lineup overlap — per-opponent positional edge map</h3>
       <LineupOverlap overlap={advisory.lineup_overlap} colors={colors} />
 
-      <h3 style={sectionH}>9. Trade simulator — counterfactual week-by-week replay</h3>
+      <h3 style={sectionH}>9. Smart trade finder — model-favored 1-for-1s</h3>
+      {advisory.smart_trade_finder ? (
+        <div>
+          <div style={subH}>
+            Found {(advisory.smart_trade_finder.global_top || []).length > 0 ?
+              Object.values(advisory.smart_trade_finder.by_opponent || {})
+                    .reduce((s, list) => s + list.length, 0) : 0
+            } fair trades (perceived value within {(advisory.smart_trade_finder.fairness_threshold * 100).toFixed(0)}%) projecting at least +{advisory.smart_trade_finder.min_gain} RoS FP gain.
+            "Fair" = YTD FP gap. Sortable by RoS gain.
+          </div>
+          {Object.entries(advisory.smart_trade_finder.by_opponent || {}).map(([opp, trades]) => (
+            <div key={opp} style={{ marginBottom:12 }}>
+              <div style={{ fontSize:11, fontFamily:MONO, fontWeight:600, color:colors.text, marginTop:8, marginBottom:4 }}>
+                vs {opp} ({trades.length} ideas)
+              </div>
+              <Table rows={trades} keyCol="get" columns={[
+                { key:'give', label:'Give' },
+                { key:'give_ytd', label:'YTD', align:'right', render: r => fmt(r.give_ytd, 0) },
+                { key:'get', label:'Get' },
+                { key:'get_ytd', label:'YTD', align:'right', render: r => fmt(r.get_ytd, 0) },
+                { key:'fair_ratio', label:'Fair Gap', align:'right',
+                  render: r => (r.fair_ratio * 100).toFixed(0) + '%',
+                  color: v => v < 0.20 ? '#33aa44' : v < 0.30 ? colors.text : '#cc5544' },
+                { key:'edge_gain_ros', label:'+RoS FP', align:'right', color: () => '#33aa44',
+                  render: r => '+' + fmt(r.edge_gain_ros, 1) },
+              ]} />
+            </div>
+          ))}
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/smart_trade_finder.py to populate)</div>}
+
+      <h3 style={sectionH}>10. Trade simulator — counterfactual week-by-week replay</h3>
       <TradeSimulator weekly={window.XFP_WEEKLY || {players:[],weeks:{}}}
                        myTeam={myTeam} colors={colors} />
 
-      <h3 style={sectionH}>10. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>11. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -4289,6 +4320,16 @@ def build_advisory_payload():
                 out['lineup_overlap'] = _json.load(f)
         except Exception:
             out['lineup_overlap'] = None
+
+    # 9. Smart trade finder (Tier 3)
+    p = out_dir / 'smart_trade_finder.json'
+    if p.exists():
+        try:
+            import json as _json
+            with open(p, 'r', encoding='utf-8') as f:
+                out['smart_trade_finder'] = _json.load(f)
+        except Exception:
+            out['smart_trade_finder'] = None
 
     return out
 

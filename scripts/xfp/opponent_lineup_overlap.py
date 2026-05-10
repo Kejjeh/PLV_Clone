@@ -51,14 +51,16 @@ SLOT_FILL_ORDER = [
     ('MI',   {'2B', 'SS', '2B/SS'}),
     ('CI',   {'1B', '3B', '1B/3B'}),
     ('UTIL', {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH', 'UTIL'}),
-    ('SP1',  {'SP', 'P'}),
-    ('SP2',  {'SP', 'P'}),
-    ('SP3',  {'SP', 'P'}),
-    ('SP4',  {'SP', 'P'}),
-    ('SP5',  {'SP', 'P'}),
-    ('RP1',  {'RP', 'P'}),
-    ('RP2',  {'RP', 'P'}),
-    ('RP3',  {'RP', 'P'}),
+    # Note: 'P' is ESPN's generic pitcher flag — not used as a lineup slot in
+    # BrownU. Only 'SP' eligibility fills an SP slot, only 'RP' fills RP.
+    ('SP1',  {'SP'}),
+    ('SP2',  {'SP'}),
+    ('SP3',  {'SP'}),
+    ('SP4',  {'SP'}),
+    ('SP5',  {'SP'}),
+    ('RP1',  {'RP'}),
+    ('RP2',  {'RP'}),
+    ('RP3',  {'RP'}),
 ]
 
 # Aggregate slot grouping for display (collapse OF1-5 into single "OF" row)
@@ -94,6 +96,7 @@ def load_projections():
             'ros_fp': float(r.get('expected_total_fp_remaining') or 0),
         }
 
+    # SP projections from rp3 (per-start × estimated remaining starts)
     rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
     rp['nk'] = rp['player_name'].map(_norm)
     rp = rp.drop_duplicates('nk', keep='first')
@@ -103,7 +106,28 @@ def load_projections():
         p_lookup[r['nk']] = {
             'name': r['player_name'],
             'ros_fp': per_start * SP_REMAINING_STARTS,
+            'src': 'rp3',
         }
+
+    # RP projections from rprs2 (closer/setup roles, has xfp_ros directly)
+    rprs2_path = OUT / 'xfp_rprs2_projections.csv'
+    if rprs2_path.exists():
+        rprs2 = pd.read_csv(rprs2_path)
+        if 'name_api' in rprs2.columns:
+            rprs2['nk'] = rprs2['name_api'].map(_norm)
+            rprs2 = rprs2.drop_duplicates('nk', keep='first')
+            for _, r in rprs2.iterrows():
+                nk = r['nk']
+                ros = float(r.get('xfp_ros') or 0)
+                # Prefer RP-specific value if it's higher (real RPs would have low
+                # rp3 value since they don't start; for converted SPs we keep rp3)
+                existing = p_lookup.get(nk)
+                if not existing or existing['ros_fp'] < ros:
+                    p_lookup[nk] = {
+                        'name': r['name_api'],
+                        'ros_fp': ros,
+                        'src': 'rprs2',
+                    }
     return h_lookup, p_lookup
 
 
