@@ -727,6 +727,7 @@ window.XFP_HITTERS = __HITTERS_JSON__;
 window.XFP_RELIEVERS = __RELIEVERS_JSON__;
 window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 window.XFP_AUDIT = __AUDIT_JSON__;
+window.XFP_ADVISORY = __ADVISORY_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -736,8 +737,8 @@ window.XFP_AUDIT = __AUDIT_JSON__;
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════
-const TABS = ['my-team', 'audit', 'projections', 'hitters', 'analysis', 'model'];
-const TAB_LABELS = { 'my-team': 'My Team', audit: 'Team Audit', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', model: 'Model Info' };
+const TABS = ['my-team', 'audit', 'projections', 'hitters', 'analysis', 'advisory', 'model'];
+const TAB_LABELS = { 'my-team': 'My Team', audit: 'Team Audit', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', advisory: 'Advisory', model: 'Model Info' };
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
@@ -1630,6 +1631,10 @@ function Dashboard({ dark }) {
 
       {activeTab === 'audit' && (
         <AuditTab audit={window.XFP_AUDIT} colors={colors} />
+      )}
+
+      {activeTab === 'advisory' && (
+        <AdvisoryTab advisory={window.XFP_ADVISORY || {}} myTeam={myTeam} colors={colors} />
       )}
 
       <div style={{ padding:'24px 32px', borderTop:`1px solid ${colors.border}`, marginTop:32,
@@ -2887,6 +2892,197 @@ function CompareView({ myName, oppName, myBuckets, oppBuckets, trades, colors, p
 }
 
 // ═══ Team Audit Tab ═══════════════════════════════════════════════════════════
+// ═══ Advisory tab ═════════════════════════════════════════════════════════════
+function AdvisoryTab({ advisory, myTeam, colors }) {
+  const [ligersOnly, setLigersOnly] = React.useState(false);
+  const [pitchFilter, setPitchFilter] = React.useState('SL');
+
+  // Build set of my-team names (both "First Last" and rh3 "Last, First")
+  const myNames = React.useMemo(() => {
+    const s = new Set();
+    const add = (n) => {
+      if (!n) return;
+      s.add(n);
+      const parts = n.split(' ');
+      if (parts.length >= 2) {
+        s.add(parts.slice(-1)[0] + ', ' + parts.slice(0, -1).join(' '));
+      }
+      if (n.includes(',')) {
+        const [last, first] = n.split(',').map(p => p.trim());
+        s.add(first + ' ' + last);
+      }
+    };
+    (myTeam?.pitchers || []).forEach(p => add(p.name || p.player_name));
+    (myTeam?.hitters || []).forEach(p => add(p.name || p.player_name));
+    return s;
+  }, [myTeam]);
+
+  const filt = (rows) => {
+    if (!ligersOnly) return rows;
+    return rows.filter(r => myNames.has(r.player_name));
+  };
+
+  const cellStyle = { padding:'4px 8px', borderBottom:`1px solid ${colors.border}`,
+                      fontFamily:MONO, fontSize:11, fontVariantNumeric:'tabular-nums' };
+  const headStyle = { ...cellStyle, fontWeight:600, color:colors.dim, textTransform:'uppercase', fontSize:9, letterSpacing:0.5 };
+  const sectionH = { fontSize:14, fontFamily:MONO, fontWeight:600, letterSpacing:1, textTransform:'uppercase',
+                     color:colors.text, margin:'24px 0 4px 0' };
+  const subH = { fontSize:10, fontFamily:MONO, color:colors.dim, marginBottom:8 };
+
+  const fmt = (v, dp = 2) => v == null || isNaN(v) ? '—' : Number(v).toFixed(dp);
+  const sign = (v, dp = 4) => {
+    if (v == null || isNaN(v)) return '—';
+    const n = Number(v);
+    return (n > 0 ? '+' : '') + n.toFixed(dp);
+  };
+
+  // Color a divergence cell green=our model bullish, red=our model bearish
+  const divColor = (v) => {
+    if (v == null) return colors.text;
+    return v > 0 ? '#33aa44' : v < 0 ? '#cc5544' : colors.text;
+  };
+
+  const Table = ({ rows, columns, keyCol }) => (
+    rows.length === 0
+      ? <div style={{...subH, padding:'8px 0'}}>No rows match.</div>
+      : <div style={{ overflowX:'auto', marginBottom:8 }}>
+        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+          <thead><tr>{columns.map(c => <th key={c.key} style={{...headStyle, textAlign: c.align || 'left'}}>{c.label}</th>)}</tr></thead>
+          <tbody>{rows.map((r, i) =>
+            <tr key={r[keyCol] || i}>
+              {columns.map(c => <td key={c.key} style={{...cellStyle, textAlign: c.align || 'left',
+                                                          color: c.color ? c.color(r[c.key]) : colors.text}}>
+                {c.render ? c.render(r) : (r[c.key] == null ? '—' : r[c.key])}
+              </td>)}
+            </tr>
+          )}</tbody>
+        </table>
+      </div>
+  );
+
+  // Panel 1 — Velocity drop
+  const velo = filt(advisory.velocity || []);
+  const veloCols = [
+    { key:'player_name', label:'Pitcher' },
+    { key:'starts_2026', label:'2026 GS', align:'right', render: r => fmt(r.starts_2026, 0) },
+    { key:'career_velo', label:'Career FB', align:'right', render: r => fmt(r.career_velo, 2) },
+    { key:'last5_velo', label:'Last 5 FB', align:'right', render: r => fmt(r.last5_velo, 2) },
+    { key:'velo_drop_mph', label:'Δ mph', align:'right', color: v => v <= -1.0 ? '#cc5544' : v >= 1.0 ? '#33aa44' : colors.text,
+      render: r => sign(r.velo_drop_mph, 2) },
+    { key:'alert', label:'Flag', align:'center' },
+    { key:'last_start_date', label:'Last Start' },
+  ];
+
+  // Panels 2/3 — Ensemble divergence (over-bull = our model > consensus)
+  const h_over = filt(advisory.ensemble_hitters_overbull || []);
+  const h_under = filt(advisory.ensemble_hitters_underbull || []);
+  const p_over = filt(advisory.ensemble_pitchers_overbull || []);
+  const p_under = filt(advisory.ensemble_pitchers_underbull || []);
+  const ensembleHitterCols = [
+    { key:'player_name', label:'Hitter' },
+    { key:'team', label:'Team', align:'center' },
+    { key:'xfp_rh3_per_pa', label:'Our fp/PA', align:'right', render: r => fmt(r.xfp_rh3_per_pa, 3) },
+    { key:'ext_mean_fp_per_pa', label:'Consensus fp/PA', align:'right', render: r => fmt(r.ext_mean_fp_per_pa, 3) },
+    { key:'divergence', label:'Δ (Ours − Consensus)', align:'right', color: divColor, render: r => sign(r.divergence, 4) },
+    { key:'ext_n_systems', label:'# Systems', align:'center', render: r => fmt(r.ext_n_systems, 0) },
+  ];
+  const ensemblePitcherCols = [
+    { key:'player_name', label:'Pitcher' },
+    { key:'xfp_rp3_per_start', label:'Our fp/G', align:'right', render: r => fmt(r.xfp_rp3_per_start, 2) },
+    { key:'ext_mean_fp_per_g', label:'Consensus fp/G', align:'right', render: r => fmt(r.ext_mean_fp_per_g, 2) },
+    { key:'divergence', label:'Δ', align:'right', color: divColor, render: r => sign(r.divergence, 2) },
+    { key:'ext_n_systems', label:'# Systems', align:'center', render: r => fmt(r.ext_n_systems, 0) },
+  ];
+
+  // Panel 4 — TTO penalty
+  const tto = filt(advisory.tto_penalty || []);
+  const ttoCols = [
+    { key:'player_name', label:'Pitcher' },
+    { key:'total_pa', label:'Career PA', align:'right', render: r => fmt(r.total_pa, 0) },
+    { key:'tto1_rate', label:'1st time', align:'right', render: r => fmt(r.tto1_rate, 3) },
+    { key:'tto2_rate', label:'2nd time', align:'right', render: r => fmt(r.tto2_rate, 3) },
+    { key:'tto3_rate', label:'3rd time', align:'right', render: r => fmt(r.tto3_rate, 3) },
+    { key:'tto3_minus_tto1', label:'Δ', align:'right', color: v => v < -0.05 ? '#cc5544' : colors.text,
+      render: r => sign(r.tto3_minus_tto1, 4) },
+  ];
+
+  // Panel 5 — Bullpen quality
+  const bp = advisory.bullpen_2026 || [];
+  const bpCols = [
+    { key:'team', label:'Team', align:'center' },
+    { key:'bullpen_fp_per_ip', label:'fp/IP', align:'right', render: r => fmt(r.bullpen_fp_per_ip, 3) },
+    { key:'n_rps', label:'# RPs', align:'right', render: r => fmt(r.n_rps, 0) },
+    { key:'bullpen_ip', label:'Total IP', align:'right', render: r => fmt(r.bullpen_ip, 1) },
+  ];
+
+  // Panel 6 — Pitch weakness
+  const allWeakness = advisory.pitch_weakness_top || [];
+  const filteredWeakness = filt(allWeakness.filter(r => r.ptg === pitchFilter));
+  const weaknessCols = [
+    { key:'player_name', label:'Hitter' },
+    { key:'ptg', label:'Pitch', align:'center' },
+    { key:'swings', label:'Swings', align:'right', render: r => fmt(r.swings, 0) },
+    { key:'whiff_per_swing', label:'Whiff %', align:'right', color: v => v >= 40 ? '#cc5544' : colors.text,
+      render: r => fmt(r.whiff_per_swing, 1) + '%' },
+    { key:'xwoba_avg', label:'xwOBA when contact', align:'right', render: r => fmt(r.xwoba_avg, 3) },
+  ];
+
+  return (
+    <div style={{ padding:'16px 32px' }}>
+      <div style={{ display:'flex', alignItems:'center', gap:16, marginBottom:8 }}>
+        <h2 style={{ fontSize:16, fontFamily:MONO, fontWeight:600, letterSpacing:1, textTransform:'uppercase',
+                     color:colors.text, margin:0 }}>Advisory signals</h2>
+        <label style={{ fontSize:11, fontFamily:MONO, color:colors.dim, cursor:'pointer' }}>
+          <input type="checkbox" checked={ligersOnly} onChange={e => setLigersOnly(e.target.checked)}
+                 style={{ marginRight:4 }} /> My team only
+        </label>
+      </div>
+      <div style={{ fontSize:10, fontFamily:MONO, color:colors.dim, marginBottom:16 }}>
+        Decision-support signals — none of these are model features. They're validated as marginal or
+        as decision-support tools only. Use for tactical roster moves, not for model predictions.
+      </div>
+
+      <h3 style={sectionH}>1. SP velocity decline (injury early-warning)</h3>
+      <div style={subH}>Rolling-5-start mean fastball velocity vs career baseline. ≥ −1.0 mph drop flagged DECLINING.</div>
+      <Table rows={velo} columns={veloCols} keyCol="player_name" />
+
+      <h3 style={sectionH}>2. Ensemble divergence — HITTERS</h3>
+      <div style={subH}>Where our RH3 model disagrees with the average of ATC / Steamer / ZiPS / TheBatX RoS projections. Big gaps = re-examine.</div>
+      <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Our model MORE bullish (potential trade targets):</div>
+      <Table rows={h_over} columns={ensembleHitterCols} keyCol="player_name" />
+      <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Our model LESS bullish (potential trade chips):</div>
+      <Table rows={h_under} columns={ensembleHitterCols} keyCol="player_name" />
+
+      <h3 style={sectionH}>3. Ensemble divergence — PITCHERS</h3>
+      <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Our model MORE bullish:</div>
+      <Table rows={p_over} columns={ensemblePitcherCols} keyCol="player_name" />
+      <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Our model LESS bullish:</div>
+      <Table rows={p_under} columns={ensemblePitcherCols} keyCol="player_name" />
+
+      <h3 style={sectionH}>4. Time-through-order penalty (SP hook-early candidates)</h3>
+      <div style={subH}>core_fp/PA drop from 1st to 3rd time through. Strongly negative Δ = SP gets clobbered late — bullpen takes over → fewer Ks for fantasy.</div>
+      <Table rows={tto} columns={ttoCols} keyCol="player_name" />
+
+      <h3 style={sectionH}>5. Bullpen quality — 2026 team rankings</h3>
+      <div style={subH}>Team RP fp/IP through current date. Bad bullpens = SPs less likely to get wins (less reliable cleanups); also affects RP holds/saves leverage.</div>
+      <Table rows={bp} columns={bpCols} keyCol="team" />
+
+      <h3 style={sectionH}>6. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
+      <div style={{ marginBottom:8 }}>
+        {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
+          <span key={g} onClick={() => setPitchFilter(g)} style={{
+            display:'inline-block', padding:'4px 10px', marginRight:6, fontSize:11, fontFamily:MONO,
+            cursor:'pointer', borderBottom: pitchFilter === g ? `2px solid ${colors.accent}` : 'none',
+            color: pitchFilter === g ? colors.text : colors.dim,
+          }}>{g}</span>
+        ))}
+      </div>
+      <Table rows={filteredWeakness} columns={weaknessCols} keyCol="player_name" />
+    </div>
+  );
+}
+
 function AuditTab({ audit, colors }) {
   const [selectedOpp, setSelectedOpp] = React.useState(null);
   if (!audit || audit.error || !audit.roster_buckets) {
@@ -3547,6 +3743,104 @@ def build_team_audit() -> dict:
     }
 
 
+def build_advisory_payload():
+    """Aggregate advisory CSVs (decision-support, not model features) into JSON.
+    Five panels: velocity drop, ensemble divergence, TTO penalty, bullpen quality,
+    pitch matchup weakness."""
+    out = {'velocity': [], 'ensemble_hitters_overbull': [], 'ensemble_hitters_underbull': [],
+           'ensemble_pitchers_overbull': [], 'ensemble_pitchers_underbull': [],
+           'tto_penalty': [], 'bullpen_2026': [], 'pitch_weakness_top': []}
+
+    def _round(d, cols, n=3):
+        for k in cols:
+            if k in d and d[k] is not None and not pd.isna(d[k]):
+                d[k] = round(float(d[k]), n)
+            elif k in d and pd.isna(d[k]):
+                d[k] = None
+        return d
+
+    out_dir = ROOT / 'data' / 'outputs'
+
+    # 1. SP velocity drop alerts — active 2026 SPs only
+    p = out_dir / 'sp_velocity_trend.csv'
+    if p.exists():
+        v = pd.read_csv(p)
+        v = v[v['starts_2026'].fillna(0) > 0]
+        v = v.sort_values('velo_drop_mph')
+        cols = ['player_name', 'starts_n', 'starts_2026', 'career_velo',
+                'last5_velo', 'last5_2026_velo', 'velo_drop_mph', 'alert', 'last_start_date']
+        for r in v[cols].head(60).to_dict(orient='records'):
+            out['velocity'].append(_round(r, ['career_velo', 'last5_velo', 'last5_2026_velo', 'velo_drop_mph'], 2))
+
+    # 2. Ensemble divergence (hitters)
+    p = out_dir / 'projection_ensemble_hitters.csv'
+    if p.exists():
+        eh = pd.read_csv(p)
+        if 'ext_mean_fp_per_pa' in eh.columns and eh['ext_mean_fp_per_pa'].notna().any():
+            eh = eh.dropna(subset=['ext_mean_fp_per_pa', 'xfp_rh3_per_pa']).copy()
+            eh['divergence'] = eh['xfp_rh3_per_pa'] - eh['ext_mean_fp_per_pa']
+            cols_h = ['player_name', 'team', 'xfp_rh3_per_pa', 'ext_mean_fp_per_pa',
+                      'ensemble_fp_per_pa', 'divergence', 'ext_n_systems']
+            avail = [c for c in cols_h if c in eh.columns]
+            top = eh.sort_values('divergence', ascending=False).head(25)
+            bot = eh.sort_values('divergence').head(25)
+            for r in top[avail].to_dict(orient='records'):
+                out['ensemble_hitters_overbull'].append(_round(r, ['xfp_rh3_per_pa', 'ext_mean_fp_per_pa', 'ensemble_fp_per_pa', 'divergence'], 4))
+            for r in bot[avail].to_dict(orient='records'):
+                out['ensemble_hitters_underbull'].append(_round(r, ['xfp_rh3_per_pa', 'ext_mean_fp_per_pa', 'ensemble_fp_per_pa', 'divergence'], 4))
+
+    # 2b. Ensemble divergence (pitchers)
+    p = out_dir / 'projection_ensemble_pitchers.csv'
+    if p.exists():
+        ep = pd.read_csv(p)
+        if 'ext_mean_fp_per_g' in ep.columns and ep['ext_mean_fp_per_g'].notna().any():
+            ep = ep.dropna(subset=['ext_mean_fp_per_g', 'xfp_rp3_per_start']).copy()
+            ep['divergence'] = ep['xfp_rp3_per_start'] - ep['ext_mean_fp_per_g']
+            cols_p = ['player_name', 'xfp_rp3_per_start', 'ext_mean_fp_per_g',
+                      'ensemble_fp_per_start', 'divergence', 'ext_n_systems']
+            avail = [c for c in cols_p if c in ep.columns]
+            top = ep.sort_values('divergence', ascending=False).head(25)
+            bot = ep.sort_values('divergence').head(25)
+            for r in top[avail].to_dict(orient='records'):
+                out['ensemble_pitchers_overbull'].append(_round(r, ['xfp_rp3_per_start', 'ext_mean_fp_per_g', 'ensemble_fp_per_start', 'divergence'], 2))
+            for r in bot[avail].to_dict(orient='records'):
+                out['ensemble_pitchers_underbull'].append(_round(r, ['xfp_rp3_per_start', 'ext_mean_fp_per_g', 'ensemble_fp_per_start', 'divergence'], 2))
+
+    # 3. TTO penalty (3rd-time-through hurts most)
+    p = out_dir / 'sp_lineup_pass.csv'
+    if p.exists():
+        t = pd.read_csv(p)
+        if 'tto3_minus_tto1' in t.columns:
+            t = t.dropna(subset=['tto3_minus_tto1', 'player_name'])
+            t = t[t['tto3_pa'].fillna(0) >= 200]
+            cols_t = ['player_name', 'total_pa', 'tto1_rate', 'tto2_rate', 'tto3_rate', 'tto3_minus_tto1']
+            avail = [c for c in cols_t if c in t.columns]
+            for r in t.sort_values('tto3_minus_tto1').head(40)[avail].to_dict(orient='records'):
+                out['tto_penalty'].append(_round(r, ['tto1_rate', 'tto2_rate', 'tto3_rate', 'tto3_minus_tto1'], 4))
+
+    # 4. Bullpen quality — 2026
+    p = out_dir / 'bullpen_quality.csv'
+    if p.exists():
+        b = pd.read_csv(p)
+        b = b[b['year'] == 2026].sort_values('bullpen_fp_per_ip', ascending=False)
+        cols_b = ['team', 'bullpen_fp_per_ip', 'n_rps', 'bullpen_ip']
+        for r in b[cols_b].to_dict(orient='records'):
+            out['bullpen_2026'].append(_round(r, ['bullpen_fp_per_ip', 'bullpen_ip'], 3))
+
+    # 5. Pitch arsenal weakness (top whiff% per pitch group, hitters w/ ≥100 swings)
+    p = out_dir / 'batter_pitch_weakness.csv'
+    if p.exists():
+        bw = pd.read_csv(p)
+        bw = bw[bw['swings'].fillna(0) >= 100].dropna(subset=['player_name', 'whiff_per_swing'])
+        # For each pitch group, top-20 whiff hitters
+        for ptg, sub in bw.groupby('ptg'):
+            top = sub.sort_values('whiff_per_swing', ascending=False).head(20)
+            for r in top[['player_name', 'ptg', 'swings', 'whiff_per_swing', 'xwoba_avg']].to_dict(orient='records'):
+                out['pitch_weakness_top'].append(_round(r, ['whiff_per_swing', 'xwoba_avg'], 3))
+
+    return out
+
+
 def main():
     records, my_team, rp_records = build_records()
     hitter_records, hitter_payload = build_hitter_records()
@@ -3554,6 +3848,7 @@ def main():
     meta = build_meta()
     h2_meta = build_h2_meta()
     audit = build_team_audit()
+    advisory = build_advisory_payload()
 
     proj_json     = json.dumps(records, separators=(',', ':'))
     meta_json     = json.dumps(meta, separators=(',', ':'))
@@ -3562,6 +3857,7 @@ def main():
     relievers_json= json.dumps(rp_records, separators=(',', ':'))
     h2_meta_json  = json.dumps(h2_meta, separators=(',', ':'))
     audit_json    = json.dumps(audit, separators=(',', ':'))
+    advisory_json = json.dumps(advisory, separators=(',', ':'))
 
     html = (HTML_TEMPLATE
             .replace('__PROJECTIONS_JSON__', proj_json)
@@ -3570,7 +3866,8 @@ def main():
             .replace('__HITTERS_JSON__', hitters_json)
             .replace('__RELIEVERS_JSON__', relievers_json)
             .replace('__MY_TEAM_JSON__', my_team_json)
-            .replace('__AUDIT_JSON__', audit_json))
+            .replace('__AUDIT_JSON__', audit_json)
+            .replace('__ADVISORY_JSON__', advisory_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
     OUT_DOCS.parent.mkdir(parents=True, exist_ok=True)
