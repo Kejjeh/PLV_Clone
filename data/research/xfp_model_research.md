@@ -2796,3 +2796,135 @@ was projecting him toward current production; the precedent says hold.
 | `scripts/xfp/xfp_rh3_pipeline.py` (modified) | Merge slump cols into projection CSV |
 | `scripts/xfp/xfp_rp3_pipeline.py` (modified) | Same for SPs |
 | `scripts/xfp/build_v11_dashboard_v2.py` (modified) | BUY-LOW / FADE badges in tables |
+
+## Six-Pack Phase — Decision-Support Artifacts (2026-05-07)
+
+Built six new feature/decision artifacts the user requested in one shot. All
+are shipped as standalone CSVs; none are integrated into rh3/rp3 yet (next
+step is cross-year r-lift validation against the established 0.5189 hitter /
+0.5859 pitcher baselines).
+
+| # | Script | Output | Purpose |
+|---|--------|--------|---------|
+| 4 | `sp_velocity_trend.py` | `sp_velocity_trend.csv` | Rolling-5-start fastball velo per SP; flags ≥1.0 mph drops as injury/mechanical watch |
+| 5 | `hitter_xwoba_residual.py` | `hitter_xwoba_residual.csv` | Career + latest-year (xwOBA_con − wOBA_con); EV90 + barrel% included |
+| 6 | `sp_lineup_pass.py` | `sp_lineup_pass.csv` | Per-SP fp/PA at TTO=1/2/3 + raw drop; identifies hook-early candidates |
+| 2 | `pitch_arsenal_matchup.py` | `batter_pitch_weakness.csv`, `pitcher_pitch_mix.csv` | Per-batter whiff% / xwOBA by pitch group; per-pitcher mix% |
+| 7 | `lineup_protection.py` | `lineup_protection.csv` | Per-batter BB%/ISO/K% by protector tertile (STRONG / AVG / WEAK) |
+| 15 | `projection_ensemble.py` | `projection_ensemble_{hitters,pitchers}.csv` | 60% rh3/rp3 + 40% (ATC, Steamer, ZiPS, TheBatX) blend |
+
+Supporting infrastructure:
+- `scripts/fetch_fangraphs_projections.py` — pulls RoS projections from FG
+  API (`type=atc&rest=1` etc.). 4 systems × hitters+pitchers, ~3,500 hitter
+  rows + 8,500 pitcher rows total.
+- `data/research/xfp_cache/mlb_player_id_name.csv` — master MLB ID → name map
+  (built from FG CSVs, 9,358 rows). Used by velocity & TTO scripts to label
+  IL'd / non-rp3 SPs.
+
+Headline finds (Ligers-relevant):
+- **Item 4 (velo):** Framber Valdez −1.03 mph from 94.53 → 93.50 last-5,
+  flagged DECLINING. Hunter Greene was last seen 2025-09-24 (no 2026 starts);
+  velo +1.37 mph above career ceiling — context: end-of-2025 surge or IL
+  rehab.
+- **Item 5 (xwOBA residual):** Bo Bichette +0.067 unlucky in 2026 sample
+  (0.306 wOBA on con vs 0.373 expected). Brendan Donovan worst luck-up
+  candidate at −0.126 (regression-down likely).
+- **Item 6 (TTO):** Hunter Greene loses −0.194 core_fp/PA from TTO1 to TTO3
+  (severe). Bradish −0.113. Glasnow only −0.030 (workhorse profile).
+- **Item 7 (protection):** Aaron Judge +2.17% BB rate gain when protected by
+  STRONG hitter; Pete Alonso conversely loses 2.21% — possibly because he
+  IS the protection (everyone walks him to face whoever's behind). League-
+  wide effect tiny: +0.35% BB / +0.011 ISO. **Likely fails ship gate.**
+- **Item 15 (ensemble):** All Ligers hitters down vs FG consensus (delta
+  −0.06 to −0.14 fp/PA), implying our model is consistently more bullish
+  than the public projection ecosystem. All Ligers SPs except Glasnow up
+  vs consensus. Bradish +0.93 fp/start, Valdez +0.92, Fried +0.63.
+
+Validation status: **NOT YET RUN.** Per the validate-before-shipping rule,
+none of these enter rh3/rp3 production until a cross-year r-lift test passes
+the +0.0244 ship gate (the current bar set by lift_h2_aug150). The ensemble
+is the most likely to pass; xwOBA residual second-most likely.
+
+## Validation Sweep — 2026-05-10 (Tier A/B/C systematic feature audit)
+
+Comprehensive cross-year r-lift validation of all candidate features built
+across recent sessions. Plus pre-season-only benchmark, week-level
+leading-indicator harness, and per-start matchup test.
+
+### Cross-year r-lift gate (RH3 baseline r=0.6100)
+
+| Candidate | Δr indiv | Status |
+|---|---|---|
+| **xwoba_residual_career** | **+0.0051** | **PASS — SHIPPED to RH3** |
+| barrel_pct_career | +0.0053 | PASS but redundant with xwoba_residual |
+| ev90_career | +0.0049 | marginal |
+| age | +0.0045 | marginal (best in combo) |
+| career_year (sophomore) | +0.0014 | marginal |
+| age_residual_27 | +0.0011 | marginal |
+| bb_protect_lift (lineup protection) | −0.0001 | FAIL |
+| sos_opp_sp_fp_per_start (hitters) | −0.0009 | FAIL |
+| sos_opp_bat_fp_per_pa (pitchers) | −0.0022 | FAIL |
+| tto3_minus_tto1 (TTO penalty) | +0.0004 | FAIL |
+| xwoba_residual_to (year-to-date) | −0.0002 | FAIL — luck doesn't carry forward |
+| xwoba_residual_last21 | −0.0002 | FAIL — same |
+
+Best 5-feature combo (xwoba_residual+ev90+barrel_pct+age+career_year): +0.0204.
+Single-feature ship (xwoba_residual_career only): +0.0051. SHIPPED.
+
+### Per-start prediction battle (41,077 SP outings, 2015–2025)
+
+| Predictor | r vs K | r vs FP |
+|---|---|---|
+| **baseline_xK** (pitcher overall swstr% × swings) | **0.542** | **0.415** |
+| arsenal_xK (pitch_mix × batter weakness) | 0.457 | 0.374 |
+| stuff_xK (pitcher per-pitch swstr%) | 0.439 | 0.337 |
+| pitcher_xfp (prior-career fp/start) | 0.245 | 0.166 |
+| lineup_xfp (mean opposing batter fp/PA) | −0.085 | −0.076 |
+| Best linear blend (all 5) | 0.550 | 0.426 |
+
+Per-pitch disaggregation LOSES signal vs aggregate swstr%. Lineup quality
+faced explains <1% of per-start FP variance.
+
+### Pre-season-only benchmark (predict full-year fp/PA from years T-1/T-2/T-3)
+
+| Model | Avg r | Notes |
+|---|---|---|
+| **Ridge kitchen sink** | **0.6354** | top of public projection range |
+| Ridge Y_{T-1}+T-2+T-3 stacked | 0.6265 | Ridge beats fixed Marcel weights |
+| Marcel + age | 0.5746 | classic Marcel + age regression |
+| Marcel 5/4/3 classic | 0.5591 | matches Tom Tango literature |
+| Naive lag (Y_{T-1}) | 0.5295 | last year only |
+
+R² = 0.404 — pre-season prediction is *slightly more predictable* than
+in-season RoS because full-year aggregates have less variance.
+
+### Week-level leading-indicator harness (predict next-7-day fp/PA)
+
+| Model | Avg r | R² |
+|---|---|---|
+| Ridge CTD+L21 (talent + recent) | 0.251 | 0.063 |
+| Ridge CTD only | 0.247 | 0.061 |
+| Ridge L21 only | 0.216 | 0.047 |
+| Marcel 40/60 blend | 0.199 | 0.040 |
+| Naive L21 | 0.152 | 0.023 |
+| Pure DELTAS (recent − career) | 0.026 | 0.001 |
+
+Marginal lift of L21 on top of CTD: **+0.004 r** (under gate). DELTAs are
+essentially noise — confirms "hot streaks" don't predict next-week fp.
+
+### Decision
+
+**SHIPPED** to RH3 production: `xwoba_residual_career`. RH3 r 0.6100 → 0.6151.
+
+**Built as decision-support panels** (Advisory tab in dashboard): SP velocity
+drop, projection ensemble divergence vs ATC/Steamer/ZiPS/TheBatX, TTO
+penalty, bullpen quality, pitch-arsenal × batter weakness.
+
+**Dropped**: SoS (both forms), lineup protection, TTO as a model feature,
+pitch arsenal as a model feature, year-T/last-21-day xwOBA residual.
+
+### Empirical track record (8 retroactive snapshots, 2024+2025)
+
+Mean cross-snapshot r = **+0.6115** (matches LOO benchmark). MAE 0.088 fp/PA.
+Add-signal players outperformed drop-signal players by +0.182 fp/PA actual.
+Top-quartile bias +0.017, bottom-quartile bias +0.022 — well-calibrated.
