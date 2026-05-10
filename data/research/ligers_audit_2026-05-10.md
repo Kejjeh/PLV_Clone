@@ -2,7 +2,7 @@
 
 Record: 4-1 (Standing #2)
 Roster: 29 players
-Total starting-lineup RoS value: **4598.7 FP**
+Total starting-lineup RoS value: **4612.2 FP**
 
 ## Starting lineup
 
@@ -25,18 +25,18 @@ Total starting-lineup RoS value: **4598.7 FP**
 | SP2 | Jose Soriano | 239.3 | hold | recent form -6.92 |
 | SP3 | Freddy Peralta | 230.3 | hold | recent form -1.00 |
 | SP4 | Max Fried | 228.1 | hold | recent form -1.04 |
-| SP5 | Framber Valdez | 207.4 | hold | recent form +2.49 |
+| SP5 | Hunter Greene | 220.9 | il | IL |
 | RP1 | Jhoan Duran | 242.1 | — | — |
 | RP2 | Pete Fairbanks | 224.7 | — | — |
 | RP3 | Ryan Helsley | 205.9 | — | — |
 
 ## Bench
 
+- Framber Valdez — value 207.4, signal=hold
 - Parker Messick — value 205.2, signal=hold
 - Will Warren — value 202.7, signal=hold
+- Carlos Rodon — value 199.3, signal=il
 - Kyle Bradish — value 180.4, signal=hold
 - Daniel Palencia — value 155.1, signal=—
 - Lucas Erceg — value 153.8, signal=—
 - Tanner Scott — value 152.4, signal=—
-- Carlos Rodon — value 0.0, signal=—
-- Hunter Greene — value 0.0, signal=—

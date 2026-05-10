@@ -326,6 +326,34 @@ def main():
     df_26 = df_26[(df_26['split_day'] == latest_split) & (df_26['gs_to'] >= EVAL_GS_MIN)]
     valid = df_26.dropna(subset=RP3_FEATS).copy()
     valid['xfp_rp3_per_start'] = pipe.predict(valid[RP3_FEATS].values)
+    valid['prior_source'] = 'rp3_model'
+
+    # IL-vet fallback: any pitcher with a valid Marcel prior but no rolling
+    # 2026 row (because they have 0 starts — IL all season). Project them
+    # using prior alone, discounted for rust/IL.
+    IL_PRIOR_DISCOUNT = 0.85
+    IL_PRIOR_MIN_GS = 5  # need ≥5 GS-equivalent of prior history
+    projected_ids = set(valid['pitcher'])
+    prior_only = prior[~prior['pitcher'].isin(projected_ids)
+                        & (prior['year'] == 2026)
+                        & (prior['prior_gs_eff'] >= IL_PRIOR_MIN_GS)].copy()
+    if not prior_only.empty:
+        prior_only['xfp_rp3_per_start'] = (prior_only['prior_fp_per_start']
+                                            * IL_PRIOR_DISCOUNT).round(2)
+        prior_only['gs_to'] = 0
+        prior_only['fp_per_start_to'] = prior_only['prior_fp_per_start']
+        prior_only['fp_per_start_last21'] = prior_only['prior_fp_per_start']
+        prior_only['is_on_il_at_split'] = 1
+        prior_only['split_day'] = latest_split
+        prior_only['year'] = 2026
+        prior_only['prior_source'] = 'marcel_il'
+        # Align columns with valid by filling missing with 0 (numeric defaults)
+        for c in valid.columns:
+            if c not in prior_only.columns:
+                prior_only[c] = 0.0
+        prior_only = prior_only[valid.columns]
+        valid = pd.concat([valid, prior_only], ignore_index=True)
+        print(f'  injected {len(prior_only)} IL-vet projections from Marcel prior')
 
     # Pred-bucket cuts for sigma
     train_for_buckets = rolling.dropna(subset=RP3_FEATS + [TARGET])
@@ -356,8 +384,11 @@ def main():
 
     # Names — multiyr only has MLB-active pitchers; for rookies (MiLB-prior
     # source) fall back to the MiLB priors CSV which carries their names.
-    sp_26 = multiyr[multiyr['year'] == 2026][['pitcher', 'player_name']].drop_duplicates('pitcher')
-    valid = valid.drop_duplicates('pitcher').merge(sp_26, on='pitcher', how='left')
+    # Use ALL years of multiyr (not just 2026) so IL-vets with no 2026 games
+    # still get their name.
+    sp_any = (multiyr.sort_values('year', ascending=False)
+              [['pitcher', 'player_name']].drop_duplicates('pitcher'))
+    valid = valid.drop_duplicates('pitcher').merge(sp_any, on='pitcher', how='left')
     if MILB_PRIORS_CSV.exists():
         milb_names = pd.read_csv(MILB_PRIORS_CSV)[['pitcher', 'name']].rename(
             columns={'name': 'milb_name'}).drop_duplicates('pitcher')
