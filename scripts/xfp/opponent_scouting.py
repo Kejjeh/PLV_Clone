@@ -32,9 +32,12 @@ sys.path.insert(0, '.')
 ROOT = Path('c:/Users/Joshua/plv_clone')
 OUT = ROOT / 'data' / 'outputs'
 
-# Roster positional needs (BrownU 8-team H2H typical setup)
-ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1, 'OF': 3, 'DH': 1,
-                'SP': 5, 'RP': 3}  # starts; bench beyond
+# Roster positional needs (BrownU 8-team H2H — confirmed 2026-05-10)
+# 13 hitter slots: C, 1B, 2B, 3B, SS, MI (2B/SS), CI (1B/3B), OF×5, UTIL
+# 8 pitcher slots: SP×5, RP×3
+ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
+                'OF': 5, 'MI': 1, 'CI': 1, 'UTIL': 1,
+                'SP': 5, 'RP': 3}
 
 
 def _norm(s):

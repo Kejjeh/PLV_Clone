@@ -2946,7 +2946,8 @@ function LineupOverlap({ overlap, colors }) {
     </div>;
   }
 
-  const POS_ORDER = ['C', '1B', '2B', '3B', 'SS', 'OF', 'SP', 'RP'];
+  const POS_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
+                     'OF', 'UTIL', 'SP', 'RP'];
   const fmt = (v, d = 1) => v == null || isNaN(v) ? '—' : Number(v).toFixed(d);
   const sign = (v, d = 1) => {
     if (v == null || isNaN(v)) return '—';

@@ -1,20 +1,25 @@
 """opponent_lineup_overlap.py — per-opponent per-position edge analyzer.
 
-For each of the 7 opponents, computes:
-  - Starting-lineup projected RoS FP per position (C, 1B, 2B, 3B, SS, OF×3, SP×5, RP×3)
-  - Per-position edge (Ligers value − opponent value)
-  - Total edge across all positions (sum)
-  - Biggest advantage / biggest weakness for trade-target framing
-  - Redundancy score (how much of opp's strength is in positions where we ALSO
-    have surplus — i.e., they can't trade their strength to fill our gaps because
-    we don't have a gap there)
+For each of the 7 opponents, computes Ligers' projected RoS FP at each
+STARTING SLOT vs theirs, edge, and trade-target framing.
+
+BrownU starting lineup (confirmed 2026-05-10 from ESPN screenshot):
+  Hitters (13 slots): C, 1B, 2B, 3B, SS, MI (2B/SS), CI (1B/3B), OF×5, UTIL
+  Pitchers (8 slots): SP×5, RP×3
+  Bench + IL beyond starters.
+
+Slot-fill logic per team:
+  1) Greedily fill primary positional slots from best-projected eligible
+     player. Uses ESPN `eligibleSlots` so multi-position players (Vladdy
+     1B/3B, Donovan 2B/3B/OF, etc.) get placed optimally.
+  2) After primary slots, fill MI from best-leftover 2B/SS eligibility.
+  3) Then CI from best-leftover 1B/3B eligibility.
+  4) Then UTIL from best-leftover hitter.
+  5) Edge = (my slot value) − (their slot value), summed gives total edge.
 
 Output:
-  data/outputs/opponent_lineup_overlap.csv (long table: team × position rows)
+  data/outputs/opponent_lineup_overlap.csv (long: team × slot)
   data/outputs/opponent_lineup_overlap.json (per-opp summary for dashboard)
-
-Usage:
-    python scripts/xfp/opponent_lineup_overlap.py
 """
 from __future__ import annotations
 import json
@@ -29,18 +34,45 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 
 OUT = ROOT / 'data' / 'outputs'
-
 MY_TEAM_NAME = 'New York Ligers'
 
-# Starting-lineup slot counts (BrownU H2H)
-STARTERS = {
-    'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1, 'OF': 3,
-    'SP': 5, 'RP': 3,
-}
-OF_POSITIONS = {'OF', 'CF', 'LF', 'RF'}
+# Slot fill order matters: fill restrictive slots first, then flex.
+SLOT_FILL_ORDER = [
+    ('C',    {'C'}),
+    ('1B',   {'1B'}),
+    ('2B',   {'2B'}),
+    ('3B',   {'3B'}),
+    ('SS',   {'SS'}),
+    ('OF1',  {'OF', 'LF', 'CF', 'RF'}),
+    ('OF2',  {'OF', 'LF', 'CF', 'RF'}),
+    ('OF3',  {'OF', 'LF', 'CF', 'RF'}),
+    ('OF4',  {'OF', 'LF', 'CF', 'RF'}),
+    ('OF5',  {'OF', 'LF', 'CF', 'RF'}),
+    ('MI',   {'2B', 'SS', '2B/SS'}),
+    ('CI',   {'1B', '3B', '1B/3B'}),
+    ('UTIL', {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH', 'UTIL'}),
+    ('SP1',  {'SP', 'P'}),
+    ('SP2',  {'SP', 'P'}),
+    ('SP3',  {'SP', 'P'}),
+    ('SP4',  {'SP', 'P'}),
+    ('SP5',  {'SP', 'P'}),
+    ('RP1',  {'RP', 'P'}),
+    ('RP2',  {'RP', 'P'}),
+    ('RP3',  {'RP', 'P'}),
+]
 
-# Estimated remaining starts per SP (rough proxy — will refine if we want)
-SP_REMAINING_STARTS = 18  # ~20 weeks left of regular season, every 5 days = 4-ish starts/mo
+# Aggregate slot grouping for display (collapse OF1-5 into single "OF" row)
+SLOT_DISPLAY_GROUP = {
+    'C': 'C', '1B': '1B', '2B': '2B', '3B': '3B', 'SS': 'SS',
+    'OF1': 'OF', 'OF2': 'OF', 'OF3': 'OF', 'OF4': 'OF', 'OF5': 'OF',
+    'MI': 'MI (2B/SS)', 'CI': 'CI (1B/3B)', 'UTIL': 'UTIL',
+    'SP1': 'SP', 'SP2': 'SP', 'SP3': 'SP', 'SP4': 'SP', 'SP5': 'SP',
+    'RP1': 'RP', 'RP2': 'RP', 'RP3': 'RP',
+}
+DISPLAY_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
+                  'OF', 'UTIL', 'SP', 'RP']
+
+SP_REMAINING_STARTS = 18
 
 
 def _norm(s):
@@ -48,11 +80,10 @@ def _norm(s):
     s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
     s = re.sub(r'[,]+', ' ', s)
     parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))  # order-independent sorted-words key
+    return ''.join(sorted(parts))
 
 
 def load_projections():
-    """Returns (hitter_lookup, pitcher_lookup) keyed by normalized name."""
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
     rh['nk'] = rh['player_name'].map(_norm)
     rh = rh.drop_duplicates('nk', keep='first')
@@ -61,8 +92,6 @@ def load_projections():
         h_lookup[r['nk']] = {
             'name': r['player_name'],
             'ros_fp': float(r.get('expected_total_fp_remaining') or 0),
-            'per_pa': float(r.get('xfp_rh3_per_pa') or 0),
-            'pa_remaining': float(r.get('expected_pa_remaining') or 0),
         }
 
     rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
@@ -73,148 +102,155 @@ def load_projections():
         per_start = float(r.get('xfp_rp3_per_start') or 0)
         p_lookup[r['nk']] = {
             'name': r['player_name'],
-            'per_start': per_start,
-            'ros_fp': per_start * SP_REMAINING_STARTS,  # crude SP-side projection
+            'ros_fp': per_start * SP_REMAINING_STARTS,
         }
     return h_lookup, p_lookup
 
 
-def position_bucket(pos: str) -> str | None:
-    """Map raw ESPN position to lineup slot."""
-    if pos in OF_POSITIONS:
-        return 'OF'
-    if pos in STARTERS:
-        return pos
-    if pos == 'DH':
-        # Add DH to OF? No — DH slot doesn't exist in our STARTERS map. Treat as bench.
-        return None
-    return None
-
-
-def evaluate_team(roster_df: pd.DataFrame, h_lookup: dict, p_lookup: dict) -> dict:
-    """Return per-position bucketed list of {name, value} for one team."""
-    buckets = defaultdict(list)
-    for _, p in roster_df.iterrows():
-        slot = position_bucket(p['position'])
-        if slot is None:
-            continue
-        nk = _norm(p['player_name'])
-        if slot in ('SP', 'RP'):
-            info = p_lookup.get(nk)
-            if not info:
-                continue
-            buckets[slot].append({'name': p['player_name'], 'value': info['ros_fp']})
+def build_team_players(league_team, h_lookup, p_lookup):
+    """Return list of {name, eligible: set, value, is_pitcher}."""
+    out = []
+    for p in league_team.roster:
+        elig = set(getattr(p, 'eligibleSlots', None) or [p.position])
+        nk = _norm(p.name)
+        is_pitcher = bool(elig & {'SP', 'RP', 'P'})
+        info = (p_lookup if is_pitcher else h_lookup).get(nk)
+        if info is None:
+            value = 0.0
         else:
-            info = h_lookup.get(nk)
-            if not info:
+            value = info['ros_fp']
+        out.append({
+            'name': p.name, 'eligible': elig, 'value': value, 'is_pitcher': is_pitcher,
+        })
+    return out
+
+
+def fill_slots(players: list[dict]) -> tuple[dict, list]:
+    """Greedy assignment of players to slots in SLOT_FILL_ORDER.
+
+    Returns ({slot: {name, value}}, [bench_players_unused]).
+    Pitcher slots filtered to pitcher-eligible only; flex hitter slots
+    skip pitchers automatically (UTIL also doesn't take pitchers).
+    """
+    available = sorted(players, key=lambda x: -x['value'])
+    assigned = {}
+    used = set()  # player names already placed
+    for slot, allowed in SLOT_FILL_ORDER:
+        is_pitch_slot = slot.startswith(('SP', 'RP'))
+        for p in available:
+            if p['name'] in used:
                 continue
-            buckets[slot].append({'name': p['player_name'], 'value': info['ros_fp']})
+            if p['is_pitcher'] != is_pitch_slot:
+                continue
+            if not (p['eligible'] & allowed):
+                continue
+            assigned[slot] = {'name': p['name'], 'value': p['value']}
+            used.add(p['name'])
+            break
+        else:
+            assigned[slot] = {'name': None, 'value': 0.0}
+    bench = [p for p in available if p['name'] not in used]
+    return assigned, bench
 
-    # Sort each bucket by value descending
-    for k in buckets:
-        buckets[k].sort(key=lambda x: -x['value'])
-    return dict(buckets)
 
-
-def position_value(bucket_list: list[dict], n_starters: int) -> tuple[float, list[str], float]:
-    """Return (starter_total_value, starter_names, bench_value_at_position)."""
-    starters = bucket_list[:n_starters]
-    bench = bucket_list[n_starters:]
-    starter_total = sum(p['value'] for p in starters)
-    bench_total = sum(p['value'] for p in bench) * 0.25  # bench worth ~25% of starter
-    return starter_total, [p['name'] for p in starters], bench_total
+def collapse_to_groups(slot_assignment: dict) -> dict:
+    """Sum slot values into display groups (OF1-5 → OF, SP1-5 → SP, etc.)."""
+    grouped = defaultdict(lambda: {'value': 0.0, 'starters': []})
+    for slot, info in slot_assignment.items():
+        group = SLOT_DISPLAY_GROUP.get(slot, slot)
+        grouped[group]['value'] += info['value']
+        if info['name']:
+            grouped[group]['starters'].append(info['name'])
+    return dict(grouped)
 
 
 def main():
     from app import espn_connector as ec
-    teams = ec.get_all_teams()
-    print(f'Loaded {len(teams)} player-roster rows across {teams["team_name"].nunique()} teams')
-
     h_lookup, p_lookup = load_projections()
-    print(f'Projections: {len(h_lookup)} hitters, {len(p_lookup)} pitchers')
+    league = ec._get_league()
 
-    # Build per-team buckets
-    team_buckets = {}
-    for tname, grp in teams.groupby('team_name'):
-        team_buckets[tname] = evaluate_team(grp, h_lookup, p_lookup)
+    # Build per-team player lists from league teams (use eligibleSlots)
+    team_data = {}
+    team_standing = {}
+    for t in league.teams:
+        team_data[t.team_name] = build_team_players(t, h_lookup, p_lookup)
+        team_standing[t.team_name] = {'wins': t.wins, 'losses': t.losses,
+                                        'standing': t.standing}
 
-    if MY_TEAM_NAME not in team_buckets:
-        print(f'ERROR: {MY_TEAM_NAME} not found in roster snapshot')
-        return
+    if MY_TEAM_NAME not in team_data:
+        print(f'ERROR: {MY_TEAM_NAME} not in league'); return
 
-    # Compute Ligers per-position values once
-    my_values = {}
-    for slot, n in STARTERS.items():
-        val, names, bench = position_value(team_buckets[MY_TEAM_NAME].get(slot, []), n)
-        my_values[slot] = {'value': val, 'names': names, 'bench': bench, 'depth': len(team_buckets[MY_TEAM_NAME].get(slot, []))}
+    my_slot_assignment, my_bench = fill_slots(team_data[MY_TEAM_NAME])
+    my_groups = collapse_to_groups(my_slot_assignment)
+    print(f'\nLigers starting lineup ({sum(1 for s in my_slot_assignment if my_slot_assignment[s]["name"])} slots filled):')
+    for slot, info in my_slot_assignment.items():
+        print(f'  {slot:<6s} {info["name"] or "(empty)":<30s}  {info["value"]:.1f} FP')
 
-    # Try to attach standings + head-to-head if available
-    try:
-        league = ec._get_league()
-        team_standing = {t.team_name: {'wins': t.wins, 'losses': t.losses, 'standing': t.standing}
-                          for t in league.teams}
-    except Exception:
-        team_standing = {}
-
-    h2h_path = OUT / 'opponent_matchup_history.json'
+    # Head-to-head history if available
     h2h = {}
+    h2h_path = OUT / 'opponent_matchup_history.json'
     if h2h_path.exists():
         try:
-            h2h_data = json.loads(h2h_path.read_text(encoding='utf-8'))
-            for opp, s in h2h_data.get('summary', {}).items():
-                h2h[opp] = s
+            h2h = json.loads(h2h_path.read_text(encoding='utf-8')).get('summary', {})
         except Exception:
             pass
 
-    # Per-opponent edge analysis
     opps = []
     long_rows = []
-    for tname, buckets in team_buckets.items():
+    for tname, players in team_data.items():
         if tname == MY_TEAM_NAME:
             continue
-        opp_values = {}
-        per_pos = {}
+        opp_assignment, opp_bench = fill_slots(players)
+        opp_groups = collapse_to_groups(opp_assignment)
+
+        per_group = {}
         total_edge = 0.0
-        for slot, n in STARTERS.items():
-            opp_val, opp_names, opp_bench = position_value(buckets.get(slot, []), n)
-            opp_values[slot] = {'value': opp_val, 'names': opp_names, 'bench': opp_bench,
-                                 'depth': len(buckets.get(slot, []))}
-            edge = my_values[slot]['value'] - opp_val
-            per_pos[slot] = {
-                'my_value': round(my_values[slot]['value'], 1),
-                'my_starters': my_values[slot]['names'],
-                'my_bench_val': round(my_values[slot]['bench'], 1),
-                'opp_value': round(opp_val, 1),
-                'opp_starters': opp_names,
-                'opp_bench_val': round(opp_bench, 1),
+        for g in DISPLAY_ORDER:
+            mv = my_groups.get(g, {'value': 0, 'starters': []})
+            ov = opp_groups.get(g, {'value': 0, 'starters': []})
+            edge = mv['value'] - ov['value']
+            per_group[g] = {
+                'my_value': round(mv['value'], 1),
+                'my_starters': mv['starters'],
+                'opp_value': round(ov['value'], 1),
+                'opp_starters': ov['starters'],
                 'edge': round(edge, 1),
             }
             total_edge += edge
             long_rows.append({
-                'opp_name': tname, 'position': slot,
-                'my_value': round(my_values[slot]['value'], 1),
-                'opp_value': round(opp_val, 1),
+                'opp_name': tname, 'slot_group': g,
+                'my_value': round(mv['value'], 1),
+                'opp_value': round(ov['value'], 1),
                 'edge': round(edge, 1),
             })
 
-        # Biggest advantage/weakness
-        pos_sorted = sorted(per_pos.items(), key=lambda x: -x[1]['edge'])
-        biggest_advantage = pos_sorted[0] if pos_sorted else None
-        biggest_weakness = pos_sorted[-1] if pos_sorted else None
+        sorted_groups = sorted(per_group.items(), key=lambda x: -x[1]['edge'])
+        biggest_adv = sorted_groups[0]
+        biggest_wk = sorted_groups[-1]
 
-        # Trade-target framing: where they're stacked AND we're thin
+        # Trade targets: positions where they have surplus (high bench at slot)
+        # AND we're behind (edge < -10)
         trade_targets = []
-        for slot in STARTERS:
-            if per_pos[slot]['edge'] < -10 and opp_values[slot]['depth'] > STARTERS[slot]:
-                # They have surplus AND we're weak — they could trade their depth here for our depth elsewhere
+        opp_bench_values_by_slot = defaultdict(float)
+        opp_bench_names_by_slot = defaultdict(list)
+        for p in opp_bench:
+            for slot, allowed in SLOT_FILL_ORDER:
+                if slot.startswith(('SP', 'RP')) != p['is_pitcher']:
+                    continue
+                if p['eligible'] & allowed:
+                    group = SLOT_DISPLAY_GROUP.get(slot, slot)
+                    opp_bench_values_by_slot[group] += p['value']
+                    opp_bench_names_by_slot[group].append(p['name'])
+                    break
+        for g in DISPLAY_ORDER:
+            if per_group[g]['edge'] < -15 and opp_bench_values_by_slot[g] > 0:
                 trade_targets.append({
-                    'position': slot,
-                    'their_bench_value': per_pos[slot]['opp_bench_val'],
-                    'their_starters': per_pos[slot]['opp_starters'],
-                    'my_edge': per_pos[slot]['edge'],
+                    'position': g,
+                    'my_edge': per_group[g]['edge'],
+                    'their_bench_value': round(opp_bench_values_by_slot[g], 1),
+                    'their_bench_names': opp_bench_names_by_slot[g][:3],
                 })
-        # Sort by biggest deficit
-        trade_targets.sort(key=lambda x: x['my_edge'])
+        trade_targets.sort(key=lambda t: t['my_edge'])
 
         std = team_standing.get(tname, {})
         h2h_rec = h2h.get(tname, {})
@@ -227,41 +263,41 @@ def main():
                 f"-{h2h_rec['ties']}" if h2h_rec.get('ties') else ''),
             'h2h_avg_margin': h2h_rec.get('avg_margin'),
             'total_edge': round(total_edge, 1),
-            'biggest_advantage': biggest_advantage[0] if biggest_advantage else None,
-            'biggest_advantage_edge': biggest_advantage[1]['edge'] if biggest_advantage else None,
-            'biggest_weakness': biggest_weakness[0] if biggest_weakness else None,
-            'biggest_weakness_edge': biggest_weakness[1]['edge'] if biggest_weakness else None,
-            'per_position': per_pos,
+            'biggest_advantage': biggest_adv[0],
+            'biggest_advantage_edge': biggest_adv[1]['edge'],
+            'biggest_weakness': biggest_wk[0],
+            'biggest_weakness_edge': biggest_wk[1]['edge'],
+            'per_position': per_group,
             'trade_targets': trade_targets,
         })
 
-    opps.sort(key=lambda o: -(o['total_edge'] or 0))
+    opps.sort(key=lambda o: -o['total_edge'])
 
-    # Save
     long_df = pd.DataFrame(long_rows)
     long_df.to_csv(OUT / 'opponent_lineup_overlap.csv', index=False)
-    print(f'wrote {OUT / "opponent_lineup_overlap.csv"}')
+
+    my_position_values = {g: {'value': round(my_groups.get(g, {'value': 0})['value'], 1),
+                                'starters': my_groups.get(g, {'starters': []})['starters']}
+                            for g in DISPLAY_ORDER}
 
     payload = {
         'my_team': MY_TEAM_NAME,
-        'my_position_values': {k: {'value': round(v['value'], 1),
-                                     'starters': v['names'],
-                                     'bench_val': round(v['bench'], 1),
-                                     'depth': v['depth']}
-                                for k, v in my_values.items()},
+        'my_position_values': my_position_values,
+        'my_slot_assignment': {s: my_slot_assignment[s] for s in my_slot_assignment},
         'opponents': opps,
     }
     with open(OUT / 'opponent_lineup_overlap.json', 'w', encoding='utf-8') as f:
         json.dump(payload, f, separators=(',', ':'), default=str)
+
+    print(f'\nwrote {OUT / "opponent_lineup_overlap.csv"}')
     print(f'wrote {OUT / "opponent_lineup_overlap.json"}')
 
-    # Console summary
-    print('\n=== Per-opponent lineup overlap (sorted by my projected edge) ===')
-    print(f'{"Opponent":<28s} {"H2H":<7s} {"Edge":>8s}  {"Strongest":<10s}  {"Weakest":<12s}')
+    print('\n=== Per-opponent total edge (sorted desc) ===')
+    print(f'{"Opponent":<28s} {"H2H":<7s} {"Edge":>8s}  {"Strongest":<15s}  {"Weakest":<15s}')
     for o in opps:
-        adv = f"{o['biggest_advantage']}({o['biggest_advantage_edge']:+.0f})" if o['biggest_advantage'] else '—'
-        wk = f"{o['biggest_weakness']}({o['biggest_weakness_edge']:+.0f})" if o['biggest_weakness'] else '—'
-        print(f'  {o["opp_name"]:<28s} {o["h2h_record"]:<7s} {o["total_edge"]:>+8.1f}  {adv:<10s}  {wk:<12s}')
+        print(f'  {o["opp_name"]:<28s} {o["h2h_record"]:<7s} {o["total_edge"]:>+8.1f}  '
+              f'{o["biggest_advantage"]}({o["biggest_advantage_edge"]:+.0f}){"":<5s}  '
+              f'{o["biggest_weakness"]}({o["biggest_weakness_edge"]:+.0f})')
 
 
 if __name__ == '__main__':
