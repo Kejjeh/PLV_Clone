@@ -61,6 +61,7 @@ SLOT_FILL_ORDER = [
     ('RP1',  {'RP'}),
     ('RP2',  {'RP'}),
     ('RP3',  {'RP'}),
+    ('RP4',  {'RP'}),
 ]
 
 # Aggregate slot grouping for display (collapse OF1-5 into single "OF" row)
@@ -69,7 +70,7 @@ SLOT_DISPLAY_GROUP = {
     'OF1': 'OF', 'OF2': 'OF', 'OF3': 'OF', 'OF4': 'OF', 'OF5': 'OF',
     'MI': 'MI (2B/SS)', 'CI': 'CI (1B/3B)', 'UTIL': 'UTIL',
     'SP1': 'SP', 'SP2': 'SP', 'SP3': 'SP', 'SP4': 'SP', 'SP5': 'SP',
-    'RP1': 'RP', 'RP2': 'RP', 'RP3': 'RP',
+    'RP1': 'RP', 'RP2': 'RP', 'RP3': 'RP', 'RP4': 'RP',
 }
 DISPLAY_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
                   'OF', 'UTIL', 'SP', 'RP']

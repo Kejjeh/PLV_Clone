@@ -32,12 +32,12 @@ sys.path.insert(0, '.')
 ROOT = Path('c:/Users/Joshua/plv_clone')
 OUT = ROOT / 'data' / 'outputs'
 
-# Roster positional needs (BrownU 8-team H2H — confirmed 2026-05-10)
+# Roster positional needs (BrownU 8-team H2H — confirmed 2026-05-10/11)
 # 13 hitter slots: C, 1B, 2B, 3B, SS, MI (2B/SS), CI (1B/3B), OF×5, UTIL
-# 8 pitcher slots: SP×5, RP×3
+# 9 pitcher slots: SP×5, RP×4
 ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
                 'OF': 5, 'MI': 1, 'CI': 1, 'UTIL': 1,
-                'SP': 5, 'RP': 3}
+                'SP': 5, 'RP': 4}
 
 # Cap-aware starting slots for the SP-value proxy. The BrownU 10-SP/week cap
 # means past the top-5 SPs, marginal value drops to ~0 (and bench SPs become
@@ -45,7 +45,7 @@ ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
 # as the per-SP weight, not all rostered SPs.
 CAP_AWARE_SP_STARTERS = 5
 CAP_AWARE_SP_RoS_STARTS = 18  # ~per starting SP RoS
-CAP_AWARE_RP_STARTERS = 3
+CAP_AWARE_RP_STARTERS = 4
 CAP_AWARE_RP_RoS_GAMES = 25
 # 13 hitter slots in BrownU; deeper bench doesn't add weekly score
 CAP_AWARE_HITTER_STARTERS = 13

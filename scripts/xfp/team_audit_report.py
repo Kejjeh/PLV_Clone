@@ -251,8 +251,18 @@ def main():
         print(f'  {d["name"]:<28s}  role={d["role"]:<8s}  RoS={d["ros_value"]:>6.1f}  '
               f'signal={d["signal"]}  repl_delta={d["repl_delta"]:+.3f}')
 
+    # Pull ESPN free-agent roster-% so we know who's safe to wait on vs grab now
+    fa_pct_owned = {}
+    try:
+        fa_lst = league.free_agents(size=500)
+        for fa in fa_lst:
+            fa_pct_owned[_norm(fa.name)] = float(getattr(fa, 'percent_owned', 0) or 0)
+    except Exception as exc:
+        print(f'  (could not fetch ESPN FA pool for roster%: {exc})')
+
     # Top FREE-AGENT pickups available (true FAs only, ranked by RoS value)
     print('\nTOP AVAILABLE HITTER FAs (model RoS, ranked):')
+    print(f'{"PLAYER":<25s} {"POS":<5s} {"TEAM":<5s} {"%OWN":>6s} {"RoS":>7s} {"fp/PA":>7s} {"SIG":>5s}')
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
     # Build owned set across whole league
     owned = set()
@@ -263,29 +273,33 @@ def main():
     fa_hitters = rh[~rh['nk'].isin(owned)].copy()
     fa_hitters = fa_hitters.dropna(subset=['expected_total_fp_remaining'])
     fa_hitters = fa_hitters.sort_values('expected_total_fp_remaining', ascending=False)
-    cols_fa = ['player_name', 'primary_position', 'team',
-               'xfp_rh3_per_pa', 'expected_total_fp_remaining', 'signal']
-    avail_cols = [c for c in cols_fa if c in fa_hitters.columns]
     for _, r in fa_hitters.head(15).iterrows():
+        nk = r['nk']
+        pct = fa_pct_owned.get(nk, '?')
+        pct_s = f'{pct:.0f}%' if isinstance(pct, (int, float)) else '?'
         print(f'  {r["player_name"]:<25s} {r.get("primary_position", "?"):<5s} '
-              f'team={r.get("team", "?"):<5s} '
-              f'RoS={r.get("expected_total_fp_remaining", 0):>6.1f} '
-              f'fp/PA={r.get("xfp_rh3_per_pa", 0):.3f}  '
-              f'signal={r.get("signal", "—")}')
+              f'{r.get("team", "?"):<5s} {pct_s:>6s} '
+              f'{r.get("expected_total_fp_remaining", 0):>7.1f} '
+              f'{r.get("xfp_rh3_per_pa", 0):>7.3f}  '
+              f'{r.get("signal", "—")}')
 
     # Top FA pitchers too — in case any are sneaky
     print('\nTOP AVAILABLE PITCHER FAs (model RoS, ranked):')
+    print(f'{"PLAYER":<25s} {"%OWN":>6s} {"fp/start":>8s} {"RoS":>7s} {"SRC":<12s} {"SIG":>5s}')
     rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
     rp['nk'] = rp['player_name'].map(_norm)
     fa_pit = rp[~rp['nk'].isin(owned)].copy()
     fa_pit['ros_proxy'] = fa_pit['xfp_rp3_per_start'].fillna(0) * SP_REMAINING_STARTS
     fa_pit = fa_pit.sort_values('ros_proxy', ascending=False)
     for _, r in fa_pit.head(10).iterrows():
+        nk = r['nk']
+        pct = fa_pct_owned.get(nk, '?')
+        pct_s = f'{pct:.0f}%' if isinstance(pct, (int, float)) else '?'
         src = r.get('prior_source', 'rp3_model')
-        print(f'  {r["player_name"]:<25s} '
-              f'fp/start={r.get("xfp_rp3_per_start", 0):>5.2f}  '
-              f'RoS_est={r["ros_proxy"]:>6.1f}  '
-              f'src={src}  signal={r.get("signal", "—")}')
+        print(f'  {r["player_name"]:<25s} {pct_s:>6s} '
+              f'{r.get("xfp_rp3_per_start", 0):>8.2f}  '
+              f'{r["ros_proxy"]:>7.1f} {src:<12s} '
+              f'{r.get("signal", "—")}')
 
     # Trade priorities from smart_trade_finder
     finder_path = OUT / 'smart_trade_finder.json'

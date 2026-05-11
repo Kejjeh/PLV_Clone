@@ -2,7 +2,7 @@
 
 Record: 4-1 (Standing #2)
 Roster: 29 players
-Total starting-lineup RoS value: **4671.7 FP**
+Total starting-lineup RoS value: **4824.1 FP**
 
 ## Starting lineup
 
@@ -29,10 +29,10 @@ Total starting-lineup RoS value: **4671.7 FP**
 | RP1 | Jhoan Duran | 242.1 | — | — |
 | RP2 | Daniel Palencia | 155.1 | — | — |
 | RP3 | Lucas Erceg | 153.8 | — | — |
+| RP4 | Tanner Scott | 152.4 | — | — |
 
 ## Bench
 
 - Will Warren — value 270.2, signal=hold
 - Carlos Rodon — value 265.7, signal=il
 - Kyle Bradish — value 240.6, signal=hold
-- Tanner Scott — value 152.4, signal=—
