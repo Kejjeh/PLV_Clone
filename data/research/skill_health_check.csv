@@ -1,0 +1,19 @@
+player,metric,cur_2026,career_avg,delta,career_std,flag
+Bo Bichette,K%,19.33,19.34,-0.01,3.14,green
+Bo Bichette,BB%,5.33,5.75,-0.42,0.73,YELLOW
+Bo Bichette,Overall whiff/swing %,16.67,19.39,-2.73,2.2,green
+Bo Bichette,FASTBALL whiff/swing %,9.09,13.62,-4.53,3.54,green
+Bo Bichette,Avg EV,84.43,83.81,0.62,0.94,green
+Bo Bichette,EV90,103.1,103.42,-0.32,0.57,YELLOW
+Bo Bichette,Hard-hit %,28.89,26.56,2.33,1.86,green
+Bo Bichette,Barrel %,0.0,1.27,-1.27,0.55,RED
+Bo Bichette,Bat speed (2024+),67.5,67.95,-0.45,0.85,YELLOW
+Salvador Perez,K%,20.86,21.83,-0.97,2.49,green
+Salvador Perez,BB%,2.88,4.33,-1.46,1.32,RED
+Salvador Perez,Overall whiff/swing %,24.92,27.15,-2.23,3.32,green
+Salvador Perez,FASTBALL whiff/swing %,17.46,19.04,-1.58,3.07,green
+Salvador Perez,Avg EV,81.38,84.89,-3.52,0.95,RED
+Salvador Perez,EV90,103.43,104.55,-1.12,0.86,RED
+Salvador Perez,Hard-hit %,25.0,30.6,-5.6,3.16,RED
+Salvador Perez,Barrel %,1.44,2.11,-0.67,0.32,RED
+Salvador Perez,Bat speed (2024+),69.97,71.42,-1.45,0.31,RED
