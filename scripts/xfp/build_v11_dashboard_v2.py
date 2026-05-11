@@ -3566,7 +3566,152 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
       <TradeSimulator weekly={window.XFP_WEEKLY || {players:[],weeks:{}}}
                        myTeam={myTeam} colors={colors} />
 
-      <h3 style={sectionH}>12. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>12. Season simulation — playoff & title probabilities (Monte Carlo)</h3>
+      {advisory.monte_carlo ? (
+        <div>
+          <div style={subH}>
+            {advisory.monte_carlo.n_sims.toLocaleString()} simulated seasons from current state.
+            σ per team-week = {advisory.monte_carlo.sigma_per_week} FP.
+          </div>
+          <Table rows={advisory.monte_carlo.standings_sim || []} keyCol="team" columns={[
+            { key:'team', label:'Team' },
+            { key:'current_record', label:'Now', align:'center' },
+            { key:'weekly_mean', label:'Weekly Mean', align:'right' },
+            { key:'playoff_pct', label:'Playoff %', align:'right',
+              render: r => fmt(r.playoff_pct, 1) + '%' },
+            { key:'finals_pct', label:'Finals %', align:'right',
+              render: r => fmt(r.finals_pct, 1) + '%' },
+            { key:'title_pct', label:'Title %', align:'right',
+              color: () => '#33aa44',
+              render: r => fmt(r.title_pct, 1) + '%' },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/monte_carlo.py to populate)</div>}
+
+      <h3 style={sectionH}>13. Playoff-weighted RoS (top hitters / pitchers for weeks 21-23)</h3>
+      {advisory.playoff_ros ? (
+        <div>
+          <div style={subH}>
+            Playoff weeks: {advisory.playoff_ros.playoff_weeks} of {advisory.playoff_ros.ros_weeks_total} remaining
+            ({(advisory.playoff_ros.playoff_share * 100).toFixed(0)}% of RoS).
+            Top players ranked by projected fp during playoff window.
+          </div>
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Top hitters in playoff window:</div>
+          <Table rows={(advisory.playoff_ros.top_hitter_playoff_picks || []).slice(0, 15)} keyCol="batter" columns={[
+            { key:'player_name', label:'Hitter' },
+            { key:'primary_position', label:'Pos', align:'center' },
+            { key:'team', label:'Team', align:'center' },
+            { key:'expected_total_fp_remaining', label:'Season RoS', align:'right', render: r => fmt(r.expected_total_fp_remaining, 1) },
+            { key:'playoff_ros', label:'Playoff RoS', align:'right',
+              color: () => '#33aa44', render: r => fmt(r.playoff_ros, 1) },
+            { key:'signal', label:'Signal', align:'center' },
+          ]} />
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Top pitchers in playoff window:</div>
+          <Table rows={(advisory.playoff_ros.top_pitcher_playoff_picks || []).slice(0, 15)} keyCol="pitcher" columns={[
+            { key:'player_name', label:'Pitcher' },
+            { key:'xfp_rp3_per_start', label:'fp/start', align:'right', render: r => fmt(r.xfp_rp3_per_start, 2) },
+            { key:'playoff_ros', label:'Playoff RoS', align:'right',
+              color: () => '#33aa44', render: r => fmt(r.playoff_ros, 1) },
+            { key:'prior_source', label:'Source', align:'center' },
+            { key:'signal', label:'Signal', align:'center' },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/playoff_ros.py to populate)</div>}
+
+      <h3 style={sectionH}>14. 2-start week alerts (upcoming SPs with 2 probables)</h3>
+      {advisory.two_start_alerts ? (
+        <div>
+          <div style={{...subH, fontWeight:600, color:colors.text}}>Ligers SPs with 2-start weeks:</div>
+          {(advisory.two_start_alerts.ligers_two_start || []).length === 0
+            ? <div style={subH}>(none in next 4 weeks)</div>
+            : <Table rows={advisory.two_start_alerts.ligers_two_start} keyCol="pitcher_id" columns={[
+                { key:'pitcher_name', label:'Pitcher' },
+                { key:'week_start', label:'Week' },
+                { key:'starts', label:'Starts', align:'right' },
+              ]} />}
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:8}}>Top FA streamers with 2-start weeks:</div>
+          <Table rows={(advisory.two_start_alerts.fa_two_start_streamers || []).slice(0, 12)} keyCol="pitcher_id" columns={[
+            { key:'pitcher_name', label:'Pitcher' },
+            { key:'week_start', label:'Week' },
+            { key:'starts', label:'#', align:'right' },
+            { key:'fp_per_start', label:'fp/start', align:'right', render: r => fmt(r.fp_per_start, 2) },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/two_start_alerts.py to populate)</div>}
+
+      <h3 style={sectionH}>15. Punt-detector — this week's SP-cap utilization</h3>
+      {advisory.punt_detector ? (
+        <div>
+          <div style={subH}>
+            Period {advisory.punt_detector.period} ({advisory.punt_detector.week_start} → {advisory.punt_detector.week_end}).
+            vs <strong>{advisory.punt_detector.opp_name}</strong>.
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16, marginBottom:8 }}>
+            <div style={{ padding:8, border:`1px solid ${colors.border}` }}>
+              <div style={{ fontSize:9, color:colors.dim, textTransform:'uppercase', letterSpacing:1 }}>Ligers SP starts this week</div>
+              <div style={{ fontSize:24, fontFamily:MONO }}>{advisory.punt_detector.my_starts} / {advisory.punt_detector.cap}</div>
+            </div>
+            <div style={{ padding:8, border:`1px solid ${colors.border}` }}>
+              <div style={{ fontSize:9, color:colors.dim, textTransform:'uppercase', letterSpacing:1 }}>{advisory.punt_detector.opp_name} SP starts</div>
+              <div style={{ fontSize:24, fontFamily:MONO }}>{advisory.punt_detector.opp_starts} / {advisory.punt_detector.cap}</div>
+            </div>
+          </div>
+          {(advisory.punt_detector.advice || []).map((a, i) => (
+            <div key={i} style={{ fontSize:11, fontFamily:MONO, color:colors.accent, marginBottom:2 }}>⚠ {a}</div>
+          ))}
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/punt_detector.py to populate)</div>}
+
+      <h3 style={sectionH}>16. Save handcuffs — per-MLB-team closer chain</h3>
+      {advisory.save_handcuffs ? (
+        <div>
+          <div style={subH}>RPs ranked by save+hold leverage in last 21 days. FA handcuffs are rank-2 RPs still on waivers.</div>
+          <Table rows={(advisory.save_handcuffs.fa_handcuffs || []).slice(0, 15)} keyCol="name" columns={[
+            { key:'team', label:'MLB', align:'center' },
+            { key:'rank', label:'Rk', align:'center' },
+            { key:'name', label:'Pitcher' },
+            { key:'saves', label:'SV', align:'right' },
+            { key:'holds', label:'HLD', align:'right' },
+            { key:'games', label:'G', align:'right' },
+          ]} />
+          <div style={{...subH, marginTop:8, fontWeight:600, color:colors.text}}>Your RPs' leverage rank:</div>
+          <Table rows={(advisory.save_handcuffs.ligers_rps_leverage || [])} keyCol="name" columns={[
+            { key:'name', label:'Pitcher' },
+            { key:'team', label:'MLB', align:'center' },
+            { key:'rank', label:'Rank', align:'center' },
+            { key:'saves', label:'SV', align:'right' },
+            { key:'holds', label:'HLD', align:'right' },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/save_handcuffs.py to populate)</div>}
+
+      <h3 style={sectionH}>17. Eligibility changes (any new positions since last snapshot)</h3>
+      {advisory.eligibility_changes ? (
+        ((advisory.eligibility_changes.changes || []).filter(c => (c.gained_eligibilities||[]).length > 0)).length === 0
+          ? <div style={subH}>No new position eligibilities since last snapshot ({advisory.eligibility_changes.as_of}).</div>
+          : <Table rows={advisory.eligibility_changes.changes.filter(c => (c.gained_eligibilities||[]).length > 0).slice(0, 15)} keyCol="name" columns={[
+              { key:'name', label:'Player' },
+              { key:'team', label:'Team' },
+              { key:'gained_eligibilities', label:'Gained',
+                render: r => (r.gained_eligibilities || []).join(', ') },
+            ]} />
+      ) : <div style={subH}>(run scripts/xfp/eligibility_watch.py to populate)</div>}
+
+      <h3 style={sectionH}>18. Bench tracker — points left on bench cumulatively</h3>
+      {advisory.bench_tracker ? (
+        <div>
+          <div style={subH}>
+            Cumulative FP left on bench across snapshots: <strong>{fmt(advisory.bench_tracker.cumulative_left_on_bench, 1)}</strong>.
+            Run weekly after each matchup completes.
+          </div>
+          <Table rows={advisory.bench_tracker.snapshots || []} keyCol="week" columns={[
+            { key:'week', label:'Week' },
+            { key:'left_on_bench', label:'Left on bench (FP)', align:'right', render: r => fmt(r.left_on_bench, 1) },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/bench_tracker.py to populate)</div>}
+
+      <h3 style={sectionH}>19. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -4386,6 +4531,25 @@ def build_advisory_payload():
                 out['waiver_watch'] = _json.load(f)
         except Exception:
             out['waiver_watch'] = None
+
+    # 11+ Tier 3 deepening artifacts (load all, render compactly)
+    for key, fname in [
+        ('playoff_ros', 'playoff_ros.json'),
+        ('two_start_alerts', 'two_start_alerts.json'),
+        ('punt_detector', 'punt_detector.json'),
+        ('save_handcuffs', 'save_handcuffs.json'),
+        ('monte_carlo', 'monte_carlo.json'),
+        ('bench_tracker', 'bench_tracker.json'),
+        ('eligibility_changes', 'eligibility_changes.json'),
+    ]:
+        p = out_dir / fname
+        if p.exists():
+            try:
+                import json as _json
+                with open(p, 'r', encoding='utf-8') as f:
+                    out[key] = _json.load(f)
+            except Exception:
+                out[key] = None
 
     return out
 
