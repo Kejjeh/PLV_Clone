@@ -251,12 +251,19 @@ def main():
         print(f'  {d["name"]:<28s}  role={d["role"]:<8s}  RoS={d["ros_value"]:>6.1f}  '
               f'signal={d["signal"]}  repl_delta={d["repl_delta"]:+.3f}')
 
-    # Pull ESPN free-agent roster-% so we know who's safe to wait on vs grab now
+    # Pull ESPN free-agent roster-% — key by (norm_name, team) to disambiguate
+    # name collisions (e.g., Max Muncy LAD vs Max Muncy OAK).
+    def _team_norm(t):
+        t = str(t or '').upper().strip()
+        # Athletics moved from Oakland — ESPN uses 'Oak'/'OAK', our rh3 uses 'ATH'
+        if t in ('OAK',): return 'ATH'
+        return t
     fa_pct_owned = {}
     try:
         fa_lst = league.free_agents(size=500)
         for fa in fa_lst:
-            fa_pct_owned[_norm(fa.name)] = float(getattr(fa, 'percent_owned', 0) or 0)
+            key = (_norm(fa.name), _team_norm(getattr(fa, 'proTeam', '')))
+            fa_pct_owned[key] = float(getattr(fa, 'percent_owned', 0) or 0)
     except Exception as exc:
         print(f'  (could not fetch ESPN FA pool for roster%: {exc})')
 
@@ -274,8 +281,8 @@ def main():
     fa_hitters = fa_hitters.dropna(subset=['expected_total_fp_remaining'])
     fa_hitters = fa_hitters.sort_values('expected_total_fp_remaining', ascending=False)
     for _, r in fa_hitters.head(15).iterrows():
-        nk = r['nk']
-        pct = fa_pct_owned.get(nk, '?')
+        key = (r['nk'], _team_norm(r.get('team', '')))
+        pct = fa_pct_owned.get(key)
         pct_s = f'{pct:.0f}%' if isinstance(pct, (int, float)) else '?'
         print(f'  {r["player_name"]:<25s} {r.get("primary_position", "?"):<5s} '
               f'{r.get("team", "?"):<5s} {pct_s:>6s} '
@@ -292,8 +299,10 @@ def main():
     fa_pit['ros_proxy'] = fa_pit['xfp_rp3_per_start'].fillna(0) * SP_REMAINING_STARTS
     fa_pit = fa_pit.sort_values('ros_proxy', ascending=False)
     for _, r in fa_pit.head(10).iterrows():
-        nk = r['nk']
-        pct = fa_pct_owned.get(nk, '?')
+        # Pitcher's rp3 might not have a team col; lookup just by name
+        # (pitcher name collisions much rarer than hitters)
+        candidates = [v for k, v in fa_pct_owned.items() if k[0] == r['nk']]
+        pct = candidates[0] if candidates else None
         pct_s = f'{pct:.0f}%' if isinstance(pct, (int, float)) else '?'
         src = r.get('prior_source', 'rp3_model')
         print(f'  {r["player_name"]:<25s} {pct_s:>6s} '
