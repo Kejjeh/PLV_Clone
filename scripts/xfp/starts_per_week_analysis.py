@@ -23,9 +23,17 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 RES = ROOT / 'data' / 'research'
 
-# MLB regular season usually mid-March to late September
-SEASON_DATES = {2024: ('2024-03-25', '2024-09-30'),
-                2025: ('2025-03-24', '2025-09-29')}
+# MLB regular season usually mid-March to late September.
+# Skip 2020 (60-game shortened season — distorts weekly cadence).
+SEASON_DATES = {
+    2018: ('2018-03-29', '2018-09-30'),
+    2019: ('2019-03-28', '2019-09-29'),
+    2021: ('2021-04-01', '2021-10-03'),
+    2022: ('2022-04-07', '2022-10-05'),
+    2023: ('2023-03-30', '2023-10-01'),
+    2024: ('2024-03-25', '2024-09-30'),
+    2025: ('2025-03-24', '2025-09-29'),
+}
 
 
 def main():
@@ -51,12 +59,24 @@ def main():
     # Per (pitcher, iso_week) start counts
     per_week = df.groupby(['pitcher', 'year', 'iso_week']).size().reset_index(name='starts')
 
-    print(f'Total SP-weeks across 2024-2025: {len(per_week)}')
+    print(f'Total SP-weeks across {min(SEASON_DATES)}-{max(SEASON_DATES)}: {len(per_week)}')
     print(f'\nDistribution of starts per ISO week (Mon-Sun):')
     dist = per_week['starts'].value_counts().sort_index()
     total = len(per_week)
     for k, v in dist.items():
         print(f'  {k} start(s)/week: {v:>6,} weeks  ({v/total*100:.1f}%)')
+
+    print(f'\nPer-year average starts/active-week (drift check):')
+    for year in sorted(per_week['year'].unique()):
+        sub = per_week[per_week['year'] == year]
+        # SP filter per year: 15+ active weeks
+        active = sub.groupby('pitcher')['iso_week'].count()
+        full_time = active[active >= 15].index
+        ft = sub[sub['pitcher'].isin(full_time)]
+        avg = ft.groupby('pitcher')['starts'].mean().mean()
+        pct_2plus = ft.groupby('pitcher').apply(lambda g: (g['starts'] >= 2).mean()).mean()
+        print(f'  {year}: {avg:.3f} starts/wk  ({pct_2plus*100:.1f}% 2+ weeks)  '
+              f'n={len(full_time)} full-time SPs')
 
     # SPs with min 20 weeks of activity (full-time SP)
     sp_activity = per_week.groupby('pitcher')['iso_week'].count().reset_index(name='active_weeks')
@@ -82,7 +102,9 @@ def main():
     avg_starts = avg_starts.merge(rp, on='pitcher', how='left')
     top = avg_starts.sort_values('pct_2plus_weeks', ascending=False).head(15)
     for _, r in top.iterrows():
-        nm = r.get('player_name') or '(unknown)'
+        nm = r.get('player_name')
+        if not isinstance(nm, str):
+            nm = '(unknown)'
         print(f'  {nm:<28s} {r["pct_2plus_weeks"]*100:>5.1f}% 2+ weeks  '
               f'(avg {r["avg_per_active_week"]:.2f} starts/active week)')
 

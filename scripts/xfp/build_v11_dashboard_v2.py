@@ -3516,11 +3516,57 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
         </div>
       ) : <div style={subH}>(run scripts/xfp/smart_trade_finder.py to populate)</div>}
 
-      <h3 style={sectionH}>10. Trade simulator — counterfactual week-by-week replay</h3>
+      <h3 style={sectionH}>10. Waiver watch — who's scooping value, who's leaking it</h3>
+      {advisory.waiver_watch ? (
+        <div>
+          <div style={subH}>
+            Last {advisory.waiver_watch.days} days of league transactions × RoS projection lookup.
+          </div>
+
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:12}}>Net waiver effectiveness (added FP − dropped FP):</div>
+          <Table rows={advisory.waiver_watch.net_effectiveness || []} keyCol="team_name" columns={[
+            { key:'team_name', label:'Team' },
+            { key:'value_added', label:'Added RoS', align:'right', render: r => fmt(r.value_added, 0) },
+            { key:'value_dropped', label:'Dropped RoS', align:'right', render: r => fmt(r.value_dropped, 0) },
+            { key:'net', label:'Net', align:'right', color: v => v >= 0 ? '#33aa44' : '#cc5544',
+              render: r => sign(r.net, 0) },
+          ]} />
+
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:12}}>Biggest pickups (other teams scooped these — what you might've missed):</div>
+          <Table rows={(advisory.waiver_watch.biggest_pickups || []).slice(0, 15)} keyCol="player" columns={[
+            { key:'date', label:'Date', render: r => String(r.date).slice(0, 10) },
+            { key:'team_name', label:'Team' },
+            { key:'player', label:'Player' },
+            { key:'role', label:'Role', align:'center' },
+            { key:'ros_fp', label:'RoS FP', align:'right', render: r => fmt(r.ros_fp, 0) },
+          ]} />
+
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:12}}>Valuable drops (these were dropped — if any are still FAs, claim now):</div>
+          <Table rows={(advisory.waiver_watch.valuable_drops || []).slice(0, 15)} keyCol="player" columns={[
+            { key:'date', label:'Date', render: r => String(r.date).slice(0, 10) },
+            { key:'team_name', label:'Dropped By' },
+            { key:'player', label:'Player' },
+            { key:'role', label:'Role', align:'center' },
+            { key:'ros_fp', label:'RoS FP', align:'right', render: r => fmt(r.ros_fp, 0) },
+          ]} />
+
+          <div style={{...subH, fontWeight:600, color:colors.text, marginTop:12}}>Leaky-roster teams (high cumulative value dropped — monitor for future drops):</div>
+          <Table rows={advisory.waiver_watch.leaky_teams || []} keyCol="team_name" columns={[
+            { key:'team_name', label:'Team' },
+            { key:'n_drops', label:'# Drops', align:'right' },
+            { key:'total_value_dropped', label:'Total RoS Dropped', align:'right',
+              render: r => fmt(r.total_value_dropped, 0) },
+            { key:'worst_drop_value', label:'Worst', align:'right',
+              render: r => fmt(r.worst_drop_value, 0) },
+          ]} />
+        </div>
+      ) : <div style={subH}>(run scripts/xfp/waiver_watch.py to populate)</div>}
+
+      <h3 style={sectionH}>11. Trade simulator — counterfactual week-by-week replay</h3>
       <TradeSimulator weekly={window.XFP_WEEKLY || {players:[],weeks:{}}}
                        myTeam={myTeam} colors={colors} />
 
-      <h3 style={sectionH}>11. Pitch arsenal × hitter weakness (matchup spotter)</h3>
+      <h3 style={sectionH}>12. Pitch arsenal × hitter weakness (matchup spotter)</h3>
       <div style={subH}>Per-batter whiff% by pitch group (career, 2015-2025). Use for streaming/benching when opposing SP has a heavy mix of the right pitch.</div>
       <div style={{ marginBottom:8 }}>
         {['FB','SI','SL','CB','CH','CT','SP'].map(g => (
@@ -4330,6 +4376,16 @@ def build_advisory_payload():
                 out['smart_trade_finder'] = _json.load(f)
         except Exception:
             out['smart_trade_finder'] = None
+
+    # 10. Waiver watch (Tier 3)
+    p = out_dir / 'waiver_watch.json'
+    if p.exists():
+        try:
+            import json as _json
+            with open(p, 'r', encoding='utf-8') as f:
+                out['waiver_watch'] = _json.load(f)
+        except Exception:
+            out['waiver_watch'] = None
 
     return out
 

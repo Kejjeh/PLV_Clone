@@ -1,0 +1,193 @@
+date,team_id,team_name,action,player,role,ros_fp
+2026-05-10 05:03:03.390,2,Team Solomon,WAIVER ADDED,Jose Altuve,hitter,233.2
+2026-05-10 05:03:03.390,2,Team Solomon,DROPPED,Emilio Pagan,pitcher,180.8
+2026-05-09 11:05:29.438,7,2015 Draft First Round,FA ADDED,Foster Griffin,pitcher,212.13102029122678
+2026-05-08 22:21:38.543,8,New York Ligers,FA ADDED,Kyle Bradish,pitcher,240.56370700236624
+2026-05-08 22:21:38.543,8,New York Ligers,DROPPED,Kris Bubic,pitcher,284.2358612965589
+2026-05-08 17:31:46.935,8,New York Ligers,DROPPED,Eury Perez,pitcher,275.8838625554857
+2026-05-08 17:31:46.935,8,New York Ligers,FA ADDED,Kris Bubic,pitcher,284.2358612965589
+2026-05-08 07:24:23.728,7,2015 Draft First Round,DROPPED,Jose Altuve,hitter,233.2
+2026-05-07 06:21:26.886,1,Boone's Bad Bullpen,DROPPED,Jason Adam,pitcher,132.1
+2026-05-07 06:21:26.886,1,Boone's Bad Bullpen,FA ADDED,Nick Martinez,pitcher,224.74414465426568
+2026-05-06 17:17:49.735,2,Team Solomon,DROPPED,Matt Chapman,hitter,172.5
+2026-05-06 17:17:49.735,2,Team Solomon,FA ADDED,Shane McClanahan,pitcher,271.57936070366026
+2026-05-06 15:39:58.939,8,New York Ligers,DROPPED,Robert Suarez,pitcher,161.9
+2026-05-06 15:39:58.939,8,New York Ligers,FA ADDED,Lucas Erceg,pitcher,153.8
+2026-05-06 11:46:25.419,4,Late Night Bettsing,FA ADDED,Xander Bogaerts,hitter,211.6
+2026-05-06 11:46:25.419,4,Late Night Bettsing,DROPPED,Teoscar Hernandez,hitter,166.6
+2026-05-06 11:44:45.035,4,Late Night Bettsing,FA ADDED,Jonathan Aranda,hitter,214.7
+2026-05-06 11:44:45.035,4,Late Night Bettsing,DROPPED,Carlos Correa,hitter,206.9
+2026-05-05 21:04:57.712,2,Team Solomon,FA ADDED,Davis Martin,pitcher,244.68358727048252
+2026-05-05 21:04:40.991,2,Team Solomon,DROPPED,Trevor Rogers,pitcher,253.31273363888732
+2026-05-05 21:03:51.396,2,Team Solomon,FA ADDED,Austin Riley,hitter,186.9
+2026-05-05 21:03:46.804,2,Team Solomon,DROPPED,Jeremy Pena,,0.0
+2026-05-04 14:29:06.234,4,Late Night Bettsing,FA ADDED,Ryan Weathers,pitcher,255.5204193446247
+2026-05-04 14:29:06.234,4,Late Night Bettsing,DROPPED,Aaron Nola,pitcher,252.59077430631137
+2026-05-04 14:28:37.811,4,Late Night Bettsing,FA ADDED,Braxton Ashcraft,pitcher,290.3775022137278
+2026-05-04 14:28:37.811,4,Late Night Bettsing,DROPPED,Jack Flaherty,pitcher,221.19200105487465
+2026-05-04 14:18:52.427,4,Late Night Bettsing,DROPPED,Jack Leiter,pitcher,277.59728359179974
+2026-05-04 14:18:52.427,4,Late Night Bettsing,FA ADDED,Clay Holmes,pitcher,239.06479009377563
+2026-05-04 11:44:06.135,5,U Just Lost To Edwin Diaz,FA ADDED,Mickey Moniak,hitter,181.6
+2026-05-04 11:44:06.135,5,U Just Lost To Edwin Diaz,DROPPED,Ramon Laureano,hitter,180.6
+2026-05-02 22:30:30.281,7,2015 Draft First Round,DROPPED,Kyle Bradish,pitcher,240.56370700236624
+2026-05-02 13:59:52.236,8,New York Ligers,FA ADDED,Daniel Palencia,pitcher,155.1
+2026-05-02 13:59:52.236,8,New York Ligers,DROPPED,Kyle Stowers,hitter,69.5
+2026-05-01 19:29:01.291,9,Frendy's Fantastic Team,DROPPED,Ryan Pepiot,pitcher,236.39999999999998
+2026-05-01 14:19:28.361,8,New York Ligers,DROPPED,Kris Bubic,pitcher,284.2358612965589
+2026-05-01 14:19:28.361,8,New York Ligers,FA ADDED,Eury Perez,pitcher,275.8838625554857
+2026-05-01 13:55:45.105,7,2015 Draft First Round,FA ADDED,Josh Jung,hitter,195.6
+2026-05-01 13:55:45.105,7,2015 Draft First Round,DROPPED,Austin Riley,hitter,186.9
+2026-05-01 13:54:03.545,7,2015 Draft First Round,DROPPED,Lance McCullers Jr.,pitcher,195.08882742244765
+2026-05-01 13:54:03.545,7,2015 Draft First Round,FA ADDED,Bryce Elder,pitcher,238.3042792147566
+2026-05-01 13:53:02.277,7,2015 Draft First Round,DROPPED,Jordan Romano,pitcher,149.4
+2026-05-01 13:53:02.277,7,2015 Draft First Round,FA ADDED,Bryan Baker,pitcher,184.5
+2026-04-29 12:40:05.566,5,U Just Lost To Edwin Diaz,DROPPED,Corbin Burnes,pitcher,289.44
+2026-04-29 12:40:05.566,5,U Just Lost To Edwin Diaz,FA ADDED,Trey Yesavage,pitcher,237.57494611486914
+2026-04-29 05:10:56.372,1,Boone's Bad Bullpen,FA ADDED,Jason Adam,pitcher,132.1
+2026-04-29 05:10:56.372,1,Boone's Bad Bullpen,DROPPED,Matthew Boyd,pitcher,273.84573475006243
+2026-04-29 05:10:28.435,1,Boone's Bad Bullpen,FA ADDED,Garrett Whitlock,pitcher,132.2
+2026-04-29 05:10:28.435,1,Boone's Bad Bullpen,DROPPED,Eury Perez,pitcher,275.8838625554857
+2026-04-29 04:25:55.347,10,Treasure Island Mashers,DROPPED,Caleb Durbin,hitter,175.5
+2026-04-29 04:25:55.347,10,Treasure Island Mashers,WAIVER ADDED,Jacob Wilson,hitter,232.4
+2026-04-28 20:05:24.125,2,Team Solomon,DROPPED,Jeff Hoffman,pitcher,153.6
+2026-04-28 20:05:24.125,2,Team Solomon,FA ADDED,Louis Varland,pitcher,194.9
+2026-04-28 04:42:14.715,8,New York Ligers,WAIVER ADDED,Jordan Walker,hitter,219.2
+2026-04-28 04:42:14.715,8,New York Ligers,DROPPED,Eugenio Suarez,hitter,119.4
+2026-04-28 04:42:14.715,4,Late Night Bettsing,WAIVER ADDED,Paul Sewald,pitcher,186.3
+2026-04-28 04:42:14.715,4,Late Night Bettsing,DROPPED,Griffin Jax,pitcher,230.4065650075006
+2026-04-28 04:25:53.604,9,Frendy's Fantastic Team,FA ADDED,Payton Tolle,pitcher,287.6256014300841
+2026-04-28 04:25:53.604,9,Frendy's Fantastic Team,DROPPED,Colt Keith,hitter,137.8
+2026-04-28 04:09:56.017,9,Frendy's Fantastic Team,DROPPED,Giancarlo Stanton,hitter,119.9
+2026-04-28 04:09:56.017,9,Frendy's Fantastic Team,FA ADDED,Miguel Vargas,hitter,226.0
+2026-04-27 10:33:01.088,4,Late Night Bettsing,FA ADDED,Carlos Correa,hitter,206.9
+2026-04-27 10:33:01.088,4,Late Night Bettsing,DROPPED,Jacob Wilson,hitter,232.4
+2026-04-26 16:22:19.347,2,Team Solomon,FA ADDED,Jeremy Pena,,0.0
+2026-04-26 15:48:36.459,2,Team Solomon,FA ADDED,Nick Pivetta,pitcher,305.57085717863504
+2026-04-26 15:48:36.459,2,Team Solomon,DROPPED,Willy Adames,hitter,181.0
+2026-04-26 15:45:49.454,2,Team Solomon,DROPPED,Jordan Walker,hitter,219.2
+2026-04-26 08:28:13.417,1,Boone's Bad Bullpen,FA ADDED,Keider Montero,pitcher,230.24668220108907
+2026-04-26 08:28:13.417,1,Boone's Bad Bullpen,DROPPED,Paul Sewald,pitcher,186.3
+2026-04-26 08:27:03.062,1,Boone's Bad Bullpen,FA ADDED,Landen Roupp,pitcher,242.51331001777208
+2026-04-26 08:27:03.062,1,Boone's Bad Bullpen,DROPPED,Bryce Elder,pitcher,238.3042792147566
+2026-04-25 09:39:53.337,1,Boone's Bad Bullpen,FA ADDED,Bryce Elder,pitcher,238.3042792147566
+2026-04-25 09:39:53.337,1,Boone's Bad Bullpen,DROPPED,Alex Vesia,pitcher,143.9
+2026-04-24 07:46:10.537,7,2015 Draft First Round,FA ADDED,Jakob Junis,pitcher,140.8
+2026-04-23 19:38:04.550,8,New York Ligers,DROPPED,Michael Soroka,pitcher,234.22190138582764
+2026-04-23 19:38:04.550,8,New York Ligers,FA ADDED,Will Warren,pitcher,270.20984434270196
+2026-04-23 04:36:50.344,1,Boone's Bad Bullpen,WAIVER ADDED,Alex Vesia,pitcher,143.9
+2026-04-23 04:36:50.344,1,Boone's Bad Bullpen,DROPPED,Kodai Senga,pitcher,234.8515061566481
+2026-04-22 16:35:25.026,8,New York Ligers,DROPPED,Jeffrey Springs,pitcher,241.1234286916393
+2026-04-22 16:35:25.026,8,New York Ligers,FA ADDED,Michael Soroka,pitcher,234.22190138582764
+2026-04-21 10:19:30.418,8,New York Ligers,DROPPED,Alex Vesia,pitcher,143.9
+2026-04-21 10:19:30.418,8,New York Ligers,FA ADDED,Robert Suarez,pitcher,161.9
+2026-04-21 04:50:00.862,9,Frendy's Fantastic Team,WAIVER ADDED,Josh Naylor,hitter,221.0
+2026-04-21 04:50:00.862,9,Frendy's Fantastic Team,DROPPED,Max Muncy,hitter,228.5
+2026-04-21 04:50:00.862,9,Frendy's Fantastic Team,DROPPED,Nick Pivetta,pitcher,305.57085717863504
+2026-04-21 04:50:00.862,9,Frendy's Fantastic Team,WAIVER ADDED,Bubba Chandler,pitcher,227.3433735951119
+2026-04-20 17:33:12.300,8,New York Ligers,FA ADDED,Tanner Scott,pitcher,152.4
+2026-04-20 17:33:12.300,8,New York Ligers,DROPPED,Louis Varland,pitcher,194.9
+2026-04-20 07:49:44.038,9,Frendy's Fantastic Team,DROPPED,Jorge Soler,hitter,192.8
+2026-04-20 07:49:44.038,9,Frendy's Fantastic Team,FA ADDED,Max Muncy,hitter,228.5
+2026-04-19 22:37:52.264,5,U Just Lost To Edwin Diaz,DROPPED,Ryan Walker,pitcher,139.8
+2026-04-19 22:37:52.264,5,U Just Lost To Edwin Diaz,FA ADDED,Gregory Soto,pitcher,166.2
+2026-04-19 22:33:25.040,5,U Just Lost To Edwin Diaz,DROPPED,Bryan Abreu,pitcher,149.5
+2026-04-19 22:33:25.040,5,U Just Lost To Edwin Diaz,FA ADDED,Tony Santillan,pitcher,141.0
+2026-04-19 22:31:23.915,5,U Just Lost To Edwin Diaz,FA ADDED,Christian Walker,hitter,244.5
+2026-04-19 22:31:23.915,5,U Just Lost To Edwin Diaz,DROPPED,Josh Naylor,hitter,221.0
+2026-04-19 22:09:11.889,9,Frendy's Fantastic Team,DROPPED,Alec Bohm,hitter,181.3
+2026-04-19 22:09:11.889,9,Frendy's Fantastic Team,FA ADDED,Colt Keith,hitter,137.8
+2026-04-19 21:58:13.292,9,Frendy's Fantastic Team,FA ADDED,Jorge Soler,hitter,192.8
+2026-04-19 21:58:13.292,9,Frendy's Fantastic Team,DROPPED,Shane McClanahan,pitcher,271.57936070366026
+2026-04-19 11:32:40.310,8,New York Ligers,DROPPED,Ceddanne Rafaela,hitter,142.1
+2026-04-19 11:32:40.310,8,New York Ligers,FA ADDED,Kyle Stowers,hitter,69.5
+2026-04-19 11:21:39.023,8,New York Ligers,FA ADDED,Louis Varland,pitcher,194.9
+2026-04-19 11:21:39.023,8,New York Ligers,DROPPED,Trey Yesavage,pitcher,237.57494611486914
+2026-04-19 11:05:52.734,8,New York Ligers,DROPPED,Bubba Chandler,pitcher,227.3433735951119
+2026-04-19 11:05:52.734,8,New York Ligers,FA ADDED,Parker Messick,pitcher,273.5356591916
+2026-04-19 10:23:13.882,10,Treasure Island Mashers,FA ADDED,Nolan Arenado,hitter,167.2
+2026-04-18 13:40:33.667,8,New York Ligers,DROPPED,Daniel Palencia,pitcher,155.1
+2026-04-18 13:40:33.667,8,New York Ligers,FA ADDED,Alex Vesia,pitcher,143.9
+2026-04-17 07:48:20.806,9,Frendy's Fantastic Team,DROPPED,Yainer Diaz,hitter,138.4
+2026-04-17 07:48:20.806,9,Frendy's Fantastic Team,FA ADDED,Jo Adell,hitter,194.2
+2026-04-16 20:03:55.556,7,2015 Draft First Round,DROPPED,Michael Busch,hitter,197.8
+2026-04-16 20:03:55.556,7,2015 Draft First Round,FA ADDED,Ildemaro Vargas,hitter,186.6
+2026-04-16 09:13:00.647,2,Team Solomon,DROPPED,Merrill Kelly,pitcher,198.1861189366781
+2026-04-16 09:13:00.647,2,Team Solomon,FA ADDED,Jazz Chisholm Jr.,hitter,170.0
+2026-04-16 08:23:17.545,9,Frendy's Fantastic Team,FA ADDED,Cam Smith,hitter,161.4
+2026-04-16 08:23:17.545,9,Frendy's Fantastic Team,DROPPED,Jeremy Pena,,0.0
+2026-04-15 11:21:38.622,5,U Just Lost To Edwin Diaz,DROPPED,Joey Wiemer,hitter,82.8
+2026-04-15 11:21:38.622,5,U Just Lost To Edwin Diaz,FA ADDED,Ramon Laureano,hitter,180.6
+2026-04-15 03:15:16.744,10,Treasure Island Mashers,FA ADDED,Agustin Ramirez,hitter,156.2
+2026-04-14 09:29:50.277,8,New York Ligers,DROPPED,Andrew Abbott,pitcher,206.99931834380857
+2026-04-14 09:29:50.277,8,New York Ligers,FA ADDED,Jeffrey Springs,pitcher,241.1234286916393
+2026-04-12 11:22:33.535,5,U Just Lost To Edwin Diaz,DROPPED,Kyle Harrison,pitcher,269.4985698269903
+2026-04-12 11:22:33.535,5,U Just Lost To Edwin Diaz,FA ADDED,Taj Bradley,pitcher,270.3847651227194
+2026-04-12 00:45:49.019,10,Treasure Island Mashers,DROPPED,Jurickson Profar,,0.0
+2026-04-11 20:48:09.796,1,Boone's Bad Bullpen,DROPPED,Jazz Chisholm Jr.,hitter,170.0
+2026-04-11 20:48:09.796,1,Boone's Bad Bullpen,FA ADDED,Mauricio Dubon,hitter,189.4
+2026-04-11 11:43:58.356,2,Team Solomon,DROPPED,Marcus Semien,hitter,186.9
+2026-04-11 11:43:58.356,2,Team Solomon,FA ADDED,Riley O'Brien,pitcher,193.5
+2026-04-10 05:44:50.050,9,Frendy's Fantastic Team,DROPPED,Emmet Sheehan,pitcher,278.9740021967001
+2026-04-10 05:44:50.050,9,Frendy's Fantastic Team,FA ADDED,Emerson Hancock,pitcher,252.1403696384329
+2026-04-08 18:54:33.965,2,Team Solomon,DROPPED,Jo Adell,hitter,194.2
+2026-04-08 18:54:33.965,2,Team Solomon,FA ADDED,Jordan Walker,hitter,219.2
+2026-04-07 00:25:29.365,8,New York Ligers,FA ADDED,Jose Soriano,pitcher,319.07802300351636
+2026-04-07 00:25:29.365,8,New York Ligers,DROPPED,Cade Horton,pitcher,241.92716521641358
+2026-04-06 21:07:22.523,5,U Just Lost To Edwin Diaz,DROPPED,Eric Lauer,pitcher,183.55892220691118
+2026-04-06 21:07:22.523,5,U Just Lost To Edwin Diaz,FA ADDED,Liam Hicks,hitter,198.4
+2026-04-06 14:16:08.784,1,Boone's Bad Bullpen,FA ADDED,Casey Mize,pitcher,258.9296934633513
+2026-04-06 06:41:31.546,9,Frendy's Fantastic Team,FA ADDED,Erik Sabrowski,pitcher,135.6
+2026-04-06 06:41:31.546,9,Frendy's Fantastic Team,DROPPED,Jose Caballero,hitter,151.8
+2026-04-05 10:45:12.433,5,U Just Lost To Edwin Diaz,DROPPED,Bailey Ober,pitcher,230.8407052098832
+2026-04-05 10:45:12.433,5,U Just Lost To Edwin Diaz,FA ADDED,Kyle Harrison,pitcher,269.4985698269903
+2026-04-05 10:18:51.887,7,2015 Draft First Round,FA ADDED,Lance McCullers Jr.,pitcher,195.08882742244765
+2026-04-05 10:18:51.887,7,2015 Draft First Round,DROPPED,Bryson Stott,hitter,160.5
+2026-04-04 20:37:47.184,2,Team Solomon,DROPPED,Robert Suarez,pitcher,161.9
+2026-04-04 20:37:47.184,2,Team Solomon,FA ADDED,Sonny Gray,pitcher,215.38181805573913
+2026-04-04 15:38:04.613,5,U Just Lost To Edwin Diaz,FA ADDED,Eric Lauer,pitcher,183.55892220691118
+2026-04-03 10:04:47.653,5,U Just Lost To Edwin Diaz,FA ADDED,Shane Bieber,pitcher,241.20000000000002
+2026-04-03 10:04:20.176,5,U Just Lost To Edwin Diaz,FA ADDED,Bryce Miller,pitcher,236.16
+2026-04-02 20:45:21.965,5,U Just Lost To Edwin Diaz,DROPPED,Tatsuya Imai,,0.0
+2026-04-02 20:45:21.965,5,U Just Lost To Edwin Diaz,FA ADDED,Corbin Burnes,pitcher,289.44
+2026-04-02 11:24:29.768,5,U Just Lost To Edwin Diaz,DROPPED,TJ Friedl,hitter,188.0
+2026-04-02 11:24:29.768,5,U Just Lost To Edwin Diaz,FA ADDED,Joey Wiemer,hitter,82.8
+2026-04-02 05:18:46.182,1,Boone's Bad Bullpen,FA ADDED,Paul Sewald,pitcher,186.3
+2026-03-31 19:34:50.005,9,Frendy's Fantastic Team,FA ADDED,Andrew Painter,pitcher,218.1484637727084
+2026-03-31 19:34:50.005,9,Frendy's Fantastic Team,DROPPED,Cody Ponce,,0.0
+2026-03-31 07:54:18.351,9,Frendy's Fantastic Team,FA ADDED,Sal Stewart,hitter,251.3
+2026-03-31 07:54:18.351,9,Frendy's Fantastic Team,DROPPED,Christian Walker,hitter,244.5
+2026-03-30 11:27:32.217,9,Frendy's Fantastic Team,DROPPED,Kyle Stowers,hitter,69.5
+2026-03-30 11:27:32.217,9,Frendy's Fantastic Team,FA ADDED,Cody Ponce,,0.0
+2026-03-30 08:24:16.733,7,2015 Draft First Round,FA ADDED,Jordan Romano,pitcher,149.4
+2026-03-30 08:24:16.733,7,2015 Draft First Round,DROPPED,Sonny Gray,pitcher,215.38181805573913
+2026-03-27 22:35:59.028,9,Frendy's Fantastic Team,FA ADDED,Munetaka Murakami,hitter,222.1
+2026-03-27 22:35:59.028,9,Frendy's Fantastic Team,DROPPED,Isaac Paredes,hitter,189.0
+2026-03-27 10:07:44.057,9,Frendy's Fantastic Team,DROPPED,Agustin Ramirez,hitter,156.2
+2026-03-27 10:07:44.057,9,Frendy's Fantastic Team,FA ADDED,Kevin McGonigle,hitter,238.5
+2026-03-26 15:21:25.813,9,Frendy's Fantastic Team,FA ADDED,Giancarlo Stanton,hitter,119.9
+2026-03-26 15:21:25.813,9,Frendy's Fantastic Team,DROPPED,Gabriel Moreno,hitter,78.9
+2026-03-26 14:07:47.907,5,U Just Lost To Edwin Diaz,DROPPED,Tucupita Marcano,,0.0
+2026-03-26 14:07:47.907,5,U Just Lost To Edwin Diaz,FA ADDED,Chase DeLauter,hitter,226.0
+2026-03-26 13:25:46.937,4,Late Night Bettsing,FA ADDED,Willson Contreras,hitter,214.5
+2026-03-26 13:24:14.959,4,Late Night Bettsing,FA ADDED,Justin Steele,pitcher,272.15999999999997
+2026-03-26 13:23:46.390,4,Late Night Bettsing,FA ADDED,Joe Musgrove,pitcher,259.20000000000005
+2026-03-26 12:42:32.288,9,Frendy's Fantastic Team,FA ADDED,Shane McClanahan,pitcher,271.57936070366026
+2026-03-26 12:41:47.626,9,Frendy's Fantastic Team,FA ADDED,Connelly Early,pitcher,205.67458950956677
+2026-03-26 12:13:07.926,9,Frendy's Fantastic Team,FA ADDED,Jose Caballero,hitter,151.8
+2026-03-26 10:02:16.602,2,Team Solomon,FA ADDED,Robert Suarez,pitcher,161.9
+2026-03-26 10:01:27.080,2,Team Solomon,FA ADDED,JJ Wetherholt,hitter,233.4
+2026-03-26 10:01:20.058,2,Team Solomon,FA ADDED,Jo Adell,hitter,194.2
+2026-03-26 05:26:48.600,8,New York Ligers,FA ADDED,Cade Horton,pitcher,241.92716521641358
+2026-03-26 05:06:37.897,8,New York Ligers,FA ADDED,Hunter Greene,pitcher,294.48
+2026-03-26 04:58:06.035,8,New York Ligers,FA ADDED,Carlos Rodon,pitcher,265.68
+2026-03-26 04:24:59.536,1,Boone's Bad Bullpen,WAIVER ADDED,Kodai Senga,pitcher,234.8515061566481
+2026-03-26 04:24:59.536,7,2015 Draft First Round,WAIVER ADDED,Robert Garcia,pitcher,111.2
+2026-03-26 04:24:59.536,8,New York Ligers,WAIVER ADDED,Bubba Chandler,pitcher,227.3433735951119
+2026-03-26 04:24:59.536,8,New York Ligers,DROPPED,Tim Anderson,,0.0
+2026-03-26 04:24:59.536,10,Treasure Island Mashers,DROPPED,Hunter Goodman,hitter,200.7
+2026-03-26 04:24:59.536,10,Treasure Island Mashers,WAIVER ADDED,Carson Benge,hitter,127.8
+2026-03-26 04:24:59.536,1,Boone's Bad Bullpen,DROPPED,Emmanuel Clase,,0.0
+2026-03-26 04:24:59.536,1,Boone's Bad Bullpen,WAIVER ADDED,Konnor Griffin,hitter,143.2
+2026-03-26 04:24:59.536,7,2015 Draft First Round,WAIVER ADDED,Trevor Megill,pitcher,163.7
+2026-03-26 04:24:59.536,4,Late Night Bettsing,WAIVER ADDED,Jackson Holliday,,0.0
+2026-03-24 20:34:38.372,4,Late Night Bettsing,DROPPED,Kungkuan Giljegiljaw,,0.0
