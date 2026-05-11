@@ -123,7 +123,8 @@ def main():
     from app import espn_connector as ec
     from scripts.xfp.opponent_lineup_overlap import (
         SLOT_FILL_ORDER, SLOT_DISPLAY_GROUP, DISPLAY_ORDER,
-        SP_REMAINING_STARTS, load_projections, fill_slots, build_team_players)
+        SP_REMAINING_STARTS, HEALTHY_SP_STARTS_PER_WEEK,
+        load_projections, fill_slots, build_team_players)
 
     h_lookup, p_lookup = load_projections()
     info_lookup = collect_player_info()
@@ -131,15 +132,35 @@ def main():
     league = ec._get_league()
     my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
 
+    # Capture per-player IL/active status from live ESPN
+    espn_status = {}
+    for p in my_team.roster:
+        espn_status[_norm(p.name)] = {
+            'name': p.name,
+            'injury_status': getattr(p, 'injuryStatus', 'ACTIVE'),
+            'injured': bool(getattr(p, 'injured', False)),
+            'lineup_slot': getattr(p, 'lineupSlot', '?'),
+            'position': getattr(p, 'position', '?'),
+            'eligible_slots': list(getattr(p, 'eligibleSlots', []) or []),
+        }
+
     print(f'\nLIGERS AUDIT — {date.today()}')
     print('=' * 78)
     print(f'Record: {my_team.wins}-{my_team.losses}  Standing: #{my_team.standing}')
     print(f'Roster size: {len(my_team.roster)}')
     print()
 
-    # Slot fill
+    # Slot fill — exclude IL'd players from the optimal starting lineup
     team_players = build_team_players(my_team, h_lookup, p_lookup)
-    slot_assignment, bench = fill_slots(team_players)
+    # Tag IL status from ESPN
+    for tp in team_players:
+        nk = _norm(tp['name'])
+        st = espn_status.get(nk, {})
+        tp['injured'] = st.get('injured', False)
+        tp['injury_status'] = st.get('injury_status', 'ACTIVE')
+        tp['lineup_slot'] = st.get('lineup_slot', '?')
+    active_team_players = [p for p in team_players if not p['injured']]
+    slot_assignment, bench = fill_slots(active_team_players)
     total_value = sum(s['value'] for s in slot_assignment.values() if s['name'])
 
     print('STARTING LINEUP (greedy-optimal via eligibleSlots):')
@@ -166,15 +187,32 @@ def main():
 
     print(f'\nTotal starting-lineup RoS FP value: {total_value:.1f}')
 
-    # Bench
-    print('\nBENCH (not in starting lineup):')
+    # Bench (active, not IL'd)
+    print('\nACTIVE BENCH (would-be starters but model has higher-value alternatives):')
     if bench:
         for p in bench:
             nk = _norm(p['name'])
             ino = info_lookup.get(nk, {})
-            print(f'  {p["name"]:<28s}  value={p["value"]:.1f}  signal={ino.get("signal", "—")}')
+            print(f'  {p["name"]:<28s}  RoS={p["value"]:.1f}  signal={ino.get("signal", "—")}')
     else:
         print('  (none — full starter usage)')
+
+    # IL — separated out
+    il_players = [p for p in team_players if p['injured']]
+    print('\nIL / INJURED (do not drop — coming back):')
+    if il_players:
+        for p in il_players:
+            nk = _norm(p['name'])
+            ino = info_lookup.get(nk, {})
+            inj_label = {'FIFTEEN_DAY_DL': '15-day IL',
+                         'SIXTY_DAY_DL': '60-day IL',
+                         'DAY_TO_DAY': 'day-to-day',
+                         'OUT': 'out'}.get(p['injury_status'], p['injury_status'])
+            print(f'  {p["name"]:<28s}  status={inj_label:<12s}  '
+                  f'projection (if healthy)={ino.get("ros_fp", p["value"]):.1f}  '
+                  f'src={ino.get("signal", "—")}')
+    else:
+        print('  (none)')
 
     # Position-by-position assessment vs opponent_lineup_overlap.json
     overlap_path = OUT / 'opponent_lineup_overlap.json'
@@ -195,19 +233,59 @@ def main():
             read = 'STRENGTH' if edge > 30 else ('WEAKNESS' if edge < -30 else 'avg')
             print(f'{g:<14s} {mv.get("value", 0):>10.1f} {edge:>+10.1f}  {read}')
 
-    # Drop candidates: low signal + low projection
-    print('\nDROP CANDIDATES (signal=drop OR low replacement_delta):')
-    drops = []
-    for p in my_team.roster:
-        nk = _norm(p.name)
+    # Drop candidates: low projection bench players, ACTIVE only (no IL)
+    print('\nDROP CANDIDATES (ACTIVE bench players ranked by lowest model value — IL excluded):')
+    drop_candidates = []
+    for p in bench:
+        nk = _norm(p['name'])
         ino = info_lookup.get(nk, {})
-        sig = ino.get('signal')
-        rd = ino.get('replacement_delta', 0)
-        if sig == 'drop' or rd <= -0.02:
-            drops.append((p.name, sig, rd))
-    drops.sort(key=lambda x: x[2])
-    for nm, sig, rd in drops[:5]:
-        print(f'  {nm:<28s}  signal={sig}  repl_delta={rd:+.3f}')
+        drop_candidates.append({
+            'name': p['name'],
+            'role': 'pitcher' if p['is_pitcher'] else 'hitter',
+            'ros_value': p['value'],
+            'signal': ino.get('signal', '—'),
+            'repl_delta': ino.get('replacement_delta', 0),
+        })
+    drop_candidates.sort(key=lambda x: x['ros_value'])
+    for d in drop_candidates[:5]:
+        print(f'  {d["name"]:<28s}  role={d["role"]:<8s}  RoS={d["ros_value"]:>6.1f}  '
+              f'signal={d["signal"]}  repl_delta={d["repl_delta"]:+.3f}')
+
+    # Top FREE-AGENT pickups available (true FAs only, ranked by RoS value)
+    print('\nTOP AVAILABLE HITTER FAs (model RoS, ranked):')
+    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    # Build owned set across whole league
+    owned = set()
+    for t in league.teams:
+        for p in t.roster:
+            owned.add(_norm(p.name))
+    rh['nk'] = rh['player_name'].map(_norm)
+    fa_hitters = rh[~rh['nk'].isin(owned)].copy()
+    fa_hitters = fa_hitters.dropna(subset=['expected_total_fp_remaining'])
+    fa_hitters = fa_hitters.sort_values('expected_total_fp_remaining', ascending=False)
+    cols_fa = ['player_name', 'primary_position', 'team',
+               'xfp_rh3_per_pa', 'expected_total_fp_remaining', 'signal']
+    avail_cols = [c for c in cols_fa if c in fa_hitters.columns]
+    for _, r in fa_hitters.head(15).iterrows():
+        print(f'  {r["player_name"]:<25s} {r.get("primary_position", "?"):<5s} '
+              f'team={r.get("team", "?"):<5s} '
+              f'RoS={r.get("expected_total_fp_remaining", 0):>6.1f} '
+              f'fp/PA={r.get("xfp_rh3_per_pa", 0):.3f}  '
+              f'signal={r.get("signal", "—")}')
+
+    # Top FA pitchers too — in case any are sneaky
+    print('\nTOP AVAILABLE PITCHER FAs (model RoS, ranked):')
+    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp['nk'] = rp['player_name'].map(_norm)
+    fa_pit = rp[~rp['nk'].isin(owned)].copy()
+    fa_pit['ros_proxy'] = fa_pit['xfp_rp3_per_start'].fillna(0) * SP_REMAINING_STARTS
+    fa_pit = fa_pit.sort_values('ros_proxy', ascending=False)
+    for _, r in fa_pit.head(10).iterrows():
+        src = r.get('prior_source', 'rp3_model')
+        print(f'  {r["player_name"]:<25s} '
+              f'fp/start={r.get("xfp_rp3_per_start", 0):>5.2f}  '
+              f'RoS_est={r["ros_proxy"]:>6.1f}  '
+              f'src={src}  signal={r.get("signal", "—")}')
 
     # Trade priorities from smart_trade_finder
     finder_path = OUT / 'smart_trade_finder.json'

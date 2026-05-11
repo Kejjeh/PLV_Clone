@@ -2,7 +2,7 @@
 
 Record: 4-1 (Standing #2)
 Roster: 29 players
-Total starting-lineup RoS value: **5006.0 FP**
+Total starting-lineup RoS value: **4671.7 FP**
 
 ## Starting lineup
 
@@ -17,26 +17,22 @@ Total starting-lineup RoS value: **5006.0 FP**
 | OF2 | Jordan Walker | 219.2 | hold | — |
 | OF3 | Corbin Carroll | 209.2 | hold | — |
 | OF4 | Michael Harris II | 206.1 | add | — |
-| OF5 | Wyatt Langford | 117.8 | hold | — |
+| OF5 | (empty) | — | — | — |
 | MI | Trea Turner | 229.5 | hold | SLUMP pct=13 |
 | CI | Pete Alonso | 239.1 | hold | SLUMP pct=15 |
 | UTIL | Brendan Donovan | 105.9 | hold | — |
-| SP1 | Tyler Glasnow | 350.3 | add | recent form +3.77 |
-| SP2 | Jose Soriano | 319.1 | hold | recent form -6.92 |
-| SP3 | Freddy Peralta | 307.1 | hold | recent form -1.00 |
-| SP4 | Max Fried | 304.2 | hold | recent form -1.04 |
-| SP5 | Hunter Greene | 294.5 | il | IL |
+| SP1 | Jose Soriano | 319.1 | hold | recent form -6.92 |
+| SP2 | Freddy Peralta | 307.1 | hold | recent form -1.00 |
+| SP3 | Max Fried | 304.2 | hold | recent form -1.04 |
+| SP4 | Framber Valdez | 276.5 | hold | recent form +2.49 |
+| SP5 | Parker Messick | 273.5 | hold | recent form -1.05 |
 | RP1 | Jhoan Duran | 242.1 | — | — |
-| RP2 | Pete Fairbanks | 224.7 | — | — |
-| RP3 | Ryan Helsley | 205.9 | — | — |
+| RP2 | Daniel Palencia | 155.1 | — | — |
+| RP3 | Lucas Erceg | 153.8 | — | — |
 
 ## Bench
 
-- Framber Valdez — value 276.5, signal=hold
-- Parker Messick — value 273.5, signal=hold
 - Will Warren — value 270.2, signal=hold
 - Carlos Rodon — value 265.7, signal=il
 - Kyle Bradish — value 240.6, signal=hold
-- Daniel Palencia — value 155.1, signal=—
-- Lucas Erceg — value 153.8, signal=—
 - Tanner Scott — value 152.4, signal=—

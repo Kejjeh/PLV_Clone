@@ -96,6 +96,12 @@ def main():
     league = ec._get_league()
     val_lookup = build_player_value_lookup()
 
+    # Snapshot of CURRENT rosters so we can tell "still held" vs "rented" pickups
+    currently_rostered = set()  # (team_name, normalized_player_name)
+    for t in league.teams:
+        for p in t.roster:
+            currently_rostered.add((t.team_name, _norm(p.name)))
+
     cutoff = datetime.now() - timedelta(days=args.days)
     activity_rows = []
     for msg_type in ['ADDED', 'DROPPED', 'WAIVER ADDED', 'WAIVER DROPPED', 'FA ADDED', 'TRADED']:
@@ -113,6 +119,7 @@ def main():
                 team_obj, action_type, player_name = action[0], action[1], action[2]
                 nk = _norm(player_name)
                 val = val_lookup.get(nk, {})
+                still_held = (team_obj.team_name, nk) in currently_rostered
                 activity_rows.append({
                     'date': act_date,
                     'team_id': team_obj.team_id,
@@ -121,6 +128,7 @@ def main():
                     'player': str(player_name),
                     'role': val.get('role'),
                     'ros_fp': val.get('ros_fp', 0),
+                    'still_held': still_held,
                 })
 
     df = pd.DataFrame(activity_rows).drop_duplicates(
@@ -166,17 +174,21 @@ def main():
     for _, r in by_team.iterrows():
         print(f'  {r["team_name"]:<28s} {r["n_drops"]:>8} {r["total_value_dropped"]:>10.1f} {r["worst_drop_value"]:>8.1f}')
 
-    # 4. Net waiver effectiveness per team
-    adds_by_team = adds.groupby('team_name')['ros_fp'].sum().reset_index().rename(columns={'ros_fp': 'value_added'})
-    drops_by_team = drops.groupby('team_name')['ros_fp'].sum().reset_index().rename(columns={'ros_fp': 'value_dropped'})
+    # 4. Net waiver effectiveness: count ONLY pickups still held today (not rentals)
+    adds_held = adds[adds['still_held']]
+    adds_by_team = adds_held.groupby('team_name')['ros_fp'].sum().reset_index().rename(
+        columns={'ros_fp': 'value_added_held'})
+    # Drops still reflect lost value — count all of them (they're gone either way)
+    drops_by_team = drops.groupby('team_name')['ros_fp'].sum().reset_index().rename(
+        columns={'ros_fp': 'value_dropped'})
     eff = adds_by_team.merge(drops_by_team, on='team_name', how='outer').fillna(0)
-    eff['net'] = eff['value_added'] - eff['value_dropped']
+    eff['net'] = eff['value_added_held'] - eff['value_dropped']
     eff = eff.sort_values('net', ascending=False)
-    print(f'\n=== 4. NET WAIVER EFFECTIVENESS ({args.days}d, added − dropped) ===')
-    print(f'{"Team":<28s} {"Added":>10s} {"Dropped":>10s} {"Net":>10s}')
+    print(f'\n=== 4. NET WAIVER EFFECTIVENESS ({args.days}d, ONLY adds-still-held minus drops) ===')
+    print(f'{"Team":<28s} {"Held Adds":>10s} {"Dropped":>10s} {"Net":>10s}')
     for _, r in eff.iterrows():
         marker = '   <-- YOU' if 'Ligers' in r['team_name'] else ''
-        print(f'  {r["team_name"]:<28s} {r["value_added"]:>10.1f} {r["value_dropped"]:>10.1f} {r["net"]:>+10.1f}{marker}')
+        print(f'  {r["team_name"]:<28s} {r["value_added_held"]:>10.1f} {r["value_dropped"]:>10.1f} {r["net"]:>+10.1f}{marker}')
 
     df.to_csv(OUT / 'waiver_watch.csv', index=False)
     print(f'\nwrote {OUT / "waiver_watch.csv"}')
