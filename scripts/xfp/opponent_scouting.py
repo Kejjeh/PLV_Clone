@@ -39,6 +39,17 @@ ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
                 'OF': 5, 'MI': 1, 'CI': 1, 'UTIL': 1,
                 'SP': 5, 'RP': 3}
 
+# Cap-aware starting slots for the SP-value proxy. The BrownU 10-SP/week cap
+# means past the top-5 SPs, marginal value drops to ~0 (and bench SPs become
+# IL-coverage / streaming options). Use 5 starting SPs × 18 remaining starts
+# as the per-SP weight, not all rostered SPs.
+CAP_AWARE_SP_STARTERS = 5
+CAP_AWARE_SP_RoS_STARTS = 18  # ~per starting SP RoS
+CAP_AWARE_RP_STARTERS = 3
+CAP_AWARE_RP_RoS_GAMES = 25
+# 13 hitter slots in BrownU; deeper bench doesn't add weekly score
+CAP_AWARE_HITTER_STARTERS = 13
+
 
 def _norm(s):
     s = unicodedata.normalize('NFD', str(s))
@@ -50,17 +61,22 @@ def _norm(s):
 
 def main():
     from app import espn_connector as ec
+    from scripts.xfp.opponent_lineup_overlap import load_projections
     league = ec._get_league()
 
-    # Load projections
+    # Load projections — hitters and pitchers
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
     rh['nk'] = rh['player_name'].map(_norm)
-    rp['nk'] = rp['player_name'].map(_norm)
-    rh_lookup = rh.drop_duplicates('nk').set_index('nk')['xfp_rh3_per_pa'].to_dict()
-    rh_pa = rh.drop_duplicates('nk').set_index('nk')['expected_pa_remaining'].to_dict() if 'expected_pa_remaining' in rh.columns else {}
-    rp_lookup = rp.drop_duplicates('nk').set_index('nk')['xfp_rp3_per_start'].to_dict()
-    rp_gs = rp.drop_duplicates('nk').set_index('nk').get('gs_to', pd.Series()).to_dict() if 'gs_to' in rp.columns else {}
+    rh = rh.drop_duplicates('nk')
+    rh_lookup = rh.set_index('nk')['xfp_rh3_per_pa'].to_dict()
+    rh_pa = rh.set_index('nk')['expected_pa_remaining'].to_dict() if 'expected_pa_remaining' in rh.columns else {}
+
+    # Use role-aware projection loader (rp3 for SPs, rprs2 for closers/setup).
+    # p_lookup_full[nk] = {'name', 'ros_fp', 'src'}. For SPs ros_fp = per_start*18;
+    # for RPs ros_fp = rprs2.xfp_ros (full RoS already).
+    _, p_lookup_full = load_projections()
+    rp_lookup = {k: v['ros_fp'] for k, v in p_lookup_full.items()}
+    rp_src    = {k: v.get('src') for k, v in p_lookup_full.items()}
 
     # Recent activity (transactions) for context
     try:
@@ -101,11 +117,13 @@ def main():
             nk = _norm(p.name)
             pos = getattr(p, 'position', '')
             if pos in {'SP', 'RP', 'P'}:
-                fp_per_g = rp_lookup.get(nk)
+                # ros_fp here is total RoS value (rp3 per_start × 18 for SPs,
+                # rprs2 full RoS for closers/setup). Treat all on same scale.
+                ros_value = rp_lookup.get(nk, 0) or 0
                 roster_pits.append({
                     'name': p.name, 'pos': pos, 'nk': nk,
-                    'xfp_per_start': fp_per_g,
-                    'gs_to': rp_gs.get(nk) if rp_gs else None,
+                    'ros_fp': ros_value,
+                    'src': rp_src.get(nk, 'none'),
                 })
             else:
                 fp_per_pa = rh_lookup.get(nk)
@@ -117,11 +135,20 @@ def main():
                     'projected_ros_fp': (fp_per_pa * pa_est) if fp_per_pa and pa_est else None,
                 })
 
-        # Aggregate
-        hit_total_fp = sum(h['projected_ros_fp'] or 0 for h in roster_hits)
-        # Pitchers: estimate per-pitcher with ~16 remaining starts cap (proxy)
-        sp_total = sum((p['xfp_per_start'] or 0) * 16 for p in roster_pits if p['pos'] == 'SP')
-        rp_total = sum((p['xfp_per_start'] or 0) * 30 for p in roster_pits if p['pos'] == 'RP')
+        # Aggregate — cap-aware: only top 13 hitters (starting slots) count
+        hit_pool = sorted([(h['projected_ros_fp'] or 0) for h in roster_hits], reverse=True)
+        hit_total_fp = sum(hit_pool[:CAP_AWARE_HITTER_STARTERS])
+        # SP: cap-aware. Top 5 SPs by projected RoS FP count (BrownU 10-SP cap).
+        # ros_fp is already total RoS (per_start * 18 for rp3 SPs).
+        sp_pool = sorted(
+            [p['ros_fp'] for p in roster_pits if p['pos'] == 'SP'],
+            reverse=True)
+        sp_total = sum(sp_pool[:CAP_AWARE_SP_STARTERS])
+        # RP: top 3 RPs (3 RP slots). rprs2 gives full RoS directly.
+        rp_pool = sorted(
+            [p['ros_fp'] for p in roster_pits if p['pos'] == 'RP'],
+            reverse=True)
+        rp_total = sum(rp_pool[:CAP_AWARE_RP_STARTERS])
 
         # Position imbalances vs standard slots
         pos_counts = {}
@@ -131,8 +158,8 @@ def main():
         # Trade-chip candidates: rostered with high projected RoS who might be expendable
         top_hits = sorted([h for h in roster_hits if h['projected_ros_fp']],
                           key=lambda x: -x['projected_ros_fp'])
-        top_pits = sorted([p for p in roster_pits if p['xfp_per_start']],
-                          key=lambda x: -x['xfp_per_start'])
+        top_pits = sorted([p for p in roster_pits if p['ros_fp']],
+                          key=lambda x: -x['ros_fp'])
 
         tx = tx_counts.get(team.team_id, {'trades': 0, 'adds': 0, 'drops': 0})
         rows.append({
