@@ -8,8 +8,8 @@ Boone's Bad Bullpen,MI (2B/SS),229.5,209.1,20.4
 Boone's Bad Bullpen,CI (1B/3B),239.1,196.3,42.8
 Boone's Bad Bullpen,OF,1062.4,1030.9,31.5
 Boone's Bad Bullpen,UTIL,105.9,165.0,-59.1
-Boone's Bad Bullpen,SP,1181.4,1146.3,35.1
-Boone's Bad Bullpen,RP,672.7,594.2,78.5
+Boone's Bad Bullpen,SP,1575.2,1528.4,46.8
+Boone's Bad Bullpen,RP,672.7,684.1,-11.4
 Team Solomon,C,195.8,207.4,-11.6
 Team Solomon,1B,249.9,302.6,-52.7
 Team Solomon,2B,207.8,233.4,-25.6
@@ -19,7 +19,7 @@ Team Solomon,MI (2B/SS),229.5,170.0,59.5
 Team Solomon,CI (1B/3B),239.1,249.0,-9.9
 Team Solomon,OF,1062.4,1091.3,-28.9
 Team Solomon,UTIL,105.9,186.9,-81.0
-Team Solomon,SP,1181.4,1267.0,-85.6
+Team Solomon,SP,1575.2,1689.3,-114.1
 Team Solomon,RP,672.7,581.1,91.6
 Late Night Bettsing,C,195.8,246.5,-50.7
 Late Night Bettsing,1B,249.9,248.7,1.2
@@ -30,7 +30,7 @@ Late Night Bettsing,MI (2B/SS),229.5,211.6,17.9
 Late Night Bettsing,CI (1B/3B),239.1,245.7,-6.6
 Late Night Bettsing,OF,1062.4,1000.3,62.1
 Late Night Bettsing,UTIL,105.9,214.7,-108.8
-Late Night Bettsing,SP,1181.4,1091.2,90.2
+Late Night Bettsing,SP,1575.2,1454.9,120.2
 Late Night Bettsing,RP,672.7,609.8,62.9
 U Just Lost To Edwin Diaz,C,195.8,269.5,-73.7
 U Just Lost To Edwin Diaz,1B,249.9,244.5,5.4
@@ -41,7 +41,7 @@ U Just Lost To Edwin Diaz,MI (2B/SS),229.5,207.5,22.0
 U Just Lost To Edwin Diaz,CI (1B/3B),239.1,226.3,12.8
 U Just Lost To Edwin Diaz,OF,1062.4,1125.0,-62.6
 U Just Lost To Edwin Diaz,UTIL,105.9,211.5,-105.6
-U Just Lost To Edwin Diaz,SP,1181.4,1084.4,97.0
+U Just Lost To Edwin Diaz,SP,1575.2,1445.9,129.3
 U Just Lost To Edwin Diaz,RP,672.7,616.2,56.5
 2015 Draft First Round,C,195.8,169.2,26.6
 2015 Draft First Round,1B,249.9,186.6,63.3
@@ -52,7 +52,7 @@ U Just Lost To Edwin Diaz,RP,672.7,616.2,56.5
 2015 Draft First Round,CI (1B/3B),239.1,195.6,43.5
 2015 Draft First Round,OF,1062.4,1084.0,-21.6
 2015 Draft First Round,UTIL,105.9,261.4,-155.5
-2015 Draft First Round,SP,1181.4,1201.9,-20.5
+2015 Draft First Round,SP,1575.2,1602.5,-27.4
 2015 Draft First Round,RP,672.7,489.0,183.7
 Frendy's Fantastic Team,C,195.8,291.5,-95.7
 Frendy's Fantastic Team,1B,249.9,251.3,-1.4
@@ -63,7 +63,7 @@ Frendy's Fantastic Team,MI (2B/SS),229.5,247.5,-18.0
 Frendy's Fantastic Team,CI (1B/3B),239.1,226.0,13.1
 Frendy's Fantastic Team,OF,1062.4,1098.4,-36.0
 Frendy's Fantastic Team,UTIL,105.9,222.1,-116.2
-Frendy's Fantastic Team,SP,1181.4,1165.2,16.1
+Frendy's Fantastic Team,SP,1575.2,1553.7,21.5
 Frendy's Fantastic Team,RP,672.7,135.6,537.1
 Treasure Island Mashers,C,195.8,156.2,39.6
 Treasure Island Mashers,1B,249.9,259.2,-9.3
@@ -74,5 +74,5 @@ Treasure Island Mashers,MI (2B/SS),229.5,218.9,10.6
 Treasure Island Mashers,CI (1B/3B),239.1,193.3,45.8
 Treasure Island Mashers,OF,1062.4,1030.4,32.0
 Treasure Island Mashers,UTIL,105.9,167.4,-61.5
-Treasure Island Mashers,SP,1181.4,1115.1,66.3
+Treasure Island Mashers,SP,1575.2,1486.8,88.3
 Treasure Island Mashers,RP,672.7,223.7,449.0

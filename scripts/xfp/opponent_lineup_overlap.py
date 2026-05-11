@@ -74,7 +74,22 @@ SLOT_DISPLAY_GROUP = {
 DISPLAY_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
                   'OF', 'UTIL', 'SP', 'RP']
 
-SP_REMAINING_STARTS = 18
+# Empirical 2024-2025 finding: league-average SP makes 1.19 starts per active
+# week (NOT 2). 82.2% of SP-weeks have 1 start, only 17.8% have 2.
+# So SP_REMAINING_STARTS scales dynamically with weeks left in season.
+HEALTHY_SP_STARTS_PER_WEEK = 1.19  # empirical, from starts_per_week_analysis.py
+SEASON_END_DATE = '2026-09-28'  # approximate MLB regular season end
+
+
+def _compute_sp_remaining_starts() -> int:
+    """Today-relative remaining starts for a healthy full-time SP."""
+    from datetime import date as _date
+    days = (pd.Timestamp(SEASON_END_DATE).date() - _date.today()).days
+    weeks = max(days, 0) / 7
+    return max(int(round(weeks * HEALTHY_SP_STARTS_PER_WEEK)), 8)
+
+
+SP_REMAINING_STARTS = _compute_sp_remaining_starts()
 
 
 def _norm(s):

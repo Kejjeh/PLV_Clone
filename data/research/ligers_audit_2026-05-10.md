@@ -2,7 +2,7 @@
 
 Record: 4-1 (Standing #2)
 Roster: 29 players
-Total starting-lineup RoS value: **4612.2 FP**
+Total starting-lineup RoS value: **5006.0 FP**
 
 ## Starting lineup
 
@@ -21,22 +21,22 @@ Total starting-lineup RoS value: **4612.2 FP**
 | MI | Trea Turner | 229.5 | hold | SLUMP pct=13 |
 | CI | Pete Alonso | 239.1 | hold | SLUMP pct=15 |
 | UTIL | Brendan Donovan | 105.9 | hold | — |
-| SP1 | Tyler Glasnow | 262.7 | add | recent form +3.77 |
-| SP2 | Jose Soriano | 239.3 | hold | recent form -6.92 |
-| SP3 | Freddy Peralta | 230.3 | hold | recent form -1.00 |
-| SP4 | Max Fried | 228.1 | hold | recent form -1.04 |
-| SP5 | Hunter Greene | 220.9 | il | IL |
+| SP1 | Tyler Glasnow | 350.3 | add | recent form +3.77 |
+| SP2 | Jose Soriano | 319.1 | hold | recent form -6.92 |
+| SP3 | Freddy Peralta | 307.1 | hold | recent form -1.00 |
+| SP4 | Max Fried | 304.2 | hold | recent form -1.04 |
+| SP5 | Hunter Greene | 294.5 | il | IL |
 | RP1 | Jhoan Duran | 242.1 | — | — |
 | RP2 | Pete Fairbanks | 224.7 | — | — |
 | RP3 | Ryan Helsley | 205.9 | — | — |
 
 ## Bench
 
-- Framber Valdez — value 207.4, signal=hold
-- Parker Messick — value 205.2, signal=hold
-- Will Warren — value 202.7, signal=hold
-- Carlos Rodon — value 199.3, signal=il
-- Kyle Bradish — value 180.4, signal=hold
+- Framber Valdez — value 276.5, signal=hold
+- Parker Messick — value 273.5, signal=hold
+- Will Warren — value 270.2, signal=hold
+- Carlos Rodon — value 265.7, signal=il
+- Kyle Bradish — value 240.6, signal=hold
 - Daniel Palencia — value 155.1, signal=—
 - Lucas Erceg — value 153.8, signal=—
 - Tanner Scott — value 152.4, signal=—
