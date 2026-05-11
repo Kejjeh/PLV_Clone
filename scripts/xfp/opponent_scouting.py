@@ -39,12 +39,13 @@ ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
                 'OF': 5, 'MI': 1, 'CI': 1, 'UTIL': 1,
                 'SP': 5, 'RP': 4}
 
-# Cap-aware starting slots for the SP-value proxy. The BrownU 10-SP/week cap
-# means past the top-5 SPs, marginal value drops to ~0 (and bench SPs become
-# IL-coverage / streaming options). Use 5 starting SPs × 18 remaining starts
-# as the per-SP weight, not all rostered SPs.
-CAP_AWARE_SP_STARTERS = 5
-CAP_AWARE_SP_RoS_STARTS = 18  # ~per starting SP RoS
+# Cap-aware aggregation for SP value. BrownU has NO per-day SP slot count —
+# the only constraint is 10 SP starts/week scoring cap. So total team
+# SP-starts can go up to ~200 over RoS (10 × ~20 weeks). Each SP averages
+# ~1.19 × weeks_remaining ≈ 24 RoS starts. Optimal SP count = 200 / 24 ≈ 8.4
+# (8-9 SPs). Above that, marginal SPs lose value as their starts get capped.
+CAP_AWARE_TEAM_SP_STARTS = 200  # 10 starts/week × ~20 RoS weeks
+CAP_AWARE_PER_SP_STARTS = 24    # ~1.19 starts/week × 20 weeks
 CAP_AWARE_RP_STARTERS = 4
 CAP_AWARE_RP_RoS_GAMES = 25
 # 13 hitter slots in BrownU; deeper bench doesn't add weekly score
@@ -138,13 +139,21 @@ def main():
         # Aggregate — cap-aware: only top 13 hitters (starting slots) count
         hit_pool = sorted([(h['projected_ros_fp'] or 0) for h in roster_hits], reverse=True)
         hit_total_fp = sum(hit_pool[:CAP_AWARE_HITTER_STARTERS])
-        # SP: cap-aware. Top 5 SPs by projected RoS FP count (BrownU 10-SP cap).
-        # ros_fp is already total RoS (per_start * 18 for rp3 SPs).
+        # SP: cap-aware. Use ALL SPs but cap cumulative starts at the 10/week
+        # ceiling (200 RoS total). Per-SP value is per_start × min(remaining_cap, 24).
+        # ros_fp here = per_start × 24 already (set by load_projections).
         sp_pool = sorted(
             [p['ros_fp'] for p in roster_pits if p['pos'] == 'SP'],
             reverse=True)
-        sp_total = sum(sp_pool[:CAP_AWARE_SP_STARTERS])
-        # RP: top 3 RPs (3 RP slots). rprs2 gives full RoS directly.
+        sp_total = 0.0
+        starts_remaining = CAP_AWARE_TEAM_SP_STARTS
+        for ros in sp_pool:
+            if starts_remaining <= 0: break
+            this_starts = min(CAP_AWARE_PER_SP_STARTS, starts_remaining)
+            if CAP_AWARE_PER_SP_STARTS > 0:
+                sp_total += ros * (this_starts / CAP_AWARE_PER_SP_STARTS)
+            starts_remaining -= this_starts
+        # RP: top 4 RPs (real 4 RP slots). rprs2 gives full RoS directly.
         rp_pool = sorted(
             [p['ros_fp'] for p in roster_pits if p['pos'] == 'RP'],
             reverse=True)

@@ -51,17 +51,16 @@ SLOT_FILL_ORDER = [
     ('MI',   {'2B', 'SS', '2B/SS'}),
     ('CI',   {'1B', '3B', '1B/3B'}),
     ('UTIL', {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH', 'UTIL'}),
-    # Note: 'P' is ESPN's generic pitcher flag — not used as a lineup slot in
-    # BrownU. Only 'SP' eligibility fills an SP slot, only 'RP' fills RP.
-    ('SP1',  {'SP'}),
-    ('SP2',  {'SP'}),
-    ('SP3',  {'SP'}),
-    ('SP4',  {'SP'}),
-    ('SP5',  {'SP'}),
-    ('RP1',  {'RP'}),
-    ('RP2',  {'RP'}),
-    ('RP3',  {'RP'}),
-    ('RP4',  {'RP'}),
+    # Note: BrownU has NO per-day SP slot count — any team can roll 10 SPs in
+    # a week (only first 10 starts count for scoring). We keep SP1-SP10 here
+    # as placeholders for greedy assignment ranked by value, then the
+    # cap-aware aggregation post-fill applies the 10-starts/week ceiling
+    # (which works out to 200 starts per team RoS at this date).
+    ('SP1',  {'SP'}), ('SP2',  {'SP'}), ('SP3',  {'SP'}), ('SP4',  {'SP'}),
+    ('SP5',  {'SP'}), ('SP6',  {'SP'}), ('SP7',  {'SP'}), ('SP8',  {'SP'}),
+    ('SP9',  {'SP'}), ('SP10', {'SP'}),
+    # RP cap is real — 4 RP slots in BrownU
+    ('RP1',  {'RP'}), ('RP2',  {'RP'}), ('RP3',  {'RP'}), ('RP4',  {'RP'}),
 ]
 
 # Aggregate slot grouping for display (collapse OF1-5 into single "OF" row)
@@ -69,8 +68,9 @@ SLOT_DISPLAY_GROUP = {
     'C': 'C', '1B': '1B', '2B': '2B', '3B': '3B', 'SS': 'SS',
     'OF1': 'OF', 'OF2': 'OF', 'OF3': 'OF', 'OF4': 'OF', 'OF5': 'OF',
     'MI': 'MI (2B/SS)', 'CI': 'CI (1B/3B)', 'UTIL': 'UTIL',
-    'SP1': 'SP', 'SP2': 'SP', 'SP3': 'SP', 'SP4': 'SP', 'SP5': 'SP',
-    'RP1': 'RP', 'RP2': 'RP', 'RP3': 'RP', 'RP4': 'RP',
+    'SP1':'SP','SP2':'SP','SP3':'SP','SP4':'SP','SP5':'SP',
+    'SP6':'SP','SP7':'SP','SP8':'SP','SP9':'SP','SP10':'SP',
+    'RP1':'RP','RP2':'RP','RP3':'RP','RP4':'RP',
 }
 DISPLAY_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
                   'OF', 'UTIL', 'SP', 'RP']
@@ -169,14 +169,27 @@ def fill_slots(players: list[dict]) -> tuple[dict, list]:
     """Greedy assignment of players to slots in SLOT_FILL_ORDER.
 
     Returns ({slot: {name, value}}, [bench_players_unused]).
-    Pitcher slots filtered to pitcher-eligible only; flex hitter slots
-    skip pitchers automatically (UTIL also doesn't take pitchers).
+
+    For SPs, applies the BrownU 10-starts/week team cap by scaling each
+    SP's RoS value by the cap-binding fraction. SPs ranked above the cap
+    boundary get full value; SPs below contribute only their partial
+    starts under the cap. RoS starts cap = 10 × weeks_remaining ≈ 200
+    when called early-to-mid season.
     """
+    from datetime import date as _date
+    days_remaining = max((pd.Timestamp(SEASON_END_DATE).date() - _date.today()).days, 0)
+    weeks_remaining = days_remaining / 7
+    TEAM_SP_STARTS_CAP = int(round(weeks_remaining * 10))  # 10 SP starts/week
+
     available = sorted(players, key=lambda x: -x['value'])
     assigned = {}
     used = set()  # player names already placed
+    sp_starts_assigned = 0  # cumulative SP starts charged against cap
+    PER_SP_ROS_STARTS = SP_REMAINING_STARTS  # ~24 currently
+
     for slot, allowed in SLOT_FILL_ORDER:
         is_pitch_slot = slot.startswith(('SP', 'RP'))
+        is_sp_slot = slot.startswith('SP')
         for p in available:
             if p['name'] in used:
                 continue
@@ -184,7 +197,20 @@ def fill_slots(players: list[dict]) -> tuple[dict, list]:
                 continue
             if not (p['eligible'] & allowed):
                 continue
-            assigned[slot] = {'name': p['name'], 'value': p['value']}
+            value = p['value']
+            if is_sp_slot:
+                # Apply cumulative SP-starts cap: marginal SPs past the cap
+                # get reduced credit proportional to how many of their
+                # 24 RoS starts fit under the remaining team cap budget.
+                remaining_starts = max(TEAM_SP_STARTS_CAP - sp_starts_assigned, 0)
+                if remaining_starts <= 0:
+                    value = 0.0
+                else:
+                    starts_used = min(PER_SP_ROS_STARTS, remaining_starts)
+                    if PER_SP_ROS_STARTS > 0:
+                        value = value * (starts_used / PER_SP_ROS_STARTS)
+                    sp_starts_assigned += starts_used
+            assigned[slot] = {'name': p['name'], 'value': round(value, 2)}
             used.add(p['name'])
             break
         else:
