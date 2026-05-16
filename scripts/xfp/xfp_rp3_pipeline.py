@@ -76,6 +76,11 @@ RP3_FEATS = [
     'prior_fp_per_start', 'prior_gs_eff',
     'is_on_il_at_split', 'days_since_il_return_imp', 'il_stints_to',
     'split_day',
+    # SP within-season drift (H1, validated 2026-05-12).
+    # Integration backtest gain +0.0157 r over rp3 v1 (clears +0.005 bar).
+    # Velocity is dominant driver; all 6 component metrics validated.
+    'delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
+    'delta_chase', 'delta_zone',
 ]
 
 
@@ -284,6 +289,20 @@ def main():
     pop_l21 = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_LAST21)
     rolling = apply_shrinkage(rolling, pop_to, SHRINK_SPEC_TO)
     rolling = apply_shrinkage(rolling, pop_l21, SHRINK_SPEC_LAST21)
+
+    # NEW v2: SP within-season drift features (H1, validated 2026-05-12).
+    # delta = last_21_day_rate − cumulative_to_date_rate (positive = recent uptick).
+    rolling['delta_velo']    = rolling['avg_velo_last21']   - rolling['avg_velo_to']
+    rolling['delta_swstr']   = rolling['swstr_pct_last21']  - rolling['swstr_pct_to']
+    rolling['delta_k_pct']   = rolling['k_pct_last21']      - rolling['k_pct_to']
+    rolling['delta_bb_pct']  = rolling['bb_pct_last21']     - rolling['bb_pct_to']
+    rolling['delta_chase']   = rolling['o_swing_pct_last21']- rolling['o_swing_pct_to']
+    rolling['delta_zone']    = rolling['zone_pct_last21']   - rolling['zone_pct_to']
+    # NaN drift (no last-21 data) → fill 0 (neutral)
+    for c in ('delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
+              'delta_chase', 'delta_zone'):
+        rolling[c] = rolling[c].fillna(0.0)
+    print('  computed 6 within-season drift features')
     for col in (rate + '_sh' for rate in SHRINK_SPEC_LAST21):
         if col in rolling.columns:
             mu = rolling.loc[rolling['year'].isin(TRAIN_YEARS), col].mean(skipna=True)
@@ -298,12 +317,17 @@ def main():
         print(f'  {y}: r={r["r"]:.4f}  mae={r["mae"]:.4f}  n={r["n"]}')
     print(f'  Overall: r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
 
-    # RP2 baseline
-    rp2_feats = [f for f in RP3_FEATS if 'last21' not in f]
-    _ , baseline = cross_year_eval(rolling, rp2_feats)
+    # v2 baseline: drop the 6 SP within-season drift features added 2026-05-12
+    # (delta_velo, delta_swstr, delta_k_pct, delta_bb_pct, delta_chase, delta_zone).
+    # Previously this stripped only _last21 features but RP3 has none left, so the
+    # comparison was vacuous (baseline == model).
+    v2_added = {'delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
+                'delta_chase', 'delta_zone'}
+    baseline_feats = [f for f in RP3_FEATS if 'last21' not in f and f not in v2_added]
+    _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
-    print(f'\n--- RP2 baseline ---  r={baseline["r"]}')
-    print(f'  Δr (RP3 − RP2) = {delta:+.4f}  '
+    print(f'\n--- Baseline (drops v2 drift features) ---  r={baseline["r"]}')
+    print(f'  Δr (RP3 v2 − baseline) = {delta:+.4f}  '
           f'{"PASS" if delta >= 0.005 else "MARGINAL"}  (gate: ≥ +0.005)')
 
     # CI

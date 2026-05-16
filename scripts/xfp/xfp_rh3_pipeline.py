@@ -102,6 +102,15 @@ RH3_FEATS = [
     # Tier-S leading-style predictor: positive residual = career xwOBA exceeds
     # actual wOBA = "unlucky" → mild bump in expected fp.
     'xwoba_residual_career',
+    # WITHIN-SEASON xwOBA - actual wOBA gap (H3, validated 2026-05-12).
+    # Standalone gain +0.077 r; v2 integrated gain +0.006 r over rh3 v1.
+    # Different from xwoba_residual_career (which is career-level) —
+    # this one detects within-2026-season luck regression candidates.
+    'xwoba_gap_to',
+    # Career stage = year - first MLB year (H5, validated 2026-05-12).
+    # Captures young-vs-vet trajectory effects rh3 v1 missed.
+    # Standalone gain +0.017 r; integrated into v2.
+    'career_stage',
 ]
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
@@ -314,6 +323,30 @@ def main():
         print(f'  WARNING: {XWOBA_RESID_CSV} missing — fill xwoba_residual_career=0')
         rolling['xwoba_residual_career'] = 0.0
 
+    # NEW v2 features (validated 2026-05-12):
+    # xwoba_gap_to = within-season expected wOBA on contact − actual wOBA per PA.
+    # Captures regression-candidate signal at the current-season window.
+    if 'xwoba_on_contact_to' in rolling.columns and 'woba_d_sum_to' in rolling.columns:
+        rolling['actual_woba_per_pa_to'] = np.where(
+            rolling['woba_d_sum_to'] > 0,
+            rolling['woba_v_sum_to'] / rolling['woba_d_sum_to'],
+            np.nan)
+        rolling['xwoba_gap_to'] = (rolling['xwoba_on_contact_to']
+                                     - rolling['actual_woba_per_pa_to'])
+        # Fill NaN with 0 (neutral signal)
+        rolling['xwoba_gap_to'] = rolling['xwoba_gap_to'].fillna(0.0)
+        n_with = (rolling['xwoba_gap_to'] != 0).sum()
+        print(f'  computed xwoba_gap_to: {n_with}/{len(rolling)} rows non-trivial')
+    else:
+        rolling['xwoba_gap_to'] = 0.0
+        print('  WARNING: xwoba_on_contact_to or woba_*_sum_to missing — fill 0')
+
+    # career_stage = target year - first MLB year per batter
+    first_year = multiyr.groupby('batter')['year'].min().to_dict()
+    rolling['career_stage'] = rolling.apply(
+        lambda r: r['year'] - first_year.get(r['batter'], r['year']), axis=1)
+    print(f'  computed career_stage: range {rolling["career_stage"].min()}-{rolling["career_stage"].max()}')
+
     # Shrinkage on both windows
     print('Shrinkage (cumulative + last21)...')
     pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
@@ -334,12 +367,17 @@ def main():
         print(f'  {y}: r={r["r"]:.4f}  mae={r["mae"]:.4f}  n={r["n"]}')
     print(f'  Overall: r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
 
-    # RH2 baseline (drop last21 features)
-    rh2_feats = [f for f in RH3_FEATS if 'last21' not in f]
-    _ , baseline = cross_year_eval(rolling, rh2_feats)
+    # v2 baseline: drop the v2-added features (xwoba_gap_to + career_stage)
+    # AND any _last21 features (legacy gate). This is the actual rh1/rh2-style
+    # baseline that v2 should be beating, not "drop last21" alone (which is
+    # vacuous when current RH3_FEATS already has no last21 features).
+    v2_added = {'xwoba_gap_to', 'career_stage'}
+    baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
+    _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
-    print(f'\n--- RH2 baseline (no recency) ---\n  Overall: r={baseline["r"]}')
-    print(f'  Δr (RH3 − RH2) = {delta:+.4f}  '
+    print(f'\n--- Baseline (drops v2 features {sorted(v2_added)} + last21) ---')
+    print(f'  Overall: r={baseline["r"]}')
+    print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  '
           f'{"PASS" if delta >= 0.005 else "MARGINAL"}  (gate: ≥ +0.005)')
 
     # Confidence interval table
