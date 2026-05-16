@@ -1,0 +1,15 @@
+hypothesis,metric,n_train,n_holdout,partial_r_train,partial_r_holdout,n_pos_per_year_train,n_years_evaluated,passes_train_r,passes_consistency,passes_holdout,passes_all
+H2_component_half_vs_half,ev_p90,1270,521,0.5264763056171707,0.6007848380445099,5,5,True,True,True,True
+H2_component_half_vs_half,k_pct,1271,521,0.47239189789129654,0.4611975219302578,5,5,True,True,True,True
+H2_component_half_vs_half,whiff_per_swing,1271,521,0.47039213050294215,0.4357097690634117,5,5,True,True,True,True
+H2_component_half_vs_half,ev_mean,1271,521,0.4510990927753407,0.4715365527128196,5,5,True,True,True,True
+H2_component_half_vs_half,hard_hit_pct,1271,521,0.44985541071844437,0.46481232785016063,5,5,True,True,True,True
+H1_component_first2_last2,whiff_per_swing,1467,593,0.3993736926833806,0.349354167436251,5,5,True,True,True,True
+H2_component_half_vs_half,bb_pct,1271,521,0.37164247462436617,0.387571312656548,5,5,True,True,True,True
+H1_component_first2_last2,ev_p90,1467,593,0.36650826366094935,0.44529651227489275,5,5,True,True,True,True
+H1_component_first2_last2,k_pct,1467,593,0.3656143609013845,0.380998648828619,5,5,True,True,True,True
+H1_component_first2_last2,ev_mean,1467,593,0.2906173740783621,0.38452951568777277,5,5,True,True,True,True
+H1_component_first2_last2,bb_pct,1467,593,0.2785670878477934,0.3176508344886327,5,5,True,True,True,True
+H1_component_first2_last2,hard_hit_pct,1467,593,0.24768412545196222,0.37929003660159705,5,5,True,True,True,True
+H2_component_half_vs_half,barrel_pct,1271,521,0.16465075996464865,0.09952452215292881,5,5,True,True,True,True
+H1_component_first2_last2,barrel_pct,1467,593,0.13110849762230345,0.054244207442193125,5,5,True,True,True,True

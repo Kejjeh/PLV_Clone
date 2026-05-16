@@ -1,16 +1,16 @@
-"""improving_fa_finder.py — intersect rolling-skill-trend with ESPN FA pool.
+"""improving_fa_finder.py — TRUE FAs ranked by validated RoS projection.
 
-Surfaces TRUE free agents (not on any team) whose underlying skills are
-trending UP over recent weeks. Combines:
-  - rolling_skill_trend.json (IMPROVING flag per player)
-  - ESPN free_agents (verified availability + percent_owned)
-  - xfp_rh3_projections (RoS value + eligibility for slot fit)
+Methodology (post-validation 2026-05-11):
+  - PRIMARY ranker: xfp_rh3 RoS (validated cross-year r=0.62)
+  - Trend flag used as a NEGATIVE filter only: drop DECLINING players
+    (the only side of the trend signal with empirically meaningful
+     rest-of-season effect; IMPROVING does NOT add signal beyond RoS)
+  - See feedback_rolling_trend_short_horizon_only.md and
+    scripts/xfp/validate_rolling_trend.py for the empirical backing.
 
-Outputs the top actionable improving FAs ranked by:
-  - Eligible slot fit on Ligers' weakest positions (C / UTIL / OF5)
-  - RoS projection value
-  - Roster % (higher = more urgent claim)
-  - Skill-trend flags count (more positive flags = stronger improvement)
+Outputs:
+  - Top FAs by RoS, with trend as informational context
+  - data/research/fa_finder_validated.csv
 """
 from __future__ import annotations
 from pathlib import Path
@@ -32,12 +32,13 @@ def _norm(s):
 
 
 def main():
-    # Load rolling-skill data
+    # Load rolling-skill data — INFORMATIONAL ONLY (validation v3 showed
+    # the flag is not robust across cutoff/horizon combos; partial r ≤ +0.03
+    # everywhere and reverses at early cutoffs). DO NOT use as a filter or
+    # co-ranker. See feedback_rolling_trend_short_horizon_only.md.
     skill = json.loads((OUT / 'rolling_skill_trend.json').read_text(encoding='utf-8'))
-    improving = [r for r in skill['results']
-                  if r.get('trend') in ('IMPROVING', 'slight_up')]
-    name_to_skill = {_norm(r['name']): r for r in improving}
-    print(f'Skill-improving universe (IMPROVING + slight_up): {len(improving)}')
+    name_to_skill = {_norm(r['name']): r for r in skill['results']}
+    print(f'Universe with trend data (for info column only): {len(name_to_skill)}')
 
     # Pull ESPN free agents
     from app import espn_connector as ec
@@ -47,28 +48,8 @@ def main():
         for p in t.roster:
             rostered.add(_norm(p.name))
     fas = league.free_agents(size=500)
-    fa_info = []
-    for fa in fas:
-        nk = _norm(fa.name)
-        if nk in rostered:
-            continue
-        if nk not in name_to_skill:
-            continue
-        # This player is BOTH a FA and improving
-        sk = name_to_skill[nk]
-        fa_info.append({
-            'name': fa.name,
-            'nk': nk,
-            'position': getattr(fa, 'position', '?'),
-            'proTeam': getattr(fa, 'proTeam', '?'),
-            'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0),
-            'eligibleSlots': list(getattr(fa, 'eligibleSlots', []) or []),
-            'trend': sk['trend'],
-            'flags': sk.get('flags', []),
-            'n_pos_flags': sum(1 for f in sk.get('flags', []) if f.startswith('+')),
-        })
 
-    # Attach rh3 projection
+    # Attach rh3 projection (the validated cross-year r=0.62 ranker)
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
     rh['nk'] = rh['player_name'].map(_norm)
     proj = rh.drop_duplicates('nk').set_index('nk')[[
@@ -76,28 +57,50 @@ def main():
         'replacement_delta', 'primary_position'
     ]].to_dict('index')
 
-    for fa in fa_info:
-        p = proj.get(fa['nk'], {})
-        fa['xfp_per_pa'] = p.get('xfp_rh3_per_pa', 0)
-        fa['ros_fp'] = p.get('expected_total_fp_remaining', 0)
-        fa['signal'] = p.get('signal', '—')
-        fa['repl_delta'] = p.get('replacement_delta', 0)
-        fa['primary_pos'] = p.get('primary_position', '?')
+    fa_info = []
+    for fa in fas:
+        nk = _norm(fa.name)
+        if nk in rostered:
+            continue
+        p = proj.get(nk, {})
+        if not p:
+            continue  # no validated RoS projection — skip
+        sk = name_to_skill.get(nk, {})
+        flags = sk.get('flags', [])
+        fa_info.append({
+            'name': fa.name,
+            'nk': nk,
+            'position': getattr(fa, 'position', '?'),
+            'proTeam': getattr(fa, 'proTeam', '?'),
+            'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0),
+            'eligibleSlots': list(getattr(fa, 'eligibleSlots', []) or []),
+            'trend': sk.get('trend', 'no_data'),
+            'flags': flags,
+            'n_pos_flags': sum(1 for f in flags if f.startswith('+')),
+            'n_neg_flags': sum(1 for f in flags if f.startswith('-')),
+            'xfp_per_pa': p.get('xfp_rh3_per_pa', 0),
+            'ros_fp': p.get('expected_total_fp_remaining', 0),
+            'signal': p.get('signal', '—'),
+            'repl_delta': p.get('replacement_delta', 0),
+            'primary_pos': p.get('primary_position', '?'),
+        })
 
+    # PRIMARY RANK: validated rh3 RoS (sole ranker; trend is info only)
     fa_info.sort(key=lambda x: -(x['ros_fp'] or 0))
 
-    print(f'\nTrue FAs from IMPROVING/slight_up universe: {len(fa_info)}')
+    print(f'\nTrue FAs with RoS projection: {len(fa_info)}')
 
-    print(f'\n=== TOP IMPROVING FREE AGENTS (sorted by RoS, all are skill-trending up) ===')
-    print(f'{"PLAYER":<25s} {"POS":<5s} {"%OWN":>6s} {"RoS":>7s} {"SIG":>5s} {"#+":>3s}  FLAGS')
+    print(f'\n=== TOP FREE AGENTS — ranked by xfp_rh3 RoS (validated, sole ranker) ===')
+    print(f'  Trend column is INFO ONLY (no validated decision use at this cutoff)')
+    print(f'\n{"PLAYER":<25s} {"POS":<6s} {"%OWN":>6s} {"RoS":>7s} {"SIG":>5s} {"TREND":<12s} FLAGS')
     for fa in fa_info[:30]:
-        flags_s = ', '.join(fa['flags'][:5])
-        print(f'  {fa["name"]:<25s} {fa["position"]:<5s} {fa["pct_owned"]:>5.0f}% '
-              f'{fa["ros_fp"]:>7.1f} {fa["signal"]:>5s} {fa["n_pos_flags"]:>3d}  {flags_s}')
+        flags_s = ', '.join(fa['flags'][:4])
+        print(f'  {fa["name"]:<25s} {fa["position"]:<6s} {fa["pct_owned"]:>5.0f}% '
+              f'{fa["ros_fp"]:>7.1f} {fa["signal"]:>5s} {fa["trend"]:<12s} {flags_s}')
 
     # Save
-    pd.DataFrame(fa_info).to_csv(OUT.parent / 'research' / 'improving_fa.csv', index=False)
-    print(f'\nwrote data/research/improving_fa.csv')
+    pd.DataFrame(fa_info).to_csv(OUT.parent / 'research' / 'fa_finder_validated.csv', index=False)
+    print(f'\nwrote data/research/fa_finder_validated.csv')
 
 
 if __name__ == '__main__':
