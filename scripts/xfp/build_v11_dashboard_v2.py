@@ -776,6 +776,10 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin></script>
 </head>
 <body>
+<div style="background:#161b22;border-bottom:1px solid #30363d;padding:.5em 1em;text-align:right;font-family:system-ui,sans-serif;font-size:.85em;color:#8b949e;">
+  <a href="live_dashboard.html" style="color:#3fb950;text-decoration:none;font-weight:bold;">🔴 LIVE TODAY</a>
+  &nbsp;·&nbsp; head-to-head + highlights + auto-refresh (generate via <code style="color:#79c0ff">python scripts/xfp/live_monitor.py --dashboard --watch 60</code>)
+</div>
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════

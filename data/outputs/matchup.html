@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ligers Weekly Matchup</title>
+<style>
+* { box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117;
+       color: #c9d1d9; max-width: 1280px; margin: 0 auto; padding: 0 1em 4em 1em;
+       line-height: 1.5; }
+header { border-bottom: 2px solid #30363d; padding: .8em 0; margin-bottom: 1em;
+         display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap;
+         position: sticky; top: 0; background: #0d1117; z-index: 100; }
+h1 { color: #58a6ff; margin: 0; }
+h2 { color: #79c0ff; margin-top: 1.5em; }
+h2 .totals { float: right; font-size: 0.65em; font-weight: 400; color: #8b949e; }
+h2 .totals b { color: #c9d1d9; }
+h2 .totals .wtd { color: #3fb950; }
+h2 .totals .proj { color: #d2a8ff; }
+h2 .totals .total { color: #f0883e; font-size: 1.2em; }
+nav a { color: #58a6ff; text-decoration: none; margin-left: 1em; font-size: .85em; }
+nav a:hover { text-decoration: underline; }
+.scoreboard { background: #161b22; border: 1px solid #30363d; border-radius: 8px;
+              padding: 1.5em; margin: 1em 0; }
+.score-grid { display: grid; grid-template-columns: 1fr 0.3fr 1fr; gap: 1em;
+              text-align: center; align-items: center; }
+.score-team .name { color: #8b949e; font-size: .85em; margin-bottom: .3em; }
+.score-team .wtd { font-size: 2.5em; font-weight: bold; color: #3fb950; }
+.score-team.opp .wtd { color: #f85149; }
+.score-team .proj { font-size: .85em; color: #8b949e; margin-top: .3em; }
+.score-team .total-final { font-size: 1.4em; color: #f0883e; font-weight: bold; }
+.vs { font-size: 1.5em; color: #6e7681; }
+.win-bar { margin-top: 1.5em; padding-top: 1em; border-top: 1px solid #30363d; }
+.win-bar-label { text-align: center; margin-bottom: .5em; font-size: 1.1em; }
+.win-bar-label .pct { font-weight: bold; font-size: 1.5em; }
+.win-bar-label .pos { color: #3fb950; }
+.win-bar-label .lean-pos { color: #5fb950; }
+.win-bar-label .toss { color: #d29922; }
+.win-bar-label .lean-neg { color: #db6d28; }
+.win-bar-label .neg { color: #f85149; }
+.win-bar-track { height: 14px; background: #21262d; border-radius: 7px; overflow: hidden; }
+.win-bar-fill { height: 100%; background: linear-gradient(90deg, #3fb950, #d29922 50%, #f85149); }
+.gap-row { text-align: center; margin-top: 1em; font-size: 1em; color: #8b949e; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 1em; font-size: .9em; }
+th { background: #161b22; padding: .5em; text-align: left;
+      border-bottom: 2px solid #30363d; font-weight: 600; color: #8b949e;
+      text-transform: uppercase; font-size: .75em; }
+td { padding: .35em .5em; border-bottom: 1px solid #21262d; }
+tr.breakdown td { color: #6e7681; font-size: .8em; padding-left: 2em;
+                    border-bottom: 1px dashed #21262d; }
+tr:hover td { background: #161b22; }
+.pos { color: #3fb950; } .neg { color: #f85149; } .zero { color: #6e7681; }
+.muted { color: #8b949e; }
+.badge { background: #d2a8ff; color: #0d1117; padding: 1px 5px; border-radius: 3px;
+          font-size: .75em; font-weight: bold; }
+.capped { background: #f85149; color: white; padding: 1px 5px; border-radius: 3px;
+           font-size: .7em; }
+.meta { color: #6e7681; font-size: .85em; margin-top: 2em; text-align: center;
+         border-top: 1px solid #21262d; padding-top: 1em; }
+.notes { background: #161b22; padding: .8em 1em; border-left: 3px solid #58a6ff;
+          margin: 1em 0; font-size: .85em; }
+
+/* ── Action items ── */
+.action-items { background: #161b22; border: 1px solid #30363d;
+                  border-radius: 8px; padding: 1em 1.5em; margin: 1em 0; }
+.action-items h3 { margin: 0 0 .5em 0; color: #d2a8ff; font-size: 1.1em; }
+.action-items ul { margin: 0; padding: 0; list-style: none; }
+.action-items li { padding: .4em .8em; margin: .3em 0; border-radius: 5px;
+                     border-left: 3px solid #6e7681; }
+.urgency-high { background: #4d1c1c; border-left-color: #f85149; }
+.urgency-med  { background: #3d2b1f; border-left-color: #d29922; }
+.urgency-low  { background: #1a2e1c; border-left-color: #3fb950; }
+
+/* ── Gauge ── */
+.gauge-wrap { display: flex; justify-content: center; margin: .5em 0; }
+.gauge { width: 160px; height: 160px; border-radius: 50%; display: flex;
+          align-items: center; justify-content: center; }
+.gauge-inner { width: 132px; height: 132px; background: #0d1117;
+                 border-radius: 50%; display: flex; flex-direction: column;
+                 align-items: center; justify-content: center; }
+.gauge-pct { font-size: 2.2em; font-weight: bold; color: #c9d1d9; }
+.gauge-label { font-size: .85em; color: #8b949e; }
+
+/* ── Collapsibles ── */
+details { margin-top: 1em; }
+details > summary { cursor: pointer; color: #79c0ff; font-size: 1.2em;
+                      font-weight: 600; padding: .5em 0;
+                      border-bottom: 1px solid #21262d; user-select: none; }
+details > summary:hover { color: #a5d6ff; }
+details[open] > summary { border-bottom: 1px solid #30363d; }
+details > summary::marker { color: #6e7681; }
+
+/* ── Heatmap cells ── */
+.heat-0 { background: #1a2e1c; }     /* dim green */
+.heat-1 { background: #2e4f2c; }
+.heat-2 { background: #3fb950; color: #0d1117; font-weight: bold; }
+.heat-3 { background: #66d979; color: #0d1117; font-weight: bold; }
+.heat-neg { background: #4d1c1c; color: #ffa198; }
+
+/* ── Section anchors ── */
+section { scroll-margin-top: 80px; }
+
+/* ── Sortable hint ── */
+th.sortable { cursor: pointer; user-select: none; }
+th.sortable:hover { background: #21262d; color: #c9d1d9; }
+th.sortable::after { content: ' ⇅'; opacity: 0.3; font-size: .8em; }
+
+/* ── TOC nav strip ── */
+.toc { display: flex; gap: .5em; flex-wrap: wrap; padding: .5em 0; margin: 1em 0;
+        border-top: 1px solid #21262d; border-bottom: 1px solid #21262d;
+        font-size: .85em; overflow-x: auto; }
+.toc a { color: #58a6ff; text-decoration: none; padding: .3em .6em;
+          border-radius: 4px; white-space: nowrap; }
+.toc a:hover { background: #161b22; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .score-grid { grid-template-columns: 1fr; }
+  .vs { display: none; }
+  table { font-size: .8em; }
+  h2 .totals { display: block; float: none; margin-top: .3em; font-size: .8em; }
+}
+</style>
+</head><body>
+<header>
+  <h1>🏟️ Ligers Weekly Matchup</h1>
+  <nav>
+    <a href="index.html">← xFP Model</a>
+    <a href="live_dashboard.html">🔴 Live Today</a>
+  </nav>
+</header>
+
+<div class="scoreboard">
+  <div class="score-grid">
+    <div class="score-team">
+      <div class="name">New York Ligers</div>
+      <div class="wtd">200.7</div>
+      <div class="proj">+ <b>128.9</b> projected rest</div>
+      <div class="total-final">→ 329.6</div>
+    </div>
+    <div class="vs">vs</div>
+    <div class="score-team opp">
+      <div class="name">U Just Lost To Edwin Diaz</div>
+      <div class="wtd">144.4</div>
+      <div class="proj">+ <b>133.4</b> projected rest</div>
+      <div class="total-final">→ 277.8</div>
+    </div>
+  </div>
+
+  <div class="gauge-wrap">
+  <div class="gauge" style="background: conic-gradient(#3fb950 0% 94.1165644802465%, #21262d 94.1165644802465% 100%);">
+    <div class="gauge-inner">
+      <div class="gauge-pct">94%</div>
+      <div class="gauge-label">win probability</div>
+    </div>
+  </div>
+</div>
+  <div class="gap-row">
+    Current gap: <b class="pos">+56.3</b>
+    &nbsp;·&nbsp; Projected final gap: <b class="pos">+51.8</b>
+  </div>
+</div>
+
+<div class="action-items"><h3>⚡ Action Items</h3><ul>
+<li class="urgency-high">🏥 Max Fried (DAY_TO_DAY) is in active slot P — consider IL/bench</li>
+<li class="urgency-high">🏥 Trea Turner (DAY_TO_DAY) is in active slot SS — consider IL/bench</li>
+<li class="urgency-high">🏥 Wyatt Langford (TEN_DAY_DL) is in active slot OF — consider IL/bench</li>
+<li class="urgency-med">📉 Only 3 probable starts this week — add a streamer to hit the 10-start cap</li>
+<li class="urgency-low">🟢 Strong position — win prob 94%. Hold steady.</li>
+</ul></div>
+
+<div class="toc">
+  <a href="#optimizer">🎯 Optimizer</a>
+  <a href="#fire">🔥 Days of Fire</a>
+  <a href="#drops">🔄 Drops/Pickups</a>
+  <a href="#streamers">💎 Streamers</a>
+  <a href="#myteam">My Roster</a>
+  <a href="#opp">Opponent</a>
+  <a href="#closers">🔒 Closers</a>
+  <a href="#power">🏆 Power Rankings</a>
+  <a href="#playoff">🎲 Playoff Sim</a>
+  <a href="#position">📍 By Position</a>
+  <a href="#accuracy">📈 Accuracy</a>
+</div>
+
+<div class="notes">
+  📅 Period <b>7</b> · 2026-05-11 → 2026-05-17 ·
+  Today is Friday May 15 · 2 days remaining after today.<br>
+  📊 SPs: probable starts × opp-bat-index factor (BrownU 10-start/week cap applied).
+  Hitters: per-game × opposing-SP-projection factor.
+  RPs: role-based appearance rate (closer 55%, setup 40%, middle 30%).<br>
+  🎲 Win probability: normal approximation from team variance estimates
+  (σ/game: hitter 3.5, SP start 5.5, RP 2.5).
+</div>
+
+<p class="notes">📊 Since last snapshot: Ligers projected <b class="pos">+40.2</b>, Opp projected <b class="pos">-8.7</b>, win prob <b class="pos">+40.9 pp</b>.</p>
+<p class="notes">📐 <b>50% confidence intervals</b>: Ligers [<b>314.2</b> – <b>345.1</b>] vs Opp [<b>261.7</b> – <b>293.9</b>]. 80% CI: ±29 / ±31 FP respectively.</p>
+<p class="notes"><b>📉 Under SP cap:</b> only 3 probable starts. Add a streamer to claim more of the 10-start/week cap.</p>
+
+<h2>🏥 Injury Status <small class="muted">(current per ESPN)</small></h2>
+<table><thead><tr><th>Player</th><th>Pos</th><th>Status</th><th>Slot</th></tr></thead><tbody>
+<tr><td>Max Fried</td><td>SP</td><td class="neg">DAY_TO_DAY</td><td>P</td></tr>
+<tr><td>Trea Turner</td><td>SS</td><td class="neg">DAY_TO_DAY</td><td>SS</td></tr>
+<tr><td>Wyatt Langford</td><td>LF</td><td class="neg">TEN_DAY_DL</td><td>OF</td></tr>
+<tr><td>Tyler Glasnow</td><td>SP</td><td class="neg">FIFTEEN_DAY_DL</td><td>IL</td></tr>
+<tr><td>Ryan Helsley</td><td>RP</td><td class="neg">FIFTEEN_DAY_DL</td><td>IL</td></tr>
+<tr><td>Hunter Greene</td><td>SP</td><td class="neg">SIXTY_DAY_DL</td><td>IL</td></tr>
+</tbody></table>
+
+<section id="optimizer"><details open>
+<summary>🎯 Lineup Optimizer</summary>
+<h2>🎯 Lineup Optimizer</h2><p class="muted">No obvious upgrades — current lineup looks well-set.</p>
+</details></section>
+
+<section id="fire"><details open>
+<summary>🔥 Days of Fire — per-day forecast</summary>
+<h2>🔥 Days of Fire <small class="muted">(per-day projected FP, top Ligers)</small></h2>
+<table style="font-size:.85em"><thead><tr><th>Player</th>
+<th>05-16</th>
+<th>05-17</th>
+<th>Total</th></tr></thead><tbody>
+<tr><td>Corbin Carroll</td>
+<td class="heat-2">2.7</td>
+<td class="heat-2">2.7</td>
+<td><b>8.0</b></td></tr>
+<tr><td>Luis Arraez</td>
+<td class="heat-1">2.3</td>
+<td class="heat-1">2.1</td>
+<td><b>6.5</b></td></tr>
+<tr><td>Jordan Walker</td>
+<td class="heat-1">2.2</td>
+<td class="heat-1">2.1</td>
+<td><b>6.2</b></td></tr>
+<tr><td>Salvador Perez</td>
+<td class="heat-1">2.0</td>
+<td class="heat-1">2.0</td>
+<td><b>6.0</b></td></tr>
+<tr><td>Wyatt Langford</td>
+<td class="heat-1">1.8</td>
+<td class="heat-1">1.9</td>
+<td><b>5.8</b></td></tr>
+<tr><td>Brendan Donovan</td>
+<td class="heat-1">1.7</td>
+<td class="heat-1">1.7</td>
+<td><b>5.7</b></td></tr>
+<tr><td>Pete Alonso</td>
+<td class="heat-1">2.4</td>
+<td class="heat-1">2.5</td>
+<td><b>4.9</b></td></tr>
+<tr><td>Aaron Judge</td>
+<td class="heat-1">2.4</td>
+<td class="heat-1">2.3</td>
+<td><b>4.6</b></td></tr>
+</tbody></table>
+</details></section>
+
+<section id="drops"><details open>
+<summary>🔄 Drop / Pickup Suggestions</summary>
+<h2>🔄 Drop / Pickup Suggestions <small class="muted">(positions match, gain ≥ 20 RoS)</small></h2>
+<table><thead><tr><th>Drop</th><th>RoS</th><th>→ Add</th><th>%Own</th><th>RoS</th><th>Gain</th></tr></thead><tbody>
+<tr><td class="neg">Wyatt Langford</td><td>91</td><td class="pos">Ivan Herrera</td><td>58%</td><td>236</td><td><b class="pos">+145</b></td></tr>
+<tr><td class="neg">Brendan Donovan</td><td>115</td><td class="pos">TJ Rumfield</td><td>16%</td><td>212</td><td><b class="pos">+97</b></td></tr>
+<tr><td class="neg">Salvador Perez</td><td>176</td><td class="pos">Colson Montgomery</td><td>27%</td><td>212</td><td><b class="pos">+37</b></td></tr>
+</tbody></table>
+</details></section>
+
+<section id="streamers"><details open>
+<summary>💎 Streamer Targets</summary>
+<h2>💎 Top Streamer Targets <small class="muted">(FAs by per-start FP projection)</small></h2>
+<table><thead><tr><th>Pitcher</th><th>Team</th><th>%Own</th><th>per_GS</th></tr></thead><tbody>
+<tr><td>Emmet Sheehan</td><td>LAD</td><td>57%</td><td><b>13.47</b></td></tr>
+<tr><td>Spencer Schwellenbach</td><td>Atl</td><td>13%</td><td><b>12.75</b></td></tr>
+<tr><td>Corbin Burnes</td><td>Ari</td><td>9%</td><td><b>12.06</b></td></tr>
+<tr><td>Eury Perez</td><td>Mia</td><td>71%</td><td><b>11.82</b></td></tr>
+<tr><td>Kyle Harrison</td><td>Mil</td><td>31%</td><td><b>11.78</b></td></tr>
+<tr><td>Jack Leiter</td><td>Tex</td><td>18%</td><td><b>11.66</b></td></tr>
+<tr><td>Dean Kremer</td><td>Bal</td><td>2%</td><td><b>11.61</b></td></tr>
+<tr><td>Pablo Lopez</td><td>Min</td><td>3%</td><td><b>11.46</b></td></tr>
+<tr><td>Matthew Boyd</td><td>ChC</td><td>44%</td><td><b>11.25</b></td></tr>
+<tr><td>Ryne Nelson</td><td>Ari</td><td>8%</td><td><b>11.10</b></td></tr>
+</tbody></table>
+</details></section>
+
+<section id="myteam"><details open>
+<summary>My Roster — full breakdown</summary>
+<h2>New York Ligers <span class="totals">WTD <b class="wtd">200.7</b> · rest <b class="proj">128.9</b> · total <b class="total">329.6</b></span></h2>
+<table><thead><tr><th>Player</th><th>Pos</th><th>WTD</th><th>Units</th><th>Rest</th><th>Total</th><th></th></tr></thead><tbody>
+<tr><td>Freddy Peralta</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+11.8</td><td><b>+11.8</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs NYY (opp bat 1.07, ×0.93, <b>11.8 FP</b>)</td></tr>
+<tr><td>Jose Soriano</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+11.5</td><td><b>+11.5</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs LAD (opp bat 1.09, ×0.92, <b>11.5 FP</b>)</td></tr>
+<tr><td>Carlos Rodon</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+11.2</td><td><b>+11.2</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs NYM (opp bat 0.99, ×1.01, <b>11.2 FP</b>)</td></tr>
+<tr><td>Corbin Carroll</td><td>RF</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+8.0</td><td><b>+8.0</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs COL (vs Kyle Freeland, 8.9 FP/start) · ×1.30 = 2.7</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs COL (vs Tomoyuki Sugano, 6.8 FP/start) · ×1.30 = 2.7</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs COL (vs Michael Lorenzen, 7.9 FP/start) · ×1.30 = 2.7</td></tr>
+<tr><td>Luis Arraez</td><td>1B</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+6.5</td><td><b>+6.5</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs ATH (vs Aaron Civale, 9.1 FP/start) · ×1.26 = 2.3</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs ATH (vs Luis Severino, 9.7 FP/start) · ×1.19 = 2.1</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs ATH (vs Jeffrey Springs, 9.7 FP/start) · ×1.18 = 2.1</td></tr>
+<tr><td>Jordan Walker</td><td>RF</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+6.2</td><td><b>+6.2</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs KC (vs Michael Wacha, 11.0 FP/start) · ×1.04 = 1.9</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs KC (vs Noah Cameron, 9.6 FP/start) · ×1.19 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs KC (vs Stephen Kolek, 9.9 FP/start) · ×1.16 = 2.1</td></tr>
+<tr><td>Salvador Perez</td><td>C</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+6.0</td><td><b>+6.0</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Dustin May, 8.3 FP/start) · ×1.30 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Kyle Leahy, 7.8 FP/start) · ×1.30 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs STL (vs Andre Pallante, 8.9 FP/start) · ×1.30 = 2.0</td></tr>
+<tr><td>Wyatt Langford</td><td>LF</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+5.8</td><td><b>+5.8</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs HOU (vs Spencer Arrighetti, 9.5 FP/start) · ×1.21 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs HOU (vs Kai-Wei Teng) · ×1.06 = 1.8</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs HOU (vs Peter Lambert, 10.0 FP/start) · ×1.15 = 1.9</td></tr>
+<tr><td>Brendan Donovan</td><td>2B</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+5.7</td><td><b>+5.7</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs SD (vs Randy Vásquez, 9.7 FP/start) · ×1.18 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs SD · ×0.93 = 1.7</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs SD · ×0.93 = 1.7</td></tr>
+<tr><td>Tanner Scott</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.7 app</td><td>+5.4</td><td><b>+5.4</b></td><td></td></tr>
+<tr><td>Pete Fairbanks</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.1 app</td><td>+5.0</td><td><b>+5.0</b></td><td></td></tr>
+<tr><td>Jhoan Duran</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.1 app</td><td>+4.9</td><td><b>+4.9</b></td><td></td></tr>
+<tr><td>Pete Alonso</td><td>1B</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.9</td><td><b>+4.9</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs WSH (vs Cade Cavalli, 9.1 FP/start) · ×1.26 = 2.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs WSH (vs Miles Mikolas, 8.1 FP/start) · ×1.30 = 2.5</td></tr>
+<tr><td>Aaron Judge</td><td>RF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.6</td><td><b>+4.6</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs NYM · ×0.95 = 2.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs NYM (vs Freddy Peralta, 12.7 FP/start) · ×0.90 = 2.3</td></tr>
+<tr><td>Ryan Helsley</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.1 app</td><td>+4.6</td><td><b>+4.6</b></td><td></td></tr>
+<tr><td>Michael Harris II</td><td>CF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.3</td><td><b>+4.3</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs BOS (vs Payton Tolle) · ×1.04 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs BOS · ×1.04 = 2.2</td></tr>
+<tr><td>Vladimir Guerrero Jr.</td><td>1B</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.2</td><td><b>+4.2</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs DET · ×0.98 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs DET (vs Jack Flaherty, 10.4 FP/start) · ×1.11 = 2.2</td></tr>
+<tr><td>Elly De La Cruz</td><td>SS</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.9</td><td><b>+3.9</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs CLE (vs Gavin Williams, 12.3 FP/start) · ×0.93 = 1.8</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs CLE (vs Joey Cantillo, 9.8 FP/start) · ×1.17 = 2.2</td></tr>
+<tr><td>Bo Bichette</td><td>SS</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.9</td><td><b>+3.9</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs NYY (vs Carlos Rodón, 11.1 FP/start) · ×1.04 = 1.9</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs NYY (vs Ryan Weathers, 10.7 FP/start) · ×1.08 = 2.0</td></tr>
+<tr><td>Lucas Erceg</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.2 app</td><td>+3.6</td><td><b>+3.6</b></td><td></td></tr>
+<tr><td>Daniel Palencia</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.1 app</td><td>+3.4</td><td><b>+3.4</b></td><td></td></tr>
+<tr><td>Trea Turner</td><td>SS</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.4</td><td><b>+3.4</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs PIT (vs Bubba Chandler, 9.4 FP/start) · ×1.23 = 2.1</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs PIT (vs Paul Skenes, 15.2 FP/start) · ×0.76 = 1.3</td></tr>
+<tr><td>Max Fried</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Framber Valdez</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Tyler Glasnow</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Hunter Greene</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Parker Messick</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Will Warren</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Kyle Bradish</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+</tbody></table>
+</details></section>
+
+<section id="opp"><details>
+<summary>Opponent — full breakdown</summary>
+<h2>U Just Lost To Edwin Diaz <span class="totals">WTD <b class="wtd">144.4</b> · rest <b class="proj">133.4</b> · total <b class="total">277.8</b></span></h2>
+<table><thead><tr><th>Player</th><th>Pos</th><th>WTD</th><th>Units</th><th>Rest</th><th>Total</th><th></th></tr></thead><tbody>
+<tr><td>Kevin Gausman</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+12.1</td><td><b>+12.1</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs DET (opp bat 1.04, ×0.96, <b>12.1 FP</b>)</td></tr>
+<tr><td>Gavin Williams</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+11.7</td><td><b>+11.7</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs CIN (opp bat 1.06, ×0.95, <b>11.7 FP</b>)</td></tr>
+<tr><td>Trey Yesavage</td><td>SP</td><td class="zero">+0.0</td><td class="muted">1 start</td><td>+9.9</td><td><b>+9.9</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs DET (opp bat 1.04, ×0.96, <b>9.9 FP</b>)</td></tr>
+<tr><td>Mason Miller</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~1.7 app</td><td>+9.3</td><td><b>+9.3</b></td><td></td></tr>
+<tr><td>Geraldo Perdomo</td><td>SS</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+7.7</td><td><b>+7.7</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs COL (vs Kyle Freeland, 8.9 FP/start) · ×1.30 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs COL (vs Tomoyuki Sugano, 6.8 FP/start) · ×1.30 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs COL (vs Michael Lorenzen, 7.9 FP/start) · ×1.30 = 2.6</td></tr>
+<tr><td>Vinnie Pasquantino</td><td>1B</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+7.7</td><td><b>+7.7</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Dustin May, 8.3 FP/start) · ×1.30 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Kyle Leahy, 7.8 FP/start) · ×1.30 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs STL (vs Andre Pallante, 8.9 FP/start) · ×1.30 = 2.6</td></tr>
+<tr><td>Shea Langeliers</td><td>C</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+7.7</td><td><b>+7.7</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs SF (vs Tyler Mahle, 10.1 FP/start) · ×1.13 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs SF (vs Trevor McDonald) · ×0.99 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs SF (vs Adrian Houser, 8.1 FP/start) · ×1.30 = 2.9</td></tr>
+<tr><td>Mickey Moniak</td><td>RF</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+7.4</td><td><b>+7.4</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs AZ (vs Merrill Kelly, 8.7 FP/start) · ×1.30 = 2.5</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs AZ (vs Eduardo Rodriguez, 8.8 FP/start) · ×1.30 = 2.5</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs AZ (vs Michael Soroka, 9.9 FP/start) · ×1.17 = 2.3</td></tr>
+<tr><td>Maikel Garcia</td><td>3B</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+7.1</td><td><b>+7.1</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Dustin May, 8.3 FP/start) · ×1.30 = 2.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs STL (vs Kyle Leahy, 7.8 FP/start) · ×1.30 = 2.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs STL (vs Andre Pallante, 8.9 FP/start) · ×1.30 = 2.4</td></tr>
+<tr><td>Jung Hoo Lee</td><td>CF</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+6.5</td><td><b>+6.5</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs ATH (vs Aaron Civale, 9.1 FP/start) · ×1.26 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs ATH (vs Luis Severino, 9.7 FP/start) · ×1.19 = 2.1</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs ATH (vs Jeffrey Springs, 9.7 FP/start) · ×1.18 = 2.1</td></tr>
+<tr><td>Chase DeLauter</td><td>RF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+5.6</td><td><b>+5.6</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs CIN (vs Chris Paddack, 8.0 FP/start) · ×1.30 = 2.8</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs CIN (vs Brady Singer, 8.2 FP/start) · ×1.30 = 2.8</td></tr>
+<tr><td>Christian Walker</td><td>1B</td><td class="zero">+0.0</td><td class="muted">3 games</td><td>+5.2</td><td><b>+5.2</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TEX (vs Jack Leiter, 11.7 FP/start) · ×0.99 = 1.9</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TEX (vs Jacob deGrom, 15.3 FP/start) · ×0.75 = 1.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs TEX · ×0.99 = 1.9</td></tr>
+<tr><td>Liam Hicks</td><td>C</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.6</td><td><b>+4.6</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TB (vs Nick Martinez, 9.4 FP/start) · ×1.22 = 2.6</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs TB (vs Drew Rasmussen, 11.8 FP/start) · ×0.97 = 2.1</td></tr>
+<tr><td>Xavier Edwards</td><td>2B</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.4</td><td><b>+4.4</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TB (vs Nick Martinez, 9.4 FP/start) · ×1.22 = 2.4</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs TB (vs Drew Rasmussen, 11.8 FP/start) · ×0.97 = 1.9</td></tr>
+<tr><td>Otto Lopez</td><td>SS</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.0</td><td><b>+4.0</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TB (vs Nick Martinez, 9.4 FP/start) · ×1.22 = 2.2</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs TB (vs Drew Rasmussen, 11.8 FP/start) · ×0.97 = 1.8</td></tr>
+<tr><td>Ronald Acuna Jr.</td><td>RF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+4.0</td><td><b>+4.0</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs BOS (vs Payton Tolle) · ×1.04 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs BOS · ×1.04 = 2.0</td></tr>
+<tr><td>Ernie Clement</td><td>3B</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.9</td><td><b>+3.9</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs DET · ×0.98 = 1.8</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs DET (vs Jack Flaherty, 10.4 FP/start) · ×1.11 = 2.1</td></tr>
+<tr><td>Byron Buxton</td><td>CF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.8</td><td><b>+3.8</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs MIL (vs Logan Henderson) · ×0.92 = 1.9</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs MIL · ×0.92 = 1.9</td></tr>
+<tr><td>Jakob Marsee</td><td>CF</td><td class="zero">+0.0</td><td class="muted">2 games</td><td>+3.6</td><td><b>+3.6</b></td><td></td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-16 vs TB (vs Nick Martinez, 9.4 FP/start) · ×1.22 = 2.0</td></tr>
+<tr class="breakdown"><td colspan="7">→ 05-17 vs TB (vs Drew Rasmussen, 11.8 FP/start) · ×0.97 = 1.6</td></tr>
+<tr><td>Gregory Soto</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~0.8 app</td><td>+2.7</td><td><b>+2.7</b></td><td></td></tr>
+<tr><td>Abner Uribe</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~0.8 app</td><td>+2.6</td><td><b>+2.6</b></td><td></td></tr>
+<tr><td>Tony Santillan</td><td>RP</td><td class="zero">+0.0</td><td class="muted">~0.8 app</td><td>+1.9</td><td><b>+1.9</b></td><td></td></tr>
+<tr><td>Garrett Crochet</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Logan Webb</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>MacKenzie Gore</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Edward Cabrera</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Bryce Miller</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Shane Bieber</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+<tr><td>Taj Bradley</td><td>SP</td><td class="zero">+0.0</td><td class="muted">—</td><td>+0.0</td><td><b>+0.0</b></td><td></td></tr>
+</tbody></table>
+</details></section>
+
+<section id="closers"><details>
+<summary>🔒 Closer-of-Record Tracker</summary>
+<h2>🔒 Closer-of-Record Tracker</h2>
+<p class="notes">From save_handcuffs analysis. Cross-reference with closer_persistence (~83%).</p>
+<table><thead><tr><th>Team</th><th>Closer</th><th>SV (current)</th></tr></thead><tbody>
+<tr><td>ATH</td><td>nan</td><td>6</td></tr>
+<tr><td>ATL</td><td>nan</td><td>5</td></tr>
+<tr><td>AZ</td><td>nan</td><td>1</td></tr>
+<tr><td>BAL</td><td>nan</td><td>4</td></tr>
+<tr><td>BOS</td><td>nan</td><td>5</td></tr>
+<tr><td>CHC</td><td>nan</td><td>6</td></tr>
+<tr><td>CIN</td><td>nan</td><td>2</td></tr>
+<tr><td>CLE</td><td>nan</td><td>6</td></tr>
+<tr><td>COL</td><td>nan</td><td>4</td></tr>
+<tr><td>CWS</td><td>nan</td><td>7</td></tr>
+<tr><td>DET</td><td>nan</td><td>2</td></tr>
+<tr><td>HOU</td><td>nan</td><td>3</td></tr>
+<tr><td>KC</td><td>nan</td><td>6</td></tr>
+<tr><td>LAA</td><td>nan</td><td>1</td></tr>
+<tr><td>LAD</td><td>nan</td><td>3</td></tr>
+</tbody></table>
+</details></section>
+
+<section id="position"><details>
+<summary>📍 Position Competition</summary>
+<h2>📍 Position-Specific Competition <small class="muted">(top 3 RoS by primary position)</small></h2>
+<table><thead><tr><th>Pos</th><th>Top 3 (RoS · owner)</th></tr></thead><tbody>
+<tr><td><b>C</b></td><td>Drake Baldwin <b>283</b> · Frendy&#x27;s Fantastic Team · Shea Langeliers <b>258</b> · U Just Lost To Edwin Diaz · Iván Herrera <b>236</b> · 🆓FA</td></tr>
+<tr><td><b>1B</b></td><td>Matt Olson <b>280</b> · Team Solomon · Nick Kurtz <b>267</b> · Treasure Island Mashers · Bryce Harper <b>246</b> · Team Solomon</td></tr>
+<tr><td><b>2B</b></td><td>Nico Hoerner <b>255</b> · Frendy&#x27;s Fantastic Team · Brice Turang <b>238</b> · Treasure Island Mashers · Xavier Edwards <b>237</b> · U Just Lost To Edwin Diaz</td></tr>
+<tr><td><b>3B</b></td><td>José Ramírez <b>282</b> · Late Night Bettsing · Junior Caminero <b>260</b> · Boone&#x27;s Bad Bullpen · Alex Bregman <b>246</b> · 2015 Draft First Round</td></tr>
+<tr><td><b>SS</b></td><td>Bobby Witt Jr. <b>296</b> · 2015 Draft First Round · Elly De La Cruz <b>236</b> · ⭐New York Ligers · Gunnar Henderson <b>228</b> · Boone&#x27;s Bad Bullpen</td></tr>
+<tr><td><b>OF</b></td><td>Yordan Alvarez <b>328</b> · Late Night Bettsing · Aaron Judge <b>302</b> · ⭐New York Ligers · Kyle Schwarber <b>273</b> · 2015 Draft First Round</td></tr>
+</tbody></table>
+</details></section>
+
+<section id="power"><details>
+<summary>🏆 League Power Rankings</summary>
+<h2>🏆 League Power Rankings <small class="muted">(by total RoS projection)</small></h2>
+<table><thead><tr><th>#</th><th>Team</th><th>Total RoS</th><th>Δ vs Avg</th></tr></thead><tbody>
+<tr><td>1</td><td>Frendy&#x27;s Fantastic Team</td><td>6362</td><td class="pos">+377</td></tr>
+<tr><td>2</td><td>Team Solomon</td><td>6346</td><td class="pos">+362</td></tr>
+<tr><td>3</td><td>2015 Draft First Round</td><td>6084</td><td class="pos">+99</td></tr>
+<tr><td>4</td><td>U Just Lost To Edwin Diaz</td><td>6047</td><td class="pos">+63</td></tr>
+<tr><td>5</td><td>Late Night Bettsing</td><td>5945</td><td class="neg">-39</td></tr>
+<tr><td>6</td><td>New York Ligers ⭐</td><td>5888</td><td class="neg">-96</td></tr>
+<tr><td>7</td><td>Boone&#x27;s Bad Bullpen</td><td>5743</td><td class="neg">-242</td></tr>
+<tr><td>8</td><td>Treasure Island Mashers</td><td>5460</td><td class="neg">-524</td></tr>
+</tbody></table>
+</details></section>
+
+<section id="playoff"><details>
+<summary>🎲 Playoff Simulation</summary>
+<h2>🎲 Playoff Simulation <small class="muted">(Monte Carlo, 10k sims · uses latest weekly win prob)</small></h2><p class="notes">Latest weekly win prob: <b>94.1%</b> · 13 periods remain<br>Projected additional wins: <b>P25 12</b> · <b>median 12</b> · <b>P75 13</b><br>Rough playoff probability (top 4): <b class="pos">100.0%</b> (assumes ~8 more wins needed)</p>
+</details></section>
+
+<section id="accuracy"><details>
+<summary>📈 Prediction Accuracy History</summary>
+<h2>📈 Prediction Accuracy History</h2>
+<table><thead><tr><th>Period</th><th>Date</th><th>My WTD</th><th>My Projected</th><th>Opp WTD</th><th>Opp Projected</th><th>Win Prob</th></tr></thead><tbody>
+<tr><td>7</td><td>05/13</td><td>112.5</td><td><b>284.3</b></td><td>63.5</td><td><b>264.4</b></td><td>68.6%</td></tr>
+<tr><td>7</td><td>05/13</td><td>112.5</td><td><b>284.3</b></td><td>63.5</td><td><b>264.4</b></td><td>68.6%</td></tr>
+<tr><td>7</td><td>05/13</td><td>112.5</td><td><b>284.3</b></td><td>63.5</td><td><b>264.4</b></td><td>68.6%</td></tr>
+<tr><td>7</td><td>05/13</td><td>112.5</td><td><b>284.3</b></td><td>63.5</td><td><b>264.4</b></td><td>68.6%</td></tr>
+<tr><td>7</td><td>05/13</td><td>112.5</td><td><b>284.3</b></td><td>63.5</td><td><b>264.4</b></td><td>68.6%</td></tr>
+<tr><td>7</td><td>05/14</td><td>151.8</td><td><b>289.5</b></td><td>122.4</td><td><b>286.5</b></td><td>53.2%</td></tr>
+<tr><td>7</td><td>05/14</td><td>151.8</td><td><b>289.5</b></td><td>122.4</td><td><b>286.5</b></td><td>53.2%</td></tr>
+<tr><td>7</td><td>05/15</td><td>200.7</td><td><b>329.6</b></td><td>144.4</td><td><b>277.8</b></td><td>94.1%</td></tr>
+</tbody></table>
+</details></section>
+
+<p class="meta">Generated 2026-05-15 10:40:28 ·
+<code>python scripts/xfp/build_matchup_dashboard.py</code>
+<meta http-equiv="refresh" content="300">
+</p>
+
+<script>
+// Click-to-sort tables (mark every <th> with class="sortable" via JS)
+document.querySelectorAll('table').forEach(table => {
+  const headers = table.querySelectorAll('thead th');
+  headers.forEach((th, idx) => {
+    th.classList.add('sortable');
+    th.addEventListener('click', () => {
+      const tbody = table.querySelector('tbody');
+      const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('breakdown'));
+      const dir = th.dataset.sortDir === 'asc' ? 'desc' : 'asc';
+      th.dataset.sortDir = dir;
+      rows.sort((a, b) => {
+        const av = a.children[idx]?.innerText.trim() || '';
+        const bv = b.children[idx]?.innerText.trim() || '';
+        const an = parseFloat(av.replace(/[^\d.+-]/g, ''));
+        const bn = parseFloat(bv.replace(/[^\d.+-]/g, ''));
+        if (!isNaN(an) && !isNaN(bn)) {
+          return dir === 'asc' ? an - bn : bn - an;
+        }
+        return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      });
+      // Re-insert in new order (keeping breakdown rows attached)
+      tbody.innerHTML = '';
+      rows.forEach(r => tbody.appendChild(r));
+    });
+  });
+});
+
+// Expand/collapse all controls
+const expandBtn = document.createElement('button');
+expandBtn.textContent = 'Expand all';
+expandBtn.style.cssText = 'margin: 1em .5em; padding: .4em 1em; background: #21262d; color: #c9d1d9; border: 1px solid #30363d; border-radius: 5px; cursor: pointer;';
+expandBtn.onclick = () => document.querySelectorAll('details').forEach(d => d.open = true);
+const collapseBtn = document.createElement('button');
+collapseBtn.textContent = 'Collapse all';
+collapseBtn.style.cssText = expandBtn.style.cssText;
+collapseBtn.onclick = () => document.querySelectorAll('details').forEach(d => d.open = false);
+document.querySelector('.toc').appendChild(expandBtn);
+document.querySelector('.toc').appendChild(collapseBtn);
+</script>
+</body></html>
