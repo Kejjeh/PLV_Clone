@@ -61,6 +61,7 @@ data/models/*.pkl
 
 # ── xFP cache: large Statcast parquets (regenerable via build_sp_multiyr.py) ─
 data/research/xfp_cache/*.parquet
+data/research/xfp_cache/*.parquet.bak
 
 # Keep aggregated CSVs in xfp_cache (training reference, smaller)
 !data/research/xfp_cache/*.csv
