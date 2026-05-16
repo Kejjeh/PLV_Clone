@@ -1,0 +1,8 @@
+model,locked_r,n_train,grade,checks,locked_r_overall,locked_r_aaa
+xfp_h2,0.54332,?,A (PASS — 4/4),"{'has_locked_r': True, 'locked_r_above_0.30': True, 'has_features': True, 'framing_appropriate': True}",,
+xfp_rh3,0.6167,8275,A (PASS — 5/5),"{'locked_r_strong': True, 'has_v2_features': True, 'framing_matches_use': True, 'adequate_sample': True, 'projections_current': True}",,
+xfp_v12,0.65581,,A (PASS — 2/2),"{'locked_r_above_0.30': True, 'framing_appropriate': True}",,
+xfp_rp3,0.5511,4174,A (PASS — 6/6),"{'locked_r_strong': True, 'has_drift_features': True, 'framing_matches_use': True, 'adequate_sample': True, 'projections_current': True, 'il_fix_available': True}",,
+xfp_rps1,0.5078,,A (PASS — 3/3),"{'has_locked_r': True, 'locked_r_above_0.20': True, 'framing_appropriate': True}",,
+xfp_rprs2,0.8419,7179,A (PASS — 3/3),"{'locked_r_strong': True, 'framing_matches_use': True, 'projections_current': True}",,
+milb_pitcher,,,C (concerns — 2/4),"{'passes_r_30_overall': False, 'passes_r_30_aaa': False, 'framing_appropriate': True, 'priors_current': True}",,0.2773
