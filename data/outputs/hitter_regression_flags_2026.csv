@@ -1,4 +1,5 @@
 batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rank_gap,rolling_trend,xwoba_vs_expected,tag,season_stage
-Max Muncy,691777,113,Signal,3B,3B,3B,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.216,cold,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
-Hunter Feduccia,676439,47,Watch,C,C,C,84.2,82.4,78.7,107.8,0.433,0.279,0.38,-0.21,cold,0.032,surface xwOBA above avg; results ahead of process; chasing (low Discipline+); Process+ very weak — high regression risk,early
-Derek Hill,656537,50,Watch,OF,OF,OF,97.2,90.3,82.2,118.4,0.489,0.277,0.45,-0.205,improving,0.086,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Owen Caissie,683357,116,Signal,OF,OF,OF,93.7,80.8,88.4,112.3,0.453,0.266,0.435,-0.238,improving,0.055,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Isaac Collins,686555,137,Signal,OF,OF,OF,75.2,89.5,100.2,89.5,0.385,0.218,0.355,-0.238,cold,-0.061,surface xwOBA OK; results ahead of process; chasing (low Discipline+); contact below pitch expectation; Process+ very weak — high regression risk,early
+Derek Hill,656537,55,Watch,OF,OF,OF,94.0,93.3,83.7,114.8,0.5,0.281,0.436,-0.233,warm,0.067,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
+Max Muncy,691777,113,Signal,3B,3B,3B,92.5,85.6,88.8,111.0,0.507,0.343,0.427,-0.231,improving,0.048,surface xwOBA elite (top 25%); results ahead of process; chasing (low Discipline+); Process+ below average,early
