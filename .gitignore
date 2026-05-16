@@ -9,8 +9,11 @@ dist/
 build/
 .eggs/
 
-# Claude Code session state (not for tracking)
-.claude/
+# Claude Code session state (not for tracking),
+# but DO track repo-level skills (committable workflows).
+# Need .claude/* form (not .claude/) so negations below can re-include.
+.claude/*
+!.claude/skills/
 
 # Virtual environments
 .venv/

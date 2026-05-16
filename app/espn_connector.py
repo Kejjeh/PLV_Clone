@@ -104,10 +104,18 @@ def _get_league():
 # ── Player name normalisation ─────────────────────────────────────────────────
 
 def _normalize(name: str) -> str:
-    """Lowercase, strip accents naively, remove suffixes for fuzzy matching."""
+    """Lowercase, strip accents naively, remove suffixes, normalize
+    'Last, First' → 'First Last' for fuzzy matching."""
     import unicodedata
+    if not isinstance(name, str):
+        return ""
     name = unicodedata.normalize("NFD", name)
     name = "".join(c for c in name if unicodedata.category(c) != "Mn")
+    # Normalize "Last, First" → "First Last" (common in projection CSVs)
+    if "," in name:
+        parts = [p.strip() for p in name.split(",", 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+            name = f"{parts[1]} {parts[0]}"
     for suffix in [" jr.", " jr", " ii", " iii", " iv", " sr.", " sr"]:
         if name.lower().endswith(suffix):
             name = name[: -len(suffix)]
@@ -183,13 +191,93 @@ def get_my_roster() -> pd.DataFrame:
     for player in my_team.roster:
         rows.append({
             "player_name": player.name,
+            "player_id": getattr(player, "playerId", None),
             "position": getattr(player, "position", ""),
             "pro_team": getattr(player, "proTeam", ""),
             "eligible_slots": getattr(player, "eligibleSlots", []),
             "lineup_slot": getattr(player, "lineupSlot", ""),
+            "injured": bool(getattr(player, "injured", False)),
+            "injury_status": getattr(player, "injuryStatus", "") or "",
             "on_team_name": my_team.team_name,
         })
     return pd.DataFrame(rows)
+
+
+def get_injury_details(player_ids: list[int]) -> pd.DataFrame:
+    """
+    Fetch structured injury details (type, side, expected return date, blurb)
+    from ESPN's public athlete endpoint for a list of player IDs.
+
+    No auth needed — uses site.web.api.espn.com which is public.
+
+    Returns DataFrame with: player_id, injury_type, injury_detail, injury_side,
+                            return_date (date), days_until_return, status_code,
+                            short_comment, long_comment.
+    Players with no current injury are returned with NaN injury fields.
+    """
+    import requests
+    from datetime import date, datetime
+
+    rows = []
+    for pid in player_ids:
+        if pid is None:
+            continue
+        url = f"https://site.web.api.espn.com/apis/common/v3/sports/baseball/mlb/athletes/{pid}"
+        try:
+            r = requests.get(url, timeout=10)
+            if r.status_code != 200:
+                continue
+            data = r.json()
+        except Exception as e:
+            logger.warning(f"injury fetch failed for {pid}: {e}")
+            continue
+
+        athlete = data.get("athlete", {}) or {}
+        injuries = athlete.get("injuries", []) or []
+        if not injuries:
+            rows.append({"player_id": pid})
+            continue
+
+        # Take the most recent injury (first in list per ESPN ordering)
+        inj = injuries[0]
+        details = inj.get("details", {}) or {}
+        return_iso = details.get("returnDate") or inj.get("returnDate")
+        return_dt = None
+        days_out = None
+        if return_iso:
+            try:
+                return_dt = datetime.fromisoformat(return_iso.replace("Z", "+00:00")).date()
+                days_out = (return_dt - date.today()).days
+            except Exception:
+                pass
+
+        rows.append({
+            "player_id": pid,
+            "injury_type": details.get("type") or inj.get("type", {}).get("description", ""),
+            "injury_detail": details.get("detail", ""),
+            "injury_side": details.get("side", ""),
+            "return_date": return_dt,
+            "days_until_return": days_out,
+            "status_code": (inj.get("type", {}) or {}).get("abbreviation", ""),
+            "short_comment": inj.get("shortComment", ""),
+            "long_comment": inj.get("longComment", ""),
+        })
+
+    return pd.DataFrame(rows)
+
+
+def get_my_roster_with_injuries() -> pd.DataFrame:
+    """Convenience: get_my_roster + injury details merged on player_id."""
+    roster = get_my_roster()
+    if roster.empty:
+        return roster
+    injured = roster[roster["injured"]]
+    if injured.empty:
+        return roster
+    inj_df = get_injury_details(injured["player_id"].dropna().astype(int).tolist())
+    if inj_df.empty:
+        return roster
+    return roster.merge(inj_df, on="player_id", how="left")
 
 
 def get_all_teams() -> pd.DataFrame:
