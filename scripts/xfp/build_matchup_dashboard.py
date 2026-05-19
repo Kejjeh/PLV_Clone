@@ -180,6 +180,101 @@ def player_mlbam_lookup(name, cache={}):
     return cache.get(_norm(name))
 
 
+def _resolve_mlbam_via_api(name, cache={}):
+    """Fallback MLBAM resolution when player not in cached multi-year CSVs.
+    Hits MLB Stats API people-search endpoint. Caches results in-process."""
+    if name in cache: return cache[name]
+    try:
+        # URL-encode the name (handle spaces, accents)
+        from urllib.parse import quote
+        url = f'https://statsapi.mlb.com/api/v1/people/search?names={quote(name)}'
+        data = _fetch_json(url)
+        ppl = data.get('people', [])
+        # Prefer pitchers; for hitters, accept first match
+        for p in ppl[:5]:
+            pos = p.get('primaryPosition', {}).get('abbreviation', '')
+            if pos == 'P':
+                cache[name] = p['id']
+                return p['id']
+        if ppl:
+            cache[name] = ppl[0]['id']
+            return ppl[0]['id']
+    except Exception:
+        pass
+    cache[name] = None
+    return None
+
+
+def _predict_rotation_starts(mlbam, team_abbr, team_id, schedules_by_team,
+                              confirmed_dates, today, week_end):
+    """Predict non-confirmed SP starts from rotation gap.
+
+    MLB Stats API only publishes probables 2-5 days ahead. For late-week
+    starts that aren't yet confirmed, infer from the pitcher's gameLog
+    rotation pattern (typical 5-day gap, clamped to 4-7).
+
+    Returns list of game dicts compatible with confirmed_starts format,
+    with `confirmed=False` flag.
+    """
+    if not mlbam: return []
+    try:
+        url = (f'https://statsapi.mlb.com/api/v1/people/{mlbam}/stats?'
+               f'stats=gameLog&group=pitching&season={today.year}')
+        data = _fetch_json(url)
+    except Exception:
+        return []
+    stats_list = data.get('stats', []) or []
+    splits = stats_list[0].get('splits', []) if stats_list else []
+    starts = [s for s in splits if int(s.get('stat', {}).get('gamesStarted', '0')) > 0]
+    if not starts: return []
+    starts.sort(key=lambda s: s['date'], reverse=True)
+    latest_actual = datetime.fromisoformat(starts[0]['date']).date()
+    # Rotation gap from last two starts, clamped to [4, 7]
+    if len(starts) >= 2:
+        prev = datetime.fromisoformat(starts[1]['date']).date()
+        gap = max(4, min(7, (latest_actual - prev).days))
+    else:
+        gap = 5
+
+    # Anchor: max of (latest actual start, latest confirmed in window).
+    # This prevents re-emitting a date that's already a confirmed start.
+    confirmed_dt = [datetime.fromisoformat(d).date() for d in confirmed_dates]
+    anchor = max([latest_actual] + confirmed_dt)
+
+    # Predict next starts, find one matching team's schedule in window
+    games = schedules_by_team.get(team_id, [])
+    team_dates_in_window = {g['date']: g for g in games
+                              if today.isoformat() <= g['date'] <= week_end.isoformat()}
+    predicted = []
+    nd = anchor
+    for _ in range(3):  # up to 3 future rotation slots in window
+        nd = nd + timedelta(days=gap)
+        if nd > week_end: break
+        nd_s = nd.isoformat()
+        # Dedup near-matches (±1 day) with confirmed
+        if any(abs((nd - cd).days) <= 1 for cd in confirmed_dt):
+            continue
+        # Find a team game on or within ±1 day of predicted date
+        match_game = None
+        for offset in (0, 1, -1):
+            d_try = (nd + timedelta(days=offset)).isoformat()
+            if d_try in team_dates_in_window and today.isoformat() <= d_try <= week_end.isoformat():
+                match_game = team_dates_in_window[d_try]
+                break
+        if match_game:
+            predicted.append({
+                'date': match_game['date'],
+                'opp_team': match_game['opp_team'],
+                'is_home': match_game['is_home'],
+                'my_probable_id': mlbam,
+                'my_probable_name': '(predicted)',
+                'opp_probable_id': match_game.get('opp_probable_id'),
+                'opp_probable_name': match_game.get('opp_probable_name'),
+                'confirmed': False,
+            })
+    return predicted
+
+
 def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
                      rprs2_map, ts_map, today, week_end):
     """Schedule + opp + role aware projection. Returns dict with fp, units,
@@ -193,11 +288,36 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
     games = schedules_by_team.get(mlb_id, [])
     today_s = today.isoformat()
     week_end_s = week_end.isoformat()
-    rem = [g for g in games if today_s < g['date'] <= week_end_s]
+    # Include TODAY in remaining-week projection (fix: was `today_s <` strict).
+    # WTD score from ESPN reflects only what's been scored at build time, so
+    # today's confirmed starts must contribute to the rest-of-week projection.
+    rem = [g for g in games if today_s <= g['date'] <= week_end_s]
 
     if pos == 'SP':
+        # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
+        inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
+        if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE',
+                   'OUT', 'DAY_TO_DAY'):
+            return out
+
         mlbam = player_mlbam_lookup(name)
-        starts = [g for g in rem if g.get('my_probable_id') == mlbam]
+        if not mlbam:  # unresolvable MLBAM — try MLB Stats API search
+            mlbam = _resolve_mlbam_via_api(name)
+        if not mlbam:
+            return out  # Can't match without an ID
+
+        # Confirmed probables for this pitcher in window. Guard against
+        # None==None false-positive (TBD probables) by requiring non-None.
+        confirmed_starts = [g for g in rem
+                              if g.get('my_probable_id') is not None
+                              and g.get('my_probable_id') == mlbam]
+        # Rotation-gap prediction for late-week games where MLB hasn't posted probables
+        confirmed_dates = {g['date'] for g in confirmed_starts}
+        predicted_starts = _predict_rotation_starts(mlbam, team, mlb_id,
+                                                     schedules_by_team,
+                                                     confirmed_dates, today, week_end)
+        starts = confirmed_starts + predicted_starts
+
         rp_info = rp3_map.get(nk, {})
         per_start_base = rp_info.get('per_start') or 0
         if not per_start_base or not starts: return out
@@ -211,7 +331,8 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
             total += fp
             out['breakdown'].append({'date': s['date'], 'opp': s['opp_team'],
                                        'opp_idx': opp_idx, 'factor': opp_factor,
-                                       'fp': fp, 'type': 'start'})
+                                       'fp': fp, 'type': 'start',
+                                       'confirmed': s.get('confirmed', True)})
         out['fp'] = total
         out['units'] = len(starts)
         out['sigma2'] = len(starts) * SIGMA_PER_SP_START ** 2
