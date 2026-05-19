@@ -140,16 +140,45 @@ Annotate with one of:
 
 ---
 
-## Step 6 — Verify candidates are TRUE FAs
+## Step 6 — Verify candidates are TRUE FAs (mandatory, not optional)
 
-Before recommending, check `get_all_teams()` and ensure no candidate
-is actually rostered. The `get_free_agents()` call returns ESPN's
-"available" pool which is usually correct, but verify any candidate
-with ownership >50% — they may have been just-dropped or about-to-be-
-claimed.
+**This step is mandatory before recommending ANY candidate, regardless
+of ownership %.** The Connelly Early bug (2026-05-18) showed why:
 
-If a recommended candidate is actually on another roster, surface it:
-"X is on Team Y — trade only, not a waiver pickup."
+- PL Top 100 ranked Early at #42 T6 with a "discount Max Fried" comp
+- I recommended him as a stash candidate from a PL article cross-reference
+- He was actually rostered on team "Frendy's Fantastic Team" in the user's
+  league — entirely unavailable as a FA
+- The user had to flag the error
+
+The lesson: **PL rank ≠ available in your league.** Same goes for "MC
+top-N candidate" or any list pulled from external rankings — always
+verify against `get_all_teams()` for the user's specific ESPN league.
+
+```python
+from app.espn_connector import get_all_teams
+teams = get_all_teams()
+
+# For any specifically-named candidate from outside (PL, user mention,
+# trending article), explicitly check:
+for name in named_candidates:
+    on_roster = teams[teams['player_name'].str.contains(name, case=False, na=False)]
+    if len(on_roster):
+        rostering_team = on_roster.iloc[0]['team_name']
+        print(f"⚠ {name} is on '{rostering_team}' — NOT AVAILABLE (trade only)")
+```
+
+For the bulk FA pool returned by `league.free_agents()`, ESPN's
+classification is usually correct (these are genuinely available).
+But for high-owned candidates (>50%) AND for any name imported from
+external rankings, always cross-check rosters.
+
+If a recommended candidate is actually on another roster, surface it
+prominently:
+> "**X is on [Team Y] — not available as FA, would require a trade**"
+
+Then either suggest an alternative or pivot to discussing trade
+possibility.
 
 ---
 
@@ -207,8 +236,12 @@ unreadable past ~10 candidates with full deep-dive details.
 - Treating "no rh3 row" as "skip" — recent callups are often the
   most interesting names (Angel Martínez, Logan Henderson, etc.).
   Surface them with ESPN stats only and a note.
-- Recommending a "FA" who's actually on another roster (`get_all_teams()`
-  check for anyone with ownership > 50%).
+- Recommending a "FA" who's actually on another roster. **Always run
+  `get_all_teams()` check before recommending ANY externally-sourced
+  candidate (PL article, podcast mention, trending name) — not just
+  high-owned ones.** The Connelly Early bug (2026-05-18) was a low-owned
+  player who happened to be rostered in the user's specific 8-team
+  league. PL/MC rankings don't reflect your league's roster state.
 - Doing full Statcast deep-dive on each candidate in this skill —
   that's `/fa-pickup-deep-dive` or `/hitter-compare`. Stay broad here.
 

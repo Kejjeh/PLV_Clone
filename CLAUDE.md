@@ -94,6 +94,23 @@ python scripts/xfp/run_roster_audit.py
 - `/sp-week-plan` — Monday-morning pitcher planning: projects week's
   starts against 10-SP cap, identifies weakest start to bench, flags
   long-IL SPs as drop candidates.
+- `/fa-sp-pool` — mirror of /fa-replacement-pool for SPs: pulls FA
+  SP pool, cross-references with PL Top 100 (and streamer ranks for
+  the current week), compares against user's rostered SPs, includes
+  mandatory `get_all_teams()` verification (Connelly Early bug).
+- `/slump-or-decline` — diagnose a hitter slump: career/2025/2026/L21d
+  decomposition + xwOBA L21d vs 2025 baseline (the load-bearing
+  diagnostic) + bounce MC scenarios + games-to-break-X-RoS math.
+  Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL.
+- `/breakout-sustainability` — diagnose if a hot hitter's recent
+  L21d is skill change vs outcome luck. Decomposes bat tracking,
+  discipline, contact quality across 2025/season/L21d windows,
+  classifies fantasy archetype, and outputs SUSTAINABLE / NARROW /
+  HOT-STREAK verdict.
+- `/savant-compare` — Baseball Savant percentile side-by-side for
+  2-6 players. WebFetches each player's profile, extracts percentile
+  rankings, builds comparison table, identifies archetypes. Supports
+  historical-season anchors (e.g., Suárez 2025 as power-or-bust comp).
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
@@ -129,6 +146,15 @@ sibling and ask if it needs attention too.
    pool scans.** Silently drops low-owned high-FP candidates. Always
    `league.free_agents(size=2000)` + manual position filter for any
    "all FAs above threshold" query. See `feedback_fa_pool_size_cap.md`.
+7. **Don't recommend a PL-ranked player as a FA pickup without
+   `get_all_teams()` verification.** PL ranks reflect MLB performance,
+   not your specific 8-team league's roster state. The Connelly Early
+   bug (2026-05-18) — recommended a stash that was actually rostered.
+   See `feedback_pl_rank_not_equal_fa_available.md`.
+8. **Don't recommend dropping a hitter without checking xwOBA L21d
+   vs 2025 baseline first.** Surface MC can show "drop" while the
+   underlying contact quality says "bounce coming." See
+   `reference_xwoba_l21d_vs_2025_diagnostic.md`.
 
 ## Memory pointers (for context-dense lookups)
 

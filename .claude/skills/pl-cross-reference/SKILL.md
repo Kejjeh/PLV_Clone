@@ -139,6 +139,39 @@ PL biases vs our model:
 
 ---
 
+## Step 5.5 — CRITICAL: verify "PL-ranked" doesn't mean "FA in your league"
+
+**Mandatory check before recommending any PL-named pitcher/hitter as
+a pickup.** PL ranks players based on MLB performance, not their
+roster status in your specific 8-team ESPN league.
+
+The Connelly Early bug (2026-05-18): PL had him at #42 T6 with
+"discount Max Fried" comp. I recommended him as a stash candidate.
+He was actually rostered on team "Frendy's Fantastic Team" in the
+user's league — entirely unavailable.
+
+```python
+from app.espn_connector import get_all_teams
+teams = get_all_teams()
+
+# For each PL-named player being recommended as add candidate:
+on_roster = teams[teams['player_name'].str.contains(name, case=False, na=False)]
+if len(on_roster):
+    rostering_team = on_roster.iloc[0]['team_name']
+    print(f"⚠ {name} — rostered on '{rostering_team}', NOT FA")
+```
+
+When recommending or comparing PL ranks, explicitly note availability:
+
+> "**Connelly Early** (PL #42 T6) — rostered on Frendy's Fantastic
+> Team, not available as a FA. Trade-only."
+
+This applies to ANY recommendation derived from PL rankings, not just
+high-owned names. Low-owned players in PL's general rankings can
+still be rostered in your specific league.
+
+---
+
 ## Step 6 — Verdict synthesis
 
 End with a clear synthesis:
@@ -189,6 +222,10 @@ REQUIREMENT.)
 - **Fetching outdated week articles.** Always WebSearch for the latest
   week first; don't hardcode last-known URLs.
 - **Skipping source links.** WebSearch tool explicitly requires them.
+- **Recommending PL-ranked players as FA pickups without ESPN roster
+  verification.** PL rank ≠ availability in your specific league.
+  Always run `get_all_teams()` check (Step 5.5) for any add-target
+  named in PL articles. The Connelly Early bug burned us once already.
 
 ---
 
