@@ -1028,7 +1028,7 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
            f'rest <b class="proj">{total_rest:.1f}</b>'
            f'{f" <small>(−{capped_fp:.1f} capped)</small>" if capped_fp > 0 else ""} · '
            f'total <b class="total">{total_proj:.1f}</b></span></h2>']
-    out.append('<table><thead><tr>'
+    out.append('<table class="player-table"><thead><tr>'
                 '<th>Player</th><th>Pos</th><th>WTD</th>'
                 '<th>Units</th><th>Rest</th><th>Total</th><th></th></tr></thead><tbody>')
     for r in rows:
@@ -1042,12 +1042,12 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
         if r['units'] == 0:
             unit_label = '—'
         badges = ' '.join(f'<span class="badge">{h(b)}</span>' for b in r['badges'])
-        out.append(f'<tr><td>{h(r["name"])}{(" " + badges) if badges else ""}</td>'
-                   f'<td>{h(r["pos"])}</td>'
-                   f'<td class="{wtd_cls}">{r["wtd"]:+.1f}</td>'
-                   f'<td class="muted">{unit_label}</td>'
-                   f'<td>{r["rest"]:+.1f}</td>'
-                   f'<td><b>{r["total"]:+.1f}</b></td><td></td></tr>')
+        out.append(f'<tr><td data-label="Player">{h(r["name"])}{(" " + badges) if badges else ""}</td>'
+                   f'<td data-label="Pos">{h(r["pos"])}</td>'
+                   f'<td data-label="WTD" class="{wtd_cls}">{r["wtd"]:+.1f}</td>'
+                   f'<td data-label="Units" class="muted">{unit_label}</td>'
+                   f'<td data-label="Rest">{r["rest"]:+.1f}</td>'
+                   f'<td data-label="Total"><b>{r["total"]:+.1f}</b></td><td></td></tr>')
         if r['breakdown']:
             for b in r['breakdown']:
                 if b.get('type') == 'start':
@@ -1284,13 +1284,111 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
           border-radius: 4px; white-space: nowrap; }}
 .toc a:hover {{ background: #161b22; }}
 
-/* ── Mobile ── */
-@media (max-width: 768px) {{
-  .score-grid {{ grid-template-columns: 1fr; }}
-  .vs {{ display: none; }}
-  table {{ font-size: .8em; }}
-  h2 .totals {{ display: block; float: none; margin-top: .3em; font-size: .8em; }}
+/* ── Tablet (≤ 900px) ── */
+@media (max-width: 900px) {{
+  body {{ padding: 0 .6em 4em .6em; }}
+  h1 {{ font-size: 1.5em; }}
+  h2 {{ font-size: 1.2em; margin-top: 1.2em; }}
+  h2 .totals {{ display: block; float: none; margin-top: .3em; font-size: .85em; }}
+  .scoreboard {{ padding: 1em; }}
+  .score-team .wtd {{ font-size: 2em; }}
+  .score-team .total-final {{ font-size: 1.2em; }}
+  /* Wrap tables in horizontal-scroll on tablet */
+  .scroll-x {{ overflow-x: auto; -webkit-overflow-scrolling: touch; }}
 }}
+
+/* ── Phone (≤ 600px) — card-style player rows ── */
+@media (max-width: 600px) {{
+  .scoreboard {{ padding: .75em; margin: .5em 0; }}
+  .score-grid {{ grid-template-columns: 1fr; gap: .5em; }}
+  .vs {{ display: none; }}
+  .score-team .wtd {{ font-size: 2.4em; line-height: 1; margin: .1em 0; }}
+  .score-team .total-final {{ font-size: 1.3em; }}
+  .score-team.opp {{ border-top: 1px solid #30363d; padding-top: .5em; }}
+  .gauge {{ width: 130px; height: 130px; }}
+  .gauge-inner {{ width: 108px; height: 108px; }}
+  .gauge-pct {{ font-size: 1.8em; }}
+
+  /* TOC: smaller pills */
+  .toc {{ gap: .3em; font-size: .8em; padding: .4em 0; }}
+  .toc a {{ padding: .35em .55em; }}
+
+  /* Action items: bigger touch targets */
+  .action-items {{ padding: .8em 1em; }}
+  .action-items li {{ padding: .6em .8em; font-size: .95em; }}
+
+  /* Collapsibles: larger tap target */
+  details > summary {{ padding: .8em 0; font-size: 1.1em; min-height: 44px; }}
+
+  /* Player table → mobile card layout */
+  .player-table {{ font-size: .95em; }}
+  .player-table thead {{ display: none; }}
+  .player-table, .player-table tbody, .player-table tr, .player-table td {{
+    display: block; width: 100%; }}
+  .player-table tr {{
+    background: #161b22; border: 1px solid #21262d; border-radius: 6px;
+    padding: .6em .75em; margin-bottom: .5em; position: relative;
+  }}
+  .player-table tr:hover td {{ background: transparent; }}
+  .player-table td {{
+    border: none; padding: .15em 0;
+    display: grid; grid-template-columns: 70px 1fr;
+    align-items: baseline;
+  }}
+  .player-table td::before {{
+    content: attr(data-label);
+    color: #6e7681; font-size: .8em; text-transform: uppercase;
+    letter-spacing: .03em; font-weight: 500;
+  }}
+  /* Player name: hide label, full-width, larger */
+  .player-table td[data-label="Player"] {{
+    grid-template-columns: 1fr; padding-bottom: .35em;
+    margin-bottom: .35em; border-bottom: 1px solid #21262d;
+    font-size: 1.05em; font-weight: 600; color: #e6edf3;
+  }}
+  .player-table td[data-label="Player"]::before {{ display: none; }}
+  /* Total: bigger, end of card */
+  .player-table td[data-label="Total"] b {{ font-size: 1.15em; color: #f0883e; }}
+  /* Hide blank trailing column */
+  .player-table td:nth-last-child(1):empty {{ display: none; }}
+  /* Breakdown rows: full-width within their player-row card */
+  .player-table tr.breakdown {{
+    background: transparent; border: none; padding: 0 0 0 1em;
+    margin: -.4em 0 .4em 0; font-size: .85em; color: #8b949e;
+  }}
+  .player-table tr.breakdown td {{
+    display: block; grid-template-columns: none; padding: .15em 0;
+    border-bottom: none;
+  }}
+  .player-table tr.breakdown td::before {{ display: none; }}
+
+  /* Other tables: horizontal-scroll wrapper to prevent viewport overflow */
+  table:not(.player-table) {{
+    display: block; overflow-x: auto; -webkit-overflow-scrolling: touch;
+    font-size: .85em; max-width: 100%;
+  }}
+  table:not(.player-table) thead, table:not(.player-table) tbody,
+  table:not(.player-table) tr {{ display: table; width: 100%; }}
+  table:not(.player-table) tr {{ table-layout: auto; }}
+
+  /* Win bar: keep readable */
+  .win-bar-label .pct {{ font-size: 1.4em; }}
+  .win-bar-track {{ height: 18px; }}
+
+  /* Headers a bit smaller */
+  h1 {{ font-size: 1.3em; }}
+  h2 {{ font-size: 1.1em; }}
+
+  /* Sticky header more compact */
+  header {{ padding: .6em 0; }}
+  header h1 {{ flex: 1 1 100%; }}
+  nav {{ font-size: .85em; }}
+  nav a {{ margin-left: .6em; }}
+}}
+
+/* Improve color contrast for legibility */
+.zero {{ color: #7d8590; }}  /* bumped from #6e7681 */
+tr:nth-child(even) td {{ background: rgba(255,255,255,.015); }}
 </style>
 </head><body>
 <header>
