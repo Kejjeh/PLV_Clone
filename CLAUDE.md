@@ -111,6 +111,14 @@ python scripts/xfp/run_roster_audit.py
   2-6 players. WebFetches each player's profile, extracts percentile
   rankings, builds comparison table, identifies archetypes. Supports
   historical-season anchors (e.g., Suárez 2025 as power-or-bust comp).
+- `/refresh-matchup` — light weekly refresh: rerun
+  `build_matchup_dashboard.py`, sanity-check, commit + push both
+  plv_clone + xfp-model (GitHub Pages). 30-second flow vs full
+  refresh's 3-30 min.
+- `/matchup-audit` — cross-check matchup.html projections against
+  MLB Stats API + ESPN roster. Catches the 4 known SP-projection bug
+  patterns (IL'd projected, undercount, mlbam=None false-positive,
+  today excluded). See `reference_matchup_dashboard_sp_gotchas.md`.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
@@ -155,6 +163,11 @@ sibling and ask if it needs attention too.
    vs 2025 baseline first.** Surface MC can show "drop" while the
    underlying contact quality says "bounce coming." See
    `reference_xwoba_l21d_vs_2025_diagnostic.md`.
+9. **Don't trust matchup.html SP projection blindly.** Four known bug
+   patterns can cause undercount, IL'd-projected, or mlbam-None false
+   matches. Run `/matchup-audit` after any change to
+   `scripts/xfp/build_matchup_dashboard.py`. See
+   `reference_matchup_dashboard_sp_gotchas.md`.
 
 ## Memory pointers (for context-dense lookups)
 

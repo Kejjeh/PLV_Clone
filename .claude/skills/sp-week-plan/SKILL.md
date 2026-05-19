@@ -195,6 +195,36 @@ in his last 2 starts — short outings tank FP regardless of K rate").
 
 ---
 
+## Step 6.5 — Cross-check with matchup dashboard (regression detector)
+
+If the matchup dashboard (`xfp-model/docs/matchup.html`) has been built
+recently, cross-reference its SP start count against this plan's count:
+
+```python
+import re
+from pathlib import Path
+html = Path('xfp-model/docs/matchup.html').read_text(encoding='utf-8')
+m = re.search(r'(?:Only|⚠ SP cap at maximum:?) (\d+) probable starts', html)
+dashboard_count = int(m.group(1)) if m else None
+```
+
+The two should match (or be within ±1 from race conditions on confirmed
+probables between runs). If `/sp-week-plan` says 10 starts and the
+dashboard says 6, there's a regression in `build_matchup_dashboard.py`
+— run `/matchup-audit` to identify which of the 4 known bug patterns
+applies (see `reference_matchup_dashboard_sp_gotchas.md`):
+- Bug A: IL'd SPs projected non-zero
+- Bug B: SP undercount (only confirmed counted)
+- Bug C: mlbam=None false-positives on TBD probables
+- Bug D: today's games excluded by `today_s <` strict filter
+
+If counts differ but you can't immediately identify the cause, surface
+the discrepancy to the user before recommending any bench decisions —
+their dashboard view may not match what `/sp-week-plan` shows, and
+bench choices made off the wrong count will misfire.
+
+---
+
 ## Step 7 — Drop candidates for long-term roster optimization
 
 Separate from the weekly bench decision, surface drop candidates:
