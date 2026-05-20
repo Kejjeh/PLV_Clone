@@ -1,14 +1,14 @@
 {
-  "scalar_correction": 0.8467,
+  "scalar_correction": 1.1864,
   "n_observations": 2,
   "n_periods": 1,
   "periods_used": [
     7
   ],
-  "mae_before": 42.07,
-  "mae_after": 6.98,
-  "mae_improvement_pct": 83.4,
+  "mae_before": 51.13,
+  "mae_after": 13.7,
+  "mae_improvement_pct": 73.2,
   "method": "POOLED_SCALAR",
-  "fit_date": "2026-05-20T00:15:04.864283",
-  "note": "Scalar=0.847 \u2192 multiply all projections by this. sample is small (n=2); refit weekly as more periods close."
+  "fit_date": "2026-05-20T00:58:09.232334",
+  "note": "Scalar=1.186 \u2192 multiply all projections by this. sample is small (n=2); refit weekly as more periods close."
 }

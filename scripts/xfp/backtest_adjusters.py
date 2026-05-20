@@ -75,6 +75,8 @@ def main():
     # ──────── PASS 1: ADJUSTERS OFF ────────
     print('\nPass 1: adjusters OFF (baseline xfp)')
     build._ADJUSTERS_ON = False
+    build._MA2_HITTER_ON = False
+    build._MA2_SP_ON = False
     build._HITTER_FORM, build._SP_FORM, build._LINEUP = {}, {}, {}
     build._PARK, build._PSPLIT, build._CALIB = {}, {}, 1.0
     proj_off = _project_all(mu['my_lineup'], mu['opp_lineup'], schedules_by_team,
@@ -84,6 +86,8 @@ def main():
     # ──────── PASS 2: ADJUSTERS ON ────────
     print('Pass 2: adjusters ON (MA1-MA7)')
     build._ADJUSTERS_ON = True
+    build._MA2_HITTER_ON = True
+    build._MA2_SP_ON = True
     build._HITTER_FORM, build._SP_FORM = build.load_recent_form_maps()
     build._LINEUP = build.load_lineup_map()
     build._PARK = build.load_park_factors()
@@ -112,6 +116,9 @@ def main():
         build._HITTER_FORM, build._SP_FORM, build._LINEUP = {}, {}, {}
         build._PARK, build._PSPLIT, build._BAT_SIDE = {}, {}, {}
         build._CALIB = 1.0
+        # MA2 hitter/sp toggles: only fire when isolating MA2_recent
+        build._MA2_HITTER_ON = (name == 'MA2_recent')
+        build._MA2_SP_ON = (name == 'MA2_recent')
         loader()  # populate only this adjuster's caches
         proj_iso = _project_all(mu['my_lineup'], mu['opp_lineup'], schedules_by_team,
                                   rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map,

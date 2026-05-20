@@ -50,31 +50,37 @@ def load_completed_periods(today_iso: str | None = None) -> pd.DataFrame:
     df['date'] = pd.to_datetime(df['date'])
     today = pd.to_datetime(today_iso) if today_iso else pd.Timestamp.today().normalize()
 
+    has_actual_cols = 'actual_my_final' in df.columns and 'actual_opp_final' in df.columns
     out_rows = []
     for period, sub in df.groupby('period'):
         sub = sub.sort_values('date')
-        # Infer period start date: Monday of the first-snapshot's ISO week.
-        # Period covers Mon-Sun (7 days). Period is "completed" once today > period_end.
         first_snap = sub['date'].min()
-        period_start = first_snap - pd.Timedelta(days=first_snap.weekday())  # back to Monday
-        period_end = period_start + pd.Timedelta(days=6)  # Sunday
+        period_start = first_snap - pd.Timedelta(days=first_snap.weekday())
+        period_end = period_start + pd.Timedelta(days=6)
         if today <= period_end:
             continue  # period still open
         first = sub.iloc[0]
-        my_actual = float(sub['my_wtd'].max())
-        opp_actual = float(sub['opp_wtd'].max())
+        # Prefer true Sunday-night actuals (from fetch_closed_matchup_actuals.py).
+        # Fall back to max(my_wtd) proxy only if actuals not yet backfilled — that
+        # proxy systematically under-counts the period's full output.
+        if has_actual_cols and pd.notna(sub['actual_my_final'].iloc[0]):
+            my_actual = float(sub['actual_my_final'].iloc[0])
+            opp_actual = float(sub['actual_opp_final'].iloc[0])
+            actual_source = 'espn_box_score'
+        else:
+            my_actual = float(sub['my_wtd'].max())
+            opp_actual = float(sub['opp_wtd'].max())
+            actual_source = 'max_wtd_proxy'
         out_rows.append({
-            'period': int(period),
-            'team_side': 'my',
+            'period': int(period), 'team_side': 'my',
             'projected_total': float(first['my_projected_total']),
-            'actual_total': my_actual,
+            'actual_total': my_actual, 'actual_source': actual_source,
             'n_snapshots': len(sub),
         })
         out_rows.append({
-            'period': int(period),
-            'team_side': 'opp',
+            'period': int(period), 'team_side': 'opp',
             'projected_total': float(first['opp_projected_total']),
-            'actual_total': opp_actual,
+            'actual_total': opp_actual, 'actual_source': actual_source,
         })
     return pd.DataFrame(out_rows)
 

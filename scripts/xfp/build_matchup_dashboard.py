@@ -98,9 +98,11 @@ def get_matchup():
 def load_projections():
     rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
     rh3['nk'] = rh3['player_name'].map(_norm)
-    # MA1: include per-player sigma
+    # MA1: per-player sigma. MA2 hitter: rh3.recency_form_gap (xpwOBA delta vs prior).
     rh3_map = {r['nk']: {'per_game': r.get('xfp_rh3_per_game') or 0,
                           'per_pa': r.get('xfp_rh3_per_pa') or 0,
+                          'prior_fp_per_pa': r.get('prior_fp_per_pa'),
+                          'recency_form_gap': r.get('recency_form_gap'),
                           'sigma': r.get('xfp_rh3_sigma')}
                 for _, r in rh3.iterrows()}
 
@@ -192,23 +194,38 @@ def load_recent_form_maps():
 
 
 def load_lineup_map():
-    """MA3 — per-batter modal lineup spot + PA/game from L21d appearances."""
+    """MA3+MA7 — per-batter modal lineup spot + PA/game with RECENCY WEIGHTING.
+
+    Last 7 games weighted ×2 vs games 8-21d ago (#7). This catches recent
+    demotions/promotions faster than flat L21d modal.
+    """
     parq = CACHE / 'hitter_lineup_appearances_2026.parquet'
     try:
         df = pd.read_parquet(parq)
     except Exception:
         return {}
     today = date.today()
-    cutoff = today - timedelta(days=21)
+    cutoff_21 = today - timedelta(days=21)
+    cutoff_7 = today - timedelta(days=7)
     df['game_date'] = pd.to_datetime(df['game_date']).dt.date
-    df = df[df['game_date'] >= cutoff]
+    df = df[df['game_date'] >= cutoff_21]
     out = {}
     for batter, sub in df.groupby('batter'):
         starts = sub[sub['started_game'] == True]
         if len(starts) < 3:
             continue
-        modal_spot = int(starts['lineup_spot'].mode().iloc[0]) if len(starts['lineup_spot'].dropna()) else None
-        pa_per_g = float(starts['pa_in_game'].mean()) if len(starts) else 4.0
+        # Recency weighting: last-7d games count 2x
+        starts = starts.copy()
+        starts['_w'] = starts['game_date'].apply(lambda d: 2.0 if d >= cutoff_7 else 1.0)
+        # Weighted modal lineup spot
+        spots = starts.dropna(subset=['lineup_spot'])
+        if len(spots):
+            spot_counts = spots.groupby('lineup_spot')['_w'].sum().sort_values(ascending=False)
+            modal_spot = int(spot_counts.index[0])
+        else:
+            modal_spot = None
+        # Weighted mean PA/g
+        pa_per_g = float((starts['pa_in_game'] * starts['_w']).sum() / starts['_w'].sum())
         out[int(batter)] = {'modal_spot': modal_spot, 'pa_per_g': pa_per_g}
     return out
 
@@ -216,16 +233,12 @@ def load_lineup_map():
 def lineup_spot_factor(modal_spot, pa_per_g):
     """MA3 — lineup-spot + PA-volume multiplier.
 
-    NOTE: rh3 builds `xfp_rh3_per_game` from `xfp_rh3_per_pa * PA_PER_GAME_LEAGUE`
-    where PA_PER_GAME_LEAGUE = 3.5 is a CONSTANT (not per-player). So rh3
-    over-projects bottom-order hitters (actual PA < 3.5) and under-projects
-    top-order (actual PA > 4.0). The PA scaling here corrects that — it's
-    NOT double-counting.
-
-    Returns: (observed PA / 3.5) × small RBI/R bonus per lineup spot.
-    Clamped to [0.75, 1.30] to bound rare high-PA outliers.
+    rh3 builds `xfp_rh3_per_game` from `per_pa * PA_PER_GAME_LEAGUE` where the
+    constant is 3.5. Per-player PA / 3.5 corrects rh3's flat assumption.
+    Clamp widened to [0.70, 1.40] after audit (24/428 hitters at 1.30 ceiling,
+    p99 factor was 1.37 — clamp was truncating legit elite-leadoff hitters).
     """
-    LEAGUE_PA = 3.5  # matches xfp_rh3_pipeline.py PA_PER_GAME_LEAGUE
+    LEAGUE_PA = 3.5
     pa_factor = (pa_per_g or LEAGUE_PA) / LEAGUE_PA
     spot_bonus = 0.0
     if modal_spot in (1, 2): spot_bonus = 0.03
@@ -233,15 +246,13 @@ def lineup_spot_factor(modal_spot, pa_per_g):
     elif modal_spot == 4: spot_bonus = 0.03
     elif modal_spot == 5: spot_bonus = 0.01
     elif modal_spot in (7, 8, 9): spot_bonus = -0.02
-    return max(0.75, min(1.30, pa_factor * (1 + spot_bonus)))
+    return max(0.70, min(1.40, pa_factor * (1 + spot_bonus)))
 
 
 def load_park_factors():
-    """MA4 — team_abbr → park_factor (1.0 = neutral)."""
-    df = _safe_csv(CACHE / 'park_factors.csv')
-    if df is None or 'team_abbr' not in df.columns: return {}
-    df['team_abbr'] = df['team_abbr'].str.upper()
-    return df.set_index('team_abbr')['park_factor'].to_dict()
+    """MA4 DROPPED (#5). Trivial impact (±0.1 FP) and park_factors.csv is
+    minimal. Stub returns empty so _PARK stays empty if anyone references it."""
+    return {}
 
 
 def load_pitcher_splits():
@@ -279,6 +290,38 @@ def load_bat_side_map():
         return {}
 
 
+def load_il_returns(mu):
+    """MA6 #10 — cache IL'd player → return_date map upstream.
+
+    `player.returnDate` is unreliable (often None even when ESPN has it).
+    Call `get_injury_details()` for all IL'd lineup players once at startup,
+    cache return_date by player_id.
+    """
+    try:
+        from app.espn_connector import get_injury_details
+    except Exception:
+        return {}
+    il_ids = []
+    for p in (mu.get('my_lineup') or []) + (mu.get('opp_lineup') or []):
+        inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
+        if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+            pid = getattr(p, 'playerId', None)
+            if pid: il_ids.append(int(pid))
+    if not il_ids: return {}
+    try:
+        details = get_injury_details(il_ids)
+    except Exception as e:
+        print(f'  ⚠ get_injury_details failed: {e}')
+        return {}
+    out = {}
+    for _, r in details.iterrows():
+        rd = r.get('return_date')
+        if pd.notna(rd):
+            try: out[int(r['player_id'])] = date.fromisoformat(str(rd)[:10])
+            except Exception: pass
+    return out
+
+
 def load_calibration_scalar():
     """MA7 — read MA0's calibration JSON. Returns 1.0 if not available.
 
@@ -300,15 +343,18 @@ def load_calibration_scalar():
 
 
 # Module-level lazy caches (populated on first call from main())
-_ADJUSTERS_ON = False    # CLI flag: --with-adjusters or env ADJUSTERS_ON=1
-_HITTER_FORM = {}
+_ADJUSTERS_ON = False        # master CLI flag
+_MA2_HITTER_ON = False       # #6 — independent toggle for hitter MA2 (rh3.recency_form_gap)
+_MA2_SP_ON = False           # #6 — independent toggle for SP MA2 (rolling 21d)
+_HITTER_FORM = {}            # SP form keyed by mlbam (MA2 SP); hitters now use rh3 recency_form_gap directly
 _SP_FORM = {}
 _LINEUP = {}
-_PARK = {}
+_PARK = {}                   # MA4 DROPPED; kept as empty stub for backward compat
 _PSPLIT = {}
 _BAT_SIDE = {}
+_IL_RETURNS = {}             # #10 — player_id → return_date from get_injury_details upstream cache
 _CALIB = 1.0
-LEAGUE_AVG_XWOBA = 0.310  # for MA5 platoon normalization
+LEAGUE_AVG_XWOBA = 0.310     # MA5 platoon normalization
 
 
 def get_team_schedule(team_id, start_date, end_date):
@@ -470,24 +516,26 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
     # today's confirmed starts must contribute to the rest-of-week projection.
     rem = [g for g in games if today_s <= g['date'] <= week_end_s]
 
-    # MA6 — IL-window pro-rate: for non-SP IL'd players returning mid-window.
-    # GATED on _ADJUSTERS_ON. When OFF, IL'd hitters/RPs keep existing behavior
-    # (zero projection until they return).
+    # MA6 — IL-window pro-rate. #10: prefer upstream-cached _IL_RETURNS map
+    # (built from get_injury_details()) since `player.returnDate` is usually None.
     il_factor = 1.0
     inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
     if _ADJUSTERS_ON and inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
-        rd_str = getattr(player, 'returnDate', None) or None
-        if rd_str:
-            try:
-                rd = date.fromisoformat(str(rd_str)[:10])
-                if rd <= week_end:
-                    days_avail = max(0, (week_end - max(rd, today)).days + 1)
-                    days_total = max(1, (week_end - today).days + 1)
-                    il_factor = days_avail / days_total
-                else:
-                    return out  # returns after window — zero
-            except Exception:
-                pass
+        pid_for_il = getattr(player, 'playerId', None)
+        rd = _IL_RETURNS.get(pid_for_il) if pid_for_il else None
+        if rd is None:
+            # fallback to player.returnDate if upstream cache missed
+            rd_str = getattr(player, 'returnDate', None) or None
+            if rd_str:
+                try: rd = date.fromisoformat(str(rd_str)[:10])
+                except Exception: rd = None
+        if rd is not None:
+            if rd <= week_end:
+                days_avail = max(0, (week_end - max(rd, today)).days + 1)
+                days_total = max(1, (week_end - today).days + 1)
+                il_factor = days_avail / days_total
+            else:
+                return out  # returns after window — zero
 
     if pos == 'SP':
         # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
@@ -519,23 +567,19 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
         if len(starts) >= 2:
             out['badges'].append('🔥 2-START')
 
-        # MA2: recent-form factor (rolling 21d/season) — keyed on MLBAM
-        recent_factor = _SP_FORM.get(mlbam, 1.0)
+        # MA2 (SP): recent-form factor — gated on _MA2_SP_ON
+        recent_factor = _SP_FORM.get(mlbam, 1.0) if _MA2_SP_ON else 1.0
 
         total = 0.0
         for s in starts:
             opp_idx = ts_map.get(s['opp_team'], {}).get('bat_index') or 1.0
             opp_factor = max(0.80, min(1.20, 1.0 / opp_idx))
-            # MA4: park factor inverse for SP (hitter-friendly park = harder for SP)
-            park_f_raw = _PARK.get(s['opp_team'] if not s.get('is_home') else team, 1.0)
-            park_factor = max(0.85, min(1.15, 1.0 / park_f_raw))
-            # MA7: residual calibration scalar (final pass)
-            fp = per_start_base * opp_factor * recent_factor * park_factor * _CALIB
+            # MA7: residual calibration scalar (final pass). MA4 dropped per #5.
+            fp = per_start_base * opp_factor * recent_factor * _CALIB
             total += fp
             out['breakdown'].append({'date': s['date'], 'opp': s['opp_team'],
                                        'opp_idx': opp_idx, 'factor': opp_factor,
                                        'recent_factor': recent_factor,
-                                       'park_factor': park_factor,
                                        'fp': fp, 'type': 'start',
                                        'confirmed': s.get('confirmed', True)})
         out['fp'] = total
@@ -578,8 +622,18 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
 
         # MA3: lineup-spot adjuster (uses mlbam → lineup map)
         batter_mlbam = player_mlbam_lookup(name)
-        # MA2: recent-form factor — keyed on MLBAM
-        recent_factor = _HITTER_FORM.get(batter_mlbam, 1.0) if batter_mlbam else 1.0
+        # MA2 hitter: use rh3.recency_form_gap directly (#8 — no double-count;
+        # rh3 includes the column as display-only, not in features).
+        # Gap is xwoba_per_pa_last21_sh - prior_fp_per_pa. Convert to factor.
+        if _MA2_HITTER_ON:
+            base_pa = rh.get('prior_fp_per_pa') or rh.get('per_pa') or 0
+            gap = rh.get('recency_form_gap')
+            if gap and base_pa and base_pa > 0:
+                recent_factor = max(0.85, min(1.15, 1.0 + gap / base_pa))
+            else:
+                recent_factor = 1.0
+        else:
+            recent_factor = 1.0
         lineup_info = _LINEUP.get(batter_mlbam, {}) if batter_mlbam else {}
         lineup_factor = lineup_spot_factor(lineup_info.get('modal_spot'),
                                             lineup_info.get('pa_per_g')) if lineup_info else 1.0
@@ -598,9 +652,8 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
                 opp_pit = ts_map.get(g['opp_team'], {}).get('pit_index') or 1.0
                 opp_factor = max(0.85, min(1.15, opp_pit))
 
-            # MA4: park factor for game's host park
-            host = team if g.get('is_home') else g['opp_team']
-            park_factor = max(0.85, min(1.15, _PARK.get(host, 1.0)))
+            # MA4 DROPPED (#5) — park factor was ±0.1 FP/team, not worth complexity.
+            park_factor = 1.0
 
             # MA5: platoon factor — opposing SP's xwOBA vs batter's stance.
             # Bat-side comes from Statcast `stand` map; switch hitters batting
@@ -1221,8 +1274,14 @@ def render_accuracy_history():
     return '\n'.join(out)
 
 
-def log_prediction(mu, my_total, opp_total, win_prob, today):
-    """Append current prediction to predictions_history.csv for accuracy tracking."""
+def log_prediction(mu, my_total, opp_total, win_prob, today, model_version='baseline'):
+    """Append current prediction to predictions_history.csv.
+
+    `model_version` distinguishes which projection iteration produced this
+    snapshot — 'baseline' (adjusters OFF, production) or 'MA_v1' (full
+    adjuster chain). Shadow-logging writes both per build so we accumulate
+    paired observations for backtest without flipping live.
+    """
     history_path = OUT / 'predictions_history.csv'
     record = {
         'timestamp': datetime.now().isoformat(),
@@ -1235,14 +1294,21 @@ def log_prediction(mu, my_total, opp_total, win_prob, today):
         'opp_wtd': round(mu['opp_score'], 2),
         'opp_projected_total': round(opp_total, 2),
         'win_probability': round(win_prob, 4),
+        'model_version': model_version,
+        # actuals backfilled post-period by fetch_closed_matchup_actuals.py
+        'actual_my_final': pd.NA,
+        'actual_opp_final': pd.NA,
     }
     if history_path.exists():
         df = pd.read_csv(history_path)
+        # Ensure new schema columns exist (graceful migration for old rows)
+        for c in ('model_version', 'actual_my_final', 'actual_opp_final'):
+            if c not in df.columns: df[c] = pd.NA
         df = pd.concat([df, pd.DataFrame([record])], ignore_index=True)
     else:
         df = pd.DataFrame([record])
     df.to_csv(history_path, index=False)
-    print(f'  logged prediction → predictions_history.csv ({len(df)} total entries)')
+    print(f'  logged prediction ({model_version}) → predictions_history.csv ({len(df)} total entries)')
 
 
 def win_probability(my_proj_total, opp_proj_total, my_sigma2, opp_sigma2):
@@ -1253,6 +1319,37 @@ def win_probability(my_proj_total, opp_proj_total, my_sigma2, opp_sigma2):
     z = gap / sigma
     # standard normal CDF approximation
     return 0.5 * (1 + math.erf(z / math.sqrt(2)))
+
+
+def win_probability_bootstrap(my_proj, opp_proj, my_wtd, opp_wtd, n_trials=5000):
+    """#11 — Monte Carlo win prob with right-skewed (lognormal) marginals per player.
+
+    Each player's `fp` (mean) + `sigma2` (variance) are matched to a lognormal
+    distribution; team total per trial = WTD + sum of player draws. Win prob is
+    the fraction of trials where my_total > opp_total.
+
+    Lognormal captures HR upside (right tail) which the normal-approx misses.
+    For mean ≤ 0 (rare — bad SP projection) falls back to normal draws.
+    """
+    import numpy as np
+    rng = np.random.default_rng(seed=42)
+
+    def _player_draws(p):
+        mu = p['fp']
+        var = p['sigma2']
+        if mu <= 0 or var <= 0:
+            return rng.normal(mu, max(math.sqrt(max(var, 0)), 1e-6), n_trials)
+        sig2 = math.log(1 + var / (mu * mu))
+        lmu = math.log(mu) - sig2 / 2
+        return rng.lognormal(lmu, math.sqrt(sig2), n_trials)
+
+    my_trials = np.full(n_trials, my_wtd, dtype=float)
+    for p in my_proj.values():
+        my_trials = my_trials + _player_draws(p)
+    opp_trials = np.full(n_trials, opp_wtd, dtype=float)
+    for p in opp_proj.values():
+        opp_trials = opp_trials + _player_draws(p)
+    return float((my_trials > opp_trials).mean())
 
 
 def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
@@ -1324,30 +1421,40 @@ def main():
     _parser = argparse.ArgumentParser(add_help=False)
     _parser.add_argument('--with-adjusters', action='store_true',
                           help='Enable MA0-MA7 accuracy adjuster chain (default OFF — pending validation)')
+    _parser.add_argument('--bootstrap', action='store_true',
+                          help='Use Monte Carlo (lognormal) win-prob instead of normal-approx CDF')
     _parser.add_argument('-h', '--help', action='store_true')
     _args, _ = _parser.parse_known_args()
     if _args.help:
         _parser.print_help(); return
-    global _ADJUSTERS_ON
+    global _ADJUSTERS_ON, _MA2_HITTER_ON, _MA2_SP_ON
     _ADJUSTERS_ON = _args.with_adjusters or os.environ.get('ADJUSTERS_ON') == '1'
+    _USE_BOOTSTRAP = _args.bootstrap or os.environ.get('WIN_PROB_BOOTSTRAP') == '1'
+    # MA2 sub-toggles default to master flag (#6 — can be split independently
+    # later via env vars if MAE shows one direction net-helps but the other doesn't)
+    _MA2_HITTER_ON = _ADJUSTERS_ON and os.environ.get('MA2_HITTER_OFF') != '1'
+    _MA2_SP_ON = _ADJUSTERS_ON and os.environ.get('MA2_SP_OFF') != '1'
 
     print('Loading matchup + projections...')
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
     # MA2-MA7: load adjuster data into module-level caches (only if enabled).
-    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB
+    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS, _CALIB
     if _ADJUSTERS_ON:
-        _HITTER_FORM, _SP_FORM = load_recent_form_maps()
+        _HITTER_FORM, _SP_FORM = load_recent_form_maps()  # SP form only used now
         _LINEUP = load_lineup_map()
-        _PARK = load_park_factors()
+        _PARK = load_park_factors()                       # stub returns {}
         _PSPLIT = load_pitcher_splits()
         _BAT_SIDE = load_bat_side_map()
+        _IL_RETURNS = load_il_returns(mu)                 # #10
         _CALIB = load_calibration_scalar()
-        print(f'  ⚙ ADJUSTERS ON  caches: hitter_form={len(_HITTER_FORM)} sp_form={len(_SP_FORM)} '
-              f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} '
-              f'bat_side={len(_BAT_SIDE)} calib={_CALIB:.3f}')
+        print(f'  ⚙ ADJUSTERS ON  MA2_hitter={_MA2_HITTER_ON} MA2_sp={_MA2_SP_ON}  '
+              f'caches: sp_form={len(_SP_FORM)} lineup={len(_LINEUP)} '
+              f'pitcher_splits={len(_PSPLIT)} bat_side={len(_BAT_SIDE)} '
+              f'il_returns={len(_IL_RETURNS)} calib={_CALIB:.3f}')
     else:
-        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB = {}, {}, {}, {}, {}, {}, 1.0
+        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS, _CALIB = (
+            {}, {}, {}, {}, {}, {}, {}, 1.0)
         print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only — pending backtest validation)')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
@@ -1395,13 +1502,19 @@ def main():
     opp_total = mu['opp_score'] + opp_rest
     my_sigma2 = sum(p['sigma2'] for p in my_proj.values())
     opp_sigma2 = sum(p['sigma2'] for p in opp_proj.values())
-    win_prob = win_probability(my_total, opp_total, my_sigma2, opp_sigma2)
+    if _USE_BOOTSTRAP:
+        win_prob = win_probability_bootstrap(my_proj, opp_proj,
+                                              mu['my_score'], mu['opp_score'])
+        wp_method = 'bootstrap'
+    else:
+        win_prob = win_probability(my_total, opp_total, my_sigma2, opp_sigma2)
+        wp_method = 'normal'
 
     print(f'\n  Ligers: WTD {mu["my_score"]:.1f} + rest {my_rest:.1f} = {my_total:.1f} '
           f'(σ²={my_sigma2:.0f})')
     print(f'  Opp:    WTD {mu["opp_score"]:.1f} + rest {opp_rest:.1f} = {opp_total:.1f} '
           f'(σ²={opp_sigma2:.0f})')
-    print(f'  Win probability: {win_prob*100:.1f}%')
+    print(f'  Win probability ({wp_method}): {win_prob*100:.1f}%')
 
     my_block, _, _ = render_team_table(mu['mine'].team_name, mu['my_lineup'],
                                           mu['my_score'], my_proj, my_capped)
@@ -1413,7 +1526,54 @@ def main():
                                           ESPN_TO_MLB_TEAM)
 
     # ---- LOG PREDICTION HISTORY ----
-    log_prediction(mu, my_total, opp_total, win_prob, today)
+    live_version = 'MA_v1' if _ADJUSTERS_ON else 'baseline'
+    log_prediction(mu, my_total, opp_total, win_prob, today, model_version=live_version)
+
+    # ---- SHADOW LOG: also write the OTHER version so we accumulate paired data
+    # without flipping live behavior. Off-build → shadow-logs MA_v1; on-build → shadow-logs baseline.
+    try:
+        shadow_on = not _ADJUSTERS_ON
+        shadow_version = 'MA_v1' if shadow_on else 'baseline'
+        # Toggle module state for the shadow projection
+        prior_state = (_ADJUSTERS_ON, _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB)
+        globals()['_ADJUSTERS_ON'] = shadow_on
+        if shadow_on:
+            globals()['_HITTER_FORM'], globals()['_SP_FORM'] = load_recent_form_maps()
+            globals()['_LINEUP'] = load_lineup_map()
+            globals()['_PARK'] = load_park_factors()
+            globals()['_PSPLIT'] = load_pitcher_splits()
+            globals()['_BAT_SIDE'] = load_bat_side_map()
+            globals()['_CALIB'] = load_calibration_scalar()
+        else:
+            (globals()['_HITTER_FORM'], globals()['_SP_FORM'], globals()['_LINEUP'],
+             globals()['_PARK'], globals()['_PSPLIT'], globals()['_BAT_SIDE'],
+             globals()['_CALIB']) = {}, {}, {}, {}, {}, {}, 1.0
+        # Reproject under shadow state
+        my_proj_s = {p.name: project_player(p, schedules_by_team, rh3_map, rp3_map,
+                                              rp3_by_mlbam, rprs2_map, ts_map,
+                                              today, week_end)
+                     for p in mu['my_lineup']}
+        opp_proj_s = {p.name: project_player(p, schedules_by_team, rh3_map, rp3_map,
+                                                rp3_by_mlbam, rprs2_map, ts_map,
+                                                today, week_end)
+                      for p in mu['opp_lineup']}
+        apply_sp_cap(my_proj_s); apply_sp_cap(opp_proj_s)
+        my_total_s = mu['my_score'] + sum(p['fp'] for p in my_proj_s.values())
+        opp_total_s = mu['opp_score'] + sum(p['fp'] for p in opp_proj_s.values())
+        my_sig2_s = sum(p['sigma2'] for p in my_proj_s.values())
+        opp_sig2_s = sum(p['sigma2'] for p in opp_proj_s.values())
+        if _USE_BOOTSTRAP:
+            wp_s = win_probability_bootstrap(my_proj_s, opp_proj_s,
+                                              mu['my_score'], mu['opp_score'])
+        else:
+            wp_s = win_probability(my_total_s, opp_total_s, my_sig2_s, opp_sig2_s)
+        log_prediction(mu, my_total_s, opp_total_s, wp_s, today, model_version=shadow_version)
+        # Restore prior state for any downstream code (no live impact, but be tidy)
+        (globals()['_ADJUSTERS_ON'], globals()['_HITTER_FORM'], globals()['_SP_FORM'],
+         globals()['_LINEUP'], globals()['_PARK'], globals()['_PSPLIT'],
+         globals()['_BAT_SIDE'], globals()['_CALIB']) = prior_state
+    except Exception as e:
+        print(f'  ⚠ shadow-log skipped: {e}')
 
     # ---- ACCURACY HISTORY VIEW ----
     accuracy_block = render_accuracy_history()
