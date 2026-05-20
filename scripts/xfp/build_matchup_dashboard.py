@@ -214,18 +214,26 @@ def load_lineup_map():
 
 
 def lineup_spot_factor(modal_spot, pa_per_g):
-    """Spot-only multiplier (PA is already in rh3 per_game baseline).
+    """MA3 — lineup-spot + PA-volume multiplier.
 
-    Returns small RBI/R bonus per lineup spot. PA component intentionally
-    omitted to avoid double-counting the baseline projection.
+    NOTE: rh3 builds `xfp_rh3_per_game` from `xfp_rh3_per_pa * PA_PER_GAME_LEAGUE`
+    where PA_PER_GAME_LEAGUE = 3.5 is a CONSTANT (not per-player). So rh3
+    over-projects bottom-order hitters (actual PA < 3.5) and under-projects
+    top-order (actual PA > 4.0). The PA scaling here corrects that — it's
+    NOT double-counting.
+
+    Returns: (observed PA / 3.5) × small RBI/R bonus per lineup spot.
+    Clamped to [0.75, 1.30] to bound rare high-PA outliers.
     """
+    LEAGUE_PA = 3.5  # matches xfp_rh3_pipeline.py PA_PER_GAME_LEAGUE
+    pa_factor = (pa_per_g or LEAGUE_PA) / LEAGUE_PA
     spot_bonus = 0.0
-    if modal_spot in (1, 2): spot_bonus = 0.03   # leadoff/2-hole runs boost
+    if modal_spot in (1, 2): spot_bonus = 0.03
     elif modal_spot == 3: spot_bonus = 0.02
-    elif modal_spot == 4: spot_bonus = 0.03      # cleanup RBI boost
+    elif modal_spot == 4: spot_bonus = 0.03
     elif modal_spot == 5: spot_bonus = 0.01
     elif modal_spot in (7, 8, 9): spot_bonus = -0.02
-    return max(0.92, min(1.08, 1 + spot_bonus))
+    return max(0.75, min(1.30, pa_factor * (1 + spot_bonus)))
 
 
 def load_park_factors():
@@ -243,6 +251,32 @@ def load_pitcher_splits():
     if 'year' in df.columns:
         df = df[df['year'] == df['year'].max()]
     return df.set_index('pitcher')[['p_throws', 'xwoba_vs_L', 'xwoba_vs_R']].to_dict('index')
+
+
+def load_bat_side_map():
+    """MA5 helper — batter mlbam → 'L' | 'R' | 'S' (modal stance).
+
+    ESPN player objects don't expose handedness. Derive from Statcast 2026
+    `stand` column (modal per batter). Switch hitters get 'S' (could refine
+    later by checking opposing pitcher hand, but most platoon math uses
+    'L'/'R' so we'd treat S→opposite-of-pitcher).
+    """
+    parq = CACHE / 'statcast_2026.parquet'
+    if not parq.exists(): return {}
+    try:
+        import duckdb
+        con = duckdb.connect()
+        df = con.execute(f"""
+            SELECT batter, stand, COUNT(*) n
+            FROM read_parquet('{parq}')
+            WHERE batter IS NOT NULL AND stand IS NOT NULL
+            GROUP BY batter, stand
+        """).df()
+        # Modal stand per batter
+        df = df.sort_values('n', ascending=False).drop_duplicates('batter', keep='first')
+        return df.set_index('batter')['stand'].to_dict()
+    except Exception:
+        return {}
 
 
 def load_calibration_scalar():
@@ -272,6 +306,7 @@ _SP_FORM = {}
 _LINEUP = {}
 _PARK = {}
 _PSPLIT = {}
+_BAT_SIDE = {}
 _CALIB = 1.0
 LEAGUE_AVG_XWOBA = 0.310  # for MA5 platoon normalization
 
@@ -567,15 +602,21 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
             host = team if g.get('is_home') else g['opp_team']
             park_factor = max(0.85, min(1.15, _PARK.get(host, 1.0)))
 
-            # MA5: platoon factor (pitcher splits)
-            # bat_side from player.stats.batsHandedness when available; default unknown
-            bat_side = getattr(player, 'batting_hand', None) or getattr(player, 'batsHand', None)
+            # MA5: platoon factor — opposing SP's xwOBA vs batter's stance.
+            # Bat-side comes from Statcast `stand` map; switch hitters batting
+            # OPPOSITE the pitcher's hand (e.g., S vs RHP → bat L).
             platoon_factor = 1.0
-            if opp_sp_id and opp_sp_id in _PSPLIT and bat_side in ('L', 'R'):
+            if opp_sp_id and opp_sp_id in _PSPLIT and batter_mlbam in _BAT_SIDE:
+                stance = _BAT_SIDE.get(batter_mlbam, 'R')
                 ps = _PSPLIT[opp_sp_id]
-                opp_xwoba = ps.get(f'xwoba_vs_{bat_side}')
-                if opp_xwoba and opp_xwoba > 0:
-                    platoon_factor = max(0.85, min(1.15, opp_xwoba / LEAGUE_AVG_XWOBA))
+                if stance == 'S':
+                    # Switch hitters bat opposite the pitcher's throwing arm
+                    p_throws = ps.get('p_throws', 'R')
+                    stance = 'L' if p_throws == 'R' else 'R'
+                if stance in ('L', 'R'):
+                    opp_xwoba = ps.get(f'xwoba_vs_{stance}')
+                    if opp_xwoba and opp_xwoba > 0:
+                        platoon_factor = max(0.85, min(1.15, opp_xwoba / LEAGUE_AVG_XWOBA))
 
             # MA7: residual calibration as final scalar
             fp = (per_game_base * opp_factor * recent_factor * lineup_factor
@@ -1294,17 +1335,19 @@ def main():
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
     # MA2-MA7: load adjuster data into module-level caches (only if enabled).
-    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _CALIB
+    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB
     if _ADJUSTERS_ON:
         _HITTER_FORM, _SP_FORM = load_recent_form_maps()
         _LINEUP = load_lineup_map()
         _PARK = load_park_factors()
         _PSPLIT = load_pitcher_splits()
+        _BAT_SIDE = load_bat_side_map()
         _CALIB = load_calibration_scalar()
         print(f'  ⚙ ADJUSTERS ON  caches: hitter_form={len(_HITTER_FORM)} sp_form={len(_SP_FORM)} '
-              f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} calib={_CALIB:.3f}')
+              f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} '
+              f'bat_side={len(_BAT_SIDE)} calib={_CALIB:.3f}')
     else:
-        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _CALIB = {}, {}, {}, {}, {}, 1.0
+        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB = {}, {}, {}, {}, {}, {}, 1.0
         print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only — pending backtest validation)')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())

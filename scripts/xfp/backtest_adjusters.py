@@ -88,10 +88,38 @@ def main():
     build._LINEUP = build.load_lineup_map()
     build._PARK = build.load_park_factors()
     build._PSPLIT = build.load_pitcher_splits()
+    build._BAT_SIDE = build.load_bat_side_map()
     build._CALIB = build.load_calibration_scalar()
+    print(f'  caches loaded: hitter_form={len(build._HITTER_FORM)} sp_form={len(build._SP_FORM)} '
+          f'lineup={len(build._LINEUP)} park={len(build._PARK)} pitcher_splits={len(build._PSPLIT)} '
+          f'bat_side={len(build._BAT_SIDE)} calib={build._CALIB:.3f}')
     proj_on = _project_all(mu['my_lineup'], mu['opp_lineup'], schedules_by_team,
                             rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map,
                             today, week_end)
+
+    # ──────── PASS 3-7: ISOLATE EACH ADJUSTER (one at a time, others off) ────────
+    isolated_results = {}
+    adjuster_specs = {
+        'MA2_recent': lambda: (setattr(build, '_HITTER_FORM', build.load_recent_form_maps()[0]),
+                                setattr(build, '_SP_FORM', build.load_recent_form_maps()[1])),
+        'MA3_lineup':  lambda: setattr(build, '_LINEUP', build.load_lineup_map()),
+        'MA4_park':    lambda: setattr(build, '_PARK', build.load_park_factors()),
+        'MA5_platoon': lambda: (setattr(build, '_PSPLIT', build.load_pitcher_splits()),
+                                  setattr(build, '_BAT_SIDE', build.load_bat_side_map())),
+    }
+    for name, loader in adjuster_specs.items():
+        # Reset all caches to off-state, then enable only this one
+        build._HITTER_FORM, build._SP_FORM, build._LINEUP = {}, {}, {}
+        build._PARK, build._PSPLIT, build._BAT_SIDE = {}, {}, {}
+        build._CALIB = 1.0
+        loader()  # populate only this adjuster's caches
+        proj_iso = _project_all(mu['my_lineup'], mu['opp_lineup'], schedules_by_team,
+                                  rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map,
+                                  today, week_end)
+        my_sum = sum(proj_iso[p.name]['fp'] for p in mu['my_lineup'])
+        opp_sum = sum(proj_iso[p.name]['fp'] for p in mu['opp_lineup'])
+        isolated_results[name] = (my_sum, opp_sum)
+        print(f'  isolated {name}: my={my_sum:.1f}, opp={opp_sum:.1f}')
 
     # ──────── DIFF + ATTRIBUTION ────────
     rows = []
@@ -185,6 +213,18 @@ def main():
     if abs(asymmetry) > 10:
         print(f'  ⚠ Adjusters apply UNEVENLY across teams. Likely cause: my roster has different '
               f'shape (e.g., more cooling players) than opp. Confirm by looking at top movers above.')
+
+    # ──────── ISOLATED-ADJUSTER CONTRIBUTION ────────
+    print(f'\n--- ISOLATED ADJUSTER CONTRIBUTION (others off) ---')
+    print(f'  Baseline (all off):  my={sum(proj_off[p.name]["fp"] for p in mu["my_lineup"]):.1f}  '
+          f'opp={sum(proj_off[p.name]["fp"] for p in mu["opp_lineup"]):.1f}')
+    base_my = sum(proj_off[p.name]['fp'] for p in mu['my_lineup'])
+    base_opp = sum(proj_off[p.name]['fp'] for p in mu['opp_lineup'])
+    for name, (iso_my, iso_opp) in isolated_results.items():
+        dmy = iso_my - base_my
+        dopp = iso_opp - base_opp
+        print(f'  {name:<14}: my={iso_my:.1f} ({dmy:+.1f})  opp={iso_opp:.1f} ({dopp:+.1f})  '
+              f'asym={(dmy/base_my - dopp/base_opp)*100:+.1f}pp')
 
 
 if __name__ == '__main__':
