@@ -266,6 +266,7 @@ def load_calibration_scalar():
 
 
 # Module-level lazy caches (populated on first call from main())
+_ADJUSTERS_ON = False    # CLI flag: --with-adjusters or env ADJUSTERS_ON=1
 _HITTER_FORM = {}
 _SP_FORM = {}
 _LINEUP = {}
@@ -434,13 +435,12 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
     # today's confirmed starts must contribute to the rest-of-week projection.
     rem = [g for g in games if today_s <= g['date'] <= week_end_s]
 
-    # MA6 — IL-window pro-rate: for non-SP IL'd players returning mid-window
-    # SPs use existing return-early rule (skip projection). For hitters/RPs,
-    # if return_date is within window, scale down the projection by remaining-week fraction.
+    # MA6 — IL-window pro-rate: for non-SP IL'd players returning mid-window.
+    # GATED on _ADJUSTERS_ON. When OFF, IL'd hitters/RPs keep existing behavior
+    # (zero projection until they return).
     il_factor = 1.0
     inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
-    if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
-        # Try to get return_date — ESPN status is on player; details fetched separately upstream
+    if _ADJUSTERS_ON and inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
         rd_str = getattr(player, 'returnDate', None) or None
         if rd_str:
             try:
@@ -453,7 +453,6 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
                     return out  # returns after window — zero
             except Exception:
                 pass
-        # If we can't determine return_date, fall back to existing behavior
 
     if pos == 'SP':
         # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
@@ -506,8 +505,8 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
                                        'confirmed': s.get('confirmed', True)})
         out['fp'] = total
         out['units'] = len(starts)
-        # MA1: per-player sigma
-        sp_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
+        # MA1: per-player sigma (gated)
+        sp_sigma = (rp_info.get('sigma') or SIGMA_PER_SP_START) if _ADJUSTERS_ON else SIGMA_PER_SP_START
         out['sigma2'] = len(starts) * sp_sigma ** 2
         return out
 
@@ -1278,18 +1277,35 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
 
 
 def main():
+    # MA0-MA7 adjuster gating: default OFF for production builds.
+    # Set ADJUSTERS_ON=1 environment variable OR pass --with-adjusters to enable.
+    import os, argparse
+    _parser = argparse.ArgumentParser(add_help=False)
+    _parser.add_argument('--with-adjusters', action='store_true',
+                          help='Enable MA0-MA7 accuracy adjuster chain (default OFF — pending validation)')
+    _parser.add_argument('-h', '--help', action='store_true')
+    _args, _ = _parser.parse_known_args()
+    if _args.help:
+        _parser.print_help(); return
+    global _ADJUSTERS_ON
+    _ADJUSTERS_ON = _args.with_adjusters or os.environ.get('ADJUSTERS_ON') == '1'
+
     print('Loading matchup + projections...')
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
-    # MA2-MA7: load adjuster data into module-level caches
+    # MA2-MA7: load adjuster data into module-level caches (only if enabled).
     global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _CALIB
-    _HITTER_FORM, _SP_FORM = load_recent_form_maps()
-    _LINEUP = load_lineup_map()
-    _PARK = load_park_factors()
-    _PSPLIT = load_pitcher_splits()
-    _CALIB = load_calibration_scalar()
-    print(f'  adjuster caches: hitter_form={len(_HITTER_FORM)} sp_form={len(_SP_FORM)} '
-          f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} calib={_CALIB:.3f}')
+    if _ADJUSTERS_ON:
+        _HITTER_FORM, _SP_FORM = load_recent_form_maps()
+        _LINEUP = load_lineup_map()
+        _PARK = load_park_factors()
+        _PSPLIT = load_pitcher_splits()
+        _CALIB = load_calibration_scalar()
+        print(f'  ⚙ ADJUSTERS ON  caches: hitter_form={len(_HITTER_FORM)} sp_form={len(_SP_FORM)} '
+              f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} calib={_CALIB:.3f}')
+    else:
+        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _CALIB = {}, {}, {}, {}, {}, 1.0
+        print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only — pending backtest validation)')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
