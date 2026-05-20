@@ -1,0 +1,14 @@
+{
+  "scalar_correction": 0.8467,
+  "n_observations": 2,
+  "n_periods": 1,
+  "periods_used": [
+    7
+  ],
+  "mae_before": 42.07,
+  "mae_after": 6.98,
+  "mae_improvement_pct": 83.4,
+  "method": "POOLED_SCALAR",
+  "fit_date": "2026-05-20T00:15:04.864283",
+  "note": "Scalar=0.847 \u2192 multiply all projections by this. sample is small (n=2); refit weekly as more periods close."
+}

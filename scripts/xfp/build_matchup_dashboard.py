@@ -98,8 +98,10 @@ def get_matchup():
 def load_projections():
     rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
     rh3['nk'] = rh3['player_name'].map(_norm)
+    # MA1: include per-player sigma
     rh3_map = {r['nk']: {'per_game': r.get('xfp_rh3_per_game') or 0,
-                          'per_pa': r.get('xfp_rh3_per_pa') or 0}
+                          'per_pa': r.get('xfp_rh3_per_pa') or 0,
+                          'sigma': r.get('xfp_rh3_sigma')}
                 for _, r in rh3.iterrows()}
 
     rp3_path = OUT / 'xfp_rp3_projections_il_fixed.csv'
@@ -108,7 +110,8 @@ def load_projections():
     rp3 = pd.read_csv(rp3_path).drop_duplicates('player_name')
     rp3['nk'] = rp3['player_name'].map(_norm)
     rp3_map = {r['nk']: {'per_start': r.get('xfp_rp3_per_start') or 0,
-                          'per_start_sched': r.get('xfp_rp3_per_start_sched') or 0}
+                          'per_start_sched': r.get('xfp_rp3_per_start_sched') or 0,
+                          'sigma': r.get('xfp_rp3_sigma')}
                 for _, r in rp3.iterrows()}
     # mlbam → rp3 lookup (for opposing-SP factor)
     sp_id = pd.read_csv(CACHE / 'sp_multiyr_2015_2025.csv',
@@ -122,16 +125,154 @@ def load_projections():
 
     rprs2 = pd.read_csv(OUT / 'xfp_rprs2_projections.csv').drop_duplicates('name_api')
     rprs2['nk'] = rprs2['name_api'].map(_norm)
-    rprs2_map = {r['nk']: {'xfp_ros': r.get('xfp_ros') or 0,
-                            'xfp_full_year': r.get('xfp_full_year') or 0,
-                            'role': r.get('role_lag1') or 'middle'}
-                 for _, r in rprs2.iterrows()}
+    # MA1: derive sigma from quantiles. σ ≈ (p75 - p25) / 1.35 (standard normal IQR identity)
+    rprs2_map = {}
+    for _, r in rprs2.iterrows():
+        p25 = r.get('xfp_p25'); p75 = r.get('xfp_p75')
+        sigma = (p75 - p25) / 1.35 if (pd.notna(p25) and pd.notna(p75)) else None
+        rprs2_map[r['nk']] = {'xfp_ros': r.get('xfp_ros') or 0,
+                              'xfp_full_year': r.get('xfp_full_year') or 0,
+                              'role': r.get('role_lag1') or 'middle',
+                              'sigma': sigma}
 
     team_strength = pd.read_csv(CACHE / 'team_strength_2026.csv')
     team_strength['team'] = team_strength['team'].str.upper()
     ts_map = team_strength.set_index('team')[['bat_index', 'pit_index']].to_dict('index')
 
     return rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MA2-MA6 adjuster data loaders + helpers
+# ─────────────────────────────────────────────────────────────────────────────
+def _safe_csv(path, **kw):
+    try: return pd.read_csv(path, **kw)
+    except Exception: return None
+
+
+def load_recent_form_maps():
+    """MA2 — Rolling 21d / season ratios for hitters + SPs.
+
+    Returns (hitter_form_map, sp_form_map): mlbam_id → factor in [0.85, 1.15]
+    (Rolling data is keyed on MLBAM, not name.)
+    """
+    hitter_form, sp_form = {}, {}
+
+    # Hitters: keyed on `batter` MLBAM ID. Use core_fp_per_pa as the rate.
+    rh = _safe_csv(CACHE / 'rolling_hitters_2018_2026.csv')
+    if rh is not None and 'batter' in rh.columns:
+        if 'year' in rh.columns:
+            rh = rh[rh['year'] == rh['year'].max()]
+        if 'split_day' in rh.columns:
+            rh = rh.sort_values('split_day').drop_duplicates('batter', keep='last')
+        for _, r in rh.iterrows():
+            l21 = r.get('core_fp_per_pa_last21')
+            tot = r.get('core_fp_per_pa_to')
+            pa_last21 = r.get('pa_last21', 0) or 0
+            if pd.notna(l21) and pd.notna(tot) and tot > 0 and pa_last21 >= 30:
+                factor = max(0.85, min(1.15, l21 / tot))
+                hitter_form[int(r['batter'])] = factor
+
+    # SPs: keyed on `pitcher` MLBAM ID
+    rp = _safe_csv(CACHE / 'rolling_pitchers_2018_2026.csv')
+    if rp is not None and 'pitcher' in rp.columns:
+        if 'year' in rp.columns:
+            rp = rp[rp['year'] == rp['year'].max()]
+        if 'split_day' in rp.columns:
+            rp = rp.sort_values('split_day').drop_duplicates('pitcher', keep='last')
+        for _, r in rp.iterrows():
+            l21 = r.get('fp_per_start_last21')
+            tot = r.get('fp_per_start_to')
+            gs_last21 = r.get('gs_last21', 0) or 0
+            if pd.notna(l21) and pd.notna(tot) and tot > 0 and gs_last21 >= 2:
+                factor = max(0.85, min(1.15, l21 / tot))
+                sp_form[int(r['pitcher'])] = factor
+
+    return hitter_form, sp_form
+
+
+def load_lineup_map():
+    """MA3 — per-batter modal lineup spot + PA/game from L21d appearances."""
+    parq = CACHE / 'hitter_lineup_appearances_2026.parquet'
+    try:
+        df = pd.read_parquet(parq)
+    except Exception:
+        return {}
+    today = date.today()
+    cutoff = today - timedelta(days=21)
+    df['game_date'] = pd.to_datetime(df['game_date']).dt.date
+    df = df[df['game_date'] >= cutoff]
+    out = {}
+    for batter, sub in df.groupby('batter'):
+        starts = sub[sub['started_game'] == True]
+        if len(starts) < 3:
+            continue
+        modal_spot = int(starts['lineup_spot'].mode().iloc[0]) if len(starts['lineup_spot'].dropna()) else None
+        pa_per_g = float(starts['pa_in_game'].mean()) if len(starts) else 4.0
+        out[int(batter)] = {'modal_spot': modal_spot, 'pa_per_g': pa_per_g}
+    return out
+
+
+def lineup_spot_factor(modal_spot, pa_per_g):
+    """Spot-only multiplier (PA is already in rh3 per_game baseline).
+
+    Returns small RBI/R bonus per lineup spot. PA component intentionally
+    omitted to avoid double-counting the baseline projection.
+    """
+    spot_bonus = 0.0
+    if modal_spot in (1, 2): spot_bonus = 0.03   # leadoff/2-hole runs boost
+    elif modal_spot == 3: spot_bonus = 0.02
+    elif modal_spot == 4: spot_bonus = 0.03      # cleanup RBI boost
+    elif modal_spot == 5: spot_bonus = 0.01
+    elif modal_spot in (7, 8, 9): spot_bonus = -0.02
+    return max(0.92, min(1.08, 1 + spot_bonus))
+
+
+def load_park_factors():
+    """MA4 — team_abbr → park_factor (1.0 = neutral)."""
+    df = _safe_csv(CACHE / 'park_factors.csv')
+    if df is None or 'team_abbr' not in df.columns: return {}
+    df['team_abbr'] = df['team_abbr'].str.upper()
+    return df.set_index('team_abbr')['park_factor'].to_dict()
+
+
+def load_pitcher_splits():
+    """MA5 — pitcher mlbam → {p_throws, xwoba_vs_L, xwoba_vs_R}."""
+    df = _safe_csv(CACHE / 'pitcher_splits.csv')
+    if df is None or 'pitcher' not in df.columns: return {}
+    if 'year' in df.columns:
+        df = df[df['year'] == df['year'].max()]
+    return df.set_index('pitcher')[['p_throws', 'xwoba_vs_L', 'xwoba_vs_R']].to_dict('index')
+
+
+def load_calibration_scalar():
+    """MA7 — read MA0's calibration JSON. Returns 1.0 if not available.
+
+    NOTE: only consume the scalar once MA0 was re-fit using POST-adjuster
+    projections. The first MA0 fit (against pre-adjuster Period 7) is
+    stale once MA1-MA6 are live — applying it would double-correct.
+    The calibration JSON includes a `safe_to_consume` flag set by the
+    re-fit step; if absent or false, return 1.0.
+    """
+    path = ROOT / 'data' / 'models' / 'matchup_calibration.json'
+    try:
+        import json
+        d = json.loads(path.read_text())
+        if not d.get('safe_to_consume', False):
+            return 1.0
+        return float(d['scalar_correction'])
+    except Exception:
+        return 1.0
+
+
+# Module-level lazy caches (populated on first call from main())
+_HITTER_FORM = {}
+_SP_FORM = {}
+_LINEUP = {}
+_PARK = {}
+_PSPLIT = {}
+_CALIB = 1.0
+LEAGUE_AVG_XWOBA = 0.310  # for MA5 platoon normalization
 
 
 def get_team_schedule(team_id, start_date, end_date):
@@ -293,9 +434,29 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
     # today's confirmed starts must contribute to the rest-of-week projection.
     rem = [g for g in games if today_s <= g['date'] <= week_end_s]
 
+    # MA6 — IL-window pro-rate: for non-SP IL'd players returning mid-window
+    # SPs use existing return-early rule (skip projection). For hitters/RPs,
+    # if return_date is within window, scale down the projection by remaining-week fraction.
+    il_factor = 1.0
+    inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
+    if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+        # Try to get return_date — ESPN status is on player; details fetched separately upstream
+        rd_str = getattr(player, 'returnDate', None) or None
+        if rd_str:
+            try:
+                rd = date.fromisoformat(str(rd_str)[:10])
+                if rd <= week_end:
+                    days_avail = max(0, (week_end - max(rd, today)).days + 1)
+                    days_total = max(1, (week_end - today).days + 1)
+                    il_factor = days_avail / days_total
+                else:
+                    return out  # returns after window — zero
+            except Exception:
+                pass
+        # If we can't determine return_date, fall back to existing behavior
+
     if pos == 'SP':
         # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
-        inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
         if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE',
                    'OUT', 'DAY_TO_DAY'):
             return out
@@ -323,19 +484,31 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
         if not per_start_base or not starts: return out
         if len(starts) >= 2:
             out['badges'].append('🔥 2-START')
+
+        # MA2: recent-form factor (rolling 21d/season) — keyed on MLBAM
+        recent_factor = _SP_FORM.get(mlbam, 1.0)
+
         total = 0.0
         for s in starts:
             opp_idx = ts_map.get(s['opp_team'], {}).get('bat_index') or 1.0
             opp_factor = max(0.80, min(1.20, 1.0 / opp_idx))
-            fp = per_start_base * opp_factor
+            # MA4: park factor inverse for SP (hitter-friendly park = harder for SP)
+            park_f_raw = _PARK.get(s['opp_team'] if not s.get('is_home') else team, 1.0)
+            park_factor = max(0.85, min(1.15, 1.0 / park_f_raw))
+            # MA7: residual calibration scalar (final pass)
+            fp = per_start_base * opp_factor * recent_factor * park_factor * _CALIB
             total += fp
             out['breakdown'].append({'date': s['date'], 'opp': s['opp_team'],
                                        'opp_idx': opp_idx, 'factor': opp_factor,
+                                       'recent_factor': recent_factor,
+                                       'park_factor': park_factor,
                                        'fp': fp, 'type': 'start',
                                        'confirmed': s.get('confirmed', True)})
         out['fp'] = total
         out['units'] = len(starts)
-        out['sigma2'] = len(starts) * SIGMA_PER_SP_START ** 2
+        # MA1: per-player sigma
+        sp_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
+        out['sigma2'] = len(starts) * sp_sigma ** 2
         return out
 
     elif pos in ('RP', 'P'):
@@ -350,20 +523,33 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
         # apply role-based appearance rate adjustment
         expected_appearances = len(rem) * app_rate
         per_app = (per_team_game / DEFAULT_RP_APP_RATE) if DEFAULT_RP_APP_RATE else per_team_game
-        proj = per_app * expected_appearances
+        # MA6 IL pro-rate + MA7 calibration
+        proj = per_app * expected_appearances * il_factor * _CALIB
         out['fp'] = proj
         out['units'] = round(expected_appearances, 1)
         out['breakdown'].append({'role': role, 'app_rate': app_rate,
                                    'n_team_games': len(rem),
                                    'expected_apps': expected_appearances,
+                                   'il_factor': il_factor,
                                    'fp': proj})
+        # MA1 RP sigma: rprs2 p25/p75 are SEASON totals, not per-app — derived σ
+        # blows up by ~5-15x. Keep static FP/game sigma until rprs2 emits per-app σ.
         out['sigma2'] = expected_appearances * SIGMA_PER_RP_GAME ** 2
         return out
 
     else:  # hitter
         rh = rh3_map.get(nk, {})
-        per_game = rh.get('per_game') or 0
-        if not per_game or not rem: return out
+        per_game_base = rh.get('per_game') or 0
+        if not per_game_base or not rem: return out
+
+        # MA3: lineup-spot adjuster (uses mlbam → lineup map)
+        batter_mlbam = player_mlbam_lookup(name)
+        # MA2: recent-form factor — keyed on MLBAM
+        recent_factor = _HITTER_FORM.get(batter_mlbam, 1.0) if batter_mlbam else 1.0
+        lineup_info = _LINEUP.get(batter_mlbam, {}) if batter_mlbam else {}
+        lineup_factor = lineup_spot_factor(lineup_info.get('modal_spot'),
+                                            lineup_info.get('pa_per_g')) if lineup_info else 1.0
+
         total = 0.0
         for g in rem:
             # Use opposing SP's projection if known; fall back to team pit_index
@@ -372,22 +558,45 @@ def project_player(player, schedules_by_team, rh3_map, rp3_map, rp3_by_mlbam,
             opp_proj = None
             if opp_sp_id and opp_sp_id in rp3_by_mlbam:
                 opp_proj = rp3_by_mlbam[opp_sp_id]['per_start']
-                # Tougher SP (higher proj) → lower hitter factor
                 opp_factor = LEAGUE_AVG_SP_FP_PER_START / opp_proj if opp_proj else 1.0
                 opp_factor = max(0.70, min(1.30, opp_factor))
             else:
                 opp_pit = ts_map.get(g['opp_team'], {}).get('pit_index') or 1.0
                 opp_factor = max(0.85, min(1.15, opp_pit))
-            fp = per_game * opp_factor
+
+            # MA4: park factor for game's host park
+            host = team if g.get('is_home') else g['opp_team']
+            park_factor = max(0.85, min(1.15, _PARK.get(host, 1.0)))
+
+            # MA5: platoon factor (pitcher splits)
+            # bat_side from player.stats.batsHandedness when available; default unknown
+            bat_side = getattr(player, 'batting_hand', None) or getattr(player, 'batsHand', None)
+            platoon_factor = 1.0
+            if opp_sp_id and opp_sp_id in _PSPLIT and bat_side in ('L', 'R'):
+                ps = _PSPLIT[opp_sp_id]
+                opp_xwoba = ps.get(f'xwoba_vs_{bat_side}')
+                if opp_xwoba and opp_xwoba > 0:
+                    platoon_factor = max(0.85, min(1.15, opp_xwoba / LEAGUE_AVG_XWOBA))
+
+            # MA7: residual calibration as final scalar
+            fp = (per_game_base * opp_factor * recent_factor * lineup_factor
+                  * park_factor * platoon_factor * il_factor * _CALIB)
             total += fp
             out['breakdown'].append({
                 'date': g['date'], 'opp': g['opp_team'],
                 'opp_sp': g.get('opp_probable_name', '?'),
                 'opp_sp_proj': opp_proj, 'factor': opp_factor,
+                'recent_factor': recent_factor,
+                'lineup_factor': lineup_factor,
+                'park_factor': park_factor,
+                'platoon_factor': platoon_factor,
+                'il_factor': il_factor,
                 'fp': fp, 'type': 'game',
             })
         out['fp'] = total
         out['units'] = len(rem)
+        # MA1: hitter sigma — rh3's xfp_rh3_sigma is xwOBA-scale, not FP/g.
+        # Keep static FP/g sigma until we have proper game-level σ.
         out['sigma2'] = len(rem) * SIGMA_PER_HITTER_GAME ** 2
         return out
 
@@ -1072,6 +1281,15 @@ def main():
     print('Loading matchup + projections...')
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
+    # MA2-MA7: load adjuster data into module-level caches
+    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _CALIB
+    _HITTER_FORM, _SP_FORM = load_recent_form_maps()
+    _LINEUP = load_lineup_map()
+    _PARK = load_park_factors()
+    _PSPLIT = load_pitcher_splits()
+    _CALIB = load_calibration_scalar()
+    print(f'  adjuster caches: hitter_form={len(_HITTER_FORM)} sp_form={len(_SP_FORM)} '
+          f'lineup={len(_LINEUP)} park={len(_PARK)} pitcher_splits={len(_PSPLIT)} calib={_CALIB:.3f}')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
