@@ -288,6 +288,18 @@ def staleness_score(mlbam: int | None, rh3_per_game: float | None,
 
     The rh3 sigma is per-PA so we scale by PA_PER_GAME to compare to per-game means.
     |score| > 1.5 → rh3 materially stale.
+
+    TUNING NOTE (2026-05-22, after live audit):
+      Default last_n_games=15 was inherited from the pitcher tool's
+      last_n_starts=5 (both ≈ 3-week windows). But hitter games are noisier
+      per unit than pitcher starts, so 15-game windows generate false-alarm
+      RH3-STALE signals on full-season-healthy hitters going through a 3-week
+      cold spell (e.g. Judge 5/22 audit: -3.79σ on n=15 was real cold but his
+      51-game season mean was actually ABOVE rh3 projection). A 21-game window
+      is probably a more honest hitter default. Defer the change until W4
+      validation residuals accumulate (≥4 weeks) — once we can measure
+      false-positive rate per window length, pick the smallest window that
+      keeps FPR < ~10%. Override via --staleness-window in the meantime.
     """
     if (mlbam is None or rh3_per_game is None
             or rh3_sigma is None or rh3_sigma <= 0):
@@ -492,6 +504,9 @@ def main():
                         help='Min 2026 fp/game floor for FA pool scope (default 3.0)')
     parser.add_argument('--brief', action='store_true',
                         help='Skip per-hitter detail; summary table only')
+    parser.add_argument('--staleness-window', type=int, default=15,
+                        help='Games to sample for RH3-STALE detection (default 15; '
+                             '21 is probably more honest — see staleness_score docstring)')
     args = parser.parse_args()
 
     h = pd.read_csv(CACHE / 'hitters_multiyr_2015_2026.csv')
@@ -527,7 +542,8 @@ def main():
         if rh3_info:
             mlbam = player_mlbam_lookup(n) or _resolve_mlbam_via_api(n)
             stale = staleness_score(mlbam, rh3_info.get('per_game'),
-                                     rh3_info.get('sigma'))
+                                     rh3_info.get('sigma'),
+                                     last_n_games=args.staleness_window)
         results.append({'name': n, 'classification': cls, 'ros': ros,
                         'rh3': rh3_info, 'staleness': stale})
         if not args.brief:
