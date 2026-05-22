@@ -8,3 +8,4 @@ timestamp,call_date,scope,player_id,player_name,kind,bucket,signal,model_at_call
 2026-05-22T01:22:41,2026-05-22,my-roster,680694,Kyle Bradish,pitcher,REGRESS,DISAGREE,11.2400,13.0322,-1.2534,-4.0044,0.0694,9,,,,
 2026-05-22T01:22:41,2026-05-22,my-roster,701656,Logan Henderson,pitcher,NO_BASELINE,,10.7100,,,,0.4625,3,,,,
 2026-05-22T01:23:13,2026-05-22,adhoc,592450,Aaron Judge,hitter,STABLE,AGREE,2.5000,2.8879,-0.1602,-0.3114,-3.7859,48,,,,
+2026-05-22T02:17:24,2026-05-22,adhoc,592450,Aaron Judge,hitter,STABLE,AGREE,2.5000,2.8879,-0.1602,-0.3114,0.7924,48,,,,
