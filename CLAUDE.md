@@ -180,3 +180,17 @@ All in `~/.claude/projects/c--Users-Joshua-plv-clone/memory/`:
 - `feedback_il_slot_vs_il_status.md` — slot counting gotcha
 - `feedback_validate_before_ship.md` — anti-promotion-without-validation rule
 - `feedback_save_handcuffs_needs_closer_context.md` — closer ranking nuance
+
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues in `Kejjeh/PLV_Clone` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Canonical defaults (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.

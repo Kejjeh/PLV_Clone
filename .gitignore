@@ -66,6 +66,10 @@ data/research/xfp_cache/*.parquet.bak
 # Keep aggregated CSVs in xfp_cache (training reference, smaller)
 !data/research/xfp_cache/*.csv
 
+# Exploratory scratch (underscore-prefixed scripts + their outputs)
+scripts/_*.py
+data/outputs/_*
+
 # IDE / OS
 .idea/
 .vscode/
