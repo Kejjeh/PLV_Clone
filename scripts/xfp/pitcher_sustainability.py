@@ -87,22 +87,50 @@ def pick_baseline_year(rows: dict, current_year: int = 2026) -> int | None:
     return priors[0] if priors else None
 
 
+MIN_2026_STARTS_FOR_CLASSIFY = 5  # below this, fall back to prior-2-year trajectory
+
+
 def classify(rows: dict) -> dict:
     """Return per-pitcher dict with marker analysis + bucket verdict."""
-    if 2026 not in rows:
-        return {'bucket': 'NO_2026_DATA', 'verdict': 'no 2026 starts in cache'}
-    base_year = pick_baseline_year(rows)
-    cur = rows[2026]
-    if base_year is None:
-        return {
-            'bucket': 'NO_BASELINE',
-            'verdict': 'only 2026 data — no prior year to compare',
-            'current_year': 2026, 'gs_2026': int(cur['gs']),
-            'fp_2026': float(cur['fp_per_start_actual']),
-            'velo_2026': float(cur['avg_velo']),
-            'k_pct_2026': float(cur['k_pct']),
-        }
-    prior = rows[base_year]
+    # Special-case: 2026 missing or n_2026 too small → use last 2 prior years
+    # as the comparison (skill trajectory) and flag the limitation.
+    n_2026 = int(rows[2026]['gs']) if 2026 in rows else 0
+    if 2026 not in rows or n_2026 < MIN_2026_STARTS_FOR_CLASSIFY:
+        # Fall back to most-recent-pair comparison
+        prior_years = sorted([y for y in rows if y < 2026], reverse=True)
+        if len(prior_years) < 2:
+            if 2026 not in rows:
+                return {'bucket': 'NO_2026_DATA',
+                        'verdict': 'no 2026 starts in cache (likely post-IL or new callup with n<3)'}
+            return {'bucket': 'NO_BASELINE',
+                    'verdict': 'only 2026 data — no prior year to compare',
+                    'current_year': 2026, 'gs_2026': n_2026,
+                    'fp_2026': float(rows[2026]['fp_per_start_actual']),
+                    'velo_2026': float(rows[2026]['avg_velo']),
+                    'k_pct_2026': float(rows[2026]['k_pct'])}
+        # Use latest two prior years as "current vs prior" — describes skill
+        # trajectory pre-2026 even if 2026 sample is too small
+        cur_year = prior_years[0]
+        base_year = prior_years[1]
+        cur = rows[cur_year]
+        prior = rows[base_year]
+        small_2026_note = (f' (2026 sample n={n_2026} too small; '
+                           f'using {cur_year} vs {base_year} as proxy)') if 2026 in rows else ''
+    else:
+        cur = rows[2026]
+        base_year = pick_baseline_year(rows)
+        if base_year is None:
+            return {
+                'bucket': 'NO_BASELINE',
+                'verdict': 'only 2026 data — no prior year to compare',
+                'current_year': 2026, 'gs_2026': n_2026,
+                'fp_2026': float(cur['fp_per_start_actual']),
+                'velo_2026': float(cur['avg_velo']),
+                'k_pct_2026': float(cur['k_pct']),
+            }
+        prior = rows[base_year]
+        small_2026_note = ''
+        cur_year = 2026
 
     marker_results = []
     n_favorable = 0
@@ -155,9 +183,15 @@ def classify(rows: dict) -> dict:
     skill_attributable = skill_fp_k + skill_fp_contact
     luck_attributable = fp_delta - skill_attributable
 
+    # If we fell back to prior-2-year comparison, also surface the actual 2026
+    # value so the user knows what the small sample is reporting
+    actual_2026 = (float(rows[2026]['fp_per_start_actual'])
+                   if 2026 in rows and int(rows[2026]['gs']) > 0 else None)
+    actual_2026_n = int(rows[2026]['gs']) if 2026 in rows else 0
+
     return {
         'bucket': bucket,
-        'base_year': base_year,
+        'base_year': base_year, 'cur_year': cur_year,
         'gs_prior': int(prior['gs']), 'gs_2026': int(cur['gs']),
         'fp_prior': float(prior['fp_per_start_actual']),
         'fp_2026': float(cur['fp_per_start_actual']),
@@ -166,6 +200,9 @@ def classify(rows: dict) -> dict:
         'skill_attributable': skill_attributable,
         'luck_attributable': luck_attributable,
         'markers': marker_results,
+        'small_2026_note': small_2026_note,
+        'actual_2026_fp': actual_2026,
+        'actual_2026_n': actual_2026_n,
     }
 
 
@@ -249,9 +286,15 @@ def print_per_pitcher(name: str, c: dict, ros: dict):
                   f"FP/start={c['fp_2026']:.1f}  velo={c.get('velo_2026',0):.1f}  "
                   f"K%={c.get('k_pct_2026',0):.3f}")
         return
+    note = c.get('small_2026_note', '')
+    if note:
+        print(f"  ⚠ {note.strip(' (').rstrip(')')}")
     print(f"  {c['base_year']} (n={c['gs_prior']}): FP/start={c['fp_prior']:.1f}")
-    print(f"  2026 (n={c['gs_2026']}): FP/start={c['fp_2026']:.1f}  "
+    print(f"  {c['cur_year']} (n={c['gs_2026']}): FP/start={c['fp_2026']:.1f}  "
           f"Δ={c['fp_delta']:+.1f}  ({c['n_material']}/{len(c['markers'])} skills materially favorable)")
+    if c.get('actual_2026_fp') is not None and c['cur_year'] != 2026:
+        print(f"  2026 actual (n={c['actual_2026_n']}): FP/start={c['actual_2026_fp']:.1f}  "
+              f"(small sample — not used in classification)")
     print(f"  {'Metric':<11} {'Prior':>8} {'2026':>8} {'Δ':>8}  {'Sign':<3}")
     for m in c['markers']:
         sign = '✓' if m['favorable'] and m['material'] else ('·' if m['favorable'] else '✗')
