@@ -70,7 +70,13 @@ def _norm(s):
 
 
 def load_rp3_map() -> dict:
-    """Load rp3 projections keyed by normalized name → {per_start, sigma}."""
+    """Load rp3 projections keyed by normalized name → {per_start, sigma}.
+
+    The `per_start` value is the SCHEDULE-ADJUSTED projection when available,
+    falling back to raw per_start. Matches the dashboard's preference
+    (build_matchup_dashboard.py:1072) so the sustainability tool and dashboard
+    surface the same number for the same pitcher.
+    """
     try:
         rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
     except Exception:
@@ -78,10 +84,14 @@ def load_rp3_map() -> dict:
     rp3['_nk'] = rp3['player_name'].map(_norm)
     out = {}
     for _, r in rp3.iterrows():
+        sched = r.get('xfp_rp3_per_start_sched')
+        raw = r.get('xfp_rp3_per_start')
+        primary = (float(sched) if pd.notna(sched)
+                   else float(raw) if pd.notna(raw) else None)
         out[r['_nk']] = {
-            'per_start': float(r['xfp_rp3_per_start']) if pd.notna(r.get('xfp_rp3_per_start')) else None,
+            'per_start': primary,    # schedule-adjusted (or raw fallback)
+            'per_start_raw': float(raw) if pd.notna(raw) else None,
             'sigma': float(r['xfp_rp3_sigma']) if pd.notna(r.get('xfp_rp3_sigma')) else None,
-            'per_start_sched': float(r['xfp_rp3_per_start_sched']) if pd.notna(r.get('xfp_rp3_per_start_sched')) else None,
         }
     return out
 
@@ -198,19 +208,18 @@ def classify(rows: dict) -> dict:
     # expected FP impact per start (BF=22 typical):
     #   K%   change: +1 FP per extra K
     #   BB%  change: -1 FP per extra BB
-    #   Barrel% change: -2.6 FP per extra HR (HR ≈ 13% conv from barrel)
-    #   xwOBA-con: ~20 FP per .010 (already scaled to per-start)
+    #   Barrel% change: -2.6 FP per extra HR (HR ≈ 13% conv from barrel, HR=2 FP via ER)
+    # xwOBA-on-contact stays as a marker (✓/✗) but is NOT dollarized into the
+    # skill attribution — multi-step wOBA→FP bridge is too noisy to scale
+    # reliably and would double-count with Barrel% (both measure damage).
     bf_per_start = 22
     k_delta = float(cur.get('k_pct', 0)) - float(prior.get('k_pct', 0))
     bb_delta = float(cur.get('bb_pct', 0)) - float(prior.get('bb_pct', 0))
     barrel_delta = float(cur.get('barrel_pct', 0)) - float(prior.get('barrel_pct', 0))
-    xwoba_delta = float(prior.get('xwoba_contact', 0)) - float(cur.get('xwoba_contact', 0))
     skill_fp_k = k_delta * bf_per_start * 1.0
     skill_fp_bb = -bb_delta * bf_per_start * 1.0
-    skill_fp_barrel = -barrel_delta * bf_per_start * 0.13 * 2.0  # HR×2 FP via ER
-    skill_fp_contact = xwoba_delta * 20
-    skill_attributable = (skill_fp_k + skill_fp_bb +
-                           skill_fp_barrel + skill_fp_contact)
+    skill_fp_barrel = -barrel_delta * bf_per_start * 0.13 * 2.0
+    skill_attributable = skill_fp_k + skill_fp_bb + skill_fp_barrel
     luck_attributable = fp_delta - skill_attributable
 
     # If we fell back to prior-2-year comparison, also surface the actual 2026
@@ -233,6 +242,36 @@ def classify(rows: dict) -> dict:
         'small_2026_note': small_2026_note,
         'actual_2026_fp': actual_2026,
         'actual_2026_n': actual_2026_n,
+    }
+
+
+def staleness_score(mlbam: int | None, rp3_per_start: float | None,
+                     rp3_sigma: float | None, last_n_starts: int = 5):
+    """(recent_actual − rp3.per_start) / rp3.sigma over last N starts.
+
+    |score| > 1.5 → rp3 materially stale.
+    Positive → pitcher overperforming rp3 (rp3 may rise next refresh)
+    Negative → pitcher underperforming (rp3 may fall)
+
+    Returns dict {score, recent_mean, n_sampled} or None if insufficient data.
+    """
+    if (mlbam is None or rp3_per_start is None
+            or rp3_sigma is None or rp3_sigma <= 0):
+        return None
+    sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
+    try:
+        from sp_bench_mc import fetch_pitcher_starts_multi_year
+    except Exception:
+        return None
+    starts = fetch_pitcher_starts_multi_year(mlbam, years=(2026,),
+                                              limit=last_n_starts)
+    if len(starts) < 3:
+        return None
+    recent_mean = sum(s['fp'] for s in starts) / len(starts)
+    return {
+        'score': (recent_mean - rp3_per_start) / rp3_sigma,
+        'recent_mean': recent_mean,
+        'n_sampled': len(starts),
     }
 
 
@@ -365,7 +404,7 @@ def print_per_pitcher(name: str, c: dict, ros: dict, rp3_info: dict | None):
     rp3_sigma = rp3_info.get('sigma') if rp3_info else None
     rp3_str = f"{rp3_per_start:.2f}" if rp3_per_start is not None else "n/a"
     sigma_str = f" σ={rp3_sigma:.2f}" if rp3_sigma is not None else ""
-    print(f"  rp3 per_start: {rp3_str}{sigma_str}  ← validated model (headline)")
+    print(f"  rp3 per_start (schedule-adjusted): {rp3_str}{sigma_str}  ← validated model (headline)")
     print(f"  Bucket: {BUCKET_EMOJI.get(bucket, bucket)}  ← confidence layer on rp3")
     if bucket in ('NO_2026_DATA', 'NO_BASELINE'):
         print(f"  {c.get('verdict','')}")
@@ -455,6 +494,14 @@ def main():
         print(f'FA pool SPs with 2026 FP/start >= {args.min_2026_fp} '
               f'(n={len(names)}): {names[:20]}{"..." if len(names)>20 else ""}')
 
+    # MLBAM lookup helper (for staleness scoring)
+    sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
+    try:
+        from build_matchup_dashboard import player_mlbam_lookup, _resolve_mlbam_via_api
+    except Exception:
+        player_mlbam_lookup = lambda x: None
+        _resolve_mlbam_via_api = lambda x: None
+
     results = []
     for n in names:
         rows = load_pitcher_rows(sp, n)
@@ -462,9 +509,44 @@ def main():
                                               'verdict': f'no rows in sp_multiyr for "{n}"'}
         ros = ros_expectation(cls)
         rp3_info = rp3_map.get(_norm(n))
-        results.append({'name': n, 'classification': cls, 'ros': ros, 'rp3': rp3_info})
+        # W3: staleness score
+        stale = None
+        if rp3_info:
+            mlbam = player_mlbam_lookup(n) or _resolve_mlbam_via_api(n)
+            stale = staleness_score(mlbam, rp3_info.get('per_start'),
+                                     rp3_info.get('sigma'))
+        results.append({'name': n, 'classification': cls, 'ros': ros,
+                        'rp3': rp3_info, 'staleness': stale})
         if not args.brief:
             print_per_pitcher(n, cls, ros, rp3_info)
+            if stale is not None:
+                marker = '⚠' if abs(stale['score']) > 1.5 else '·'
+                print(f"  {marker} rp3 staleness: recent_mean={stale['recent_mean']:.2f} "
+                      f"vs rp3={rp3_info['per_start']:.2f}  (score={stale['score']:+.2f}σ, "
+                      f"n={stale['n_sampled']})")
+        # W4: log this call to sustainability_history.csv
+        try:
+            from sustainability_logger import log_call
+            sig = None
+            if rp3_info and ros and 'ev' in ros:
+                sig, _ = divergence_signal(ros['ev'], rp3_info.get('per_start'),
+                                            cls.get('bucket'))
+            mlbam_for_log = (player_mlbam_lookup(n) or _resolve_mlbam_via_api(n)) if rp3_info else None
+            log_call(
+                scope=args.scope or 'adhoc',
+                player_id=mlbam_for_log,
+                player_name=n, kind='pitcher',
+                bucket=cls.get('bucket'),
+                signal=sig,
+                model_at_call=(rp3_info or {}).get('per_start'),
+                sus_ev_at_call=(ros or {}).get('ev'),
+                skill_attributable=cls.get('skill_attributable'),
+                luck_attributable=cls.get('luck_attributable'),
+                staleness_score=(stale or {}).get('score'),
+                n_2026=cls.get('gs_2026'),
+            )
+        except Exception as e:
+            pass  # silent — logging is best-effort
 
     # Sort summary: rp3 per_start primary, sustainability E[ROS] fallback
     def sort_key(r):
@@ -502,6 +584,28 @@ def main():
             print(f'    {n:<22} rp3={rp:.2f}  sus E[ROS]={ev:.2f}  Δ={ev-rp:+.2f}  — {msg}')
     if not buy_low and not sell_high:
         print('  (none — sustainability and rp3 in agreement)')
+
+    # W3: RP3-STALE — recent actual diverging from rp3 (independent of bucket)
+    stale_pos, stale_neg = [], []
+    for r in results:
+        s = r.get('staleness')
+        rp3 = r.get('rp3') or {}
+        if s is None or rp3.get('per_start') is None:
+            continue
+        if abs(s['score']) > 1.5:
+            entry = (r['name'], rp3['per_start'], s['recent_mean'], s['score'], s['n_sampled'])
+            if s['score'] > 0:
+                stale_pos.append(entry)
+            else:
+                stale_neg.append(entry)
+    if stale_pos:
+        print('  RP3-STALE (recent runs hot — rp3 will likely catch up):')
+        for n, rp, rm, sc, ns in stale_pos:
+            print(f'    {n:<22} rp3={rp:.2f}  recent_mean={rm:.2f} (n={ns})  staleness={sc:+.2f}σ')
+    if stale_neg:
+        print('  RP3-STALE (recent runs cold — rp3 may fall):')
+        for n, rp, rm, sc, ns in stale_neg:
+            print(f'    {n:<22} rp3={rp:.2f}  recent_mean={rm:.2f} (n={ns})  staleness={sc:+.2f}σ')
 
 
 if __name__ == '__main__':

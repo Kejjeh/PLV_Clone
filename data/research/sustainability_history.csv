@@ -1,0 +1,10 @@
+timestamp,call_date,scope,player_id,player_name,kind,bucket,signal,model_at_call,sus_ev_at_call,skill_attributable,luck_attributable,staleness_score,n_2026,actual_fp_per_unit_4wk_post,actual_fp_per_unit_8wk_post,backfill_date_4wk,backfill_date_8wk
+2026-05-22T01:22:41,2026-05-22,my-roster,664285,Framber Valdez,pitcher,REGRESS,AGREE_BEARISH,11.2900,12.4777,-0.7730,-3.4194,-1.7067,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,642547,Freddy Peralta,pitcher,STABLE,DISAGREE,12.1200,14.3677,-0.6703,-0.5762,0.0090,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,607074,Carlos Rodon,pitcher,NOISE,SELL_HIGH,11.3700,12.9077,-0.3213,2.9898,-0.8009,33,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,667755,Jose Soriano,pitcher,IMPROVING,BUY_LOW,11.6300,14.0136,1.9361,6.0589,-0.6430,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,800048,Parker Messick,pitcher,NO_BASELINE,,10.7400,,,,0.9069,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,701542,Will Warren,pitcher,LEGIT,AGREE_BULLISH,11.0400,11.5259,2.2156,1.3894,0.0333,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,680694,Kyle Bradish,pitcher,REGRESS,DISAGREE,11.2400,13.0322,-1.2534,-4.0044,0.0694,9,,,,
+2026-05-22T01:22:41,2026-05-22,my-roster,701656,Logan Henderson,pitcher,NO_BASELINE,,10.7100,,,,0.4625,3,,,,
+2026-05-22T01:23:13,2026-05-22,adhoc,592450,Aaron Judge,hitter,STABLE,AGREE,2.5000,2.8879,-0.1602,-0.3114,-3.7859,48,,,,

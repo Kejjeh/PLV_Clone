@@ -483,7 +483,8 @@ def main():
         emp = fetch_pitcher_starts_multi_year(mlbam, limit=args.history_window)
         emp_fps = [s['fp'] for s in emp]
         rp_info = rp3_map.get(_norm(name), {})
-        rp3_mean = rp_info.get('per_start') or 0
+        # Prefer schedule-adjusted to match dashboard convention (W1 fix)
+        rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start') or 0
         rp3_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
         if rp3_sigma is None or rp3_sigma <= 0:
             rp3_sigma = SIGMA_PER_SP_START
@@ -573,7 +574,8 @@ def main():
             ranked = []
             for name, mlbam, sd in remaining_mine:
                 rp_info = rp3_map.get(_norm(name), {})
-                rp3_mean = rp_info.get('per_start') or 0
+                # Prefer schedule-adjusted (W1 fix)
+                rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start') or 0
                 f = make_opp_factor(sd['opp_team'], ts_map, args.opp_window)
                 ranked.append((name, sd['date'], sd['opp_team'], rp3_mean * f))
             ranked.sort(key=lambda x: x[3])
