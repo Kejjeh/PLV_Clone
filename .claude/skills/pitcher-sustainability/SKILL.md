@@ -1,6 +1,6 @@
 ---
 name: pitcher-sustainability
-description: Decompose a pitcher's 2026 vs prior-year FP/start change into skill-attributable (sustainable) vs luck-attributable (regression-prone) using the 9-marker Statcast checklist (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact). Outputs LEGIT / IMPROVING / STABLE / MIXED / NOISE / BAD_LUCK / REGRESS buckets per pitcher plus bull/base/bear expectations for the rest of season. Use when (a) a pitcher had a monster game or rough stretch and you need to know if it's real, (b) auditing your whole SP staff for who's sustainable vs who's regressing, (c) sizing up FA SPs to see if their 2026 form has skill support behind it. Works for any pitcher in sp_multiyr.csv with at least one prior season.
+description: Augments rp3 (the validated ROS projection) with a 9-marker Statcast skill decomposition (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact). The headline ROS number is rp3.per_start. The sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS) is a CONFIDENCE LAYER on that rp3 number. The most valuable output is the DIVERGENCE SIGNAL — when sustainability decomp and rp3 disagree by >1.5 FP, we get BUY-LOW (rp3 hasn't caught up to a real breakout) or SELL-HIGH (production won't sustain, rp3 already conservative) actionable flags. Use when (a) a pitcher had a monster game or rough stretch and you need to know if rp3's number is going to move, (b) auditing your SP staff for hidden regression risk or buy-low candidates, (c) sizing up FA SPs by validated rp3 PLUS skill confirmation.
 ---
 
 # pitcher-sustainability
@@ -61,17 +61,31 @@ python scripts/xfp/pitcher_sustainability.py --scope my-roster --brief
 
 ---
 
-## Understanding the buckets
+## Understanding the buckets (confidence layer on rp3)
 
-| Bucket | Criteria | Action |
+| Bucket | Criteria | Implication for rp3 |
 |---|---|---|
-| **LEGIT** | fp_delta ≥ +2.0 AND ≥7/9 markers materially favorable | Trust the breakout; hold/add |
-| **IMPROVING** | fp_delta ≥ +2.0 AND 5-6/9 markers favorable | Real but expect partial regression |
-| **NOISE** | fp_delta ≥ +2.0 AND ≤3/9 favorable | Production up but skills don't support — likely BABIP fluke |
-| **STABLE** | abs(fp_delta) < 2.0 | No story to tell; rely on baseline rp3 |
+| **LEGIT** | fp_delta ≥ +2.0 AND ≥7/9 markers materially favorable | rp3 may be **conservative** if recent — BUY-LOW candidate |
+| **IMPROVING** | fp_delta ≥ +2.0 AND 5-6/9 markers favorable | rp3 reasonable; small upside vs current value |
+| **NOISE** | fp_delta ≥ +2.0 AND ≤3/9 favorable | rp3 should be near prior-year; production won't sustain |
+| **STABLE** | abs(fp_delta) < 2.0 | Trust rp3 cleanly; no signal |
 | **MIXED** | Doesn't cleanly fit above | Read the markers manually |
-| **BAD_LUCK** | fp_delta ≤ -2.0 AND ≥4/9 markers HOLDING | Buy-low candidate; results regressing up |
-| **REGRESS** | fp_delta ≤ -2.0 AND skills declining | Sell-high if you have him; avoid acquiring |
+| **BAD_LUCK** | fp_delta ≤ -2.0 AND ≥4/9 markers HOLDING | rp3 may catch the bounce; **BUY-LOW** |
+| **REGRESS** | fp_delta ≤ -2.0 AND skills declining | rp3 may not yet have penalized; **SELL-HIGH** |
+
+## Divergence signals (the actionable layer)
+
+After computing both rp3 (validated) and sustainability E[ROS] (descriptive),
+the tool flags pitchers where they disagree by ≥1.5 FP:
+
+| Signal | When | Action |
+|---|---|---|
+| **BUY-LOW** | Sustainability bullish, rp3 conservative | Add before rp3 refresh catches up |
+| **SELL-HIGH** | Sustainability bearish, rp3 still high | Drop / trade while value holds |
+| **CONFIRM (bullish)** | Both bullish | High-confidence hold/add |
+| **CONFIRM (bearish)** | Both bearish | High-confidence avoid/drop |
+| **AGREE** | Within 1.5 FP | Trust rp3 |
+| **INVESTIGATE** | Disagree but bucket doesn't suggest direction | Manual review |
 
 ---
 

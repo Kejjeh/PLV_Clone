@@ -42,6 +42,11 @@ import pandas as pd
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
+OUT = ROOT / 'data' / 'outputs'
+
+# Divergence threshold: |my_E[ROS] - rp3.per_start| > this → flag as
+# disagreement between sustainability decomp and validated model.
+DIVERGENCE_THRESHOLD = 1.5
 
 # (column, direction, label, materiality threshold for "real" change)
 MARKERS = [
@@ -62,6 +67,23 @@ def _norm(s):
     s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
     parts = re.findall(r'[a-z]+', s)
     return ''.join(sorted(parts))
+
+
+def load_rp3_map() -> dict:
+    """Load rp3 projections keyed by normalized name → {per_start, sigma}."""
+    try:
+        rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    except Exception:
+        return {}
+    rp3['_nk'] = rp3['player_name'].map(_norm)
+    out = {}
+    for _, r in rp3.iterrows():
+        out[r['_nk']] = {
+            'per_start': float(r['xfp_rp3_per_start']) if pd.notna(r.get('xfp_rp3_per_start')) else None,
+            'sigma': float(r['xfp_rp3_sigma']) if pd.notna(r.get('xfp_rp3_sigma')) else None,
+            'per_start_sched': float(r['xfp_rp3_per_start_sched']) if pd.notna(r.get('xfp_rp3_per_start_sched')) else None,
+        }
+    return out
 
 
 def load_pitcher_rows(sp: pd.DataFrame, name: str):
@@ -214,6 +236,50 @@ def classify(rows: dict) -> dict:
     }
 
 
+def divergence_signal(my_ev: float, rp3_per_start: float, bucket: str) -> tuple[str, str]:
+    """Reading from the gap between my tool's E[ROS] and rp3's validated number.
+
+    Returns (signal, interpretation) tuple:
+      - BUY_LOW: bucket is LEGIT/IMPROVING but rp3 hasn't caught up
+                 (model conservative; sustainability says skills support more)
+      - SELL_HIGH: bucket is REGRESS but rp3 still high (model hasn't
+                   penalized the regression yet)
+      - AGREE: gap < threshold
+      - WATCH_REGRESS: bucket REGRESS, rp3 also low — both flag concern
+      - WATCH_NOISE: bucket NOISE, rp3 reasonable — production won't sustain
+    """
+    if rp3_per_start is None:
+        return ('NO_RP3', 'rp3 has no projection for this pitcher')
+    gap = my_ev - rp3_per_start
+    if abs(gap) < DIVERGENCE_THRESHOLD:
+        if bucket in ('LEGIT', 'IMPROVING'):
+            return ('AGREE_BULLISH', 'sustainability + rp3 both bullish')
+        elif bucket in ('REGRESS', 'NOISE'):
+            return ('AGREE_BEARISH', 'sustainability + rp3 both bearish')
+        else:
+            return ('AGREE', 'sustainability + rp3 within noise')
+    elif gap > DIVERGENCE_THRESHOLD:
+        if bucket in ('LEGIT', 'IMPROVING'):
+            return ('BUY_LOW', 'skill signals strong but rp3 conservative — '
+                                'model may be lagging the breakout')
+        elif bucket == 'NOISE':
+            return ('SELL_HIGH', 'production up but skills do not support — '
+                                  'rp3 already conservative, regression coming')
+        elif bucket == 'BAD_LUCK':
+            return ('BUY_LOW', 'production down but skills holding — '
+                                'rp3 may catch the bounce')
+        else:
+            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
+                                 f'>> rp3={rp3_per_start:.2f} — investigate')
+    else:  # my_ev < rp3
+        if bucket == 'REGRESS':
+            return ('SELL_HIGH', 'skill regression real but rp3 still bullish — '
+                                  'sell now before model catches up')
+        else:
+            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
+                                 f'<< rp3={rp3_per_start:.2f} — investigate')
+
+
 def ros_expectation(c: dict) -> dict:
     """Bayesian ROS expectation — bull/base/bear given bucket + skill support."""
     if c['bucket'] in ('NO_2026_DATA', 'NO_BASELINE'):
@@ -283,10 +349,24 @@ BUCKET_EMOJI = {
 }
 
 
-def print_per_pitcher(name: str, c: dict, ros: dict):
+SIGNAL_PREFIX = {
+    'BUY_LOW': '↑ BUY-LOW   ', 'SELL_HIGH': '↓ SELL-HIGH ',
+    'AGREE_BULLISH': '✓ CONFIRM   ', 'AGREE_BEARISH': '✗ CONFIRM   ',
+    'AGREE': '· AGREE     ', 'WATCH_REGRESS': '! WATCH-RGR ',
+    'WATCH_NOISE': '! WATCH-NSE ', 'DISAGREE': '? INVESTIGAT',
+    'NO_RP3': '— no rp3    ',
+}
+
+
+def print_per_pitcher(name: str, c: dict, ros: dict, rp3_info: dict | None):
     print(f'\n--- {name} ---')
     bucket = c.get('bucket', '?')
-    print(f"  Bucket: {BUCKET_EMOJI.get(bucket, bucket)}")
+    rp3_per_start = rp3_info.get('per_start') if rp3_info else None
+    rp3_sigma = rp3_info.get('sigma') if rp3_info else None
+    rp3_str = f"{rp3_per_start:.2f}" if rp3_per_start is not None else "n/a"
+    sigma_str = f" σ={rp3_sigma:.2f}" if rp3_sigma is not None else ""
+    print(f"  rp3 per_start: {rp3_str}{sigma_str}  ← validated model (headline)")
+    print(f"  Bucket: {BUCKET_EMOJI.get(bucket, bucket)}  ← confidence layer on rp3")
     if bucket in ('NO_2026_DATA', 'NO_BASELINE'):
         print(f"  {c.get('verdict','')}")
         if 'fp_2026' in c:
@@ -313,31 +393,42 @@ def print_per_pitcher(name: str, c: dict, ros: dict):
     print(f"  FP decomposition: skill≈{c['skill_attributable']:+.1f}  "
           f"luck≈{c['luck_attributable']:+.1f}")
     if ros:
-        print(f"  ROS FP/start: bull={ros['bull']:.1f} ({ros['p_bull']*100:.0f}%)  "
+        print(f"  sustainability E[ROS]: bull={ros['bull']:.1f} ({ros['p_bull']*100:.0f}%)  "
               f"base={ros['base']:.1f} ({ros['p_base']*100:.0f}%)  "
               f"bear={ros['bear']:.1f} ({ros['p_bear']*100:.0f}%)  "
-              f"→ E[FP/start]={ros['ev']:.2f}")
+              f"→ E={ros['ev']:.2f}")
+        # Divergence signal
+        if rp3_per_start is not None:
+            sig, interp = divergence_signal(ros['ev'], rp3_per_start, bucket)
+            gap = ros['ev'] - rp3_per_start
+            print(f"  Signal: {SIGNAL_PREFIX.get(sig, sig)}  (gap={gap:+.2f} FP) — {interp}")
 
 
 def print_summary_table(results: list[dict]):
-    print(f'\n\n=== SUMMARY (sorted by E[ROS FP/start] desc) ===')
-    print(f'{"Pitcher":<24} {"Bucket":<12} {"2026":>6} {"Prior":>6} {"Δ":>6} '
-          f'{"Skill":>5} {"Mat":>4} {"E[ROS]":>7}')
-    print('-' * 80)
+    print(f'\n\n=== SUMMARY (sorted by rp3 per_start desc) ===')
+    print(f'{"Pitcher":<22} {"rp3":>6} {"Sus":<11} {"Bucket":<12} {"2026":>6} {"Skill":>6} {"Signal":<14}')
+    print('-' * 95)
     for r in results:
         cls = r['classification']
         bucket = cls.get('bucket', '?')
+        rp3_info = r.get('rp3') or {}
+        rp3_ps = rp3_info.get('per_start')
+        rp3_str = f"{rp3_ps:.2f}" if rp3_ps is not None else "  n/a"
         if bucket in ('NO_2026_DATA', 'NO_BASELINE'):
-            ev = cls.get('fp_2026', 0)
-            print(f"{r['name']:<24} {BUCKET_EMOJI[bucket]:<12} "
-                  f"{cls.get('fp_2026', 0):>6.1f}  {'n/a':>5} {'n/a':>5}  "
-                  f"{'n/a':>5} {'n/a':>4} {ev:>7.1f}")
+            print(f"{r['name']:<22} {rp3_str:>6} {'n/a':<11} {BUCKET_EMOJI[bucket]:<12} "
+                  f"{cls.get('fp_2026', 0):>6.1f} {'n/a':>6} {'NO_RP3' if rp3_ps is None else '·  AGREE'}")
             continue
         ros = r.get('ros', {})
-        print(f"{r['name']:<24} {BUCKET_EMOJI[bucket]:<12} "
-              f"{cls['fp_2026']:>6.1f} {cls['fp_prior']:>6.1f} {cls['fp_delta']:>+6.1f} "
-              f"{cls['n_favorable']:>5} {cls['n_material']:>4} "
-              f"{ros.get('ev', 0):>7.2f}")
+        my_ev = ros.get('ev', 0)
+        sus_str = f"{my_ev:.2f}"
+        if rp3_ps is not None:
+            sig, _ = divergence_signal(my_ev, rp3_ps, bucket)
+        else:
+            sig = 'NO_RP3'
+        sig_label = SIGNAL_PREFIX.get(sig, sig).strip()
+        skill_str = f"{cls.get('skill_attributable', 0):+.1f}"
+        print(f"{r['name']:<22} {rp3_str:>6} {sus_str:<11} {BUCKET_EMOJI[bucket]:<12} "
+              f"{cls['fp_2026']:>6.1f} {skill_str:>6} {sig_label:<14}")
 
 
 def main():
@@ -352,6 +443,7 @@ def main():
     args = parser.parse_args()
 
     sp = pd.read_csv(CACHE / 'sp_multiyr.csv')
+    rp3_map = load_rp3_map()
 
     if args.players:
         names = [n.strip() for n in args.players.split(',')]
@@ -369,19 +461,47 @@ def main():
         cls = classify(rows) if rows else {'bucket': 'NOT_FOUND',
                                               'verdict': f'no rows in sp_multiyr for "{n}"'}
         ros = ros_expectation(cls)
-        results.append({'name': n, 'classification': cls, 'ros': ros})
+        rp3_info = rp3_map.get(_norm(n))
+        results.append({'name': n, 'classification': cls, 'ros': ros, 'rp3': rp3_info})
         if not args.brief:
-            print_per_pitcher(n, cls, ros)
+            print_per_pitcher(n, cls, ros, rp3_info)
 
-    # Sort summary by E[ROS]
+    # Sort summary: rp3 per_start primary, sustainability E[ROS] fallback
     def sort_key(r):
-        cls = r['classification']
+        rp3 = r.get('rp3') or {}
+        if rp3.get('per_start') is not None:
+            return -rp3['per_start']
         ros = r.get('ros', {})
         if ros and 'ev' in ros:
             return -ros['ev']
-        return -cls.get('fp_2026', 0)
+        return -r['classification'].get('fp_2026', 0)
     results.sort(key=sort_key)
     print_summary_table(results)
+
+    # Watch-list call-outs: SIGNAL flags worth surfacing
+    print(f'\n=== ACTIONABLE SIGNALS ===')
+    buy_low, sell_high = [], []
+    for r in results:
+        cls = r['classification']
+        ros = r.get('ros') or {}
+        rp3 = r.get('rp3') or {}
+        if rp3.get('per_start') is None or 'ev' not in ros:
+            continue
+        sig, interp = divergence_signal(ros['ev'], rp3['per_start'], cls.get('bucket'))
+        if sig == 'BUY_LOW':
+            buy_low.append((r['name'], rp3['per_start'], ros['ev'], interp))
+        elif sig == 'SELL_HIGH':
+            sell_high.append((r['name'], rp3['per_start'], ros['ev'], interp))
+    if buy_low:
+        print('  BUY-LOW (sustainability bullish, rp3 hasn\'t caught up):')
+        for n, rp, ev, msg in buy_low:
+            print(f'    {n:<22} rp3={rp:.2f}  sus E[ROS]={ev:.2f}  Δ={ev-rp:+.2f}  — {msg}')
+    if sell_high:
+        print('  SELL-HIGH (sustainability bearish, rp3 still high):')
+        for n, rp, ev, msg in sell_high:
+            print(f'    {n:<22} rp3={rp:.2f}  sus E[ROS]={ev:.2f}  Δ={ev-rp:+.2f}  — {msg}')
+    if not buy_low and not sell_high:
+        print('  (none — sustainability and rp3 in agreement)')
 
 
 if __name__ == '__main__':
