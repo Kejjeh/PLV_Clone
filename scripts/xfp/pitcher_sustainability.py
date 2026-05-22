@@ -172,15 +172,23 @@ def classify(rows: dict) -> dict:
     else:
         bucket = 'MIXED'
 
-    # Skill-attributable FP estimate (rough): how much of fp_delta is supported
-    # by the K%+contact-quality changes?
-    k_delta = float(cur.get('k_pct', 0)) - float(prior.get('k_pct', 0))
-    xwoba_delta = float(prior.get('xwoba_contact', 0)) - float(cur.get('xwoba_contact', 0))
-    # ~22 BF per start typically; K worth +1 FP, xwOBA-contact pts ≈ scaling
+    # Skill-attributable FP estimate. Each major skill change converted to
+    # expected FP impact per start (BF=22 typical):
+    #   K%   change: +1 FP per extra K
+    #   BB%  change: -1 FP per extra BB
+    #   Barrel% change: -2.6 FP per extra HR (HR ≈ 13% conv from barrel)
+    #   xwOBA-con: ~20 FP per .010 (already scaled to per-start)
     bf_per_start = 22
-    skill_fp_k = k_delta * bf_per_start * 1.0     # each extra K = +1 FP
-    skill_fp_contact = xwoba_delta * 20            # rough: .010 xwOBA-con ≈ 0.2 FP/start
-    skill_attributable = skill_fp_k + skill_fp_contact
+    k_delta = float(cur.get('k_pct', 0)) - float(prior.get('k_pct', 0))
+    bb_delta = float(cur.get('bb_pct', 0)) - float(prior.get('bb_pct', 0))
+    barrel_delta = float(cur.get('barrel_pct', 0)) - float(prior.get('barrel_pct', 0))
+    xwoba_delta = float(prior.get('xwoba_contact', 0)) - float(cur.get('xwoba_contact', 0))
+    skill_fp_k = k_delta * bf_per_start * 1.0
+    skill_fp_bb = -bb_delta * bf_per_start * 1.0
+    skill_fp_barrel = -barrel_delta * bf_per_start * 0.13 * 2.0  # HR×2 FP via ER
+    skill_fp_contact = xwoba_delta * 20
+    skill_attributable = (skill_fp_k + skill_fp_bb +
+                           skill_fp_barrel + skill_fp_contact)
     luck_attributable = fp_delta - skill_attributable
 
     # If we fell back to prior-2-year comparison, also surface the actual 2026
