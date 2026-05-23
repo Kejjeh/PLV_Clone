@@ -3,10 +3,11 @@
 Steps:
   1. Pull latest statcast (lag=1 day, gets through yesterday)
   2. Rebuild all xFP models (rh3, rp3, rprs2, h2, v12, rps1)
-  3. Regenerate live_dashboard.html (today's live stats snapshot)
-  4. Regenerate matchup.html (weekly H2H projection)
-  5. Copy both to xfp-model/docs/
-  6. Commit + push xfp-model to GitHub Pages
+     — also mirrors xfp_dashboard.html → xfp-model/docs/index.html
+  3. Regenerate live_dashboard.html (mirrored to xfp-model/docs/)
+  4. Regenerate matchup.html (mirrored to xfp-model/docs/)
+  5. Commit the three mirrored dashboards in xfp-model
+  6. Push xfp-model to GitHub Pages
 
 Usage:
   python scripts/xfp/refresh_dashboards.py            # full refresh + push
@@ -71,7 +72,7 @@ def main():
             return
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         commit_cmd = (
-            'git add docs/matchup.html docs/live_dashboard.html && '
+            'git add docs/index.html docs/matchup.html docs/live_dashboard.html && '
             f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)
