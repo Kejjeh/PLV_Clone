@@ -65,6 +65,15 @@ This file IS the pre-registration. If anything in the frontmatter changes
 after seeing results, the run is invalidated — restart with a fresh
 holdout window.
 
+`production_target` must be a clean enum value (`rh3` / `rp3` / `rprs2` /
+`research-only`). Parenthetical caveats belong in the body, not the
+frontmatter — the `ValidatedSignal` parser in
+`src/plv_clone/models/xfp/validated_signals.py` consumes this field as a
+literal. See ADR-0003.
+
+A `verdict` field will be appended at the END of the run (Step 9 below).
+Do NOT pre-fill it at pre-registration time.
+
 ---
 
 ## Step 2 — Identify the production baseline (Rule 9, the CRITICAL one)
@@ -281,6 +290,37 @@ separate request — do you want to plan that now or later?"
 Until that integration ships, the signal lives in research artifacts
 (CSVs, diagnostic scripts) and may be used as a tie-breaker but NOT
 as a ranker.
+
+---
+
+## Step 9 — Write the final verdict to the pre-registration frontmatter
+
+Append a `verdict:` field to the pre-registration frontmatter (NOT the
+body — the `ValidatedSignal` parser reads frontmatter only). Allowed
+values:
+
+- `PASS` — beat the Rule 9 baseline by ≥ +0.005 cross-year r AND cleared
+  the year-consistency / Bonferroni / framing gates. Eligible to ship
+  in a FEATS list.
+- `MARGINAL` — between 0 and +0.005, OR cleared the headline gate but
+  failed a secondary check. Do NOT add to production. Document the lift
+  so a future re-test doesn't redo the same work.
+- `REJECTED` — failed the headline gate, failed Rule 5 (sample-size
+  honesty), produced wrong sign, or hit framing mismatch. Permanently
+  out unless the underlying constraint changes (e.g., more data).
+- `RESEARCH-ONLY` — design-stage analysis that was never intended for a
+  production target. Useful as a diagnostic but never eligible.
+
+Insert the line directly after `date:` and before any other key:
+
+```yaml
+date: 2026-05-16
+verdict: PASS
+purpose: ...
+```
+
+Also append a one-line entry to the Index table in
+`data/research/validation_runs/README.md` with the same verdict.
 
 ---
 

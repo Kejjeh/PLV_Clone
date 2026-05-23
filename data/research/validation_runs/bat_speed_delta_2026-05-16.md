@@ -10,6 +10,7 @@ holdout_years: [2026]
 training_years: [2025] only — see Rule 5 honesty note below
 validation_script: scripts/xfp/validate_bat_speed_delta.py
 date: 2026-05-16
+verdict: REJECTED
 purpose: Test whether the +20 FP/600 PA effect seen in the Bleday analog cohort (N=7) is robust enough to be used as a predictor in rh3.
 ---
 

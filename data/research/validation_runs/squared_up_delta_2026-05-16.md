@@ -4,12 +4,13 @@ formula: squared_up_rate(year T-1) − squared_up_rate(year T-2), per batter, bo
 outcome: barrel_per_pa OR hr_per_pa in year T (component-level outcome, per Rule 4)
 expected_sign: +
 theory: A higher % of squared-up swings means more consistent damage on contact regardless of raw bat speed. Tests whether the qualitative pattern in Bleday (44%→72% squared-up rate jump) translates to power.
-production_target: rh3 (component-level — barrel% feature)
+production_target: rh3
 framing: full-year
 holdout_years: [2026]
 training_years: [2025] only — same Rule 5 issue as Test A
 validation_script: scripts/xfp/validate_squared_up_delta.py
 date: 2026-05-16
+verdict: REJECTED
 purpose: Component-level retest pattern (Rule 4) — even if bat speed delta doesn't move composite FP, the squared-up rate change might more directly predict barrel%, which then feeds rh3 separately.
 ---
 

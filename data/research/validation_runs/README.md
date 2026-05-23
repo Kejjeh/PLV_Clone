@@ -27,6 +27,7 @@ holdout_years: <list>
 training_years: <list>
 validation_script: scripts/xfp/validate_<signal_name>.py
 date: <YYYY-MM-DD>
+verdict: <PASS | MARGINAL | REJECTED | RESEARCH-ONLY>
 purpose: <why this is being run now>
 ---
 ```

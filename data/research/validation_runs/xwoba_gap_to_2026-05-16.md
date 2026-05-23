@@ -10,5 +10,6 @@ holdout_years: [2024, 2025]
 training_years: [2018, 2019, 2021, 2022, 2023]
 validation_script: scripts/xfp/validate_xwoba_gap_to.py
 date: 2026-05-16
+verdict: MARGINAL
 purpose: Skill sanity-check — re-run a feature that is already LIVE in rh3 v2 and confirm the new skill produces the +0.0016 number documented in the registry against the FULL production baseline (not the inflated +0.006 from the original curated backtest).
 ---
