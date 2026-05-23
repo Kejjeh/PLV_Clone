@@ -14,9 +14,13 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
-from app.espn_connector import (
-    get_my_roster_with_injuries, get_free_agents, fuzzy_match_name
-)
+from plv_clone.league_state import LeagueState
+from plv_clone.utils.name_match import fuzzy_match_name
+
+_ls = LeagueState()
+get_my_roster_with_injuries = _ls.my_roster_with_injuries
+def get_free_agents(position=None, size=None):
+    return _ls.available_fa(position=position)
 
 pd.set_option('display.width', 250)
 pd.set_option('display.max_columns', 30)
