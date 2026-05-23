@@ -1,0 +1,279 @@
+"""Behavioral tests for plv_clone.league_state.LeagueState.
+
+Each test names a structural invariant from ADR-0004 or the related
+feedback memory files:
+
+  * ``il_slots()`` counts ``lineup_slot=='IL'`` and NOT ``injured==True``
+    (`feedback_il_slot_vs_il_status.md`).
+  * No ``injured_players`` accessor exists — the absence is the
+    enforcement mechanism (ADR-0004).
+  * ``available_fa`` has no ``size=`` parameter — the size lives inside
+    the method (`feedback_fa_pool_size_cap.md`).
+  * ``available_fa`` filters out cross-team-rostered players internally
+    (`feedback_pl_rank_not_equal_fa_available.md`).
+"""
+from __future__ import annotations
+
+import inspect
+from dataclasses import dataclass, field
+from typing import Any
+
+import pandas as pd
+import pytest
+
+from plv_clone.league_state import LeagueState
+
+
+# ── Fakes ────────────────────────────────────────────────────────────────
+
+@dataclass
+class _FakePlayer:
+    name: str
+    playerId: int = 0
+    position: str = ""
+    proTeam: str = ""
+    eligibleSlots: list[str] = field(default_factory=list)
+    lineupSlot: str = ""
+    injured: bool = False
+    injuryStatus: str = ""
+    percent_owned: float = 0.0
+
+
+@dataclass
+class _FakeTeam:
+    team_id: int
+    team_name: str
+    owner: str
+    roster: list[_FakePlayer]
+    wins: int = 0
+    losses: int = 0
+    ties: int = 0
+    points_for: float = 0.0
+    points_against: float = 0.0
+
+
+class _FakeLeague:
+    """Minimal stand-in for espn_api.baseball.League."""
+
+    def __init__(self, teams: list[_FakeTeam], free_agents: list[_FakePlayer]):
+        self.teams = teams
+        self._fas = free_agents
+        self.free_agents_size_arg: int | None = None
+
+    def free_agents(self, size: int = 50, **_: Any) -> list[_FakePlayer]:
+        self.free_agents_size_arg = size
+        return list(self._fas)
+
+
+# ── Tests ────────────────────────────────────────────────────────────────
+
+def test_il_slots_counts_lineup_slot_not_injured_flag():
+    """The load-bearing distinction from ADR-0004 and CONTEXT.md.
+
+    Roster has TWO injured players:
+      - Player A: ``lineup_slot=='IL'`` and ``injured==True``
+      - Player B: ``lineup_slot=='OF'`` and ``injured==True`` (the
+        Langford pattern: hurt but still in the starting slot)
+
+    ``il_slots()`` must return 1, not 2. Counting ``injured==True`` is
+    the bug.
+    """
+    roster = pd.DataFrame([
+        {"player_name": "A", "lineup_slot": "IL", "injured": True},
+        {"player_name": "B", "lineup_slot": "OF", "injured": True},
+        {"player_name": "C", "lineup_slot": "1B", "injured": False},
+    ])
+
+    state = LeagueState(league=object())  # league handle unused in this path
+    assert state.il_slots(roster) == 1
+
+
+def test_il_slots_free_uses_il_slot_count_constant():
+    roster = pd.DataFrame([
+        {"player_name": "A", "lineup_slot": "IL", "injured": True},
+        {"player_name": "B", "lineup_slot": "IL", "injured": True},
+    ])
+    state = LeagueState(league=object())
+    # IL_SLOT_COUNT==3, 2 used → 1 free
+    assert state.il_slots_free(roster) == 1
+
+
+def test_league_state_has_no_injured_players_attribute():
+    """ADR-0004 — the absence is the enforcement.
+
+    Future contributors who add ``injured_players()`` back as a small
+    helper will trip this regression.
+    """
+    state = LeagueState(league=object())
+    assert not hasattr(state, "injured_players"), (
+        "LeagueState must NOT expose injured_players — see ADR-0004. "
+        "Callers who need the injury flag read my_roster() and filter "
+        "injured==True themselves."
+    )
+
+
+def test_available_fa_signature_has_no_size_parameter():
+    """`feedback_fa_pool_size_cap.md` — size=2000 lives inside the method.
+
+    A ``size=`` parameter on the public API invites the silent-truncation
+    bug. The default is internal and not a caller knob.
+    """
+    sig = inspect.signature(LeagueState.available_fa)
+    assert "size" not in sig.parameters, (
+        "LeagueState.available_fa must NOT accept size= — the default "
+        "of 2000 is an internal invariant, not a caller knob. See "
+        "feedback_fa_pool_size_cap.md."
+    )
+
+
+def test_available_fa_pulls_full_pool_internally():
+    """Even without size= in the signature, the method must pull 2000."""
+    fa = _FakePlayer(name="Free Agent X", position="OF")
+    team = _FakeTeam(team_id=1, team_name="My Ligers", owner="josh", roster=[])
+    league = _FakeLeague(teams=[team], free_agents=[fa])
+
+    state = LeagueState(league=league)
+    state.available_fa()
+
+    assert league.free_agents_size_arg == 2000, (
+        "available_fa() must pull the unfiltered size=2000 pool — per-"
+        "position size=N calls silently truncate low-owned candidates."
+    )
+
+
+def test_available_fa_drops_cross_team_rostered_players():
+    """`feedback_pl_rank_not_equal_fa_available.md` — the Connelly Early bug.
+
+    ESPN's FA endpoint can lag and surface "available" players who are
+    actually rostered. ``available_fa()`` must filter them out
+    internally — the cross-team check is not a caller obligation.
+    """
+    # Connelly Early appears in the FA pool…
+    fa_pool = [
+        _FakePlayer(name="Connelly Early", position="SP"),
+        _FakePlayer(name="True FA", position="SP"),
+    ]
+    # …but is also on another team's roster.
+    other_team = _FakeTeam(
+        team_id=2,
+        team_name="Frendy's Fantastic Team",
+        owner="frendy",
+        roster=[_FakePlayer(name="Connelly Early", position="SP")],
+    )
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=[]
+    )
+    league = _FakeLeague(teams=[my_team, other_team], free_agents=fa_pool)
+
+    state = LeagueState(league=league)
+    fa_df = state.available_fa()
+
+    names = set(fa_df["player_name"].tolist())
+    assert "Connelly Early" not in names, (
+        "available_fa() must drop players who are rostered on another "
+        "team — that's the Connelly Early bug class."
+    )
+    assert "True FA" in names
+
+
+def test_available_fa_position_filter_works():
+    fa_pool = [
+        _FakePlayer(name="Outfielder", position="OF"),
+        _FakePlayer(name="Pitcher", position="SP"),
+    ]
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=[]
+    )
+    league = _FakeLeague(teams=[my_team], free_agents=fa_pool)
+
+    state = LeagueState(league=league)
+    sps = state.available_fa(position="SP")
+
+    assert sps["player_name"].tolist() == ["Pitcher"]
+
+
+def test_my_roster_exposes_injured_flag_for_caller_filtering():
+    """Per ADR-0004 — callers who need injury status read my_roster()
+    and filter themselves. This test just confirms the column exists."""
+    injured_player = _FakePlayer(
+        name="Hurt Hitter",
+        position="OF",
+        lineupSlot="OF",
+        injured=True,
+        injuryStatus="DAY_TO_DAY",
+    )
+    healthy_player = _FakePlayer(
+        name="Healthy Hitter",
+        position="1B",
+        lineupSlot="1B",
+        injured=False,
+    )
+    my_team = _FakeTeam(
+        team_id=1,
+        team_name="New York Ligers",
+        owner="josh",
+        roster=[injured_player, healthy_player],
+    )
+    league = _FakeLeague(teams=[my_team], free_agents=[])
+
+    state = LeagueState(league=league)
+    roster = state.my_roster()
+
+    assert "injured" in roster.columns
+    # Caller-side filter, as documented:
+    injured_subset = roster[roster["injured"]]
+    assert injured_subset["player_name"].tolist() == ["Hurt Hitter"]
+
+
+def test_imports_at_advertised_paths():
+    """The two public import paths CONTEXT.md and the task spec promise."""
+    from plv_clone.league_state import LeagueState as LS  # noqa: F401
+    from plv_clone.utils.name_match import (  # noqa: F401
+        fuzzy_match_name,
+        merge_with_model,
+    )
+
+
+def test_constants_exposed_for_callers():
+    """CONTEXT.md says league_state imports cap_math constants."""
+    from plv_clone.league_state import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP
+
+    assert SP_CAP == 10
+    assert RP_SLOT_CAP == 4
+    assert IL_SLOT_COUNT == 3
+
+
+# ── name_match utility tests ─────────────────────────────────────────────
+
+def test_fuzzy_match_name_handles_accents():
+    from plv_clone.utils.name_match import fuzzy_match_name
+
+    model_names = ["Jose Soriano", "Ivan Herrera", "Luis Garcia Jr."]
+    assert fuzzy_match_name("José Soriano", model_names) == "Jose Soriano"
+    assert fuzzy_match_name("Iván Herrera", model_names) == "Ivan Herrera"
+
+
+def test_fuzzy_match_name_returns_none_below_cutoff():
+    from plv_clone.utils.name_match import fuzzy_match_name
+
+    assert fuzzy_match_name("Totally Random", ["Aaron Judge"], cutoff=0.9) is None
+
+
+def test_merge_with_model_fuzzy_joins_on_player_name():
+    from plv_clone.utils.name_match import merge_with_model
+
+    espn = pd.DataFrame([
+        {"player_name": "José Soriano", "position": "SP"},
+        {"player_name": "Aaron Judge", "position": "OF"},
+    ])
+    model = pd.DataFrame([
+        {"player_name": "Jose Soriano", "xfp_rp3_per_start": 12.5},
+        {"player_name": "Aaron Judge", "xfp_rp3_per_start": 7.0},
+    ])
+
+    merged = merge_with_model(espn, model)
+    # The merge produces a `model_name` column with the matched name and
+    # the joined projection column. Verify both rows joined.
+    by_match = dict(zip(merged["model_name"], merged["xfp_rp3_per_start"]))
+    assert by_match["Jose Soriano"] == pytest.approx(12.5)
+    assert by_match["Aaron Judge"] == pytest.approx(7.0)

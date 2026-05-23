@@ -9,6 +9,8 @@ from dataclasses import dataclass, field
 from datetime import date
 
 SP_CAP = 10
+RP_SLOT_CAP = 4
+IL_SLOT_COUNT = 3
 
 IL_STATUSES = frozenset({"TEN_DAY_DL", "FIFTEEN_DAY_DL", "SIXTY_DAY_DL"})
 
