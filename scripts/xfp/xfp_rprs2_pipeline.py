@@ -32,6 +32,9 @@ import numpy as np
 import pandas as pd
 import joblib
 
+from plv_clone.models.xfp import engine as _engine
+from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+
 warnings.filterwarnings('ignore')
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -119,25 +122,13 @@ def role_change_mask(df: pd.DataFrame) -> pd.Series:
 
 
 def fit_residual_ci(df, feats):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
     sub = df.dropna(subset=feats + [TARGET]).copy()
     sub = sub[sub['year'].isin(TRAIN_YEARS) & (sub['g_to'] >= EVAL_G_MIN)]
-    rows = []
-    for held in TRAIN_YEARS:
-        train = sub[sub['year'] != held]; test = sub[sub['year'] == held]
-        if len(train) < 100 or len(test) < 30:
-            continue
-        pipe = Pipeline([('sc', StandardScaler()),
-                         ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
-        pipe.fit(train[feats].values, train[TARGET].values)
-        preds = pipe.predict(test[feats].values)
-        rows.append(pd.DataFrame({'pred': preds, 'actual': test[TARGET].values,
-                                  'split_day': test['split_day'].values}))
-    res = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
-    res['resid'] = res['actual'] - res['pred']
-    out = {}
+    res = _engine.train_residual_table(
+        df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
+        min_train=100, min_test=30,
+    )
+    out: dict[tuple[int, int], float] = {}
     for split in sorted(res['split_day'].unique()):
         sub2 = res[res['split_day'] == split]
         if len(sub2) < 30:
@@ -149,15 +140,6 @@ def fit_residual_ci(df, feats):
             out[(int(split), int(q))] = sigma
     overall_sigma = float(res['resid'].std())
     return out, overall_sigma
-
-
-def lookup_sigma(ci_table, overall_sigma, split_day, pred, pred_buckets):
-    if split_day not in pred_buckets:
-        return overall_sigma
-    cuts = pred_buckets[split_day]
-    q = int(np.searchsorted(cuts, pred))
-    q = min(max(q, 0), len(cuts))
-    return ci_table.get((split_day, q), overall_sigma)
 
 
 def train_final(df, feats):

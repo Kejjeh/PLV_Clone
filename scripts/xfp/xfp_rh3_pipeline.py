@@ -23,6 +23,9 @@ import numpy as np
 import pandas as pd
 import joblib
 
+from plv_clone.models.xfp import engine as _engine
+from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+
 warnings.filterwarnings('ignore')
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -166,35 +169,11 @@ def build_prior_table(multiyr: pd.DataFrame, years: list[int]) -> pd.DataFrame:
 
 def compute_population_means(df: pd.DataFrame, train_years: list[int],
                               spec: dict) -> dict:
-    means: dict[str, float] = {}
-    sub = _ensure_derived_denoms(df[df['year'].isin(train_years) & (df['year'] != 2020)].copy())
-    for rate_col, (denom_col, _k) in spec.items():
-        if rate_col not in sub.columns or denom_col not in sub.columns:
-            means[rate_col] = float(sub.get(rate_col, pd.Series([0])).mean(skipna=True) or 0.0)
-            continue
-        d = sub[[rate_col, denom_col]].dropna()
-        d = d[d[denom_col] > 0]
-        if d.empty:
-            means[rate_col] = float(sub[rate_col].mean(skipna=True) or 0.0)
-        else:
-            means[rate_col] = float((d[rate_col] * d[denom_col]).sum() / d[denom_col].sum())
-    return means
+    return _engine.compute_population_means(_ensure_derived_denoms(df.copy()), train_years, spec)
 
 
 def apply_shrinkage(df: pd.DataFrame, pop_means: dict, spec: dict) -> pd.DataFrame:
-    out = _ensure_derived_denoms(df.copy())
-    for rate_col, (denom_col, k) in spec.items():
-        if rate_col not in out.columns or denom_col not in out.columns:
-            mu = pop_means.get(rate_col, 0.0)
-            out[rate_col + '_sh'] = mu
-            continue
-        n = out[denom_col].astype(float)
-        obs = out[rate_col].astype(float)
-        mean = pop_means.get(rate_col, float(np.nanmean(obs) or 0.0))
-        obs_filled = obs.fillna(mean)
-        n_eff = n.fillna(0.0)
-        out[rate_col + '_sh'] = (n_eff * obs_filled + k * mean) / (n_eff + k)
-    return out
+    return _engine.apply_shrinkage(_ensure_derived_denoms(df.copy()), pop_means, spec)
 
 
 def cross_year_eval(df: pd.DataFrame, feats: list[str]):
@@ -223,33 +202,15 @@ def cross_year_eval(df: pd.DataFrame, feats: list[str]):
 
 
 def fit_residual_ci(df: pd.DataFrame, feats: list[str]):
-    """Build a residual-based CI lookup: (split_day, predicted_quartile) -> sigma.
-    Train one Ridge on all training years and compute residuals on each held-out
-    year. Stratify by split_day and predicted-bucket quartile."""
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
+    """Residual-based CI table: (split_day, predicted_quartile) -> sigma."""
     sub = df.dropna(subset=feats + [TARGET]).copy()
     sub = sub[(sub['pa_to'] >= EVAL_PA_MIN) & (sub['ros_pa'] >= ROS_PA_MIN)
               & (sub['year'] != 2020)]
-    rows = []
-    for held in TRAIN_YEARS:
-        train = sub[sub['year'] != held]; test = sub[sub['year'] == held]
-        if len(train) < 100 or len(test) < 30:
-            continue
-        pipe = Pipeline([('sc', StandardScaler()),
-                         ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
-        pipe.fit(train[feats].values, train[TARGET].values)
-        preds = pipe.predict(test[feats].values)
-        rows.append(pd.DataFrame({
-            'pred': preds,
-            'actual': test[TARGET].values,
-            'split_day': test['split_day'].values,
-        }))
-    res = pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
-    res['resid'] = res['actual'] - res['pred']
-    # Stratify by split_day x pred-quartile
-    out = {}
+    res = _engine.train_residual_table(
+        df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
+        min_train=100, min_test=30,
+    )
+    out: dict[tuple[int, int], float] = {}
     for split in sorted(res['split_day'].unique()):
         sub2 = res[res['split_day'] == split]
         qs = pd.qcut(sub2['pred'], q=4, duplicates='drop', labels=False)
@@ -258,18 +219,7 @@ def fit_residual_ci(df: pd.DataFrame, feats: list[str]):
             sigma = float(sub2.loc[ix, 'resid'].std())
             out[(int(split), int(q))] = sigma
     overall_sigma = float(res['resid'].std())
-    return out, overall_sigma, res
-
-
-def lookup_sigma(ci_table: dict, overall_sigma: float, split_day: int, pred: float,
-                 pred_buckets: dict[int, np.ndarray]) -> float:
-    """Map (split_day, pred) → sigma using stored quartile cuts."""
-    if split_day not in pred_buckets:
-        return overall_sigma
-    cuts = pred_buckets[split_day]
-    q = int(np.searchsorted(cuts, pred))
-    q = min(max(q, 0), len(cuts))
-    return ci_table.get((split_day, q), overall_sigma)
+    return out, overall_sigma
 
 
 def train_final(df: pd.DataFrame, feats: list[str]):
@@ -382,7 +332,7 @@ def main():
 
     # Confidence interval table
     print('\n--- Building residual-based CI table ---')
-    ci_table, overall_sigma, _res = fit_residual_ci(rolling, RH3_FEATS)
+    ci_table, overall_sigma = fit_residual_ci(rolling, RH3_FEATS)
     print(f'  overall sigma = {overall_sigma:.4f} FP/PA')
 
     # Train final + project 2026
