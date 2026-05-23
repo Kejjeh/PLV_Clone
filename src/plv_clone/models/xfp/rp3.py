@@ -86,6 +86,13 @@ RP3_FEATS = [
     'delta_chase', 'delta_zone',
 ]
 
+# ADR-0003 phase-4 soft warning: surface FEATS entries without a PASS
+# validation_runs record. Wrap to bypass the sklearn-noise filter above.
+from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
+with warnings.catch_warnings():
+    warnings.simplefilter("default", UserWarning)
+    _check_feats_validated(RP3_FEATS, target="rp3")
+
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
     out = df

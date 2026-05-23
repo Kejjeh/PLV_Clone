@@ -118,6 +118,15 @@ RH3_FEATS = [
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
 
+# ADR-0003 phase-4 soft warning: surface FEATS entries without a PASS
+# validation_runs record. Flips to hard assert once backfill completes.
+# Wrap in catch_warnings because the module-level filterwarnings('ignore')
+# above is for sklearn noise — our registry-gap warning should still print.
+from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
+with warnings.catch_warnings():
+    warnings.simplefilter("default", UserWarning)
+    _check_feats_validated(RH3_FEATS, target="rh3")
+
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
     out = df

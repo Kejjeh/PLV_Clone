@@ -13,6 +13,8 @@ import pytest
 
 from plv_clone.models.xfp.validated_signals import (
     ValidatedSignal,
+    check_feats_validated,
+    load_registry,
     parse_frontmatter,
 )
 
@@ -100,3 +102,60 @@ production_target: rh3
 def test_parse_frontmatter_raises_when_no_frontmatter_block():
     with pytest.raises(ValueError, match="frontmatter"):
         parse_frontmatter("just a markdown file\nno frontmatter\n", path=Path("foo.md"))
+
+
+def _write_run(directory: Path, name: str, target: str, verdict: str | None) -> None:
+    body = ["---", f"signal: {name}", "formula: a - b",
+            f"production_target: {target}", "expected_sign: +", "date: 2026-05-16"]
+    if verdict is not None:
+        body.append(f"verdict: {verdict}")
+    body.append("---\n")
+    (directory / f"{name}_2026-05-16.md").write_text("\n".join(body), encoding="utf-8")
+
+
+def test_load_registry_skips_readme_and_indexes_by_signal_name(tmp_path):
+    (tmp_path / "README.md").write_text("# index\n", encoding="utf-8")
+    _write_run(tmp_path, "feat_a", "rh3", "PASS")
+    _write_run(tmp_path, "feat_b", "rp3", "REJECTED")
+
+    registry = load_registry(tmp_path)
+
+    assert set(registry) == {"feat_a", "feat_b"}
+    assert registry["feat_a"].production_target == "rh3"
+    assert registry["feat_b"].verdict == "REJECTED"
+
+
+def test_check_feats_validated_warns_on_missing_and_mismatched(tmp_path):
+    _write_run(tmp_path, "valid_feat", "rh3", "PASS")
+    _write_run(tmp_path, "wrong_target", "rp3", "PASS")
+    _write_run(tmp_path, "not_passed", "rh3", "MARGINAL")
+    registry = load_registry(tmp_path)
+
+    with pytest.warns(UserWarning, match="rh3: 3 FEATS entries unvalidated"):
+        gaps = check_feats_validated(
+            ["valid_feat", "wrong_target", "not_passed", "missing_entirely"],
+            target="rh3",
+            registry=registry,
+        )
+
+    assert len(gaps) == 3
+    assert any("wrong_target" in g and "rp3" in g for g in gaps)
+    assert any("not_passed" in g and "MARGINAL" in g for g in gaps)
+    assert any("missing_entirely" in g for g in gaps)
+
+
+def test_check_feats_validated_returns_empty_when_all_pass(tmp_path):
+    _write_run(tmp_path, "a", "rh3", "PASS")
+    _write_run(tmp_path, "b", "rh3", "PASS")
+    registry = load_registry(tmp_path)
+
+    gaps = check_feats_validated(["a", "b"], target="rh3", registry=registry)
+
+    assert gaps == []
+
+
+def test_check_feats_validated_strict_raises(tmp_path):
+    registry = load_registry(tmp_path)  # empty dir
+
+    with pytest.raises(AssertionError, match="unvalidated"):
+        check_feats_validated(["unknown_feat"], target="rh3", registry=registry, strict=True)
