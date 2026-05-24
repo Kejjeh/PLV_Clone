@@ -42,3 +42,9 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-05-22T02:29:12.842379,2026-05-22,8,New York Ligers,Team Solomon,199.8,390.87,144.9,346.0,0.9053,,,MA_v1
 2026-05-22T18:18:25.883576,2026-05-22,8,New York Ligers,Team Solomon,199.8,378.44,144.9,327.94,0.909,,,baseline
 2026-05-22T18:18:27.100043,2026-05-22,8,New York Ligers,Team Solomon,199.8,408.48,144.9,350.74,0.9508,,,MA_v1
+2026-05-23T22:26:17.302797,2026-05-23,8,New York Ligers,Team Solomon,288.1,422.05,267.7,394.59,0.8054,,,baseline
+2026-05-23T22:26:18.701206,2026-05-23,8,New York Ligers,Team Solomon,288.1,441.34,267.7,409.92,0.8583,,,MA_v1
+2026-05-23T22:31:39.187921,2026-05-23,8,New York Ligers,Team Solomon,288.1,422.05,269.8,396.69,0.7867,,,baseline
+2026-05-23T22:31:40.836920,2026-05-23,8,New York Ligers,Team Solomon,288.1,441.34,269.8,412.02,0.8416,,,MA_v1
+2026-05-23T23:10:43.292149,2026-05-23,8,New York Ligers,Team Solomon,287.1,420.63,275.5,401.97,0.7208,,,baseline
+2026-05-23T23:10:43.839928,2026-05-23,8,New York Ligers,Team Solomon,287.1,440.11,275.5,417.33,0.7816,,,MA_v1
