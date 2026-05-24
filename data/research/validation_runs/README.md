@@ -51,8 +51,17 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | velo_x_swstr_to_sh | rp3 | REJECTED | Interaction sweep cell 1/4. Δr −0.0001 vs full RP3_FEATS; sign 4/7, holdout +0.0007. "Stuff index" product absorbed by individual avg_velo_to + swstr_pct_to_sh entries. |
+| 2026-05-24 | velo_x_delta_velo | rp3 | REJECTED | Interaction sweep cell 2/4. Δr +0.0000 vs full RP3_FEATS; sign 3/7 (chance), holdout +0.0001. delta_velo magnitude too small for product to add variance. |
+| 2026-05-24 | gs_x_prior_ip_resid | rp3 | REJECTED | Interaction sweep cell 3/4. Δr −0.0013 vs full RP3_FEATS; sign 2/7, holdout −0.0023 (2025 −0.0043). Worst of sweep — early-season GS noise amplified by prior-IP residual. prior_gs_eff already encodes durability. |
+| 2026-05-24 | xwoba_x_bb_to_sh | rp3 | REJECTED | Interaction sweep cell 4/4. Δr −0.0001 vs full RP3_FEATS; sign 3/7, holdout −0.0001. "Trouble pitcher" badness² flat noise — joint contribution already captured linearly. |
+<<<<<<< Updated upstream
 | 2026-05-24 | bat_speed_level_prior | rh3 | REJECTED — Step 2.5 sample-size | Bat-tracking began 2024; only 1 train-eligible year (2025 outcomes from 2024 prior). Same Rule 5 gate that killed `bat_speed_delta` (2026-05-16). Raw `bat_speed` IS in `statcast_{2024,2025}.parquet` but not rolled into `hitters_multiyr` cache. Re-runnable 2028+. |
 | 2026-05-24 | stuff_plus_prior | rp3 | REJECTED — Step 2.5 data unavailable | No FG Stuff+/Pitching+ cache in repo; user constraint forbids re-scrape. Closest in-repo proxy `avg_pfxz_to` already REJECTED (-0.0007), so bar for external Stuff+ is high. |
+=======
+| 2026-05-24 | stuff_plus_prior | rp3 | REJECTED — Step 2.5 data unavailable | No FG Stuff+/Pitching+ cache in repo; user constraint forbids re-scrape. Closest in-repo proxy `avg_pfxz_to` already REJECTED (-0.0007), so bar for external Stuff+ is high. |
+| 2026-05-24 | bat_speed_level_prior | rh3 | REJECTED — Step 2.5 sample-size | Bat-tracking began 2024; only 1 train-eligible year (2025 outcomes from 2024 prior). Same Rule 5 gate that killed `bat_speed_delta` (2026-05-16). Raw `bat_speed` IS in `statcast_{2024,2025}.parquet` but not rolled into `hitters_multiyr` cache. Re-runnable 2028+. |
+>>>>>>> Stashed changes
 | 2026-05-24 | park_pf_wOBA_ros | rh3 | MARGINAL | Δr +0.0014 vs full RH3_FEATS; sign 5/7 PASS, holdout 1/2, coef WRONG SIGN (-0.0062). v1 home-park-only proxy. Lift exists but coef inverted suggests RH3_FEATS already absorb park signal via rate stats; the small Δr is regularization noise. Not worth promoting; full RoS-schedule pipeline unlikely to clear +0.005. |
 | 2026-05-24 | bip_to | rh3 | REJECTED | Δr +0.0000 vs full RH3_FEATS; sign 4/7, holdout 2/2 but pooled flat. Redundant with pa_to × in_play_pct_to_sh joint. Ceiling-audit raw-count candidate. |
 | 2026-05-24 | contact_to | rh3 | MARGINAL | Δr +0.0001 vs full RH3_FEATS; sign 5/7, holdout 2/2, coef sign OK. Best of the 3-cell raw-count sweep but two orders of magnitude below +0.005 gate. |
