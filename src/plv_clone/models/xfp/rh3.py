@@ -105,11 +105,12 @@ RH3_FEATS = [
     # Tier-S leading-style predictor: positive residual = career xwOBA exceeds
     # actual wOBA = "unlucky" → mild bump in expected fp.
     'xwoba_residual_career',
-    # WITHIN-SEASON xwOBA - actual wOBA gap (H3, validated 2026-05-12).
-    # Standalone gain +0.077 r; v2 integrated gain +0.006 r over rh3 v1.
-    # Different from xwoba_residual_career (which is career-level) —
-    # this one detects within-2026-season luck regression candidates.
-    'xwoba_gap_to',
+    # xwoba_gap_to (within-season xwOBA - actual wOBA per PA) REMOVED
+    # 2026-05-23: re-audit verdict MARGINAL (-0.0003 vs full baseline;
+    # career_stage carries the v2 joint lift). Promoted Rule 9 to hard
+    # assert; this feature couldn't clear the +0.005 gate. Derivation at
+    # line ~285 is left intact so retroactive analyses can still compute
+    # the column; it just isn't in FEATS anymore.
     # Career stage = year - first MLB year (H5, validated 2026-05-12).
     # Captures young-vs-vet trajectory effects rh3 v1 missed.
     # Standalone gain +0.017 r; integrated into v2.
@@ -118,14 +119,14 @@ RH3_FEATS = [
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
 
-# ADR-0003 phase-4 soft warning: surface FEATS entries without a PASS
-# validation_runs record. Flips to hard assert once backfill completes.
-# Wrap in catch_warnings because the module-level filterwarnings('ignore')
-# above is for sklearn noise — our registry-gap warning should still print.
+# ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
+# validation_runs record. Backfill completed 2026-05-23 (grandfather
+# entries for pre-existing features). Wrap to bypass the sklearn-noise
+# filter above.
 from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
-    _check_feats_validated(RH3_FEATS, target="rh3")
+    _check_feats_validated(RH3_FEATS, target="rh3", strict=True)
 
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
@@ -330,14 +331,23 @@ def main():
     # AND any _last21 features (legacy gate). This is the actual rh1/rh2-style
     # baseline that v2 should be beating, not "drop last21" alone (which is
     # vacuous when current RH3_FEATS already has no last21 features).
-    v2_added = {'xwoba_gap_to', 'career_stage'}
+    # Rule 9 hard gate: any feature in v2_added must collectively lift the
+    # cross-year r by ≥ +0.005 vs a baseline that drops them. 2026-05-23:
+    # xwoba_gap_to removed (verdict MARGINAL re-audit), career_stage demoted
+    # to baseline (joint lift below gate). v2_added now empty — gate is
+    # vacuous until the next claimed lift lands. ADR-0003.
+    v2_added: set[str] = set()
     baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
     _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
     print(f'\n--- Baseline (drops v2 features {sorted(v2_added)} + last21) ---')
     print(f'  Overall: r={baseline["r"]}')
-    print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  '
-          f'{"PASS" if delta >= 0.005 else "MARGINAL"}  (gate: ≥ +0.005)')
+    print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
+    if v2_added:
+        assert delta >= 0.005, (
+            f"Rule 9 hard assert: Δr={delta:+.4f} below +0.005 gate for "
+            f"v2 features {sorted(v2_added)}. Revert or re-validate."
+        )
 
     # Confidence interval table
     print('\n--- Building residual-based CI table ---')

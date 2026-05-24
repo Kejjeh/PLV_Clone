@@ -71,12 +71,12 @@ NEW_FEATS = [
 ]
 FEATS_RPRS2 = BASE_FEATS + NEW_FEATS
 
-# ADR-0003 phase-4 soft warning: surface FEATS entries without a PASS
-# validation_runs record. Wrap to bypass the sklearn-noise filter above.
+# ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
+# validation_runs record. Backfill completed 2026-05-23.
 from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
-    _check_feats_validated(FEATS_RPRS2, target="rprs2")
+    _check_feats_validated(FEATS_RPRS2, target="rprs2", strict=True)
 
 
 def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None):

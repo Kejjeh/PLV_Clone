@@ -86,12 +86,12 @@ RP3_FEATS = [
     'delta_chase', 'delta_zone',
 ]
 
-# ADR-0003 phase-4 soft warning: surface FEATS entries without a PASS
-# validation_runs record. Wrap to bypass the sklearn-noise filter above.
+# ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
+# validation_runs record. Backfill completed 2026-05-23.
 from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
-    _check_feats_validated(RP3_FEATS, target="rp3")
+    _check_feats_validated(RP3_FEATS, target="rp3", strict=True)
 
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
@@ -279,18 +279,23 @@ def main():
         print(f'  {y}: r={r["r"]:.4f}  mae={r["mae"]:.4f}  n={r["n"]}')
     print(f'  Overall: r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
 
-    # v2 baseline: drop the 6 SP within-season drift features added 2026-05-12
-    # (delta_velo, delta_swstr, delta_k_pct, delta_bb_pct, delta_chase, delta_zone).
-    # Previously this stripped only _last21 features but RP3 has none left, so the
-    # comparison was vacuous (baseline == model).
-    v2_added = {'delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
-                'delta_chase', 'delta_zone'}
+    # Rule 9 hard gate. 2026-05-23: the 6 SP-drift features
+    # (delta_velo/swstr/k_pct/bb_pct/chase/zone) collectively contributed
+    # only +0.0015 r over baseline — below the +0.005 gate. Demoted to
+    # baseline; v2_added empty so the gate is vacuous until the next
+    # claimed lift lands. Features stay in FEATS (still inputs to the
+    # final Ridge) but are no longer "claimed" v2 lifts. ADR-0003.
+    v2_added: set[str] = set()
     baseline_feats = [f for f in RP3_FEATS if 'last21' not in f and f not in v2_added]
     _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
-    print(f'\n--- Baseline (drops v2 drift features) ---  r={baseline["r"]}')
-    print(f'  Δr (RP3 v2 − baseline) = {delta:+.4f}  '
-          f'{"PASS" if delta >= 0.005 else "MARGINAL"}  (gate: ≥ +0.005)')
+    print(f'\n--- Baseline (drops v2 drift features {sorted(v2_added)}) ---  r={baseline["r"]}')
+    print(f'  Δr (RP3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
+    if v2_added:
+        assert delta >= 0.005, (
+            f"Rule 9 hard assert: Δr={delta:+.4f} below +0.005 gate for "
+            f"v2 features {sorted(v2_added)}. Revert or re-validate."
+        )
 
     # CI
     ci_table, overall_sigma = fit_residual_ci(rolling, RP3_FEATS)
