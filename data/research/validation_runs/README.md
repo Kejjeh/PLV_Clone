@@ -51,6 +51,7 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | park_pf_HR_ros | rp3 | MARGINAL | Lift +0.0017 vs full RP3_FEATS (24 feats); sign 6/7 PASS, holdout 2024-25 avg -0.0013 FAIL (2025 alone -0.0059), coef -0.1845 OK. v1 SP-home-park-only proxy. Directionally healthy (6/7 years, correct sign) but pooled lift below +0.005 gate and 2025 reversal kills holdout. Stuff/command rates already absorb most park signal. Full RoS rotation-weighted version might clear gate; not worth investment given marginal headroom. |
 | 2026-05-24 | velo_x_swstr_to_sh | rp3 | REJECTED | Interaction sweep cell 1/4. Δr −0.0001 vs full RP3_FEATS; sign 4/7, holdout +0.0007. "Stuff index" product absorbed by individual avg_velo_to + swstr_pct_to_sh entries. |
 | 2026-05-24 | velo_x_delta_velo | rp3 | REJECTED | Interaction sweep cell 2/4. Δr +0.0000 vs full RP3_FEATS; sign 3/7 (chance), holdout +0.0001. delta_velo magnitude too small for product to add variance. |
 | 2026-05-24 | gs_x_prior_ip_resid | rp3 | REJECTED | Interaction sweep cell 3/4. Δr −0.0013 vs full RP3_FEATS; sign 2/7, holdout −0.0023 (2025 −0.0043). Worst of sweep — early-season GS noise amplified by prior-IP residual. prior_gs_eff already encodes durability. |
