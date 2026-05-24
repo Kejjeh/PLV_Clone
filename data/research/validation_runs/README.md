@@ -51,6 +51,10 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | prior_pa_eff_x_pa_to | rh3 | MARGINAL | Δr +0.0008 (best of rh3 interaction 4-cell sweep); sign 5/7, holdout 1/2, WRONG-sign coef (expected +, got −0.0117), and every per-split_day Δr negative. Pooled positive looks like averaging artifact. Do not promote. |
+| 2026-05-24 | lineup_spot_x_split_day | rh3 | REJECTED | Δr −0.0001; sign 5/7 but 2024 disaster (−0.0029) drags pooled negative. split_day 30 lift (+0.0027) reaffirms 2026-05-23 lineup_spot finding but linear product cannot encode the mid-season decay — needs piecewise framing. |
+| 2026-05-24 | bb_pct_x_xwoba_per_pa_to_sh | rh3 | REJECTED | Δr +0.0000; sign 3/7; flat at every split_day. xwOBA already weights BB so discipline × power interaction is collinear with marginal. |
+| 2026-05-24 | pa_to_x_hr_per_pa_to_sh | rh3 | REJECTED | Δr −0.0002; sign 4/7; negative at every split_day. Volume × HR-rate redundant with the two marginals already in RH3_FEATS. |
 | 2026-05-24 | bip_to | rh3 | REJECTED | Δr +0.0000 vs full RH3_FEATS; sign 4/7, holdout 2/2 but pooled flat. Redundant with pa_to × in_play_pct_to_sh joint. Ceiling-audit raw-count candidate. |
 | 2026-05-24 | contact_to | rh3 | MARGINAL | Δr +0.0001 vs full RH3_FEATS; sign 5/7, holdout 2/2, coef sign OK. Best of the 3-cell raw-count sweep but two orders of magnitude below +0.005 gate. |
 | 2026-05-24 | hr_to | rh3 | REJECTED | Δr -0.0001 vs full RH3_FEATS; sign 3/7, holdout 0/2 (wrong direction on the years that matter). Redundant with hr_per_pa_to_sh × pa_to. |
