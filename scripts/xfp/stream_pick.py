@@ -25,8 +25,17 @@ from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[2]
 load_dotenv(ROOT / '.env')
-sys.path.insert(0, str(ROOT / 'app'))
-from espn_connector import get_free_agents
+sys.path.insert(0, str(ROOT))
+
+from plv_clone.league_state import LeagueState
+
+_ls = LeagueState()
+
+
+def get_free_agents(position=None, size=None):
+    """Shim preserving the pre-refactor API. ``size`` ignored —
+    LeagueState.available_fa bakes size=2000 internally per ADR-0004."""
+    return _ls.available_fa(position=position)
 
 
 def _strip(s):

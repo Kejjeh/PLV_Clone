@@ -88,7 +88,6 @@ def build_ytd_lookup() -> dict:
             rp['fp_ytd'] = rp['fp_per_start_to'].fillna(0) * rp['gs_to'].fillna(0)
         else:
             rp['fp_ytd'] = 0
-        from app import espn_connector as ec
         # Need mlb_id -> name; use rh3/rp3 lookup
         rp_proj = pd.read_csv(OUT / 'xfp_rp3_projections.csv')[['pitcher', 'player_name']]
         rp_proj['nk'] = rp_proj['player_name'].map(_norm)
@@ -123,10 +122,11 @@ def main():
                     help='Minimum RoS FP gain to surface (default +5.0)')
     args = ap.parse_args()
 
-    from app import espn_connector as ec
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
     h_lookup, p_lookup = load_projections()
     ytd_lookup = build_ytd_lookup()
-    league = ec._get_league()
+    league = ls._get_league()
 
     team_players = {}
     team_standing = {}

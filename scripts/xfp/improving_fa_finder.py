@@ -41,13 +41,17 @@ def main():
     print(f'Universe with trend data (for info column only): {len(name_to_skill)}')
 
     # Pull ESPN free agents
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     rostered = set()
     for t in league.teams:
         for p in t.roster:
             rostered.add(_norm(p.name))
-    fas = league.free_agents(size=500)
+    # NOTE: size=500 was the pre-refactor cap. LeagueState bakes size=2000
+    # internally per ADR-0004 — call the espn-api League directly here
+    # because downstream code needs raw player objects (eligibleSlots, etc.).
+    fas = league.free_agents(size=2000)
 
     # Attach rh3 projection (the validated cross-year r=0.62 ranker)
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')

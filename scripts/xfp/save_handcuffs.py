@@ -67,8 +67,9 @@ def fetch_team_saves(team_id: int, days: int = 21) -> list[dict]:
 
 
 def main():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     rostered = {}  # name → team_name
     for t in league.teams:
         for p in t.roster:

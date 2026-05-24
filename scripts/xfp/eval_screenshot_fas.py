@@ -82,9 +82,13 @@ def main():
     drift = pd.read_csv(OUT / 'skill_drift_2026.csv')
     drift['_nk'] = drift['name'].map(_norm)
 
-    from app import espn_connector as ec
-    league = ec._get_league()
-    fas = league.free_agents(size=1500)
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
+    # NOTE: size=1500 was the pre-refactor cap. LeagueState bakes size=2000
+    # internally per ADR-0004 — call espn-api League directly because
+    # downstream code needs raw player objects (eligibleSlots, percent_owned).
+    fas = league.free_agents(size=2000)
     fa_by_nk = {_norm(f.name): f for f in fas}
     rostered = set()
     for t in league.teams:
