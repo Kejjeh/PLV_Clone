@@ -382,17 +382,21 @@ HITTER_POSITIONS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH', '
 
 
 def get_my_hitter_names() -> list[str]:
-    from app.espn_connector import get_my_roster_with_injuries
-    df = get_my_roster_with_injuries()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    df = ls.my_roster_with_injuries()
     hitters = df[(df['position'].isin(HITTER_POSITIONS)) & (~df['injured'])]
     return hitters['player_name'].tolist()
 
 
 def get_fa_hitter_names(min_2026_fp: float, hitters_multiyr: pd.DataFrame) -> list[str]:
-    from app.espn_connector import _get_league
-    league = _get_league()
-    fas = league.free_agents(size=2000)
-    fa_hitters = [p.name for p in fas if (p.position or '?') in HITTER_POSITIONS]
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    fa_df = ls.available_fa()
+    fa_hitters = [
+        n for n, pos in zip(fa_df['player_name'], fa_df['position'])
+        if (pos or '?') in HITTER_POSITIONS
+    ]
     h = hitters_multiyr.copy()
     h['_nk'] = h['player_name'].map(_norm)
     cur_yr = h[h['year'] == 2026]

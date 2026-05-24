@@ -61,9 +61,10 @@ def _norm(s):
 
 
 def main():
-    from app import espn_connector as ec
+    from plv_clone.league_state import LeagueState
     from scripts.xfp.opponent_lineup_overlap import load_projections
-    league = ec._get_league()
+    ls = LeagueState()
+    league = ls._get_league()
 
     # Load projections — hitters and pitchers
     rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')

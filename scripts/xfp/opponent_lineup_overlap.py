@@ -231,9 +231,10 @@ def collapse_to_groups(slot_assignment: dict) -> dict:
 
 
 def main():
-    from app import espn_connector as ec
+    from plv_clone.league_state import LeagueState
     h_lookup, p_lookup = load_projections()
-    league = ec._get_league()
+    ls = LeagueState()
+    league = ls._get_league()
 
     # Build per-team player lists from league teams (use eligibleSlots)
     team_data = {}

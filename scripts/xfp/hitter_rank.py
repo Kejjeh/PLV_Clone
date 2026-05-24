@@ -123,8 +123,9 @@ def main():
     print(f'  FA POOL — top hitters by validated rh3 RoS')
     print(f'{"="*100}\n')
 
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     rostered = set()
     for t in league.teams:
         for p in t.roster:

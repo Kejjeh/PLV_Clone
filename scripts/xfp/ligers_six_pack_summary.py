@@ -18,8 +18,9 @@ sys.path.insert(0, '.')
 ROOT = Path('c:/Users/Joshua/plv_clone')
 OUT = ROOT / 'data' / 'outputs'
 
-from app import espn_connector as ec
-teams = ec.get_all_teams()
+from plv_clone.league_state import LeagueState
+ls = LeagueState()
+teams = ls.all_teams()
 ligers = teams[teams['team_name'] == 'New York Ligers']
 hit_names = ligers[~ligers['position'].isin(['SP', 'RP', 'P'])]['player_name'].tolist()
 sp_names = ligers[ligers['position'].isin(['SP', 'P'])]['player_name'].tolist()

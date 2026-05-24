@@ -354,18 +354,19 @@ def ros_expectation(c: dict) -> dict:
 
 # ─── Roster / FA scope helpers ────────────────────────────────────────
 def get_my_sp_names() -> list[str]:
-    from app.espn_connector import get_my_roster_with_injuries
-    df = get_my_roster_with_injuries()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    df = ls.my_roster_with_injuries()
     sps = df[(df['position'] == 'SP') & (~df['injured'])]
     return sps['player_name'].tolist()
 
 
 def get_fa_sp_names(min_2026_fp: float, sp_multiyr: pd.DataFrame) -> list[str]:
     """Return FA SP names whose 2026 fp_per_start ≥ min_2026_fp."""
-    from app.espn_connector import _get_league
-    league = _get_league()
-    fas = league.free_agents(size=2000)
-    fa_sps = [p.name for p in fas if (p.position or '?') == 'SP']
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    fa_df = ls.available_fa(position='SP')
+    fa_sps = fa_df['player_name'].tolist()
     # Filter by 2026 fp/start floor via sp_multiyr
     sp = sp_multiyr.copy()
     sp['_nk'] = sp['player_name'].map(_norm)

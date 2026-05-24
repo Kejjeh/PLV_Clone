@@ -120,7 +120,7 @@ def collect_player_info():
 
 
 def main():
-    from app import espn_connector as ec
+    from plv_clone.league_state import LeagueState
     from scripts.xfp.opponent_lineup_overlap import (
         SLOT_FILL_ORDER, SLOT_DISPLAY_GROUP, DISPLAY_ORDER,
         SP_REMAINING_STARTS, HEALTHY_SP_STARTS_PER_WEEK,
@@ -129,7 +129,8 @@ def main():
     h_lookup, p_lookup = load_projections()
     info_lookup = collect_player_info()
 
-    league = ec._get_league()
+    ls = LeagueState()
+    league = ls._get_league()
     my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
 
     # Capture per-player IL/active status from live ESPN

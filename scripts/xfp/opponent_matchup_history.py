@@ -136,8 +136,9 @@ def update_notes(summary: dict) -> None:
 
 
 def main():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     print(f'Pulling {league.year} season matchups for {MY_TEAM_NAME}...')
     rows = fetch_matchup_results(league)
     print(f'  {len(rows)} completed matchups in {league.year}')

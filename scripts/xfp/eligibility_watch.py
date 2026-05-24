@@ -28,8 +28,9 @@ SNAPS = ROOT / 'data' / 'research' / 'eligibility_snapshots'
 
 def main():
     SNAPS.mkdir(parents=True, exist_ok=True)
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
 
     today_snap = {}
     for t in league.teams:

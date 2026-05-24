@@ -132,8 +132,9 @@ def main():
     print(f'  FA POOL — TOP SP-eligible arms')
     print(f'{"="*90}\n')
 
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     rostered = set()
     for t in league.teams:
         for p in t.roster:
