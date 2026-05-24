@@ -72,8 +72,9 @@ def fetch_team_schedule(team_abbr_to_id: dict, days_ahead: int = 7) -> pd.DataFr
 
 def main():
     OUT.mkdir(parents=True, exist_ok=True)
-    from app import espn_connector as ec
-    teams = ec.get_all_teams()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    teams = ls.all_teams()
     ligers = teams[teams['team_name'] == 'New York Ligers']
 
     # Load supporting data

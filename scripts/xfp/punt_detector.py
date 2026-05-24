@@ -30,8 +30,9 @@ WEEKLY_SP_CAP = 10  # BrownU starts/week cap
 
 
 def main():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
 
     # Find current matchup

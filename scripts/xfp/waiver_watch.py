@@ -92,8 +92,9 @@ def main():
     ap.add_argument('--days', type=int, default=60, help='Lookback window (default 60)')
     args = ap.parse_args()
 
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     val_lookup = build_player_value_lookup()
 
     # Snapshot of CURRENT rosters so we can tell "still held" vs "rented" pickups

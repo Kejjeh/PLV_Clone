@@ -71,8 +71,9 @@ def main():
     print(f'2-start weeks coming up: {len(two_start)} pitcher-weeks')
 
     # Filter to Ligers SPs + top-ros FAs
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
     my_pids = {p.playerId: p.name for p in my_team.roster}
     # espn playerId is ESPN's, not MLB's. To match, build name lookup.

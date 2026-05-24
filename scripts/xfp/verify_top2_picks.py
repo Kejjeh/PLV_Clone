@@ -29,8 +29,9 @@ def _norm(s):
 
 
 def main():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    ls = LeagueState()
+    league = ls._get_league()
 
     # 1. Dual-pool check: in 1500-deep FA pool + NOT on any roster
     print('=== Step 1: ESPN dual-pool verification ===')
@@ -39,7 +40,10 @@ def main():
         for p in t.roster:
             rostered[_norm(p.name)] = (t.team_name, p.proTeam)
 
-    fas = league.free_agents(size=1500)
+    # NOTE: size=1500 was the pre-refactor cap. LeagueState bakes size=2000
+    # internally per ADR-0004 — call espn-api League directly because
+    # downstream code needs raw player objects (eligibleSlots, percent_owned).
+    fas = league.free_agents(size=2000)
     fa_lookup = {_norm(p.name): p for p in fas}
 
     for target_name in ['Ivan Herrera', 'Max Muncy']:
