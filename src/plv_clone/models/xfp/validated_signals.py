@@ -25,11 +25,21 @@ _FRONTMATTER_RE = re.compile(r"\A---\n(.*?)\n---", re.DOTALL)
 class ValidatedSignal:
     name: str
     formula: str
-    production_target: str
+    production_targets: tuple[str, ...]  # frontmatter can list multiple, comma-separated
     expected_sign: str
     validation_date: date
     validation_run_path: Path
     verdict: str | None = None
+
+    @property
+    def production_target(self) -> str:
+        """Back-compat single-target accessor; raises if multi-target."""
+        if len(self.production_targets) != 1:
+            raise ValueError(
+                f"{self.name}: production_targets={self.production_targets!r}; "
+                "use .production_targets (plural) for multi-target signals"
+            )
+        return self.production_targets[0]
 
 
 def parse_frontmatter(text: str, *, path: Path) -> ValidatedSignal:
@@ -46,10 +56,11 @@ def parse_frontmatter(text: str, *, path: Path) -> ValidatedSignal:
     missing = [k for k in _REQUIRED if k not in fields]
     if missing:
         raise ValueError(f"{path}: missing required field(s): {', '.join(missing)}")
+    targets = tuple(t.strip() for t in fields["production_target"].split(",") if t.strip())
     return ValidatedSignal(
         name=fields["signal"],
         formula=fields["formula"],
-        production_target=fields["production_target"],
+        production_targets=targets,
         expected_sign=fields["expected_sign"],
         validation_date=date.fromisoformat(fields["date"]),
         validation_run_path=path,
@@ -95,9 +106,9 @@ def check_feats_validated(
         if sig is None:
             gaps.append(f"{name}: no validation_run record")
             continue
-        if sig.production_target != target:
+        if target not in sig.production_targets:
             gaps.append(
-                f"{name}: registered for {sig.production_target!r}, FEATS says {target!r}"
+                f"{name}: registered for {sig.production_targets!r}, FEATS says {target!r}"
             )
             continue
         if sig.verdict != "PASS":

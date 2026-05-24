@@ -36,7 +36,7 @@ def test_parse_frontmatter_extracts_minimal_record():
     assert sig == ValidatedSignal(
         name="xwoba_gap_to",
         formula="xwoba_on_contact_to - (woba_v_sum_to / woba_d_sum_to)",
-        production_target="rh3",
+        production_targets=("rh3",),
         expected_sign="+",
         validation_date=date(2026, 5, 16),
         validation_run_path=Path("xwoba_gap_to_2026-05-16.md"),
@@ -66,7 +66,7 @@ purpose: Test whether the +20 FP effect generalizes
     sig = parse_frontmatter(text, path=Path("bat_speed_delta_2026-05-16.md"))
 
     assert sig.name == "bat_speed_delta"
-    assert sig.production_target == "rh3"
+    assert sig.production_targets == ("rh3",)
 
 
 def test_parse_frontmatter_accepts_verdict_when_present():
@@ -121,7 +121,7 @@ def test_load_registry_skips_readme_and_indexes_by_signal_name(tmp_path):
     registry = load_registry(tmp_path)
 
     assert set(registry) == {"feat_a", "feat_b"}
-    assert registry["feat_a"].production_target == "rh3"
+    assert registry["feat_a"].production_targets == ("rh3",)
     assert registry["feat_b"].verdict == "REJECTED"
 
 
@@ -139,7 +139,7 @@ def test_check_feats_validated_warns_on_missing_and_mismatched(tmp_path):
         )
 
     assert len(gaps) == 3
-    assert any("wrong_target" in g and "rp3" in g for g in gaps)
+    assert any("wrong_target" in g and "'rp3'" in g for g in gaps)
     assert any("not_passed" in g and "MARGINAL" in g for g in gaps)
     assert any("missing_entirely" in g for g in gaps)
 
@@ -159,3 +159,34 @@ def test_check_feats_validated_strict_raises(tmp_path):
 
     with pytest.raises(AssertionError, match="unvalidated"):
         check_feats_validated(["unknown_feat"], target="rh3", registry=registry, strict=True)
+
+
+def test_parse_frontmatter_accepts_comma_separated_targets():
+    """Shared features (e.g. k_pct_to_sh used by rh3 + rp3) carry a comma-separated production_target."""
+    text = """\
+---
+signal: k_pct_to_sh
+formula: k/pa season-to-date, denom-shrunk
+production_target: rh3, rp3
+expected_sign: -
+date: 2026-05-23
+verdict: PASS
+---
+"""
+
+    sig = parse_frontmatter(text, path=Path("k_pct_to_sh_2026-05-23.md"))
+
+    assert sig.production_targets == ("rh3", "rp3")
+
+
+def test_check_feats_validated_accepts_signal_registered_for_either_target(tmp_path):
+    """A signal with production_targets=(rh3, rp3) clears the check for either target."""
+    _write_run(tmp_path, "shared", "rh3, rp3", "PASS")
+    registry = load_registry(tmp_path)
+
+    assert check_feats_validated(["shared"], target="rh3", registry=registry) == []
+    assert check_feats_validated(["shared"], target="rp3", registry=registry) == []
+    # But not for a third target
+    with pytest.warns(UserWarning):
+        gaps = check_feats_validated(["shared"], target="rprs2", registry=registry)
+    assert any("rprs2" in g for g in gaps)
