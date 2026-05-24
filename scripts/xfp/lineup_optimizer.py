@@ -90,8 +90,8 @@ def fetch_week_schedule(days_ahead: int = 7) -> pd.DataFrame:
 
 
 def main():
-    from app import espn_connector as ec
-    teams = ec.get_all_teams()
+    from plv_clone.league_state import LeagueState
+    teams = LeagueState().all_teams()
     ligers = teams[teams['team_name'] == 'New York Ligers']
     sps = ligers[ligers['position'].isin(['SP', 'P'])][['player_name', 'pro_team']]
     print(f'Ligers SPs: {len(sps)}')

@@ -36,8 +36,8 @@ def _period_closed(period_first_snapshot_date: pd.Timestamp, today: pd.Timestamp
 
 def _fetch_period_finals(period: int, ligers_team_id: int | None = None):
     """Return (my_final, opp_final) for the given period, or (None, None)."""
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
     try:
         box_scores = league.box_scores(matchup_period=period)
     except Exception as e:

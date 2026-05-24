@@ -198,8 +198,8 @@ def main():
         target_ids = set(rh['batter'].astype(int))
         print(f'Running league-wide on {len(target_ids)} hitters')
     else:
-        from app import espn_connector as ec
-        league = ec._get_league()
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
         my_names = {p.name for p in my_team.roster}
         ligers_rows = rh[rh['player_name'].isin(my_names)]

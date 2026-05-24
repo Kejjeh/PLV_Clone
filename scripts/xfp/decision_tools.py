@@ -66,8 +66,8 @@ def parse_dashboard():
 
 def get_free_agents_with_model(pitchers, hitters, relievers):
     """Pull ESPN FAs and join to model records by name."""
-    from espn_connector import get_free_agents
-    fa = get_free_agents(size=400)
+    from plv_clone.league_state import LeagueState
+    fa = LeagueState().available_fa()
     p_by = {name_key(p['name']): p for p in pitchers}
     h_by = {name_key(h['name']): h for h in hitters}
     r_by = {name_key(r['name']): r for r in relievers}

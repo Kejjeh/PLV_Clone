@@ -55,8 +55,9 @@ def get_scope_player_ids() -> tuple[set[int], set[int], dict]:
     try:
         import sys
         sys.path.insert(0, str(ROOT))
-        from app import espn_connector as ec
-        teams = ec.get_all_teams()
+        from plv_clone.league_state import LeagueState
+        ls = LeagueState()
+        teams = ls.all_teams()
         espn_names = set(_norm(n) for n in teams['player_name'].dropna())
     except Exception as e:
         print(f'  ESPN unavailable: {e}')

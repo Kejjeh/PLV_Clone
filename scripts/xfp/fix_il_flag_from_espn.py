@@ -49,8 +49,8 @@ def main():
     rp3['original_is_il'] = rp3['is_on_il_at_split'].copy()
 
     # Build ESPN injury map for all 2026 pitchers
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
 
     # Build comprehensive injury map across rostered + FA pool
     injury_map = {}  # nk -> (espn_status, espn_lineup_slot, on_team)
