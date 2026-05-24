@@ -51,6 +51,7 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | rh3_opportunity_bundle | rh3 | MARGINAL | Joint 3-feat bundle (pa_per_started_game_to + lineup_spot_to*split_day + park_pf_wOBA_ros) Δr +0.0036 vs full RH3_FEATS; sign 5/7 PASS, holdout 1/2. Joint fit UNDERSHOT sum-of-marginals (+0.0046) by −0.0010 → collinearity hurts, doesn't help. Park coef wrong-sign (-0.003) in joint fit confirms venue feat is fighting career_stage/prior. Volume (pa_per_started_game_to, +0.015) is the load-bearing positive component. |
 | 2026-05-24 | bip_to | rh3 | REJECTED | Δr +0.0000 vs full RH3_FEATS; sign 4/7, holdout 2/2 but pooled flat. Redundant with pa_to × in_play_pct_to_sh joint. Ceiling-audit raw-count candidate. |
 | 2026-05-24 | contact_to | rh3 | MARGINAL | Δr +0.0001 vs full RH3_FEATS; sign 5/7, holdout 2/2, coef sign OK. Best of the 3-cell raw-count sweep but two orders of magnitude below +0.005 gate. |
 | 2026-05-24 | hr_to | rh3 | REJECTED | Δr -0.0001 vs full RH3_FEATS; sign 3/7, holdout 0/2 (wrong direction on the years that matter). Redundant with hr_per_pa_to_sh × pa_to. |
