@@ -80,8 +80,8 @@ def _fetch_json(url):
 
 
 def get_matchup():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
     period = league.currentMatchupPeriod
     for bs in league.box_scores(matchup_period=period):
         if bs.home_team and 'Ligers' in bs.home_team.team_name:
@@ -300,7 +300,8 @@ def load_il_returns(mu):
     cache return_date by player_id.
     """
     try:
-        from app.espn_connector import get_injury_details
+        from plv_clone.league_state import LeagueState as _LS_inj
+        get_injury_details = _LS_inj().injury_details
     except Exception:
         return {}
     il_ids = []
@@ -922,8 +923,8 @@ def render_playoff_simulation():
 def render_position_competition(rh3_map):
     """For each position, top hot/cold movers among FAs + Ligers."""
     try:
-        from app import espn_connector as ec
-        league = ec._get_league()
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
         rh3['nk'] = rh3['player_name'].map(_norm)
         # for each position, top 5 by RoS league-wide
@@ -972,8 +973,8 @@ def render_injury_alerts(my_lineup):
 def render_power_rankings():
     """League-wide team rankings by total RoS projection."""
     try:
-        from app import espn_connector as ec
-        league = ec._get_league()
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
         rh3['nk'] = rh3['player_name'].map(_norm)
         rh3_ros = dict(zip(rh3['nk'], rh3['expected_total_fp_remaining'].fillna(0)))
@@ -1020,8 +1021,8 @@ def render_power_rankings():
 def render_drop_pickup_suggestions(my_lineup, rh3_map):
     """Find your lowest-RoS Ligers + matching FA upgrades."""
     try:
-        from app import espn_connector as ec
-        league = ec._get_league()
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         rostered = set()
         for t in league.teams:
             for p in t.roster:
@@ -1087,8 +1088,8 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
 def render_2start_gems():
     """League-wide 2-start SP gems available on waivers."""
     try:
-        from app import espn_connector as ec
-        league = ec._get_league()
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         rostered = set()
         for t in league.teams:
             for p in t.roster:
