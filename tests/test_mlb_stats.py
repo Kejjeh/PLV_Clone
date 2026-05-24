@@ -8,7 +8,8 @@ from __future__ import annotations
 
 from datetime import date
 
-from plv_clone.mlb_stats import predict_rotation_starts
+from plv_clone.cap_math import WeekProbables
+from plv_clone.mlb_stats import fetch_week_probables, predict_rotation_starts, resolve_mlbam
 
 
 def test_predicts_next_start_at_gap_after_last_actual():
@@ -77,3 +78,127 @@ def test_gap_clamps_to_four_when_prior_starts_close():
     )
 
     assert result == [(date(2026, 5, 24), "NYY")]
+
+
+# ---- HTTP-wrapper tests with injected transport ------------------------------
+
+class _FakeResponse:
+    def __init__(self, payload):
+        self._payload = payload
+    def json(self):
+        return self._payload
+    @property
+    def status_code(self):
+        return 200
+
+
+def _make_http_get(routes):
+    """Build a fake http_get that dispatches by URL substring -> payload."""
+    def _http_get(url, **kwargs):
+        for needle, payload in routes.items():
+            if needle in url:
+                return _FakeResponse(payload)
+        raise AssertionError(f"unexpected URL: {url}")
+    return _http_get
+
+
+def test_resolve_mlbam_returns_name_to_pitcher_id_map():
+    routes = {
+        "names=Hunter%20Brown": {"people": [
+            {"id": 686613, "primaryPosition": {"abbreviation": "P"}, "fullName": "Hunter Brown"},
+        ]},
+        "names=Bobby%20Witt": {"people": [
+            {"id": 677951, "primaryPosition": {"abbreviation": "SS"}, "fullName": "Bobby Witt Jr."},
+        ]},
+    }
+
+    result = resolve_mlbam(["Hunter Brown", "Bobby Witt"], http_get=_make_http_get(routes))
+
+    # Hunter Brown is a P -> picks 686613. Bobby Witt is an SS -> still picks first match.
+    assert result == {"Hunter Brown": 686613, "Bobby Witt": 677951}
+
+
+def test_resolve_mlbam_omits_names_with_no_match():
+    routes = {"names=Ghost%20Player": {"people": []}}
+
+    result = resolve_mlbam(["Ghost Player"], http_get=_make_http_get(routes))
+
+    assert result == {}
+
+
+def test_fetch_week_probables_returns_confirmed_starts_matching_pitcher_ids():
+    week_start = date(2026, 5, 22)
+    week_end = date(2026, 5, 28)
+    schedule_payload = {
+        "dates": [{"games": [
+            {
+                "gameDate": "2026-05-24T19:00:00Z",
+                "teams": {
+                    "home": {"team": {"id": 117, "abbreviation": "HOU"},
+                              "probablePitcher": {"id": 686613, "fullName": "Hunter Brown"}},
+                    "away": {"team": {"id": 110, "abbreviation": "BAL"},
+                              "probablePitcher": {"id": 999999, "fullName": "Not Tracked"}},
+                },
+            },
+        ]}]
+    }
+    # Empty gamelog for our pitcher -> no rotation-gap predictions added.
+    gamelog_payload = {"stats": [{"splits": []}]}
+
+    routes = {
+        "schedule?sportId=1": schedule_payload,
+        "people/686613/stats": gamelog_payload,
+    }
+
+    result = fetch_week_probables(
+        week_start=week_start, week_end=week_end,
+        pitcher_ids=[686613],
+        http_get=_make_http_get(routes),
+    )
+
+    assert isinstance(result, WeekProbables)
+    assert result.starts == {(686613, date(2026, 5, 24)): "BAL"}
+
+
+def test_fetch_week_probables_folds_rotation_gap_predictions_into_confirmed():
+    """Bug B integration: pitcher confirmed Mon + 5-day gap gamelog -> predicted Sat too."""
+    week_start = date(2026, 5, 18)
+    week_end = date(2026, 5, 24)
+    schedule_payload = {"dates": [{"games": [
+        # Mon confirmed for our pitcher (HOU home vs BAL)
+        {
+            "gameDate": "2026-05-18T19:00:00Z",
+            "teams": {
+                "home": {"team": {"id": 117, "abbreviation": "HOU"},
+                          "probablePitcher": {"id": 686613, "fullName": "Hunter Brown"}},
+                "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+            },
+        },
+        # Sat HOU plays NYY — no probable listed; rotation-gap should fill
+        {
+            "gameDate": "2026-05-23T19:00:00Z",
+            "teams": {
+                "home": {"team": {"id": 117, "abbreviation": "HOU"}},
+                "away": {"team": {"id": 147, "abbreviation": "NYY"}},
+            },
+        },
+    ]}]}
+    # Last two actual starts 5 days apart -> gap=5 -> next start = 5/18 + 5 = 5/23.
+    gamelog_payload = {"stats": [{"splits": [
+        {"date": "2026-05-18", "stat": {"gamesStarted": "1"}},
+        {"date": "2026-05-13", "stat": {"gamesStarted": "1"}},
+    ]}]}
+
+    result = fetch_week_probables(
+        week_start=week_start, week_end=week_end,
+        pitcher_ids=[686613],
+        http_get=_make_http_get({
+            "schedule?sportId=1": schedule_payload,
+            "people/686613/stats": gamelog_payload,
+        }),
+    )
+
+    assert result.starts == {
+        (686613, date(2026, 5, 18)): "BAL",   # confirmed
+        (686613, date(2026, 5, 23)): "NYY",   # rotation-gap fill
+    }
