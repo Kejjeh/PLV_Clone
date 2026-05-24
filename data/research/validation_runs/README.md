@@ -51,6 +51,7 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | bat_speed_level_prior | rh3 | REJECTED — Step 2.5 sample-size | Bat-tracking began 2024; only 1 train-eligible year (2025 outcomes from 2024 prior). Same Rule 5 gate that killed `bat_speed_delta` (2026-05-16). Raw `bat_speed` IS in `statcast_{2024,2025}.parquet` but not rolled into `hitters_multiyr` cache. Re-runnable 2028+. |
 | 2026-05-24 | stuff_plus_prior | rp3 | REJECTED — Step 2.5 data unavailable | No FG Stuff+/Pitching+ cache in repo; user constraint forbids re-scrape. Closest in-repo proxy `avg_pfxz_to` already REJECTED (-0.0007), so bar for external Stuff+ is high. |
 | 2026-05-24 | park_pf_wOBA_ros | rh3 | MARGINAL | Δr +0.0014 vs full RH3_FEATS; sign 5/7 PASS, holdout 1/2, coef WRONG SIGN (-0.0062). v1 home-park-only proxy. Lift exists but coef inverted suggests RH3_FEATS already absorb park signal via rate stats; the small Δr is regularization noise. Not worth promoting; full RoS-schedule pipeline unlikely to clear +0.005. |
 | 2026-05-24 | bip_to | rh3 | REJECTED | Δr +0.0000 vs full RH3_FEATS; sign 4/7, holdout 2/2 but pooled flat. Redundant with pa_to × in_play_pct_to_sh joint. Ceiling-audit raw-count candidate. |
