@@ -30,8 +30,8 @@ SIGMA_PER_WEEK = 80  # FP std per team per week (empirical-ish guess)
 
 
 def main():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
 
     # Pull team weekly means from current value / RoS weeks
     overlap = json.loads((OUT / 'opponent_lineup_overlap.json').read_text(encoding='utf-8'))

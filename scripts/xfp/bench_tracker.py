@@ -76,8 +76,8 @@ def player_fp_in_window(pid: int, is_pitcher: bool, year: int,
 
 def main():
     SNAPS.mkdir(parents=True, exist_ok=True)
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
 
     # For each player on roster, compute fp earned last week

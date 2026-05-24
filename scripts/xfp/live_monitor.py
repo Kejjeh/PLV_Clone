@@ -179,8 +179,8 @@ def build_team_id_map(team):
 
 
 def get_my_team_and_opponent():
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
     # current matchup period → find opponent
     period = league.currentMatchupPeriod

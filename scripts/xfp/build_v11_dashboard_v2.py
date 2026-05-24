@@ -112,8 +112,8 @@ def _label_roster_status(records: list[dict], name_key_fn,
     try:
         import sys as _sys
         _sys.path.insert(0, str(ROOT))
-        from app import espn_connector as ec
-        teams = ec.get_all_teams()
+        from plv_clone.league_state import LeagueState
+        teams = LeagueState().all_teams()
     except Exception as e:
         print(f'  [_label_roster_status] ESPN unavailable, defaulting to fa: {e}')
         return  # ESPN unavailable; leave existing labels
@@ -4058,14 +4058,15 @@ def build_team_audit() -> dict:
     try:
         import sys as _sys
         _sys.path.insert(0, str(ROOT))
-        from app import espn_connector as ec
+        from plv_clone.league_state import LeagueState
+        ls = LeagueState()
     except Exception as e:
-        print(f'[audit] espn_connector unavailable: {e}')
+        print(f'[audit] LeagueState unavailable: {e}')
         return {'error': str(e)}
 
     try:
-        teams = ec.get_all_teams()
-        standings = ec.get_league_standings()
+        teams = ls.all_teams()
+        standings = ls.standings()
     except Exception as e:
         print(f'[audit] ESPN fetch failed: {e}')
         return {'error': str(e)}

@@ -163,8 +163,8 @@ def main():
     print(f'\nwrote {RES / "playoff_peak_hitters.csv"} ({len(career)} qualifying batters)')
 
     # Cross-reference with Ligers roster + top FAs
-    from app import espn_connector as ec
-    league = ec._get_league()
+    from plv_clone.league_state import LeagueState
+    league = LeagueState()._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
     my_names = {p.name for p in my_team.roster}
     print(f'\n=== LIGERS ROSTER — career playoff lift ===')
