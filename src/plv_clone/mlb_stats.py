@@ -24,19 +24,49 @@ def predict_rotation_starts(
     team_schedule: list[tuple[date, str]],
     week_start: date,
     week_end: date,
+    anchor: date | None = None,
+    n_predictions: int = 3,
 ) -> list[tuple[date, str]]:
+    """Predict up to ``n_predictions`` rotation-gap starts in [week_start, week_end].
+
+    Anchor (the date forward from which we count gaps) defaults to the later
+    of (a) the latest actual gamelog start and (b) the latest confirmed start
+    in the window. ESPN-confirmed future starts MUST advance the anchor or
+    we double-emit a start the cap has already counted.
+
+    ±1 day tolerance on both dedup (predicted date is "close enough" to a
+    confirmed date) and team-schedule matching (predicted date can land on
+    an adjacent team game).
+    """
     if not gamelog_dates:
         return []
     last_actual = gamelog_dates[0]
-    prior = gamelog_dates[1]
-    gap = max(4, min(7, (last_actual - prior).days))
-    next_date = last_actual + timedelta(days=gap)
-    if next_date in confirmed_dates:
-        return []
+    if len(gamelog_dates) >= 2:
+        gap = max(4, min(7, (last_actual - gamelog_dates[1]).days))
+    else:
+        gap = 5  # single-start gamelog: default to 5-day rotation
+    if anchor is None:
+        anchor = max([last_actual] + list(confirmed_dates)) if confirmed_dates else last_actual
     sched = {d: opp for d, opp in team_schedule}
-    if next_date in sched:
-        return [(next_date, sched[next_date])]
-    return []
+    out: list[tuple[date, str]] = []
+    next_date = anchor
+    for _ in range(n_predictions):
+        next_date = next_date + timedelta(days=gap)
+        if next_date > week_end:
+            break
+        # ±1 day dedup against confirmed
+        if any(abs((next_date - cd).days) <= 1 for cd in confirmed_dates):
+            continue
+        # ±1 day tolerance for matching team schedule
+        match: tuple[date, str] | None = None
+        for offset in (0, 1, -1):
+            cand = next_date + timedelta(days=offset)
+            if week_start <= cand <= week_end and cand in sched:
+                match = (cand, sched[cand])
+                break
+        if match is not None:
+            out.append(match)
+    return out
 
 
 def _default_http_get(url: str, **_: Any):
@@ -142,6 +172,24 @@ def fetch_week_probables(
                 pid = probable.get("id")
                 if pid and int(pid) in pitcher_set:
                     pid_team_id[int(pid)] = (side.get("team") or {}).get("id")
+
+    # Fallback: pitchers with no confirmed in-window start aren't resolved by
+    # the schedule walk above (McClanahan case — Sunday probable not yet
+    # posted). Hit /people/{id}?hydrate=currentTeam to pull their team_id.
+    for pid in pitcher_set - pid_team_id.keys():
+        try:
+            person = http_get(
+                f"{_STATSAPI}/people/{pid}?hydrate=currentTeam"
+            ).json()
+        except Exception:
+            continue
+        people = person.get("people") or []
+        if not people:
+            continue
+        current_team = people[0].get("currentTeam") or {}
+        tid = current_team.get("id")
+        if tid is not None:
+            pid_team_id[pid] = int(tid)
 
     # Build team-schedule lists for any pitcher we found a team for.
     for date_block in sched.get("dates", []):
