@@ -51,7 +51,7 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
-<<<<<<< HEAD
+| 2026-05-24 | rp3_all_marginals_bundle | rp3 | MARGINAL | 4-feat bundle (avg_ext_prior + c_plus_swstr_last21 + avg_velo_last21 + park_pf_HR_ros) jointly added to full RP3_FEATS (23→27). Δr +0.0032 vs sum-of-marginals +0.0034 (essentially no independence bonus). Sign 4/7 FAIL (positives 2018/2021/2023/2024; negatives 2019/2022/2025). Holdout 2024-25 avg +0.0022. Joint Ridge coefs: ext +0.171, csw +0.264, velo +0.196, park -0.174 — all directionally sensible. No PASS → no drop-one. Confirms rp3 saturated against these axes; 2025 reversal echoes park_pf_HR_ros standalone behavior. RP3_FEATS NOT modified. |
 | 2026-05-24 | park_pf_HR_ros | rp3 | MARGINAL | Lift +0.0017 vs full RP3_FEATS (24 feats); sign 6/7 PASS, holdout 2024-25 avg -0.0013 FAIL (2025 alone -0.0059), coef -0.1845 OK. v1 SP-home-park-only proxy. Directionally healthy (6/7 years, correct sign) but pooled lift below +0.005 gate and 2025 reversal kills holdout. Stuff/command rates already absorb most park signal. Full RoS rotation-weighted version might clear gate; not worth investment given marginal headroom. |
 | 2026-05-24 | velo_x_swstr_to_sh | rp3 | REJECTED | Interaction sweep cell 1/4. Δr −0.0001 vs full RP3_FEATS; sign 4/7, holdout +0.0007. "Stuff index" product absorbed by individual avg_velo_to + swstr_pct_to_sh entries. |
 | 2026-05-24 | velo_x_delta_velo | rp3 | REJECTED | Interaction sweep cell 2/4. Δr +0.0000 vs full RP3_FEATS; sign 3/7 (chance), holdout +0.0001. delta_velo magnitude too small for product to add variance. |
