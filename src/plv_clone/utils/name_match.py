@@ -76,4 +76,82 @@ def merge_with_model(
     return merged
 
 
-__all__ = ["fuzzy_match_name", "merge_with_model"]
+# Known name collisions in the player universe. Each entry maps a colliding
+# name to a list of (team, position, mlbam_id) tuples so the resolver can pick
+# the right player using roster metadata. See
+# `memory/feedback_player_name_collisions.md` for the canonical list — keep
+# this dict in sync with that memory file.
+KNOWN_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
+    "Max Muncy": [
+        ("LAD", "3B", 571970),  # established veteran
+        ("ATH", "SS", 691777),  # 2024+ Oakland callup
+    ],
+}
+
+
+def resolve_batter_id(
+    name: str,
+    *,
+    team: Optional[str] = None,
+    position: Optional[str] = None,
+    multiyr: Optional[pd.DataFrame] = None,
+    multiyr_path: str = "data/research/xfp_cache/hitters_multiyr_2015_2026.csv",
+) -> Optional[int]:
+    """Resolve a player name to their MLBAM batter ID, disambiguating
+    known collisions using ``team`` / ``position`` hints.
+
+    Args:
+        name: Player name as it appears in ESPN / model outputs (e.g.
+            "Max Muncy"). Accent / suffix normalization is applied so
+            "José Ramírez" and "Jose Ramirez" both resolve.
+        team: ESPN/MLB team abbreviation (e.g. "LAD") — required when
+            ``name`` is in ``KNOWN_COLLISIONS``.
+        position: Position abbreviation (e.g. "3B") — second-line tie
+            breaker if ``team`` is ambiguous.
+        multiyr: Optional pre-loaded multiyr cache to avoid re-reading
+            the CSV per call. If None, reads from ``multiyr_path``.
+        multiyr_path: Path to the hitters_multiyr cache.
+
+    Returns:
+        MLBAM batter ID (int), or None if the name doesn't resolve. For
+        a colliding name with no ``team``/``position`` hint, returns
+        None (caller must disambiguate) rather than silently picking the
+        wrong player.
+    """
+    # Fast-path the collision list first — these are the historic footguns.
+    if name in KNOWN_COLLISIONS:
+        candidates = KNOWN_COLLISIONS[name]
+        if team is not None:
+            for cand_team, cand_pos, mlbam in candidates:
+                if cand_team.upper() == team.upper():
+                    return mlbam
+        if position is not None:
+            for cand_team, cand_pos, mlbam in candidates:
+                if cand_pos.upper() == position.upper():
+                    return mlbam
+        # Refuse to silently guess.
+        return None
+
+    if multiyr is None:
+        multiyr = pd.read_csv(multiyr_path)
+
+    # Prefer the most recent year's row for stable team/position info.
+    sub = multiyr[multiyr["player_name"] == name]
+    if sub.empty:
+        return None
+    if team is not None and "team" in sub.columns:
+        team_sub = sub[sub["team"].str.upper() == team.upper()]
+        if not team_sub.empty:
+            sub = team_sub
+    # Return the most recent batter ID for the (filtered) rows.
+    if "year" in sub.columns:
+        sub = sub.sort_values("year", ascending=False)
+    return int(sub.iloc[0]["batter"])
+
+
+__all__ = [
+    "fuzzy_match_name",
+    "merge_with_model",
+    "resolve_batter_id",
+    "KNOWN_COLLISIONS",
+]

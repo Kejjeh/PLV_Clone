@@ -168,6 +168,12 @@ sibling and ask if it needs attention too.
    matches. Run `/matchup-audit` after any change to
    `scripts/xfp/build_matchup_dashboard.py`. See
    `reference_matchup_dashboard_sp_gotchas.md`.
+10. **Don't lookup batter IDs by name alone.** Same-name MLB players
+    (canonical: Max Muncy LAD vs ATH) silently grab the wrong row in a
+    `dict[name]=batter_id` map. Always use
+    `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`
+    which consults `KNOWN_COLLISIONS` and refuses to silently guess. See
+    `feedback_player_name_collisions.md`.
 
 ## Memory pointers (for context-dense lookups)
 
