@@ -1,3 +1,19 @@
+---
+signal: ros_opp_sp_xwoba_weighted
+formula: For each (batter, year, split_day) — batter's primary-team RoS games (game_date > cutoff_date), equal-weight mean of opp_team's team-average SP xwOBA-allowed (tbf-weighted across pitchers with gs>=5). Built in scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py.
+outcome: rh3 cross_year_eval Δr on RoS FP/PA target (matches rh3 production)
+expected_sign: +
+theory: A hitter facing a tougher RoS slate of opposing SPs (lower opp SP xwOBA-allowed) will average lower FP/PA regardless of own skill. The rh3 model previously used no schedule-strength input — all features were own-skill. This is the hitter mirror of the rp3 ros_opp_xwoba_weighted that PASSED today (+0.0145).
+production_target: rh3
+framing: in-season → ros
+holdout_years: [2024, 2025]
+training_years: [2018, 2019, 2021, 2022, 2023, 2024, 2025]
+validation_script: scripts/xfp/validate_ros_opp_sp_xwoba_weighted.py
+date: 2026-05-24
+verdict: PASS
+purpose: Quantify whether explicit RoS opposing-SP quality adds independent lift on rh3 beyond own-skill features.
+---
+
 # Pre-registration: `ros_opp_sp_xwoba_weighted` (rh3 v3 candidate)
 
 **Date:** 2026-05-24

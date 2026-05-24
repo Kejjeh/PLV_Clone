@@ -39,6 +39,7 @@ ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_hitters_2018_2
 MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2026.csv'
 H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
+ROS_OPP_SP_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_opp_sp_xwoba_per_hitter.csv'
 MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 MODEL_PKL   = ROOT / 'data' / 'models' / 'xfp_rh3_pipeline.pkl'
 PROJ_CSV    = ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'
@@ -115,6 +116,16 @@ RH3_FEATS = [
     # Captures young-vs-vet trajectory effects rh3 v1 missed.
     # Standalone gain +0.017 r; integrated into v2.
     'career_stage',
+    # RoS opposing-SP schedule strength: per-(batter, year, split_day)
+    # equal-weight mean opp_team SP xwOBA-allowed over the batter's
+    # primary team's remaining schedule. Validated PASS 2026-05-24
+    # (Δr +0.0137 vs full rh3 v2 baseline, 7/7 per-year positives,
+    # holdout 2/2). Cache built by
+    # scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py — see
+    # data/research/xfp_cache/ros_opp_sp_xwoba_per_hitter.csv. Joined on
+    # (batter, year, split_day); NaN filled with per-year mean (mostly
+    # end-of-year batters with no remaining games).
+    'ros_opp_sp_xwoba_weighted',
 ]
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
@@ -307,6 +318,29 @@ def main():
         lambda r: r['year'] - first_year.get(r['batter'], r['year']), axis=1)
     print(f'  computed career_stage: range {rolling["career_stage"].min()}-{rolling["career_stage"].max()}')
 
+    # RoS opposing-SP schedule strength (validated 2026-05-24, PASS Δr +0.0137).
+    # Cache source: scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py. Merge
+    # mirrors the validation harness (attach() in
+    # validate_ros_opp_sp_xwoba_weighted.py).
+    if ROS_OPP_SP_CSV.exists():
+        opp_sp = pd.read_csv(ROS_OPP_SP_CSV)[
+            ['batter', 'year', 'split_day', 'ros_opp_sp_xwoba_weighted']
+        ]
+        rolling = rolling.merge(opp_sp, on=['batter', 'year', 'split_day'], how='left')
+        n_missing = int(rolling['ros_opp_sp_xwoba_weighted'].isna().sum())
+        year_means = rolling.groupby('year')['ros_opp_sp_xwoba_weighted'].transform('mean')
+        rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(year_means)
+        rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(
+            rolling['ros_opp_sp_xwoba_weighted'].mean()
+        )
+        print(f'  ros_opp_sp_xwoba_weighted missing pre-fill: {n_missing}/{len(rolling)} '
+              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
+    else:
+        raise FileNotFoundError(
+            f'Missing required RoS opp-SP cache: {ROS_OPP_SP_CSV}. '
+            'Run scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py.'
+        )
+
     # Shrinkage on both windows
     print('Shrinkage (cumulative + last21)...')
     pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
@@ -336,7 +370,12 @@ def main():
     # xwoba_gap_to removed (verdict MARGINAL re-audit), career_stage demoted
     # to baseline (joint lift below gate). v2_added now empty — gate is
     # vacuous until the next claimed lift lands. ADR-0003.
-    v2_added: set[str] = set()
+    # 2026-05-24: promoted ros_opp_sp_xwoba_weighted (rh3 v3). Validation
+    # data/research/validation_runs/ros_opp_sp_xwoba_weighted_2026-05-24.md
+    # showed Δr +0.0137 vs full rh3 v2 baseline, 7/7 per-year positives,
+    # holdout 2/2. Rule 9 hard assert now FIRES meaningfully against the
+    # full prior-production baseline (RH3_FEATS minus this one feature).
+    v2_added: set[str] = {"ros_opp_sp_xwoba_weighted"}
     baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
     _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
