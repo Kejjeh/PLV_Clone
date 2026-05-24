@@ -55,6 +55,11 @@ python scripts/xfp/pitcher_sustainability.py --scope my-roster
 python scripts/xfp/pitcher_sustainability.py \
     --scope fa-pool --min-2026-fp 12
 
+# Universe for fa-pool sweeps: prefer LeagueState.available_fa_meaningful_sp()
+# over available_fa(position="SP") — drops zero-start callup / fringe noise
+# (returns a (df, summary) tuple), ~6x speedup. Use available_fa() only when
+# you need the full unfiltered SP pool.
+
 # Summary table only (skip per-pitcher detail)
 python scripts/xfp/pitcher_sustainability.py --scope my-roster --brief
 ```
