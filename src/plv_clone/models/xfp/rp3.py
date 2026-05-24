@@ -36,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[4]
 ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_pitchers_2018_2026.csv'
 MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'sp_multiyr_2015_2025.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
+ROS_SCHED_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_schedule_features_2018_2026.csv'
 TEAM_STR_CSV  = ROOT / 'data' / 'research' / 'xfp_cache' / 'team_strength_2026.csv'
 SCHEDULE_CSV  = ROOT / 'data' / 'research' / 'xfp_cache' / 'pitcher_schedule_2026.csv'
 MILB_PRIORS_CSV = ROOT / 'data' / 'outputs' / 'xfp_milb_pitcher_priors_2026.csv'
@@ -84,6 +85,14 @@ RP3_FEATS = [
     # Velocity is dominant driver; all 6 component metrics validated.
     'delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
     'delta_chase', 'delta_zone',
+    # RoS schedule strength: per-(pitcher, year, split_day) weighted opp xwOBA
+    # over the pitcher's primary team's remaining schedule. Validated PASS
+    # 2026-05-24 (Δr +0.0145 vs full rp3 v2 baseline). Cache built by
+    # scripts/xfp/build_ros_schedule_features.py — see
+    # data/research/xfp_cache/ros_schedule_features_2018_2026.csv. Joined on
+    # (pitcher, year, split_day); NaN filled with per-year mean (mostly
+    # end-of-year IL rows with no RoS games).
+    'ros_opp_xwoba_weighted',
 ]
 
 # ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
@@ -246,6 +255,28 @@ def main():
     max_dsr = float(rolling['days_since_il_return'].max(skipna=True) or 200)
     rolling['days_since_il_return_imp'] = rolling['days_since_il_return'].fillna(max_dsr + 1)
 
+    # RoS schedule-strength feature (validated 2026-05-24, PASS Δr +0.0145).
+    # Cache source: scripts/xfp/build_ros_schedule_features.py. Merge mirrors
+    # the validation harness (attach() in validate_ros_opp_xwoba_weighted.py).
+    if ROS_SCHED_CSV.exists():
+        sched_xw = pd.read_csv(ROS_SCHED_CSV)[
+            ['pitcher', 'year', 'split_day', 'ros_opp_xwoba_weighted']
+        ]
+        rolling = rolling.merge(sched_xw, on=['pitcher', 'year', 'split_day'], how='left')
+        n_missing = int(rolling['ros_opp_xwoba_weighted'].isna().sum())
+        year_means = rolling.groupby('year')['ros_opp_xwoba_weighted'].transform('mean')
+        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(year_means)
+        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(
+            rolling['ros_opp_xwoba_weighted'].mean()
+        )
+        print(f'  ros_opp_xwoba_weighted missing pre-fill: {n_missing}/{len(rolling)} '
+              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
+    else:
+        raise FileNotFoundError(
+            f'Missing required RoS schedule cache: {ROS_SCHED_CSV}. '
+            'Run scripts/xfp/build_ros_schedule_features.py.'
+        )
+
     # Shrinkage on cumulative + last21
     pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
     pop_l21 = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_LAST21)
@@ -285,8 +316,13 @@ def main():
     # baseline; v2_added empty so the gate is vacuous until the next
     # claimed lift lands. Features stay in FEATS (still inputs to the
     # final Ridge) but are no longer "claimed" v2 lifts. ADR-0003.
-    v2_added: set[str] = set()
-    baseline_feats = [f for f in RP3_FEATS if 'last21' not in f and f not in v2_added]
+    # 2026-05-24: promoted ros_opp_xwoba_weighted (rp3 v3). Validation run
+    # data/research/validation_runs/ros_opp_xwoba_weighted_2026-05-24.md
+    # showed Δr +0.0145 vs full rp3 v2 baseline — first PASS-gate signal in
+    # 4 sessions. Rule 9 hard assert below now FIRES meaningfully against the
+    # full prior-production baseline (RP3_FEATS minus this one feature).
+    v2_added: set[str] = {"ros_opp_xwoba_weighted"}
+    baseline_feats = [f for f in RP3_FEATS if f not in v2_added]
     _ , baseline = cross_year_eval(rolling, baseline_feats)
     delta = overall['r'] - baseline['r']
     print(f'\n--- Baseline (drops v2 drift features {sorted(v2_added)}) ---  r={baseline["r"]}')
