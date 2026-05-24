@@ -55,6 +55,9 @@ def main():
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
 
+    run('1b. Build batter rolling-feature cache',
+        'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
+
     if not args.no_models:
         ok = run('2. Rebuild xFP models', 'python -X utf8 scripts/xfp/refresh_all.py',
                   timeout=1800)
