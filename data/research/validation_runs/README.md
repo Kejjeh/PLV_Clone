@@ -51,6 +51,9 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | avg_velo_last21 | rp3 | MARGINAL | Lift +0.0001 vs full RP3_FEATS (23→24); sign 4/7, holdout +0.0011. L21 velo level redundant with (avg_velo_to, delta_velo) pair. Ceiling-audit follow-up. |
+| 2026-05-24 | c_plus_swstr_last21 | rp3 | MARGINAL | Lift +0.0011 vs full RP3_FEATS; sign 5/7 PASS, holdout −0.0008 FAIL. Strongest pooled lift of 3-cell sweep but train-only signal — 2025 negative. Ceiling-audit follow-up. |
+| 2026-05-24 | avg_pfxz_to | rp3 | REJECTED | Lift −0.0007 vs full RP3_FEATS; sign 1/7 (6 of 7 years negative). Signed arsenal-average IVB acts as distraction — outcome rates already encode pitch shape. Ceiling-audit follow-up. |
 | 2026-05-23 | avg_ext_prior | rp3 | MARGINAL | Lift +0.0005 vs full RP3_FEATS; sign 5/7, holdout +0.0033. Below +0.005 gate. Extension info absorbed by avg_velo_to + in-season rates. |
 | 2026-05-23 | pitch_entropy_prior | rp3 | REJECTED | Lift -0.0001 vs full RP3_FEATS; holdout -0.0061 (wrong sign). Mix-diversity info downstream of stuff features already in baseline. |
 | 2026-05-23 | vaa_ff_prior | rp3 | REJECTED | Lift +0.0011 vs full RP3_FEATS; sign 4/7 (fails 5/7 bar). Holdout +0.0030 but pooled & sign fail. Whiffs from flat FB are already captured by swstr_pct_to_sh / c_plus_swstr_to_sh. |
