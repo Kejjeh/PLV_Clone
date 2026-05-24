@@ -51,6 +51,7 @@ starting <year Y>.
 
 | Date | Signal | Target | Verdict | Notes |
 |---|---|---|---|---|
+| 2026-05-24 | stuff_plus_prior | rp3 | REJECTED — Step 2.5 data unavailable | No FG Stuff+/Pitching+ cache in repo; user constraint forbids re-scrape. Closest in-repo proxy `avg_pfxz_to` already REJECTED (-0.0007), so bar for external Stuff+ is high. |
 | 2026-05-24 | park_pf_wOBA_ros | rh3 | MARGINAL | Δr +0.0014 vs full RH3_FEATS; sign 5/7 PASS, holdout 1/2, coef WRONG SIGN (-0.0062). v1 home-park-only proxy. Lift exists but coef inverted suggests RH3_FEATS already absorb park signal via rate stats; the small Δr is regularization noise. Not worth promoting; full RoS-schedule pipeline unlikely to clear +0.005. |
 | 2026-05-24 | bip_to | rh3 | REJECTED | Δr +0.0000 vs full RH3_FEATS; sign 4/7, holdout 2/2 but pooled flat. Redundant with pa_to × in_play_pct_to_sh joint. Ceiling-audit raw-count candidate. |
 | 2026-05-24 | contact_to | rh3 | MARGINAL | Δr +0.0001 vs full RH3_FEATS; sign 5/7, holdout 2/2, coef sign OK. Best of the 3-cell raw-count sweep but two orders of magnitude below +0.005 gate. |
