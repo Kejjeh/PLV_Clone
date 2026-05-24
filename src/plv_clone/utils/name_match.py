@@ -149,9 +149,92 @@ def resolve_batter_id(
     return int(sub.iloc[0]["batter"])
 
 
+# ── Pre-resolved name → batter-ID cache lookup ──────────────────────────
+
+_CACHE_DF: Optional[pd.DataFrame] = None
+_CACHE_PATH: Optional[str] = None
+_DEFAULT_CACHE_PATH = "data/research/xfp_cache/name_resolution_2026.csv"
+
+
+def _load_cache(cache_path: Optional[str] = None) -> Optional[pd.DataFrame]:
+    """Lazy-load the name-resolution cache (module-level memo).
+
+    Returns None if the cache file doesn't exist — callers fall back to
+    ``resolve_batter_id``.
+    """
+    global _CACHE_DF, _CACHE_PATH
+    path = cache_path or _DEFAULT_CACHE_PATH
+    if _CACHE_DF is not None and _CACHE_PATH == path:
+        return _CACHE_DF
+    import os
+    if not os.path.exists(path):
+        return None
+    df = pd.read_csv(path)
+    _CACHE_DF = df
+    _CACHE_PATH = path
+    return df
+
+
+def lookup_batter_id_cached(
+    name: str,
+    *,
+    team: Optional[str] = None,
+    position: Optional[str] = None,
+    cache_path: Optional[str] = None,
+    cache_df: Optional[pd.DataFrame] = None,
+) -> Optional[int]:
+    """Look up a batter MLBAM ID from the pre-resolved name cache.
+
+    Lookup order:
+      1. Exact ``(player_name, team)`` match in the cache (if ``team`` given).
+      2. Exact ``player_name`` match if unique (one row in the cache).
+      3. Fall back to ``resolve_batter_id(name, team=..., position=...)``.
+
+    Args:
+        name: Player name (ESPN-or-Statcast spelling).
+        team: Optional team abbreviation — required for known collisions.
+        position: Optional position — second-line collision tie-breaker.
+        cache_path: Override the default cache CSV path. ``None`` uses
+            ``data/research/xfp_cache/name_resolution_2026.csv``.
+        cache_df: Pre-loaded cache DataFrame (skips the lazy-load).
+
+    Returns:
+        MLBAM batter ID (int) or None if unresolved.
+    """
+    df = cache_df if cache_df is not None else _load_cache(cache_path)
+    if df is not None and not df.empty and "player_name" in df.columns:
+        sub = df[df["player_name"] == name]
+        if not sub.empty:
+            if team is not None and "team" in sub.columns:
+                team_sub = sub[sub["team"].astype(str).str.upper() == team.upper()]
+                if not team_sub.empty:
+                    sub = team_sub
+            # Take the first resolved row.
+            resolved = sub[sub["batter_mlbam"].notna()]
+            if not resolved.empty:
+                try:
+                    return int(resolved.iloc[0]["batter_mlbam"])
+                except (TypeError, ValueError):
+                    pass
+    # Cache miss → fall through to live resolver. Don't crash if the
+    # multiyr cache isn't present in the working tree.
+    try:
+        return resolve_batter_id(name, team=team, position=position)
+    except FileNotFoundError:
+        return None
+
+
+def _reset_cache_for_tests() -> None:
+    """Test-only helper to clear the module-level cache memo."""
+    global _CACHE_DF, _CACHE_PATH
+    _CACHE_DF = None
+    _CACHE_PATH = None
+
+
 __all__ = [
     "fuzzy_match_name",
     "merge_with_model",
     "resolve_batter_id",
+    "lookup_batter_id_cached",
     "KNOWN_COLLISIONS",
 ]
