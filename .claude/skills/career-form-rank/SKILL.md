@@ -25,6 +25,11 @@ both poised to revert toward their respective career means.
 
 1. **Universe** — `my-roster`, `my-roster + fa-pool`, or an explicit
    list of player names. Default `my-roster + fa-pool`.
+
+   Prefer `LeagueState.available_fa_meaningful()` for sweeps over
+   `available_fa()` — drops zero-PA callup / fringe noise (returns a
+   `(df, summary)` tuple), ~6x speedup. Fall back to `available_fa()`
+   only when you explicitly need the full unfiltered ~963-name pool.
 2. **Min career PA** — exclude players with fewer than N total career
    PAs (their percentile is unstable). Default 300.
 3. **Min current L150 sample** — only show players with at least N

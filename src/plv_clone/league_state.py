@@ -256,6 +256,179 @@ class LeagueState:
 
         return fa_df
 
+    # ── Meaningful-batter / meaningful-SP filters ───────────────────────
+
+    _HITTERS_MULTIYR_PATH: str = (
+        "data/research/xfp_cache/hitters_multiyr_2015_2026.csv"
+    )
+    _SP_MULTIYR_PATH: str = "data/research/xfp_cache/sp_multiyr_2015_2025.csv"
+
+    def available_fa_meaningful(
+        self,
+        min_2026_pa: int = 100,
+        min_career_pa: int = 300,
+        position: Optional[str] = None,
+        *,
+        multiyr: pd.DataFrame | None = None,
+        multiyr_path: str | None = None,
+    ) -> tuple[pd.DataFrame, dict[str, int]]:
+        """``available_fa`` filtered to meaningful hitters.
+
+        Drops zero-PA callups / retired / fringe names that bloat sweep
+        skills (~6x speedup on the FA hitter pool). A player is kept if
+        EITHER:
+
+          * ≥ ``min_2026_pa`` PA in the 2026 season (active this year), OR
+          * ≥ ``min_career_pa`` total career PA across all years (an
+            established veteran whose 2026 sample is just small so far).
+
+        Players whose names can't be resolved against the hitters multiyr
+        cache (after `resolve_batter_id` fallback) are DROPPED — they're
+        almost always non-hitter pitchers, retired players, or names
+        that won't join any model output anyway.
+
+        Returns:
+            ``(df_filtered, summary)`` where ``summary`` is a dict with
+            ``input_n``, ``kept``, ``dropped_no_pa``, ``dropped_unresolved``.
+        """
+        fa = self.available_fa(position=position)
+        input_n = int(len(fa))
+        if fa.empty:
+            return fa, {
+                "input_n": 0, "kept": 0,
+                "dropped_no_pa": 0, "dropped_unresolved": 0,
+            }
+
+        if multiyr is None:
+            path = multiyr_path or self._HITTERS_MULTIYR_PATH
+            multiyr = pd.read_csv(path)
+
+        # Per-batter aggregates: career PA total + 2026 PA.
+        career_pa = (
+            multiyr.groupby("player_name")["pa"].sum().to_dict()
+            if "pa" in multiyr.columns else {}
+        )
+        cur_pa: dict[str, int] = {}
+        if "year" in multiyr.columns and "pa" in multiyr.columns:
+            cur = multiyr[multiyr["year"] == 2026]
+            cur_pa = cur.groupby("player_name")["pa"].sum().to_dict()
+
+        kept_rows = []
+        dropped_no_pa = 0
+        dropped_unresolved = 0
+        for _, row in fa.iterrows():
+            name = row["player_name"]
+            if name in career_pa or name in cur_pa:
+                c = float(career_pa.get(name, 0))
+                y = float(cur_pa.get(name, 0))
+                if y >= min_2026_pa or c >= min_career_pa:
+                    kept_rows.append(row)
+                else:
+                    dropped_no_pa += 1
+            else:
+                # Try the disambiguating resolver as a fallback for names
+                # the raw groupby missed (accents, suffix differences).
+                try:
+                    from plv_clone.utils.name_match import resolve_batter_id
+
+                    bid = resolve_batter_id(
+                        name,
+                        team=row.get("pro_team"),
+                        position=row.get("position"),
+                        multiyr=multiyr,
+                    )
+                except Exception:
+                    bid = None
+                if bid is None:
+                    dropped_unresolved += 1
+                    continue
+                sub = multiyr[multiyr["batter"] == bid] if "batter" in multiyr.columns else None
+                if sub is None or sub.empty:
+                    dropped_unresolved += 1
+                    continue
+                c = float(sub["pa"].sum()) if "pa" in sub.columns else 0.0
+                y = float(
+                    sub[sub.get("year", -1) == 2026]["pa"].sum()
+                ) if "pa" in sub.columns and "year" in sub.columns else 0.0
+                if y >= min_2026_pa or c >= min_career_pa:
+                    kept_rows.append(row)
+                else:
+                    dropped_no_pa += 1
+
+        kept_df = pd.DataFrame(kept_rows).reset_index(drop=True)
+        summary = {
+            "input_n": input_n,
+            "kept": int(len(kept_df)),
+            "dropped_no_pa": int(dropped_no_pa),
+            "dropped_unresolved": int(dropped_unresolved),
+        }
+        return kept_df, summary
+
+    def available_fa_meaningful_sp(
+        self,
+        min_2026_starts: int = 2,
+        min_career_starts: int = 10,
+        position: str = "SP",
+        *,
+        multiyr: pd.DataFrame | None = None,
+        multiyr_path: str | None = None,
+    ) -> tuple[pd.DataFrame, dict[str, int]]:
+        """SP analogue of :meth:`available_fa_meaningful`.
+
+        A pitcher is kept if EITHER:
+
+          * ≥ ``min_2026_starts`` game starts in 2026, OR
+          * ≥ ``min_career_starts`` total career starts.
+
+        Uses the SP multiyr cache (``gs`` column for starts). Names that
+        don't appear in the cache are dropped as unresolved.
+        """
+        fa = self.available_fa(position=position)
+        input_n = int(len(fa))
+        if fa.empty:
+            return fa, {
+                "input_n": 0, "kept": 0,
+                "dropped_no_pa": 0, "dropped_unresolved": 0,
+            }
+
+        if multiyr is None:
+            path = multiyr_path or self._SP_MULTIYR_PATH
+            multiyr = pd.read_csv(path)
+
+        starts_col = "gs" if "gs" in multiyr.columns else None
+        career_gs = (
+            multiyr.groupby("player_name")[starts_col].sum().to_dict()
+            if starts_col else {}
+        )
+        cur_gs: dict[str, float] = {}
+        if "year" in multiyr.columns and starts_col:
+            cur = multiyr[multiyr["year"] == 2026]
+            cur_gs = cur.groupby("player_name")[starts_col].sum().to_dict()
+
+        kept_rows = []
+        dropped_no_pa = 0
+        dropped_unresolved = 0
+        for _, row in fa.iterrows():
+            name = row["player_name"]
+            if name not in career_gs and name not in cur_gs:
+                dropped_unresolved += 1
+                continue
+            c = float(career_gs.get(name, 0))
+            y = float(cur_gs.get(name, 0))
+            if y >= min_2026_starts or c >= min_career_starts:
+                kept_rows.append(row)
+            else:
+                dropped_no_pa += 1
+
+        kept_df = pd.DataFrame(kept_rows).reset_index(drop=True)
+        summary = {
+            "input_n": input_n,
+            "kept": int(len(kept_df)),
+            "dropped_no_pa": int(dropped_no_pa),
+            "dropped_unresolved": int(dropped_unresolved),
+        }
+        return kept_df, summary
+
     # ── Standings ────────────────────────────────────────────────────────
 
     def standings(self) -> pd.DataFrame:

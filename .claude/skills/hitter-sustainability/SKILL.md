@@ -46,6 +46,11 @@ python scripts/xfp/hitter_sustainability.py --scope my-roster
 # FA pool sweep for buy-low candidates
 python scripts/xfp/hitter_sustainability.py --scope fa-pool --min-2026-fp 2.0
 
+# Universe for fa-pool sweeps: prefer LeagueState.available_fa_meaningful()
+# over available_fa() — drops zero-PA callup / fringe noise (returns a
+# (df, summary) tuple), ~6x speedup. Use available_fa() only when you need
+# the full unfiltered ~963-name pool.
+
 # Summary table only (no per-hitter detail)
 python scripts/xfp/hitter_sustainability.py --scope my-roster --brief
 ```

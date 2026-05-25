@@ -225,6 +225,89 @@ def test_my_roster_exposes_injured_flag_for_caller_filtering():
     assert injured_subset["player_name"].tolist() == ["Hurt Hitter"]
 
 
+def test_available_fa_meaningful_drops_zero_pa_callup():
+    """A veteran (3000 career PA) is kept; a zero-PA callup is dropped."""
+    multiyr = pd.DataFrame([
+        {"player_name": "Veteran Vet", "batter": 1, "year": 2024, "pa": 600},
+        {"player_name": "Veteran Vet", "batter": 1, "year": 2025, "pa": 650},
+        {"player_name": "Veteran Vet", "batter": 1, "year": 2026, "pa": 50},
+        {"player_name": "Zero Callup", "batter": 2, "year": 2026, "pa": 3},
+    ])
+
+    fa_pool = [
+        _FakePlayer(name="Veteran Vet", position="OF"),
+        _FakePlayer(name="Zero Callup", position="OF"),
+    ]
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=[]
+    )
+    league = _FakeLeague(teams=[my_team], free_agents=fa_pool)
+    state = LeagueState(league=league)
+
+    df, summary = state.available_fa_meaningful(
+        min_2026_pa=100, min_career_pa=300, multiyr=multiyr,
+    )
+
+    assert summary["input_n"] == 2
+    assert summary["kept"] == 1
+    assert summary["dropped_no_pa"] == 1
+    assert summary["dropped_unresolved"] == 0
+    assert df["player_name"].tolist() == ["Veteran Vet"]
+
+
+def test_available_fa_meaningful_filters_fewer_than_unfiltered():
+    """Filtered count <= unfiltered, and dropped_no_pa is non-zero when
+    the pool has zero-PA names."""
+    multiyr = pd.DataFrame([
+        {"player_name": "Veteran", "batter": 1, "year": 2025, "pa": 500},
+        {"player_name": "Veteran", "batter": 1, "year": 2026, "pa": 200},
+        {"player_name": "Fringe", "batter": 2, "year": 2026, "pa": 5},
+        {"player_name": "Other", "batter": 3, "year": 2026, "pa": 2},
+    ])
+    fa_pool = [
+        _FakePlayer(name="Veteran", position="OF"),
+        _FakePlayer(name="Fringe", position="OF"),
+        _FakePlayer(name="Other", position="OF"),
+    ]
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=[]
+    )
+    league = _FakeLeague(teams=[my_team], free_agents=fa_pool)
+    state = LeagueState(league=league)
+
+    base = state.available_fa()
+    df, summary = state.available_fa_meaningful(multiyr=multiyr)
+
+    assert len(df) < len(base)
+    assert summary["dropped_no_pa"] > 0
+
+
+def test_available_fa_meaningful_sp_drops_callup_starter():
+    """An SP with 30 career starts is kept; a 1-start callup is dropped."""
+    multiyr = pd.DataFrame([
+        {"player_name": "Vet SP", "year": 2024, "gs": 30},
+        {"player_name": "Vet SP", "year": 2026, "gs": 1},
+        {"player_name": "AAA Callup", "year": 2026, "gs": 1},
+    ])
+    fa_pool = [
+        _FakePlayer(name="Vet SP", position="SP"),
+        _FakePlayer(name="AAA Callup", position="SP"),
+    ]
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=[]
+    )
+    league = _FakeLeague(teams=[my_team], free_agents=fa_pool)
+    state = LeagueState(league=league)
+
+    df, summary = state.available_fa_meaningful_sp(
+        min_2026_starts=2, min_career_starts=10, multiyr=multiyr,
+    )
+
+    assert summary["kept"] == 1
+    assert summary["dropped_no_pa"] == 1
+    assert df["player_name"].tolist() == ["Vet SP"]
+
+
 def test_imports_at_advertised_paths():
     """The two public import paths CONTEXT.md and the task spec promise."""
     from plv_clone.league_state import LeagueState as LS  # noqa: F401
