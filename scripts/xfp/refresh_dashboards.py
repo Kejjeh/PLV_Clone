@@ -63,6 +63,10 @@ def main():
                   timeout=1800)
         if not ok: print('  → continuing despite model rebuild issue')
 
+    run('2b. Build name-resolution cache',
+        'python -X utf8 scripts/xfp/build_name_resolution_cache.py',
+        timeout=120)
+
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 
