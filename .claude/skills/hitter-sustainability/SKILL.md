@@ -88,7 +88,14 @@ SELL-HIGH hitters across the whole sweep.
 | Chase% (o_swing) | − | 2.0 pp |
 | SweetSpot% (8-32° launch angle) | + | 2.0 pp |
 
-xwOBA-on-contact is a marker but NOT used in the FP decomposition
+xwOBA-on-contact (`xwoba_on_contact`) is a marker used here as a
+contact-quality diagnostic. Do NOT confuse with `xwoba_contact_to` —
+the latter was REJECTED from RP3_FEATS on 2026-05-25 (algebraically
+redundant given `xwoba_per_pa_to_sh + k_pct_to_sh + bb_pct_to_sh`
+already in RP3_FEATS). The marker here is a human-readable signal,
+not a model feature.
+
+xwOBA-on-contact is NOT used in the FP decomposition
 (redundant with Barrel%; would double-count).
 
 FP decomposition uses **K%, BB%, Barrel%** with PA-per-game = 3.5
@@ -110,8 +117,43 @@ FP decomposition uses **K%, BB%, Barrel%** with PA-per-game = 3.5
 
 ---
 
+## Name-collision guard (mandatory before any rh3 lookup)
+
+When building a `dict[name] → rh3 row` lookup, NEVER key on normalized
+name alone. Two MLB players named "Max Muncy" exist (LAD batter_id 571970,
+ATH batter_id 691777); a bare name dict silently assigns the wrong
+projection. Canonical fix:
+
+```python
+import unicodedata
+def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+
+rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+rh3_idx = {}
+dup_keys = set()
+for _, row in rh3.iterrows():
+    key = (_norm(row['player_name']), str(row.get('team', '')).upper())
+    if key in rh3_idx:
+        dup_keys.add(key)
+    rh3_idx[key] = row
+if dup_keys:
+    print(f"WARNING: duplicate rh3 keys {dup_keys} — verify team-keyed resolution")
+
+def rh3_row(name, team):
+    return rh3_idx.get((_norm(name), str(team).upper()))
+```
+
+Use `pro_team` from the ESPN row as the second key. If unavailable, call
+`resolve_batter_id(name, team=..., position=...)` from
+`plv_clone.utils.name_match`.
+
+---
+
 ## Anti-patterns this skill exists to prevent
 
+- **Building `{_norm(name): row}` dicts from rh3 without team key.**
+  Always key on `(norm_name, pro_team)` tuple to prevent same-name
+  player collisions (canonical: Max Muncy LAD #39 vs ATH #331).
 - **Trusting raw FP/game without skill check.** A hitter whose FP/g
   jumped 0.6 might be all BABIP (NOISE) or all skill (LEGIT) — same
   surface, opposite verdict.

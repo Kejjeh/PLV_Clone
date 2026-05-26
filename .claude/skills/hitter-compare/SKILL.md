@@ -34,6 +34,40 @@ makes the decision easy.
 
 ---
 
+## Step 0.5 — Same-name collision guard (mandatory, before any dict lookup)
+
+Build the rh3 lookup keyed on `(norm_name, pro_team)` tuple — NEVER bare
+name. Canonical failure: Max Muncy LAD (3B, 571970, rh3=0.578 — hold) vs
+Max Muncy ATH (C, 691777, rh3=0.379 — drop candidate) have identical
+`_norm()` keys. A 2026-05-25 roster audit silently assigned the wrong row.
+
+**Mandatory pattern for every rh3 build in this skill:**
+
+```python
+import unicodedata
+def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+
+rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+rh3_idx = {}
+dup_keys = set()
+for _, row in rh3.iterrows():
+    key = (_norm(row['player_name']), str(row.get('team', '')).upper())
+    if key in rh3_idx:
+        dup_keys.add(key)
+    rh3_idx[key] = row
+if dup_keys:
+    print(f"WARNING: duplicate rh3 keys {dup_keys} — resolve by team")
+
+def rh3_row(name, team): return rh3_idx.get((_norm(name), str(team).upper()))
+```
+
+When a user names a player, always pass the MLB team abbreviation as
+second key. If team is ambiguous (user-provided name only, no ESPN row),
+ask: **"which team — LAD or ATH?"** before resolving. See
+`/player-id-resolve` for the full protocol.
+
+---
+
 ## Step 1 — Resolve player IDs
 
 For each name, look up the `batter` MLBAM ID from
@@ -45,9 +79,10 @@ def norm(s):
     return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode().lower().strip()
 ```
 
-Disambiguate same-name (Max Muncy LAD vs Max Muncy ATH) by team. If
-the player is not in rh3 (recent callup), look up via MLB Stats API
-`people/search?names=<name>` and flag "no rh3 row — ESPN stats only."
+Disambiguate same-name (Max Muncy LAD vs Max Muncy ATH) by team
+(see Step 0.5). If the player is not in rh3 (recent callup), look up
+via MLB Stats API `people/search?names=<name>` and flag
+"no rh3 row — ESPN stats only."
 
 ---
 
@@ -247,6 +282,10 @@ the data-driven verdict first.
   `/pitcher-compare` (not yet built — candidate for future).
 - Auto-fetching Pitcher List in this skill — keep it model-focused;
   delegate PL to /pl-cross-reference on user request.
+- Silently using the first/last dict row for a colliding name —
+  produces a wrong projection with no error. Always resolve team
+  context when the user names a player (see Step 0.5 and
+  `/player-id-resolve`).
 
 ---
 

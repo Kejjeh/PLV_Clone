@@ -169,6 +169,13 @@ SP at top.
 
 ## Anti-patterns this skill exists to prevent
 
+- **Citing `stuff_contact_composite` as an rp3 model feature.** It was
+  validated MARGINAL (+0.0021, 7/7 years) on 2026-05-25 — used for
+  Signal A alerts in `build_sp_alerts.py` ONLY. Do NOT add the binary
+  flag to `RP3_FEATS`. See `/sp-breakout-signal` for the alert use case.
+- **Citing `xwoba_contact_to` as an rp3 model feature.** REJECTED
+  2026-05-25: algebraically redundant given `xwoba_per_pa_to_sh +
+  k_pct_to_sh + bb_pct_to_sh` already in RP3_FEATS (lift = -0.0001).
 - **Buying/dropping based on raw FP/start without skill check.** A guy whose
   FP/start jumped 4 might be all luck (NOISE) or all skill (LEGIT) — same
   surface number, opposite verdicts.

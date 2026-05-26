@@ -92,13 +92,87 @@ accents WILL bite):
 
 ```python
 import unicodedata
-def norm(s):
+def ascii_strip(s):
     if not isinstance(s, str): return ''
     return unicodedata.normalize('NFKD', s).encode('ascii','ignore').decode().lower().strip()
+
+# alias used throughout
+norm = ascii_strip
 ```
 
-Disambiguate same-name players (two Max Muncys, two Will Smiths, etc.)
-by `team` match first, then by `pa_to` max (the regular).
+**SP/RP accent fix — build 4-key index for rp3 "Last, First" format.**
+
+rp3 stores names as `"Luzardo, Jesús"`. A naive `norm()` strips the accent
+but keeps `"luzardo, jesus"` in Last-First order, which won't match the
+ESPN First-Last `"Jesus Luzardo"`. This caused 4 missing SPs in a live
+audit (Jesús Luzardo, Cristopher Sánchez, Carlos Rodón, José Soriano).
+
+Always build all 4 key variants and index them:
+
+```python
+def build_sp_index(rp3_df):
+    idx = {}
+    for _, row in rp3_df.iterrows():
+        fl_orig = row['player_name']            # "Luzardo, Jesús"
+        fl_ascii = ascii_strip(fl_orig)         # "luzardo, jesus"
+        if ',' in fl_orig:
+            parts = [p.strip() for p in fl_orig.split(',', 1)]
+            first_last = f"{parts[1]} {parts[0]}"          # "Jesús Luzardo"
+            first_last_ascii = ascii_strip(first_last)      # "jesus luzardo"
+        else:
+            first_last = fl_orig
+            first_last_ascii = fl_ascii
+        for key in {fl_orig.lower(), fl_ascii, first_last.lower(), first_last_ascii}:
+            idx.setdefault(key, row)  # first-seen wins; collisions handled below
+    return idx
+```
+
+Then join FA SP names against this index using `norm(fa_name)` as key.
+
+**Name-collision fix — use `(norm_name, pro_team)` tuple keys, never bare names.**
+
+After building a `dict[norm_name] → projection_row`, scan for duplicate keys
+before joining. The canonical collision as of 2026-05-25:
+
+| Player | Team | Pos | batter_id | rh3 FP/g | signal |
+|---|---|---|---|---|---|
+| Max Muncy | LAD | 3B | 571970 | 0.578 | hold |
+| Max Muncy | ATH | C | 691777 | 0.379 | drop |
+
+Using the wrong Muncy row caused a false "drop" recommendation in a live
+session (2026-05-25). The LAD Muncy is the fantasy-relevant player; the ATH
+Muncy is a near-replacement-level catcher.
+
+**Resolution — two options (use whichever is appropriate):**
+
+Option A — key on `(norm_name, pro_team)` tuple:
+```python
+proj_dict = {}
+for _, row in proj_df.iterrows():
+    key = (norm(row['player_name']), row.get('pro_team', '').upper())
+    proj_dict[key] = row
+
+# Join: look up (norm(fa.name), fa.proTeam) first; fall back to norm(fa.name)
+# only if there is exactly one match (no collision)
+def lookup_proj(fa_name, fa_team):
+    key_full = (norm(fa_name), fa_team.upper())
+    if key_full in proj_dict:
+        return proj_dict[key_full]
+    # Fall back only if unambiguous
+    candidates = [v for (n, t), v in proj_dict.items() if n == norm(fa_name)]
+    return candidates[0] if len(candidates) == 1 else None
+```
+
+Option B — use `resolve_batter_id` from `plv_clone.utils.name_match`:
+```python
+from plv_clone.utils.name_match import resolve_batter_id
+batter_id = resolve_batter_id(fa_name, team=fa_team, position=fa_pos)
+# Consults KNOWN_COLLISIONS dict; raises ValueError (refuses to silently guess)
+```
+
+When the FA player's `pro_team` is available from ESPN (it always is), prefer
+Option A's team-keyed lookup or Option B's `resolve_batter_id` call. Never
+rely on bare `norm_name` alone when a collision could exist.
 
 For hitters surface these joined cols:
 - `rh3_rank`, `xfp_rh3_per_game`, `expected_total_fp_remaining`,
@@ -109,6 +183,73 @@ surface as "(insufficient PA in model)" with their ESPN season stats only.
 These are often the recent callups (Angel Martínez was a great example
 — PL had a glowing recap but rh3 didn't even have him in the file at
 first; later he appeared at rank #121).
+
+---
+
+## Step 3b — Full roster comparison mode (optional)
+
+**Trigger:** user says "evaluate my whole roster against the FA pool",
+"tell me if I should drop anyone for an FA upgrade", "roster vs FA",
+or similar.
+
+In this mode, instead of a single drop target, you evaluate every
+rostered player in a bucket against the FA pool simultaneously.
+
+### 3b-1 — Pull roster
+
+```python
+roster_df = get_my_roster_with_injuries()
+# columns: player_name, lineup_slot, position, eligible_slots,
+#          pro_team, injury_status, projected_total_points, rh3/rp3/rprs2 (joined)
+```
+
+### 3b-2 — Separate buckets and sort weakest-first
+
+For each bucket (H, SP, RP), sort rostered players by their projection
+ascending (weakest first). This surfaces the most actionable drops at the
+top of the table.
+
+### 3b-3 — Match each roster player against FA candidates
+
+For each rostered player, find FA candidates that beat them by a meaningful
+margin:
+
+| Bucket | Beat-by threshold |
+|---|---|
+| H | rh3 FP/g > roster_player_fpg + **0.010** |
+| SP | rp3 FP/start > roster_player_fps + **0.20** |
+| RP | rprs2 > roster_player_rprs2 + **5** |
+
+Present as a "drop → add" table sorted by roster player projection ascending:
+
+```markdown
+| Drop (roster) | Proj | Add (FA) | FA Proj | Delta | FA Owned | FA Injury | Flex |
+|---|---|---|---|---|---|---|---|
+| Donovan, B | 3.41 fpg | Martínez, A | 3.68 fpg | +0.27 | 14% | — | ~ partial |
+```
+
+### 3b-4 — IL-stash carve-out
+
+**Do not list IL60-stashed players as drop candidates** unless their
+projected return date is > 60 days out. IL60-stashed players are sunk
+costs for the IL slot — they do not occupy an active slot, so dropping
+them costs only a future roster spot, not current production. Surface the
+information ("X is on IL60, return TBD / [date]") but do not auto-flag
+as drop unless the user asks specifically.
+
+Players on IL10 or with "Day-to-Day" status who are in active slots ARE
+valid drop candidates if a meaningful upgrade exists.
+
+### 3b-5 — Injury status on ALL FA candidates (mandatory)
+
+Always pull `injuryStatus` for every FA candidate surfaced in this mode.
+A 0.1%-owned FA with a 12.11 rp3 projection may be on IL60 themselves.
+Flag prominently:
+
+> "**[FA name] — IL60, return date unknown — do not add without verifying.**"
+
+Do not recommend an IL60 FA as a direct replacement for an active-slot
+player without flagging the slot mismatch.
 
 ---
 
@@ -231,8 +372,9 @@ unreadable past ~10 candidates with full deep-dive details.
   cares more about absolute upside than claim risk.
 - Forgetting accent-normalization on name joins — Iván Herrera,
   José Soriano, Luis García Jr. will all fail naive string match.
-- Same-name collisions (Max Muncy LAD vs Max Muncy ATH) — always
-  disambiguate by team or by `pa_to` max.
+- Same-name collisions (Max Muncy LAD vs Max Muncy ATH) — always key
+  on `(norm_name, pro_team)` tuple or use `resolve_batter_id(name, team=..., position=...)`.
+  Bare-name dict lookup caused a false "drop" recommendation on 2026-05-25.
 - Treating "no rh3 row" as "skip" — recent callups are often the
   most interesting names (Angel Martínez, Logan Henderson, etc.).
   Surface them with ESPN stats only and a note.

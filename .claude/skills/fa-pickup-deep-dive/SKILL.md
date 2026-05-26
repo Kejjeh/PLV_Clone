@@ -37,6 +37,32 @@ Try in order:
 If multiple matches (e.g., two players with same surname), surface
 all candidates and ask user to pick.
 
+**Same-name collision guard (mandatory):** Build the rh3 lookup keyed
+on `(norm_name, pro_team)` tuple, never bare name. Canonical failure:
+Max Muncy LAD (3B, 571970, rh3=0.578 — hold) vs Max Muncy ATH (C,
+691777, rh3=0.379 — drop candidate) — identical `_norm()` keys, opposite
+verdicts. A 2026-05-25 roster audit assigned the wrong projection.
+
+```python
+import unicodedata
+def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+
+rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+rh3_idx = {}
+dup_keys = set()
+for _, row in rh3.iterrows():
+    key = (_norm(row['player_name']), str(row.get('team', '')).upper())
+    if key in rh3_idx:
+        dup_keys.add(key)
+    rh3_idx[key] = row
+if dup_keys:
+    print(f"WARNING: duplicate rh3 keys {dup_keys} — resolve by team")
+def rh3_row(name, team): return rh3_idx.get((_norm(name), str(team).upper()))
+```
+
+Use `pro_team` from the ESPN row. If absent, call `resolve_batter_id()`
+from `plv_clone.utils.name_match`. See `/player-id-resolve`.
+
 If no match anywhere: tell user, suggest a search alternative
 (MLB Stats API athlete search).
 
@@ -95,6 +121,23 @@ For HITTER — query last 5-10 games:
 - Bat tracking metrics if available (bat_speed, swing_length,
   attack_angle) — but apply Rule 5 (sample-size honesty), only
   surface if N ≥ 30 swings recent
+- **xwOBACON year-over-year trajectory** (mandatory for any FA pickup
+  or drop target where the user is weighing recent performance against
+  historical norms):
+
+```python
+for yr in [2022, 2023, 2024, 2025, 2026]:
+    con.execute(f"""
+    SELECT COUNT(*) bb, AVG(estimated_woba_using_speedangle) xwobacon
+    FROM read_parquet('data/research/xfp_cache/statcast_{yr}.parquet')
+    WHERE batter=? AND events IS NOT NULL AND events != ''
+      AND launch_speed IS NOT NULL
+    """, [batter_id]).df()
+```
+
+Display as a one-line table: `xwOBACON: 2022: 0.XXX | 2023: 0.XXX | 2024: 0.XXX | 2025: 0.XXX | 2026: 0.XXX → RISING/STABLE/DECLINING`
+
+This answers: **is the model's history-weighted projection anchored on a rising, stable, or falling contact quality platform?** A declining trajectory means the model may be over-projecting based on prior seasons that are no longer representative. A rising trajectory means the model may be under-projecting.
 
 ---
 
@@ -127,10 +170,29 @@ fas = league.free_agents(size=2000)   # one unfiltered call
 # Then find your target by name (normalize accents — see Step 1)
 ```
 
-Find the player's `percent_owned`. Translation to 8-team BrownU:
-- < 50%: clearly available
-- 50-80%: marginal — may already be rostered in 8-team
-- 80%+: probably rostered; check `get_all_teams()` to confirm
+Find the player's `percent_owned`. **NEVER conclude a player is rostered
+from percent_owned alone — always verify via `get_all_teams()`.** In an
+8-team league, a player at 60-70% nationally owned is routinely
+unclaimed. This was confirmed 2026-05-25: Emmett Sheehan showed 60.7%
+owned and the analysis incorrectly concluded "almost certainly rostered"
+without calling `get_all_teams()` — he was a FA.
+
+```python
+# MANDATORY: always verify actual roster status
+league = _get_league()
+for team in league.teams:
+    for player in team.roster:
+        if _norm(player.name) == _norm(target_name):
+            print(f"ROSTERED on {team.team_name} — cannot pick up")
+            break
+else:
+    print("Confirmed FA — available to add")
+```
+
+Ownership % as a **rough prior only** (not a conclusion):
+- < 30%: almost certainly FA in 8-team
+- 30-70%: unknown — must verify via `get_all_teams()`
+- 70%+: likely rostered but still verify — do not assume
 
 If they're on another team's roster, surface that — picking up isn't
 possible without a trade.
@@ -227,9 +289,17 @@ Format:
   (see registry 2026-05-16 re-audit)
 - Recommending an IL'd player without surfacing return_date
 - Recommending someone who's actually on another team's roster
+- **Inferring roster status from percent_owned** — "60% owned = probably rostered in 8-team"
+  is WRONG. Always call `get_all_teams()` and check `team.roster` explicitly. The
+  Sheehan error (2026-05-25): 60.7% owned → concluded "almost certainly rostered" →
+  he was a FA. percent_owned is national ESPN data across all league sizes; it is
+  not a reliable proxy for 8-team roster status.
 - Forgetting to compare to user's drop target — "is X good" is less
   useful than "is X better than what I'd drop for him"
 - Using rh3 to rank an RP (use rprs2)
+- Resolving a named player to the wrong rh3/rp3 row because of a
+  same-name collision. Always check for duplicate `_norm()` keys when
+  Step 1 matches a player. See `/player-id-resolve`.
 
 ---
 

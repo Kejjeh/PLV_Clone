@@ -118,10 +118,41 @@ verdict, not the raw observed gap.**
 
 ---
 
-## Step 2.6 — xwOBACON separation (distinguish skill vs BABIP up)
+## Step 2.6 — Year-over-year xwOBACON trajectory (breakout ceiling estimator)
+
+Before assessing how "real" the current breakout is, check whether the xwOBACON improvement is part of a multi-year trend or just a within-season hot window:
+
+```python
+for yr in [2021, 2022, 2023, 2024, 2025, 2026]:
+    sql = f"""
+    SELECT COUNT(*) bb, AVG(estimated_woba_using_speedangle) xwobacon
+    FROM read_parquet('data/research/xfp_cache/statcast_{yr}.parquet')
+    WHERE batter=? AND events IS NOT NULL AND events != ''
+      AND launch_speed IS NOT NULL
+    """
+```
+
+| Year | Batted Balls | xwOBACON |
+|---|---|---|
+| 2021 | n | 0.XXX |
+| ... | | |
+| 2026 | n | 0.XXX |
+
+**Interpretation for breakouts:**
+
+- **xwOBACON rising year-over-year** → breakout is the continuation of a multi-year skill trajectory. **Highest sustainability.** The player has been improving; this season is confirmation, not aberration.
+- **xwOBACON stable across years + current L21d xwOBACON UP significantly** → breakout is real but new, not part of a trend. **Moderate sustainability** — watch for regression to the stable baseline.
+- **xwOBACON stable + current xwOBACON FLAT** → breakout is discipline-driven (fewer K, more BB) or BABIP hot. Sustainable in the K%/BB% dimension only; power/contact ceiling unchanged.
+- **xwOBACON declining year-over-year** → any xwOBA "breakout" is almost certainly outcomes (BABIP hot, HR landing). **Low sustainability.** The contact platform is falling; outcomes temporarily obscure it.
+
+**Surface in output:** `xwOBACON trajectory: RISING / STABLE / DECLINING (peak → current: ±0.XXX)` — this is the single most useful single-line summary for whether the breakout ceiling is real.
+
+---
+
+## Step 2.8 — xwOBACON separation (distinguish skill vs BABIP up, within-season)
 
 A hot stretch can come from (a) real contact-quality improvement OR
-(b) outcomes finding holes. Separate the two using xwOBACON:
+(b) outcomes finding holes. Separate the two using xwOBACON (Step 2.6 covers the multi-year version; this is the within-season split):
 
 ```python
 # xwOBACON = xwOBA on batted balls only (luck-decoupled from K%/BB%)
@@ -261,8 +292,73 @@ Map to user's actual decision (which to add / hold / sell).
 
 ---
 
+### Calibrated examples (2026-05-25)
+
+Three peak-type archetypes from the 2026-05-25 league-wide audit:
+
+**PROCESS_DRIVEN — Ryan Jeffers (C, Boone's Bad Bullpen)**
+Career %ile: 99.9% | rh3: 0.595 | Sust: IMPROVING
+Bayes P(talent > .320): **81.0%** | Survival: **92.7%** (+30PA) / **82.2%** (+60PA) | Weeks to reversion: 6.7
+All 5 physical inputs improved: bat_speed +1.1mph, EV90 +1.7mph, whiff% −4.9pt, z_contact% +5.6pt, xwOBACON +0.050
+Trade window: HOLD_SHORT — even process-driven peaks revert; the survival curve buys ~6-7 weeks, not a half-season.
+
+**OUTCOME_DRIVEN — Josh Naylor (1B, Frendy's Fantastic Team)**
+Career %ile: 92.4% | rh3: 0.571 | Sust: REGRESS
+Bayes P(talent > .320): **80.7%** — nearly identical to Jeffers — but process verdict: DECLINING.
+No process metrics improved. Surface outcomes inflated over true skill.
+Survival: 89.2% (+30PA) / **76.2%** (+60PA) | Weeks to reversion: 5.6
+Cross-verdict: **SELL_HIGH_WARNING**. Bayes alone cannot distinguish archetype; process verdict is the separator.
+
+**MIXED — Drake Baldwin (C, Frendy's Fantastic Team)**
+Career %ile: 99.8% | rh3: 0.679 | Sust: STABLE
+Bayes P(talent > .320): **100.0%** — highest in the league — yet trade window: HOLD_SHORT.
+Survival: 91.4% (+30PA) / **80.0%** (+60PA) | Weeks to reversion: 5.6
+Only 1/6 process metrics improved (xwOBACON +0.110). Elite Bayes reflects career level, not new skill level.
+Cross-verdict: CONSENSUS_HOLD_PEAK. Even a 100% Bayes posterior doesn't override a 5.6-week survival clock.
+
+Key takeaway: Jeffers, Naylor, and Baldwin share nearly identical survival horizons (~5-7 weeks) and all have
+Bayes 80%+. What separates them is the process verdict — IMPROVING vs DECLINING vs MIXED. Always pull that
+column first before acting on Bayes or surface rh3.
+
+---
+
+## Name-collision guard (mandatory before any rh3 lookup)
+
+When building a `dict[name] → rh3 row` lookup, NEVER key on normalized
+name alone. Two MLB players named "Max Muncy" exist (LAD batter_id 571970,
+ATH batter_id 691777); a bare name dict silently assigns the wrong
+projection. Canonical fix:
+
+```python
+import unicodedata
+def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+
+rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+rh3_idx = {}
+dup_keys = set()
+for _, row in rh3.iterrows():
+    key = (_norm(row['player_name']), str(row.get('team', '')).upper())
+    if key in rh3_idx:
+        dup_keys.add(key)
+    rh3_idx[key] = row
+if dup_keys:
+    print(f"WARNING: duplicate rh3 keys {dup_keys} — verify team-keyed resolution")
+
+def rh3_row(name, team):
+    return rh3_idx.get((_norm(name), str(team).upper()))
+```
+
+Use `pro_team` from the ESPN row as the second key. If unavailable, call
+`resolve_batter_id(name, team=..., position=...)` from
+`plv_clone.utils.name_match`.
+
+---
+
 ## Anti-patterns this skill exists to prevent
 
+- **Building `{_norm(name): row}` dicts from rh3 without team key.**
+  Always key on `(norm_name, pro_team)` tuple to prevent same-name
+  player collisions (canonical: Max Muncy LAD #39 vs ATH #331).
 - **Calling a breakout sustainable on xwOBA alone.** Step 1's
   multi-axis table is non-optional. Montgomery had elite xwOBA
   improvement but whiff% actually got WORSE — that's an outcome

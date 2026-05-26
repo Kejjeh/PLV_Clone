@@ -127,6 +127,9 @@ Refresh complete:
 Next checkpoints:
   • <returning IL player + date> if any
   • <forced-drop date> if SP cap will be hit
+    Formula: forced-drop date = earliest return_date where (healthy_sp + 1) * 1.19 >= 10.
+    At that date, pre-identified cut from bottom of rp3 rankings must be ready.
+    Example: Glasnow Jun 15 (9 SPs → 10.7/wk) = forced drop by Jun 15; Fried Jun 16 = second cut.
 ```
 
 ---

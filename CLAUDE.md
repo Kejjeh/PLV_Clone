@@ -80,6 +80,10 @@ python scripts/xfp/run_roster_audit.py
 - `/refresh-and-commit-and-push` — daily refresh ritual wrapped end-to-end.
 - `/fa-pickup-deep-dive` — single-player deep dive: model projection
   + recent Statcast + injury + ownership + recommendation.
+- `/fa-monitor` — proactive weekly scan across 6 signals (SP first-start
+  fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-
+  then-dropped comeback, IL return timing, role-change RP). Run Monday
+  mornings. Script: `scripts/xfp/run_fa_monitor.py`.
 - `/fa-replacement-pool` — broad scan: given a player to drop, returns
   ranked FA replacement candidates above a season-FP threshold with
   rh3 join, Δ vs drop target, and positional-flex match. Uses the
@@ -99,14 +103,32 @@ python scripts/xfp/run_roster_audit.py
   the current week), compares against user's rostered SPs, includes
   mandatory `get_all_teams()` verification (Connelly Early bug).
 - `/slump-or-decline` — diagnose a hitter slump: career/2025/2026/L21d
-  decomposition + xwOBA L21d vs 2025 baseline (the load-bearing
-  diagnostic) + bounce MC scenarios + games-to-break-X-RoS math.
-  Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL.
+  decomposition + xwOBACON/shrinkage/anchor-in-CI + process metrics +
+  **year-over-year xwOBACON trajectory** (distinguishes valid prior-trough
+  recovery templates from structural decline where recovery ceiling is lower) +
+  three-test convergence panel (MC bounce 10k sims, Bayesian posterior
+  talent, historical comp matcher 54k snapshots). DROP requires all
+  3 tests to agree. Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL.
+- `/league-deep-audit` — full 8-team league-wide statistical audit v4
+  (11 layers, calibrated ECE=0.0197): career-form, 9-marker sustainability,
+  xwOBACON/shrinkage/anchor-in-CI, process metrics, K%-decomp, PEAK validator,
+  injury signals (ESPN DTD/IL), MC bounce (10k sims, λ=0.20 recency decay),
+  Bayesian posterior talent (recency-weighted), historical comp matcher (54k
+  snapshots, age-matched ±3yr), peak decay survival curves with Wilson CIs,
+  SP velo/k-form. Power ranking, per-team breakdown, slump cards with
+  4-signal convergence, trade targets, sell-high alerts.
+  Script: `league_wide_full_audit.py`.
 - `/breakout-sustainability` — diagnose if a hot hitter's recent
   L21d is skill change vs outcome luck. Decomposes bat tracking,
   discipline, contact quality across 2025/season/L21d windows,
   classifies fantasy archetype, and outputs SUSTAINABLE / NARROW /
   HOT-STREAK verdict.
+- `/sp-breakout-signal` — evaluate whether a starting pitcher's recent
+  hot stretch is persistent skill or outcome noise. Uses rolling-window
+  good-start methodology (33,063 SP starts, 2018-2025 calibration;
+  threshold: fp_proxy_per_bf ≥ −0.0476). Triggered by "is X on a hot
+  streak", "should I trust X's recent starts", or any FA SP where last
+  3-5 starts are cited as evidence.
 - `/savant-compare` — Baseball Savant percentile side-by-side for
   2-6 players. WebFetches each player's profile, extracts percentile
   rankings, builds comparison table, identifies archetypes. Supports
@@ -119,6 +141,30 @@ python scripts/xfp/run_roster_audit.py
   MLB Stats API + ESPN roster. Catches the 4 known SP-projection bug
   patterns (IL'd projected, undercount, mlbam=None false-positive,
   today excluded). See `reference_matchup_dashboard_sp_gotchas.md`.
+- `/player-id-resolve` — name-collision prevention for same-name MLB
+  players (canonical: Max Muncy LAD 3B vs ATH C). Use
+  `resolve_batter_id(name, team=..., position=...)` from
+  `plv_clone.utils.name_match`; builds `(norm_name, pro_team)` tuple
+  keys and consults `KNOWN_COLLISIONS`. Required before any dict-keyed
+  batter lookup in audit, compare, or FA scan contexts.
+- `/roster-verify` — hard pre-condition before labeling ANY player as
+  "yours." Calls `get_my_roster_with_injuries()` live, builds a
+  normalized name set, applies `my_tag()` to every row. Exists because
+  on 2026-05-25 Weathers (Late Night Bettsing) and Rasmussen (2015
+  Draft First Round) were labeled "Your SP" from stale session context.
+  Required before: SP/RP/hitter evals, drop/add recs, matchup previews,
+  any Statcast pull filtered by roster membership.
+- `/monday-morning` — **meta-skill**: chains roster-verify → roster-audit
+  → sp-week-plan → fa-monitor into one unified Monday report. Pulls
+  roster/FA data once and passes through all steps. Replaces 4 separate
+  invocations with manual handoff.
+- `/fa-signal-to-decision` — **meta-skill**: fa-monitor HIGH alerts →
+  fa-pickup-deep-dive (≤3 players) → ranked add recommendation. Replaces
+  the manual "signal fired, should I deep-dive it?" loop.
+- `/forced-drop-planner` — compute exact date the 10-SP cap will be
+  breached by upcoming IL activations, pre-identify cut candidates from
+  rp3 rankings, simulate full IL return cascade. Use when multiple IL
+  starters (Glasnow/Fried pattern) are returning in close succession.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
@@ -154,15 +200,21 @@ sibling and ask if it needs attention too.
    pool scans.** Silently drops low-owned high-FP candidates. Always
    `league.free_agents(size=2000)` + manual position filter for any
    "all FAs above threshold" query. See `feedback_fa_pool_size_cap.md`.
-7. **Don't recommend a PL-ranked player as a FA pickup without
-   `get_all_teams()` verification.** PL ranks reflect MLB performance,
-   not your specific 8-team league's roster state. The Connelly Early
-   bug (2026-05-18) — recommended a stash that was actually rostered.
-   See `feedback_pl_rank_not_equal_fa_available.md`.
+7. **Don't conclude a player is rostered without calling `get_all_teams()`.**
+   Neither PL rank nor percent_owned is a substitute. PL ranks reflect
+   MLB performance, not 8-team roster state (Connelly Early, 2026-05-18).
+   percent_owned is national data — 60% nationally owned is routinely
+   unclaimed in 8-team (Emmett Sheehan, 2026-05-25: 60.7% owned, confirmed
+   FA). Always verify via `league.teams` roster scan before concluding
+   anyone is unavailable. See `feedback_pl_rank_not_equal_fa_available.md`.
 8. **Don't recommend dropping a hitter without checking xwOBA L21d
-   vs 2025 baseline first.** Surface MC can show "drop" while the
-   underlying contact quality says "bounce coming." See
-   `reference_xwoba_l21d_vs_2025_diagnostic.md`.
+   vs 2025 baseline AND xwOBACON year-over-year trajectory first.**
+   MC can show "drop" while the underlying contact quality says "bounce
+   coming." The YoY trajectory determines whether prior slump/recovery
+   patterns are valid templates: if xwOBACON is declining each year
+   (Turner pattern), recovery will hit a lower ceiling than prior
+   troughs. If xwOBACON is stable, prior recoveries predict this one.
+   See `reference_xwoba_l21d_vs_2025_diagnostic.md`.
 9. **Don't trust matchup.html SP projection blindly.** Four known bug
    patterns can cause undercount, IL'd-projected, or mlbam-None false
    matches. Run `/matchup-audit` after any change to
@@ -173,7 +225,12 @@ sibling and ask if it needs attention too.
     `dict[name]=batter_id` map. Always use
     `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`
     which consults `KNOWN_COLLISIONS` and refuses to silently guess. See
-    `feedback_player_name_collisions.md`.
+    `feedback_player_name_collisions.md` and `/player-id-resolve`.
+11. **Don't label any player as "yours" without a live roster call.**
+    On 2026-05-25, Weathers and Rasmussen were labeled "Your SP" from
+    session memory — both were on opponent rosters. Always call
+    `get_my_roster_with_injuries()` first and use `my_tag()` to annotate.
+    See `/roster-verify` skill.
 
 ## Memory pointers (for context-dense lookups)
 

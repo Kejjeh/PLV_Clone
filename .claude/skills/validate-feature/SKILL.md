@@ -359,3 +359,22 @@ At the end of a `/validate-feature` run, the user should have:
 The writeup is the deliverable. Even a FAIL is valuable — it goes into
 the rejected section of the registry to prevent re-investigating the
 same dead end (Rule 6).
+
+---
+
+## Recently closed dead ends (do not re-investigate without new data)
+
+All from 2026-05-25 sweep. Full results in `reference_validated_signals_registry.md`.
+
+| Signal | Target | Verdict | Root cause |
+|---|---|---|---|
+| `xwoba_contact_to` (split-day) | rp3 | REJECTED | Algebraic redundancy — `xwoba_per_pa + k_pct + bb_pct` reconstructs it |
+| `stuff_contact_composite` (binary flag) | rp3 | MARGINAL +0.0021 | Binary discards magnitude; continuous forms already in model |
+| Trajectory slopes (`slope_k_pct_to` etc.) | rp3 | REJECTED | Non-causal at sd=30 is pure leakage; causal version +0.0000 |
+| Pitch mix changes (entropy, pitch type %) | rp3 | REJECTED | Holdout reversal 2024-2025 — arsenals normalized across MLB |
+| Age × drift interactions (7 candidates) | rp3 | REJECTED | Max lift +0.0003; sign unstable across age strata |
+| `xwoba_on_contact_to_sh` | rh3 | REJECTED | Same algebraic redundancy as rp3 |
+| Bat speed features | rh3 | BLOCKED | 2024+ only; need 2028+ for 5-year training set |
+| Sprint speed slope | rh3 | REJECTED | Training positive, both 2024-2025 holdouts negative |
+
+Next viable rh3/rp3 research window: 2028 (bat speed delta signal) or when a structural MLB rule change creates new signal opportunities.

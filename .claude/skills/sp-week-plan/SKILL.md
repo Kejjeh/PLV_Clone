@@ -38,7 +38,7 @@ roster = get_my_roster_with_injuries()
 pitchers = roster[roster['eligible_slots'].apply(
     lambda s: any(p in s for p in ['SP','RP','P']) if isinstance(s,list) else False
 )]
-sps_healthy = pitchers[(pitchers['position']=='SP') & (~pitchers['injured'])]
+sps_healthy = pitchers[(pitchers['position']=='SP') & (pitchers['lineup_slot'] != 'IL') & (~pitchers['injured'])]
 sps_injured = pitchers[(pitchers['position']=='SP') & (pitchers['injured'])]
 ```
 
@@ -222,6 +222,32 @@ If counts differ but you can't immediately identify the cause, surface
 the discrepancy to the user before recommending any bench decisions —
 their dashboard view may not match what `/sp-week-plan` shows, and
 bench choices made off the wrong count will misfire.
+
+---
+
+## Step 6.6 — Forward-looking forced-drop date
+
+After cap math for this week, compute when the cap will be breached
+by upcoming IL activations:
+
+```python
+from datetime import date
+
+il_returns = roster[(roster['injured']==True) & (roster['position']=='SP') & (roster['lineup_slot']=='IL')]
+il_returns = il_returns.sort_values('days_until_return')
+
+for _, r in il_returns.iterrows():
+    projected_healthy = len(sps_healthy) + 1  # +1 per return
+    proj_starts = projected_healthy * 1.19
+    if proj_starts >= 10:
+        print(f"FORCED DROP DATE: {r['return_date']} — {r['player_name']} activates → {projected_healthy} SPs → {proj_starts:.1f} starts/wk (over cap)")
+        print(f"Pre-identify cut NOW from bottom of rp3 rankings: {[s['player_name'] for s in sps_healthy sorted by rp3 asc][:2]}")
+        break
+```
+
+Report as: "Forced-drop deadline: **Jun 15** (Glasnow activates → 9 SPs → 10.7/wk). Pre-cut: Warren or Bradish."
+
+This prevents the surprise of a returning star creating a cap violation with no pre-planned cut.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 name: slump-or-decline
-description: Rigorous diagnostic of whether an underperforming hitter is in luck-driven outcome variance (will bounce) or real skill decline (won't). Uses L150 PA as the stable baseline (not noisy L21d), explicit sample-size confidence intervals, Bayesian shrinkage of recent windows toward career mean, xwOBACON separation from xwOBA, process-metric decomposition (bat speed, whiff%, chase%, Z-contact%, K%, BB%), pitch-mix attack changes, splits, calendar history, and bounce Monte Carlo. Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL with statistical honesty about confidence. Use whenever the user asks "should I give X more time", "is this slump real", "how close is X to bouncing", or surface-MC says drop on noisy recent data.
+description: Rigorous diagnostic of whether an underperforming hitter is in luck-driven outcome variance (will bounce) or real skill decline (won't). Uses L150 PA as the stable baseline, sample-size CIs, Bayesian shrinkage, xwOBACON separation, process-metric decomposition (bat speed, whiff%, chase%, Z-contact%, K%), pitch-mix changes, calendar history, and a three-test statistical convergence panel: (1) MC bounce simulator — 10k bootstrap sims from career rolling-150 distribution; (2) Bayesian posterior talent — conjugate normal-normal update, P(true talent > .320); (3) historical comp matcher — 54k real 2015-2025 snapshots at similar career %ile/PA/month, actual outcome distributions. DROP verdict requires all 3 tests to agree. Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL. Use when the user asks "should I hold X", "is this slump real", "should I drop X", or any player is at a career-low percentile.
 ---
 
 # slump-or-decline
@@ -159,6 +159,56 @@ shrunk_gap = shrunk_l21d - anchor_xwoba
 Always show BOTH the L150 baseline AND the 2025 reference in output —
 2025 catches year-over-year decline (which still matters for trade
 context and contract decisions), but L150 drives the immediate verdict.
+
+---
+
+## Step 4.5 — Year-over-year xwOBACON trajectory (structural decline detector)
+
+**This is the step that distinguishes "recovering from a familiar trough" from "the floor is lower now."**
+
+A player can have the exact same rolling xwOBA trough (e.g., 0.285) in two different years — once as pure variance (recovers to career mean) and once as structural decline (recovers to a lower ceiling). The xwOBACON trajectory across years is the tell.
+
+```python
+# Pull full-season xwOBACON for each year, sorted ascending
+for yr in [2021, 2022, 2023, 2024, 2025, 2026]:
+    sql = f"""
+    SELECT COUNT(*) bb, AVG(estimated_woba_using_speedangle) xwobacon
+    FROM read_parquet('data/research/xfp_cache/statcast_{yr}.parquet')
+    WHERE batter=? AND events IS NOT NULL AND events != ''
+      AND launch_speed IS NOT NULL
+    """
+```
+
+Build the year-by-year table:
+
+| Year | Batted Balls | xwOBACON |
+|---|---|---|
+| 2021 | n | 0.XXX |
+| 2022 | n | 0.XXX |
+| 2023 | n | 0.XXX |
+| 2024 | n | 0.XXX |
+| 2025 | n | 0.XXX |
+| 2026 | n | 0.XXX |
+
+**Interpretation rules:**
+
+- **xwOBACON stable across years (within ±0.015)**: prior-year troughs are valid recovery templates. A trough in 2026 at the same xwOBA depth as a 2023 trough predicts a similar recovery.
+- **xwOBACON declining year-over-year (each year lower)**: prior recovery templates are NOT valid. The player's contact quality ceiling is falling. A recovery from a trough will hit a lower ceiling than it did in 2023.
+- **xwOBACON up year-over-year**: player is improving — a trough is almost certainly variance.
+
+**Key threshold:** If xwOBACON has declined ≥ 0.030 from peak to current full-season, classify as **STRUCTURAL CONTACT DECLINE** regardless of how many prior troughs/recoveries occurred. The 0.030 threshold corresponds to roughly one full skill tier (e.g., league-avg contact → below-avg contact).
+
+**The Turner pattern (canonical example):** 2026 rolling xwOBA at 0.285 looks identical to 2023 trough at 0.285. But:
+- 2023 trough xwOBACON: 0.396 (stayed high during trough → outcomes not falling, skill intact)  
+- 2026 full-season xwOBACON: 0.330 (66pt lower → contact quality genuinely lower)
+The 2023 recovery (to 0.363 xwOBA) happened on a 0.396 xwOBACON platform. In 2026, the platform is 0.330 — the recovery ceiling is lower.
+
+**Output:** Append to the verdict block:
+```
+xwOBACON trajectory: [year list] → STABLE / DECLINING / IMPROVING
+YoY drop from peak: −0.XXX (STRUCTURAL flag if ≥ 0.030)
+Recovery ceiling adjustment: prior templates predict X.XXX → adjusted ceiling X.XXX
+```
 
 ---
 
@@ -397,48 +447,203 @@ as a percentage 0-100, not a decimal proportion. Values like 81, 97,
 
 ---
 
-## Step 14 — Bounce Monte Carlo (with confidence anchored on Steps 2-7)
+## Step 14 — Three-test statistical convergence (replaces single MC step)
 
-Run 10,000 bootstrap sims under three scenarios — but pre-tier by
-the confidence-adjusted gap from Step 4 (Bayesian shrinkage), not raw L21d:
+Run all three tests. A HOLD verdict requires ≥ 2 of 3 to support bounce.
+A DROP verdict requires all 3 to support decline — which is genuinely rare.
+
+### Step 14a — MC bounce simulator (10k career-distribution bootstrap)
 
 ```python
-sims_curr   = ...  # bootstrap from 2026 FPs
-sims_bounce = ...  # scale by career_fp_g / current_fp_g
-sims_half   = ...  # scale by midpoint
+from scripts.xfp.mc_bounce_simulator import batch_mc_bounce
+mc = batch_mc_bounce([batter_id], n_sim=10_000)
 ```
 
-Report mean / P>200 / P>250 for each scenario.
+The simulator draws 10,000 samples from the player's OWN career rolling-150
+xwOBA distribution (not a parametric assumption), then applies 30-PA shrinkage:
+`sim_30pa = (30 * sample + 150 * career_mean) / 180`
 
-Bounce-math: "needs N games at career rate to break 200 RoS."
+Report:
+- **P(bounce above career median)** — what fraction of simulations project
+  next-30PA xwOBA above the career median? The cleanest single number.
+- **Expected xwOBA next 30PA** and **95% CI** on the distribution.
+- If P(bounce > median) > 55%: bounce is more likely than not from career history alone.
+- If P(bounce > median) < 40%: career distribution itself says this player
+  structurally lives in the lower range — more information needed.
+
+### Step 14b — Bayesian posterior talent estimate
+
+```python
+from scripts.xfp.bayesian_talent_estimator import batch_bayesian_talent
+b = batch_bayesian_talent([batter_id])
+```
+
+Conjugate normal-normal update:
+- **Prior:** career rolling-150 xwOBA distribution (mean μ₀, variance σ₀²)
+- **Likelihood:** observed L21d PA events (mean x̄ᵢ, n observations)
+- **Posterior:** precision-weighted combination
+
+Report:
+- **posterior_mu** — best current estimate of true talent level (shrinks
+  L21d observation toward career prior by how much the L21d sample moves precision)
+- **95% credible interval** [ci_low, ci_high]
+- **P(true talent > .320)** — P above league average. The single most
+  useful number for a drop decision:
+  - > 70%: clearly above-average talent, slump is noise
+  - 40-70%: borderline, need other signals
+  - < 40%: talent may genuinely be at or below average right now
+- **Games to 200 FP at career rate** — if talent is at prior_mu, how
+  long until 200 RoS FP? Frames the recovery timeline concretely.
+
+Note: posterior_mu is a BETTER estimate than L21d xwOBA alone AND a
+better estimate than 2025 xwOBA alone. It correctly weights how much
+new information (L21d PA) should update a career-long prior.
+
+### Step 14c — Historical comp matcher (2015-2025 outcome distributions)
+
+```python
+from scripts.xfp.historical_comp_matcher import batch_historical_comps
+comps = batch_historical_comps([batter_id])
+```
+
+Finds ALL real historical players (2015-2025 Statcast) who were at:
+- Similar career percentile (±10 percentile points)
+- Similar career PA count (±20%)
+- Similar calendar month (±1 month)
+
+And shows what actually happened to them next.
+
+Report:
+- **n_comps** — number of real historical matches. > 200 = statistically
+  reliable; 50-200 = directional; < 50 = informational only.
+- **P(bounced within 30 PA)** — fraction of real comps who had a
+  meaningful xwOBA improvement (> +0.010) in the next 30 PA events.
+- **P(bounced within 60 PA)** — for slower-building recoveries.
+- **Median next-30PA xwOBA + 10th/90th percentile range** — the full
+  outcome distribution. The 10th percentile is the realistic downside.
+- **comp_sample** — up to 5 example real comps for context ("Javier Báez
+  (2023) at 8% form" etc.)
+
+This is the most epistemically rigorous test: it makes no distributional
+assumptions, uses no model, and is grounded entirely in historical reality.
+When n_comps > 500, treat hist_p_bounce as near-ground-truth for what
+happens to players in this exact situation.
 
 ---
 
-## Step 15 — Verdict synthesis (calibrated, not point-estimate)
+## Step 15 — Verdict synthesis (4-test calibrated, not point-estimate)
 
-Combine Steps 2-13 into a calibrated verdict. **The xwOBA L21d gap
-ALONE should never drive the verdict** — it must be cross-checked
-with sample-size CI, shrinkage, xwOBACON, and process metrics.
+Combine Steps 2-13 AND all three Step 14 tests into a calibrated verdict.
+**The xwOBA L21d gap ALONE should never drive the verdict** — it must be
+cross-checked with CI, shrinkage, xwOBACON, process metrics, AND now
+the three statistical tests.
+
+**Verdict decision matrix:**
 
 | Verdict | Required evidence |
 |---|---|
-| **HOLD — bounce expected** | xwOBACON down + EV90/bat-speed holding + process metrics stable-or-improving + L150 PA shrunk gap < 0.030 + slump_bounce_pct > 75% |
-| **HOLD with caveat** | Shrunk gap −0.030 to −0.050 + process metrics mixed. Watch for 2 weeks; revisit. |
-| **SELL-HIGH** | Shrunk gap < −0.050 + xwOBACON down + EV90/bat-speed declining + market still values player (e.g., PL still ranks top-50). Sell while perception lags. |
-| **DROP** | Shrunk gap < −0.060 + age-decline plausible + multi-year trajectory negative + no role/PT protection. |
-| **NOT SLUMPING (structural)** | Current rate ≈ career rate AND surface MC depressed by missed time (IL). Action depends on roster slot pressure, not bounce. |
+| **HOLD — bounce expected** | ≥ 2 of: (a) anchor_in_CI=True OR (b) MC P>median > 55% OR (c) Bayes P>avg > 60% OR (d) hist_p_bounce > 60% AND ≥ 1 of: process IMPROVING OR K-decomp BABIP_DRIVEN OR xwOBACON gap < 0.040 |
+| **HOLD with caveat** | Mixed statistical signals (2 tests say bounce, 1 says decline). Watch 2 weeks. |
+| **SELL-HIGH** | Bayes posterior_mu < 0.280 + hist_p_bounce < 45% + process DECLINING + shrunk gap < −0.050. Market still values player. Sell while perception lags. |
+| **DROP** | ALL of: Bayes P>avg < 30% + hist_p_bounce < 45% + MC P>median < 40% + REGRESS + process DECLINING/MIXED + shrunk gap < −0.060 + age-decline plausible. This gate is intentionally strict. **Note: STRUCTURAL CONTACT DECLINE (Step 4.5, xwOBACON YoY drop ≥ 0.030) lowers the DROP bar** — prior recovery templates are invalid; a "recoverable trough" pattern can still be a genuine decline if the xwOBACON platform itself has fallen. |
+| **NOT SLUMPING (structural)** | Current rate ≈ career rate. action depends on roster slot pressure. |
 
-Always show:
+Always surface in the output:
 - Shrunk gap (not raw)
-- Process-metric direction (the actual skill signal)
-- xwOBACON gap (the BABIP-variance signal)
-- "N games to break 200 RoS at career rate" as the recovery anchor
+- Process-metric direction (leading indicator)
+- xwOBACON gap (BABIP-variance signal)
+- MC P(bounce > median) [Step 14a]
+- Bayes posterior μ + P(true talent > .320) [Step 14b]
+- Hist n_comps + P(bounce 30PA) [Step 14c]
+- "N games to break 200 RoS at career rate" as recovery anchor
 - Confidence statement ("X PA in L21d — verdict has ±Y uncertainty")
+
+---
+
+### Calibrated examples (2026-05-25)
+
+**Freddie Freeman — CONSENSUS_HOLD_BOUNCE**
+Career %ile 14.1%, but process is IMPROVING on every axis (whiff% −5.7pt,
+chase% −4.5pt, Z-contact% +5.4pt, EV90 +1.8mph). Bayesian P(talent > .320)
+= 97.0%. MC 54.6%, hist 49.0% (104 comps). Anchor in CI. Three tests are
+split but process override is decisive: outcome noise, not skill decline.
+
+**Vlad Guerrero Jr. — HOLD_NOISE**
+Career %ile 13.2%, DTD (bruise, right). Anchor in CI (shrunk gap +0.005 vs
+anchor 0.343). 596 age-matched historical comps → 65.1% bounce rate. MC
+53.1%, Bayes P(>avg) 84.8%. BABIP-driven K-decomp. Verdict: noise.
+Process notes worsening (chase% +11.3pt, EV90 −5.5mph) — watch the
+DTD timeline but statistical tests do not support a drop call.
+
+**Rafael Devers — SPLIT-SIGNAL (why all 3 tests matter)**
+MC P(bounce) = 12.3% (alarming). Bayes P(talent > .320) = 70.9%.
+Hist P(bounce 30PA) = 72.0% (293 comps). Three tests point in three
+directions. Single-test verdict would be wrong in either direction.
+Anchor is in CI (shrunk gap +0.016) and process is declining but small;
+correct call is HOLD_NOISE with close monitoring — not DROP (MC alone
+would trigger), not safe HOLD (process declining on all axes).
+
+**Corey Seager — HOLD_NOISE but watch**
+Anchor in CI, MC 70.6%, Bayes 88.4%, hist 72.1% (340 comps) — statistics
+all say hold. But process is declining on every axis (whiff% +4.6pt,
+chase% +8.3pt, Z-contact% −4.4pt, EV90 −1.5mph, hard-hit% −8.6pt) AND
+active DTD (inflammation, not specified). The statistical tests override for
+now, but if process metrics don't stabilize in the next 14 days, revisit.
+
+---
+
+## Name-collision guard (mandatory before any rh3 lookup)
+
+When building a `dict[name] → rh3 row` lookup, NEVER key on normalized
+name alone. Two MLB players named "Max Muncy" exist (LAD batter_id 571970,
+ATH batter_id 691777); a bare name dict silently assigns the wrong
+projection. Canonical fix:
+
+```python
+import unicodedata
+def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+
+rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+rh3_idx = {}
+dup_keys = set()
+for _, row in rh3.iterrows():
+    key = (_norm(row['player_name']), str(row.get('team', '')).upper())
+    if key in rh3_idx:
+        dup_keys.add(key)
+    rh3_idx[key] = row
+if dup_keys:
+    print(f"WARNING: duplicate rh3 keys {dup_keys} — verify team-keyed resolution")
+
+def rh3_row(name, team):
+    return rh3_idx.get((_norm(name), str(team).upper()))
+```
+
+When pulling the player via ESPN (roster or FA pool), `pro_team` is always
+available. Use it as the second key. If `pro_team` is absent, call
+`resolve_batter_id(name, team=..., position=...)` from
+`plv_clone.utils.name_match` instead.
 
 ---
 
 ## Anti-patterns this skill exists to prevent
 
+- **Building `{_norm(name): row}` dicts from rh3 without team key.**
+  This is what caused a wrong Muncy LAD/ATH verdict in the roster audit
+  (2026-05-25). Always key on `(norm_name, pro_team)` tuple.
+- **Skipping Step 14's three-test convergence.** The old single-MC bounce
+  step was noisy. The three-test panel (MC + Bayesian + historical comps)
+  is the 2026-05-25 upgrade. All three must be run before a DROP verdict.
+  Vlad Jr. at 13th career percentile looked like a drop on career-form alone;
+  1,177 real historical comps (63% bounce rate) + Bayesian 79% P(>avg) + IMPROVING
+  process said hold. The old skill would have missed that.
+- **Ignoring hist_n_comps count.** A 70% bounce rate from 12 comps is
+  noise. A 63% bounce rate from 1,177 comps is load-bearing. Always surface
+  n_comps alongside the percentage.
+- **Confusing Bayesian posterior_mu with the L21d xwOBA.** The posterior
+  shrinks the noisy L21d observation toward the career prior by the relative
+  precision of each. A 86-PA L21d observation moves the posterior about halfway
+  from the prior. Always report posterior_mu, not raw L21d, as "where we think
+  the player's talent is."
 - **Treating a 21-day window as a verdict driver.** L21d typically has
   60-80 PA — well below xwOBA's 150 PA stabilization. The CI alone
   spans 0.080+ xwOBA, which is the entire range from "declining" to
@@ -472,6 +677,13 @@ Always show:
 - **Skipping multi-year baseline.** A "declining" call against 2025
   alone misses that 2024 was the actual outlier. Pull 2022-2025
   individually.
+- **Using prior recovery as a valid template without checking xwOBACON trajectory.**
+  The Turner pattern (2026-05-25): 2023 and 2026 both show rolling xwOBA at 0.285,
+  which looks identical. But 2023 trough xwOBACON was 0.396 (contact quality intact),
+  while 2026 full-season xwOBACON is 0.330 (genuinely lower platform). Prior recovery
+  to 0.363 xwOBA was built on the 0.396 platform — the 2026 recovery ceiling is lower.
+  Always run Step 4.5 before citing a prior slump/recovery as evidence that a current
+  trough will fully bounce back.
 
 ---
 

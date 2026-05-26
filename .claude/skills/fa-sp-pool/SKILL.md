@@ -82,6 +82,45 @@ For low-ownership upside plays, also surface bottom-quartile owned
 candidates with high season FP — these are the "league hasn't
 noticed yet" picks.
 
+### Recency outlier alert (model-lagging candidates)
+
+After the main sort, run a secondary scan for SPs whose recent form
+significantly exceeds their model projection:
+
+```python
+# Join rp3 projections to FA SP pool by name
+rp3 = pd.read_csv('data/outputs/xfp_rp3_projections.csv')
+rp3_fa = fa_sp_df.merge(rp3, on='player_name', how='left')
+
+# Flag: gs_to >= 10, recency_form_gap > 2.5, fp_per_start_last21 available
+outliers = rp3_fa[
+    (rp3_fa['gs_to'] >= 10) &
+    (rp3_fa['recency_form_gap'] > 2.5) &
+    (rp3_fa['fp_per_start_last21'].notna())
+].sort_values('recency_form_gap', ascending=False)
+```
+
+Surface each as:
+`⚠ RECENCY OUTLIER: {name} — rank #{rank}, xfp {xfp:.1f}/start, L21d {l21d:.1f}/start, gap +{gap:.1f}`
+
+**Why 10 GS threshold:** K% stabilizes at ~70 TBF (~5-6 GS); by 10 GS
+the season carries 67% weight in the prior blend and K% signal is fully
+credible. Below 10 GS the L21d gap can reflect a single dominant outing,
+not a skill shift.
+
+**Prior refresh trigger (10 GS):** When a SP has `gs_to >= 10` AND
+`recency_form_gap > 2.5` AND (`career_k_percentile >= 0.85` OR
+`k_pct improvement vs prior > 0.025`), flag them for manual prior review.
+The Bayesian prior anchors on career history and needs ~15+ GS to fully
+update, but K% signal is credible by 6 GS. At 10 GS the model is still
+31% prior-anchored but the evidence is real. Don't wait for 15 GS.
+
+**Why this exists:** On 2026-05-25, Max Meyer (rank #65, xfp=10.58) averaged
+17.0 FP/start in L21d with a +3.1 gap but was invisible to the main FA scan
+because he ranked below the replacement threshold (rank 45). Career form:
+PEAK/PEAK (k_pct 90th, velo 93.5th percentile). He was picked up by another
+team before surfacing. This alert exists to catch those cases.
+
 ---
 
 ## Step 4 — Fetch current PL Top 100 SP article
@@ -228,6 +267,12 @@ top-M are clear holds.**
 - **Ignoring injury status in the FA pool.** A 90-FP earner on IL15
   with no return date is a worse hold than a 60-FP earner who's
   active. Surface injury status alongside the rank.
+- **Ignoring recency_form_gap outliers below the replacement threshold.**
+  The model intentionally excludes L21d as a feature (failed +0.005r
+  validation gate); below-replacement pitchers with large positive gaps
+  are "model-lagging" candidates that need manual review. Run the
+  recency outlier scan (Step 3) every time — don't skip it because the
+  player ranks below the normal cut.
 
 ---
 
