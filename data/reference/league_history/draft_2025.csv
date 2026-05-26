@@ -1,0 +1,241 @@
+pick_no,player_name,team_abbr,position,round,fantasy_team
+1,Shohei Ohtani,LAD,DH,1,U Just Lost To Yainer Diaz
+2,Juan Soto,NYM,RF,1,The Polar Pasquatch
+3,Jose Ramirez,Cle,3B,1,Big Dumpers
+4,Bobby Witt Jr.,KC,SS,1,New York Ligers
+5,Aaron Judge,NYY,CF,1,Team Solomon
+6,Tarik Skubal,Det,SP,1,A Whole Ass Meal
+7,Paul Skenes,Pit,SP,1,A Whole Ass Meal
+8,Mookie Betts,LAD,SS,2,Team Solomon
+9,Vladimir Guerrero Jr.,Tor,1B,2,New York Ligers
+10,Francisco Lindor,NYM,SS,2,Big Dumpers
+11,Zack Wheeler,Phi,SP,2,The Polar Pasquatch
+12,Yordan Alvarez,Hou,LF,2,U Just Lost To Yainer Diaz
+13,Logan Gilbert,Sea,SP,2,U Just Lost To Yainer Diaz
+14,Dylan Cease,Tor,SP,3,The Polar Pasquatch
+15,Kyle Tucker,FA,RF,3,Big Dumpers
+16,Gunnar Henderson,Bal,SS,2,New York Ligers
+17,Corbin Carroll,Ari,CF,3,Team Solomon
+18,Ketel Marte,Ari,2B,3,A Whole Ass Meal
+19,Freddie Freeman,LAD,1B,3,A Whole Ass Meal
+20,Fernando Tatis Jr.,SD,RF,4,Team Solomon
+21,Rafael Devers,SF,3B,3,New York Ligers
+22,Garrett Crochet,Bos,SP,4,Big Dumpers
+23,William Contreras,Mil,C,4,The Polar Pasquatch
+24,Chris Sale,Atl,SP,4,U Just Lost To Yainer Diaz
+25,Corbin Burnes,Ari,SP,5,U Just Lost To Yainer Diaz
+26,Marcus Semien,NYM,2B,5,The Polar Pasquatch
+27,Adley Rutschman,Bal,C,5,Big Dumpers
+28,Cole Ragans,KC,SP,4,New York Ligers
+29,Emmanuel Clase,Cle,RP,5,Team Solomon
+30,Bryce Harper,Phi,1B,4,A Whole Ass Meal
+31,Ronald Acuna Jr.,Atl,RF,4,A Whole Ass Meal
+32,Devin Williams,NYM,RP,6,Team Solomon
+33,Josh Hader,Hou,RP,5,New York Ligers
+34,Corey Seager,Tex,SS,6,Big Dumpers
+35,Manny Machado,SD,3B,6,The Polar Pasquatch
+36,Steven Kwan,Cle,LF,6,U Just Lost To Yainer Diaz
+37,Alex Bregman,ChC,3B,7,U Just Lost To Yainer Diaz
+38,Framber Valdez,FA,SP,7,The Polar Pasquatch
+39,Blake Snell,LAD,SP,7,Big Dumpers
+40,Edwin Diaz,LAD,RP,6,New York Ligers
+41,Anthony Santander,Tor,RF,7,Team Solomon
+42,Jackson Chourio,Mil,LF,6,A Whole Ass Meal
+43,Trea Turner,Phi,SS,6,A Whole Ass Meal
+44,Ryan Helsley,Bal,RP,8,Team Solomon
+45,Luis Arraez,FA,1B,7,New York Ligers
+46,Jarren Duran,Bos,CF,8,Big Dumpers
+47,Mason Miller,SD,RP,8,The Polar Pasquatch
+48,Matt Olson,Atl,1B,8,U Just Lost To Yainer Diaz
+49,Raisel Iglesias,Atl,RP,9,U Just Lost To Yainer Diaz
+50,Pete Alonso,Bal,1B,9,The Polar Pasquatch
+51,Jose Altuve,Hou,2B,9,Big Dumpers
+52,Jackson Merrill,SD,CF,8,New York Ligers
+53,Will Smith,LAD,C,9,Team Solomon
+54,Pablo Lopez,Min,SP,8,A Whole Ass Meal
+55,Andres Munoz,Sea,RP,8,A Whole Ass Meal
+56,Aaron Nola,Phi,SP,10,Team Solomon
+57,Julio Rodriguez,Sea,CF,9,New York Ligers
+58,Ryan Walker,SF,RP,10,Big Dumpers
+59,Luis Castillo,Sea,SP,10,The Polar Pasquatch
+60,Yainer Diaz,Hou,C,10,U Just Lost To Yainer Diaz
+61,Michael King,SD,SP,11,U Just Lost To Yainer Diaz
+62,Elly De La Cruz,Cin,SS,11,The Polar Pasquatch
+63,Austin Riley,Atl,3B,11,Big Dumpers
+64,Josh Naylor,Sea,1B,10,New York Ligers
+65,Sonny Gray,Bos,SP,11,Team Solomon
+66,Robert Suarez,Atl,RP,10,A Whole Ass Meal
+67,Felix Bautista,Bal,RP,10,A Whole Ass Meal
+68,Max Fried,NYY,SP,12,Team Solomon
+69,Wyatt Langford,Tex,LF,11,New York Ligers
+70,Cody Bellinger,FA,RF,12,Big Dumpers
+71,Shota Imanaga,FA,SP,12,The Polar Pasquatch
+72,Jhoan Duran,Phi,RP,12,U Just Lost To Yainer Diaz
+73,Brendan Donovan,StL,LF,13,U Just Lost To Yainer Diaz
+74,Logan Webb,SF,SP,13,The Polar Pasquatch
+75,Ozzie Albies,Atl,2B,13,Big Dumpers
+76,Michael Harris II,Atl,CF,12,New York Ligers
+77,George Kirby,Sea,SP,13,Team Solomon
+78,Marcell Ozuna,FA,DH,12,A Whole Ass Meal
+79,Salvador Perez,KC,C,12,A Whole Ass Meal
+80,Gerrit Cole,NYY,SP,14,Team Solomon
+81,Yoshinobu Yamamoto,LAD,SP,13,New York Ligers
+82,Cal Raleigh,Sea,C,14,Big Dumpers
+83,Vinnie Pasquantino,KC,1B,14,The Polar Pasquatch
+84,Freddy Peralta,Mil,SP,14,U Just Lost To Yainer Diaz
+85,Willy Adames,SF,SS,15,U Just Lost To Yainer Diaz
+86,Bryan Reynolds,Pit,LF,15,The Polar Pasquatch
+87,Jazz Chisholm Jr.,NYY,CF,15,Big Dumpers
+88,Willson Contreras,Bos,C,14,New York Ligers
+89,Nolan Arenado,StL,3B,15,Team Solomon
+90,Matt Chapman,SF,3B,14,A Whole Ass Meal
+91,Oneil Cruz,Pit,SS,14,A Whole Ass Meal
+92,Kyle Schwarber,Phi,DH,16,Team Solomon
+93,Yandy Diaz,TB,1B,15,New York Ligers
+94,Ian Happ,ChC,LF,16,Big Dumpers
+95,Nico Hoerner,ChC,2B,16,The Polar Pasquatch
+96,Brent Rooker,Ath,DH,16,U Just Lost To Yainer Diaz
+97,Zac Gallen,FA,SP,17,U Just Lost To Yainer Diaz
+98,Keibert Ruiz,Wsh,C,17,The Polar Pasquatch
+99,Tanner Scott,LAD,RP,17,Big Dumpers
+100,Tyler Glasnow,LAD,SP,16,New York Ligers
+101,Joe Ryan,Min,SP,17,Team Solomon
+102,Jurickson Profar,Atl,LF,16,A Whole Ass Meal
+103,Jeff Hoffman,Tor,RP,16,A Whole Ass Meal
+104,Alec Bohm,Phi,3B,18,Team Solomon
+105,Tanner Bibee,Cle,SP,17,New York Ligers
+106,Spencer Schwellenbach,Atl,SP,18,Big Dumpers
+107,Brandon Nimmo,Tex,LF,18,The Polar Pasquatch
+108,Ryan Pressly,FA,RP,18,U Just Lost To Yainer Diaz
+109,Jonathan India,KC,2B,19,U Just Lost To Yainer Diaz
+110,Seiya Suzuki,ChC,RF,19,The Polar Pasquatch
+111,Bryce Miller,Sea,SP,19,Big Dumpers
+112,Bailey Ober,Min,SP,18,New York Ligers
+113,Alexis Diaz,Tex,RP,19,Team Solomon
+114,Jung Hoo Lee,SF,CF,18,A Whole Ass Meal
+115,Kevin Gausman,Tor,SP,18,A Whole Ass Meal
+116,Trevor Megill,Mil,RP,20,Team Solomon
+117,Justin Steele,ChC,SP,19,New York Ligers
+118,Teoscar Hernandez,LAD,LF,20,Big Dumpers
+119,Christian Yelich,Mil,LF,20,The Polar Pasquatch
+120,CJ Abrams,Wsh,SS,20,U Just Lost To Yainer Diaz
+121,Spencer Steer,Cin,LF,21,U Just Lost To Yainer Diaz
+122,Carlos Correa,Hou,SS,21,The Polar Pasquatch
+123,David Bednar,NYY,RP,21,Big Dumpers
+124,Taylor Ward,Bal,LF,20,New York Ligers
+125,Mike Trout,LAA,CF,21,Team Solomon
+126,Randy Arozarena,Sea,LF,20,A Whole Ass Meal
+127,Yusei Kikuchi,LAA,SP,20,A Whole Ass Meal
+128,Hunter Greene,Cin,SP,22,Team Solomon
+129,Christian Walker,Hou,1B,21,New York Ligers
+130,Isaac Paredes,Hou,3B,22,Big Dumpers
+131,Justin Martinez,Ari,RP,22,The Polar Pasquatch
+132,James Wood,Wsh,LF,22,U Just Lost To Yainer Diaz
+133,Jack Flaherty,Det,SP,23,U Just Lost To Yainer Diaz
+134,Andres Gimenez,Tor,2B,23,The Polar Pasquatch
+135,Brandon Pfaadt,Ari,SP,23,Big Dumpers
+136,A.J. Puk,Ari,RP,22,New York Ligers
+137,Jacob deGrom,Tex,SP,23,Team Solomon
+138,Riley Greene,Det,LF,22,A Whole Ass Meal
+139,Hunter Brown,Hou,SP,22,A Whole Ass Meal
+140,Junior Caminero,TB,3B,24,Team Solomon
+141,Grayson Rodriguez,LAA,SP,23,New York Ligers
+142,Xander Bogaerts,SD,2B,24,Big Dumpers
+143,Alec Burleson,StL,RF,24,The Polar Pasquatch
+144,Jake Cronenworth,SD,1B,24,U Just Lost To Yainer Diaz
+145,Austin Wells,NYY,C,25,U Just Lost To Yainer Diaz
+146,Maikel Garcia,KC,3B,25,The Polar Pasquatch
+147,Jordan Westburg,Bal,3B,25,Big Dumpers
+148,Jared Jones,Pit,SP,24,New York Ligers
+149,Spencer Strider,Atl,SP,25,Team Solomon
+150,Jeremy Pena,Hou,SS,24,A Whole Ass Meal
+151,Gleyber Torres,Det,2B,24,A Whole Ass Meal
+152,Lawrence Butler,Ath,RF,26,Team Solomon
+153,Pete Fairbanks,Mia,RP,25,New York Ligers
+154,Nick Castellanos,Phi,RF,26,Big Dumpers
+155,Mitch Keller,Pit,SP,26,The Polar Pasquatch
+156,Kyle Finnegan,Det,RP,26,U Just Lost To Yainer Diaz
+157,Max Muncy,LAD,3B,27,U Just Lost To Yainer Diaz
+158,Kodai Senga,NYM,SP,27,The Polar Pasquatch
+159,Lourdes Gurriel Jr.,Ari,LF,27,Big Dumpers
+160,Adolis Garcia,Phi,RF,26,New York Ligers
+161,Masyn Winn,StL,SS,27,Team Solomon
+162,Seth Lugo,KC,SP,26,A Whole Ass Meal
+163,Jake Burger,Tex,1B,26,A Whole Ass Meal
+164,Triston Casas,Bos,1B,28,Team Solomon
+165,Luis Garcia Jr.,Wsh,2B,27,New York Ligers
+166,Carlos Santana,FA,1B,28,Big Dumpers
+167,Dylan Crews,Wsh,RF,28,The Polar Pasquatch
+168,Roki Sasaki,LAD,SP,28,U Just Lost To Yainer Diaz
+169,Pete Crow-Armstrong,ChC,CF,29,U Just Lost To Yainer Diaz
+170,Sal Frelick,Mil,RF,29,The Polar Pasquatch
+171,Reynaldo Lopez,Atl,SP,29,Big Dumpers
+172,Royce Lewis,Min,3B,28,New York Ligers
+173,Matt McLain,Cin,SS,29,Team Solomon
+174,Sean Manaea,NYM,SP,28,A Whole Ass Meal
+175,Sandy Alcantara,Mia,SP,28,A Whole Ass Meal
+176,Bo Bichette,FA,SS,30,Team Solomon
+177,JJ Bleday,Cin,CF,29,New York Ligers
+178,Lucas Erceg,KC,RP,30,Big Dumpers
+179,Jason Adam,SD,RP,30,The Polar Pasquatch
+180,Cristopher Sanchez,Phi,SP,30,U Just Lost To Yainer Diaz
+181,Brenton Doyle,Col,CF,31,U Just Lost To Yainer Diaz
+182,Jake McCarthy,Col,RF,31,The Polar Pasquatch
+183,Jason Foley,SF,RP,31,Big Dumpers
+184,Bryan Abreu,Hou,RP,30,New York Ligers
+185,Carlos Rodon,NYY,SP,31,Team Solomon
+186,Cade Smith,Cle,RP,30,A Whole Ass Meal
+187,Tommy Edman,LAD,CF,30,A Whole Ass Meal
+188,Bryson Stott,Phi,2B,32,Team Solomon
+189,Jorge Soler,LAA,RF,31,New York Ligers
+190,Tanner Houck,Bos,SP,32,Big Dumpers
+191,Taj Bradley,Min,SP,32,The Polar Pasquatch
+192,Heliot Ramos,SF,CF,32,U Just Lost To Yainer Diaz
+193,Clay Holmes,NYM,RP,33,U Just Lost To Yainer Diaz
+194,Kerry Carpenter,Det,RF,33,The Polar Pasquatch
+195,Colton Cowser,Bal,LF,33,Big Dumpers
+196,Bryan Woo,Sea,SP,32,New York Ligers
+197,Paul Goldschmidt,FA,1B,33,Team Solomon
+198,Francisco Alvarez,NYM,C,32,A Whole Ass Meal
+199,Mark Vientos,NYM,3B,32,A Whole Ass Meal
+200,George Springer,Tor,RF,34,Team Solomon
+201,Luke Weaver,NYM,RP,33,New York Ligers
+202,Andrew Vaughn,Mil,1B,34,Big Dumpers
+203,Griffin Jax,TB,RP,34,The Polar Pasquatch
+204,Shane McClanahan,TB,SP,34,U Just Lost To Yainer Diaz
+205,Byron Buxton,Min,CF,35,U Just Lost To Yainer Diaz
+206,MacKenzie Gore,Wsh,SP,35,The Polar Pasquatch
+207,Alejandro Kirk,Tor,C,35,Big Dumpers
+208,Willi Castro,FA,SS,34,New York Ligers
+209,Tyler Stephenson,Cin,C,35,Team Solomon
+210,Brandon Woodruff,FA,SP,35,A Whole Ass Meal
+211,Dansby Swanson,ChC,SS,35,A Whole Ass Meal
+212,Luis Robert Jr.,ChW,CF,36,Team Solomon
+213,Gabriel Moreno,Ari,C,35,New York Ligers
+214,Anthony Volpe,NYY,SS,36,Big Dumpers
+215,Brice Turang,Mil,2B,36,The Polar Pasquatch
+216,Hunter Gaddis,Cle,RP,36,U Just Lost To Yainer Diaz
+217,Zach Neto,LAA,SS,37,U Just Lost To Yainer Diaz
+218,Chad Green,Tor,RP,37,The Polar Pasquatch
+219,Jose Berrios,Tor,SP,37,Big Dumpers
+220,Lars Nootbaar,StL,RF,36,New York Ligers
+221,Bowden Francis,Tor,RP,37,Team Solomon
+222,Kirby Yates,LAA,RP,37,A Whole Ass Meal
+223,Cedric Mullins,TB,CF,37,A Whole Ass Meal
+224,Nick Pivetta,SD,SP,38,Team Solomon
+225,Xavier Edwards,Mia,SS,37,New York Ligers
+226,Jasson Dominguez,NYY,LF,38,Big Dumpers
+227,Connor Norby,Mia,3B,38,The Polar Pasquatch
+228,Lane Thomas,KC,RF,38,U Just Lost To Yainer Diaz
+229,Michael Conforto,FA,LF,39,U Just Lost To Yainer Diaz
+230,Ranger Suarez,FA,SP,39,The Polar Pasquatch
+231,Aroldis Chapman,Bos,RP,39,Big Dumpers
+232,Spencer Horwitz,Pit,1B,38,New York Ligers
+233,Tyler O'Neill,Bal,LF,39,Team Solomon
+234,Shea Langeliers,Ath,C,39,A Whole Ass Meal
+235,Kungkuan Giljegiljaw,Cle,C,39,A Whole Ass Meal
+236,Kenley Jansen,Det,RP,40,Team Solomon
+237,Giancarlo Stanton,NYY,DH,39,New York Ligers
+238,Wander Franco,TB,SS,40,Big Dumpers
+239,Pedro Severino,FA,C,40,The Polar Pasquatch
+240,Daniel Vogelbach,FA,DH,40,U Just Lost To Yainer Diaz

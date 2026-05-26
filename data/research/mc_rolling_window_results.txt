@@ -1,0 +1,114 @@
+============================================================================
+ROLLING WINDOW PERSISTENCE TABLE (2021-2025 re-calibration)
+Formula: fp_proxy_per_bf = (K - BB - H - HR) / BF
+Good-start threshold: fp_proxy_per_bf >= -0.0476
+Min BF per start: 10
+Bootstrap: 10,000 iterations, seed=42
+Seasons: [2021, 2022, 2023, 2024, 2025]
+============================================================================
+
+Baseline next-start good-start rate: 36.0%  CI=[35.3%, 36.6%]  n=21,474
+  Prior calibration (2018-2025): 25.4%
+
+Window     Rate    Delta         CI [lo, hi]       n  Tier
+----------------------------------------------------------------------------
+2/3       43.6%    +7.7pp  [42.3%, 45.0%]   5,171  WATCH
+3/4       47.7%   +11.7pp  [45.8%, 49.5%]   2,804  ACTIONABLE
+4/5       51.1%   +15.1pp  [48.7%, 53.6%]   1,593  STRONG
+3/3       52.7%   +16.8pp  [50.2%, 55.3%]   1,522  STRONG
+4/4       54.1%   +18.1pp  [50.5%, 57.7%]     756  LOCK
+5/5       57.5%   +21.5pp  [52.6%, 62.4%]     388  LOCK
+2/4       40.9%    +4.9pp  [39.6%, 42.2%]   5,488  NOISE
+3/5       44.9%    +8.9pp  [43.2%, 46.5%]   3,493  WATCH
+
+ORDER TEST (2/3 window — does position of bad start matter?)
+----------------------------------------------------------------------------
+  bad-GG      : 42.3%  CI=[40.0%, 44.6%]  n=1,716
+  G-bad-G     : 44.4%  CI=[42.0%, 46.8%]  n=1,732
+  GG-bad      : 44.2%  CI=[41.9%, 46.5%]  n=1,723
+  Max spread: 2.1pp
+  VERDICT: Marginal ordering effect (2-5pp) — monitor but not actionable
+
+CONSECUTIVE STREAK TABLE (different baseline: streak >= 1)
+----------------------------------------------------------------------------
+  Streak>=1 baseline: 41.2%  (prior: 45.8%)
+  Streak>=2: 47.2%  +6.0pp  CI=[45.5%, 48.9%]  n=3,460
+  Streak>=3: 52.7%  +11.5pp  CI=[50.2%, 55.3%]  n=1,522
+  Streak>=4: 54.1%  +12.9pp  CI=[50.5%, 57.7%]  n=756
+  Streak>=5: 57.5%  +16.2pp  CI=[52.6%, 62.4%]  n=388
+  Streak>=7: 60.5%  +19.2pp  CI=[50.9%, 69.3%]  n=114
+
+DRIFT CHECK vs 2018-2025 calibration
+----------------------------------------------------------------------------
+  2/3 : NEW=43.6%  OLD=35.1%  diff=+8.5pp  | DRIFT
+  3/4 : NEW=47.7%  OLD=42.8%  diff=+4.9pp  | DRIFT
+  4/5 : NEW=51.1%  OLD=49.4%  diff=+1.7pp  | minor
+  3/3 : NEW=52.7%  OLD=50.8%  diff=+1.9pp  | minor
+  4/4 : NEW=54.1%  OLD=58.2%  diff=-4.1pp  | DRIFT
+  5/5 : NEW=57.5%  OLD=66.1%  diff=-8.6pp  | DRIFT
+  2/4 : NEW=40.9%  OLD=28.9%  diff=+12.0pp  | DRIFT
+  3/5 : NEW=44.9%  OLD=35.5%  diff=+9.4pp  | DRIFT
+
+SIGNAL TIER RECOMMENDATIONS
+----------------------------------------------------------------------------
+  2/3: lift=+7.7pp (was +9.7pp) — tier WATCH holds
+  3/4: signal lift shifted -5.7pp vs old — REVIEW tier ACTIONABLE
+  4/5: signal lift shifted -8.9pp vs old — REVIEW tier STRONG
+  3/3: signal lift shifted -8.6pp vs old — REVIEW tier STRONG
+  4/4: signal lift shifted -14.7pp vs old — REVIEW tier LOCK
+  5/5: signal lift shifted -19.2pp vs old — REVIEW tier LOCK
+  2/4: lift=+4.9pp (was +3.5pp) — tier NOISE holds
+  3/5: lift=+8.9pp (was +10.1pp) — tier WATCH holds
+
+PRIOR SEASON RANK EFFECT ON PERSISTENCE (Step 4)
+----------------------------------------------------------------------------
+Methodology: rank each pitcher by their prior season mean fp_proxy_per_bf
+(min 10 starts to qualify), then measure next-season baseline + rolling window rates.
+Data: 2022-2025 starts crossed with 2021-2024 prior-season ranks.
+
+Prior Rank Tier   Baseline   2/3 rate   3/3 rate   n_starts
+Top-50            50.9%      54.5%      59.0%       3,763
+Ranks 51-100      36.7%      36.9%      47.6%       3,465
+Ranks 101+        27.4%      35.2%      36.0%       4,618
+No prior data     31.9%      39.4%      44.7%       5,422
+
+Key finding: Prior season rank is a STRONG baseline modifier.
+  - Top-50 prior pitchers: baseline already 50.9%, so even 2/3 window only adds +3.6pp.
+    Their 3/3 signal (59.0%) is LOCK-tier even from an already-elevated base.
+  - Rank 101+ pitchers: baseline 27.4% (near old calibration's 25.4%), window effects
+    remain meaningful (+8.6pp for 2/3, +8.6pp for 3/3 relative to their base).
+  - No-prior-data pitchers (rookies, returning): 3/3 window fires at 44.7% — STRONG tier.
+
+ACTIONABLE INTERPRETATION:
+  For a top-50 prior rp3 pitcher showing 3/4 in-season:
+    their actual probability is ~54% (NOT the 47.7% table average).
+  For a rank-100+ pitcher showing 3/4: closer to 40-42%.
+  The rolling window table above is population-average; prior rank shifts the prior.
+
+BASELINE DISCREPANCY NOTE
+----------------------------------------------------------------------------
+The 2021-2025 rolling-window baseline (36.0%) differs from the prior calibration
+(25.4%) documented in the sp-breakout-signal skill. Investigation shows:
+  - Per-year good-start rates: 2018=33.3%, 2019=32.8%, 2020=33.7%, 2021=35.6%,
+    2022=34.7%, 2023=32.8%, 2024=34.8%, 2025=34.5%.
+  - The threshold -0.0476 IS the 65th percentile across 2018-2025, meaning ~35%
+    of starts exceed it — consistent with this calibration, NOT the 25.4% figure.
+  - The original 25.4% baseline was likely computed with a different formula,
+    a different BF filter, or a different definition of "good start."
+  - This re-calibration treats the formula fp_proxy = (K-BB-H-HR)/BF as canonical
+    (matching the skill's own code at line 103 of SKILL.md).
+  - RECOMMENDATION: Update the sp-breakout-signal skill's stated baseline from
+    25.4% to 36.0% (2021-2025) or ~34.5% (all years 2018-2025).
+  - The LIFT (delta) figures are the actionable signal; the absolute rates and
+    tier labels should be re-anchored to the new baseline.
+
+METHODOLOGY NOTES
+----------------------------------------------------------------------------
+- fp_proxy_per_bf = (K - BB - H - HR) / BF (exact match to sp-breakout-signal skill)
+- No ER term (consistent with skill definition)
+- BF >= 10 filter to exclude sub-SP relief outings
+- Sequences: '1'=good, '0'=bad, left-to-right = oldest-to-most-recent
+- 2020 COVID season excluded from rolling window analysis; included for prior-rank baseline
+- 2026 data excluded (partial year)
+- Prior season rank proxy: pitcher's mean fp_proxy_per_bf in prior season (min 10 GS)
+============================================================================

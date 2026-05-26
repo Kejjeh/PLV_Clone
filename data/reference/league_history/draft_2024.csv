@@ -1,0 +1,209 @@
+pick_no,player_name,team_abbr,position,round,fantasy_team
+1,Ronald Acuna Jr.,Atl,RF,1,New York Ligers
+2,Mookie Betts,LAD,RF,1,WAR What Is It Good For?
+3,Juan Soto,NYM,LF,1,Bregman's Wheelbarrows
+4,Spencer Strider,Atl,SP,1,Big Scoops For All
+5,Kyle Tucker,ChC,RF,1,U Just Lost To Yainer Diaz
+6,Freddie Freeman,LAD,1B,1,Team Solomon
+7,Jose Ramirez,Cle,3B,1,Jersey St Green Monsters
+8,Matt Olson,Atl,1B,1,Big Dumpers
+9,Logan Gilbert,Sea,SP,2,U Just Lost To Yainer Diaz
+10,Corbin Carroll,Ari,LF,2,Jersey St Green Monsters
+11,Corbin Burnes,Ari,SP,2,Team Solomon
+12,Bobby Witt Jr.,KC,SS,2,U Just Lost To Yainer Diaz
+13,Logan Webb,SF,SP,2,Big Scoops For All
+14,Yordan Alvarez,Hou,LF,2,Bregman's Wheelbarrows
+15,Zack Wheeler,Phi,SP,2,WAR What Is It Good For?
+16,Fernando Tatis Jr.,SD,RF,2,New York Ligers
+17,Aaron Judge,NYY,RF,3,New York Ligers
+18,Shohei Ohtani,LAD,DH,3,WAR What Is It Good For?
+19,Pablo Lopez,Min,SP,3,Bregman's Wheelbarrows
+20,Rafael Devers,Bos,3B,3,Big Scoops For All
+21,Zac Gallen,Ari,SP,3,U Just Lost To Yainer Diaz
+22,Kevin Gausman,Tor,SP,3,Team Solomon
+23,Marcus Semien,Tex,2B,3,Jersey St Green Monsters
+24,Adley Rutschman,Bal,C,3,Big Dumpers
+25,Aaron Nola,Phi,SP,4,Big Dumpers
+26,Framber Valdez,Hou,SP,4,Jersey St Green Monsters
+27,Vladimir Guerrero Jr.,Tor,1B,4,Team Solomon
+28,Pete Alonso,FA,1B,4,U Just Lost To Yainer Diaz
+29,Bryce Harper,Phi,1B,4,Big Scoops For All
+30,Alex Bregman,FA,3B,4,Bregman's Wheelbarrows
+31,Trea Turner,Phi,SS,4,WAR What Is It Good For?
+32,Ozzie Albies,Atl,2B,4,New York Ligers
+33,George Kirby,Sea,SP,5,New York Ligers
+34,Julio Rodriguez,Sea,CF,5,WAR What Is It Good For?
+35,Logan Gilbert,Sea,SP,5,Bregman's Wheelbarrows
+36,Gunnar Henderson,Bal,3B,5,Big Scoops For All
+37,Austin Riley,Atl,3B,5,U Just Lost To Yainer Diaz
+38,Tyler Glasnow,LAD,SP,5,Team Solomon
+39,Corey Seager,Tex,SS,5,Jersey St Green Monsters
+40,Freddy Peralta,Mil,SP,5,Big Dumpers
+41,Francisco Lindor,NYM,SS,6,Big Dumpers
+42,Yoshinobu Yamamoto,LAD,SP,6,Jersey St Green Monsters
+43,Gerrit Cole,NYY,SP,6,Team Solomon
+44,Jose Altuve,Hou,2B,6,U Just Lost To Yainer Diaz
+45,Ketel Marte,Ari,2B,6,Big Scoops For All
+46,Luis Arraez,SD,2B,6,Bregman's Wheelbarrows
+47,Manny Machado,SD,3B,6,WAR What Is It Good For?
+48,Nico Hoerner,ChC,2B,6,New York Ligers
+49,Tarik Skubal,Det,SP,7,New York Ligers
+50,Max Fried,NYY,SP,7,WAR What Is It Good For?
+51,Will Smith,LAD,C,7,Bregman's Wheelbarrows
+52,Steven Kwan,Cle,LF,7,Big Scoops For All
+53,Joe Ryan,Min,SP,7,U Just Lost To Yainer Diaz
+54,Kyle Schwarber,Phi,LF,7,Team Solomon
+55,Paul Goldschmidt,NYY,1B,7,Jersey St Green Monsters
+56,Bryan Reynolds,Pit,LF,7,Big Dumpers
+57,Josh Hader,Hou,RP,8,Big Dumpers
+58,Camilo Doval,SF,RP,8,Jersey St Green Monsters
+59,Edwin Diaz,NYM,RP,8,Team Solomon
+60,Jhoan Duran,Min,RP,8,U Just Lost To Yainer Diaz
+61,Jesus Luzardo,Phi,SP,8,Big Scoops For All
+62,Michael Harris II,Atl,CF,8,Bregman's Wheelbarrows
+63,Justin Steele,ChC,SP,8,WAR What Is It Good For?
+64,Nolan Arenado,StL,3B,8,New York Ligers
+65,Emmanuel Clase,Cle,RP,9,New York Ligers
+66,Jordan Romano,Phi,RP,9,WAR What Is It Good For?
+67,Blake Snell,LAD,SP,9,Bregman's Wheelbarrows
+68,William Contreras,Mil,C,9,Big Scoops For All
+69,Grayson Rodriguez,Bal,SP,9,U Just Lost To Yainer Diaz
+70,Yandy Diaz,TB,1B,9,Team Solomon
+71,Christian Walker,Hou,1B,9,Jersey St Green Monsters
+72,Bo Bichette,Tor,SS,9,Big Dumpers
+73,Brandon Nimmo,NYM,CF,10,Big Dumpers
+74,Alexis Diaz,Cin,RP,10,Jersey St Green Monsters
+75,Luis Robert Jr.,ChW,CF,10,Team Solomon
+76,Randy Arozarena,Sea,LF,10,U Just Lost To Yainer Diaz
+77,George Springer,Tor,RF,10,Big Scoops For All
+78,Dylan Cease,SD,SP,10,Bregman's Wheelbarrows
+79,Cole Ragans,KC,RP,10,WAR What Is It Good For?
+80,Zach Eflin,Bal,SP,10,New York Ligers
+81,Mike Trout,LAA,CF,11,New York Ligers
+82,Cody Bellinger,NYY,CF,11,WAR What Is It Good For?
+83,Merrill Kelly,Ari,SP,11,Bregman's Wheelbarrows
+84,Chris Bassitt,Tor,SP,11,Big Scoops For All
+85,Joe Musgrove,SD,SP,11,U Just Lost To Yainer Diaz
+86,Raisel Iglesias,Atl,RP,11,Team Solomon
+87,Evan Carter,Tex,LF,11,Jersey St Green Monsters
+88,Gleyber Torres,Det,2B,11,Big Dumpers
+89,Mitch Keller,Pit,SP,12,Big Dumpers
+90,Xander Bogaerts,SD,SS,12,Jersey St Green Monsters
+91,Christian Yelich,Mil,LF,12,Team Solomon
+92,Royce Lewis,Min,3B,12,U Just Lost To Yainer Diaz
+93,Hunter Greene,Cin,SP,12,Big Scoops For All
+94,Andres Munoz,Sea,RP,12,Bregman's Wheelbarrows
+95,Ian Happ,ChC,LF,12,WAR What Is It Good For?
+96,Bobby Miller,LAD,SP,12,New York Ligers
+97,Eury Perez,Mia,SP,13,New York Ligers
+98,Nick Pivetta,FA,RP,13,WAR What Is It Good For?
+99,Paul Sewald,FA,RP,13,Bregman's Wheelbarrows
+100,Clay Holmes,NYM,RP,13,Big Scoops For All
+101,Evan Phillips,LAD,RP,13,U Just Lost To Yainer Diaz
+102,Ryan Helsley,StL,RP,13,Team Solomon
+103,Anthony Santander,Tor,RF,13,Jersey St Green Monsters
+104,Ha-Seong Kim,FA,2B,13,Big Dumpers
+105,Tanner Bibee,Cle,SP,14,Big Dumpers
+106,Jordan Montgomery,Ari,SP,14,Jersey St Green Monsters
+107,Adolis Garcia,Tex,RF,14,Team Solomon
+108,Yainer Diaz,Hou,C,14,U Just Lost To Yainer Diaz
+109,Craig Kimbrel,FA,RP,14,Big Scoops For All
+110,David Bednar,Pit,RP,14,Bregman's Wheelbarrows
+111,J.T. Realmuto,Phi,C,14,WAR What Is It Good For?
+112,Triston Casas,Bos,1B,14,New York Ligers
+113,Chris Sale,Atl,SP,15,New York Ligers
+114,Isaac Paredes,Hou,3B,15,WAR What Is It Good For?
+115,Jose Berrios,Tor,SP,15,Bregman's Wheelbarrows
+116,Nick Castellanos,Phi,RF,15,Big Scoops For All
+117,Masataka Yoshida,Bos,LF,15,U Just Lost To Yainer Diaz
+118,Matt McLain,Cin,SS,15,Team Solomon
+119,Vinnie Pasquantino,KC,1B,15,Jersey St Green Monsters
+120,Cedric Mullins,Bal,CF,15,Big Dumpers
+121,Pete Fairbanks,TB,RP,16,Big Dumpers
+122,Sonny Gray,StL,SP,16,Jersey St Green Monsters
+123,Bailey Ober,Min,SP,16,Team Solomon
+124,Spencer Steer,Cin,1B,16,U Just Lost To Yainer Diaz
+125,Nolan Jones,Col,LF,16,Big Scoops For All
+126,CJ Abrams,Wsh,SS,16,Bregman's Wheelbarrows
+127,Cristian Javier,Hou,SP,16,WAR What Is It Good For?
+128,Tanner Scott,FA,RP,16,New York Ligers
+129,Elly De La Cruz,Cin,SS,17,New York Ligers
+130,Dansby Swanson,ChC,SS,17,WAR What Is It Good For?
+131,Josh Naylor,Ari,1B,17,Bregman's Wheelbarrows
+132,Adbert Alzolay,FA,RP,17,Big Scoops For All
+133,Hunter Brown,Hou,SP,17,U Just Lost To Yainer Diaz
+134,Max Muncy,LAD,3B,17,Team Solomon
+135,Jose Alvarado,Phi,RP,17,Jersey St Green Monsters
+136,Jake Cronenworth,SD,1B,17,Big Dumpers
+137,Lourdes Gurriel Jr.,Ari,LF,18,Big Dumpers
+138,Walker Buehler,Bos,SP,18,Jersey St Green Monsters
+139,Alex Lange,Det,RP,18,Team Solomon
+140,Shane Bieber,Cle,SP,18,U Just Lost To Yainer Diaz
+141,Jeff McNeil,NYM,2B,18,Big Scoops For All
+142,Alec Bohm,Phi,3B,18,Bregman's Wheelbarrows
+143,Jorge Soler,LAA,RF,18,WAR What Is It Good For?
+144,Spencer Torkelson,Det,1B,18,New York Ligers
+145,Yu Darvish,SD,SP,19,New York Ligers
+146,Seiya Suzuki,ChC,RF,19,WAR What Is It Good For?
+147,Jung Hoo Lee,SF,CF,19,Bregman's Wheelbarrows
+148,Reid Detmers,LAA,SP,19,Big Scoops For All
+149,Bryson Stott,Phi,2B,19,U Just Lost To Yainer Diaz
+150,Michael King,SD,RP,19,Team Solomon
+151,Carlos Rodon,NYY,SP,19,Jersey St Green Monsters
+152,Jose Leclerc,Oak,RP,19,Big Dumpers
+153,TJ Friedl,Cin,CF,20,Big Dumpers
+154,Keibert Ruiz,Wsh,C,20,Jersey St Green Monsters
+155,Willson Contreras,StL,C,20,Team Solomon
+156,Marcell Ozuna,Atl,DH,20,U Just Lost To Yainer Diaz
+157,Ke'Bryan Hayes,Pit,3B,20,Big Scoops For All
+158,J.P. Crawford,Sea,SS,20,Bregman's Wheelbarrows
+159,Kenley Jansen,FA,RP,20,WAR What Is It Good For?
+160,Teoscar Hernandez,LAD,RF,20,New York Ligers
+161,Sean Murphy,Atl,C,21,New York Ligers
+162,Salvador Perez,KC,C,21,WAR What Is It Good For?
+163,Kodai Senga,NYM,SP,21,Bregman's Wheelbarrows
+164,Daulton Varsho,Tor,LF,21,Big Scoops For All
+165,Jake Irvin,Wsh,SP,21,U Just Lost To Yainer Diaz
+166,Lane Thomas,Cle,RF,21,Team Solomon
+167,Charlie Morton,Bal,SP,21,Jersey St Green Monsters
+168,Cal Raleigh,Sea,C,21,Big Dumpers
+169,Eduardo Rodriguez,Ari,SP,22,Big Dumpers
+170,Carlos Estevez,FA,RP,22,Jersey St Green Monsters
+171,Oneil Cruz,Pit,SS,22,Team Solomon
+172,Yennier Cano,Bal,RP,22,U Just Lost To Yainer Diaz
+173,Nathan Eovaldi,FA,SP,22,Big Scoops For All
+174,Shota Imanaga,ChC,SP,22,Bregman's Wheelbarrows
+175,Josh Lowe,TB,RF,22,WAR What Is It Good For?
+176,A.J. Puk,Ari,RP,22,New York Ligers
+177,Andres Gimenez,Tor,2B,23,New York Ligers
+178,Gabriel Moreno,Ari,C,23,WAR What Is It Good For?
+179,Taylor Ward,LAA,LF,23,Bregman's Wheelbarrows
+180,Josh Bell,Wsh,1B,23,Big Scoops For All
+181,Willy Adames,SF,SS,23,U Just Lost To Yainer Diaz
+182,Justin Verlander,SF,SP,23,Team Solomon
+183,Riley Greene,Det,CF,23,Jersey St Green Monsters
+184,Justin Turner,FA,1B,23,Big Dumpers
+185,Matt Strahm,Phi,RP,24,Big Dumpers
+186,Jordan Walker,StL,RF,24,Jersey St Green Monsters
+187,Devin Williams,NYY,RP,24,Team Solomon
+188,Max Kepler,Phi,RF,24,U Just Lost To Yainer Diaz
+189,Triston McKenzie,Cle,SP,24,Big Scoops For All
+190,Robert Suarez,SD,RP,24,Bregman's Wheelbarrows
+191,Kyle Bradish,Bal,SP,24,WAR What Is It Good For?
+192,Carlos Correa,Min,SS,24,New York Ligers
+193,Bryan Abreu,Hou,RP,25,New York Ligers
+194,Bryce Miller,Sea,SP,25,WAR What Is It Good For?
+195,Tommy Edman,LAD,2B,25,Bregman's Wheelbarrows
+196,A.J. Minter,FA,RP,25,Big Scoops For All
+197,Hector Neris,FA,RP,25,U Just Lost To Yainer Diaz
+198,Trevor Story,Bos,SS,25,Team Solomon
+199,Luis Rengifo,LAA,2B,25,Jersey St Green Monsters
+200,MacKenzie Gore,Wsh,SP,25,Big Dumpers
+201,Andrew Benintendi,ChW,LF,26,Big Dumpers
+202,Sandy Leon,KC,C,26,Jersey St Green Monsters
+203,Nolan Gorman,StL,2B,26,Team Solomon
+204,Hyun Jin Ryu,FA,SP,26,U Just Lost To Yainer Diaz
+205,Thairo Estrada,Col,2B,26,Big Scoops For All
+206,Luis Guillorme,Ari,2B,26,Bregman's Wheelbarrows
+207,Kyle Finnegan,FA,RP,26,WAR What Is It Good For?
+208,Wyatt Langford,Tex,LF,26,New York Ligers

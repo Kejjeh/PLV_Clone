@@ -1,0 +1,288 @@
+MC Bootstrap Analysis: SP Early-Start Signal Thresholds
+Good-start threshold: fp_proxy/bf >= -0.0476
+Bootstrap iterations: 10,000
+
+Loading per-start data for 2021-2025...
+Columns: ['pitcher', 'player_name', 'game_pk', 'game_date', 'game_year', 'bf', 'k', 'bb', 'h', 'hr', 'swinging_strikes', 'swings', 'fpp_per_bf', 'whiff_pct']
+Years present: [np.int64(2021), np.int64(2022), np.int64(2023), np.int64(2024), np.int64(2025)]
+Sample fpp_per_bf stats:
+count    23524.000000
+mean        -0.119497
+std          0.195664
+min         -1.000000
+25%         -0.250000
+50%         -0.120000
+75%          0.000000
+max          0.666667
+Name: fpp_per_bf, dtype: float64
+
+Training: 18,788 starts | Test (2025): 4,736 starts
+
+======================================================================
+SIGNAL A CALIBRATION — TRAINING 2021-2024
+======================================================================
+(showing cells where lift > 5pp AND n >= 10)
+
+N=4 GS window: 818 pitcher-seasons
+  N=4, T=-0.02, W=0 :  n=156, precision=41.7%, lift=+29.1pp [CI: +21.2 to +37.1], recall=43.9%
+  N=4, T=-0.02, W=22:  n=152, precision=42.1%, lift=+29.5pp [CI: +21.2 to +37.8], recall=43.2%
+  N=4, T=-0.02, W=24:  n=145, precision=42.8%, lift=+30.0pp [CI: +21.4 to +38.8], recall=41.9%
+  N=4, T=-0.02, W=26:  n=130, precision=45.4%, lift=+32.4pp [CI: +23.3 to +41.3], recall=39.9%
+  N=4, T=-0.02, W=28:  n=101, precision=50.5%, lift=+37.0pp [CI: +26.6 to +47.4], recall=34.5%
+  N=4, T=+0.00, W=0 :  n=132, precision=44.7%, lift=+31.7pp [CI: +23.0 to +40.6], recall=39.9%
+  N=4, T=+0.00, W=22:  n=130, precision=45.4%, lift=+32.4pp [CI: +23.4 to +41.3], recall=39.9%
+  N=4, T=+0.00, W=24:  n=125, precision=45.6%, lift=+32.5pp [CI: +23.1 to +41.6], recall=38.5%
+  N=4, T=+0.00, W=26:  n=111, precision=48.6%, lift=+35.4pp [CI: +25.8 to +45.1], recall=36.5%
+  N=4, T=+0.00, W=28:  n= 90, precision=54.4%, lift=+40.8pp [CI: +30.0 to +51.6], recall=33.1%
+  N=4, T=+0.02, W=0 :  n= 98, precision=50.0%, lift=+36.2pp [CI: +25.8 to +46.4], recall=33.1%
+  N=4, T=+0.02, W=22:  n= 96, precision=51.0%, lift=+37.3pp [CI: +27.0 to +47.6], recall=33.1%
+  N=4, T=+0.02, W=24:  n= 91, precision=51.6%, lift=+37.8pp [CI: +27.3 to +48.6], recall=31.8%
+  N=4, T=+0.02, W=26:  n= 83, precision=53.0%, lift=+38.9pp [CI: +27.8 to +49.6], recall=29.7%
+  N=4, T=+0.02, W=28:  n= 72, precision=55.6%, lift=+41.1pp [CI: +29.2 to +53.0], recall=27.0%
+  N=4, T=+0.04, W=0 :  n= 74, precision=55.4%, lift=+41.0pp [CI: +29.6 to +52.5], recall=27.7%
+  N=4, T=+0.04, W=22:  n= 72, precision=56.9%, lift=+42.6pp [CI: +31.1 to +54.2], recall=27.7%
+  N=4, T=+0.04, W=24:  n= 69, precision=56.5%, lift=+42.0pp [CI: +29.5 to +53.7], recall=26.4%
+  N=4, T=+0.04, W=26:  n= 65, precision=58.5%, lift=+43.9pp [CI: +31.5 to +55.8], recall=25.7%
+  N=4, T=+0.04, W=28:  n= 59, precision=57.6%, lift=+42.6pp [CI: +29.7 to +55.7], recall=23.0%
+  N=4, T=+0.06, W=0 :  n= 54, precision=59.3%, lift=+44.1pp [CI: +30.3 to +57.4], recall=21.6%
+  N=4, T=+0.06, W=22:  n= 53, precision=60.4%, lift=+45.2pp [CI: +31.4 to +58.3], recall=21.6%
+  N=4, T=+0.06, W=24:  n= 51, precision=60.8%, lift=+45.5pp [CI: +31.6 to +59.3], recall=20.9%
+  N=4, T=+0.06, W=26:  n= 50, precision=60.0%, lift=+44.6pp [CI: +30.2 to +58.6], recall=20.3%
+  N=4, T=+0.06, W=28:  n= 47, precision=59.6%, lift=+44.0pp [CI: +29.5 to +58.2], recall=18.9%
+N=5 GS window: 780 pitcher-seasons
+  N=5, T=-0.02, W=0 :  n=145, precision=46.2%, lift=+33.6pp [CI: +25.3 to +42.1], recall=45.6%
+  N=5, T=-0.02, W=22:  n=140, precision=46.4%, lift=+33.6pp [CI: +25.0 to +42.1], recall=44.2%
+  N=5, T=-0.02, W=24:  n=135, precision=47.4%, lift=+34.5pp [CI: +25.9 to +43.5], recall=43.5%
+  N=5, T=-0.02, W=26:  n=119, precision=47.9%, lift=+34.3pp [CI: +25.0 to +43.8], recall=38.8%
+  N=5, T=-0.02, W=28:  n= 97, precision=49.5%, lift=+35.0pp [CI: +24.7 to +45.2], recall=32.7%
+  N=5, T=+0.00, W=0 :  n=103, precision=53.4%, lift=+39.8pp [CI: +29.7 to +49.8], recall=37.4%
+  N=5, T=+0.00, W=22:  n=100, precision=53.0%, lift=+39.2pp [CI: +29.3 to +49.3], recall=36.1%
+  N=5, T=+0.00, W=24:  n= 97, precision=53.6%, lift=+39.7pp [CI: +29.4 to +50.0], recall=35.4%
+  N=5, T=+0.00, W=26:  n= 91, precision=52.7%, lift=+38.4pp [CI: +27.8 to +48.9], recall=32.7%
+  N=5, T=+0.00, W=28:  n= 76, precision=55.3%, lift=+40.3pp [CI: +28.7 to +51.9], recall=28.6%
+  N=5, T=+0.02, W=0 :  n= 76, precision=61.8%, lift=+47.6pp [CI: +36.2 to +58.7], recall=32.0%
+  N=5, T=+0.02, W=22:  n= 73, precision=61.6%, lift=+47.2pp [CI: +35.8 to +58.4], recall=30.6%
+  N=5, T=+0.02, W=24:  n= 72, precision=61.1%, lift=+46.6pp [CI: +34.7 to +58.1], recall=29.9%
+  N=5, T=+0.02, W=26:  n= 68, precision=61.8%, lift=+47.0pp [CI: +34.8 to +58.9], recall=28.6%
+  N=5, T=+0.02, W=28:  n= 60, precision=61.7%, lift=+46.4pp [CI: +33.5 to +58.5], recall=25.2%
+  N=5, T=+0.04, W=0 :  n= 56, precision=67.9%, lift=+52.8pp [CI: +40.1 to +65.1], recall=25.9%
+  N=5, T=+0.04, W=22:  n= 54, precision=68.5%, lift=+53.4pp [CI: +40.2 to +65.7], recall=25.2%
+  N=5, T=+0.04, W=24:  n= 54, precision=68.5%, lift=+53.4pp [CI: +40.3 to +65.7], recall=25.2%
+  N=5, T=+0.04, W=26:  n= 53, precision=67.9%, lift=+52.7pp [CI: +39.5 to +65.1], recall=24.5%
+  N=5, T=+0.04, W=28:  n= 47, precision=66.0%, lift=+50.1pp [CI: +35.7 to +63.6], recall=21.1%
+  N=5, T=+0.06, W=0 :  n= 43, precision=69.8%, lift=+53.9pp [CI: +38.9 to +67.7], recall=20.4%
+  N=5, T=+0.06, W=22:  n= 42, precision=71.4%, lift=+55.6pp [CI: +40.9 to +69.6], recall=20.4%
+  N=5, T=+0.06, W=24:  n= 42, precision=71.4%, lift=+55.6pp [CI: +41.3 to +69.2], recall=20.4%
+  N=5, T=+0.06, W=26:  n= 41, precision=70.7%, lift=+54.8pp [CI: +40.3 to +68.8], recall=19.7%
+  N=5, T=+0.06, W=28:  n= 38, precision=68.4%, lift=+52.1pp [CI: +36.1 to +66.7], recall=17.7%
+N=6 GS window: 731 pitcher-seasons
+  N=6, T=-0.02, W=0 :  n=119, precision=54.6%, lift=+40.7pp [CI: +31.4 to +50.2], recall=43.3%
+  N=6, T=-0.02, W=22:  n=116, precision=55.2%, lift=+41.2pp [CI: +31.8 to +50.5], recall=42.7%
+  N=6, T=-0.02, W=24:  n=115, precision=54.8%, lift=+40.7pp [CI: +31.2 to +50.3], recall=42.0%
+  N=6, T=-0.02, W=26:  n=105, precision=57.1%, lift=+42.8pp [CI: +32.9 to +52.8], recall=40.0%
+  N=6, T=-0.02, W=28:  n= 85, precision=57.6%, lift=+42.0pp [CI: +31.0 to +52.9], recall=32.7%
+  N=6, T=+0.00, W=0 :  n=102, precision=57.8%, lift=+43.4pp [CI: +33.1 to +53.3], recall=39.3%
+  N=6, T=+0.00, W=22:  n= 99, precision=58.6%, lift=+44.0pp [CI: +33.7 to +54.1], recall=38.7%
+  N=6, T=+0.00, W=24:  n= 98, precision=58.2%, lift=+43.5pp [CI: +32.8 to +53.5], recall=38.0%
+  N=6, T=+0.00, W=26:  n= 91, precision=60.4%, lift=+45.6pp [CI: +34.9 to +55.9], recall=36.7%
+  N=6, T=+0.00, W=28:  n= 75, precision=61.3%, lift=+45.5pp [CI: +34.0 to +56.5], recall=30.7%
+  N=6, T=+0.02, W=0 :  n= 74, precision=67.6%, lift=+52.3pp [CI: +41.4 to +63.5], recall=33.3%
+  N=6, T=+0.02, W=22:  n= 72, precision=68.1%, lift=+52.7pp [CI: +41.3 to +63.6], recall=32.7%
+  N=6, T=+0.02, W=24:  n= 71, precision=67.6%, lift=+52.2pp [CI: +40.7 to +63.3], recall=32.0%
+  N=6, T=+0.02, W=26:  n= 67, precision=68.7%, lift=+53.0pp [CI: +41.2 to +64.1], recall=30.7%
+  N=6, T=+0.02, W=28:  n= 57, precision=70.2%, lift=+53.9pp [CI: +41.3 to +65.8], recall=26.7%
+  N=6, T=+0.04, W=0 :  n= 54, precision=74.1%, lift=+57.8pp [CI: +45.1 to +69.7], recall=26.7%
+  N=6, T=+0.04, W=22:  n= 52, precision=75.0%, lift=+58.7pp [CI: +46.1 to +70.4], recall=26.0%
+  N=6, T=+0.04, W=24:  n= 51, precision=74.5%, lift=+58.0pp [CI: +45.1 to +70.0], recall=25.3%
+  N=6, T=+0.04, W=26:  n= 49, precision=75.5%, lift=+58.9pp [CI: +45.9 to +70.9], recall=24.7%
+  N=6, T=+0.04, W=28:  n= 42, precision=76.2%, lift=+59.1pp [CI: +45.8 to +71.9], recall=21.3%
+  N=6, T=+0.06, W=0 :  n= 34, precision=79.4%, lift=+61.8pp [CI: +47.0 to +75.4], recall=18.0%
+  N=6, T=+0.06, W=22:  n= 34, precision=79.4%, lift=+61.8pp [CI: +46.9 to +74.9], recall=18.0%
+  N=6, T=+0.06, W=24:  n= 33, precision=78.8%, lift=+61.0pp [CI: +46.0 to +74.7], recall=17.3%
+  N=6, T=+0.06, W=26:  n= 31, precision=80.6%, lift=+62.8pp [CI: +47.6 to +76.3], recall=16.7%
+  N=6, T=+0.06, W=28:  n= 28, precision=78.6%, lift=+60.4pp [CI: +43.5 to +75.0], recall=14.7%
+N=7 GS window: 698 pitcher-seasons
+  N=7, T=-0.02, W=0 :  n=122, precision=52.5%, lift=+37.2pp [CI: +27.6 to +46.6], recall=42.1%
+  N=7, T=-0.02, W=22:  n=120, precision=52.5%, lift=+37.1pp [CI: +27.5 to +46.7], recall=41.4%
+  N=7, T=-0.02, W=24:  n=115, precision=53.9%, lift=+38.5pp [CI: +28.7 to +48.0], recall=40.8%
+  N=7, T=-0.02, W=26:  n=101, precision=55.4%, lift=+39.4pp [CI: +28.9 to +49.4], recall=36.8%
+  N=7, T=-0.02, W=28:  n= 87, precision=57.5%, lift=+40.8pp [CI: +29.9 to +51.5], recall=32.9%
+  N=7, T=+0.00, W=0 :  n= 98, precision=56.1%, lift=+40.0pp [CI: +29.4 to +50.3], recall=36.2%
+  N=7, T=+0.00, W=22:  n= 96, precision=56.2%, lift=+40.0pp [CI: +29.6 to +50.0], recall=35.5%
+  N=7, T=+0.00, W=24:  n= 93, precision=57.0%, lift=+40.6pp [CI: +30.2 to +51.1], recall=34.9%
+  N=7, T=+0.00, W=26:  n= 84, precision=59.5%, lift=+42.9pp [CI: +31.7 to +53.6], recall=32.9%
+  N=7, T=+0.00, W=28:  n= 76, precision=60.5%, lift=+43.5pp [CI: +31.9 to +54.5], recall=30.3%
+  N=7, T=+0.02, W=0 :  n= 58, precision=67.2%, lift=+49.6pp [CI: +36.8 to +62.0], recall=25.7%
+  N=7, T=+0.02, W=22:  n= 57, precision=66.7%, lift=+48.9pp [CI: +36.1 to +61.4], recall=25.0%
+  N=7, T=+0.02, W=24:  n= 55, precision=67.3%, lift=+49.4pp [CI: +36.2 to +61.7], recall=24.3%
+  N=7, T=+0.02, W=26:  n= 51, precision=68.6%, lift=+50.5pp [CI: +37.0 to +63.4], recall=23.0%
+  N=7, T=+0.02, W=28:  n= 48, precision=70.8%, lift=+52.7pp [CI: +38.8 to +65.5], recall=22.4%
+  N=7, T=+0.04, W=0 :  n= 43, precision=74.4%, lift=+56.1pp [CI: +42.0 to +69.3], recall=21.1%
+  N=7, T=+0.04, W=22:  n= 42, precision=73.8%, lift=+55.4pp [CI: +40.9 to +68.4], recall=20.4%
+  N=7, T=+0.04, W=24:  n= 42, precision=73.8%, lift=+55.4pp [CI: +41.3 to +68.4], recall=20.4%
+  N=7, T=+0.04, W=26:  n= 39, precision=74.4%, lift=+55.7pp [CI: +40.9 to +69.3], recall=19.1%
+  N=7, T=+0.04, W=28:  n= 39, precision=74.4%, lift=+55.7pp [CI: +40.7 to +69.3], recall=19.1%
+  N=7, T=+0.06, W=0 :  n= 32, precision=84.4%, lift=+65.6pp [CI: +51.6 to +77.7], recall=17.8%
+  N=7, T=+0.06, W=22:  n= 31, precision=83.9%, lift=+65.0pp [CI: +50.7 to +77.3], recall=17.1%
+  N=7, T=+0.06, W=24:  n= 31, precision=83.9%, lift=+65.0pp [CI: +50.6 to +77.7], recall=17.1%
+  N=7, T=+0.06, W=26:  n= 30, precision=83.3%, lift=+64.3pp [CI: +49.1 to +77.0], recall=16.4%
+  N=7, T=+0.06, W=28:  n= 30, precision=83.3%, lift=+64.3pp [CI: +49.5 to +77.2], recall=16.4%
+N=8 GS window: 670 pitcher-seasons
+  N=8, T=-0.02, W=0 :  n=121, precision=56.2%, lift=+42.0pp [CI: +32.7 to +51.2], recall=46.6%
+  N=8, T=-0.02, W=22:  n=119, precision=56.3%, lift=+42.0pp [CI: +32.5 to +51.5], recall=45.9%
+  N=8, T=-0.02, W=24:  n=115, precision=57.4%, lift=+43.0pp [CI: +33.2 to +52.2], recall=45.2%
+  N=8, T=-0.02, W=26:  n= 96, precision=60.4%, lift=+45.1pp [CI: +34.5 to +55.2], recall=39.7%
+  N=8, T=-0.02, W=28:  n= 83, precision=60.2%, lift=+43.9pp [CI: +32.7 to +54.9], recall=34.2%
+  N=8, T=+0.00, W=0 :  n= 88, precision=64.8%, lift=+49.5pp [CI: +38.3 to +59.8], recall=39.0%
+  N=8, T=+0.00, W=22:  n= 87, precision=64.4%, lift=+48.9pp [CI: +38.0 to +59.3], recall=38.4%
+  N=8, T=+0.00, W=24:  n= 84, precision=65.5%, lift=+49.9pp [CI: +39.3 to +60.2], recall=37.7%
+  N=8, T=+0.00, W=26:  n= 73, precision=68.5%, lift=+52.4pp [CI: +41.3 to +63.4], recall=34.2%
+  N=8, T=+0.00, W=28:  n= 65, precision=67.7%, lift=+50.8pp [CI: +38.9 to +62.5], recall=30.1%
+  N=8, T=+0.02, W=0 :  n= 56, precision=71.4%, lift=+54.2pp [CI: +41.6 to +66.1], recall=27.4%
+  N=8, T=+0.02, W=22:  n= 55, precision=70.9%, lift=+53.5pp [CI: +40.6 to +65.8], recall=26.7%
+  N=8, T=+0.02, W=24:  n= 54, precision=70.4%, lift=+52.8pp [CI: +39.9 to +65.4], recall=26.0%
+  N=8, T=+0.02, W=26:  n= 51, precision=72.5%, lift=+54.9pp [CI: +41.9 to +67.3], recall=25.3%
+  N=8, T=+0.02, W=28:  n= 49, precision=73.5%, lift=+55.8pp [CI: +42.7 to +68.3], recall=24.7%
+  N=8, T=+0.04, W=0 :  n= 38, precision=81.6%, lift=+63.4pp [CI: +49.5 to +75.5], recall=21.2%
+  N=8, T=+0.04, W=22:  n= 38, precision=81.6%, lift=+63.4pp [CI: +49.5 to +75.3], recall=21.2%
+  N=8, T=+0.04, W=24:  n= 37, precision=81.1%, lift=+62.8pp [CI: +49.1 to +74.9], recall=20.5%
+  N=8, T=+0.04, W=26:  n= 35, precision=82.9%, lift=+64.4pp [CI: +50.7 to +76.8], recall=19.9%
+  N=8, T=+0.04, W=28:  n= 33, precision=84.8%, lift=+66.3pp [CI: +52.9 to +78.0], recall=19.2%
+  N=8, T=+0.06, W=0 :  n= 27, precision=81.5%, lift=+62.2pp [CI: +45.5 to +76.4], recall=15.1%
+  N=8, T=+0.06, W=22:  n= 27, precision=81.5%, lift=+62.2pp [CI: +45.3 to +76.6], recall=15.1%
+  N=8, T=+0.06, W=24:  n= 27, precision=81.5%, lift=+62.2pp [CI: +45.8 to +76.2], recall=15.1%
+  N=8, T=+0.06, W=26:  n= 25, precision=84.0%, lift=+64.6pp [CI: +48.6 to +78.0], recall=14.4%
+  N=8, T=+0.06, W=28:  n= 25, precision=84.0%, lift=+64.6pp [CI: +48.7 to +78.0], recall=14.4%
+
+OPTIMAL THRESHOLDS:
+  Best precision: N=8, T=+0.04, W=28:  precision=84.8%  n=33  lift=+66.3pp  recall=19.2%
+  Best lift:      N=8, T=+0.04, W=28:  lift=+66.3pp [CI: +52.9 to +78.0]  n=33
+  Best F1:        N=8, T=-0.02, W=0:  F1=0.509  precision=56.2%  recall=46.6%  n=121
+
+======================================================================
+2025 HOLDOUT VALIDATION
+======================================================================
+(Using optimal thresholds from training set)
+
+N=8 GS window: 170 pitcher-seasons (2025)
+  [best_prec] N=8, T=+0.04, W=28:  n=11, precision=81.8%, lift=+66.1pp [CI: +38.0 to +87.0], recall=26.5%
+  [best_lift] N=8, T=+0.04, W=28:  n=11, precision=81.8%, lift=+66.1pp [CI: +39.3 to +86.7], recall=26.5%
+  [best_f1] N=8, T=-0.02, W=0 :  n=26, precision=65.4%, lift=+53.6pp [CI: +33.8 to +72.7], recall=50.0%
+
+Full 2025 grid (cells where lift > 5pp, n >= 10):
+
+======================================================================
+SIGNAL A CALIBRATION — 2025 HOLDOUT (full grid)
+======================================================================
+(showing cells where lift > 5pp AND n >= 10)
+
+N=4 GS window: 207 pitcher-seasons
+  N=4, T=-0.02, W=0 :  n= 32, precision=56.2%, lift=+41.4pp [CI: +23.2 to +59.4], recall=40.9%
+  N=4, T=-0.02, W=22:  n= 32, precision=56.2%, lift=+41.4pp [CI: +23.1 to +59.4], recall=40.9%
+  N=4, T=-0.02, W=24:  n= 32, precision=56.2%, lift=+41.4pp [CI: +23.0 to +59.2], recall=40.9%
+  N=4, T=-0.02, W=26:  n= 28, precision=60.7%, lift=+45.6pp [CI: +25.7 to +64.8], recall=38.6%
+  N=4, T=-0.02, W=28:  n= 19, precision=63.2%, lift=+46.1pp [CI: +22.5 to +68.5], recall=27.3%
+  N=4, T=+0.00, W=0 :  n= 28, precision=60.7%, lift=+45.6pp [CI: +26.1 to +64.6], recall=38.6%
+  N=4, T=+0.00, W=22:  n= 28, precision=60.7%, lift=+45.6pp [CI: +26.6 to +64.8], recall=38.6%
+  N=4, T=+0.00, W=24:  n= 28, precision=60.7%, lift=+45.6pp [CI: +26.6 to +64.5], recall=38.6%
+  N=4, T=+0.00, W=26:  n= 25, precision=64.0%, lift=+48.6pp [CI: +28.3 to +67.7], recall=36.4%
+  N=4, T=+0.00, W=28:  n= 18, precision=61.1%, lift=+43.7pp [CI: +18.5 to +67.1], recall=25.0%
+  N=4, T=+0.02, W=0 :  n= 22, precision=63.6%, lift=+47.4pp [CI: +25.7 to +67.7], recall=31.8%
+  N=4, T=+0.02, W=22:  n= 22, precision=63.6%, lift=+47.4pp [CI: +25.6 to +68.6], recall=31.8%
+  N=4, T=+0.02, W=24:  n= 22, precision=63.6%, lift=+47.4pp [CI: +25.9 to +67.9], recall=31.8%
+  N=4, T=+0.02, W=26:  n= 19, precision=68.4%, lift=+51.9pp [CI: +28.8 to +73.4], recall=29.5%
+  N=4, T=+0.02, W=28:  n= 16, precision=68.8%, lift=+51.5pp [CI: +25.8 to +74.6], recall=25.0%
+  N=4, T=+0.04, W=0 :  n= 18, precision=72.2%, lift=+55.8pp [CI: +31.9 to +76.4], recall=29.5%
+  N=4, T=+0.04, W=22:  n= 18, precision=72.2%, lift=+55.8pp [CI: +32.8 to +76.3], recall=29.5%
+  N=4, T=+0.04, W=24:  n= 18, precision=72.2%, lift=+55.8pp [CI: +32.0 to +76.1], recall=29.5%
+  N=4, T=+0.04, W=26:  n= 17, precision=70.6%, lift=+53.7pp [CI: +29.7 to +75.8], recall=27.3%
+  N=4, T=+0.04, W=28:  n= 14, precision=71.4%, lift=+53.8pp [CI: +27.1 to +76.8], recall=22.7%
+  N=4, T=+0.06, W=0 :  n= 10, precision=70.0%, lift=+51.2pp [CI: +18.9 to +81.2], recall=15.9%
+  N=4, T=+0.06, W=22:  n= 10, precision=70.0%, lift=+51.2pp [CI: +18.9 to +81.3], recall=15.9%
+  N=4, T=+0.06, W=24:  n= 10, precision=70.0%, lift=+51.2pp [CI: +19.2 to +81.4], recall=15.9%
+  N=4, T=+0.06, W=26:  n= 10, precision=70.0%, lift=+51.2pp [CI: +19.0 to +81.1], recall=15.9%
+N=5 GS window: 196 pitcher-seasons
+  N=5, T=-0.02, W=0 :  n= 37, precision=51.4%, lift=+36.9pp [CI: +19.6 to +54.2], recall=45.2%
+  N=5, T=-0.02, W=22:  n= 37, precision=51.4%, lift=+36.9pp [CI: +19.5 to +53.7], recall=45.2%
+  N=5, T=-0.02, W=24:  n= 36, precision=52.8%, lift=+38.4pp [CI: +20.6 to +55.7], recall=45.2%
+  N=5, T=-0.02, W=26:  n= 30, precision=56.7%, lift=+41.6pp [CI: +22.6 to +59.9], recall=40.5%
+  N=5, T=-0.02, W=28:  n= 21, precision=66.7%, lift=+50.7pp [CI: +28.3 to +71.4], recall=33.3%
+  N=5, T=+0.00, W=0 :  n= 30, precision=56.7%, lift=+41.6pp [CI: +22.4 to +60.1], recall=40.5%
+  N=5, T=+0.00, W=22:  n= 30, precision=56.7%, lift=+41.6pp [CI: +22.5 to +60.7], recall=40.5%
+  N=5, T=+0.00, W=24:  n= 29, precision=58.6%, lift=+43.7pp [CI: +24.7 to +62.6], recall=40.5%
+  N=5, T=+0.00, W=26:  n= 25, precision=64.0%, lift=+48.8pp [CI: +28.7 to +68.4], recall=38.1%
+  N=5, T=+0.00, W=28:  n= 17, precision=76.5%, lift=+60.3pp [CI: +37.9 to +80.6], recall=31.0%
+  N=5, T=+0.02, W=0 :  n= 23, precision=56.5%, lift=+39.8pp [CI: +18.2 to +60.7], recall=31.0%
+  N=5, T=+0.02, W=22:  n= 23, precision=56.5%, lift=+39.8pp [CI: +18.5 to +61.4], recall=31.0%
+  N=5, T=+0.02, W=24:  n= 22, precision=59.1%, lift=+42.4pp [CI: +19.8 to +63.7], recall=31.0%
+  N=5, T=+0.02, W=26:  n= 19, precision=63.2%, lift=+46.2pp [CI: +22.2 to +68.2], recall=28.6%
+  N=5, T=+0.02, W=28:  n= 13, precision=76.9%, lift=+59.4pp [CI: +33.0 to +82.5], recall=23.8%
+  N=5, T=+0.04, W=0 :  n= 16, precision=75.0%, lift=+58.3pp [CI: +33.6 to +78.8], recall=28.6%
+  N=5, T=+0.04, W=22:  n= 16, precision=75.0%, lift=+58.3pp [CI: +34.2 to +79.3], recall=28.6%
+  N=5, T=+0.04, W=24:  n= 16, precision=75.0%, lift=+58.3pp [CI: +35.0 to +79.1], recall=28.6%
+  N=5, T=+0.04, W=26:  n= 16, precision=75.0%, lift=+58.3pp [CI: +34.8 to +79.0], recall=28.6%
+  N=5, T=+0.04, W=28:  n= 12, precision=83.3%, lift=+65.9pp [CI: +41.0 to +85.2], recall=23.8%
+N=6 GS window: 183 pitcher-seasons
+  N=6, T=-0.02, W=0 :  n= 30, precision=63.3%, lift=+50.3pp [CI: +31.0 to +68.0], recall=48.7%
+  N=6, T=-0.02, W=22:  n= 30, precision=63.3%, lift=+50.3pp [CI: +31.5 to +68.0], recall=48.7%
+  N=6, T=-0.02, W=24:  n= 28, precision=67.9%, lift=+55.0pp [CI: +36.1 to +72.7], recall=48.7%
+  N=6, T=-0.02, W=26:  n= 25, precision=68.0%, lift=+54.1pp [CI: +33.9 to +73.0], recall=43.6%
+  N=6, T=-0.02, W=28:  n= 16, precision=68.8%, lift=+52.0pp [CI: +25.8 to +75.0], recall=28.2%
+  N=6, T=+0.00, W=0 :  n= 27, precision=66.7%, lift=+53.2pp [CI: +34.2 to +71.9], recall=46.2%
+  N=6, T=+0.00, W=22:  n= 27, precision=66.7%, lift=+53.2pp [CI: +34.0 to +71.1], recall=46.2%
+  N=6, T=+0.00, W=24:  n= 27, precision=66.7%, lift=+53.2pp [CI: +33.3 to +71.2], recall=46.2%
+  N=6, T=+0.00, W=26:  n= 24, precision=66.7%, lift=+52.2pp [CI: +31.2 to +71.7], recall=41.0%
+  N=6, T=+0.00, W=28:  n= 16, precision=68.8%, lift=+52.0pp [CI: +26.3 to +75.2], recall=28.2%
+  N=6, T=+0.02, W=0 :  n= 19, precision=68.4%, lift=+52.6pp [CI: +30.0 to +73.7], recall=33.3%
+  N=6, T=+0.02, W=22:  n= 19, precision=68.4%, lift=+52.6pp [CI: +29.4 to +74.0], recall=33.3%
+  N=6, T=+0.02, W=24:  n= 19, precision=68.4%, lift=+52.6pp [CI: +29.3 to +73.2], recall=33.3%
+  N=6, T=+0.02, W=26:  n= 17, precision=70.6%, lift=+54.3pp [CI: +30.9 to +76.4], recall=30.8%
+  N=6, T=+0.02, W=28:  n= 11, precision=72.7%, lift=+54.7pp [CI: +24.7 to +82.0], recall=20.5%
+  N=6, T=+0.04, W=0 :  n= 12, precision=83.3%, lift=+66.4pp [CI: +40.9 to +85.5], recall=25.6%
+  N=6, T=+0.04, W=22:  n= 12, precision=83.3%, lift=+66.4pp [CI: +40.6 to +85.5], recall=25.6%
+  N=6, T=+0.04, W=24:  n= 12, precision=83.3%, lift=+66.4pp [CI: +41.2 to +85.7], recall=25.6%
+  N=6, T=+0.04, W=26:  n= 12, precision=83.3%, lift=+66.4pp [CI: +40.4 to +85.5], recall=25.6%
+N=7 GS window: 175 pitcher-seasons
+  N=7, T=-0.02, W=0 :  n= 28, precision=67.9%, lift=+57.0pp [CI: +38.4 to +74.4], recall=54.3%
+  N=7, T=-0.02, W=22:  n= 28, precision=67.9%, lift=+57.0pp [CI: +38.4 to +74.7], recall=54.3%
+  N=7, T=-0.02, W=24:  n= 27, precision=66.7%, lift=+55.2pp [CI: +36.0 to +73.1], recall=51.4%
+  N=7, T=-0.02, W=26:  n= 25, precision=68.0%, lift=+56.0pp [CI: +36.4 to +74.7], recall=48.6%
+  N=7, T=-0.02, W=28:  n= 18, precision=72.2%, lift=+58.2pp [CI: +35.2 to +78.7], recall=37.1%
+  N=7, T=+0.00, W=0 :  n= 21, precision=71.4%, lift=+58.4pp [CI: +36.8 to +77.9], recall=42.9%
+  N=7, T=+0.00, W=22:  n= 21, precision=71.4%, lift=+58.4pp [CI: +37.1 to +77.9], recall=42.9%
+  N=7, T=+0.00, W=24:  n= 21, precision=71.4%, lift=+58.4pp [CI: +36.9 to +78.1], recall=42.9%
+  N=7, T=+0.00, W=26:  n= 21, precision=71.4%, lift=+58.4pp [CI: +36.8 to +78.2], recall=42.9%
+  N=7, T=+0.00, W=28:  n= 16, precision=75.0%, lift=+60.5pp [CI: +35.9 to +81.2], recall=34.3%
+  N=7, T=+0.02, W=0 :  n= 15, precision=80.0%, lift=+65.6pp [CI: +42.3 to +85.9], recall=34.3%
+  N=7, T=+0.02, W=22:  n= 15, precision=80.0%, lift=+65.6pp [CI: +42.1 to +85.6], recall=34.3%
+  N=7, T=+0.02, W=24:  n= 15, precision=80.0%, lift=+65.6pp [CI: +42.4 to +85.9], recall=34.3%
+  N=7, T=+0.02, W=26:  n= 15, precision=80.0%, lift=+65.6pp [CI: +42.0 to +85.8], recall=34.3%
+  N=7, T=+0.02, W=28:  n= 14, precision=78.6%, lift=+63.7pp [CI: +39.0 to +85.2], recall=31.4%
+N=8 GS window: 170 pitcher-seasons
+  N=8, T=-0.02, W=0 :  n= 26, precision=65.4%, lift=+53.6pp [CI: +33.8 to +72.4], recall=50.0%
+  N=8, T=-0.02, W=22:  n= 26, precision=65.4%, lift=+53.6pp [CI: +34.0 to +72.4], recall=50.0%
+  N=8, T=-0.02, W=24:  n= 25, precision=68.0%, lift=+56.3pp [CI: +36.3 to +74.9], recall=50.0%
+  N=8, T=-0.02, W=26:  n= 23, precision=65.2%, lift=+52.3pp [CI: +31.4 to +72.7], recall=44.1%
+  N=8, T=-0.02, W=28:  n= 18, precision=72.2%, lift=+58.4pp [CI: +35.5 to +79.0], recall=38.2%
+  N=8, T=+0.00, W=0 :  n= 21, precision=71.4%, lift=+58.7pp [CI: +37.4 to +78.3], recall=44.1%
+  N=8, T=+0.00, W=22:  n= 21, precision=71.4%, lift=+58.7pp [CI: +36.7 to +77.7], recall=44.1%
+  N=8, T=+0.00, W=24:  n= 21, precision=71.4%, lift=+58.7pp [CI: +36.9 to +78.5], recall=44.1%
+  N=8, T=+0.00, W=26:  n= 19, precision=68.4%, lift=+54.5pp [CI: +31.2 to +76.3], recall=38.2%
+  N=8, T=+0.00, W=28:  n= 16, precision=75.0%, lift=+60.7pp [CI: +35.8 to +81.7], recall=35.3%
+  N=8, T=+0.02, W=0 :  n= 14, precision=71.4%, lift=+56.0pp [CI: +29.7 to +79.8], recall=29.4%
+  N=8, T=+0.02, W=22:  n= 14, precision=71.4%, lift=+56.0pp [CI: +29.2 to +79.0], recall=29.4%
+  N=8, T=+0.02, W=24:  n= 14, precision=71.4%, lift=+56.0pp [CI: +30.1 to +79.5], recall=29.4%
+  N=8, T=+0.02, W=26:  n= 14, precision=71.4%, lift=+56.0pp [CI: +28.8 to +79.6], recall=29.4%
+  N=8, T=+0.02, W=28:  n= 13, precision=76.9%, lift=+61.6pp [CI: +35.4 to +84.7], recall=29.4%
+  N=8, T=+0.04, W=0 :  n= 11, precision=81.8%, lift=+66.1pp [CI: +38.8 to +87.0], recall=26.5%
+  N=8, T=+0.04, W=22:  n= 11, precision=81.8%, lift=+66.1pp [CI: +38.1 to +86.9], recall=26.5%
+  N=8, T=+0.04, W=24:  n= 11, precision=81.8%, lift=+66.1pp [CI: +39.4 to +86.6], recall=26.5%
+  N=8, T=+0.04, W=26:  n= 11, precision=81.8%, lift=+66.1pp [CI: +38.4 to +86.7], recall=26.5%
+  N=8, T=+0.04, W=28:  n= 11, precision=81.8%, lift=+66.1pp [CI: +38.7 to +86.7], recall=26.5%
+
+OPTIMAL THRESHOLDS:
+  Best precision: N=5, T=+0.04, W=28:  precision=83.3%  n=12  lift=+65.9pp  recall=23.8%
+  Best lift:      N=6, T=+0.04, W=0:  lift=+66.4pp [CI: +40.9 to +85.5]  n=12
+  Best F1:        N=7, T=-0.02, W=0:  F1=0.603  precision=67.9%  recall=54.3%  n=28
+
+Results saved to: C:\Users\Joshua\plv_clone\data\research\mc_signal_a_results.txt

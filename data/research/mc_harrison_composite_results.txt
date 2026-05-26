@@ -1,0 +1,112 @@
+HARRISON COMPOSITE CALIBRATION
+Monte Carlo Bootstrap Validation (10,000 iterations)
+fp_proxy formula: (K - BB - H - HR) / BF  (per sp-breakout-signal calibration)
+fp_proxy threshold: -0.0476 (65th pctile, 2018-2025)
+Early window: first 6 GS | Min total GS: 10
+Training years: [2021, 2022, 2023, 2024] | Holdout: 2025
+RoS success = RoS fpp/bf >= -0.0476
+
+======================================================================
+ TRAINING: [2021, 2022, 2023, 2024] (pooled)
+======================================================================
+
+All pitcher-seasons (10+ GS, with RoS data): 730
+fp_proxy BLIND early (fpp/bf < -0.0476): 554 (75.9%)
+
+Baseline (fp_proxy blind, no signal): RoS success = 13.9% (n=554)
+
+--- T1: whiff >= 26% AND xwoba_contact <= X ---
+  whiff>=26 AND xwoba<=0.280: precision=30.5%, lift=+16.6pp [CI: 23.4%-38.3%], n=141
+  whiff>=26 AND xwoba<=0.300: precision=30.1%, lift=+16.2pp [CI: 22.4%-37.8%], n=143
+  whiff>=26 AND xwoba<=0.310: precision=30.0%, lift=+16.1pp [CI: 22.4%-37.8%], n=143
+  whiff>=26 AND xwoba<=0.320: precision=30.1%, lift=+16.2pp [CI: 23.1%-37.8%], n=143
+  whiff>=26 AND xwoba<=0.330: precision=30.1%, lift=+16.2pp [CI: 23.1%-37.8%], n=143
+
+--- T2: csw >= 30% AND xwoba_contact <= X ---
+  csw>=30 AND xwoba<=0.280: precision=30.7%, lift=+16.8pp [CI: 20.5%-41.0%], n=78
+  csw>=30 AND xwoba<=0.300: precision=30.4%, lift=+16.5pp [CI: 20.3%-40.5%], n=79
+  csw>=30 AND xwoba<=0.310: precision=30.3%, lift=+16.4pp [CI: 20.3%-40.5%], n=79
+
+--- T3: whiff >= Y AND xwoba_contact <= 0.320 ---
+  whiff>=0.22 AND xwoba<=0.320: precision=21.0%, lift=+7.1pp [CI: 16.7%-25.5%], n=329
+  whiff>=0.24 AND xwoba<=0.320: precision=26.8%, lift=+12.9pp [CI: 21.2%-32.5%], n=231
+  whiff>=0.26 AND xwoba<=0.320: precision=30.1%, lift=+16.2pp [CI: 22.4%-37.8%], n=143
+  whiff>=0.28 AND xwoba<=0.320: precision=30.9%, lift=+17.0pp [CI: 19.7%-42.3%], n=71
+
+--- avg_ev gate (added to whiff>=26 AND xwoba<=0.320) ---
+  whiff>=26 AND xwoba<=0.320 AND ev<85: precision=31.4%, lift=+17.5pp [CI: 23.9%-39.6%], n=134
+  whiff>=26 AND xwoba<=0.320 AND ev<87: precision=30.0%, lift=+16.1pp [CI: 23.1%-37.8%], n=143
+  whiff>=26 AND xwoba<=0.320 AND ev<89: precision=30.1%, lift=+16.2pp [CI: 22.4%-37.8%], n=143
+
+--- OPTIMAL COMPOSITE (exhaustive sweep) ---
+  Best precision: whiff>=0.28 AND xwoba<=0.280 -> precision=31.4%, lift=+17.5pp [CI: 21.4%-42.9%], n=70 (recall=12.6%)
+  Best recall   : whiff>=0.22 AND xwoba<=0.300 -> precision=21.0%, lift=+7.1pp [CI: 16.7%-25.5%], n=329 (recall=59.4%)
+
+--- BABIP INTERACTION (among whiff>=26 AND xwoba<=0.320 fires) ---
+  Among composite-firing: BABIP > 0.350: success=45.5%, n=22
+  Among composite-firing: BABIP <= 0.350: success=27.3%, n=121
+
+
+--- PER-YEAR SUMMARY (training) ---
+
+2021: blind n=134, baseline=10.4% | whiff>=26 AND xwoba<=0.320: prec=21.4%, lift=+10.9pp [CI:9.5%-33.3%], n=42
+
+2022: blind n=140, baseline=15.0% | whiff>=26 AND xwoba<=0.320: prec=30.3%, lift=+15.3pp [CI:15.2%-45.5%], n=33
+
+2023: blind n=147, baseline=12.9% | whiff>=26 AND xwoba<=0.320: prec=28.9%, lift=+16.0pp [CI:15.8%-44.7%], n=38
+
+2024: blind n=133, baseline=17.3% | whiff>=26 AND xwoba<=0.320: prec=43.3%, lift=+26.0pp [CI:26.7%-60.0%], n=30
+
+======================================================================
+ 2025 HOLDOUT
+======================================================================
+
+All pitcher-seasons (10+ GS, with RoS data): 182
+fp_proxy BLIND early (fpp/bf < -0.0476): 139 (76.4%)
+
+Baseline (fp_proxy blind, no signal): RoS success = 12.2% (n=139)
+
+--- T1: whiff >= 26% AND xwoba_contact <= X ---
+  whiff>=26 AND xwoba<=0.280: precision=28.1%, lift=+15.9pp [CI: 12.5%-43.8%], n=32
+  whiff>=26 AND xwoba<=0.300: precision=28.1%, lift=+15.9pp [CI: 12.5%-43.8%], n=32
+  whiff>=26 AND xwoba<=0.310: precision=28.1%, lift=+15.9pp [CI: 12.5%-43.8%], n=32
+  whiff>=26 AND xwoba<=0.320: precision=28.0%, lift=+15.7pp [CI: 12.5%-43.8%], n=32
+  whiff>=26 AND xwoba<=0.330: precision=28.1%, lift=+15.9pp [CI: 12.5%-43.8%], n=32
+
+--- T2: csw >= 30% AND xwoba_contact <= X ---
+  csw>=30 AND xwoba<=0.280: precision=35.1%, lift=+22.9pp [CI: 11.8%-58.8%], n=17
+  csw>=30 AND xwoba<=0.300: precision=35.3%, lift=+23.0pp [CI: 11.8%-58.8%], n=17
+  csw>=30 AND xwoba<=0.310: precision=35.2%, lift=+23.0pp [CI: 11.8%-58.8%], n=17
+
+--- T3: whiff >= Y AND xwoba_contact <= 0.320 ---
+  whiff>=0.22 AND xwoba<=0.320: precision=16.0%, lift=+3.8pp [CI: 8.0%-24.0%], n=75
+  whiff>=0.24 AND xwoba<=0.320: precision=19.5%, lift=+7.3pp [CI: 9.8%-31.4%], n=51
+  whiff>=0.26 AND xwoba<=0.320: precision=28.1%, lift=+15.9pp [CI: 12.5%-43.8%], n=32
+  whiff>=0.28 AND xwoba<=0.320: precision=35.3%, lift=+23.1pp [CI: 11.8%-58.8%], n=17
+
+--- avg_ev gate (added to whiff>=26 AND xwoba<=0.320) ---
+  whiff>=26 AND xwoba<=0.320 AND ev<85: precision=32.3%, lift=+20.1pp [CI: 14.3%-50.0%], n=28
+  whiff>=26 AND xwoba<=0.320 AND ev<87: precision=28.2%, lift=+16.0pp [CI: 12.5%-43.8%], n=32
+  whiff>=26 AND xwoba<=0.320 AND ev<89: precision=28.2%, lift=+16.0pp [CI: 12.5%-43.8%], n=32
+
+--- OPTIMAL COMPOSITE (exhaustive sweep) ---
+  Best precision: whiff>=0.28 AND xwoba<=0.280 -> precision=35.4%, lift=+23.2pp [CI: 11.8%-58.8%], n=17 (recall=12.2%)
+  Best recall   : whiff>=0.22 AND xwoba<=0.280 -> precision=16.0%, lift=+3.7pp [CI: 8.0%-25.3%], n=75 (recall=54.0%)
+
+--- BABIP INTERACTION (among whiff>=26 AND xwoba<=0.320 fires) ---
+  Among composite-firing: BABIP > 0.350: success=40.0%, n=5
+  Among composite-firing: BABIP <= 0.350: success=25.9%, n=27
+
+
+======================================================================
+METHODOLOGY NOTES
+======================================================================
+- SP identified as: pitcher with min inning = 1 AND >= 40 pitches in game.
+- fp_proxy_per_bf = (K - BB - H - HR) / BF  (matches sp-breakout-signal calibration)
+- whiff_pct = (swinging_strike + swinging_strike_blocked + foul_tip) / swings
+- csw_pct = (swinging_strike variants + called_strike) / total_pitches
+- xwoba_contact = sum(estimated_woba_using_speedangle WHERE launch_speed IS NOT NULL) / n_bip
+- ev_mean = mean(launch_speed WHERE launch_speed IS NOT NULL)
+- BABIP proxy = (H - HR) / (BF - K - BB - HR)
+- Bootstrap: 10,000 resamplings of the signal-firing pool (with replacement)
+- RoS = starts 7 through end of season (GS > 6)
