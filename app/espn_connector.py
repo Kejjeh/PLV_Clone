@@ -284,7 +284,8 @@ def get_all_teams() -> pd.DataFrame:
     """
     Return DataFrame of all teams and their rosters.
 
-    Columns: team_name, owner, team_id, player_name, position, pro_team
+    Columns: team_name, owner, team_id, player_name, player_id, position,
+             pro_team, lineup_slot, injured, injury_status
     """
     league = _get_league()
     rows = []
@@ -295,8 +296,12 @@ def get_all_teams() -> pd.DataFrame:
                 "owner": getattr(team, "owner", ""),
                 "team_id": team.team_id,
                 "player_name": player.name,
+                "player_id": getattr(player, "playerId", None),
                 "position": getattr(player, "position", ""),
                 "pro_team": getattr(player, "proTeam", ""),
+                "lineup_slot": getattr(player, "lineupSlot", ""),
+                "injured": bool(getattr(player, "injured", False)),
+                "injury_status": getattr(player, "injuryStatus", "") or "",
             })
     return pd.DataFrame(rows)
 

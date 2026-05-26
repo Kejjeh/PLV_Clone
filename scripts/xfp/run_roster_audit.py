@@ -76,20 +76,46 @@ def main():
     rps['rank'] = rps['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[1])
     rp_drops = rps.sort_values('proj', ascending=True, na_position='first').head(2)
 
-    fa_sp = get_free_agents(position='SP', size=200)
+    # Bug fix: was get_free_agents(position='SP', size=200) — silently truncates pool.
+    # available_fa() always pulls size=2000 internally; pass position for post-filter.
+    fa_sp = get_free_agents(position='SP')
     fa_sp = fa_sp[fa_sp['percent_owned'] < 95].copy()
     fa_sp['proj'] = fa_sp['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[0])
     fa_sp['rank'] = fa_sp['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[1])
-    fa_sp = fa_sp.dropna(subset=['proj']).sort_values('proj', ascending=False).head(5)
+    fa_sp = fa_sp.dropna(subset=['proj']).sort_values('proj', ascending=False).head(10)
 
-    fa_all = get_free_agents(size=300)
+    # Recency outlier alert: FA SPs where L21d form significantly exceeds model projection.
+    # Criteria: gs_to >= 10, recency_form_gap > 2.5 — "model may be lagging" candidates
+    # the main rp3-ranked table misses because the model weights longer history.
+    # NOTE: cross-reference against full FA SP pool (not just top-10 above).
+    fa_sp_all = get_free_agents(position='SP')
+    fa_sp_all_names = fa_sp_all['player_name'].tolist()
+    rp3_all = pd.read_csv(proj_files['rp3']).dropna(subset=['player_name'])
+    recency_cols = {'gs_to', 'recency_form_gap', 'fp_per_start_last21'}
+    if recency_cols.issubset(set(rp3_all.columns)):
+        recency_outliers = rp3_all[
+            (rp3_all['gs_to'] >= 10) &
+            (rp3_all['recency_form_gap'] > 2.5) &
+            rp3_all['fp_per_start_last21'].notna()
+        ].copy()
+        recency_matches = []
+        for _, row in recency_outliers.iterrows():
+            m = fuzzy_match_name(row['player_name'], fa_sp_all_names)
+            if m:
+                recency_matches.append(row)
+        recency_alerts = pd.DataFrame(recency_matches) if recency_matches else pd.DataFrame()
+    else:
+        recency_alerts = pd.DataFrame()
+
+    # Bug fix: was get_free_agents(size=300) — size param ignored by wrapper; made explicit.
+    fa_all = get_free_agents()
     fa_hit = fa_all[~fa_all['position'].isin(['SP', 'RP', 'P'])].copy()
     fa_hit = fa_hit[fa_hit['percent_owned'] < 95]
     fa_hit['proj'] = fa_hit['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[0])
     fa_hit['rank'] = fa_hit['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[1])
     fa_hit = fa_hit.dropna(subset=['proj']).sort_values('proj', ascending=False).head(5)
 
-    fa_rp = get_free_agents(position='RP', size=100)
+    fa_rp = get_free_agents(position='RP')
     fa_rp = fa_rp[fa_rp['percent_owned'] < 95].copy()
     fa_rp['proj'] = fa_rp['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[0])
     fa_rp['rank'] = fa_rp['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[1])
@@ -163,6 +189,14 @@ def main():
     print("### Top SP FAs")
     for _, r in fa_sp.iterrows():
         print(f"  - {r['player_name']} ({r['pro_team']}) — xfp_rp3 {r['proj']:.2f}, rank #{int(r['rank'])}, owned {r['percent_owned']:.1f}%")
+    if not recency_alerts.empty:
+        print("\n#### Recency outlier alerts (gs_to ≥ 10, L21d gap > 2.5 fp/start above model)")
+        for _, r in recency_alerts.iterrows():
+            rk = f"#{int(r['rank'])}" if 'rank' in r and pd.notna(r.get('rank')) else "?"
+            xfp = r.get('xfp_rp3_per_start', float('nan'))
+            l21d = r['fp_per_start_last21']
+            gap = r['recency_form_gap']
+            print(f"  ⚠ RECENCY OUTLIER: {r['player_name']} — rank {rk}, xfp {xfp:.1f}/start, L21d {l21d:.1f}/start, gap +{gap:.1f}")
     print("\n### Top hitter FAs")
     for _, r in fa_hit.iterrows():
         print(f"  - {r['player_name']} ({r['position']}, {r['pro_team']}) — xfp_rh3 {r['proj']:.3f}, rank #{int(r['rank'])}, owned {r['percent_owned']:.1f}%")

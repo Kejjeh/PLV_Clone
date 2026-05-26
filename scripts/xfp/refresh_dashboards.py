@@ -67,6 +67,10 @@ def main():
         'python -X utf8 scripts/xfp/build_name_resolution_cache.py',
         timeout=120)
 
+    run('2.5. Build SP/hitter upgrade alerts',
+        'python -X utf8 scripts/xfp/build_sp_alerts.py',
+        timeout=120)
+
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 

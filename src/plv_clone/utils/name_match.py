@@ -204,6 +204,13 @@ def lookup_batter_id_cached(
     df = cache_df if cache_df is not None else _load_cache(cache_path)
     if df is not None and not df.empty and "player_name" in df.columns:
         sub = df[df["player_name"] == name]
+        if sub.empty:
+            # Accent-insensitive fallback: compare normalized forms.
+            target = _normalize(name)
+            if "_norm_name" not in df.columns:
+                df = df.copy()
+                df["_norm_name"] = df["player_name"].apply(_normalize)
+            sub = df[df["_norm_name"] == target]
         if not sub.empty:
             if team is not None and "team" in sub.columns:
                 team_sub = sub[sub["team"].astype(str).str.upper() == team.upper()]

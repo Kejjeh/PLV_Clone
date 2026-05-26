@@ -27,6 +27,7 @@ from urllib.request import urlopen, Request
 from urllib.error import URLError
 from html import escape as h
 
+import json
 import pandas as pd
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -289,6 +290,93 @@ def render_console(d, games, my_rows, opp_rows, opp_name):
     print(f'  ╚════════════════════════════════════════════════════════════════════════╝')
 
 
+def _render_sp_alerts_html() -> str:
+    """Read sp_alerts.json and render an HTML alerts block."""
+    alerts_file = OUT / 'sp_alerts.json'
+    if not alerts_file.exists():
+        return ''
+    try:
+        data = json.loads(alerts_file.read_text(encoding='utf-8'))
+    except Exception:
+        return ''
+    alerts = data.get('alerts', [])
+    if not alerts:
+        return (
+            '<h2 style="color:#79c0ff;">⚡ SP Upgrade Alerts</h2>'
+            '<p style="color:#6e7681;font-style:italic;">No FA SP upgrades detected today.</p>'
+        )
+    floor = data.get('upgrade_floor_fpp', 0)
+    generated = data.get('generated', '')
+    rows = []
+    for a in alerts:
+        tier_color = '#f85149' if a['tier'] == 'HIGH' else '#d29922'
+        sigs = ' '.join(a['signals'])
+        rows.append(
+            f'<tr>'
+            f'<td>{h(a["name"])}</td>'
+            f'<td style="color:{tier_color};font-weight:bold;">{h(a["tier"])}</td>'
+            f'<td>{a["gs"]}</td>'
+            f'<td style="color:{"#3fb950" if a["fpp"]>=0 else "#f85149"};">'
+            f'{a["fpp"]:+.4f}</td>'
+            f'<td style="color:{"#3fb950" if a["fpp_gap"]>=0.030 else "#d29922"};">'
+            f'{a["fpp_gap"]:+.3f}</td>'
+            f'<td>{a["l4"]}</td>'
+            f'<td>{a["whiff_pct"]:.1f}%</td>'
+            f'<td>{a["xwoba_con"]:.3f}</td>'
+            f'<td>#{a["rp3_rank"]}</td>'
+            f'<td style="color:#d2a8ff;">{h(sigs)}</td>'
+            f'</tr>'
+        )
+    rows_html = '\n'.join(rows)
+    # Hitter alerts
+    hitter_alerts = data.get('hitter_alerts', [])
+    hit_floor = data.get('hit_upgrade_floor_xwoba', 0)
+    hit_rows = []
+    for a in hitter_alerts:
+        tier_color = '#f85149' if a['tier'] == 'HIGH' else '#d29922'
+        hit_rows.append(
+            f'<tr>'
+            f'<td>{h(a["name"])}</td>'
+            f'<td style="color:{tier_color};font-weight:bold;">{h(a["tier"])}</td>'
+            f'<td>{a["pa"]}</td>'
+            f'<td style="color:#3fb950;">{a["xwoba_szn"]:.3f}</td>'
+            f'<td style="color:{"#3fb950" if a["xwoba_gap"]>=0.040 else "#d29922"};">'
+            f'{a["xwoba_gap"]:+.3f}</td>'
+            f'<td>{a["xwoba_con"]:.3f}</td>'
+            f'<td>#{a["rh3_rank"]}</td>'
+            f'</tr>'
+        )
+    hit_rows_html = '\n'.join(hit_rows)
+    hit_block = ''
+    if hitter_alerts:
+        hit_block = f'''
+<h2 style="color:#79c0ff;">⚡ Hitter Upgrade Alerts
+  <span style="float:right;font-size:0.75em;color:#8b949e;">floor xwOBA={hit_floor:.3f}</span>
+</h2>
+<table>
+<thead><tr>
+  <th>Player</th><th>Tier</th><th>PA</th><th>xwOBA</th>
+  <th>vs floor</th><th>xwOBACON</th><th>rh3</th>
+</tr></thead>
+<tbody>{hit_rows_html}</tbody>
+</table>'''
+
+    return f'''
+<h2 style="color:#79c0ff;">⚡ SP Upgrade Alerts
+  <span style="float:right;font-size:0.75em;color:#8b949e;">
+    floor={floor:+.4f} · {h(generated)}
+  </span>
+</h2>
+<table>
+<thead><tr>
+  <th>Player</th><th>Tier</th><th>GS</th><th>fpp</th>
+  <th>vs floor</th><th>L4</th><th>Whiff</th><th>xCON</th><th>rp3</th><th>Signals</th>
+</tr></thead>
+<tbody>{rows_html}</tbody>
+</table>
+{hit_block}'''
+
+
 def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=60):
     """Write a live HTML dashboard with auto-refresh."""
     def block_html(label, rows):
@@ -352,8 +440,11 @@ tr:hover {{ background: #161b22; }}
 <p class="meta">Last refresh: {h(now)} · auto-refresh every {refresh_secs}s · MLB Stats API live feed</p>
 </body></html>
 '''
+    sp_alerts_block = _render_sp_alerts_html()
+
     target = OUT / 'live_dashboard.html'
-    target.write_text(html, encoding='utf-8')
+    target.write_text(html.replace('</body></html>', sp_alerts_block + '\n</body></html>'),
+                      encoding='utf-8')
 
 
 def main():
