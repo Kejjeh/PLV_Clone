@@ -25,7 +25,7 @@ def predict_rotation_starts(
     week_start: date,
     week_end: date,
     anchor: date | None = None,
-    n_predictions: int = 3,
+    n_predictions: int = 2,
 ) -> list[tuple[date, str]]:
     """Predict up to ``n_predictions`` rotation-gap starts in [week_start, week_end].
 
@@ -34,15 +34,26 @@ def predict_rotation_starts(
     in the window. ESPN-confirmed future starts MUST advance the anchor or
     we double-emit a start the cap has already counted.
 
-    ±1 day tolerance on both dedup (predicted date is "close enough" to a
-    confirmed date) and team-schedule matching (predicted date can land on
-    an adjacent team game).
+    Gap is derived from the MINIMUM of the last three inter-start intervals so
+    that off-days or travel days don't inflate the estimate (e.g. Valdez
+    May 18→24 = 6d, but typical gap is 5d — the min of recent intervals).
+
+    ±1 day tolerance for team-schedule matching (predicted date can land on an
+    adjacent team game). After a ±1 slide the loop anchor advances from the
+    *matched* date, not the pre-slide date — this prevents double-predictions
+    (the original bug that gave Rodon two false starts: May 26 slid to May 27,
+    then May 26+5=May 31 fired a second prediction).
     """
     if not gamelog_dates:
         return []
     last_actual = gamelog_dates[0]
+    # Use the MINIMUM of up to 3 recent inter-start gaps (clamped 4–7).
+    # Minimum is more conservative: off-days inflate the last gap but the
+    # pitcher's underlying rotation cadence is the shorter intervals.
     if len(gamelog_dates) >= 2:
-        gap = max(4, min(7, (last_actual - gamelog_dates[1]).days))
+        intervals = [(gamelog_dates[i] - gamelog_dates[i + 1]).days
+                     for i in range(min(3, len(gamelog_dates) - 1))]
+        gap = max(4, min(7, min(intervals)))
     else:
         gap = 5  # single-start gamelog: default to 5-day rotation
     if anchor is None:
@@ -66,6 +77,10 @@ def predict_rotation_starts(
                 break
         if match is not None:
             out.append(match)
+            # Advance the anchor to the MATCHED date (not the pre-slide
+            # next_date) so the next iteration doesn't re-fire from the
+            # wrong base and produce a double-prediction.
+            next_date = match[0]
     return out
 
 

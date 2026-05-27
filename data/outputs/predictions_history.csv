@@ -56,3 +56,7 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-05-27T01:00:29.262690,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,370.35,69.1,322.07,0.8656,,,MA_v1
 2026-05-27T01:02:33.644584,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,343.17,69.1,293.59,0.8573,,,baseline
 2026-05-27T01:02:34.174502,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,370.35,69.1,322.07,0.8656,,,MA_v1
+2026-05-27T01:06:49.305163,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,343.17,69.1,293.59,0.8573,,,baseline
+2026-05-27T01:06:49.831577,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,370.35,69.1,322.07,0.8656,,,MA_v1
+2026-05-27T01:09:41.806971,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,332.27,69.1,315.43,0.6407,,,baseline
+2026-05-27T01:09:42.337859,2026-05-27,9,New York Ligers,Treasure Island Mashers,92.5,359.45,69.1,343.91,0.6387,,,MA_v1
