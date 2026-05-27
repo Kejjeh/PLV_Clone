@@ -132,6 +132,8 @@ def fetch_week_probables(
         sched = {"dates": []}
 
     confirmed: dict[tuple[int, date], str] = {}
+    # Keys that came directly from MLB's confirmed probable list (not rotation-gap)
+    mlb_confirmed_keys: set[tuple[int, date]] = set()
     # pitcher_id -> list of (date, opp) for ALL their team's games in window
     team_schedule_by_pid: dict[int, list[tuple[date, str]]] = {p: [] for p in pitcher_set}
     confirmed_dates_by_pid: dict[int, list[date]] = {p: [] for p in pitcher_set}
@@ -153,6 +155,7 @@ def fetch_week_probables(
                 opp_team = (opp_side.get("team") or {}).get("abbreviation", "?").upper()
                 if int(pid) in pitcher_set:
                     confirmed[(int(pid), game_date)] = opp_team
+                    mlb_confirmed_keys.add((int(pid), game_date))
                     confirmed_dates_by_pid.setdefault(int(pid), []).append(game_date)
                 # Also record team_schedule for each rostered pitcher whose
                 # team is playing today (need team_id resolution below).
@@ -234,4 +237,4 @@ def fetch_week_probables(
         for game_date, opp in predicted:
             confirmed.setdefault((pid, game_date), opp)
 
-    return WeekProbables(starts=confirmed)
+    return WeekProbables(starts=confirmed, confirmed_keys=frozenset(mlb_confirmed_keys))

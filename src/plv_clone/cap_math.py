@@ -26,6 +26,9 @@ class RosterPitcher:
 @dataclass(frozen=True)
 class WeekProbables:
     starts: dict[tuple[int, date], str] = field(default_factory=dict)
+    # Keys that came from MLB's confirmed probable list (not rotation-gap predicted).
+    # Use this to distinguish ✓ confirmed from ~ predicted in displays.
+    confirmed_keys: frozenset = field(default_factory=frozenset)
 
 
 @dataclass(frozen=True)

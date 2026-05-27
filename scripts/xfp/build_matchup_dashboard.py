@@ -88,12 +88,12 @@ def get_matchup():
             return {'mine': bs.home_team, 'opp': bs.away_team,
                     'my_score': bs.home_score, 'opp_score': bs.away_score,
                     'my_lineup': bs.home_lineup, 'opp_lineup': bs.away_lineup,
-                    'period': period}
+                    'period': period, 'league_obj': league}
         if bs.away_team and 'Ligers' in bs.away_team.team_name:
             return {'mine': bs.away_team, 'opp': bs.home_team,
                     'my_score': bs.away_score, 'opp_score': bs.home_score,
                     'my_lineup': bs.away_lineup, 'opp_lineup': bs.home_lineup,
-                    'period': period}
+                    'period': period, 'league_obj': league}
     raise RuntimeError('No Ligers matchup found')
 
 
@@ -360,13 +360,85 @@ _CALIB = 1.0
 LEAGUE_AVG_XWOBA = 0.310     # MA5 platoon normalization
 
 
-def fetch_schedules_by_team(team_ids, start_date, end_date):
-    """One consolidated schedule API call → {team_id: [game_dict]} for all teams.
+def fetch_espn_week_schedule(league, week_start, week_end):
+    """Pull team game schedules from ESPN's proGamesByScoringPeriod.
 
-    The fetched schedule covers the whole league for the window; we re-key the
-    games per team in `team_ids` so the rest of the dashboard logic
-    (hitters, RPs) gets the same per-team-day shape it expected from the old
-    per-team `get_team_schedule(team_id, ...)` helper.
+    Replaces the old MLB Stats API team-schedule call with ESPN's own
+    authoritative game calendar.  This makes the dashboard's team-game-day
+    counts match exactly what ESPN shows in their UI (since it's the same
+    source), and eliminates the separate MLB Stats API schedule fetch.
+
+    Probable-pitcher fields (my_probable_id / opp_probable_id) are left None
+    here; they are filled in later by build_sp_starts_by_pitcher via
+    fetch_week_probables (MLB Stats API).
+
+    Returns: {mlb_team_id: [game_dict, …]} — same shape as the old
+    fetch_schedules_by_team so all downstream code is unchanged.
+    """
+    try:
+        raw = league.espn_request.get_pro_schedule()
+    except Exception:
+        return {}
+
+    # ESPN internal team_id → uppercase abbreviation  (e.g. 11 → 'ATH')
+    espn_id_to_abbr: dict[int, str] = {}
+    for team in raw.get('settings', {}).get('proTeams', []):
+        if team['id'] != 0:
+            espn_id_to_abbr[team['id']] = team.get('abbrev', '').upper()
+
+    # abbrev → MLB Stats API team_id (for keying the returned dict)
+    abbr_to_mlb = ESPN_TO_MLB_TEAM  # defined at module level
+
+    by_mlb: dict[int, list] = {}
+    for team in raw.get('settings', {}).get('proTeams', []):
+        espn_id = team['id']
+        if espn_id == 0:
+            continue
+        abbr = espn_id_to_abbr.get(espn_id, '')
+        mlb_id = abbr_to_mlb.get(abbr)
+        if mlb_id is None:
+            continue
+
+        games = []
+        for _sp, game_list in team.get('proGamesByScoringPeriod', {}).items():
+            for g in game_list:
+                cal = date.fromtimestamp(g['date'] / 1000)
+                if not (week_start <= cal <= week_end):
+                    continue
+                home_id = g['homeProTeamId']
+                away_id = g['awayProTeamId']
+                is_home = (espn_id == home_id)
+                opp_espn_id = away_id if is_home else home_id
+                opp_abbr = espn_id_to_abbr.get(opp_espn_id, '?')
+                games.append({
+                    'date': cal.isoformat(),
+                    'is_home': is_home,
+                    'opp_team': opp_abbr,
+                    # Probable pitcher fields filled in later by fetch_week_probables
+                    'my_probable_id': None,
+                    'my_probable_name': None,
+                    'opp_probable_id': None,
+                    'opp_probable_name': None,
+                })
+        if games:
+            # Sort chronologically; deduplicate (ESPN may list doubleheaders twice)
+            seen = set()
+            uniq = []
+            for g in sorted(games, key=lambda x: x['date']):
+                key = (g['date'], g['opp_team'])
+                if key not in seen:
+                    seen.add(key)
+                    uniq.append(g)
+            by_mlb[mlb_id] = uniq
+
+    return by_mlb
+
+
+def fetch_schedules_by_team(team_ids, start_date, end_date):
+    """Fallback MLB Stats API schedule fetch (used only when ESPN schedule unavailable).
+
+    The primary path is fetch_espn_week_schedule().  This function is kept as a
+    fallback and for the SP probable-pitcher overlay inside build_sp_starts_by_pitcher.
 
     Returns a dict keyed by MLB team_id; missing teams default to empty list
     on lookup downstream.
@@ -482,18 +554,28 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
     for tid, games in schedules_by_team.items():
         team_by_date_lookup[tid] = {g['date']: g for g in games}
 
-    # Pre-compute: pitcher_id -> team_id by scanning schedules for confirmed.
+    # Pre-compute: pitcher_id -> team_id.
+    # Primary: scan schedules (ESPN-sourced) for teams with the pitcher's opp on the right day.
+    # Fallback: use the mlbam → MLB team mapping from the schedule.
     pid_to_team = {}
-    for tid, games in schedules_by_team.items():
-        for g in games:
-            mpid = g.get('my_probable_id')
-            if mpid is not None and int(mpid) in pid_set:
-                pid_to_team.setdefault(int(mpid), tid)
+    # Try matching via opp_team abbreviation on dates where we know the start
+    for (pid, start_date), opp_abbr in wp.starts.items():
+        date_s = start_date.isoformat()
+        for tid, games in schedules_by_team.items():
+            for g in games:
+                if g['date'] == date_s and g['opp_team'].upper() == opp_abbr.upper():
+                    pid_to_team.setdefault(pid, tid)
+                    break
+            if pid in pid_to_team:
                 break
 
     starts_by_pid = {pid: [] for pid in pid_set}
     for (pid, start_date), opp_abbr in wp.starts.items():
         date_s = start_date.isoformat()
+        # Confirmed iff this (pid, date) key was in MLB's confirmed-probable list.
+        # This is authoritative regardless of schedule source (ESPN vs MLB Stats API).
+        confirmed = (pid, start_date) in wp.confirmed_keys
+
         # Find which team this pitcher plays for so we can fetch is_home, etc.
         tid = pid_to_team.get(pid)
         game_meta = None
@@ -509,18 +591,13 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
                         game_meta = cand
                         date_s = alt  # use the matched team-game date
                         break
-        # Confirmed iff the team-day schedule lists this pitcher as the probable.
-        confirmed = bool(
-            game_meta and game_meta.get('my_probable_id') == pid
-        )
         if game_meta:
             starts_by_pid[pid].append({
                 'date': date_s,
                 'opp_team': game_meta['opp_team'],
                 'is_home': game_meta['is_home'],
                 'my_probable_id': pid,
-                'my_probable_name': (game_meta.get('my_probable_name')
-                                      if confirmed else '(predicted)'),
+                'my_probable_name': ('(probable)' if confirmed else '(predicted)'),
                 'opp_probable_id': game_meta.get('opp_probable_id'),
                 'opp_probable_name': game_meta.get('opp_probable_name'),
                 'confirmed': confirmed,
@@ -771,12 +848,18 @@ def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob):
             items.append({'urgency': 'high', 'icon': '🏥',
                            'text': f'{p.name} ({inj}) is in active slot {slot} — consider IL/bench'})
 
-    # Cap status
-    n_starts = sum(1 for proj in my_proj.values()
-                    for b in proj.get('breakdown', []) if b.get('type') == 'start')
+    # Cap status — count confirmed and predicted separately
+    n_confirmed = sum(1 for proj in my_proj.values()
+                      for b in proj.get('breakdown', [])
+                      if b.get('type') == 'start' and b.get('confirmed', True))
+    n_predicted = sum(1 for proj in my_proj.values()
+                      for b in proj.get('breakdown', [])
+                      if b.get('type') == 'start' and not b.get('confirmed', True))
+    n_starts = n_confirmed + n_predicted
+    pred_s = f' (+{n_predicted} predicted)' if n_predicted else ''
     if n_starts < 7:
         items.append({'urgency': 'med', 'icon': '📉',
-                       'text': f'Only {n_starts} probable starts this week — add a streamer to hit the 10-start cap'})
+                       'text': f'Only {n_confirmed} confirmed starts{pred_s} this week — add a streamer to hit the 10-start cap'})
 
     # Win prob extremes
     if win_prob < 0.40:
@@ -1132,21 +1215,30 @@ def render_2start_gems():
 
 
 def render_cap_status(my_proj):
-    """Show SP-start cap utilization for the week."""
-    n_starts = 0
+    """Show SP-start cap utilization for the week, split confirmed vs predicted."""
+    n_confirmed = 0
+    n_predicted = 0
     for proj in my_proj.values():
         for b in proj.get('breakdown', []):
             if b.get('type') == 'start':
-                n_starts += 1
-    msg = ''
+                if b.get('confirmed', True):
+                    n_confirmed += 1
+                else:
+                    n_predicted += 1
+    n_starts = n_confirmed + n_predicted
+    pred_note = (f' <span class="muted">(+{n_predicted} rotation-gap predicted)</span>'
+                 if n_predicted else '')
     if n_starts >= 10:
-        msg = (f'<p class="notes"><b>⚠ SP cap at maximum:</b> {n_starts} probable starts this week. '
+        msg = (f'<p class="notes"><b>⚠ SP cap at maximum:</b> {n_confirmed} confirmed'
+               f'{pred_note} · {n_starts}/10 starts this week. '
                f'Excess starts past 10 are zeroed in scoring.</p>')
     elif n_starts < 8:
-        msg = (f'<p class="notes"><b>📉 Under SP cap:</b> only {n_starts} probable starts. '
+        msg = (f'<p class="notes"><b>📉 Under SP cap:</b> {n_confirmed} confirmed'
+               f'{pred_note} · only {n_starts}/10 starts. '
                f'Add a streamer to claim more of the 10-start/week cap.</p>')
     else:
-        msg = f'<p class="notes">✓ SP cap usage: <b>{n_starts}/10</b> probable starts.</p>'
+        msg = (f'<p class="notes">✓ SP cap: <b>{n_confirmed} confirmed</b>'
+               f'{pred_note} · <b>{n_starts}/10</b> total projected starts.</p>')
     return msg
 
 
@@ -1440,8 +1532,10 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
             for b in r['breakdown']:
                 if b.get('type') == 'start':
                     cap_marker = ' <span class="capped">⚠ CAPPED</span>' if b.get('fp_capped') else ''
-                    opp_sp = ''
-                    txt = (f'{b["date"][5:]} vs {b["opp"]} '
+                    # Confirmed probable (✓) vs rotation-gap prediction (~)
+                    conf_marker = ('✓' if b.get('confirmed', True) else
+                                   '<span class="muted" title="rotation-gap prediction — not yet confirmed probable">~</span>')
+                    txt = (f'{conf_marker} {b["date"][5:]} vs {b["opp"]} '
                            f'(opp bat {b["opp_idx"]:.2f}, ×{b["factor"]:.2f}, '
                            f'<b>{b.get("fp_original", b["fp"]):.1f} FP</b>){cap_marker}')
                     out.append(f'<tr class="breakdown"><td colspan="7">→ {txt}</td></tr>')
@@ -1507,16 +1601,25 @@ def main():
     print(f'  week: {week_start} → {week_end} (today: {today})')
     print(f'  Ligers WTD: {mu["my_score"]:.1f}  |  Opp WTD: {mu["opp_score"]:.1f}')
 
-    # Fetch schedules — one consolidated MLB Stats API call covering the
-    # full week, then re-keyed per team that has a rostered player.
-    all_teams = set()
-    for p in mu['my_lineup'] + mu['opp_lineup']:
-        t = (p.proTeam or '').upper()
-        if t: all_teams.add(t)
-    team_ids = {ESPN_TO_MLB_TEAM[t] for t in all_teams if t in ESPN_TO_MLB_TEAM}
-    print(f'  fetching schedules for {len(team_ids)} teams (consolidated)...')
-    schedules_by_team = fetch_schedules_by_team(
-        team_ids, today.isoformat(), week_end.isoformat())
+    # Fetch schedules — primary source is ESPN's proGamesByScoringPeriod
+    # (same data ESPN uses in their UI → our team-game-day counts match theirs).
+    # Falls back to MLB Stats API if ESPN schedule returns empty.
+    print(f'  fetching schedules from ESPN proGamesByScoringPeriod...')
+    schedules_by_team = fetch_espn_week_schedule(mu['league_obj'], week_start, week_end)
+    if not schedules_by_team:
+        # Fallback: MLB Stats API team schedule
+        all_teams = set()
+        for p in mu['my_lineup'] + mu['opp_lineup']:
+            t = (p.proTeam or '').upper()
+            if t: all_teams.add(t)
+        team_ids = {ESPN_TO_MLB_TEAM[t] for t in all_teams if t in ESPN_TO_MLB_TEAM}
+        print(f'  ⚠ ESPN schedule empty — falling back to MLB Stats API ({len(team_ids)} teams)')
+        schedules_by_team = fetch_schedules_by_team(
+            team_ids, today.isoformat(), week_end.isoformat())
+    else:
+        n_teams = len(schedules_by_team)
+        n_games = sum(len(v) for v in schedules_by_team.values())
+        print(f'  ESPN schedule: {n_teams} teams, {n_games} game-slots this week')
 
     # Resolve mlbam for all rostered SPs; precompute their full SP-start lists
     # (confirmed probables + rotation-gap predictions) via
@@ -1552,6 +1655,17 @@ def main():
     opp_capped = apply_sp_cap(opp_proj)
     if my_capped > 0: print(f'  Ligers SP cap removed {my_capped:.1f} FP')
     if opp_capped > 0: print(f'  Opp SP cap removed {opp_capped:.1f} FP')
+
+    # Summarise confirmed vs rotation-gap predicted starts
+    my_conf = sum(1 for p in my_proj.values()
+                  for b in p.get('breakdown', [])
+                  if b.get('type') == 'start' and b.get('confirmed', True))
+    my_pred = sum(1 for p in my_proj.values()
+                  for b in p.get('breakdown', [])
+                  if b.get('type') == 'start' and not b.get('confirmed', True))
+    my_total_starts = my_conf + my_pred
+    pred_note = f' + {my_pred} rotation-gap predicted' if my_pred else ''
+    print(f'  SP starts: {my_conf} confirmed{pred_note} = {my_total_starts}/10 cap')
 
     # Team totals + variance
     my_rest = sum(p['fp'] for p in my_proj.values())
