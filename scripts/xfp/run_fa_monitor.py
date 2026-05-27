@@ -114,12 +114,38 @@ def load_models():
     return rp3, rh3, rprs2
 
 
-def _rank_for(player_last: str, df: pd.DataFrame) -> int:
+def _rank_for(full_name: str, df: pd.DataFrame) -> int:
+    """Return projection rank for a player by full name.
+
+    Tries in order:
+    1. Exact normalized match on 'First Last'
+    2. Exact normalized match on 'Last, First' (projection CSV format)
+    3. Last-name-only fallback — but takes the BEST (lowest) rank among all
+       matches to avoid the Signal D explosion where 'Rodriguez' picked up
+       ~20 unrelated players and returned the first row's rank arbitrarily.
+
+    A missed rank (999) is better than a false rank from the wrong player.
+    """
     nc = _name_col(df)
     rc = _rank_col(df)
-    hits = df[df[nc].str.contains(player_last, case=False, na=False)]
-    if len(hits):
-        return int(hits[rc].iloc[0])
+    n = _norm(full_name)
+    # Try 'First Last' exact
+    for _, row in df.iterrows():
+        if _norm(str(row[nc])) == n:
+            return int(row[rc])
+    # Try 'Last, First' exact
+    parts = full_name.strip().split()
+    if len(parts) >= 2:
+        last_first = _norm(f"{parts[-1]}, {' '.join(parts[:-1])}")
+        for _, row in df.iterrows():
+            if _norm(str(row[nc])) == last_first:
+                return int(row[rc])
+    # Last-name fallback: take best rank among all surname matches
+    last = parts[-1].lower() if parts else ""
+    if len(last) >= 4:
+        hits = df[df[nc].str.lower().str.split().str[-1] == last]
+        if len(hits):
+            return int(hits[rc].min())
     return 999
 
 
@@ -192,8 +218,7 @@ def signal_a(fa_sps, rp3):
         fa_match = _exact_match(display, fa_sp_names)
         if not fa_match:
             continue
-        last = raw.split(",")[0] if "," in raw else display.split()[-1]
-        rp3_rank = _rank_for(last, rp3)
+        rp3_rank = _rank_for(fa_match, rp3)
         fp = row["fp_proxy_per_bf"]
         whiff_pct = float(row["whiff_pct"]) if row["whiff_pct"] is not None else 0.0
         # MC-validated gate: fpp >= 0.02 AND whiff >= 26%
@@ -306,8 +331,7 @@ def signal_c(fa_hits, rh3):
         fa_match = _fuzzy_in(display, fa_hit_names)
         if not fa_match:
             continue
-        last = raw.split(",")[0] if "," in raw else display.split()[-1]
-        rh3_rank = _rank_for(last, rh3)
+        rh3_rank = _rank_for(fa_match, rh3)
         if rh3_rank > 100:
             continue
         xw = row["xwoba_season"]
@@ -367,10 +391,10 @@ def signal_d(fas, rp3, rh3, rprs2):
         matched = n in all_drafted or (len(last) >= 4 and last in drafted_lasts)
         if not matched:
             continue
-        # best model rank across all 3 models
-        rp3_r = _rank_for(last, rp3)
-        rh3_r = _rank_for(last, rh3)
-        rprs2_r = _rank_for(last, rprs2)
+        # best model rank across all 3 models — use full name to avoid last-name explosion
+        rp3_r = _rank_for(fa_name, rp3)
+        rh3_r = _rank_for(fa_name, rh3)
+        rprs2_r = _rank_for(fa_name, rprs2)
         best = min(rp3_r, rh3_r, rprs2_r)
         if best > 80:
             continue
@@ -411,8 +435,7 @@ def signal_e(fas, rp3):
         days = getattr(p, "days_until_return", 999) or 999
         if days > 14:
             continue
-        last = p.name.split()[-1]
-        rank = _rank_for(last, rp3)
+        rank = _rank_for(p.name, rp3)
         if rank > 60:
             continue
         results.append({
