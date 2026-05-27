@@ -85,6 +85,42 @@ gate: ≥50 first-pitches and ≥30 two-strike PAs.
 V2 convergence curves are properly distinct across cutoffs (d30 different
 from d70), confirming the fix.
 
+## V3 framing: rolling-last-N-PA windows
+
+Tested whether **recent form** (last 100 first-pitch PA / last 50 two-strike PA)
+predicts beyond season average. Directly analogous to RP3's `delta_swstr` /
+`delta_k_pct` features. Cache: `pl_signals_lastpa_2018_2026.csv` via
+`build_pl_signals_lastpa.py`.
+
+9 cells × 2 holdout configs = 18:
+
+| Cell | Best cv_lift | Best ho_lift | Sign | Verdict |
+|---|---|---|---|---|
+| F_lpa (fps_pct_last100pa) | +0.0006 | +0.0011 | 5/5, 6/6 | MARGINAL → reject |
+| F_dlpa (fps_pct_delta_l100) | +0.0001 | +0.0001 | 5/5, 6/6 | MARGINAL → reject |
+| P_lpa (putaway_pct_last50pa) | +0.0001 | +0.0024 | 5/5, 6/6 | MARGINAL → reject |
+| P_dlpa (putaway_pct_delta_l50) | −0.0002 | +0.0005 | 5/5, 6/6 | REJECTED |
+| FP_lpa | +0.0007 | +0.0038 | 5/5, 6/6 | MARGINAL → reject |
+| ALL_lpa (4-feat) | +0.0007 | +0.0047 | 5/5, 6/6 | MARGINAL → reject |
+
+**All 18 cells fail the +0.005 cv_lift gate.** Best is ALL_lpa with cv=+0.0007 /
+ho=+0.0047 — brushing the bar from below on holdout but nowhere near it on CV.
+Sign consistency is perfect across every cell, confirming a tiny real signal
+exists but is overwhelmed by what's already in RP3_FEATS.
+
+## Three-framing convergence
+
+| Framing | Best cv_lift | Verdict |
+|---|---|---|
+| v1 cumulative (leaky) | +0.0972 | Spurious |
+| v2 cumulative split-day-aware | +0.0011 | REJECTED |
+| v3 rolling-last-N-PA | +0.0007 | REJECTED |
+
+Three independent feature representations converge on lift ≈ +0.001 over the
+RP3 baseline. The PL roundup edge on first-pitch command / putaway skill exists
+in raw form but is fully absorbed by the existing delta-rate-stat layer.
+**Final close: REJECTED for production promotion in any framing.**
+
 ## Bonus: production-model leakage audit
 
 Parallel audit of RP3 (24 features), RH3 (17 features), RPRS2 (31 features)
