@@ -2,13 +2,15 @@
 
 Exposes `render_page(payload) -> str`. Imported by build_player_profiles_dashboard.py.
 
-Phase B: HTML shell + CSS theme (mirrors matchup.html palette).
-Phase C: Plotly scatters + sparklines + Pearson r computed in JS.
-Phase D: Search + leaderboards + archetype tables + career-arc modal.
+UI mirrors the main XFP dashboard's "editorial" palette (warm beige/cream dark
+mode, IBM Plex Mono for numerics, Source Serif 4 for headings). Each side
+(Hitters / Pitchers) has ONE custom quadrant where the user picks X and Y axes
+from a dropdown; 50/50 reference lines mark the league-average crosshair so the
+top-right quadrant reads as "good at both."
 
-The HTML embeds the full data payload as `window.PROFILES_DATA`. All filtering,
-correlation, and rendering happens client-side so the year-mode selector,
-color-by dropdown, and search update live without page reload.
+Archetype legend is grouped + color-coded by primary trait category
+(ELITE / POWER / CONTACT / DISCIPLINE / AVERAGE / BELOW for hitters;
+ELITE / STUFF / MOVEMENT / CONTROL / AVERAGE / BELOW for SPs).
 """
 from __future__ import annotations
 import json
@@ -20,132 +22,181 @@ HEAD = r"""<!doctype html>
 <meta charset="utf-8">
 <title>Player Profiles — Archetype Browser</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 <style>
+:root {
+  --bg: #1a1815;
+  --panel: #211e1a;
+  --stripe: #1d1b17;
+  --border: #34302a;
+  --text: #f5f1ea;
+  --dim: #8d8579;
+  --faint: #3a352e;
+  --accent: #d97757;
+  --pos: #7fb069;
+  --neg: #c1666b;
+  --warn: #d4a945;
+}
 * { box-sizing: border-box; }
-body { font-family: -apple-system, system-ui, sans-serif; background: #0d1117;
-       color: #c9d1d9; max-width: 1480px; margin: 0 auto; padding: 0 1em 4em 1em;
-       line-height: 1.5; }
-header { border-bottom: 2px solid #30363d; padding: .8em 0; margin-bottom: 1em;
-         position: sticky; top: 0; background: #0d1117; z-index: 100; }
+html, body { margin: 0; padding: 0; }
+body { font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
+       background: var(--bg); color: var(--text); line-height: 1.5; }
+.wrap { max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }
+.mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
+
+header { border-bottom: 1px solid var(--border); padding: .9em 0;
+         position: sticky; top: 0; background: var(--bg); z-index: 100;
+         margin-bottom: 1em; }
 .header-row { display: flex; justify-content: space-between; align-items: baseline;
-              flex-wrap: wrap; gap: 1em; }
-h1 { color: #58a6ff; margin: 0; font-size: 1.5em; }
-h2 { color: #79c0ff; margin-top: 1.5em; }
-h3 { color: #a5d6ff; margin: .8em 0 .4em 0; font-size: 1.1em; }
-nav.topnav a { color: #58a6ff; text-decoration: none; margin-left: 1em; font-size: .85em; }
-nav.topnav a:hover { text-decoration: underline; }
-nav.topnav a.current { color: #c9d1d9; font-weight: 600; }
+              flex-wrap: wrap; gap: 1.2em; }
+h1 { color: var(--accent); margin: 0; font-size: 1.6em; font-weight: 700;
+     letter-spacing: .01em; }
+h2 { color: var(--text); margin-top: 1.4em; font-size: 1.25em; font-weight: 600;
+     border-bottom: 1px solid var(--border); padding-bottom: .35em;
+     letter-spacing: .01em; }
+h3 { color: var(--text); margin: 1em 0 .4em 0; font-size: 1.05em; font-weight: 600; }
 
-/* Search */
-.search-wrap { position: relative; min-width: 260px; }
-.search-wrap input { width: 100%; padding: .4em .6em; background: #161b22;
-                     color: #c9d1d9; border: 1px solid #30363d; border-radius: 5px;
-                     font-size: .9em; }
+nav.topnav { display: flex; align-items: center; gap: 0; font-family: 'IBM Plex Mono', monospace;
+             font-size: .72em; text-transform: uppercase; letter-spacing: .15em; }
+nav.topnav a { color: var(--dim); text-decoration: none; padding: .35em .9em;
+               border: 1px solid var(--border); border-right: 0; }
+nav.topnav a:first-child { border-radius: 3px 0 0 3px; }
+nav.topnav a:last-child  { border-radius: 0 3px 3px 0; border-right: 1px solid var(--border); }
+nav.topnav a:hover { color: var(--text); background: var(--panel); }
+nav.topnav a.current { color: var(--accent); background: var(--panel); border-color: var(--accent); }
+
+.search-wrap { position: relative; min-width: 280px; }
+.search-wrap input { width: 100%; padding: .5em .7em; background: var(--panel);
+                     color: var(--text); border: 1px solid var(--border); border-radius: 3px;
+                     font-family: 'IBM Plex Mono', monospace; font-size: .85em; }
+.search-wrap input::placeholder { color: var(--dim); }
+.search-wrap input:focus { outline: 0; border-color: var(--accent); }
 .search-results { position: absolute; top: 100%; left: 0; right: 0;
-                   background: #161b22; border: 1px solid #30363d; border-radius: 5px;
-                   max-height: 320px; overflow-y: auto; display: none; z-index: 200; }
+                   background: var(--panel); border: 1px solid var(--border); border-radius: 3px;
+                   max-height: 340px; overflow-y: auto; display: none; z-index: 200;
+                   margin-top: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
 .search-results.open { display: block; }
-.search-results .item { padding: .4em .7em; cursor: pointer; font-size: .9em;
-                         border-bottom: 1px solid #21262d; }
-.search-results .item:hover { background: #21262d; }
-.search-results .item .meta { color: #8b949e; font-size: .8em; margin-left: .5em; }
-.search-results .item .role { color: #d2a8ff; font-size: .7em; text-transform: uppercase;
-                                margin-right: .5em; }
+.search-results .item { padding: .5em .7em; cursor: pointer; font-size: .85em;
+                         border-bottom: 1px solid var(--faint);
+                         font-family: 'IBM Plex Mono', monospace; }
+.search-results .item:hover { background: var(--stripe); }
+.search-results .item:last-child { border-bottom: 0; }
+.search-results .item .meta { color: var(--dim); font-size: .82em; margin-left: .6em; }
+.search-results .item .role { color: var(--accent); font-size: .72em; text-transform: uppercase;
+                                margin-right: .6em; letter-spacing: .1em; }
 
-/* Year mode + color-by controls */
-.controls { display: flex; flex-wrap: wrap; gap: 1.2em; align-items: center;
-            padding: .6em 0; font-size: .85em; }
-.controls label { color: #8b949e; margin-right: .4em; }
-.controls select, .controls input[type=radio] { background: #161b22; color: #c9d1d9;
-                                                  border: 1px solid #30363d; border-radius: 4px;
-                                                  padding: .25em .4em; font-size: .9em; }
-.radio-group { display: inline-flex; gap: .8em; align-items: center; }
-.radio-group label { color: #c9d1d9; cursor: pointer; }
-.radio-group label.active { color: #58a6ff; font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: 1.5em; align-items: center;
+            padding: .7em 0 .2em 0; font-family: 'IBM Plex Mono', monospace; font-size: .8em; }
+.controls label { color: var(--dim); margin-right: .4em; text-transform: uppercase;
+                  letter-spacing: .1em; font-size: .92em; }
+.controls select { background: var(--panel); color: var(--text);
+                    border: 1px solid var(--border); border-radius: 3px;
+                    padding: .3em .5em; font-size: .9em;
+                    font-family: 'IBM Plex Mono', monospace; }
+.controls select:focus { outline: 0; border-color: var(--accent); }
+.radio-group { display: inline-flex; gap: 1em; align-items: center; }
+.radio-group label { color: var(--text); cursor: pointer; text-transform: none;
+                     font-family: 'IBM Plex Mono', monospace; }
+.radio-group input[type=radio] { accent-color: var(--accent); margin-right: .3em; }
+.filter-summary { color: var(--dim); font-style: italic; }
 
-/* Tabs */
-.tabs { display: flex; gap: .3em; margin-top: .6em; }
-.tabs button { background: transparent; color: #8b949e; border: 0;
-               border-bottom: 2px solid transparent; padding: .5em 1em;
-               font-size: .95em; font-weight: 600; cursor: pointer;
-               font-family: inherit; }
-.tabs button.active { color: #58a6ff; border-bottom-color: #58a6ff; }
-.tabs button:hover { color: #a5d6ff; }
+.tabs { display: flex; gap: 0; margin-top: .8em; font-family: 'IBM Plex Mono', monospace; }
+.tabs button { background: transparent; color: var(--dim); border: 0;
+               border-bottom: 2px solid transparent; padding: .55em 1.1em;
+               font-size: .82em; font-weight: 500; cursor: pointer;
+               font-family: 'IBM Plex Mono', monospace;
+               text-transform: uppercase; letter-spacing: .15em; }
+.tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tabs button:hover { color: var(--text); }
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
-/* Tables */
-table { border-collapse: collapse; width: 100%; margin-bottom: 1em; font-size: .87em; }
-th { background: #161b22; padding: .45em .6em; text-align: left;
-      border-bottom: 2px solid #30363d; font-weight: 600; color: #8b949e;
-      text-transform: uppercase; font-size: .72em; }
-td { padding: .3em .6em; border-bottom: 1px solid #21262d; }
-tr:hover td { background: #161b22; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 1.2em;
+        font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
+th { background: var(--panel); padding: .55em .7em;
+      border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
+      font-weight: 600; color: var(--dim);
+      text-transform: uppercase; font-size: .72em; letter-spacing: .12em;
+      text-align: left; font-family: 'IBM Plex Mono', monospace; }
+th.num { text-align: right; }
+td { padding: .42em .7em; border-bottom: 1px solid var(--faint);
+      font-variant-numeric: tabular-nums; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
-td.player { color: #58a6ff; cursor: pointer; font-weight: 500; }
+tbody tr:nth-child(even) td { background: var(--stripe); }
+tbody tr:hover td { background: var(--panel); }
+td.player { color: var(--accent); cursor: pointer; font-weight: 500;
+             font-family: 'Source Serif 4', Georgia, serif; }
 td.player:hover { text-decoration: underline; }
-.badge { background: #21262d; color: #c9d1d9; padding: 1px 6px; border-radius: 3px;
-          font-size: .75em; }
-.badge.plus  { background: #1a3d22; color: #79c275; }
-.badge.minus { background: #4d1c1c; color: #ffa198; }
-.badge.avg   { background: #21262d; color: #8b949e; }
 
-/* Quadrants */
-.quadrants { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8em;
-             margin: 1em 0; }
-@media (max-width: 1200px) { .quadrants { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 800px)  { .quadrants { grid-template-columns: 1fr; } }
-.quadrant { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
-            padding: .4em; }
-.quadrant-title { color: #79c0ff; font-size: .85em; padding: .3em .5em; }
-.quadrant-title .r { color: #d2a8ff; font-variant-numeric: tabular-nums; }
-.quadrant-title .n { color: #8b949e; font-size: .85em; }
+.badge { display: inline-block; padding: 1px 7px; border-radius: 2px;
+          font-size: .72em; font-family: 'IBM Plex Mono', monospace;
+          background: var(--faint); color: var(--text); letter-spacing: .08em; }
+.badge.plus { background: rgba(127,176,105,0.18); color: var(--pos); }
+.badge.minus { background: rgba(193,102,107,0.18); color: var(--neg); }
+.badge.avg { background: var(--faint); color: var(--dim); }
 
-/* Collapsibles */
+/* Quadrant — one big customizable scatter per side */
+.quad-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
+                  font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
+.quad-controls label { color: var(--dim); text-transform: uppercase;
+                        letter-spacing: .1em; font-size: .9em; }
+.quad-controls select { background: var(--panel); color: var(--text);
+                         border: 1px solid var(--border); border-radius: 3px;
+                         padding: .25em .5em; font-family: inherit; }
+.quad-controls .r-display { margin-left: auto; color: var(--accent);
+                             font-weight: 600; font-size: .9em; }
+.quadrant-host { background: var(--panel); border: 1px solid var(--border);
+                  border-radius: 4px; padding: .8em; }
+
 details { margin: .6em 0; }
-details > summary { cursor: pointer; color: #79c0ff; font-size: 1em;
-                     font-weight: 600; padding: .4em 0; user-select: none; }
-details > summary:hover { color: #a5d6ff; }
-details > summary::marker { color: #6e7681; }
-details > summary .count { color: #8b949e; font-weight: 400; font-size: .85em; margin-left: .5em; }
-details > summary .desc { color: #8b949e; font-weight: 400; font-size: .85em; margin-left: .8em; font-style: italic; }
+details > summary { cursor: pointer; color: var(--text); font-size: .92em;
+                     font-weight: 600; padding: .55em 0; user-select: none;
+                     font-family: 'IBM Plex Mono', monospace;
+                     text-transform: uppercase; letter-spacing: .12em;
+                     border-bottom: 1px solid var(--faint); }
+details > summary:hover { color: var(--accent); }
+details > summary::marker { color: var(--dim); }
+details > summary .count { color: var(--dim); font-weight: 400; font-size: .85em;
+                            margin-left: .8em; text-transform: none; letter-spacing: 0; }
+details > summary .desc { color: var(--dim); font-weight: 400; font-size: .82em;
+                          margin-left: 1em; font-style: italic; text-transform: none;
+                          font-family: 'Source Serif 4', Georgia, serif; letter-spacing: 0; }
 
-/* Glossary */
-.glossary { background: #161b22; border: 1px solid #30363d; border-radius: 6px;
-            padding: 1em 1.5em; margin: 1em 0; font-size: .9em; }
-.glossary table { font-size: .85em; }
-.glossary .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em; }
+.glossary { background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
+            padding: 1em 1.4em; margin: 1em 0; font-size: .92em; }
+.glossary p { color: var(--text); }
+.glossary .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em; margin-top: .7em; }
 @media (max-width: 700px) { .glossary .grid { grid-template-columns: 1fr; } }
 
-/* Modal */
-.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none;
+.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none;
             align-items: center; justify-content: center; z-index: 500; }
 .modal-bg.open { display: flex; }
-.modal { background: #0d1117; border: 1px solid #30363d; border-radius: 8px;
-         max-width: 900px; max-height: 90vh; width: 95%; overflow-y: auto;
-         padding: 1.2em 1.6em; }
-.modal-close { float: right; cursor: pointer; color: #8b949e; font-size: 1.4em;
-                background: none; border: 0; }
-.modal-close:hover { color: #f85149; }
-.modal h2 { margin-top: 0; color: #58a6ff; }
-.modal .traj { font-size: .85em; color: #d2a8ff; margin: .5em 0; }
-.modal .traj .arrow { color: #6e7681; }
-.modal .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .5em;
-                       padding: .8em 0; }
-.modal .summary-grid .stat { background: #161b22; padding: .5em; border-radius: 5px;
-                              text-align: center; }
-.modal .summary-grid .stat .label { color: #8b949e; font-size: .75em; text-transform: uppercase; }
-.modal .summary-grid .stat .val { font-size: 1.3em; font-weight: bold; }
+.modal { background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+         max-width: 980px; max-height: 92vh; width: 96%; overflow-y: auto;
+         padding: 1.4em 1.8em; }
+.modal-close { float: right; cursor: pointer; color: var(--dim); font-size: 1.4em;
+                background: none; border: 0; padding: 0 .3em; }
+.modal-close:hover { color: var(--neg); }
+.modal h2 { margin-top: 0; color: var(--accent); border-bottom: 1px solid var(--border); }
+.modal .traj { font-size: .82em; color: var(--accent); margin: .6em 0;
+                font-family: 'IBM Plex Mono', monospace; letter-spacing: .04em; }
+.modal .traj .arrow { color: var(--dim); margin: 0 .3em; }
+.modal .latest-line { color: var(--dim); margin-top: .3em;
+                       font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
 
-.meta { color: #6e7681; font-size: .8em; margin-top: 2em; text-align: center;
-         border-top: 1px solid #21262d; padding-top: 1em; }
+.meta { color: var(--dim); font-size: .78em; margin-top: 2em; text-align: center;
+         border-top: 1px solid var(--faint); padding-top: 1em;
+         font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; }
 </style>
 </head>
 """
 
 
 BODY_HEADER = """
+<div class="wrap">
 <header>
 <div class="header-row">
   <div>
@@ -164,24 +215,16 @@ BODY_HEADER = """
 </div>
 <div class="controls">
   <span class="radio-group">
-    <label>Year mode:</label>
+    <label>Year mode</label>
     <label><input type="radio" name="year-mode" value="single" checked> Single Year</label>
     <label><input type="radio" name="year-mode" value="all"> All Years</label>
     <label><input type="radio" name="year-mode" value="blend"> 2025+2026 Blend</label>
   </span>
   <span id="single-year-wrap">
-    <label>Year:</label>
+    <label>Year</label>
     <select id="single-year-select"></select>
   </span>
-  <span>
-    <label>Color by:</label>
-    <select id="color-by">
-      <option value="archetype">Archetype</option>
-      <option value="age_tier">Age tier</option>
-      <option value="fp">FP rate</option>
-    </select>
-  </span>
-  <span id="filter-summary" class="muted"></span>
+  <span id="filter-summary" class="filter-summary"></span>
 </div>
 <div class="tabs">
   <button data-tab="home" class="active">Home</button>
@@ -195,8 +238,8 @@ BODY_HEADER = """
 HOME_TAB = """
 <div id="tab-home" class="tab-panel active">
   <h2>League archetype distribution by year</h2>
-  <div id="home-arch-hit" style="height: 360px;"></div>
-  <div id="home-arch-sp"  style="height: 360px;"></div>
+  <div id="home-arch-hit" style="height: 580px;"></div>
+  <div id="home-arch-sp"  style="height: 580px; margin-top: 1.2em;"></div>
 
   <h2>Current view leaderboards</h2>
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em;">
@@ -219,13 +262,20 @@ HOME_TAB = """
       Contact / Power / Discipline bucket. SPs: Stuff / Movement / Control.
       SB (hitters) and Velo (SPs) are overlay ratings — shown alongside but
       excluded from the archetype label and from comp-matching distance.</p>
+      <p><b>Archetype color groupings.</b> Within the legend, archetypes are
+      grouped by primary trait family: hitters use ELITE / POWER / CONTACT /
+      DISCIPLINE / AVERAGE / BELOW; SPs use ELITE / STUFF / MOVEMENT / CONTROL
+      / AVERAGE / BELOW. Each family gets its own color hue; lighter shades
+      within a family indicate stronger sub-archetypes.</p>
+      <p><b>Custom quadrant.</b> Pick any X and Y from the rating dimensions.
+      Reference lines at x=50 and y=50 mark the league-average crosshair —
+      the top-right quadrant is "good at both."</p>
       <p><b>Year mode semantics.</b> <i>Single Year</i> filters to that
       season's qualifiers (PA ≥ 250 hitters / GS ≥ 20 SPs full season,
       lower in-progress). <i>All Years</i> shows every player-year as an
       independent row. <i>2025+2026 Blend</i> aggregates one row per player
       via PA-weighted (hitter) / GS-weighted (SP) mean of each rating, then
-      re-buckets the archetype label from the blended ratings; sub-types
-      come from the most-recent year.</p>
+      re-buckets the archetype label from the blended ratings.</p>
       <div class="grid" id="boundary-glossary"></div>
     </div>
   </details>
@@ -233,22 +283,27 @@ HOME_TAB = """
 """
 
 
-def _quadrant(div_id, title):
-    return f'  <div class="quadrant"><div class="quadrant-title" id="{div_id}-title">{title}</div><div id="{div_id}" style="height: 320px;"></div></div>\n'
-
-
 HITTERS_TAB = """
 <div id="tab-hitters" class="tab-panel">
-  <h2>Hitter quadrants</h2>
-  <div class="quadrants">
-""" + ''.join([
-    _quadrant('h-cp',  'Contact × Power'),
-    _quadrant('h-cd',  'Contact × Discipline'),
-    _quadrant('h-pd',  'Power × Discipline'),
-    _quadrant('h-csb', 'Contact × SB'),
-    _quadrant('h-psb', 'Power × SB'),
-    _quadrant('h-dsb', 'Discipline × SB'),
-]) + """  </div>
+  <h2>Hitter custom quadrant</h2>
+  <div class="quad-controls">
+    <label>X axis</label>
+    <select id="h-x">
+      <option value="CONTACT">Contact</option>
+      <option value="POWER" selected>Power</option>
+      <option value="DISCIPLINE">Discipline</option>
+      <option value="SB">SB</option>
+    </select>
+    <label>Y axis</label>
+    <select id="h-y">
+      <option value="CONTACT" selected>Contact</option>
+      <option value="POWER">Power</option>
+      <option value="DISCIPLINE">Discipline</option>
+      <option value="SB">SB</option>
+    </select>
+    <span class="r-display" id="h-r"></span>
+  </div>
+  <div class="quadrant-host"><div id="h-quad" style="height: 540px;"></div></div>
 
   <h2>Hitter archetype roster</h2>
   <div id="h-archetype-tables"></div>
@@ -258,16 +313,25 @@ HITTERS_TAB = """
 
 PITCHERS_TAB = """
 <div id="tab-pitchers" class="tab-panel">
-  <h2>Pitcher quadrants</h2>
-  <div class="quadrants">
-""" + ''.join([
-    _quadrant('s-sm', 'Stuff × Movement'),
-    _quadrant('s-sc', 'Stuff × Control'),
-    _quadrant('s-mc', 'Movement × Control'),
-    _quadrant('s-vs', 'Velo × Stuff'),
-    _quadrant('s-vm', 'Velo × Movement'),
-    _quadrant('s-vc', 'Velo × Control'),
-]) + """  </div>
+  <h2>Pitcher custom quadrant</h2>
+  <div class="quad-controls">
+    <label>X axis</label>
+    <select id="s-x">
+      <option value="STUFF">Stuff</option>
+      <option value="MOVEMENT" selected>Movement</option>
+      <option value="CONTROL">Control</option>
+      <option value="velo_rating">Velo</option>
+    </select>
+    <label>Y axis</label>
+    <select id="s-y">
+      <option value="STUFF" selected>Stuff</option>
+      <option value="MOVEMENT">Movement</option>
+      <option value="CONTROL">Control</option>
+      <option value="velo_rating">Velo</option>
+    </select>
+    <span class="r-display" id="s-r"></span>
+  </div>
+  <div class="quadrant-host"><div id="s-quad" style="height: 540px;"></div></div>
 
   <h2>Pitcher archetype roster</h2>
   <div id="s-archetype-tables"></div>
@@ -285,8 +349,6 @@ MODAL_HTML = """
 """
 
 
-# Major JS block — pure functions for filter / pearson / render scatters /
-# render tables / leaderboards / modal / search. Compact and tightly scoped.
 JS = r"""
 <script>
 const D = window.PROFILES_DATA;
@@ -295,64 +357,183 @@ const SPS     = D.sps;
 const HDEFS   = D.hitter_archetype_defs;
 const SDEFS   = D.sp_archetype_defs;
 
-// Build (cell -> description) maps for archetype titles
 const HARCH_DESC = {}; Object.values(HDEFS).forEach(v => HARCH_DESC[v.label] = v.description);
 const SARCH_DESC = {}; Object.values(SDEFS).forEach(v => SARCH_DESC[v.label] = v.description);
 
-// Index by stable id for modal lookups
 const H_BY_ID = {}; HITTERS.forEach(r => { (H_BY_ID[r.batter] = H_BY_ID[r.batter] || []).push(r); });
 const S_BY_ID = {}; SPS.forEach(r => { (S_BY_ID[r.pitcher] = S_BY_ID[r.pitcher] || []).push(r); });
+
+// ── Axis labels (display only) ──────────────────────────────────────────
+const HITTER_AXIS_LABEL = { CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
+const SP_AXIS_LABEL     = { STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
+
+// ── Archetype category classification ──────────────────────────────────
+// Hitters: every cell -> category. Categories: ELITE, POWER, CONTACT, DISCIPLINE, AVERAGE, BELOW.
+const HITTER_ARCH_CAT = {
+  GOAT_TIER:         'ELITE',
+  CONTACT_POWER:     'ELITE',
+  AGGRESSIVE_STAR:   'ELITE',
+  CONTACT_EYE:       'ELITE',
+  POWER_EYE:         'ELITE',
+  SLAP_AND_WALK:     'ELITE',
+  THREE_TRUE_OUTCOMES:'ELITE',
+
+  PURE_HITTER:       'CONTACT',
+  CONTACT_HACKER:    'CONTACT',
+  SLAP_HITTER:       'CONTACT',
+  AGGRESSIVE_SLAP:   'CONTACT',
+
+  POWER_HITTER:      'POWER',
+  ALL_OR_NOTHING:    'POWER',
+  POWER_K:           'POWER',
+  POWER_HACKER:      'POWER',
+
+  BALANCED_EYE:      'DISCIPLINE',
+  SECONDARY_LEADOFF: 'DISCIPLINE',
+  PATIENT_K:         'DISCIPLINE',
+  WALK_ONLY_FRINGE:  'DISCIPLINE',
+
+  AVERAGE_HITTER:    'AVERAGE',
+  AVG_HACKER:        'AVERAGE',
+  GENERIC_NO_POWER:  'AVERAGE',
+  NO_POWER_HACKER:   'AVERAGE',
+
+  BACKUP_BAT:        'BELOW',
+  K_PRONE_FILLER:    'BELOW',
+  FRINGE:            'BELOW',
+  BUST:              'BELOW',
+};
+
+// SPs: every cell -> category. ELITE / STUFF / MOVEMENT / CONTROL / AVERAGE / BELOW.
+const SP_ARCH_CAT = {
+  MT_RUSHMORE:           'ELITE',
+  STUFF_PLUS_MOVE:       'ELITE',
+  STUFF_MOVE_WILD:       'ELITE',
+  STUFF_PLUS_CTRL:       'ELITE',
+  MOVE_CTRL_ACE:         'ELITE',
+  SOFT_TOSS_ARTIST:      'ELITE',
+
+  PURE_STUFF:            'STUFF',
+  WILD_FIREBALLER:       'STUFF',
+  K_AND_CTRL_HR_RISK:    'STUFF',
+  STUFF_NO_MOVE:         'STUFF',
+  PURE_STUFF_LIABILITY:  'STUFF',
+
+  PURE_MOVEMENT:         'MOVEMENT',
+  MOVE_WILD:             'MOVEMENT',
+  SINKER_ONLY:           'MOVEMENT',
+  SINKER_WILD:           'MOVEMENT',
+
+  PURE_CONTROL:          'CONTROL',
+  CTRL_HR_PRONE:         'CONTROL',
+  JUNKBALLER:            'CONTROL',
+  PIT_CHF_CTRL:          'CONTROL',
+
+  AVERAGE_4_5:           'AVERAGE',
+  WILD_MID:              'AVERAGE',
+  GENERIC_HR_PRONE:      'AVERAGE',
+
+  FILLER:                'BELOW',
+  LIABILITY:             'BELOW',
+  BAD_BIG_INNINGS:       'BELOW',
+  PIT_CHF:               'BELOW',
+  FRINGE:                'BELOW',
+};
+
+// Category color anchors + a small family ramp per category
+const CAT_ORDER_HITTER = ['ELITE','POWER','CONTACT','DISCIPLINE','AVERAGE','BELOW'];
+const CAT_ORDER_SP     = ['ELITE','STUFF','MOVEMENT','CONTROL','AVERAGE','BELOW'];
+
+const CAT_FAMILY = {
+  ELITE:      ['#d97757','#e89576','#f0b298','#c45c39','#a8421f'],            // accent / warm orange-red family
+  POWER:      ['#c1666b','#d48289','#e6a3a8','#a8424a','#8a3038'],            // red family
+  STUFF:      ['#c1666b','#d48289','#e6a3a8','#a8424a','#8a3038'],            // red family (same idea: high-K)
+  CONTACT:    ['#7fb069','#9bc784','#b7d9a4','#5e8a4b','#456a37'],            // sage green family
+  MOVEMENT:   ['#7fb069','#9bc784','#b7d9a4','#5e8a4b','#456a37'],            // sage green family
+  DISCIPLINE: ['#b099d4','#c9b5e0','#dfd0ed','#9077b8','#735a99'],            // muted lavender
+  CONTROL:    ['#b099d4','#c9b5e0','#dfd0ed','#9077b8','#735a99'],            // muted lavender
+  AVERAGE:    ['#a89e8a','#b8af9d','#c9c1b0','#8d8579','#6a6258'],            // warm gray
+  BELOW:      ['#5a5347','#6a6258','#7a7261','#48433b','#34302a'],            // dim
+};
+
+// Assign a stable color to each archetype label within its family
+function buildColorMap(catMap, catOrder) {
+  // group by category, sort labels for stable shade assignment
+  const byCat = {};
+  Object.entries(catMap).forEach(([label, cat]) => { (byCat[cat] = byCat[cat] || []).push(label); });
+  catOrder.forEach(c => { (byCat[c] || []).sort(); });
+  const out = {};
+  catOrder.forEach(cat => {
+    const labels = byCat[cat] || [];
+    const family = CAT_FAMILY[cat];
+    labels.forEach((label, i) => {
+      out[label] = family[i % family.length];
+    });
+  });
+  return out;
+}
+const HITTER_COLOR = buildColorMap(HITTER_ARCH_CAT, CAT_ORDER_HITTER);
+const SP_COLOR     = buildColorMap(SP_ARCH_CAT,     CAT_ORDER_SP);
 
 // Global UI state
 const state = {
   tab: 'home',
-  yearMode: 'single',     // 'single' | 'all' | 'blend'
+  yearMode: 'single',
   singleYear: D.current_year,
-  colorBy: 'archetype',   // 'archetype' | 'age_tier' | 'fp'
+  hX: 'POWER', hY: 'CONTACT',
+  sX: 'MOVEMENT', sY: 'STUFF',
 };
 
-// ── Pearson r in JS ────────────────────────────────────────────────────────
+// ── Pearson r ──────────────────────────────────────────────────────────
 function pearson(xs, ys) {
   const px = [], py = [];
   for (let i = 0; i < xs.length; i++) {
-    const x = xs[i], y = ys[i];
-    if (Number.isFinite(x) && Number.isFinite(y)) { px.push(x); py.push(y); }
+    if (Number.isFinite(xs[i]) && Number.isFinite(ys[i])) { px.push(xs[i]); py.push(ys[i]); }
   }
   const n = px.length;
-  if (n < 3) return { r: null, n: n };
-  const mx = px.reduce((a,b)=>a+b,0) / n;
-  const my = py.reduce((a,b)=>a+b,0) / n;
-  let sxx = 0, syy = 0, sxy = 0;
-  for (let i = 0; i < n; i++) {
-    const dx = px[i] - mx, dy = py[i] - my;
-    sxx += dx*dx; syy += dy*dy; sxy += dx*dy;
-  }
-  if (sxx === 0 || syy === 0) return { r: null, n: n };
-  return { r: sxy / Math.sqrt(sxx * syy), n: n };
+  if (n < 3) return { r: null, n };
+  const mx = px.reduce((a,b)=>a+b,0)/n, my = py.reduce((a,b)=>a+b,0)/n;
+  let sxx=0, syy=0, sxy=0;
+  for (let i = 0; i < n; i++) { const dx = px[i]-mx, dy = py[i]-my; sxx+=dx*dx; syy+=dy*dy; sxy+=dx*dy; }
+  if (sxx === 0 || syy === 0) return { r: null, n };
+  return { r: sxy / Math.sqrt(sxx*syy), n };
 }
 
-// ── Filtering by year mode ────────────────────────────────────────────────
-function paWeightBlend(rows, blendKey, rateKey) {
-  // group by id, PA-weight ratings (and rateKey), take last-year sub-types/team/age
+function olsLine(xs, ys) {
+  const n = xs.length;
+  if (n < 3) return null;
+  const mx = xs.reduce((a,b)=>a+b,0)/n, my = ys.reduce((a,b)=>a+b,0)/n;
+  let sxx=0, sxy=0;
+  for (let i = 0; i < n; i++) { sxx += (xs[i]-mx)**2; sxy += (xs[i]-mx)*(ys[i]-my); }
+  if (sxx === 0) return null;
+  const slope = sxy/sxx, icpt = my - slope*mx;
+  const xmin = Math.min(...xs), xmax = Math.max(...xs);
+  return { x: [xmin, xmax], y: [xmin*slope+icpt, xmax*slope+icpt] };
+}
+
+// ── Filtering / blend ─────────────────────────────────────────────────
+function bucket(v) { return v >= 60 ? 'PLUS' : (v >= 40 ? 'AVG' : 'MINUS'); }
+function lookupHitterArch(c,p,d){ return (HDEFS[bucket(c)+'/'+bucket(p)+'/'+bucket(d)] || {label:'UNKNOWN'}).label; }
+function lookupSpArch(s,m,c){ return (SDEFS[bucket(s)+'/'+bucket(m)+'/'+bucket(c)] || {label:'UNKNOWN'}).label; }
+
+function paWeightBlend(rows, idKey, fpKey) {
   const byId = {};
-  rows.forEach(r => { (byId[r[blendKey]] = byId[r[blendKey]] || []).push(r); });
-  const out = [];
-  const PA_KEY = blendKey === 'batter' ? 'pa' : 'gs';
-  // Numeric domain cols to weighted-mean
+  rows.forEach(r => { (byId[r[idKey]] = byId[r[idKey]] || []).push(r); });
+  const PA_KEY = idKey === 'batter' ? 'pa' : 'gs';
   const HITTER_NUMS = ['CONTACT','POWER','DISCIPLINE','SB',
     'r_Contact','r_K','r_BABIP','r_xCON','r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB',
     'r_BB','r_Chase','r_ZSwing','r_SBrate','r_Sprint'];
   const SP_NUMS = ['STUFF','MOVEMENT','CONTROL','velo_rating',
     'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB'];
-  const NUMS = blendKey === 'batter' ? HITTER_NUMS : SP_NUMS;
-
+  const NUMS = idKey === 'batter' ? HITTER_NUMS : SP_NUMS;
+  const out = [];
   Object.entries(byId).forEach(([id, recs]) => {
     const sel = recs.filter(r => r.year === 2025 || r.year === 2026);
     if (!sel.length) return;
-    const wsum = sel.reduce((a, r) => a + (r[PA_KEY] || 0), 0);
+    const wsum = sel.reduce((a,r) => a + (r[PA_KEY] || 0), 0);
     if (!wsum) return;
     const last = sel.slice().sort((a,b) => b.year - a.year)[0];
-    const blend = { ...last };  // copy display fields
+    const blend = { ...last };
     blend.year = 'blend';
     NUMS.forEach(c => {
       let s = 0;
@@ -360,159 +541,26 @@ function paWeightBlend(rows, blendKey, rateKey) {
       blend[c] = Math.round(s / wsum);
     });
     blend[PA_KEY] = wsum;
-    // Re-bucket archetype from blended ratings
-    if (blendKey === 'batter') {
-      blend.archetype = lookupHitterArch(blend.CONTACT, blend.POWER, blend.DISCIPLINE);
-    } else {
-      blend.archetype = lookupSpArch(blend.STUFF, blend.MOVEMENT, blend.CONTROL);
-    }
-    // Re-rank within blend population added below
+    blend.archetype = idKey === 'batter'
+      ? lookupHitterArch(blend.CONTACT, blend.POWER, blend.DISCIPLINE)
+      : lookupSpArch(blend.STUFF, blend.MOVEMENT, blend.CONTROL);
+    blend[fpKey] = sel.reduce((a,r) => a + (r[fpKey] || 0) * (r[PA_KEY] || 0), 0) / wsum;
     blend.rank_in_year = null;
-    blend[rateKey] = sel.reduce((a, r) => a + (r[rateKey] || 0) * (r[PA_KEY] || 0), 0) / wsum;
     out.push(blend);
   });
-  // Rank
-  out.sort((a,b) => b[rateKey] - a[rateKey]);
+  out.sort((a,b) => b[fpKey] - a[fpKey]);
   out.forEach((r, i) => r.rank_in_year = i + 1);
   return out;
 }
 
-function bucket(v) { return v >= 60 ? 'PLUS' : (v >= 40 ? 'AVG' : 'MINUS'); }
-
-function lookupHitterArch(c, p, d) {
-  const cell = bucket(c) + '/' + bucket(p) + '/' + bucket(d);
-  return (HDEFS[cell] || {label:'UNKNOWN'}).label;
-}
-function lookupSpArch(s, m, c) {
-  const cell = bucket(s) + '/' + bucket(m) + '/' + bucket(c);
-  return (SDEFS[cell] || {label:'UNKNOWN'}).label;
-}
-
 function filterRows(rows, role) {
-  // role: 'hitter' | 'sp'
-  if (state.yearMode === 'single') {
-    return rows.filter(r => r.year === state.singleYear);
-  }
-  if (state.yearMode === 'all') return rows.slice();
-  // blend
+  if (state.yearMode === 'single') return rows.filter(r => r.year === state.singleYear);
+  if (state.yearMode === 'all')    return rows.slice();
   return paWeightBlend(rows, role === 'hitter' ? 'batter' : 'pitcher',
                        role === 'hitter' ? 'fp_per_pa' : 'fp_per_start');
 }
 
-// ── Color mapping ─────────────────────────────────────────────────────────
-const ARCH_PALETTE = ['#58a6ff','#3fb950','#d29922','#f85149','#d2a8ff',
-  '#f0883e','#79c0ff','#79c275','#ff7b72','#a5d6ff','#ffa657','#56d364',
-  '#ffa198','#bc8cff','#7ee787','#ffc680','#79c0ff','#d2a8ff','#3fb950',
-  '#f85149','#58a6ff','#8b949e','#6e7681','#484f58','#30363d','#21262d','#161b22'];
-
-function colorMap(rows, key) {
-  if (key === 'archetype') {
-    const labels = [...new Set(rows.map(r => r.archetype))];
-    labels.sort();
-    const map = {};
-    labels.forEach((l, i) => map[l] = ARCH_PALETTE[i % ARCH_PALETTE.length]);
-    return { type: 'cat', map, key: 'archetype' };
-  }
-  if (key === 'age_tier') {
-    return { type: 'cat',
-             map: { 'PRE_PEAK': '#79c275', 'PEAK': '#58a6ff', 'POST_PEAK': '#f0883e' },
-             key: 'age_tier' };
-  }
-  // fp continuous
-  return { type: 'fp' };
-}
-
-// ── Scatter rendering ─────────────────────────────────────────────────────
-function ratingTitleR(rRes) {
-  if (rRes.r == null) return ` <span class="r">r = —</span> <span class="n">(n=${rRes.n})</span>`;
-  return ` <span class="r">r = ${rRes.r.toFixed(3)}</span> <span class="n">(n=${rRes.n})</span>`;
-}
-
-function olsLine(xs, ys) {
-  const n = xs.length;
-  if (n < 3) return null;
-  const mx = xs.reduce((a,b)=>a+b,0)/n;
-  const my = ys.reduce((a,b)=>a+b,0)/n;
-  let sxx = 0, sxy = 0;
-  for (let i = 0; i < n; i++) { sxx += (xs[i]-mx)**2; sxy += (xs[i]-mx)*(ys[i]-my); }
-  if (sxx === 0) return null;
-  const slope = sxy / sxx;
-  const icpt = my - slope * mx;
-  const xmin = Math.min(...xs), xmax = Math.max(...xs);
-  return { x: [xmin, xmax], y: [xmin*slope + icpt, xmax*slope + icpt] };
-}
-
-function renderScatter(divId, titleBase, rows, xKey, yKey, idKey, role) {
-  const xs = rows.map(r => r[xKey]).filter(Number.isFinite);
-  const ys = rows.map(r => r[yKey]).filter(Number.isFinite);
-  // align
-  const px = [], py = [], meta = [];
-  for (let i = 0; i < rows.length; i++) {
-    const x = rows[i][xKey], y = rows[i][yKey];
-    if (Number.isFinite(x) && Number.isFinite(y)) { px.push(x); py.push(y); meta.push(rows[i]); }
-  }
-  const rRes = pearson(px, py);
-  document.getElementById(divId + '-title').innerHTML = titleBase + ratingTitleR(rRes);
-
-  const cmap = colorMap(rows, state.colorBy);
-  let traces;
-  if (cmap.type === 'cat') {
-    const byCat = {};
-    for (let i = 0; i < meta.length; i++) {
-      const cat = meta[i][cmap.key] || 'UNK';
-      (byCat[cat] = byCat[cat] || { x:[], y:[], txt:[], ids:[], idx:[] });
-      byCat[cat].x.push(px[i]); byCat[cat].y.push(py[i]);
-      byCat[cat].txt.push(hoverText(meta[i], role));
-      byCat[cat].ids.push(meta[i][idKey]);
-    }
-    traces = Object.entries(byCat).map(([cat, g]) => ({
-      x: g.x, y: g.y, name: cat,
-      mode: 'markers', type: 'scattergl',
-      text: g.txt, hovertemplate: '%{text}<extra></extra>',
-      customdata: g.ids,
-      marker: { color: cmap.map[cat] || '#8b949e', size: 7, opacity: 0.85 },
-    }));
-  } else {
-    // fp continuous
-    const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
-    const cs = meta.map(r => r[fpKey]);
-    traces = [{
-      x: px, y: py, mode: 'markers', type: 'scattergl',
-      text: meta.map(r => hoverText(r, role)),
-      hovertemplate: '%{text}<extra></extra>',
-      customdata: meta.map(r => r[idKey]),
-      marker: { color: cs, colorscale: 'Viridis', size: 8, opacity: 0.85,
-                colorbar: { title: fpKey } },
-    }];
-  }
-  // OLS overlay
-  const ols = olsLine(px, py);
-  if (ols) traces.push({
-    x: ols.x, y: ols.y, mode: 'lines', type: 'scatter',
-    line: { color: '#d2a8ff', width: 2, dash: 'dash' }, hoverinfo: 'skip',
-    showlegend: false, name: 'OLS',
-  });
-
-  Plotly.react(divId, traces, {
-    paper_bgcolor: '#161b22', plot_bgcolor: '#0d1117',
-    font: { color: '#c9d1d9', size: 11 },
-    margin: { l: 38, r: 10, t: 8, b: 32 },
-    xaxis: { title: xKey, gridcolor: '#21262d', zerolinecolor: '#30363d' },
-    yaxis: { title: yKey, gridcolor: '#21262d', zerolinecolor: '#30363d' },
-    showlegend: cmap.type === 'cat',
-    legend: { font: { size: 9 }, bgcolor: 'rgba(0,0,0,0)' },
-  }, { displayModeBar: false, responsive: true });
-
-  // Click → modal
-  const div = document.getElementById(divId);
-  div.removeAllListeners && div.removeAllListeners('plotly_click');
-  div.on('plotly_click', e => {
-    const pt = e.points[0];
-    const id = pt.customdata;
-    if (id != null) openModal(role, id);
-  });
-}
-
+// ── Quadrant rendering ────────────────────────────────────────────────
 function hoverText(r, role) {
   if (role === 'hitter') {
     return `<b>${r.player_name}</b> ${r.year} (${r.team})<br>`
@@ -526,26 +574,150 @@ function hoverText(r, role) {
        + `fp/start = ${(r.fp_per_start||0).toFixed(2)}`;
 }
 
-// ── Archetype roster tables ───────────────────────────────────────────────
+function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
+  const idKey = role === 'hitter' ? 'batter' : 'pitcher';
+  const catMap = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
+  const colorMap = role === 'hitter' ? HITTER_COLOR : SP_COLOR;
+  const catOrder = role === 'hitter' ? CAT_ORDER_HITTER : CAT_ORDER_SP;
+  const axisLabel = role === 'hitter' ? HITTER_AXIS_LABEL : SP_AXIS_LABEL;
+
+  // build aligned points
+  const px=[], py=[], meta=[];
+  rows.forEach(r => {
+    const x = r[xKey], y = r[yKey];
+    if (Number.isFinite(x) && Number.isFinite(y)) { px.push(x); py.push(y); meta.push(r); }
+  });
+  const rRes = pearson(px, py);
+  document.getElementById(rDispId).innerHTML = rRes.r == null
+    ? `r = — (n=${rRes.n})`
+    : `r = ${rRes.r.toFixed(3)} · n = ${rRes.n}`;
+
+  // group points by archetype, ordered by category so legend reads top-down
+  const byArch = {};
+  meta.forEach((r, i) => {
+    const a = r.archetype || 'UNK';
+    (byArch[a] = byArch[a] || { x:[], y:[], txt:[], ids:[] });
+    byArch[a].x.push(px[i]); byArch[a].y.push(py[i]);
+    byArch[a].txt.push(hoverText(r, role));
+    byArch[a].ids.push(r[idKey]);
+  });
+  // sort labels by category order then alpha
+  const orderedLabels = Object.keys(byArch).sort((a,b) => {
+    const ca = catOrder.indexOf(catMap[a] || 'BELOW');
+    const cb = catOrder.indexOf(catMap[b] || 'BELOW');
+    if (ca !== cb) return ca - cb;
+    return a.localeCompare(b);
+  });
+
+  const traces = orderedLabels.map(label => {
+    const g = byArch[label];
+    const cat = catMap[label] || 'BELOW';
+    return {
+      x: g.x, y: g.y,
+      name: label,
+      legendgroup: cat,
+      legendgrouptitle: { text: cat },
+      mode: 'markers', type: 'scattergl',
+      text: g.txt, hovertemplate: '%{text}<extra></extra>',
+      customdata: g.ids,
+      marker: { color: colorMap[label] || '#888', size: 8, opacity: 0.85,
+                 line: { width: 0.5, color: 'rgba(0,0,0,0.4)' } },
+    };
+  });
+
+  // OLS overlay
+  const ols = olsLine(px, py);
+  if (ols) traces.push({
+    x: ols.x, y: ols.y, mode: 'lines', type: 'scatter',
+    name: 'OLS fit', legendgroup: 'fit',
+    line: { color: '#d97757', width: 1.5, dash: 'dash' },
+    hoverinfo: 'skip', showlegend: true,
+  });
+
+  // Plot range — keep [20,80] when both axes are 20-80 ratings; auto for velo
+  const ratingAxes = ['CONTACT','POWER','DISCIPLINE','SB','STUFF','MOVEMENT','CONTROL','velo_rating'];
+  const xRange = ratingAxes.includes(xKey) ? [20, 80] : undefined;
+  const yRange = ratingAxes.includes(yKey) ? [20, 80] : undefined;
+
+  // 50/50 reference lines (only when on rating scale)
+  const shapes = [];
+  if (xRange) shapes.push({ type:'line', x0:50, x1:50, yref:'paper', y0:0, y1:1,
+                            line:{ color:'#8d8579', width:1, dash:'dot' } });
+  if (yRange) shapes.push({ type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50,
+                            line:{ color:'#8d8579', width:1, dash:'dot' } });
+
+  // Quadrant labels (only when both 20-80)
+  const annotations = [];
+  if (xRange && yRange) {
+    annotations.push(
+      { x:70, y:75, text:'PLUS both', showarrow:false, font:{ color:'#7fb069', size:10, family:'IBM Plex Mono' } },
+      { x:30, y:75, text:`+ ${axisLabel[yKey]} only`, showarrow:false, font:{ color:'#d4a945', size:10, family:'IBM Plex Mono' } },
+      { x:70, y:25, text:`+ ${axisLabel[xKey]} only`, showarrow:false, font:{ color:'#d4a945', size:10, family:'IBM Plex Mono' } },
+      { x:30, y:25, text:'MINUS both', showarrow:false, font:{ color:'#c1666b', size:10, family:'IBM Plex Mono' } },
+    );
+  }
+
+  Plotly.react(divId, traces, {
+    paper_bgcolor: '#211e1a', plot_bgcolor: '#1a1815',
+    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    margin: { l: 56, r: 10, t: 10, b: 50 },
+    xaxis: { title: { text: axisLabel[xKey] || xKey, font: { size: 13, color: '#d97757' } },
+             gridcolor: '#34302a', zerolinecolor: '#34302a',
+             range: xRange, tick0: 20, dtick: 10 },
+    yaxis: { title: { text: axisLabel[yKey] || yKey, font: { size: 13, color: '#d97757' } },
+             gridcolor: '#34302a', zerolinecolor: '#34302a',
+             range: yRange, tick0: 20, dtick: 10 },
+    shapes, annotations,
+    showlegend: true,
+    legend: { font: { size: 10, color: '#f5f1ea', family: 'IBM Plex Mono' },
+              bgcolor: 'rgba(33,30,26,0.85)', bordercolor: '#34302a', borderwidth: 1,
+              groupclick: 'togglegroup', tracegroupgap: 8,
+              x: 1.02, y: 1 },
+  }, { displayModeBar: false, responsive: true });
+
+  // Click → modal
+  const div = document.getElementById(divId);
+  if (div._clickWired) return;
+  div._clickWired = true;
+  div.on('plotly_click', e => {
+    const pt = e.points[0];
+    const id = pt.customdata;
+    if (id != null) openModal(role, id);
+  });
+}
+
+// ── Archetype tables ──────────────────────────────────────────────────
 function renderArchetypeTables(rows, role, targetId) {
   const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
   const archDesc = role === 'hitter' ? HARCH_DESC : SARCH_DESC;
+  const catMap = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
+  const catOrder = role === 'hitter' ? CAT_ORDER_HITTER : CAT_ORDER_SP;
   const byArch = {};
   rows.forEach(r => { (byArch[r.archetype] = byArch[r.archetype] || []).push(r); });
+
   const arches = Object.entries(byArch).map(([a, rs]) => {
     const mean = rs.reduce((s,r) => s + (r[fpKey]||0), 0) / rs.length;
-    return { arch: a, rows: rs, mean };
-  }).sort((a,b) => b.mean - a.mean);
+    return { arch: a, rows: rs, mean, cat: catMap[a] || 'BELOW' };
+  }).sort((a,b) => {
+    const ca = catOrder.indexOf(a.cat), cb = catOrder.indexOf(b.cat);
+    if (ca !== cb) return ca - cb;
+    return b.mean - a.mean;
+  });
 
   let html = '';
-  arches.forEach(({arch, rows: rs, mean}) => {
-    rs.sort((a,b) => (b[fpKey] || 0) - (a[fpKey] || 0));
+  let lastCat = null;
+  arches.forEach(({arch, rows: rs, mean, cat}) => {
+    if (cat !== lastCat) {
+      html += `<h3 style="color:var(--dim);font-size:.78em;text-transform:uppercase;letter-spacing:.15em;margin-top:1.2em;border-bottom:1px solid var(--faint);padding-bottom:.3em;">${cat}</h3>`;
+      lastCat = cat;
+    }
+    rs.sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0));
     const desc = archDesc[arch] || '';
     html += `<details><summary>${arch}<span class="count">n=${rs.length}, mean ${fpKey}=${mean.toFixed(role==='hitter'?3:2)}</span><span class="desc">${desc}</span></summary><table><thead>`;
     if (role === 'hitter') {
-      html += '<tr><th>#</th><th>Player</th><th>Team</th><th>C</th><th>P</th><th>D</th><th>SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th>FP/PA</th><th>Rank</th></tr></thead><tbody>';
+      html += '<tr><th class="num">#</th><th>Player</th><th>Team</th><th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
-        html += `<tr><td>${i+1}</td>`
+        html += `<tr><td class="num">${i+1}</td>`
               + `<td class="player" data-role="hitter" data-id="${r.batter}">${r.player_name}</td>`
               + `<td>${r.team||''}</td>`
               + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
@@ -556,9 +728,9 @@ function renderArchetypeTables(rows, role, targetId) {
               + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
       });
     } else {
-      html += '<tr><th>#</th><th>Pitcher</th><th>S</th><th>M</th><th>C</th><th>Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th>FP/start</th><th>Rank</th></tr></thead><tbody>';
+      html += '<tr><th class="num">#</th><th>Pitcher</th><th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
-        html += `<tr><td>${i+1}</td>`
+        html += `<tr><td class="num">${i+1}</td>`
               + `<td class="player" data-role="sp" data-id="${r.pitcher}">${r.player_name}</td>`
               + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
               + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating??''}</td>`
@@ -571,22 +743,21 @@ function renderArchetypeTables(rows, role, targetId) {
     html += '</tbody></table></details>';
   });
   document.getElementById(targetId).innerHTML = html;
-  // Wire clicks
   document.querySelectorAll(`#${targetId} td.player`).forEach(td => {
     td.addEventListener('click', () => openModal(td.dataset.role, parseInt(td.dataset.id)));
   });
 }
 
-// ── Leaderboards ──────────────────────────────────────────────────────────
+// ── Leaderboards ──────────────────────────────────────────────────────
 function renderLeaderboard(rows, role, targetId) {
   const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
   const top = rows.slice().sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0)).slice(0, 15);
-  let html = '<table><thead><tr><th>#</th><th>Player</th>';
-  if (role === 'hitter') html += '<th>C</th><th>P</th><th>D</th><th>SB</th><th>Arch</th><th>FP/PA</th>';
-  else                    html += '<th>S</th><th>M</th><th>C</th><th>Arch</th><th>FP/start</th>';
+  let html = '<table><thead><tr><th class="num">#</th><th>Player</th>';
+  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
+  else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
-    html += `<tr><td>${i+1}</td>`
+    html += `<tr><td class="num">${i+1}</td>`
           + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}</td>`;
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
@@ -606,51 +777,61 @@ function renderLeaderboard(rows, role, targetId) {
   });
 }
 
-// ── Home archetype-distribution stacked bars (all years, fixed) ──────────
+// ── Home stacked-bar archetype distribution (grouped by category) ─────
 function renderHomeArchDist() {
-  // hitters
-  renderStackedArchDist('home-arch-hit', HITTERS, 'archetype', 'Hitter archetypes per year');
-  renderStackedArchDist('home-arch-sp',  SPS,     'archetype', 'SP archetypes per year');
+  renderStackedArchDist('home-arch-hit', HITTERS, HITTER_ARCH_CAT, CAT_ORDER_HITTER, HITTER_COLOR, 'Hitter archetypes per year');
+  renderStackedArchDist('home-arch-sp',  SPS,     SP_ARCH_CAT,     CAT_ORDER_SP,     SP_COLOR,     'SP archetypes per year');
 }
 
-function renderStackedArchDist(divId, rows, key, title) {
-  // group by (year, archetype) count
+function renderStackedArchDist(divId, rows, catMap, catOrder, colorMap, title) {
   const byYrArch = {};
   rows.forEach(r => {
-    const k = `${r.year}|${r[key]}`;
+    const k = `${r.year}|${r.archetype}`;
     byYrArch[k] = (byYrArch[k] || 0) + 1;
   });
   const years = [...new Set(rows.map(r => r.year))].sort();
-  const arches = [...new Set(rows.map(r => r[key]))].sort();
-  const traces = arches.map((a, i) => ({
-    name: a,
+  const labels = [...new Set(rows.map(r => r.archetype))];
+  // Sort labels by category order (so stack order is consistent + legend reads top-down)
+  labels.sort((a,b) => {
+    const ca = catOrder.indexOf(catMap[a] || 'BELOW');
+    const cb = catOrder.indexOf(catMap[b] || 'BELOW');
+    if (ca !== cb) return ca - cb;
+    return a.localeCompare(b);
+  });
+  const traces = labels.map(label => ({
+    name: label,
+    legendgroup: catMap[label] || 'BELOW',
+    legendgrouptitle: { text: catMap[label] || 'BELOW' },
     x: years,
-    y: years.map(y => byYrArch[`${y}|${a}`] || 0),
+    y: years.map(y => byYrArch[`${y}|${label}`] || 0),
     type: 'bar',
-    marker: { color: ARCH_PALETTE[i % ARCH_PALETTE.length] },
+    marker: { color: colorMap[label] || '#888' },
   }));
   Plotly.react(divId, traces, {
     barmode: 'stack',
-    paper_bgcolor: '#161b22', plot_bgcolor: '#0d1117',
-    font: { color: '#c9d1d9', size: 11 },
-    title: { text: title, font: { color: '#79c0ff', size: 13 } },
-    margin: { l: 40, r: 10, t: 36, b: 36 },
-    xaxis: { gridcolor: '#21262d', tickmode: 'linear', dtick: 1 },
-    yaxis: { gridcolor: '#21262d' },
-    legend: { font: { size: 9 }, orientation: 'h', y: -0.2 },
+    paper_bgcolor: '#211e1a', plot_bgcolor: '#1a1815',
+    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    title: { text: title, font: { color: '#d97757', family: 'Source Serif 4, serif', size: 16 },
+             x: 0.02 },
+    margin: { l: 60, r: 30, t: 50, b: 50 },
+    xaxis: { gridcolor: '#34302a', tickmode: 'linear', dtick: 1 },
+    yaxis: { gridcolor: '#34302a', title: { text: 'qualified players', font: { size: 11 } } },
+    legend: { font: { size: 9, color: '#f5f1ea', family: 'IBM Plex Mono' },
+              bgcolor: 'rgba(33,30,26,0.85)', bordercolor: '#34302a', borderwidth: 1,
+              groupclick: 'togglegroup', tracegroupgap: 6 },
   }, { displayModeBar: false, responsive: true });
 }
 
-// ── Boundary glossary ─────────────────────────────────────────────────────
+// ── Boundary glossary ────────────────────────────────────────────────
 function renderBoundaryGlossary() {
   const sides = [
-    { title: 'Hitters', data: D.hitter_boundary },
+    { title: 'Hitters',           data: D.hitter_boundary },
     { title: 'Starting pitchers', data: D.sp_boundary },
   ];
   let html = '';
   sides.forEach(s => {
-    html += `<div><h3>${s.title} boundary retention</h3>`;
-    html += '<table><thead><tr><th>Tier</th><th>n transitions</th><th>YoY archetype retention</th></tr></thead><tbody>';
+    html += `<div><h3 style="color:var(--accent);font-family:Source Serif 4,serif;">${s.title}</h3>`;
+    html += '<table><thead><tr><th>Tier</th><th class="num">n transitions</th><th class="num">YoY retention</th></tr></thead><tbody>';
     ['EDGE','NEAR_EDGE','SOLID'].forEach(t => {
       const v = s.data[t];
       if (!v) return;
@@ -661,95 +842,87 @@ function renderBoundaryGlossary() {
   document.getElementById('boundary-glossary').innerHTML = html;
 }
 
-// ── Modal ────────────────────────────────────────────────────────────────
+// ── Modal ───────────────────────────────────────────────────────────
 function openModal(role, id) {
   const records = (role === 'hitter' ? H_BY_ID[id] : S_BY_ID[id]) || [];
   if (!records.length) return;
   const sorted = records.slice().sort((a,b) => a.year - b.year);
   const last = sorted[sorted.length - 1];
   let html = `<h2>${last.player_name}</h2>`;
-  if (role === 'hitter') {
-    html += `<div class="muted">Latest: ${last.team || '—'}, age ${last.age ?? '?'} (${last.age_tier})</div>`;
-  } else {
-    html += `<div class="muted">Latest: age ${last.age ?? '?'} (${last.age_tier})</div>`;
-  }
-  // Trajectory
-  html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${r.archetype}</b></span>`).join(' <span class="arrow">→</span> ') + '</div>';
-  // Year table
-  html += '<table><thead><tr><th>Year</th><th>Age</th>';
-  if (role === 'hitter') html += '<th>C</th><th>P</th><th>D</th><th>SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th>FP/PA</th><th>Rank</th>';
-  else                    html += '<th>S</th><th>M</th><th>C</th><th>Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th>FP/start</th><th>Rank</th>';
+  if (role === 'hitter') html += `<div class="latest-line">Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${last.age_tier})</div>`;
+  else                    html += `<div class="latest-line">Latest: age ${last.age ?? '?'} (${last.age_tier})</div>`;
+  html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${r.archetype}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
+  html += '<table><thead><tr><th class="num">Year</th><th class="num">Age</th>';
+  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th>';
+  else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th>';
   html += '</tr></thead><tbody>';
   sorted.forEach(r => {
     if (role === 'hitter') {
-      html += `<tr><td>${r.year}</td><td>${r.age ?? ''}</td>`
+      html += `<tr><td class="num">${r.year}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
             + `<td>${r.archetype}</td>`
-            + `<td><span class="muted">${[r.contact_subtype, r.power_subtype, r.discipline_subtype, r.sb_tier].filter(Boolean).join(' / ')}</span></td>`
+            + `<td><span style="color:var(--dim);">${[r.contact_subtype, r.power_subtype, r.discipline_subtype, r.sb_tier].filter(Boolean).join(' / ')}</span></td>`
             + `<td>${r.boundary_tier||''}</td>`
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
-      html += `<tr><td>${r.year}</td><td>${r.age ?? ''}</td>`
+      html += `<tr><td class="num">${r.year}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating ?? ''}</td>`
             + `<td>${r.archetype}</td>`
-            + `<td><span class="muted">${[r.stuff_subtype, r.velo_tier, r.pitch_archetype].filter(Boolean).join(' / ')}</span></td>`
+            + `<td><span style="color:var(--dim);">${[r.stuff_subtype, r.velo_tier, r.pitch_archetype].filter(Boolean).join(' / ')}</span></td>`
             + `<td>${r.boundary_tier||''}</td>`
             + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     }
   });
   html += '</tbody></table>';
-  html += '<div id="modal-spark" style="height: 280px; margin-top: .8em;"></div>';
+  html += '<div id="modal-spark" style="height: 300px; margin-top: 1em;"></div>';
   document.getElementById('modal-content').innerHTML = html;
   document.getElementById('modal-bg').classList.add('open');
   renderSparkline(sorted, role);
 }
 
-function closeModal() {
-  document.getElementById('modal-bg').classList.remove('open');
-}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
 
 function renderSparkline(sorted, role) {
   const xs = sorted.map(r => r.year);
   const keys = role === 'hitter'
-    ? [['CONTACT','#58a6ff'], ['POWER','#f0883e'], ['DISCIPLINE','#d2a8ff'], ['SB','#3fb950']]
-    : [['STUFF','#58a6ff'], ['MOVEMENT','#f0883e'], ['CONTROL','#d2a8ff'], ['velo_rating','#3fb950']];
+    ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
+    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
   const traces = keys.map(([k, color]) => ({
     x: xs, y: sorted.map(r => r[k]), mode: 'lines+markers', name: k,
-    line: { color }, marker: { size: 7 },
+    line: { color, width: 2 }, marker: { size: 8 },
   }));
-  // Bucket boundary lines
   const shapes = [
-    { type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 60, y1: 60, line: { color: '#3fb950', dash: 'dot', width: 1 } },
-    { type: 'line', xref: 'paper', x0: 0, x1: 1, y0: 40, y1: 40, line: { color: '#f85149', dash: 'dot', width: 1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:60, y1:60, line:{ color:'#7fb069', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50, line:{ color:'#8d8579', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:40, y1:40, line:{ color:'#c1666b', dash:'dot', width:1 } },
   ];
   Plotly.react('modal-spark', traces, {
-    paper_bgcolor: '#0d1117', plot_bgcolor: '#161b22',
-    font: { color: '#c9d1d9', size: 11 },
-    margin: { l: 40, r: 10, t: 10, b: 30 },
-    xaxis: { gridcolor: '#21262d', tickmode: 'linear', dtick: 1 },
-    yaxis: { gridcolor: '#21262d', range: [20, 80] },
+    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
+    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    margin: { l: 50, r: 10, t: 10, b: 35 },
+    xaxis: { gridcolor: '#34302a', tickmode: 'linear', dtick: 1 },
+    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
     shapes,
-    legend: { orientation: 'h', y: -0.15 },
+    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono' } },
   }, { displayModeBar: false, responsive: true });
 }
 
-// ── Search ──────────────────────────────────────────────────────────────
+// ── Search ──────────────────────────────────────────────────────────
 function buildSearchIndex() {
-  // De-dup per id, attach a display label with most-recent team
   const idx = [];
   Object.entries(H_BY_ID).forEach(([id, recs]) => {
     const last = recs.slice().sort((a,b) => b.year - a.year)[0];
     idx.push({ id: parseInt(id), role: 'hitter', name: last.player_name,
-               label: `${last.player_name}`, meta: `Hitter · ${last.team || '—'} · last ${last.year}` });
+               label: last.player_name, meta: `Hitter · ${last.team || '—'} · last ${last.year}` });
   });
   Object.entries(S_BY_ID).forEach(([id, recs]) => {
     const last = recs.slice().sort((a,b) => b.year - a.year)[0];
     idx.push({ id: parseInt(id), role: 'sp', name: last.player_name,
-               label: `${last.player_name}`, meta: `SP · last ${last.year}` });
+               label: last.player_name, meta: `SP · last ${last.year}` });
   });
   return idx;
 }
@@ -760,7 +933,7 @@ function runSearch(q) {
   if (!q || q.length < 2) { box.classList.remove('open'); box.innerHTML = ''; return; }
   const ql = q.toLowerCase();
   const hits = SEARCH_INDEX.filter(o => o.name.toLowerCase().includes(ql)).slice(0, 20);
-  if (!hits.length) { box.innerHTML = '<div class="item muted">no match</div>'; box.classList.add('open'); return; }
+  if (!hits.length) { box.innerHTML = '<div class="item" style="color:var(--dim);">no match</div>'; box.classList.add('open'); return; }
   box.innerHTML = hits.map(o =>
     `<div class="item" data-role="${o.role}" data-id="${o.id}">`
     + `<span class="role">${o.role}</span>${o.label}<span class="meta">${o.meta}</span></div>`
@@ -775,43 +948,39 @@ function runSearch(q) {
   });
 }
 
-// ── Master render: re-runs everything dependent on state ─────────────────
+// ── Master render ──────────────────────────────────────────────────
 function renderAll() {
   const hitterRows = filterRows(HITTERS, 'hitter');
   const spRows     = filterRows(SPS,     'sp');
 
-  // Filter summary
   const ym = state.yearMode === 'single' ? `Single ${state.singleYear}` :
              state.yearMode === 'all'    ? 'All years' : '2025+2026 Blend';
   document.getElementById('filter-summary').textContent =
     `${ym} · ${hitterRows.length} hitters · ${spRows.length} SPs`;
 
-  // Home
   renderLeaderboard(hitterRows, 'hitter', 'lb-hitters');
-  renderLeaderboard(spRows, 'sp', 'lb-sps');
+  renderLeaderboard(spRows,    'sp',     'lb-sps');
 
-  // Hitters
-  renderScatter('h-cp',  'Contact × Power',      hitterRows, 'CONTACT', 'POWER',      'batter', 'hitter');
-  renderScatter('h-cd',  'Contact × Discipline', hitterRows, 'CONTACT', 'DISCIPLINE', 'batter', 'hitter');
-  renderScatter('h-pd',  'Power × Discipline',   hitterRows, 'POWER',   'DISCIPLINE', 'batter', 'hitter');
-  renderScatter('h-csb', 'Contact × SB',         hitterRows, 'CONTACT', 'SB',         'batter', 'hitter');
-  renderScatter('h-psb', 'Power × SB',           hitterRows, 'POWER',   'SB',         'batter', 'hitter');
-  renderScatter('h-dsb', 'Discipline × SB',      hitterRows, 'DISCIPLINE', 'SB',      'batter', 'hitter');
+  renderQuadrant('h-quad', 'h-r', hitterRows, state.hX, state.hY, 'hitter');
+  renderQuadrant('s-quad', 's-r', spRows,     state.sX, state.sY, 'sp');
+
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
-
-  // SPs
-  renderScatter('s-sm',  'Stuff × Movement',     spRows, 'STUFF',    'MOVEMENT',    'pitcher', 'sp');
-  renderScatter('s-sc',  'Stuff × Control',      spRows, 'STUFF',    'CONTROL',     'pitcher', 'sp');
-  renderScatter('s-mc',  'Movement × Control',   spRows, 'MOVEMENT', 'CONTROL',     'pitcher', 'sp');
-  renderScatter('s-vs',  'Velo × Stuff',         spRows, 'velo_rating', 'STUFF',    'pitcher', 'sp');
-  renderScatter('s-vm',  'Velo × Movement',      spRows, 'velo_rating', 'MOVEMENT', 'pitcher', 'sp');
-  renderScatter('s-vc',  'Velo × Control',       spRows, 'velo_rating', 'CONTROL',  'pitcher', 'sp');
-  renderArchetypeTables(spRows, 'sp', 's-archetype-tables');
+  renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
 }
 
-// ── Init ─────────────────────────────────────────────────────────────────
+// ── Resize Plotly when its tab becomes visible ──────────────────────
+function resizeCurrentTabPlots() {
+  const ids = state.tab === 'home'    ? ['home-arch-hit','home-arch-sp']
+            : state.tab === 'hitters' ? ['h-quad']
+            : state.tab === 'pitchers'? ['s-quad'] : [];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.data) Plotly.Plots.resize(el);
+  });
+}
+
+// ── Init ───────────────────────────────────────────────────────────
 function init() {
-  // Populate year dropdown
   const sel = document.getElementById('single-year-select');
   D.years.forEach(y => {
     const o = document.createElement('option'); o.value = y; o.textContent = y;
@@ -820,7 +989,6 @@ function init() {
   });
   sel.addEventListener('change', () => { state.singleYear = parseInt(sel.value); renderAll(); });
 
-  // Year-mode radios
   document.querySelectorAll('input[name="year-mode"]').forEach(rb => {
     rb.addEventListener('change', () => {
       state.yearMode = rb.value;
@@ -830,11 +998,11 @@ function init() {
     });
   });
 
-  // Color-by
-  document.getElementById('color-by').addEventListener('change', e => {
-    state.colorBy = e.target.value;
-    renderAll();
-  });
+  // Axis selectors
+  document.getElementById('h-x').addEventListener('change', e => { state.hX = e.target.value; renderAll(); });
+  document.getElementById('h-y').addEventListener('change', e => { state.hY = e.target.value; renderAll(); });
+  document.getElementById('s-x').addEventListener('change', e => { state.sX = e.target.value; renderAll(); });
+  document.getElementById('s-y').addEventListener('change', e => { state.sY = e.target.value; renderAll(); });
 
   // Tabs
   document.querySelectorAll('.tabs button').forEach(b => {
@@ -844,8 +1012,8 @@ function init() {
       b.classList.add('active');
       document.getElementById('tab-' + b.dataset.tab).classList.add('active');
       state.tab = b.dataset.tab;
-      // Plotly needs a relayout after becoming visible from display:none
-      window.dispatchEvent(new Event('resize'));
+      // After display:block transition, ask Plotly to recompute sizes
+      requestAnimationFrame(resizeCurrentTabPlots);
     });
   });
 
@@ -856,23 +1024,28 @@ function init() {
     document.getElementById('search-results').classList.remove('open');
   }, 200));
 
-  // Modal background click
+  // Modal
   document.getElementById('modal-bg').addEventListener('click', closeModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
-  // First render
   renderBoundaryGlossary();
   renderHomeArchDist();
   renderAll();
+
+  // After initial paint, resize again to ensure off-tab plots size correctly when first shown
+  window.addEventListener('resize', resizeCurrentTabPlots);
 }
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
 """
 
+CLOSE = """
+</div><!-- /.wrap -->
+"""
+
 
 def render_page(payload: dict) -> str:
-    """Assemble the complete HTML document."""
     payload_json = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
     meta = (f'<div class="meta">Generated {payload["last_refresh"]} · '
             f'{len(payload["hitters"])} hitter-years · '
@@ -886,6 +1059,7 @@ def render_page(payload: dict) -> str:
             + PITCHERS_TAB
             + MODAL_HTML
             + meta
+            + CLOSE
             + f'<script>window.PROFILES_DATA = {payload_json};</script>\n'
             + JS
             + '</body>\n</html>\n')
