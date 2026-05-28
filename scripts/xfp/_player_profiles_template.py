@@ -33,7 +33,7 @@ HEAD = r"""<!doctype html>
   --stripe: #1d1b17;
   --border: #34302a;
   --text: #f5f1ea;
-  --dim: #8d8579;
+  --dim: #a89e8a;
   --faint: #3a352e;
   --accent: #d97757;
   --pos: #7fb069;
@@ -43,7 +43,7 @@ HEAD = r"""<!doctype html>
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
-       background: var(--bg); color: var(--text); line-height: 1.5; }
+       background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.6; }
 .wrap { max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }
 .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
@@ -52,12 +52,12 @@ header { border-bottom: 1px solid var(--border); padding: .9em 0;
          margin-bottom: 1em; }
 .header-row { display: flex; justify-content: space-between; align-items: baseline;
               flex-wrap: wrap; gap: 1.2em; }
-h1 { color: var(--accent); margin: 0; font-size: 1.6em; font-weight: 700;
-     letter-spacing: .01em; }
-h2 { color: var(--text); margin-top: 1.4em; font-size: 1.25em; font-weight: 600;
+h1 { color: var(--accent); margin: 0; font-size: 2em; font-weight: 700;
+     letter-spacing: .01em; line-height: 1.15; }
+h2 { color: var(--text); margin-top: 2em; font-size: 1.5em; font-weight: 600;
      border-bottom: 1px solid var(--border); padding-bottom: .35em;
-     letter-spacing: .01em; }
-h3 { color: var(--text); margin: 1em 0 .4em 0; font-size: 1.05em; font-weight: 600; }
+     letter-spacing: .01em; line-height: 1.2; }
+h3 { color: var(--text); margin: 1em 0 .4em 0; font-size: 1.125em; font-weight: 600; line-height: 1.3; }
 
 nav.topnav { display: flex; align-items: center; gap: 0; font-family: 'IBM Plex Mono', monospace;
              font-size: .72em; text-transform: uppercase; letter-spacing: .15em; }
@@ -114,15 +114,53 @@ nav.topnav a.current { color: var(--accent); background: var(--panel); border-co
 .tab-panel { display: none; }
 .tab-panel.active { display: block; }
 
+.toc-strip { display: none; gap: .4em; flex-wrap: wrap; padding: .55em 0;
+             margin: .4em 0 1em 0; border-top: 1px solid var(--faint);
+             border-bottom: 1px solid var(--faint); font-family: 'IBM Plex Mono', monospace;
+             font-size: .78em; overflow-x: auto; }
+.toc-strip.active { display: flex; }
+.toc-strip a { color: var(--dim); text-decoration: none; padding: .25em .7em;
+                border-radius: 3px; white-space: nowrap; }
+.toc-strip a:hover { color: var(--accent); background: var(--stripe); }
+section[id] { scroll-margin-top: 160px; }
+
+.modal-hero { display: flex; justify-content: space-between; align-items: center;
+              padding: 1em 0 1.2em 0; border-bottom: 1px solid var(--border);
+              margin-bottom: 1em; gap: 1em; flex-wrap: wrap; }
+.modal-hero .hero-name { font-size: 1.6em; font-weight: 700; color: var(--accent);
+                          font-family: 'Source Serif 4', serif; }
+.modal-hero .hero-meta { color: var(--dim); font-family: 'IBM Plex Mono', monospace;
+                          font-size: .85em; margin-top: .3em; }
+.modal-hero .hero-stats { display: flex; gap: 1em; align-items: center; }
+.modal-hero .hero-overall { background: var(--panel); padding: .6em 1em; border-radius: 4px;
+                             border: 1px solid var(--border); text-align: center; }
+.modal-hero .hero-overall .label { color: var(--dim); font-size: .7em; text-transform: uppercase;
+                                    letter-spacing: .12em; font-family: 'IBM Plex Mono', monospace; }
+.modal-hero .hero-overall .val { color: var(--accent); font-size: 2em; font-weight: 700;
+                                  font-family: 'Source Serif 4', serif; line-height: 1; }
+.modal-hero .hero-archetype { color: var(--text); font-family: 'IBM Plex Mono', monospace;
+                               font-size: .9em; }
+
+.modal-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 1em;
+              font-family: 'IBM Plex Mono', monospace; }
+.modal-tabs button { background: transparent; color: var(--dim); border: 0;
+                      border-bottom: 2px solid transparent; padding: .55em 1.1em;
+                      font-size: .78em; font-weight: 500; cursor: pointer;
+                      font-family: inherit; text-transform: uppercase; letter-spacing: .12em; }
+.modal-tabs button.active { color: var(--accent); border-bottom-color: var(--accent); }
+.modal-tabs button:hover { color: var(--text); }
+.modal-mtab-panel { display: none; }
+.modal-mtab-panel.active { display: block; }
+
 table { border-collapse: collapse; width: 100%; margin-bottom: 1.2em;
-        font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
-th { background: var(--panel); padding: .55em .7em;
+        font-family: 'IBM Plex Mono', monospace; font-size: .87em; }
+th { background: var(--panel); padding: .65em .8em;
       border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
       font-weight: 600; color: var(--dim);
       text-transform: uppercase; font-size: .72em; letter-spacing: .12em;
       text-align: left; font-family: 'IBM Plex Mono', monospace; }
 th.num { text-align: right; }
-td { padding: .42em .7em; border-bottom: 1px solid var(--faint);
+td { padding: .55em .8em; border-bottom: 1px solid var(--faint);
       font-variant-numeric: tabular-nums; }
 td.num { text-align: right; font-variant-numeric: tabular-nums; }
 tbody tr:nth-child(even) td { background: var(--stripe); }
@@ -218,12 +256,34 @@ details > summary .desc { color: var(--dim); font-weight: 400; font-size: .82em;
 .meta { color: var(--dim); font-size: .78em; margin-top: 2em; text-align: center;
          border-top: 1px solid var(--faint); padding-top: 1em;
          font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; }
+
+#loading-overlay { position: fixed; inset: 0; background: var(--bg);
+                    display: flex; align-items: center; justify-content: center;
+                    flex-direction: column; gap: 1em; z-index: 1000;
+                    transition: opacity .3s ease; }
+#loading-overlay.hidden { opacity: 0; pointer-events: none; }
+#loading-overlay .spinner { width: 40px; height: 40px; border: 3px solid var(--faint);
+                             border-top-color: var(--accent); border-radius: 50%;
+                             animation: spin 1s linear infinite; }
+#loading-overlay .label { color: var(--dim); font-family: 'IBM Plex Mono', monospace;
+                          font-size: .9em; letter-spacing: .1em; text-transform: uppercase; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+header { transition: padding .2s ease; }
+header.collapsed { padding-top: .35em; padding-bottom: .35em; }
+header.collapsed h1 { font-size: 1.25em; transition: font-size .2s ease; }
+header.collapsed .controls { display: none; }
+header.collapsed nav.topnav a { padding-top: .25em; padding-bottom: .25em; }
 </style>
 </head>
 """
 
 
 BODY_HEADER = """
+<div id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="label">Loading dashboard…</div>
+</div>
 <div class="wrap">
 <header>
 <div class="header-row">
@@ -316,6 +376,13 @@ HOME_TAB = """
 
 HITTERS_TAB = """
 <div id="tab-hitters" class="tab-panel">
+  <nav id="h-toc" class="toc-strip">
+    <a href="#h-section-snapshots">Snapshot movers</a>
+    <a href="#h-section-quadrant">Quadrant</a>
+    <a href="#h-section-roster">Roster</a>
+    <a href="#h-section-all">All hitters</a>
+  </nav>
+  <section id="h-section-snapshots">
   <div id="h-snapshots-section" style="display:none;">
     <h2>Season progression — snapshot movers</h2>
     <div class="quad-controls" style="margin-bottom:.4em;">
@@ -337,7 +404,9 @@ HITTERS_TAB = """
       <div><h3 style="color:var(--neg);">Fallers</h3><div id="h-snap-down"></div></div>
     </div>
   </div>
+  </section>
 
+  <section id="h-section-quadrant">
   <h2>Hitter custom quadrant</h2>
   <div class="quad-controls">
     <label>X axis</label>
@@ -359,22 +428,34 @@ HITTERS_TAB = """
     <span class="r-display" id="h-r"></span>
   </div>
   <div class="quadrant-host"><div id="h-quad" style="height: 540px;"></div></div>
+  </section>
 
+  <section id="h-section-roster">
   <h2>Hitter archetype roster</h2>
   <div id="h-archetype-tables"></div>
+  </section>
 
+  <section id="h-section-all">
   <h2>All hitters — sortable</h2>
   <div class="alltable-controls">
     <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
     <span id="h-alltable-count" class="filter-summary"></span>
   </div>
   <div class="table-scroll"><table id="h-alltable" class="alltable"></table></div>
+  </section>
 </div>
 """
 
 
 PITCHERS_TAB = """
 <div id="tab-pitchers" class="tab-panel">
+  <nav id="s-toc" class="toc-strip">
+    <a href="#s-section-snapshots">Snapshot movers</a>
+    <a href="#s-section-quadrant">Quadrant</a>
+    <a href="#s-section-roster">Roster</a>
+    <a href="#s-section-all">All pitchers</a>
+  </nav>
+  <section id="s-section-snapshots">
   <div id="s-snapshots-section" style="display:none;">
     <h2>Season progression — snapshot movers</h2>
     <div class="quad-controls" style="margin-bottom:.4em;">
@@ -397,7 +478,9 @@ PITCHERS_TAB = """
       <div><h3 style="color:var(--neg);">Fallers</h3><div id="s-snap-down"></div></div>
     </div>
   </div>
+  </section>
 
+  <section id="s-section-quadrant">
   <h2>Pitcher custom quadrant</h2>
   <div class="quad-controls">
     <label>X axis</label>
@@ -419,16 +502,21 @@ PITCHERS_TAB = """
     <span class="r-display" id="s-r"></span>
   </div>
   <div class="quadrant-host"><div id="s-quad" style="height: 540px;"></div></div>
+  </section>
 
+  <section id="s-section-roster">
   <h2>Pitcher archetype roster</h2>
   <div id="s-archetype-tables"></div>
+  </section>
 
+  <section id="s-section-all">
   <h2>All pitchers — sortable</h2>
   <div class="alltable-controls">
     <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
     <span id="s-alltable-count" class="filter-summary"></span>
   </div>
   <div class="table-scroll"><table id="s-alltable" class="alltable"></table></div>
+  </section>
 </div>
 """
 
@@ -984,21 +1072,45 @@ function openModal(role, id) {
   if (!records.length) return;
   const sorted = records.slice().sort((a,b) => a.year - b.year);
   const last = sorted[sorted.length - 1];
-  let html = `<h2>${last.player_name}${partialBadge(last)}</h2>`;
-  if (role === 'hitter') html += `<div class="latest-line">Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${last.age_tier})</div>`;
-  else                    html += `<div class="latest-line">Latest: age ${last.age ?? '?'} (${last.age_tier})</div>`;
-  html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${prettyLabel(r.archetype)}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
-  html += '<div class="table-scroll"><table><thead><tr><th class="num">Year</th><th class="num">Age</th><th class="num">Overall</th>';
-  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th>';
-  else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th>';
-  html += '</tr></thead><tbody>';
+
+  // Snapshot trajectory (only when Single Year mode + snapshots exist for that year)
+  const snapKey = `${id}|${state.singleYear}`;
+  const snapRows = role === 'hitter' ? HSNAP_BY_PY[snapKey] : SSNAP_BY_PY[snapKey];
+  const hasSnap = state.yearMode === 'single' && snapRows && snapRows.length >= 2;
+
+  // ── Hero block ──
+  let hero = `<div class="modal-hero">`;
+  hero += `<div><div class="hero-name">${last.player_name}${partialBadge(last)}</div>`;
+  hero += `<div class="hero-meta">`;
+  if (role === 'hitter') hero += `Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${prettyLabel(last.age_tier)})`;
+  else                    hero += `Latest: age ${last.age ?? '?'} (${prettyLabel(last.age_tier)})`;
+  hero += `</div></div>`;
+  hero += `<div class="hero-stats">`;
+  hero += `<div class="hero-archetype">${prettyLabel(last.archetype)}</div>`;
+  hero += `<div class="hero-overall"><div class="label">Overall</div><div class="val">${last.OVERALL}</div></div>`;
+  hero += `</div></div>`;
+
+  // ── Modal tabs ──
+  let tabs = '<div class="modal-tabs">';
+  tabs += '<button class="active" data-mtab="arc">Career arc</button>';
+  tabs += '<button data-mtab="years">Year-by-year</button>';
+  if (hasSnap) tabs += '<button data-mtab="snap">In-season</button>';
+  tabs += '</div>';
+
+  // ── Year table header + rows (shared by years panel) ──
+  let yearHeader = '<tr><th class="num">Year</th><th class="num">Age</th><th class="num">Overall</th>';
+  if (role === 'hitter') yearHeader += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th>';
+  else                    yearHeader += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th>';
+  yearHeader += '</tr>';
+
+  let yearRows = '';
   sorted.forEach(r => {
     const sub = role === 'hitter'
       ? [r.contact_subtype, r.power_subtype, r.discipline_subtype, r.sb_tier]
       : [r.stuff_subtype, r.velo_tier, r.pitch_archetype];
     const subStr = sub.filter(Boolean).map(prettyLabel).join(' / ');
     if (role === 'hitter') {
-      html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
+      yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num"><b>${r.OVERALL}</b></td>`
             + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
@@ -1008,7 +1120,7 @@ function openModal(role, id) {
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
-      html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
+      yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num"><b>${r.OVERALL}</b></td>`
             + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating ?? ''}</td>`
@@ -1019,20 +1131,42 @@ function openModal(role, id) {
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     }
   });
-  html += '</tbody></table></div>';
-  html += '<div id="modal-spark" style="height: 300px; margin-top: 1em;"></div>';
-  // Snapshot trajectory (only when Single Year mode + snapshots exist for that year)
-  const snapKey = `${id}|${state.singleYear}`;
-  const snapRows = role === 'hitter' ? HSNAP_BY_PY[snapKey] : SSNAP_BY_PY[snapKey];
-  const showSnap = state.yearMode === 'single' && snapRows && snapRows.length >= 2;
-  if (showSnap) {
-    html += `<h3 style="margin-top:1em;color:var(--accent);">In-season trajectory · ${state.singleYear}</h3>`;
-    html += '<div id="modal-snap" style="height: 280px;"></div>';
+
+  // ── Panels ──
+  let panels = '<div class="modal-mtab-panel active" data-mtab="arc">';
+  panels += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${prettyLabel(r.archetype)}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
+  panels += '<div id="modal-spark" style="height: 320px; margin-top: 1em;"></div>';
+  panels += '</div>';
+
+  panels += '<div class="modal-mtab-panel" data-mtab="years">';
+  panels += '<div class="table-scroll"><table><thead>' + yearHeader + '</thead><tbody>' + yearRows + '</tbody></table></div>';
+  panels += '</div>';
+
+  if (hasSnap) {
+    panels += '<div class="modal-mtab-panel" data-mtab="snap">';
+    panels += `<h3 style="color:var(--accent);">In-season trajectory · ${state.singleYear}</h3>`;
+    panels += '<div id="modal-snap" style="height: 320px;"></div>';
+    panels += '</div>';
   }
-  document.getElementById('modal-content').innerHTML = html;
+
+  document.getElementById('modal-content').innerHTML = hero + tabs + panels;
   document.getElementById('modal-bg').classList.add('open');
+
+  // Wire modal-tab click handler
+  document.querySelectorAll('.modal-tabs button').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.modal-tabs button').forEach(x => x.classList.remove('active'));
+      document.querySelectorAll('.modal-mtab-panel').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      document.querySelector(`.modal-mtab-panel[data-mtab="${b.dataset.mtab}"]`).classList.add('active');
+      // Plotly needs resize when its tab becomes visible
+      if (b.dataset.mtab === 'arc' && document.getElementById('modal-spark')) Plotly.Plots.resize('modal-spark');
+      if (b.dataset.mtab === 'snap' && document.getElementById('modal-snap')) Plotly.Plots.resize('modal-snap');
+    });
+  });
+
   renderSparkline(sorted, role);
-  if (showSnap) renderSnapshotTrajectory(snapRows, role);
+  if (hasSnap) renderSnapshotTrajectory(snapRows, role);
 }
 
 function renderSnapshotTrajectory(rows, role) {
@@ -1407,6 +1541,8 @@ function renderAll() {
     document.getElementById('h-snapshots-section').style.display = 'none';
     document.getElementById('s-snapshots-section').style.display = 'none';
   }
+
+  encodeStateToHash();
 }
 
 // ── Resize Plotly when its tab becomes visible ──────────────────────
@@ -1420,15 +1556,51 @@ function resizeCurrentTabPlots() {
   });
 }
 
+// ── URL state persistence ──────────────────────────────────────────
+function encodeStateToHash() {
+  const parts = [];
+  parts.push(`mode=${state.yearMode}`);
+  parts.push(`year=${state.singleYear}`);
+  parts.push(`partial=${state.includePartial ? '1' : '0'}`);
+  parts.push(`tab=${state.tab}`);
+  parts.push(`hx=${state.hX}`); parts.push(`hy=${state.hY}`);
+  parts.push(`sx=${state.sX}`); parts.push(`sy=${state.sY}`);
+  history.replaceState(null, '', '#' + parts.join('&'));
+}
+
+function loadStateFromHash() {
+  const h = window.location.hash.replace(/^#/, '');
+  if (!h) return;
+  const map = {};
+  h.split('&').forEach(p => { const [k, v] = p.split('='); if (k && v != null) map[k] = decodeURIComponent(v); });
+  if (map.mode) state.yearMode = map.mode;
+  if (map.year) state.singleYear = parseInt(map.year);
+  if (map.partial) state.includePartial = map.partial === '1';
+  if (map.tab) state.tab = map.tab;
+  if (map.hx) state.hX = map.hx;
+  if (map.hy) state.hY = map.hy;
+  if (map.sx) state.sX = map.sx;
+  if (map.sy) state.sy = map.sy;
+}
+
 // ── Init ───────────────────────────────────────────────────────────
 function init() {
+  loadStateFromHash();
+
   const sel = document.getElementById('single-year-select');
   D.years.forEach(y => {
     const o = document.createElement('option'); o.value = y; o.textContent = y;
-    if (y === D.current_year) o.selected = true;
+    if (y === state.singleYear) o.selected = true;
     sel.appendChild(o);
   });
   sel.addEventListener('change', () => { state.singleYear = parseInt(sel.value); renderAll(); });
+
+  // Reflect loaded state into UI controls
+  const ymRadio = document.querySelector(`input[name="year-mode"][value="${state.yearMode}"]`);
+  if (ymRadio) ymRadio.checked = true;
+  document.getElementById('include-partial').checked = state.includePartial;
+  document.getElementById('single-year-wrap').style.display =
+    state.yearMode === 'single' ? '' : 'none';
 
   document.querySelectorAll('input[name="year-mode"]').forEach(rb => {
     rb.addEventListener('change', () => {
@@ -1445,7 +1617,11 @@ function init() {
     renderAll();
   });
 
-  // Axis selectors
+  // Axis selectors — reflect loaded state then wire change handlers
+  document.getElementById('h-x').value = state.hX;
+  document.getElementById('h-y').value = state.hY;
+  document.getElementById('s-x').value = state.sX;
+  document.getElementById('s-y').value = state.sY;
   document.getElementById('h-x').addEventListener('change', e => { state.hX = e.target.value; renderAll(); });
   document.getElementById('h-y').addEventListener('change', e => { state.hY = e.target.value; renderAll(); });
   document.getElementById('s-x').addEventListener('change', e => { state.sX = e.target.value; renderAll(); });
@@ -1483,6 +1659,11 @@ function init() {
       document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
       document.getElementById('tab-' + b.dataset.tab).classList.add('active');
+      // Show the TOC for the active tab; hide others
+      document.querySelectorAll('.toc-strip').forEach(t => t.classList.remove('active'));
+      const tocId = b.dataset.tab === 'hitters' ? 'h-toc'
+                  : b.dataset.tab === 'pitchers' ? 's-toc' : null;
+      if (tocId) document.getElementById(tocId).classList.add('active');
       state.tab = b.dataset.tab;
       // After display:block transition, ask Plotly to recompute sizes
       requestAnimationFrame(resizeCurrentTabPlots);
@@ -1500,12 +1681,45 @@ function init() {
   document.getElementById('modal-bg').addEventListener('click', closeModal);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
 
+  // "/" hotkey focuses the search box
+  document.addEventListener('keydown', e => {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('search-input').focus();
+    }
+  });
+
+  // Apply loaded tab state by clicking the right tab button (handlers are wired above)
+  if (state.tab && state.tab !== 'home') {
+    const tabBtn = document.querySelector(`.tabs button[data-tab="${state.tab}"]`);
+    if (tabBtn) tabBtn.click();
+  }
+
   renderBoundaryGlossary();
   renderHomeArchDist();
   renderAll();
 
   // After initial paint, resize again to ensure off-tab plots size correctly when first shown
   window.addEventListener('resize', resizeCurrentTabPlots);
+
+  // Sticky-header collapse — frees vertical space while scrolling
+  let lastScroll = 0;
+  const hdr = document.querySelector('header');
+  window.addEventListener('scroll', () => {
+    const y = window.scrollY;
+    if (y > 80 && !hdr.classList.contains('collapsed')) {
+      hdr.classList.add('collapsed');
+    } else if (y < 40 && hdr.classList.contains('collapsed')) {
+      hdr.classList.remove('collapsed');
+    }
+    lastScroll = y;
+  }, { passive: true });
+
+  const overlay = document.getElementById('loading-overlay');
+  if (overlay) {
+    overlay.classList.add('hidden');
+    setTimeout(() => overlay.remove(), 300);
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
