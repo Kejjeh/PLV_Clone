@@ -350,12 +350,13 @@ PITCHERS_TAB = """
       <select id="s-snap-vs"></select>
       <label>Sort by</label>
       <select id="s-snap-sort">
-        <option value="net">Net |ΔS|+|ΔC|+|ΔVelo|</option>
+        <option value="net">Net |ΔS|+|ΔM|+|ΔC|</option>
         <option value="S">ΔS (Stuff)</option>
+        <option value="M">ΔM (Movement)</option>
         <option value="C">ΔC (Control)</option>
         <option value="V">ΔVelo</option>
       </select>
-      <span id="s-snap-note" class="filter-summary">SP MOVEMENT rating omitted — rolling cache lacks barrel%/hard-hit%/gb%/xwOBA-contact</span>
+      <span id="s-snap-note" class="filter-summary"></span>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5em;">
       <div><h3 style="color:var(--pos);">Risers</h3><div id="s-snap-up"></div></div>
@@ -973,7 +974,7 @@ function renderSnapshotTrajectory(rows, role) {
   const xs = rows.map(r => r.date);
   const keys = role === 'hitter'
     ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
-    : [['STUFF','#c1666b'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
   const traces = keys.map(([k, color]) => ({
     x: xs, y: rows.map(r => r[k]), mode: 'lines+markers', name: k,
     line: { color, width: 2 }, marker: { size: 8 },
@@ -1080,7 +1081,7 @@ function populateSnapshotPickers(role) {
     note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
   } else {
     state.sSnapAt = selAt.value; state.sSnapVs = selVs.value;
-    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear} · MOVEMENT omitted (cache lacks barrel/HardHit/GB/xCON)`;
+    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
   }
   return true;
 }
@@ -1101,9 +1102,9 @@ function renderSnapshotMovers(role) {
   const vsByID = {};
   vsRows.forEach(r => { vsByID[r[idKey]] = r; });
 
-  const dims = role === 'hitter' ? ['CONTACT','POWER','DISCIPLINE'] : ['STUFF','CONTROL','velo_rating'];
+  const dims = role === 'hitter' ? ['CONTACT','POWER','DISCIPLINE'] : ['STUFF','MOVEMENT','CONTROL'];
   const dimAlias = role === 'hitter' ? { C:'CONTACT', P:'POWER', D:'DISCIPLINE' }
-                                      : { S:'STUFF', C:'CONTROL', V:'velo_rating' };
+                                      : { S:'STUFF', M:'MOVEMENT', C:'CONTROL', V:'velo_rating' };
   const movers = [];
   atRows.forEach(at_r => {
     const vs_r = vsByID[at_r[idKey]];
@@ -1129,16 +1130,16 @@ function renderSnapshotMovers(role) {
     rows = sort === 'net' ? rows.slice(0, 15) : rows;
     let h = '<table><thead><tr><th class="num">#</th><th>Player</th>';
     if (role === 'hitter') h += '<th class="num">ΔC</th><th class="num">ΔP</th><th class="num">ΔD</th><th class="num">C now</th><th class="num">P now</th><th class="num">D now</th>';
-    else                    h += '<th class="num">ΔS</th><th class="num">ΔC</th><th class="num">ΔVelo</th><th class="num">S now</th><th class="num">C now</th><th class="num">Velo now</th>';
+    else                    h += '<th class="num">ΔS</th><th class="num">ΔM</th><th class="num">ΔC</th><th class="num">S now</th><th class="num">M now</th><th class="num">C now</th>';
     h += '</tr></thead><tbody>';
     rows.forEach((m, i) => {
       const r = m.at;
       const id = role === 'hitter' ? r.batter : r.pitcher;
       const fmtD = v => (v > 0 ? '+' : '') + v;
       const cls = v => v > 0 ? 'pos' : (v < 0 ? 'neg' : 'dim');
-      const k1 = role === 'hitter' ? 'CONTACT' : 'STUFF';
-      const k2 = role === 'hitter' ? 'POWER'   : 'CONTROL';
-      const k3 = role === 'hitter' ? 'DISCIPLINE' : 'velo_rating';
+      const k1 = role === 'hitter' ? 'CONTACT'    : 'STUFF';
+      const k2 = role === 'hitter' ? 'POWER'      : 'MOVEMENT';
+      const k3 = role === 'hitter' ? 'DISCIPLINE' : 'CONTROL';
       h += `<tr><td class="num">${i+1}</td>`
          + `<td class="player" data-role="${role}" data-id="${id}">${r.player_name}</td>`
          + `<td class="num" style="color:var(--${cls(m.deltas[k1])})">${fmtD(m.deltas[k1])}</td>`

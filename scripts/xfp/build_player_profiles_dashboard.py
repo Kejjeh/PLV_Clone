@@ -248,11 +248,11 @@ def build_hitter_snapshots():
 
 
 def build_sp_snapshots():
-    """Per-(pitcher, year, snapshot_date) STUFF + CONTROL + Velo ratings.
+    """Per-(pitcher, year, snapshot_date) STUFF + MOVEMENT + CONTROL + Velo ratings.
 
-    SP rolling cache lacks MOVEMENT components (barrel%, hard_hit%, gb%,
-    xwoba_on_contact) — only STUFF/CONTROL/Velo are computable. Archetype label
-    is omitted for SP snapshots.
+    Uses the extended SP rolling cache that now carries barrel%, hard_hit%,
+    gb%, xwoba_on_contact. Archetype label is recomputed per-snapshot from
+    blended STUFF/MOVEMENT/CONTROL ratings.
     """
     if not S_ROLLING.exists() or not S_SRC.exists():
         print('  ⚠ SP rolling/source not found — skipping snapshot build')
@@ -264,14 +264,22 @@ def build_sp_snapshots():
                    .agg({'player_name': 'last'}).to_dict('index'))
 
     src['hr_per_bf'] = src['hr'] / src['tbf'].clip(lower=1)
-    BASELINE_COLS = ['k_pct', 'swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo', 'hr_per_bf']
+    BASELINE_COLS = ['k_pct', 'swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo',
+                     'hr_per_bf', 'barrel_pct', 'hard_hit_pct', 'gb_pct', 'xwoba_contact']
     baselines = {}
     for yr, grp in src.groupby('year'):
-        baselines[int(yr)] = {c: (grp[c].mean(), grp[c].std()) for c in BASELINE_COLS}
+        baselines[int(yr)] = {}
+        for c in BASELINE_COLS:
+            if c not in grp.columns: continue
+            baselines[int(yr)][c] = (grp[c].mean(), grp[c].std())
 
     r = r[r['gs_to'] >= 3].copy()
     r['hr_per_bf_to'] = r['hr_to'] / r['tbf_to'].clip(lower=1)
     if not len(r): return []
+
+    # Load archetype definitions to assign label per snapshot
+    with open(S_DEFS, encoding='utf-8') as f:
+        sdefs = json.load(f)
 
     out = []
     for _, row in r.iterrows():
@@ -287,11 +295,29 @@ def build_sp_snapshots():
         rBB  = _rate(row['bb_pct_to'],        *b['bb_pct'], invert=True)
         rV   = _rate(row['avg_velo_to'],      *b['avg_velo'])
 
+        # MOVEMENT components (rolling cache extended 2026-05-28). The hr_per_bf
+        # baseline in the source uses 'hr_per_bf'; the others use the same names.
+        rHR  = _rate(row['hr_per_bf_to'],     *b['hr_per_bf'], invert=True) if 'hr_per_bf' in b else None
+        rBR  = _rate(row['barrel_pct_to'],    *b['barrel_pct'], invert=True) if 'barrel_pct' in b else None
+        rHH  = _rate(row['hard_hit_pct_to'],  *b['hard_hit_pct'], invert=True) if 'hard_hit_pct' in b else None
+        rGB  = _rate(row['gb_pct_to'],        *b['gb_pct']) if 'gb_pct' in b else None
+        rXC  = _rate(row['xwoba_on_contact_to'], *b['xwoba_contact'], invert=True) if 'xwoba_contact' in b else None
+
         s_vals = [v for v in [rK, rSW, rCSW] if v is not None]
-        if not (s_vals and rBB is not None):
+        m_vals = [v for v in [rHR, rBR, rHH, rGB, rXC] if v is not None]
+        if not (s_vals and m_vals and rBB is not None):
             continue
-        STUFF   = int(round(sum(s_vals) / len(s_vals)))
-        CONTROL = rBB
+        STUFF    = int(round(sum(s_vals) / len(s_vals)))
+        MOVEMENT = int(round(sum(m_vals) / len(m_vals)))
+        CONTROL  = rBB
+
+        def _b(v):
+            if v >= 60: return 'PLUS'
+            if v >= 40: return 'AVG'
+            return 'MINUS'
+        cell = f'{_b(STUFF)}/{_b(MOVEMENT)}/{_b(CONTROL)}'
+        arch = sdefs.get(cell, {}).get('label', 'UNKNOWN')
+
         info = name_lookup.get(int(row['pitcher']), {'player_name': None})
         nm = info.get('player_name')
         if isinstance(nm, str) and ',' in nm:
@@ -303,8 +329,9 @@ def build_sp_snapshots():
             'year': yr,
             'date': row['cutoff_date'].strftime('%Y-%m-%d'),
             'gs_to': int(row['gs_to']),
-            'STUFF': STUFF, 'CONTROL': CONTROL,
+            'STUFF': STUFF, 'MOVEMENT': MOVEMENT, 'CONTROL': CONTROL,
             'velo_rating': rV if rV is not None else 50,
+            'cell': cell, 'archetype': arch,
         })
     print(f'  SP snapshots: {len(out)} rows ({len(set((o["pitcher"], o["year"]) for o in out))} pitcher-years)', flush=True)
     return out

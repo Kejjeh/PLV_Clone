@@ -53,6 +53,17 @@ def annotate_pitches(d: pd.DataFrame) -> pd.DataFrame:
     bip_with = d['is_bip'] & xwoba.notna()
     d.loc[bip_with, 'woba_v_pa'] = xwoba[bip_with]
     d['woba_d_pa'] = woba_d
+
+    # Quality-of-contact flags (Statcast definitions). All gated to BIP.
+    ls = pd.to_numeric(d.get('launch_speed'), errors='coerce')
+    lsa = pd.to_numeric(d.get('launch_speed_angle'), errors='coerce')
+    bb_type = d.get('bb_type', pd.Series('', index=d.index)).fillna('')
+    d['is_barrel']    = d['is_bip'] & (lsa == 6)
+    d['is_hard_hit']  = d['is_bip'] & (ls >= 95.0)
+    d['is_gb']        = d['is_bip'] & (bb_type == 'ground_ball')
+    # xwOBA on contact: sum/count only over BIP rows that have a valid xwoba estimate
+    d['xwoba_bip_sum']   = xwoba.where(bip_with, 0.0)
+    d['xwoba_bip_count'] = bip_with.astype(int)
     return d
 
 
@@ -79,6 +90,11 @@ def aggregate_window(pitches: pd.DataFrame) -> pd.DataFrame:
         hr           =('is_hr', 'sum'),
         woba_v_sum   =('woba_v_pa', 'sum'),
         woba_d_sum   =('woba_d_pa', 'sum'),
+        barrel_n     =('is_barrel', 'sum'),
+        hard_hit_n   =('is_hard_hit', 'sum'),
+        gb_n         =('is_gb', 'sum'),
+        xwoba_bip_sum_  =('xwoba_bip_sum', 'sum'),
+        xwoba_bip_count_=('xwoba_bip_count', 'sum'),
     ).reset_index()
 
     pn = agg['pitches'].replace(0, np.nan)
@@ -96,6 +112,14 @@ def aggregate_window(pitches: pd.DataFrame) -> pd.DataFrame:
     agg['xwoba_per_pa'] = agg['woba_v_sum'] / agg['woba_d_sum'].replace(0, np.nan)
     agg['xwoba_x_swstr'] = agg['xwoba_per_pa'] * agg['swstr_pct']
 
+    # Quality-of-contact rates (over BIP)
+    bip = agg['bip'].replace(0, np.nan)
+    agg['barrel_pct']       = agg['barrel_n']   / bip
+    agg['hard_hit_pct']     = agg['hard_hit_n'] / bip
+    agg['gb_pct']           = agg['gb_n']       / bip
+    agg['xwoba_on_contact'] = (agg['xwoba_bip_sum_']
+                                / agg['xwoba_bip_count_'].replace(0, np.nan))
+    agg = agg.drop(columns=['xwoba_bip_sum_', 'xwoba_bip_count_'])
     return agg
 
 
