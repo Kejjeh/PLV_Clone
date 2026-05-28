@@ -160,17 +160,34 @@ for _, r in fa_rows.iterrows():
     signal_a_high = (4 <= gs <= 8) and fpp >= 0.02 and whiff >= 26.0
     signal_a_watch = (4 <= gs <= 8) and fpp >= 0.00 and not signal_a_high
 
+    # Signal H: fp_proxy gap-from-user-staff signal
+    # Audit refinement 2026-05-28: bump gs >= 4 → gs >= 6 (proper sample-size gate
+    # per /sp-breakout-signal SKILL spec; 75% of ungated fires were GS=1 noise).
+    # Add absolute fpp floor of -0.05 to filter deep-negative cases (the BUST
+    # pattern in 2023 where gap signal fired on already-failing pitchers).
     fpp_gap = fpp - upgrade_floor
-    signal_h_high   = fpp_gap >= 0.030 and rank <= 150 and gs >= 4
-    signal_h_monitor = fpp_gap >= 0.015 and rank <= 200 and gs >= 4 and not signal_h_high
+    signal_h_high   = fpp_gap >= 0.030 and rank <= 150 and gs >= 6 and fpp >= -0.05
+    signal_h_monitor = fpp_gap >= 0.015 and rank <= 200 and gs >= 6 and fpp >= -0.05 and not signal_h_high
 
-    if not (signal_a_high or signal_h_high or signal_h_monitor):
+    # Signal Stuff: calibrated Harrison composite (whiff + xwOBA-contact + velo)
+    # Audit 2026-05-28 (n=21,864 SP-starts 2021-2025, sp_signal_audit_2021_2025.parquet):
+    #   - gs >= 6 gate (sample size)
+    #   - fpp >= 0 floor (+10pp Strong TP lift across all 5 years, no year-flip)
+    #   - Strong TP @ +0.02: 28% pooled (range 21-50% across years), 5/5 years above baseline
+    #   - Median lead time vs surface 4/5 good-start signal: 4 starts (P75: 8)
+    #   - Note: year-aware xwc threshold deferred (low leverage vs fpp floor)
+    signal_stuff_high = (gs >= 6 and fpp >= 0.0 and whiff >= 26.0
+                         and xcon <= 0.320 and rank <= 200)
+
+    if not (signal_a_high or signal_h_high or signal_h_monitor or signal_stuff_high):
         continue
 
-    tier = "HIGH" if (signal_a_high or signal_h_high) else "MONITOR"
+    tier = "HIGH" if (signal_a_high or signal_h_high or signal_stuff_high) else "MONITOR"
     signals = []
     if signal_a_high:
         signals.append("SigA-HIGH")
+    if signal_stuff_high:
+        signals.append(f"SigStuff-HIGH(whiff={whiff:.1f},xwc={xcon:.3f})")
     if signal_h_high:
         signals.append(f"SigH-HIGH(gap={fpp_gap:+.3f})")
     elif signal_h_monitor:

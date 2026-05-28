@@ -778,7 +778,11 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
 <body>
 <div style="background:#161b22;border-bottom:1px solid #30363d;padding:.5em 1em;text-align:right;font-family:system-ui,sans-serif;font-size:.85em;color:#8b949e;">
   <a href="live_dashboard.html" style="color:#3fb950;text-decoration:none;font-weight:bold;">🔴 LIVE TODAY</a>
-  &nbsp;·&nbsp; head-to-head + highlights + auto-refresh (generate via <code style="color:#79c0ff">python scripts/xfp/live_monitor.py --dashboard --watch 60</code>)
+  &nbsp;·&nbsp;
+  <a href="matchup.html" style="color:#58a6ff;text-decoration:none;">Matchup</a>
+  &nbsp;·&nbsp;
+  <a href="player_profiles.html" style="color:#d2a8ff;text-decoration:none;font-weight:bold;">🪪 PROFILES</a>
+  &nbsp;·&nbsp; archetype browser (rebuild via <code style="color:#79c0ff">python scripts/xfp/build_player_profiles_dashboard.py</code>)
 </div>
 <div id="root"></div>
 <script type="text/babel">

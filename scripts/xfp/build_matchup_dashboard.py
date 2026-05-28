@@ -2005,6 +2005,7 @@ tr:nth-child(even) td {{ background: rgba(255,255,255,.015); }}
   <nav>
     <a href="index.html">← xFP Model</a>
     <a href="live_dashboard.html">🔴 Live Today</a>
+    <a href="player_profiles.html">🪪 Profiles</a>
   </nav>
 </header>
 

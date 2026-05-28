@@ -209,12 +209,34 @@ For pitchers with soft contact profiles but high BABIP, fp_proxy fires too late 
   BUT whiff% ≥ 26% in ≥ 4 of those starts AND season avg xwOBA-on-contact < .320
   (Ginn/Griffin archetype: walks tank fp_proxy but contact quality is real)
 
-**Signal definition (updated 2026-05-25 based on Ginn/Griffin retroactive analysis):**
+**Signal definition (updated 2026-05-28 with audit-validated fp_proxy floor):**
 ```
-stuff_contact_composite fires when:
-  (whiff_pct >= 26% AND xwoba_on_contact <= 0.320)
-  OR (csw_pct >= 30% AND xwoba_on_contact <= 0.310)
+stuff_contact_composite ("SigStuff") fires when:
+  gs >= 6
+  AND season_fp_proxy_per_bf >= 0.0
+  AND (whiff_pct >= 26% AND xwoba_on_contact <= 0.320)
+      OR (csw_pct >= 30% AND xwoba_on_contact <= 0.310)
 ```
+
+**Why the fp_proxy >= 0 floor was added (2026-05-28):**
+Per-start audit across 21,864 SP-start snapshots 2021-2025
+(`data/research/sp_signal_audit_2021_2025.parquet`) found that adding an absolute
+`fp_proxy >= 0` floor to Signal H lifts the Strong TP rate (RoS fp_proxy ≥ +0.02)
+from 28% → 38% pooled — a +10pp gain — with sign-consistency in 5/5 training years.
+Canonical false positive correctly disqualified: **Walbert Ureña 2026** (whiff 27.7%,
+xwc 0.303, velo 97.7 — looked like SUPER tier; fpp = −0.104 from 16% BB rate). Pitchers
+firing whiff+xwc gates while fp_proxy is already deeply negative are the 2023 BUST
+archetype (Alex Wood, J.P. France, Patrick Sandoval). Harrison's blind-spot framing
+requires `fp_proxy hasn't fired YET` (near 0), not `fp_proxy is actively failing`.
+
+**Year-to-year stability (audit 2026-05-28):**
+Pooled 28% Strong TP rate is sign-stable (5/5 years > baseline) but magnitude wobbles:
+2021: 24%, 2022: 32%, 2023: 21%, 2024: 25%, 2025: 38% (std 6.1pp). 2023 dip ~75% real
+(league mean xwoba-contact rose to 0.324 vs ~0.315 in other years — pitch-clock and
+post-spider-tack adjustment), ~25% measurement (gs=1 noise in unrefined audit).
+Honest framing: 21-38% range, not 28% locked in. Sub-cells (whiff≥33 AND xwc≤0.290,
+SUPER tier with velo gate) have insufficient sample at gs≥6 for reliable per-year
+calibration (1-9 fires per year).
 
 **Why the xwOBA-contact gate was added:**
 Original definition used `whiff_pct >= 26%` without a contact quality gate. Retroactive
@@ -313,6 +335,7 @@ or CI is too wide to be actionable. Signal A supplements (does not replace) the 
 | `/sp-week-plan` | Consumer — use signal tier to decide which starts to trust this week |
 | `/fa-sp-pool` | Upstream — surfaces FA SPs; this skill validates their recent form |
 | `/fa-pickup-deep-dive` | Complement — pulls full rp3 row + Statcast; use when model-lag flagged |
+| `/sp-archetype` | Complement — outcome-based rolling-window signal lives here; process-based 20-80 ratings + archetype label + historical comps live there. Use both for highest-confidence breakout call. |
 | `/breakout-sustainability` | Hitter analog — same rolling-window philosophy for hitters |
 | `/pitcher-sustainability` | Deeper velo/K-form decomposition if signal is ambiguous |
 | `build_sp_alerts.py` | Generates `data/outputs/sp_alerts.json` for Signal A. **Known bug fixed 2026-05-25:** `str.contains(last)` → `str.contains(re.escape(last))` — names with regex-special characters (e.g., "O'Brien", "Durán)") silently zeroed FA match results before fix. |

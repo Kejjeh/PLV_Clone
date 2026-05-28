@@ -129,6 +129,30 @@ python scripts/xfp/run_roster_audit.py
   threshold: fp_proxy_per_bf ≥ −0.0476). Triggered by "is X on a hot
   streak", "should I trust X's recent starts", or any FA SP where last
   3-5 starts are cited as evidence.
+- `/sp-archetype` — profile any SP by 20-80 scouting ratings on
+  Stuff/Movement/Control with archetype label (27-cell matrix), career
+  trajectory, and historical comp matching (Euclidean distance over
+  1,353 SP-years 2015-2026). Three modes: `profile <name>` for single-
+  pitcher deep dive, `scan` for league-wide trajectory shifts (upward/
+  downward archetype transitions), `comps <name>` for K=5-8 closest
+  historical SP-seasons with T+1/T+2 outcomes. Built on calibrated
+  archetype stickiness (retention rates 0-69% depending on streak) and
+  honest decline base rates (59% T+1 decline among elite, no actionable
+  warning signs). Complementary to `/sp-breakout-signal` (outcome-based)
+  — this is process-based. Triggered by "what kind of pitcher is X",
+  "who does X compare to", "is X breaking out / declining". Daily
+  refresh via `build_sp_archetypes.py` (step 2.6 of refresh_dashboards).
+- `/hitter-archetype` — hitter parallel to `/sp-archetype`: profile any
+  hitter by 20-80 ratings on Contact/Power/Discipline + SB overlay (27-cell
+  C/P/D matrix; SB is rated but excluded from the archetype label and from
+  comp-matching distance). Three modes (profile/scan/comps). Built on 3,485
+  batter-years 2015-2026, PA floor 250 (80 in-progress), age tiers
+  PRE_PEAK ≤25 / PEAK 26-30 / POST_PEAK 31+ (hitters peak earlier than SPs).
+  Boundary tier retention validated EDGE 28.5% / SOLID 56.1% (~2× spread).
+  Triggered by "what kind of hitter is X", "who does X compare to", "is X
+  breaking out / declining". Daily refresh via `build_hitter_archetypes.py`
+  (step 2.7 of refresh_dashboards). Complementary to `/breakout-sustainability`
+  and `/hitter-sustainability` (outcome-based) — this is process-based.
 - `/savant-compare` — Baseball Savant percentile side-by-side for
   2-6 players. WebFetches each player's profile, extracts percentile
   rankings, builds comparison table, identifies archetypes. Supports

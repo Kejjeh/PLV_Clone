@@ -1,0 +1,110 @@
+{
+  "PLUS/PLUS/PLUS": {
+    "label": "GOAT_TIER",
+    "description": "Triple-plus elite hitter: Trout peak, Judge 22, Soto 24"
+  },
+  "PLUS/PLUS/AVG": {
+    "label": "CONTACT_POWER",
+    "description": "Hits + hits hard: Vlad Jr, Freeman, Acu\u00f1a peak"
+  },
+  "PLUS/PLUS/MINUS": {
+    "label": "AGGRESSIVE_STAR",
+    "description": "Contact + power but chases: Acu\u00f1a 23-style aggression"
+  },
+  "PLUS/AVG/PLUS": {
+    "label": "CONTACT_EYE",
+    "description": "Bat-to-ball + walks, modest pop: Devers good yrs, Verdugo"
+  },
+  "PLUS/AVG/AVG": {
+    "label": "PURE_HITTER",
+    "description": "High BA, average pop & eye: Arraez, McNeil, Bregman"
+  },
+  "PLUS/AVG/MINUS": {
+    "label": "CONTACT_HACKER",
+    "description": "Hits everything, no walks: Yandy Diaz-lite"
+  },
+  "PLUS/MINUS/PLUS": {
+    "label": "SLAP_AND_WALK",
+    "description": "Bat control + eye, no power: Bichette down years"
+  },
+  "PLUS/MINUS/AVG": {
+    "label": "SLAP_HITTER",
+    "description": "Contact specialist, no pop: LeMahieu, Merrifield"
+  },
+  "PLUS/MINUS/MINUS": {
+    "label": "AGGRESSIVE_SLAP",
+    "description": "High contact, no pop, no walks: bench piece"
+  },
+  "AVG/PLUS/PLUS": {
+    "label": "POWER_EYE",
+    "description": "Power + walks, K-OK: Schwarber, Olson, Soto-lite"
+  },
+  "AVG/PLUS/AVG": {
+    "label": "POWER_HITTER",
+    "description": "Classic slugger: Olson, Stanton good yrs, Riley"
+  },
+  "AVG/PLUS/MINUS": {
+    "label": "ALL_OR_NOTHING",
+    "description": "Power, K-prone, chases: Gallo, Schwarber, Stanton late"
+  },
+  "AVG/AVG/PLUS": {
+    "label": "BALANCED_EYE",
+    "description": "Average bat with patience: Will Smith, Riley some yrs"
+  },
+  "AVG/AVG/AVG": {
+    "label": "AVERAGE_HITTER",
+    "description": "Generic mid-tier \u2014 most common archetype"
+  },
+  "AVG/AVG/MINUS": {
+    "label": "AVG_HACKER",
+    "description": "Average everything but chases: Salvy Perez, Tellez"
+  },
+  "AVG/MINUS/PLUS": {
+    "label": "SECONDARY_LEADOFF",
+    "description": "Patient leadoff, no pop: Edman, Benintendi"
+  },
+  "AVG/MINUS/AVG": {
+    "label": "GENERIC_NO_POWER",
+    "description": "Average everything, no pop: utility profile"
+  },
+  "AVG/MINUS/MINUS": {
+    "label": "NO_POWER_HACKER",
+    "description": "No pop, chases: 4A bat"
+  },
+  "MINUS/PLUS/PLUS": {
+    "label": "THREE_TRUE_OUTCOMES",
+    "description": "HR + BB + K: Gallo, Adolis Garc\u00eda, Cal Raleigh"
+  },
+  "MINUS/PLUS/AVG": {
+    "label": "POWER_K",
+    "description": "Power-only, K-heavy: Stanton late, classic slugger-K"
+  },
+  "MINUS/PLUS/MINUS": {
+    "label": "POWER_HACKER",
+    "description": "Power + K + chase: B\u00e1ez, Adolis at worst"
+  },
+  "MINUS/AVG/PLUS": {
+    "label": "PATIENT_K",
+    "description": "Walks, no pop, K-prone: bench bat type"
+  },
+  "MINUS/AVG/AVG": {
+    "label": "BACKUP_BAT",
+    "description": "Below-K, average rest: replacement-tier"
+  },
+  "MINUS/AVG/MINUS": {
+    "label": "K_PRONE_FILLER",
+    "description": "Below-K + chase + no walks"
+  },
+  "MINUS/MINUS/PLUS": {
+    "label": "WALK_ONLY_FRINGE",
+    "description": "Only skill is the walk: fringe bench"
+  },
+  "MINUS/MINUS/AVG": {
+    "label": "FRINGE",
+    "description": "Below-K, below-power, average eye"
+  },
+  "MINUS/MINUS/MINUS": {
+    "label": "BUST",
+    "description": "Below everything: AAAA bat"
+  }
+}

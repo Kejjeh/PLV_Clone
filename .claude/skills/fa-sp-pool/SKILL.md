@@ -276,6 +276,10 @@ top-M are clear holds.**
 
 ---
 
+## Complementary skills
+
+- **`/sp-archetype <name>`** — after this skill surfaces a candidate, run sp-archetype to get the 20-80 ratings + archetype label + historical comps (T+1/T+2 outcomes for 5-8 similar SP-years). Especially powerful when paired with the recency-outlier scan — a SUPER-tier SUPER tier outlier whose archetype matches MOVE_CTRL_ACE (44% historical breakout rate) is the highest-conviction add.
+
 ## When NOT to use this skill
 
 - Hitter FAs — use `/fa-replacement-pool` instead

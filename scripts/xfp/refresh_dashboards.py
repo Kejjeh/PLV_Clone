@@ -71,19 +71,35 @@ def main():
         'python -X utf8 scripts/xfp/build_sp_alerts.py',
         timeout=120)
 
+    run('2.6. Build SP archetype ratings panel (20-80 + trajectories)',
+        'python -X utf8 scripts/xfp/build_sp_archetypes.py',
+        timeout=120)
+
+    run('2.7. Build hitter archetype ratings panel (20-80 + trajectories)',
+        'python -X utf8 scripts/xfp/build_hitter_archetypes.py',
+        timeout=120)
+
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
+    # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
+    ok_profiles = run('4.5. Build player_profiles.html (archetype browser)',
+                      'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',
+                      timeout=120)
+
     if not args.no_push:
+        if not ok_profiles:
+            print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
+            return
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
             return
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         commit_cmd = (
-            'git add docs/index.html docs/matchup.html docs/live_dashboard.html && '
+            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html && '
             f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)

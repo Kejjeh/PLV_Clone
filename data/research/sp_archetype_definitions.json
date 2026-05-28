@@ -1,0 +1,110 @@
+{
+  "PLUS/PLUS/PLUS": {
+    "label": "MT_RUSHMORE",
+    "description": "Triple-plus elite: Kershaw 15-16, Skubal 24, deGrom 18"
+  },
+  "PLUS/PLUS/AVG": {
+    "label": "STUFF_PLUS_MOVE",
+    "description": "High K + HR suppression: Burnes 21, Sale 24, Arrieta 15"
+  },
+  "PLUS/PLUS/MINUS": {
+    "label": "STUFF_MOVE_WILD",
+    "description": "High K + HR suppress, wild: Snell 24, Castillo 19"
+  },
+  "PLUS/AVG/PLUS": {
+    "label": "STUFF_PLUS_CTRL",
+    "description": "High K + plus control: Scherzer, Cole peak, Skubal"
+  },
+  "PLUS/AVG/AVG": {
+    "label": "PURE_STUFF",
+    "description": "K-driven, avg rest: Strider 23, Glasnow, Soriano 26"
+  },
+  "PLUS/AVG/MINUS": {
+    "label": "WILD_FIREBALLER",
+    "description": "High K + walk problems: Snell, McClanahan, Cease 22"
+  },
+  "PLUS/MINUS/PLUS": {
+    "label": "K_AND_CTRL_HR_RISK",
+    "description": "K+control, HR-prone: rare"
+  },
+  "PLUS/MINUS/AVG": {
+    "label": "STUFF_NO_MOVE",
+    "description": "K but HR risk: 2019 Cole style"
+  },
+  "PLUS/MINUS/MINUS": {
+    "label": "PURE_STUFF_LIABILITY",
+    "description": "High K only, walk+HR risk: Greene 22, Ragans 26"
+  },
+  "AVG/PLUS/PLUS": {
+    "label": "MOVE_CTRL_ACE",
+    "description": "Sinker-control elite: Hendricks, Greinke aging, Skenes 26"
+  },
+  "AVG/PLUS/AVG": {
+    "label": "PURE_MOVEMENT",
+    "description": "GB/HR-suppress: Arrieta, Alcantara 22, Fried 22"
+  },
+  "AVG/PLUS/MINUS": {
+    "label": "MOVE_WILD",
+    "description": "Movement without command: Arrieta 16, Greene 24"
+  },
+  "AVG/AVG/PLUS": {
+    "label": "PURE_CONTROL",
+    "description": "Walk-avoidance specialist: Verlander 22, Woo 25, Bassitt"
+  },
+  "AVG/AVG/AVG": {
+    "label": "AVERAGE_4_5",
+    "description": "Generic mid-rotation \u2014 most common archetype"
+  },
+  "AVG/AVG/MINUS": {
+    "label": "WILD_MID",
+    "description": "Mediocre + walks: Senga 23, Blanco 24, Gore"
+  },
+  "AVG/MINUS/PLUS": {
+    "label": "CTRL_HR_PRONE",
+    "description": "Control without movement: Imanaga 25, Fiers 18"
+  },
+  "AVG/MINUS/AVG": {
+    "label": "GENERIC_HR_PRONE",
+    "description": "Avg stuff, HR-prone: Kennedy 16, Rod\u00f3n 24"
+  },
+  "AVG/MINUS/MINUS": {
+    "label": "BAD_BIG_INNINGS",
+    "description": "No suppression, walks: Archer 19, Gray 22"
+  },
+  "MINUS/PLUS/PLUS": {
+    "label": "SOFT_TOSS_ARTIST",
+    "description": "Low K, plus move/control: Keuchel-lite"
+  },
+  "MINUS/PLUS/AVG": {
+    "label": "SINKER_ONLY",
+    "description": "Pure GB pitcher, no K"
+  },
+  "MINUS/PLUS/MINUS": {
+    "label": "SINKER_WILD",
+    "description": "Pure GB + walks"
+  },
+  "MINUS/AVG/PLUS": {
+    "label": "JUNKBALLER",
+    "description": "Low K, avg move, plus control: Colon 16, Cueto 22, McGreevy 26"
+  },
+  "MINUS/AVG/AVG": {
+    "label": "FILLER",
+    "description": "Below-K average rest: Leake, Williams 18, Fedde 26"
+  },
+  "MINUS/AVG/MINUS": {
+    "label": "LIABILITY",
+    "description": "Below-K + walks: Rod\u00f3n 18, Keller 19"
+  },
+  "MINUS/MINUS/PLUS": {
+    "label": "PIT_CHF_CTRL",
+    "description": "Control-only, gets hit hard: Paddack 25, Hughes 15"
+  },
+  "MINUS/MINUS/AVG": {
+    "label": "PIT_CHF",
+    "description": "Below-K, HR-prone: Gonsolin 23, Heaney 25"
+  },
+  "MINUS/MINUS/MINUS": {
+    "label": "FRINGE",
+    "description": "Below everything"
+  }
+}
