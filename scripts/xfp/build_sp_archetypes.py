@@ -63,8 +63,11 @@ ARCHETYPES = {
     'MINUS/MINUS/MINUS': ('FRINGE',               'Below everything'),
 }
 
-GS_FLOOR_FULL = 20  # full season
-GS_FLOOR_INPROGRESS = 4  # for current year
+# Sample-stability floor (K% stabilizes at ~70 TBF ≈ 6 starts; below this, ratings
+# are dominated by single-game noise). All years use the same RATED floor so rookies
+# and mid-season call-ups are visible. FULL tier flags 20+ GS as the durable cut.
+GS_FLOOR_RATED = 6
+GS_FLOOR_FULL = 20
 
 
 def rating_20_80(series, grouper, invert=False):
@@ -232,10 +235,11 @@ def build_ratings_panel(current_year=2026):
     m = pd.read_csv(HIST_CSV)
     m['hr_per_bf'] = m['hr'] / m['tbf'].clip(lower=1)
 
-    # Apply GS floor: full season for prior years, lower floor for current
-    qual = m[((m['year'] != current_year) & (m['gs'] >= GS_FLOOR_FULL)) |
-             ((m['year'] == current_year) & (m['gs'] >= GS_FLOOR_INPROGRESS))].copy()
+    # Apply GS floor: every year uses the sample-stability floor so debutants
+    # and mid-season call-ups are visible. data_tier flags durable vs partial.
+    qual = m[m['gs'] >= GS_FLOOR_RATED].copy()
     qual = qual[qual['year'] != 2020]  # exclude COVID short season
+    qual['data_tier'] = np.where(qual['gs'] >= GS_FLOOR_FULL, 'FULL', 'PARTIAL')
 
     g = qual.groupby('year')
 
@@ -385,7 +389,7 @@ def main():
     print(f'  arsenal joined: {n_arsenal} of {len(qual)} pitcher-years have pitch data', flush=True)
 
     # Master ratings CSV (human-readable)
-    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start',
+    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','data_tier',
                    'STUFF','MOVEMENT','CONTROL','archetype','stuff_subtype','cell',
                    'velo_rating','velo_tier','pitch_archetype','primary_group','secondary_group',
                    'age','age_tier','career_year',

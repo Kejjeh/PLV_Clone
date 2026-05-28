@@ -31,8 +31,12 @@ HIST_CSV = REPO / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 AGE_CSV  = REPO / 'data/outputs/hitter_age_career.csv'
 OUT_DIR  = REPO / 'data/research'
 
-PA_FLOOR_FULL = 250         # full season qualifier
-PA_FLOOR_INPROGRESS = 80    # in-progress current year
+# Sample-stability floor (BB% stabilizes ~120 PA; 100 is the practical edge
+# where rate-based 20-80 ratings are still meaningful). All years use the same
+# RATED floor so rookies and mid-season call-ups are visible. FULL tier flags
+# 250+ PA as the durable cut.
+PA_FLOOR_RATED = 100
+PA_FLOOR_FULL = 250
 
 # ──────────────────────────────────────────────────────────────────────────────
 # 27 archetype cells (C/P/D bucket triple → label + description)
@@ -210,10 +214,11 @@ def build_ratings_panel(current_year=2026):
     m['rate_2b3b']    = derive_2b3b_rate(m)
     m['sb_per_opp']   = derive_sb_per_opp(m)
 
-    # PA floor
-    qual = m[((m['year'] != current_year) & (m['pa'] >= PA_FLOOR_FULL)) |
-             ((m['year'] == current_year) & (m['pa'] >= PA_FLOOR_INPROGRESS))].copy()
+    # Apply PA floor: every year uses the sample-stability floor so debutants
+    # and mid-season call-ups are visible. data_tier flags durable vs partial.
+    qual = m[m['pa'] >= PA_FLOOR_RATED].copy()
     qual = qual[qual['year'] != 2020]   # exclude COVID
+    qual['data_tier'] = np.where(qual['pa'] >= PA_FLOOR_FULL, 'FULL', 'PARTIAL')
 
     g = qual.groupby('year')
 
@@ -382,7 +387,7 @@ def main():
 
     # Master ratings CSV (human-readable)
     master_cols = [
-        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa',
+        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
         'CONTACT','POWER','DISCIPLINE','SB',
         'archetype','contact_subtype','power_subtype','discipline_subtype',
         'sb_tier','spray_archetype','cell',

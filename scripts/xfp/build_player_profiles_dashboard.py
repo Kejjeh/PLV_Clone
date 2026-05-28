@@ -43,7 +43,7 @@ S_BOUND  = RES / 'sp_boundary_validation.json'
 
 # Whitelisted columns — drives payload size.
 H_COLS = [
-    'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa',
+    'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
     'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
     'archetype', 'contact_subtype', 'power_subtype', 'discipline_subtype',
     'sb_tier', 'spray_archetype',
@@ -54,7 +54,7 @@ H_COLS = [
     'r_SBrate', 'r_Sprint',
 ]
 S_COLS = [
-    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start',
+    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 'data_tier',
     'STUFF', 'MOVEMENT', 'CONTROL',
     'archetype', 'stuff_subtype',
     'velo_rating', 'velo_tier', 'pitch_archetype', 'primary_group',

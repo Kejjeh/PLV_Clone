@@ -137,6 +137,9 @@ td.player:hover { text-decoration: underline; }
 .badge.plus { background: rgba(127,176,105,0.18); color: var(--pos); }
 .badge.minus { background: rgba(193,102,107,0.18); color: var(--neg); }
 .badge.avg { background: var(--faint); color: var(--dim); }
+.badge.partial { background: rgba(212,169,69,0.18); color: var(--warn);
+                 font-size: .65em; vertical-align: middle; margin-left: .5em;
+                 letter-spacing: .08em; padding: 0 5px; }
 
 /* Quadrant — one big customizable scatter per side */
 .quad-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
@@ -223,6 +226,9 @@ BODY_HEADER = """
   <span id="single-year-wrap">
     <label>Year</label>
     <select id="single-year-select"></select>
+  </span>
+  <span>
+    <label><input type="checkbox" id="include-partial" checked style="accent-color:var(--accent);margin-right:.3em;"> Include partial seasons</label>
   </span>
   <span id="filter-summary" class="filter-summary"></span>
 </div>
@@ -480,9 +486,15 @@ const state = {
   tab: 'home',
   yearMode: 'single',
   singleYear: D.current_year,
+  includePartial: true,
   hX: 'POWER', hY: 'CONTACT',
   sX: 'MOVEMENT', sY: 'STUFF',
 };
+
+// Inline badge for partial-season players
+function partialBadge(r) {
+  return r && r.data_tier === 'PARTIAL' ? ' <span class="badge partial">PARTIAL</span>' : '';
+}
 
 // ── Pearson r ──────────────────────────────────────────────────────────
 function pearson(xs, ys) {
@@ -554,10 +566,16 @@ function paWeightBlend(rows, idKey, fpKey) {
 }
 
 function filterRows(rows, role) {
-  if (state.yearMode === 'single') return rows.filter(r => r.year === state.singleYear);
-  if (state.yearMode === 'all')    return rows.slice();
-  return paWeightBlend(rows, role === 'hitter' ? 'batter' : 'pitcher',
-                       role === 'hitter' ? 'fp_per_pa' : 'fp_per_start');
+  let r;
+  if (state.yearMode === 'single')      r = rows.filter(x => x.year === state.singleYear);
+  else if (state.yearMode === 'all')    r = rows.slice();
+  else r = paWeightBlend(rows, role === 'hitter' ? 'batter' : 'pitcher',
+                          role === 'hitter' ? 'fp_per_pa' : 'fp_per_start');
+  // Partial-season filter — blend mode keeps everyone (already aggregated)
+  if (!state.includePartial && state.yearMode !== 'blend') {
+    r = r.filter(x => x.data_tier !== 'PARTIAL');
+  }
+  return r;
 }
 
 // ── Quadrant rendering ────────────────────────────────────────────────
@@ -718,7 +736,7 @@ function renderArchetypeTables(rows, role, targetId) {
       html += '<tr><th class="num">#</th><th>Player</th><th>Team</th><th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
         html += `<tr><td class="num">${i+1}</td>`
-              + `<td class="player" data-role="hitter" data-id="${r.batter}">${r.player_name}</td>`
+              + `<td class="player" data-role="hitter" data-id="${r.batter}">${r.player_name}${partialBadge(r)}</td>`
               + `<td>${r.team||''}</td>`
               + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
               + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
@@ -731,7 +749,7 @@ function renderArchetypeTables(rows, role, targetId) {
       html += '<tr><th class="num">#</th><th>Pitcher</th><th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
         html += `<tr><td class="num">${i+1}</td>`
-              + `<td class="player" data-role="sp" data-id="${r.pitcher}">${r.player_name}</td>`
+              + `<td class="player" data-role="sp" data-id="${r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
               + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
               + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating??''}</td>`
               + `<td>${r.velo_tier||''}</td><td>${r.age_tier||''}</td>`
@@ -758,7 +776,7 @@ function renderLeaderboard(rows, role, targetId) {
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
     html += `<tr><td class="num">${i+1}</td>`
-          + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}</td>`;
+          + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}${partialBadge(r)}</td>`;
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
@@ -848,7 +866,7 @@ function openModal(role, id) {
   if (!records.length) return;
   const sorted = records.slice().sort((a,b) => a.year - b.year);
   const last = sorted[sorted.length - 1];
-  let html = `<h2>${last.player_name}</h2>`;
+  let html = `<h2>${last.player_name}${partialBadge(last)}</h2>`;
   if (role === 'hitter') html += `<div class="latest-line">Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${last.age_tier})</div>`;
   else                    html += `<div class="latest-line">Latest: age ${last.age ?? '?'} (${last.age_tier})</div>`;
   html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${r.archetype}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
@@ -858,7 +876,7 @@ function openModal(role, id) {
   html += '</tr></thead><tbody>';
   sorted.forEach(r => {
     if (role === 'hitter') {
-      html += `<tr><td class="num">${r.year}</td><td class="num">${r.age ?? ''}</td>`
+      html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
             + `<td>${r.archetype}</td>`
@@ -867,7 +885,7 @@ function openModal(role, id) {
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
-      html += `<tr><td class="num">${r.year}</td><td class="num">${r.age ?? ''}</td>`
+      html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating ?? ''}</td>`
             + `<td>${r.archetype}</td>`
@@ -996,6 +1014,12 @@ function init() {
         state.yearMode === 'single' ? '' : 'none';
       renderAll();
     });
+  });
+
+  // Partial-season filter
+  document.getElementById('include-partial').addEventListener('change', e => {
+    state.includePartial = e.target.checked;
+    renderAll();
   });
 
   // Axis selectors
