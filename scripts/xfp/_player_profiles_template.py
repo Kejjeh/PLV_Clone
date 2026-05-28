@@ -141,6 +141,21 @@ td.player:hover { text-decoration: underline; }
                  font-size: .65em; vertical-align: middle; margin-left: .5em;
                  letter-spacing: .08em; padding: 0 5px; }
 
+/* All-players sortable table */
+.alltable-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
+                      font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
+.alltable-controls input { background: var(--panel); color: var(--text);
+                            border: 1px solid var(--border); border-radius: 3px;
+                            padding: .35em .55em; font-family: 'IBM Plex Mono', monospace;
+                            font-size: .9em; min-width: 320px; }
+.alltable-controls input:focus { outline: 0; border-color: var(--accent); }
+table.alltable th { cursor: pointer; user-select: none; }
+table.alltable th:hover { color: var(--accent); background: var(--stripe); }
+table.alltable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
+table.alltable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
+table.alltable { table-layout: auto; }
+table.alltable td { white-space: nowrap; }
+
 /* Quadrant — one big customizable scatter per side */
 .quad-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
                   font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
@@ -335,6 +350,13 @@ HITTERS_TAB = """
 
   <h2>Hitter archetype roster</h2>
   <div id="h-archetype-tables"></div>
+
+  <h2>All hitters — sortable</h2>
+  <div class="alltable-controls">
+    <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
+    <span id="h-alltable-count" class="filter-summary"></span>
+  </div>
+  <div style="overflow-x:auto;"><table id="h-alltable" class="alltable"></table></div>
 </div>
 """
 
@@ -386,6 +408,13 @@ PITCHERS_TAB = """
 
   <h2>Pitcher archetype roster</h2>
   <div id="s-archetype-tables"></div>
+
+  <h2>All pitchers — sortable</h2>
+  <div class="alltable-controls">
+    <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
+    <span id="s-alltable-count" class="filter-summary"></span>
+  </div>
+  <div style="overflow-x:auto;"><table id="s-alltable" class="alltable"></table></div>
 </div>
 """
 
@@ -548,6 +577,11 @@ const state = {
   sX: 'MOVEMENT', sY: 'STUFF',
   hSnapAt: null, hSnapVs: null, hSnapSort: 'net',
   sSnapAt: null, sSnapVs: null, sSnapSort: 'net',
+  // All-players table state — initial sort by FP descending
+  hTblSort: { col: 'fp_per_pa', dir: 'desc' },
+  sTblSort: { col: 'fp_per_start', dir: 'desc' },
+  hTblQuery: '',
+  sTblQuery: '',
 };
 
 // Inline badge for partial-season players
@@ -1059,6 +1093,151 @@ function runSearch(q) {
   });
 }
 
+// ── All-players sortable table ────────────────────────────────────
+// Column definitions: { key, label, num (right-align + numeric sort), w (optional width) }
+const H_TBL_COLS = [
+  { key: 'player_name', label: 'Player', text: true },
+  { key: 'team',        label: 'Tm', text: true },
+  { key: 'year',        label: 'Yr',  num: true },
+  { key: 'pa',          label: 'PA',  num: true },
+  { key: 'CONTACT',     label: 'C',   num: true },
+  { key: 'POWER',       label: 'P',   num: true },
+  { key: 'DISCIPLINE',  label: 'D',   num: true },
+  { key: 'SB',          label: 'SB',  num: true },
+  { key: 'archetype',           label: 'Archetype', text: true },
+  { key: 'contact_subtype',     label: 'Contact sub', text: true },
+  { key: 'power_subtype',       label: 'Power sub',   text: true },
+  { key: 'discipline_subtype',  label: 'Disc sub',    text: true },
+  { key: 'sb_tier',             label: 'SB tier', text: true },
+  { key: 'spray_archetype',     label: 'Spray',   text: true },
+  { key: 'age',                 label: 'Age', num: true },
+  { key: 'age_tier',            label: 'Age tier', text: true },
+  { key: 'boundary_tier',       label: 'Bnd', text: true },
+  { key: 'data_tier',           label: 'Tier', text: true },
+  { key: 'fp_per_pa',           label: 'FP/PA', num: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 'rank_in_year',        label: 'Rank', num: true },
+];
+
+const S_TBL_COLS = [
+  { key: 'player_name', label: 'Pitcher', text: true },
+  { key: 'year',        label: 'Yr',  num: true },
+  { key: 'gs',          label: 'GS',  num: true },
+  { key: 'tbf',         label: 'TBF', num: true },
+  { key: 'STUFF',       label: 'S',   num: true },
+  { key: 'MOVEMENT',    label: 'M',   num: true },
+  { key: 'CONTROL',     label: 'C',   num: true },
+  { key: 'velo_rating', label: 'Velo', num: true },
+  { key: 'archetype',           label: 'Archetype', text: true },
+  { key: 'stuff_subtype',       label: 'Stuff sub', text: true },
+  { key: 'velo_tier',           label: 'Velo tier', text: true },
+  { key: 'pitch_archetype',     label: 'Pitch arch', text: true },
+  { key: 'primary_group',       label: 'Primary', text: true },
+  { key: 'age',                 label: 'Age', num: true },
+  { key: 'age_tier',            label: 'Age tier', text: true },
+  { key: 'boundary_tier',       label: 'Bnd', text: true },
+  { key: 'data_tier',           label: 'Tier', text: true },
+  { key: 'fp_per_start',        label: 'FP/start', num: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'rank_in_year',        label: 'Rank', num: true },
+];
+
+function tblRowMatches(r, q) {
+  if (!q) return true;
+  const ql = q.toLowerCase();
+  // Search across text-ish fields
+  const candidates = [r.player_name, r.team, r.archetype, r.contact_subtype, r.power_subtype,
+                       r.discipline_subtype, r.sb_tier, r.spray_archetype, r.age_tier,
+                       r.boundary_tier, r.data_tier, r.stuff_subtype, r.velo_tier,
+                       r.pitch_archetype, r.primary_group];
+  for (const c of candidates) {
+    if (c && String(c).toLowerCase().includes(ql)) return true;
+  }
+  return false;
+}
+
+function tblSortRows(rows, sort, cols) {
+  const col = cols.find(c => c.key === sort.col);
+  if (!col) return rows;
+  const dir = sort.dir === 'asc' ? 1 : -1;
+  const numeric = !!col.num;
+  return rows.slice().sort((a, b) => {
+    let va = a[col.key], vb = b[col.key];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;        // nulls last
+    if (vb == null) return -1;
+    if (numeric) {
+      va = +va; vb = +vb;
+      return dir * (va - vb);
+    }
+    return dir * String(va).localeCompare(String(vb));
+  });
+}
+
+function renderAllTable(rows, role) {
+  const cols = role === 'hitter' ? H_TBL_COLS : S_TBL_COLS;
+  const tblId = role === 'hitter' ? 'h-alltable' : 's-alltable';
+  const sort = role === 'hitter' ? state.hTblSort : state.sTblSort;
+  const q    = role === 'hitter' ? state.hTblQuery : state.sTblQuery;
+  const cntEl = document.getElementById(role === 'hitter' ? 'h-alltable-count' : 's-alltable-count');
+  const idKey = role === 'hitter' ? 'batter' : 'pitcher';
+
+  const filtered = rows.filter(r => tblRowMatches(r, q));
+  const sorted   = tblSortRows(filtered, sort, cols);
+
+  cntEl.textContent = q
+    ? `${filtered.length} of ${rows.length} match "${q}"`
+    : `${rows.length} rows`;
+
+  // Build header
+  let h = '<thead><tr>';
+  h += '<th class="num">#</th>';
+  cols.forEach(c => {
+    const cls = (c.num ? 'num ' : '') + (sort.col === c.key ? `sort-${sort.dir}` : '');
+    h += `<th class="${cls.trim()}" data-col="${c.key}">${c.label}</th>`;
+  });
+  h += '</tr></thead><tbody>';
+
+  // Cap at 800 rows to keep render snappy; show note if truncated
+  const cap = 800;
+  const visible = sorted.slice(0, cap);
+  visible.forEach((r, i) => {
+    h += '<tr>';
+    h += `<td class="num">${i+1}</td>`;
+    cols.forEach(c => {
+      let v = r[c.key];
+      if (c.fmt) v = c.fmt(v);
+      else if (v == null) v = '';
+      const cellCls = (c.num ? 'num' : '') + (c.key === 'player_name' ? ' player' : '');
+      const tier = r.data_tier === 'PARTIAL' && c.key === 'player_name' ? partialBadge(r) : '';
+      if (c.key === 'player_name') {
+        h += `<td class="${cellCls.trim()}" data-role="${role}" data-id="${r[idKey]}">${v}${tier}</td>`;
+      } else {
+        h += `<td class="${cellCls.trim()}">${v}</td>`;
+      }
+    });
+    h += '</tr>';
+  });
+  h += '</tbody>';
+  if (sorted.length > cap) {
+    h += `<tfoot><tr><td colspan="${cols.length + 1}" style="text-align:center;color:var(--dim);padding:.6em;">Showing first ${cap} of ${sorted.length} matches — refine search to see the rest.</td></tr></tfoot>`;
+  }
+  const tbl = document.getElementById(tblId);
+  tbl.innerHTML = h;
+
+  // Wire header click → sort
+  tbl.querySelectorAll('thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.col;
+      if (sort.col === k) sort.dir = (sort.dir === 'asc' ? 'desc' : 'asc');
+      else { sort.col = k; sort.dir = 'desc'; }
+      renderAllTable(rows, role);
+    });
+  });
+  // Wire player click → modal
+  tbl.querySelectorAll('td.player').forEach(td => {
+    td.addEventListener('click', () => openModal(td.dataset.role, parseInt(td.dataset.id)));
+  });
+}
+
 // ── Snapshot section (Single Year mode only) ──────────────────────
 function populateSnapshotPickers(role) {
   const snaps = role === 'hitter' ? HSNAP : SSNAP;
@@ -1181,6 +1360,9 @@ function renderAll() {
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
   renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
 
+  renderAllTable(hitterRows, 'hitter');
+  renderAllTable(spRows,     'sp');
+
   // Snapshot movers — only in Single Year mode
   if (state.yearMode === 'single') {
     if (populateSnapshotPickers('hitter')) renderSnapshotMovers('hitter');
@@ -1232,6 +1414,23 @@ function init() {
   document.getElementById('h-y').addEventListener('change', e => { state.hY = e.target.value; renderAll(); });
   document.getElementById('s-x').addEventListener('change', e => { state.sX = e.target.value; renderAll(); });
   document.getElementById('s-y').addEventListener('change', e => { state.sY = e.target.value; renderAll(); });
+
+  // All-players search (debounced)
+  let hSearchTimer = null, sSearchTimer = null;
+  document.getElementById('h-alltable-search').addEventListener('input', e => {
+    clearTimeout(hSearchTimer);
+    hSearchTimer = setTimeout(() => {
+      state.hTblQuery = e.target.value.trim();
+      renderAllTable(filterRows(HITTERS, 'hitter'), 'hitter');
+    }, 120);
+  });
+  document.getElementById('s-alltable-search').addEventListener('input', e => {
+    clearTimeout(sSearchTimer);
+    sSearchTimer = setTimeout(() => {
+      state.sTblQuery = e.target.value.trim();
+      renderAllTable(filterRows(SPS, 'sp'), 'sp');
+    }, 120);
+  });
 
   // Snapshot pickers
   document.getElementById('h-snap-at').addEventListener('change', e => { state.hSnapAt = e.target.value; renderSnapshotMovers('hitter'); });
