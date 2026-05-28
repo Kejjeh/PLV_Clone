@@ -1,0 +1,27 @@
+milb_pitches,outings,last_outing,fb_velo,fb_max,milb_k_pct,milb_bb_pct,milb_swstr,milb_csw,velo_delta,k_delta,bb_delta,swstr_delta,workload_curve,days_gap_max,verdict,name,pos,team,injury,mlbam,prior_year,prior_fb_velo,prior_k,prior_bb,prior_swstr,rehab_window
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Casey Mize,SP,Boone's Bad Bullpen,DAY_TO_DAY,663554.0,2025.0,94.65,0.221,0.056,0.115,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Garrett Whitlock,RP,Boone's Bad Bullpen,DAY_TO_DAY,676477.0,2025.0,95.84,0.311,0.075,0.163,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Tarik Skubal,SP,Team Solomon,FIFTEEN_DAY_DL,669373.0,2025.0,97.44,0.321,0.044,0.175,
+34.0,2.0,2026-05-09,94.42,96.2,0.429,0.143,0.176,0.324,-1.09,0.06,0.07,-0.019,05/05:16 → 05/09:18,4.0,WORKLOAD-ONLY,Josh Hader,RP,Team Solomon,SIXTY_DAY_DL,623352.0,2025.0,95.51,0.369,0.073,0.195,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Kenley Jansen,RP,Team Solomon,DAY_TO_DAY,445276.0,2025.0,93.21,0.244,0.073,0.137,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Nick Pivetta,SP,Team Solomon,FIFTEEN_DAY_DL,601713.0,2025.0,93.77,0.263,0.068,0.113,
+62.0,1.0,2026-05-22,90.44,91.9,0.133,0.2,0.081,0.258,-2.16,-0.125,0.146,-0.026,05/22:62,,WORKLOAD-ONLY,Logan Webb,SP,Team Solomon,FIFTEEN_DAY_DL,657277.0,2025.0,92.6,0.258,0.054,0.107,"filtered to post-2026-05-05 (pre-filter: 62, post-IL: 62)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Dylan Cease,SP,Late Night Bettsing,FIFTEEN_DAY_DL,656302.0,2025.0,97.01,0.296,0.096,0.154,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Joe Musgrove,SP,Late Night Bettsing,SIXTY_DAY_DL,605397.0,2024.0,92.91,0.248,0.053,0.13,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Justin Steele,SP,Late Night Bettsing,SIXTY_DAY_DL,657006.0,2025.0,90.78,0.213,0.053,0.081,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Garrett Crochet,SP,U Just Lost To Edwin Diaz,FIFTEEN_DAY_DL,676979.0,2025.0,96.28,0.312,0.056,0.143,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Edward Cabrera,SP,U Just Lost To Edwin Diaz,FIFTEEN_DAY_DL,665795.0,2025.0,96.91,0.257,0.082,0.122,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Shane Bieber,SP,U Just Lost To Edwin Diaz,SIXTY_DAY_DL,669456.0,2025.0,92.57,0.233,0.044,0.119,
+68.0,1.0,2026-05-23,95.21,97.6,0.176,0.059,0.118,0.191,-0.05,-0.205,-0.019,-0.041,05/23:68,,WORKLOAD-ONLY,Cole Ragans,SP,2015 Draft First Round,FIFTEEN_DAY_DL,666142.0,2025.0,95.26,0.381,0.078,0.159,"filtered to post-2026-05-06 (pre-filter: 68, post-IL: 68)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Robert Garcia,RP,2015 Draft First Round,FIFTEEN_DAY_DL,676395.0,2025.0,94.44,0.253,0.074,0.143,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Max Fried,SP,New York Ligers,FIFTEEN_DAY_DL,608331.0,2025.0,94.8,0.236,0.064,0.12,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Tyler Glasnow,SP,New York Ligers,FIFTEEN_DAY_DL,607192.0,2025.0,95.81,0.29,0.117,0.097,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Ryan Helsley,RP,New York Ligers,FIFTEEN_DAY_DL,664854.0,2025.0,99.31,0.249,0.087,0.138,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Hunter Greene,SP,New York Ligers,SIXTY_DAY_DL,668881.0,2025.0,99.48,0.312,0.062,0.164,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Logan Henderson,SP,New York Ligers,FIFTEEN_DAY_DL,701656.0,2025.0,92.94,0.333,0.081,0.151,"filtered to post-2026-05-22 (pre-filter: 289, post-IL: 0)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Hunter Brown,SP,Frendy's Fantastic Team,SIXTY_DAY_DL,686613.0,2025.0,96.25,0.282,0.077,0.114,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Brandon Woodruff,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,605540.0,2025.0,92.96,0.323,0.054,0.138,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Erik Sabrowski,RP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,681870.0,2025.0,93.93,0.344,0.172,0.169,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Kris Bubic,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,663460.0,2025.0,92.06,0.243,0.079,0.133,
+,,,,,,,,,,,,,,,NO MLBAM,Edwin Diaz,RP,Treasure Island Mashers,SIXTY_DAY_DL,,,,,,,
+171.0,3.0,2026-05-23,98.13,101.1,0.317,0.098,0.17,0.316,0.8,0.058,0.023,0.02,04/29:41 → 05/06:54 → 05/23:76,17.0,ON TRACK,Jared Jones,SP,FA (watchlist),IL (FA),683003.0,2024.0,97.33,0.259,0.075,0.15,
