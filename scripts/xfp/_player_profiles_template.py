@@ -291,6 +291,28 @@ HOME_TAB = """
 
 HITTERS_TAB = """
 <div id="tab-hitters" class="tab-panel">
+  <div id="h-snapshots-section" style="display:none;">
+    <h2>Season progression — snapshot movers</h2>
+    <div class="quad-controls" style="margin-bottom:.4em;">
+      <label>At date</label>
+      <select id="h-snap-at"></select>
+      <label>Compared to</label>
+      <select id="h-snap-vs"></select>
+      <label>Sort by</label>
+      <select id="h-snap-sort">
+        <option value="net">Net |ΔC|+|ΔP|+|ΔD|</option>
+        <option value="C">ΔC (Contact)</option>
+        <option value="P">ΔP (Power)</option>
+        <option value="D">ΔD (Discipline)</option>
+      </select>
+      <span id="h-snap-note" class="filter-summary"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5em;">
+      <div><h3 style="color:var(--pos);">Risers</h3><div id="h-snap-up"></div></div>
+      <div><h3 style="color:var(--neg);">Fallers</h3><div id="h-snap-down"></div></div>
+    </div>
+  </div>
+
   <h2>Hitter custom quadrant</h2>
   <div class="quad-controls">
     <label>X axis</label>
@@ -319,6 +341,28 @@ HITTERS_TAB = """
 
 PITCHERS_TAB = """
 <div id="tab-pitchers" class="tab-panel">
+  <div id="s-snapshots-section" style="display:none;">
+    <h2>Season progression — snapshot movers</h2>
+    <div class="quad-controls" style="margin-bottom:.4em;">
+      <label>At date</label>
+      <select id="s-snap-at"></select>
+      <label>Compared to</label>
+      <select id="s-snap-vs"></select>
+      <label>Sort by</label>
+      <select id="s-snap-sort">
+        <option value="net">Net |ΔS|+|ΔC|+|ΔVelo|</option>
+        <option value="S">ΔS (Stuff)</option>
+        <option value="C">ΔC (Control)</option>
+        <option value="V">ΔVelo</option>
+      </select>
+      <span id="s-snap-note" class="filter-summary">SP MOVEMENT rating omitted — rolling cache lacks barrel%/hard-hit%/gb%/xwOBA-contact</span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5em;">
+      <div><h3 style="color:var(--pos);">Risers</h3><div id="s-snap-up"></div></div>
+      <div><h3 style="color:var(--neg);">Fallers</h3><div id="s-snap-down"></div></div>
+    </div>
+  </div>
+
   <h2>Pitcher custom quadrant</h2>
   <div class="quad-controls">
     <label>X axis</label>
@@ -368,6 +412,18 @@ const SARCH_DESC = {}; Object.values(SDEFS).forEach(v => SARCH_DESC[v.label] = v
 
 const H_BY_ID = {}; HITTERS.forEach(r => { (H_BY_ID[r.batter] = H_BY_ID[r.batter] || []).push(r); });
 const S_BY_ID = {}; SPS.forEach(r => { (S_BY_ID[r.pitcher] = S_BY_ID[r.pitcher] || []).push(r); });
+
+// Snapshots — indexed by (id, year) for per-player trajectories, and by (year, date) for movers
+const HSNAP = D.hitter_snapshots || [];
+const SSNAP = D.sp_snapshots     || [];
+const HSNAP_BY_PY = {}; HSNAP.forEach(r => { const k = `${r.batter}|${r.year}`; (HSNAP_BY_PY[k] = HSNAP_BY_PY[k] || []).push(r); });
+const SSNAP_BY_PY = {}; SSNAP.forEach(r => { const k = `${r.pitcher}|${r.year}`; (SSNAP_BY_PY[k] = SSNAP_BY_PY[k] || []).push(r); });
+Object.values(HSNAP_BY_PY).forEach(arr => arr.sort((a,b) => a.date.localeCompare(b.date)));
+Object.values(SSNAP_BY_PY).forEach(arr => arr.sort((a,b) => a.date.localeCompare(b.date)));
+
+function snapshotDatesForYear(snaps, year) {
+  return [...new Set(snaps.filter(r => r.year === year).map(r => r.date))].sort();
+}
 
 // ── Axis labels (display only) ──────────────────────────────────────────
 const HITTER_AXIS_LABEL = { CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
@@ -489,6 +545,8 @@ const state = {
   includePartial: true,
   hX: 'POWER', hY: 'CONTACT',
   sX: 'MOVEMENT', sY: 'STUFF',
+  hSnapAt: null, hSnapVs: null, hSnapSort: 'net',
+  sSnapAt: null, sSnapVs: null, sSnapSort: 'net',
 };
 
 // Inline badge for partial-season players
@@ -897,9 +955,43 @@ function openModal(role, id) {
   });
   html += '</tbody></table>';
   html += '<div id="modal-spark" style="height: 300px; margin-top: 1em;"></div>';
+  // Snapshot trajectory (only when Single Year mode + snapshots exist for that year)
+  const snapKey = `${id}|${state.singleYear}`;
+  const snapRows = role === 'hitter' ? HSNAP_BY_PY[snapKey] : SSNAP_BY_PY[snapKey];
+  const showSnap = state.yearMode === 'single' && snapRows && snapRows.length >= 2;
+  if (showSnap) {
+    html += `<h3 style="margin-top:1em;color:var(--accent);">In-season trajectory · ${state.singleYear}</h3>`;
+    html += '<div id="modal-snap" style="height: 280px;"></div>';
+  }
   document.getElementById('modal-content').innerHTML = html;
   document.getElementById('modal-bg').classList.add('open');
   renderSparkline(sorted, role);
+  if (showSnap) renderSnapshotTrajectory(snapRows, role);
+}
+
+function renderSnapshotTrajectory(rows, role) {
+  const xs = rows.map(r => r.date);
+  const keys = role === 'hitter'
+    ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
+    : [['STUFF','#c1666b'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+  const traces = keys.map(([k, color]) => ({
+    x: xs, y: rows.map(r => r[k]), mode: 'lines+markers', name: k,
+    line: { color, width: 2 }, marker: { size: 8 },
+  }));
+  const shapes = [
+    { type:'line', xref:'paper', x0:0, x1:1, y0:60, y1:60, line:{ color:'#7fb069', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50, line:{ color:'#8d8579', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:40, y1:40, line:{ color:'#c1666b', dash:'dot', width:1 } },
+  ];
+  Plotly.react('modal-snap', traces, {
+    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
+    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    margin: { l: 50, r: 10, t: 10, b: 50 },
+    xaxis: { gridcolor: '#34302a', type: 'category' },
+    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
+    shapes,
+    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono' } },
+  }, { displayModeBar: false, responsive: true });
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
@@ -966,6 +1058,109 @@ function runSearch(q) {
   });
 }
 
+// ── Snapshot section (Single Year mode only) ──────────────────────
+function populateSnapshotPickers(role) {
+  const snaps = role === 'hitter' ? HSNAP : SSNAP;
+  const dates = snapshotDatesForYear(snaps, state.singleYear);
+  const sec   = document.getElementById(role === 'hitter' ? 'h-snapshots-section' : 's-snapshots-section');
+  const note  = document.getElementById(role === 'hitter' ? 'h-snap-note' : 's-snap-note');
+  if (!dates.length) {
+    sec.style.display = 'none';
+    return false;
+  }
+  sec.style.display = state.yearMode === 'single' ? '' : 'none';
+  const selAt = document.getElementById(role === 'hitter' ? 'h-snap-at' : 's-snap-at');
+  const selVs = document.getElementById(role === 'hitter' ? 'h-snap-vs' : 's-snap-vs');
+  selAt.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  selVs.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
+  selAt.value = dates[dates.length - 1];
+  selVs.value = dates[Math.max(0, dates.length - 2)];
+  if (role === 'hitter') {
+    state.hSnapAt = selAt.value; state.hSnapVs = selVs.value;
+    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
+  } else {
+    state.sSnapAt = selAt.value; state.sSnapVs = selVs.value;
+    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear} · MOVEMENT omitted (cache lacks barrel/HardHit/GB/xCON)`;
+  }
+  return true;
+}
+
+function renderSnapshotMovers(role) {
+  const snaps = role === 'hitter' ? HSNAP : SSNAP;
+  const at = role === 'hitter' ? state.hSnapAt : state.sSnapAt;
+  const vs = role === 'hitter' ? state.hSnapVs : state.sSnapVs;
+  const sort = role === 'hitter' ? state.hSnapSort : state.sSnapSort;
+  const upDiv   = document.getElementById(role === 'hitter' ? 'h-snap-up' : 's-snap-up');
+  const downDiv = document.getElementById(role === 'hitter' ? 'h-snap-down' : 's-snap-down');
+  if (!at || !vs) { upDiv.innerHTML = downDiv.innerHTML = ''; return; }
+
+  const yr = state.singleYear;
+  const atRows = snaps.filter(r => r.year === yr && r.date === at);
+  const vsRows = snaps.filter(r => r.year === yr && r.date === vs);
+  const idKey = role === 'hitter' ? 'batter' : 'pitcher';
+  const vsByID = {};
+  vsRows.forEach(r => { vsByID[r[idKey]] = r; });
+
+  const dims = role === 'hitter' ? ['CONTACT','POWER','DISCIPLINE'] : ['STUFF','CONTROL','velo_rating'];
+  const dimAlias = role === 'hitter' ? { C:'CONTACT', P:'POWER', D:'DISCIPLINE' }
+                                      : { S:'STUFF', C:'CONTROL', V:'velo_rating' };
+  const movers = [];
+  atRows.forEach(at_r => {
+    const vs_r = vsByID[at_r[idKey]];
+    if (!vs_r) return;
+    const deltas = {};
+    dims.forEach(k => { deltas[k] = at_r[k] - vs_r[k]; });
+    let primary;
+    if (sort === 'net') {
+      primary = dims.reduce((s,k) => s + Math.abs(deltas[k]), 0);
+    } else {
+      const key = dimAlias[sort] || dims[0];
+      primary = deltas[key];
+    }
+    movers.push({ at: at_r, vs: vs_r, deltas, primary });
+  });
+
+  const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+  const rateAtVal = at_r => null; // snapshot rows don't carry fp/pa; skip rate display
+
+  const buildTable = (rows, descending) => {
+    rows = rows.slice().sort((a,b) => descending ? b.primary - a.primary : a.primary - b.primary);
+    rows = sort === 'net' ? rows : rows.slice(0, 15);
+    rows = sort === 'net' ? rows.slice(0, 15) : rows;
+    let h = '<table><thead><tr><th class="num">#</th><th>Player</th>';
+    if (role === 'hitter') h += '<th class="num">ΔC</th><th class="num">ΔP</th><th class="num">ΔD</th><th class="num">C now</th><th class="num">P now</th><th class="num">D now</th>';
+    else                    h += '<th class="num">ΔS</th><th class="num">ΔC</th><th class="num">ΔVelo</th><th class="num">S now</th><th class="num">C now</th><th class="num">Velo now</th>';
+    h += '</tr></thead><tbody>';
+    rows.forEach((m, i) => {
+      const r = m.at;
+      const id = role === 'hitter' ? r.batter : r.pitcher;
+      const fmtD = v => (v > 0 ? '+' : '') + v;
+      const cls = v => v > 0 ? 'pos' : (v < 0 ? 'neg' : 'dim');
+      const k1 = role === 'hitter' ? 'CONTACT' : 'STUFF';
+      const k2 = role === 'hitter' ? 'POWER'   : 'CONTROL';
+      const k3 = role === 'hitter' ? 'DISCIPLINE' : 'velo_rating';
+      h += `<tr><td class="num">${i+1}</td>`
+         + `<td class="player" data-role="${role}" data-id="${id}">${r.player_name}</td>`
+         + `<td class="num" style="color:var(--${cls(m.deltas[k1])})">${fmtD(m.deltas[k1])}</td>`
+         + `<td class="num" style="color:var(--${cls(m.deltas[k2])})">${fmtD(m.deltas[k2])}</td>`
+         + `<td class="num" style="color:var(--${cls(m.deltas[k3])})">${fmtD(m.deltas[k3])}</td>`
+         + `<td class="num">${r[k1]}</td><td class="num">${r[k2]}</td><td class="num">${r[k3]}</td>`
+         + `</tr>`;
+    });
+    h += '</tbody></table>';
+    return h;
+  };
+
+  upDiv.innerHTML   = buildTable(movers, true);
+  downDiv.innerHTML = buildTable(movers, false);
+  // Wire player clicks
+  [upDiv, downDiv].forEach(div => {
+    div.querySelectorAll('td.player').forEach(td => {
+      td.addEventListener('click', () => openModal(td.dataset.role, parseInt(td.dataset.id)));
+    });
+  });
+}
+
 // ── Master render ──────────────────────────────────────────────────
 function renderAll() {
   const hitterRows = filterRows(HITTERS, 'hitter');
@@ -984,6 +1179,15 @@ function renderAll() {
 
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
   renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
+
+  // Snapshot movers — only in Single Year mode
+  if (state.yearMode === 'single') {
+    if (populateSnapshotPickers('hitter')) renderSnapshotMovers('hitter');
+    if (populateSnapshotPickers('sp'))     renderSnapshotMovers('sp');
+  } else {
+    document.getElementById('h-snapshots-section').style.display = 'none';
+    document.getElementById('s-snapshots-section').style.display = 'none';
+  }
 }
 
 // ── Resize Plotly when its tab becomes visible ──────────────────────
@@ -1027,6 +1231,14 @@ function init() {
   document.getElementById('h-y').addEventListener('change', e => { state.hY = e.target.value; renderAll(); });
   document.getElementById('s-x').addEventListener('change', e => { state.sX = e.target.value; renderAll(); });
   document.getElementById('s-y').addEventListener('change', e => { state.sY = e.target.value; renderAll(); });
+
+  // Snapshot pickers
+  document.getElementById('h-snap-at').addEventListener('change', e => { state.hSnapAt = e.target.value; renderSnapshotMovers('hitter'); });
+  document.getElementById('h-snap-vs').addEventListener('change', e => { state.hSnapVs = e.target.value; renderSnapshotMovers('hitter'); });
+  document.getElementById('h-snap-sort').addEventListener('change', e => { state.hSnapSort = e.target.value; renderSnapshotMovers('hitter'); });
+  document.getElementById('s-snap-at').addEventListener('change', e => { state.sSnapAt = e.target.value; renderSnapshotMovers('sp'); });
+  document.getElementById('s-snap-vs').addEventListener('change', e => { state.sSnapVs = e.target.value; renderSnapshotMovers('sp'); });
+  document.getElementById('s-snap-sort').addEventListener('change', e => { state.sSnapSort = e.target.value; renderSnapshotMovers('sp'); });
 
   // Tabs
   document.querySelectorAll('.tabs button').forEach(b => {

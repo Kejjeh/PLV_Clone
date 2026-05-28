@@ -27,10 +27,12 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 REPO = Path(r'c:\Users\Joshua\plv_clone')
 RES = REPO / 'data/research'
+CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'
 OUT_PUB = REPO / 'xfp-model/docs/player_profiles.html'
 
@@ -40,6 +42,11 @@ H_DEFS   = RES / 'hitter_archetype_definitions.json'
 S_DEFS   = RES / 'sp_archetype_definitions.json'
 H_BOUND  = RES / 'hitter_boundary_validation.json'
 S_BOUND  = RES / 'sp_boundary_validation.json'
+
+H_ROLLING = CACHE / 'rolling_hitters_2018_2026.csv'
+S_ROLLING = CACHE / 'rolling_pitchers_2018_2026.csv'
+H_SRC     = CACHE / 'hitters_multiyr_2015_2026.csv'
+S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 
 # Whitelisted columns — drives payload size.
 H_COLS = [
@@ -144,6 +151,165 @@ def build_sp_records(s: pd.DataFrame):
     return json.loads(df.to_json(orient='records'))
 
 
+def _bucket(v):
+    if pd.isna(v): return None
+    if v >= 60: return 'PLUS'
+    if v >= 40: return 'AVG'
+    return 'MINUS'
+
+
+def _rate(val, mu, sd, invert=False):
+    if pd.isna(val) or pd.isna(mu) or pd.isna(sd) or sd == 0:
+        return None
+    z = (val - mu) / sd
+    if invert: z = -z
+    return int(round(min(max(50 + 10 * z, 20), 80)))
+
+
+def build_hitter_snapshots():
+    """Per-(batter, year, snapshot_date) C/P/D/SB ratings using rolling cache.
+
+    Each snapshot rates using the PRIOR-year full-season mean/SD as baseline so
+    units stay consistent across snapshot dates. Rookies / players without a
+    prior year fall back to the snapshot-year baseline.
+    """
+    if not H_ROLLING.exists() or not H_SRC.exists():
+        print('  ⚠ hitter rolling/source not found — skipping snapshot build')
+        return []
+    r = pd.read_csv(H_ROLLING)
+    src = pd.read_csv(H_SRC)
+    r['cutoff_date'] = pd.to_datetime(r['cutoff_date'])
+
+    # Derive BABIP and z_swing_pct from raw counts
+    r['babip_to'] = ((r['h_to'] - r['hr_to']) /
+                     (r['ab_to'] - r['k_to'] - r['hr_to']).clip(lower=1)).clip(0, 1)
+    # source for player_name + team lookups
+    name_lookup = (src.sort_values('year').groupby('batter')
+                   .agg({'player_name': 'last', 'team': 'last'}).to_dict('index'))
+
+    # Build per-year baselines (mean/sd of full-season rates) for stable rating units
+    src['babip'] = ((src['h'] - src['hr']) /
+                    (src['ab'] - src['k'] - src['hr']).clip(lower=1)).clip(0, 1)
+    BASELINE_COLS = ['contact_pct', 'k_pct', 'babip', 'xwoba_on_contact',
+                     'barrel_pct', 'hard_hit_pct', 'iso', 'hr_per_pa',
+                     'bb_pct', 'chase_pct', 'sb_per_pa']
+    baselines = {}
+    for yr, grp in src.groupby('year'):
+        baselines[int(yr)] = {c: (grp[c].mean(), grp[c].std()) for c in BASELINE_COLS}
+
+    # 50 PA floor for snapshot rating — rolling cache already filters early-season noise
+    r = r[r['pa_to'] >= 50].copy()
+    if not len(r): return []
+
+    out = []
+    for _, row in r.iterrows():
+        yr = int(row['year'])
+        baseline_yr = yr - 1 if (yr - 1) in baselines else yr
+        if baseline_yr not in baselines:
+            continue
+        b = baselines[baseline_yr]
+
+        rC = _rate(row['contact_pct_to'],      *b['contact_pct'])
+        rK = _rate(row['k_pct_to'],            *b['k_pct'], invert=True)
+        rB = _rate(row['babip_to'],            *b['babip'])
+        rX = _rate(row['xwoba_on_contact_to'], *b['xwoba_on_contact'])
+        rBR= _rate(row['barrel_pct_to'],       *b['barrel_pct'])
+        rHH= _rate(row['hard_hit_pct_to'],     *b['hard_hit_pct'])
+        rI = _rate(row['iso_to'],              *b['iso'])
+        rHR= _rate(row['hr_per_pa_to'],        *b['hr_per_pa'])
+        rBB= _rate(row['bb_pct_to'],           *b['bb_pct'])
+        rCH= _rate(row['chase_pct_to'],        *b['chase_pct'], invert=True)
+        rSB= _rate(row['sb_per_pa_to'],        *b['sb_per_pa'])
+
+        c_vals = [v for v in [rC, rK, rB, rX] if v is not None]
+        p_vals = [v for v in [rBR, rHH, rI, rHR] if v is not None]
+        d_vals = [v for v in [rBB, rCH] if v is not None]
+        if not (c_vals and p_vals and d_vals):
+            continue
+        CONTACT    = int(round(sum(c_vals) / len(c_vals)))
+        POWER      = int(round(sum(p_vals) / len(p_vals)))
+        DISCIPLINE = int(round(sum(d_vals) / len(d_vals)))
+        SB = rSB if rSB is not None else 50
+        cell = _bucket(CONTACT) + '/' + _bucket(POWER) + '/' + _bucket(DISCIPLINE)
+
+        info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
+        out.append({
+            'batter': int(row['batter']),
+            'player_name': info.get('player_name'),
+            'team': info.get('team'),
+            'year': yr,
+            'date': row['cutoff_date'].strftime('%Y-%m-%d'),
+            'pa_to': int(row['pa_to']),
+            'CONTACT': CONTACT, 'POWER': POWER, 'DISCIPLINE': DISCIPLINE, 'SB': SB,
+            'cell': cell,
+        })
+    print(f'  hitter snapshots: {len(out)} rows ({len(set((o["batter"], o["year"]) for o in out))} player-years)', flush=True)
+    return out
+
+
+def build_sp_snapshots():
+    """Per-(pitcher, year, snapshot_date) STUFF + CONTROL + Velo ratings.
+
+    SP rolling cache lacks MOVEMENT components (barrel%, hard_hit%, gb%,
+    xwoba_on_contact) — only STUFF/CONTROL/Velo are computable. Archetype label
+    is omitted for SP snapshots.
+    """
+    if not S_ROLLING.exists() or not S_SRC.exists():
+        print('  ⚠ SP rolling/source not found — skipping snapshot build')
+        return []
+    r = pd.read_csv(S_ROLLING)
+    src = pd.read_csv(S_SRC)
+    r['cutoff_date'] = pd.to_datetime(r['cutoff_date'])
+    name_lookup = (src.sort_values('year').groupby('pitcher')
+                   .agg({'player_name': 'last'}).to_dict('index'))
+
+    src['hr_per_bf'] = src['hr'] / src['tbf'].clip(lower=1)
+    BASELINE_COLS = ['k_pct', 'swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo', 'hr_per_bf']
+    baselines = {}
+    for yr, grp in src.groupby('year'):
+        baselines[int(yr)] = {c: (grp[c].mean(), grp[c].std()) for c in BASELINE_COLS}
+
+    r = r[r['gs_to'] >= 3].copy()
+    r['hr_per_bf_to'] = r['hr_to'] / r['tbf_to'].clip(lower=1)
+    if not len(r): return []
+
+    out = []
+    for _, row in r.iterrows():
+        yr = int(row['year'])
+        baseline_yr = yr - 1 if (yr - 1) in baselines else yr
+        if baseline_yr not in baselines:
+            continue
+        b = baselines[baseline_yr]
+
+        rK   = _rate(row['k_pct_to'],         *b['k_pct'])
+        rSW  = _rate(row['swstr_pct_to'],     *b['swstr_pct'])
+        rCSW = _rate(row['c_plus_swstr_to'],  *b['c_plus_swstr'])
+        rBB  = _rate(row['bb_pct_to'],        *b['bb_pct'], invert=True)
+        rV   = _rate(row['avg_velo_to'],      *b['avg_velo'])
+
+        s_vals = [v for v in [rK, rSW, rCSW] if v is not None]
+        if not (s_vals and rBB is not None):
+            continue
+        STUFF   = int(round(sum(s_vals) / len(s_vals)))
+        CONTROL = rBB
+        info = name_lookup.get(int(row['pitcher']), {'player_name': None})
+        nm = info.get('player_name')
+        if isinstance(nm, str) and ',' in nm:
+            a, c = nm.split(',', 1)
+            nm = f'{c.strip()} {a.strip()}'
+        out.append({
+            'pitcher': int(row['pitcher']),
+            'player_name': nm,
+            'year': yr,
+            'date': row['cutoff_date'].strftime('%Y-%m-%d'),
+            'gs_to': int(row['gs_to']),
+            'STUFF': STUFF, 'CONTROL': CONTROL,
+            'velo_rating': rV if rV is not None else 50,
+        })
+    print(f'  SP snapshots: {len(out)} rows ({len(set((o["pitcher"], o["year"]) for o in out))} pitcher-years)', flush=True)
+    return out
+
+
 def build_payload():
     h, s = assert_schema()
 
@@ -159,6 +325,10 @@ def build_payload():
     years = sorted(set(h['year'].unique().tolist() + s['year'].unique().tolist()))
     current_year = int(max(years))
 
+    print('Computing intra-season snapshots...', flush=True)
+    hitter_snapshots = build_hitter_snapshots()
+    sp_snapshots = build_sp_snapshots()
+
     return {
         'last_refresh': datetime.now().strftime('%Y-%m-%d %H:%M'),
         'years': [int(y) for y in years],
@@ -169,6 +339,8 @@ def build_payload():
         'sp_boundary': s_bound,
         'hitters': build_hitter_records(h),
         'sps': build_sp_records(s),
+        'hitter_snapshots': hitter_snapshots,
+        'sp_snapshots': sp_snapshots,
     }
 
 
