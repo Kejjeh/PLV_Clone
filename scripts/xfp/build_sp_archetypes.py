@@ -263,6 +263,14 @@ def build_ratings_panel(current_year=2026):
     qual['MOVEMENT'] = qual[['r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON']].mean(axis=1).round(0).astype(int)
     qual['CONTROL']  = qual['r_BB']
 
+    # Overall composite — mean of the three archetype-driving domains, then
+    # re-rated within year to a clean 20-80 distribution. Velo intentionally
+    # excluded since it's a sub-classifier, not part of the archetype identity.
+    qual['_OVERALL_raw'] = qual[['STUFF','MOVEMENT','CONTROL']].mean(axis=1)
+    qual['OVERALL'] = rating_20_80(qual['_OVERALL_raw'],
+                                    qual.groupby('year')['_OVERALL_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_OVERALL_raw'])
+
     # Velocity rating (sub-classifier within STUFF; not a 4th domain)
     qual['velo_rating'] = rating_20_80(qual['avg_velo'], g['avg_velo']).round(0).astype(int)
     qual['velo_tier'] = qual.apply(velo_tier, axis=1)
@@ -390,7 +398,7 @@ def main():
 
     # Master ratings CSV (human-readable)
     master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','data_tier',
-                   'STUFF','MOVEMENT','CONTROL','archetype','stuff_subtype','cell',
+                   'OVERALL','STUFF','MOVEMENT','CONTROL','archetype','stuff_subtype','cell',
                    'velo_rating','velo_tier','pitch_archetype','primary_group','secondary_group',
                    'age','age_tier','career_year',
                    'bd_S','bd_M','bd_C','boundary_distance','boundary_tier',

@@ -264,6 +264,14 @@ def build_ratings_panel(current_year=2026):
     qual['SB']         = rating_20_80(qual['_SB_raw'],         g2['_SB_raw']).round(0).astype(int)
     qual = qual.drop(columns=['_CONTACT_raw','_POWER_raw','_DISCIPLINE_raw','_SB_raw'])
 
+    # Overall composite — mean of the three archetype-driving domains, then
+    # re-rated within year to a clean 20-80 distribution. SB is intentionally
+    # excluded since it's an overlay, not part of the archetype identity.
+    qual['_OVERALL_raw'] = qual[['CONTACT','POWER','DISCIPLINE']].mean(axis=1)
+    qual['OVERALL'] = rating_20_80(qual['_OVERALL_raw'],
+                                    qual.groupby('year')['_OVERALL_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_OVERALL_raw'])
+
     # Age tier (added 2026-05-28)
     qual = attach_age(qual)
 
@@ -388,7 +396,7 @@ def main():
     # Master ratings CSV (human-readable)
     master_cols = [
         'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
-        'CONTACT','POWER','DISCIPLINE','SB',
+        'OVERALL','CONTACT','POWER','DISCIPLINE','SB',
         'archetype','contact_subtype','power_subtype','discipline_subtype',
         'sb_tier','spray_archetype','cell',
         'age','age_tier','career_year',

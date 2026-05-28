@@ -51,7 +51,7 @@ S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 # Whitelisted columns — drives payload size.
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
-    'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
+    'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
     'archetype', 'contact_subtype', 'power_subtype', 'discipline_subtype',
     'sb_tier', 'spray_archetype',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
@@ -62,7 +62,7 @@ H_COLS = [
 ]
 S_COLS = [
     'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 'data_tier',
-    'STUFF', 'MOVEMENT', 'CONTROL',
+    'OVERALL', 'STUFF', 'MOVEMENT', 'CONTROL',
     'archetype', 'stuff_subtype',
     'velo_rating', 'velo_tier', 'pitch_archetype', 'primary_group',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
@@ -105,10 +105,10 @@ def assert_schema():
         n = int(s.duplicated(['pitcher', 'year']).sum())
         _fail(f'sp master has {n} duplicate (pitcher, year) rows')
 
-    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'rank_in_year']:
+    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year']:
         n = int(h[c].isna().sum())
         if n: _fail(f'hitter master {c} has {n} null rows')
-    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'rank_in_year']:
+    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'OVERALL', 'rank_in_year']:
         n = int(s[c].isna().sum())
         if n: _fail(f'sp master {c} has {n} null rows')
 
@@ -134,7 +134,7 @@ def build_hitter_records(h: pd.DataFrame):
     df['fp_per_pa'] = df['fp_per_pa'].round(3)
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
-    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB']:
+    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL']:
         df[c] = df[c].astype(int)
     # Component r_* are ints in source; preserve.
     return json.loads(df.to_json(orient='records'))
@@ -146,7 +146,7 @@ def build_sp_records(s: pd.DataFrame):
     df['fp_per_start'] = df['fp_per_start'].round(2)
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
-    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'velo_rating']:
+    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'velo_rating', 'OVERALL']:
         df[c] = df[c].astype('Int64')
     return json.loads(df.to_json(orient='records'))
 
@@ -233,6 +233,7 @@ def build_hitter_snapshots():
         cell = _bucket(CONTACT) + '/' + _bucket(POWER) + '/' + _bucket(DISCIPLINE)
 
         info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
+        OVERALL = int(round((CONTACT + POWER + DISCIPLINE) / 3))
         out.append({
             'batter': int(row['batter']),
             'player_name': info.get('player_name'),
@@ -240,6 +241,7 @@ def build_hitter_snapshots():
             'year': yr,
             'date': row['cutoff_date'].strftime('%Y-%m-%d'),
             'pa_to': int(row['pa_to']),
+            'OVERALL': OVERALL,
             'CONTACT': CONTACT, 'POWER': POWER, 'DISCIPLINE': DISCIPLINE, 'SB': SB,
             'cell': cell,
         })
@@ -323,12 +325,14 @@ def build_sp_snapshots():
         if isinstance(nm, str) and ',' in nm:
             a, c = nm.split(',', 1)
             nm = f'{c.strip()} {a.strip()}'
+        OVERALL = int(round((STUFF + MOVEMENT + CONTROL) / 3))
         out.append({
             'pitcher': int(row['pitcher']),
             'player_name': nm,
             'year': yr,
             'date': row['cutoff_date'].strftime('%Y-%m-%d'),
             'gs_to': int(row['gs_to']),
+            'OVERALL': OVERALL,
             'STUFF': STUFF, 'MOVEMENT': MOVEMENT, 'CONTROL': CONTROL,
             'velo_rating': rV if rV is not None else 50,
             'cell': cell, 'archetype': arch,

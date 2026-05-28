@@ -149,12 +149,22 @@ td.player:hover { text-decoration: underline; }
                             padding: .35em .55em; font-family: 'IBM Plex Mono', monospace;
                             font-size: .9em; min-width: 320px; }
 .alltable-controls input:focus { outline: 0; border-color: var(--accent); }
+
+/* Horizontal scroll wrapper — works on both alltable and any wide table */
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch;
+                 border: 1px solid var(--border); border-radius: 4px;
+                 background: var(--panel); }
+.table-scroll::-webkit-scrollbar { height: 10px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--stripe); }
+.table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+.table-scroll::-webkit-scrollbar-thumb:hover { background: var(--dim); }
+
+table.alltable { min-width: max-content; width: max-content; margin-bottom: 0; }
+table.alltable th, table.alltable td { white-space: nowrap; }
 table.alltable th { cursor: pointer; user-select: none; }
 table.alltable th:hover { color: var(--accent); background: var(--stripe); }
 table.alltable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
 table.alltable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
-table.alltable { table-layout: auto; }
-table.alltable td { white-space: nowrap; }
 
 /* Quadrant — one big customizable scatter per side */
 .quad-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
@@ -332,6 +342,7 @@ HITTERS_TAB = """
   <div class="quad-controls">
     <label>X axis</label>
     <select id="h-x">
+      <option value="OVERALL">Overall</option>
       <option value="CONTACT">Contact</option>
       <option value="POWER" selected>Power</option>
       <option value="DISCIPLINE">Discipline</option>
@@ -339,6 +350,7 @@ HITTERS_TAB = """
     </select>
     <label>Y axis</label>
     <select id="h-y">
+      <option value="OVERALL">Overall</option>
       <option value="CONTACT" selected>Contact</option>
       <option value="POWER">Power</option>
       <option value="DISCIPLINE">Discipline</option>
@@ -356,7 +368,7 @@ HITTERS_TAB = """
     <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
     <span id="h-alltable-count" class="filter-summary"></span>
   </div>
-  <div style="overflow-x:auto;"><table id="h-alltable" class="alltable"></table></div>
+  <div class="table-scroll"><table id="h-alltable" class="alltable"></table></div>
 </div>
 """
 
@@ -390,6 +402,7 @@ PITCHERS_TAB = """
   <div class="quad-controls">
     <label>X axis</label>
     <select id="s-x">
+      <option value="OVERALL">Overall</option>
       <option value="STUFF">Stuff</option>
       <option value="MOVEMENT" selected>Movement</option>
       <option value="CONTROL">Control</option>
@@ -397,6 +410,7 @@ PITCHERS_TAB = """
     </select>
     <label>Y axis</label>
     <select id="s-y">
+      <option value="OVERALL">Overall</option>
       <option value="STUFF" selected>Stuff</option>
       <option value="MOVEMENT">Movement</option>
       <option value="CONTROL">Control</option>
@@ -414,7 +428,7 @@ PITCHERS_TAB = """
     <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
     <span id="s-alltable-count" class="filter-summary"></span>
   </div>
-  <div style="overflow-x:auto;"><table id="s-alltable" class="alltable"></table></div>
+  <div class="table-scroll"><table id="s-alltable" class="alltable"></table></div>
 </div>
 """
 
@@ -456,8 +470,16 @@ function snapshotDatesForYear(snaps, year) {
 }
 
 // ── Axis labels (display only) ──────────────────────────────────────────
-const HITTER_AXIS_LABEL = { CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
-const SP_AXIS_LABEL     = { STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
+const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
+const SP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
+
+// Convert SCREAMING_SNAKE_CASE labels to "Title Case" for display
+function prettyLabel(s) {
+  if (s == null || s === '') return s;
+  return String(s).split('_').map(w =>
+    w ? (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) : w
+  ).join(' ');
+}
 
 // ── Archetype category classification ──────────────────────────────────
 // Hitters: every cell -> category. Categories: ELITE, POWER, CONTACT, DISCIPLINE, AVERAGE, BELOW.
@@ -577,16 +599,16 @@ const state = {
   sX: 'MOVEMENT', sY: 'STUFF',
   hSnapAt: null, hSnapVs: null, hSnapSort: 'net',
   sSnapAt: null, sSnapVs: null, sSnapSort: 'net',
-  // All-players table state — initial sort by FP descending
-  hTblSort: { col: 'fp_per_pa', dir: 'desc' },
-  sTblSort: { col: 'fp_per_start', dir: 'desc' },
+  // All-players table state — initial sort by Overall descending
+  hTblSort: { col: 'OVERALL', dir: 'desc' },
+  sTblSort: { col: 'OVERALL', dir: 'desc' },
   hTblQuery: '',
   sTblQuery: '',
 };
 
 // Inline badge for partial-season players
 function partialBadge(r) {
-  return r && r.data_tier === 'PARTIAL' ? ' <span class="badge partial">PARTIAL</span>' : '';
+  return r && r.data_tier === 'PARTIAL' ? ' <span class="badge partial">Partial</span>' : '';
 }
 
 // ── Pearson r ──────────────────────────────────────────────────────────
@@ -675,14 +697,14 @@ function filterRows(rows, role) {
 function hoverText(r, role) {
   if (role === 'hitter') {
     return `<b>${r.player_name}</b> ${r.year} (${r.team})<br>`
-         + `C=${r.CONTACT} P=${r.POWER} D=${r.DISCIPLINE} SB=${r.SB}<br>`
-         + `${r.archetype} · ${r.age_tier || ''} · ${r.boundary_tier}<br>`
-         + `fp/pa = ${(r.fp_per_pa||0).toFixed(3)}`;
+         + `Overall=${r.OVERALL} · C=${r.CONTACT} P=${r.POWER} D=${r.DISCIPLINE} SB=${r.SB}<br>`
+         + `${prettyLabel(r.archetype)} · ${prettyLabel(r.age_tier || '')} · ${prettyLabel(r.boundary_tier)}<br>`
+         + `FP/PA = ${(r.fp_per_pa||0).toFixed(3)}`;
   }
   return `<b>${r.player_name}</b> ${r.year}<br>`
-       + `S=${r.STUFF} M=${r.MOVEMENT} C=${r.CONTROL} velo=${r.velo_rating}<br>`
-       + `${r.archetype} · ${r.age_tier || ''} · ${r.boundary_tier}<br>`
-       + `fp/start = ${(r.fp_per_start||0).toFixed(2)}`;
+       + `Overall=${r.OVERALL} · S=${r.STUFF} M=${r.MOVEMENT} C=${r.CONTROL} velo=${r.velo_rating}<br>`
+       + `${prettyLabel(r.archetype)} · ${prettyLabel(r.age_tier || '')} · ${prettyLabel(r.boundary_tier)}<br>`
+       + `FP/start = ${(r.fp_per_start||0).toFixed(2)}`;
 }
 
 function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
@@ -725,9 +747,9 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
     const cat = catMap[label] || 'BELOW';
     return {
       x: g.x, y: g.y,
-      name: label,
+      name: prettyLabel(label),
       legendgroup: cat,
-      legendgrouptitle: { text: cat },
+      legendgrouptitle: { text: prettyLabel(cat) },
       mode: 'markers', type: 'scattergl',
       text: g.txt, hovertemplate: '%{text}<extra></extra>',
       customdata: g.ids,
@@ -761,10 +783,10 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
   const annotations = [];
   if (xRange && yRange) {
     annotations.push(
-      { x:70, y:75, text:'PLUS both', showarrow:false, font:{ color:'#7fb069', size:10, family:'IBM Plex Mono' } },
+      { x:70, y:75, text:'Plus both', showarrow:false, font:{ color:'#7fb069', size:10, family:'IBM Plex Mono' } },
       { x:30, y:75, text:`+ ${axisLabel[yKey]} only`, showarrow:false, font:{ color:'#d4a945', size:10, family:'IBM Plex Mono' } },
       { x:70, y:25, text:`+ ${axisLabel[xKey]} only`, showarrow:false, font:{ color:'#d4a945', size:10, family:'IBM Plex Mono' } },
-      { x:30, y:25, text:'MINUS both', showarrow:false, font:{ color:'#c1666b', size:10, family:'IBM Plex Mono' } },
+      { x:30, y:25, text:'Minus both', showarrow:false, font:{ color:'#c1666b', size:10, family:'IBM Plex Mono' } },
     );
   }
 
@@ -819,34 +841,36 @@ function renderArchetypeTables(rows, role, targetId) {
   let lastCat = null;
   arches.forEach(({arch, rows: rs, mean, cat}) => {
     if (cat !== lastCat) {
-      html += `<h3 style="color:var(--dim);font-size:.78em;text-transform:uppercase;letter-spacing:.15em;margin-top:1.2em;border-bottom:1px solid var(--faint);padding-bottom:.3em;">${cat}</h3>`;
+      html += `<h3 style="color:var(--dim);font-size:.85em;letter-spacing:.05em;margin-top:1.2em;border-bottom:1px solid var(--faint);padding-bottom:.3em;">${prettyLabel(cat)}</h3>`;
       lastCat = cat;
     }
     rs.sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0));
     const desc = archDesc[arch] || '';
-    html += `<details><summary>${arch}<span class="count">n=${rs.length}, mean ${fpKey}=${mean.toFixed(role==='hitter'?3:2)}</span><span class="desc">${desc}</span></summary><table><thead>`;
+    html += `<details><summary>${prettyLabel(arch)}<span class="count">n=${rs.length}, mean ${fpKey}=${mean.toFixed(role==='hitter'?3:2)}</span><span class="desc">${desc}</span></summary><table><thead>`;
     if (role === 'hitter') {
-      html += '<tr><th class="num">#</th><th>Player</th><th>Team</th><th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th></tr></thead><tbody>';
+      html += '<tr><th class="num">#</th><th>Player</th><th>Team</th><th class="num">Overall</th><th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
         html += `<tr><td class="num">${i+1}</td>`
               + `<td class="player" data-role="hitter" data-id="${r.batter}">${r.player_name}${partialBadge(r)}</td>`
               + `<td>${r.team||''}</td>`
+              + `<td class="num"><b>${r.OVERALL}</b></td>`
               + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
               + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
-              + `<td>${r.sb_tier||''}</td><td>${r.age_tier||''}</td>`
-              + `<td>${r.boundary_tier||''}</td>`
+              + `<td>${prettyLabel(r.sb_tier||'')}</td><td>${prettyLabel(r.age_tier||'')}</td>`
+              + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
               + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
               + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
       });
     } else {
-      html += '<tr><th class="num">#</th><th>Pitcher</th><th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th></tr></thead><tbody>';
+      html += '<tr><th class="num">#</th><th>Pitcher</th><th class="num">Overall</th><th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th></tr></thead><tbody>';
       rs.forEach((r, i) => {
         html += `<tr><td class="num">${i+1}</td>`
               + `<td class="player" data-role="sp" data-id="${r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
+              + `<td class="num"><b>${r.OVERALL}</b></td>`
               + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
               + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating??''}</td>`
-              + `<td>${r.velo_tier||''}</td><td>${r.age_tier||''}</td>`
-              + `<td>${r.boundary_tier||''}</td>`
+              + `<td>${prettyLabel(r.velo_tier||'')}</td><td>${prettyLabel(r.age_tier||'')}</td>`
+              + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
               + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
               + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
       });
@@ -863,21 +887,22 @@ function renderArchetypeTables(rows, role, targetId) {
 function renderLeaderboard(rows, role, targetId) {
   const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
   const top = rows.slice().sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0)).slice(0, 15);
-  let html = '<table><thead><tr><th class="num">#</th><th>Player</th>';
+  let html = '<table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Overall</th>';
   if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
   else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
     html += `<tr><td class="num">${i+1}</td>`
-          + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}${partialBadge(r)}</td>`;
+          + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
+          + `<td class="num"><b>${r.OVERALL}</b></td>`;
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
-            + `<td>${r.archetype}</td><td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`;
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`;
     } else {
       html += `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td>`
-            + `<td>${r.archetype}</td><td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`;
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`;
     }
     html += '</tr>';
   });
@@ -910,9 +935,9 @@ function renderStackedArchDist(divId, rows, catMap, catOrder, colorMap, title) {
     return a.localeCompare(b);
   });
   const traces = labels.map(label => ({
-    name: label,
+    name: prettyLabel(label),
     legendgroup: catMap[label] || 'BELOW',
-    legendgrouptitle: { text: catMap[label] || 'BELOW' },
+    legendgrouptitle: { text: prettyLabel(catMap[label] || 'BELOW') },
     x: years,
     y: years.map(y => byYrArch[`${y}|${label}`] || 0),
     type: 'bar',
@@ -946,7 +971,7 @@ function renderBoundaryGlossary() {
     ['EDGE','NEAR_EDGE','SOLID'].forEach(t => {
       const v = s.data[t];
       if (!v) return;
-      html += `<tr><td>${t}</td><td class="num">${v.n_transitions}</td><td class="num">${v.retention_pct}%</td></tr>`;
+      html += `<tr><td>${prettyLabel(t)}</td><td class="num">${v.n_transitions}</td><td class="num">${v.retention_pct}%</td></tr>`;
     });
     html += '</tbody></table></div>';
   });
@@ -962,33 +987,39 @@ function openModal(role, id) {
   let html = `<h2>${last.player_name}${partialBadge(last)}</h2>`;
   if (role === 'hitter') html += `<div class="latest-line">Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${last.age_tier})</div>`;
   else                    html += `<div class="latest-line">Latest: age ${last.age ?? '?'} (${last.age_tier})</div>`;
-  html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${r.archetype}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
-  html += '<table><thead><tr><th class="num">Year</th><th class="num">Age</th>';
+  html += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${prettyLabel(r.archetype)}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
+  html += '<div class="table-scroll"><table><thead><tr><th class="num">Year</th><th class="num">Age</th><th class="num">Overall</th>';
   if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th>';
   else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th>';
   html += '</tr></thead><tbody>';
   sorted.forEach(r => {
+    const sub = role === 'hitter'
+      ? [r.contact_subtype, r.power_subtype, r.discipline_subtype, r.sb_tier]
+      : [r.stuff_subtype, r.velo_tier, r.pitch_archetype];
+    const subStr = sub.filter(Boolean).map(prettyLabel).join(' / ');
     if (role === 'hitter') {
       html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
+            + `<td class="num"><b>${r.OVERALL}</b></td>`
             + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
-            + `<td>${r.archetype}</td>`
-            + `<td><span style="color:var(--dim);">${[r.contact_subtype, r.power_subtype, r.discipline_subtype, r.sb_tier].filter(Boolean).join(' / ')}</span></td>`
-            + `<td>${r.boundary_tier||''}</td>`
+            + `<td>${prettyLabel(r.archetype)}</td>`
+            + `<td><span style="color:var(--dim);">${subStr}</span></td>`
+            + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
       html += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
+            + `<td class="num"><b>${r.OVERALL}</b></td>`
             + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating ?? ''}</td>`
-            + `<td>${r.archetype}</td>`
-            + `<td><span style="color:var(--dim);">${[r.stuff_subtype, r.velo_tier, r.pitch_archetype].filter(Boolean).join(' / ')}</span></td>`
-            + `<td>${r.boundary_tier||''}</td>`
+            + `<td>${prettyLabel(r.archetype)}</td>`
+            + `<td><span style="color:var(--dim);">${subStr}</span></td>`
+            + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
             + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     }
   });
-  html += '</tbody></table>';
+  html += '</tbody></table></div>';
   html += '<div id="modal-spark" style="height: 300px; margin-top: 1em;"></div>';
   // Snapshot trajectory (only when Single Year mode + snapshots exist for that year)
   const snapKey = `${id}|${state.singleYear}`;
@@ -1095,26 +1126,28 @@ function runSearch(q) {
 
 // ── All-players sortable table ────────────────────────────────────
 // Column definitions: { key, label, num (right-align + numeric sort), w (optional width) }
+// `pretty: true` means the cell's text value should pass through prettyLabel().
 const H_TBL_COLS = [
   { key: 'player_name', label: 'Player', text: true },
   { key: 'team',        label: 'Tm', text: true },
   { key: 'year',        label: 'Yr',  num: true },
   { key: 'pa',          label: 'PA',  num: true },
+  { key: 'fp_per_pa',   label: 'FP/PA', num: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
   { key: 'CONTACT',     label: 'C',   num: true },
   { key: 'POWER',       label: 'P',   num: true },
   { key: 'DISCIPLINE',  label: 'D',   num: true },
   { key: 'SB',          label: 'SB',  num: true },
-  { key: 'archetype',           label: 'Archetype', text: true },
-  { key: 'contact_subtype',     label: 'Contact sub', text: true },
-  { key: 'power_subtype',       label: 'Power sub',   text: true },
-  { key: 'discipline_subtype',  label: 'Disc sub',    text: true },
-  { key: 'sb_tier',             label: 'SB tier', text: true },
-  { key: 'spray_archetype',     label: 'Spray',   text: true },
+  { key: 'archetype',           label: 'Archetype', text: true, pretty: true },
+  { key: 'contact_subtype',     label: 'Contact sub', text: true, pretty: true },
+  { key: 'power_subtype',       label: 'Power sub',   text: true, pretty: true },
+  { key: 'discipline_subtype',  label: 'Disc sub',    text: true, pretty: true },
+  { key: 'sb_tier',             label: 'SB tier', text: true, pretty: true },
+  { key: 'spray_archetype',     label: 'Spray',   text: true, pretty: true },
   { key: 'age',                 label: 'Age', num: true },
-  { key: 'age_tier',            label: 'Age tier', text: true },
-  { key: 'boundary_tier',       label: 'Bnd', text: true },
-  { key: 'data_tier',           label: 'Tier', text: true },
-  { key: 'fp_per_pa',           label: 'FP/PA', num: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 'age_tier',            label: 'Age tier', text: true, pretty: true },
+  { key: 'boundary_tier',       label: 'Bnd', text: true, pretty: true },
+  { key: 'data_tier',           label: 'Tier', text: true, pretty: true },
   { key: 'rank_in_year',        label: 'Rank', num: true },
 ];
 
@@ -1123,20 +1156,21 @@ const S_TBL_COLS = [
   { key: 'year',        label: 'Yr',  num: true },
   { key: 'gs',          label: 'GS',  num: true },
   { key: 'tbf',         label: 'TBF', num: true },
+  { key: 'fp_per_start', label: 'FP/start', num: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
   { key: 'STUFF',       label: 'S',   num: true },
   { key: 'MOVEMENT',    label: 'M',   num: true },
   { key: 'CONTROL',     label: 'C',   num: true },
   { key: 'velo_rating', label: 'Velo', num: true },
-  { key: 'archetype',           label: 'Archetype', text: true },
-  { key: 'stuff_subtype',       label: 'Stuff sub', text: true },
-  { key: 'velo_tier',           label: 'Velo tier', text: true },
-  { key: 'pitch_archetype',     label: 'Pitch arch', text: true },
-  { key: 'primary_group',       label: 'Primary', text: true },
+  { key: 'archetype',           label: 'Archetype', text: true, pretty: true },
+  { key: 'stuff_subtype',       label: 'Stuff sub', text: true, pretty: true },
+  { key: 'velo_tier',           label: 'Velo tier', text: true, pretty: true },
+  { key: 'pitch_archetype',     label: 'Pitch arch', text: true, pretty: true },
+  { key: 'primary_group',       label: 'Primary', text: true, pretty: true },
   { key: 'age',                 label: 'Age', num: true },
-  { key: 'age_tier',            label: 'Age tier', text: true },
-  { key: 'boundary_tier',       label: 'Bnd', text: true },
-  { key: 'data_tier',           label: 'Tier', text: true },
-  { key: 'fp_per_start',        label: 'FP/start', num: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'age_tier',            label: 'Age tier', text: true, pretty: true },
+  { key: 'boundary_tier',       label: 'Bnd', text: true, pretty: true },
+  { key: 'data_tier',           label: 'Tier', text: true, pretty: true },
   { key: 'rank_in_year',        label: 'Rank', num: true },
 ];
 
@@ -1205,13 +1239,15 @@ function renderAllTable(rows, role) {
     cols.forEach(c => {
       let v = r[c.key];
       if (c.fmt) v = c.fmt(v);
+      else if (c.pretty) v = (v == null ? '' : prettyLabel(v));
       else if (v == null) v = '';
       const cellCls = (c.num ? 'num' : '') + (c.key === 'player_name' ? ' player' : '');
       const tier = r.data_tier === 'PARTIAL' && c.key === 'player_name' ? partialBadge(r) : '';
+      const display = c.bold ? `<b>${v}</b>` : v;
       if (c.key === 'player_name') {
-        h += `<td class="${cellCls.trim()}" data-role="${role}" data-id="${r[idKey]}">${v}${tier}</td>`;
+        h += `<td class="${cellCls.trim()}" data-role="${role}" data-id="${r[idKey]}">${display}${tier}</td>`;
       } else {
-        h += `<td class="${cellCls.trim()}">${v}</td>`;
+        h += `<td class="${cellCls.trim()}">${display}</td>`;
       }
     });
     h += '</tr>';
