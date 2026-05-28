@@ -66,6 +66,13 @@ data/research/xfp_cache/*.parquet.bak
 # Keep aggregated CSVs in xfp_cache (training reference, smaller)
 !data/research/xfp_cache/*.csv
 
+# Archetype career panels — regenerated daily by build_*_archetypes.py
+data/research/hitter_archetype_career_panel.parquet
+data/research/sp_archetype_career_panel.parquet
+
+# Research archive — historical snapshots, local-only (see _archive/README.md)
+data/research/_archive/
+
 # Exploratory scratch (underscore-prefixed scripts + their outputs)
 scripts/_*.py
 data/outputs/_*

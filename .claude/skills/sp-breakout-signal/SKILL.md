@@ -220,7 +220,7 @@ stuff_contact_composite ("SigStuff") fires when:
 
 **Why the fp_proxy >= 0 floor was added (2026-05-28):**
 Per-start audit across 21,864 SP-start snapshots 2021-2025
-(`data/research/sp_signal_audit_2021_2025.parquet`) found that adding an absolute
+(`data/research/_archive/signal_validation/sp_signal_audit_2021_2025.parquet`) found that adding an absolute
 `fp_proxy >= 0` floor to Signal H lifts the Strong TP rate (RoS fp_proxy ≥ +0.02)
 from 28% → 38% pooled — a +10pp gain — with sign-consistency in 5/5 training years.
 Canonical false positive correctly disqualified: **Walbert Ureña 2026** (whiff 27.7%,
