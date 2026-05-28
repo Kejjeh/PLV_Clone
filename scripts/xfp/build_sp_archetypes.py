@@ -263,10 +263,15 @@ def build_ratings_panel(current_year=2026):
     qual['MOVEMENT'] = qual[['r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON']].mean(axis=1).round(0).astype(int)
     qual['CONTROL']  = qual['r_BB']
 
-    # Overall composite — mean of the three archetype-driving domains, then
-    # re-rated within year to a clean 20-80 distribution. Velo intentionally
-    # excluded since it's a sub-classifier, not part of the archetype identity.
-    qual['_OVERALL_raw'] = qual[['STUFF','MOVEMENT','CONTROL']].mean(axis=1)
+    # Overall composite — weighted mean of the three archetype-driving domains,
+    # then re-rated within year to a clean 20-80 distribution. Weights derived
+    # from OLS regression of fp_per_start ~ STUFF + MOVEMENT + CONTROL on the
+    # FULL-tier pool (n=1,205, R^2=0.74). Empirical: 0.49/0.34/0.17; rounded.
+    # Velo intentionally excluded (sub-classifier, not part of archetype identity).
+    OVERALL_W = {'STUFF': 0.50, 'MOVEMENT': 0.35, 'CONTROL': 0.15}
+    qual['_OVERALL_raw'] = (qual['STUFF']    * OVERALL_W['STUFF']
+                          + qual['MOVEMENT'] * OVERALL_W['MOVEMENT']
+                          + qual['CONTROL']  * OVERALL_W['CONTROL'])
     qual['OVERALL'] = rating_20_80(qual['_OVERALL_raw'],
                                     qual.groupby('year')['_OVERALL_raw']).round(0).astype(int)
     qual = qual.drop(columns=['_OVERALL_raw'])

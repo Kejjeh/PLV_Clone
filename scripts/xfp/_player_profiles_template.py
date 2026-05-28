@@ -353,6 +353,14 @@ HOME_TAB = """
       Contact / Power / Discipline bucket. SPs: Stuff / Movement / Control.
       SB (hitters) and Velo (SPs) are overlay ratings — shown alongside but
       excluded from the archetype label and from comp-matching distance.</p>
+      <p><b>Overall.</b> Empirically-weighted composite of the three
+      archetype-driving domains, re-rated within year to a clean 20-80
+      distribution. Weights from OLS regression of FP rate on the
+      domain ratings, full-season pool: <i>hitters Contact 0.55 / Power 0.40
+      / Discipline 0.05 (n=3,163, R²=0.73); SPs Stuff 0.50 / Movement 0.35
+      / Control 0.15 (n=1,205, R²=0.74).</i> Year-by-year weights vary by
+      ±2-3pp. Overall correlates with realized FP rate at r=0.86 (hitters)
+      and r=0.81 (SPs).</p>
       <p><b>Archetype color groupings.</b> Within the legend, archetypes are
       grouped by primary trait family: hitters use ELITE / POWER / CONTACT /
       DISCIPLINE / AVERAGE / BELOW; SPs use ELITE / STUFF / MOVEMENT / CONTROL

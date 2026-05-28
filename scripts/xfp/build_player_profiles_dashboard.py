@@ -233,7 +233,8 @@ def build_hitter_snapshots():
         cell = _bucket(CONTACT) + '/' + _bucket(POWER) + '/' + _bucket(DISCIPLINE)
 
         info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
-        OVERALL = int(round((CONTACT + POWER + DISCIPLINE) / 3))
+        # Weighted Overall — same coefficients as the master CSV builder.
+        OVERALL = int(round(CONTACT * 0.55 + POWER * 0.40 + DISCIPLINE * 0.05))
         out.append({
             'batter': int(row['batter']),
             'player_name': info.get('player_name'),
@@ -325,7 +326,8 @@ def build_sp_snapshots():
         if isinstance(nm, str) and ',' in nm:
             a, c = nm.split(',', 1)
             nm = f'{c.strip()} {a.strip()}'
-        OVERALL = int(round((STUFF + MOVEMENT + CONTROL) / 3))
+        # Weighted Overall — same coefficients as the master CSV builder.
+        OVERALL = int(round(STUFF * 0.50 + MOVEMENT * 0.35 + CONTROL * 0.15))
         out.append({
             'pitcher': int(row['pitcher']),
             'player_name': nm,
