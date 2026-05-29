@@ -1,0 +1,11 @@
+metric,column,n_pairs,r,verdict
+SWING_MISS (swstr_pct),swstr_pct,1014,0.6293,KEEP
+SWING_MISS (c_plus_swstr CSW),c_plus_swstr,1014,0.5072,KEEP
+CALLED_STRIKE (called_strike rate),called_strike_rate,1014,0.6149,KEEP
+DAMAGE_SUPP (xwoba_contact),xwoba_contact,1014,0.1189,DROP
+DAMAGE_SUPP (barrel_pct),barrel_pct,1014,0.2019,MAYBE
+GB_TENDENCY (gb_pct),gb_pct,1014,0.7136,KEEP
+WALK_AVOID (bb_pct),bb_pct,1014,0.4438,KEEP
+velo_rating (avg_velo),avg_velo,1014,0.9272,KEEP
+"K_RATE (k_pct, reference)",k_pct,1014,0.5717,KEEP
+xwoba_per_pa (overall reference),xwoba_per_pa,1014,0.2014,MAYBE

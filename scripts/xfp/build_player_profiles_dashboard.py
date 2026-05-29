@@ -40,10 +40,13 @@ OUT_PUB = REPO / 'xfp-model/docs/player_profiles.html'
 
 H_MASTER = RES / 'hitter_ratings_master.csv'
 S_MASTER = RES / 'sp_ratings_master.csv'
+R_MASTER = RES / 'rp_ratings_master.csv'
 H_DEFS   = RES / 'hitter_archetype_definitions.json'
 S_DEFS   = RES / 'sp_archetype_definitions.json'
+R_DEFS   = RES / 'rp_archetype_definitions.json'
 H_BOUND  = RES / 'hitter_boundary_validation.json'
 S_BOUND  = RES / 'sp_boundary_validation.json'
+R_BOUND  = RES / 'rp_boundary_validation.json'
 
 H_ROLLING = CACHE / 'rolling_hitters_2018_2026.csv'
 S_ROLLING = CACHE / 'rolling_pitchers_2018_2026.csv'
@@ -81,6 +84,26 @@ S_COLS = [
     'r_BB',
 ]
 
+# RP master CSV columns. Different schema from SP:
+#  - usage cols: g/sv/hld/ip_per_appearance instead of gs/tbf
+#  - 3 main domains: STUFF / CONTROL / BATTED_BALL (vs SP's STUFF/MOVEMENT/CONTROL)
+#  - 6 sub-domains: SWING_MISS, CALLED_STRIKE, WALK_AVOID, VELO, GB_TENDENCY, BULK_IP
+#    (vs SP's SWING_MISS, CALLED_STRIKE, DAMAGE_SUPP, GB_TENDENCY, WALK_AVOID, velo_rating)
+#  - tags: CLOSER / HIGH_LEVERAGE / MULTI_INNING_BULK / OBVIOUS_PLATOON_GUY
+R_COLS = [
+    'pitcher', 'year', 'player_name', 'team_abbr', 'g', 'gs', 'tbf', 'sv', 'hld',
+    'ip_per_appearance', 'fp_per_g', 't1_fp_projection', 't2_fp_projection',
+    'data_tier',
+    'OVERALL', 'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag',
+    'STUFF', 'CONTROL', 'BATTED_BALL',
+    'SWING_MISS', 'CALLED_STRIKE', 'VELO', 'WALK_AVOID', 'GB_TENDENCY', 'BULK_IP',
+    'archetype', 'stuff_subtype', 'cell', 'velo_tier',
+    'age', 'age_tier', 'boundary_tier', 'rank_in_year',
+    'CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY',
+    'r_K',
+]
+
+
 
 def _fail(msg: str):
     print(f'  ERR  {msg}', flush=True)
@@ -96,17 +119,21 @@ def pretty_sp_name(s):
 
 
 def assert_schema():
-    for p in [H_MASTER, S_MASTER, H_DEFS, S_DEFS, H_BOUND, S_BOUND]:
+    for p in [H_MASTER, S_MASTER, R_MASTER,
+              H_DEFS, S_DEFS, R_DEFS, H_BOUND, S_BOUND, R_BOUND]:
         if not p.exists():
             _fail(f'missing input: {p}')
 
     h = pd.read_csv(H_MASTER)
     s = pd.read_csv(S_MASTER)
+    rp = pd.read_csv(R_MASTER)
 
     miss_h = [c for c in H_COLS if c not in h.columns]
     miss_s = [c for c in S_COLS if c not in s.columns]
+    miss_r = [c for c in R_COLS if c not in rp.columns]
     if miss_h: _fail(f'hitter master missing cols: {miss_h}')
     if miss_s: _fail(f'sp master missing cols: {miss_s}')
+    if miss_r: _fail(f'rp master missing cols: {miss_r}')
 
     if h.duplicated(['batter', 'year']).any():
         n = int(h.duplicated(['batter', 'year']).sum())
@@ -114,6 +141,9 @@ def assert_schema():
     if s.duplicated(['pitcher', 'year']).any():
         n = int(s.duplicated(['pitcher', 'year']).sum())
         _fail(f'sp master has {n} duplicate (pitcher, year) rows')
+    if rp.duplicated(['pitcher', 'year']).any():
+        n = int(rp.duplicated(['pitcher', 'year']).sum())
+        _fail(f'rp master has {n} duplicate (pitcher, year) rows')
 
     for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year',
               'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
@@ -126,21 +156,26 @@ def assert_schema():
               'STRIKE_THROWING']:
         n = int(s[c].isna().sum())
         if n: _fail(f'sp master {c} has {n} null rows')
+    for c in ['STUFF', 'CONTROL', 'BATTED_BALL', 'OVERALL',
+              'SWING_MISS', 'CALLED_STRIKE', 'VELO', 'WALK_AVOID',
+              'GB_TENDENCY', 'BULK_IP']:
+        n = int(rp[c].isna().sum())
+        if n: _fail(f'rp master {c} has {n} null rows')
 
     # Definitions and boundary JSONs load + have expected shape
-    for p in [H_DEFS, S_DEFS]:
+    for p in [H_DEFS, S_DEFS, R_DEFS]:
         with open(p, encoding='utf-8') as f:
             d = json.load(f)
         if not isinstance(d, dict) or not d:
             _fail(f'archetype defs malformed: {p}')
-    for p in [H_BOUND, S_BOUND]:
+    for p in [H_BOUND, S_BOUND, R_BOUND]:
         with open(p, encoding='utf-8') as f:
             d = json.load(f)
         for k in ['EDGE', 'NEAR_EDGE', 'SOLID']:
             if k not in d:
                 _fail(f'boundary validation missing {k} in {p}')
 
-    return h, s
+    return h, s, rp
 
 
 def build_hitter_records(h: pd.DataFrame):
@@ -168,7 +203,74 @@ def build_sp_records(s: pd.DataFrame):
               'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID',
               'STRIKE_THROWING']:
         df[c] = df[c].astype('Int64')
-    return json.loads(df.to_json(orient='records'))
+    recs = json.loads(df.to_json(orient='records'))
+    for r in recs:
+        r['role'] = 'SP'
+    return recs
+
+
+def build_rp_records(rp: pd.DataFrame):
+    """Map RP master rows to the same record shape SP rows use, plus RP-specific
+    tags and the unique BATTED_BALL / BULK_IP / VELO sub-domain fields.
+
+    Schema bridging so the existing pitcher table/leaderboard/quadrant code paths
+    consume RP rows with minimal branching:
+
+        gs            ← g                  (appearance count)
+        fp_per_start  ← fp_per_g           (RP rate = FP per appearance)
+        MOVEMENT      ← BATTED_BALL        (alias so the S/M/C triplet renders)
+        velo_rating   ← VELO               (matches SP velo_rating semantics)
+
+    The original BATTED_BALL / BULK_IP / VELO fields are kept on each record
+    so the modal can render the correct RP-domain labels and weights.
+    """
+    df = rp[R_COLS].copy()
+    df['player_name'] = df['player_name'].apply(pretty_sp_name)
+    df['fp_per_g'] = df['fp_per_g'].round(2)
+
+    for c in ['age', 'rank_in_year', 'g', 'gs', 'tbf', 'sv', 'hld']:
+        df[c] = df[c].astype('Int64')
+    for c in ['STUFF', 'CONTROL', 'BATTED_BALL', 'OVERALL',
+              'SWING_MISS', 'CALLED_STRIKE', 'VELO', 'WALK_AVOID',
+              'GB_TENDENCY', 'BULK_IP']:
+        df[c] = df[c].astype('Int64')
+
+    # Bridge fields so the existing SP-shaped renderers work for RP rows too.
+    df['fp_per_start'] = df['fp_per_g']
+    df['MOVEMENT'] = df['BATTED_BALL']
+    df['velo_rating'] = df['VELO']
+    df['team'] = df['team_abbr']
+
+    # RP-specific fields the SP path doesn't have — null them so column lookups
+    # don't NaN-out the table cells.
+    df['DAMAGE_SUPP'] = None
+    df['STRIKE_THROWING'] = None
+    df['pitch_archetype'] = None
+    df['primary_group'] = None
+    df['r_SwStr'] = None
+    df['r_CSW'] = None
+    df['r_HRrate'] = None
+    df['r_Barrel'] = None
+    df['r_HardHit'] = None
+    df['r_GB'] = None
+    df['r_xCON'] = None
+    df['r_BB'] = None
+
+    # Cast tag bools to plain python bool so JSON serializes cleanly.
+    for c in ['CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY']:
+        df[c] = df[c].astype(bool)
+
+    recs = json.loads(df.to_json(orient='records'))
+    for r in recs:
+        r['role'] = 'RP'
+        # Compact tag list for chip rendering in the modal.
+        tags = []
+        if r.get('CLOSER'):            tags.append('CLOSER')
+        if r.get('HIGH_LEVERAGE'):     tags.append('HIGH_LEVERAGE')
+        if r.get('MULTI_INNING_BULK'): tags.append('MULTI_INNING_BULK')
+        if r.get('OBVIOUS_PLATOON_GUY'): tags.append('PLATOON')
+        r['rp_tags'] = tags
+    return recs
 
 
 def _bucket(v):
@@ -465,35 +567,41 @@ def annotate_current_year_rows(records: list[dict], current_year: int,
             continue
         key = _norm_name(r.get('player_name') or '')
         hit = roster_map.get(key)
+        # Role-implied fallback when ESPN has no entry: SP→['SP'], RP→['RP'].
+        implied = ['SP'] if role == 'sp' else (['RP'] if role == 'rp' else [])
         if hit is None:
             r['roster_status'] = 'fa'
-            # No ESPN row -> fall back to role-implied position
-            r['eligible_positions'] = ['SP'] if role == 'sp' else []
+            r['eligible_positions'] = implied
             n_fa += 1
         else:
             if hit['is_mine']:
                 r['roster_status'] = 'mine'; n_mine += 1
             else:
                 r['roster_status'] = 'taken'; n_taken += 1
-            r['eligible_positions'] = hit['eligible_positions'] or (
-                ['SP'] if role == 'sp' else [])
+            r['eligible_positions'] = hit['eligible_positions'] or implied
     print(f'  {role}: mine={n_mine} taken={n_taken} fa={n_fa} '
           f'(current_year={current_year})', flush=True)
 
 
 def build_payload():
-    h, s = assert_schema()
+    h, s, rp = assert_schema()
 
     with open(H_DEFS, encoding='utf-8') as f:
         h_defs = json.load(f)
     with open(S_DEFS, encoding='utf-8') as f:
         s_defs = json.load(f)
+    with open(R_DEFS, encoding='utf-8') as f:
+        r_defs = json.load(f)
     with open(H_BOUND, encoding='utf-8') as f:
         h_bound = json.load(f)
     with open(S_BOUND, encoding='utf-8') as f:
         s_bound = json.load(f)
+    with open(R_BOUND, encoding='utf-8') as f:
+        r_bound = json.load(f)
 
-    years = sorted(set(h['year'].unique().tolist() + s['year'].unique().tolist()))
+    years = sorted(set(h['year'].unique().tolist()
+                       + s['year'].unique().tolist()
+                       + rp['year'].unique().tolist()))
     current_year = int(max(years))
 
     print('Computing intra-season snapshots...', flush=True)
@@ -502,26 +610,19 @@ def build_payload():
 
     hitter_records = build_hitter_records(h)
     sp_records = build_sp_records(s)
+    rp_records = build_rp_records(rp)
 
     print('Fetching ESPN roster map (once)...', flush=True)
     roster_map = fetch_espn_roster_map()
     annotate_current_year_rows(hitter_records, current_year, roster_map, 'hitter')
     annotate_current_year_rows(sp_records,     current_year, roster_map, 'sp')
+    annotate_current_year_rows(rp_records,     current_year, roster_map, 'rp')
 
-    # Flag whether a meaningful RP-archetype pool exists. The current SP master
-    # is SP-only by construction (built from gs_to); only a handful of dual-
-    # eligible swingmen will show RP in their ESPN slots, which is NOT a true
-    # RP archetype dataset. Require ≥25 RP-eligible current-year records before
-    # enabling the RP position filter — keeps the user's "coming soon" intent
-    # intact until a real RP archetype build lands.
-    rp_count = sum(1 for r in sp_records
-                   if r.get('year') == current_year
-                   and 'RP' in (r.get('eligible_positions') or []))
+    rp_count = sum(1 for r in rp_records if r.get('year') == current_year)
     rp_available = rp_count >= 25
-    if rp_count:
-        print(f'  RP-eligible SP records: {rp_count} '
-              f'(RP filter {"ENABLED" if rp_available else "disabled until archetype build lands"})',
-              flush=True)
+    print(f'  RP-archetype current-year records: {rp_count} '
+          f'(RP filter {"ENABLED" if rp_available else "disabled — need >=25"})',
+          flush=True)
 
     return {
         'last_refresh': datetime.now().strftime('%Y-%m-%d %H:%M'),
@@ -529,10 +630,13 @@ def build_payload():
         'current_year': current_year,
         'hitter_archetype_defs': h_defs,
         'sp_archetype_defs': s_defs,
+        'rp_archetype_defs': r_defs,
         'hitter_boundary': h_bound,
         'sp_boundary': s_bound,
+        'rp_boundary': r_bound,
         'hitters': hitter_records,
         'sps': sp_records,
+        'rps': rp_records,
         'hitter_snapshots': hitter_snapshots,
         'sp_snapshots': sp_snapshots,
         'rp_available': bool(rp_available),
@@ -550,7 +654,8 @@ def main():
     print('Building Player Profiles dashboard...', flush=True)
     payload = build_payload()
     print(f'  payload: {len(payload["hitters"])} hitter-years, '
-          f'{len(payload["sps"])} SP-years, years '
+          f'{len(payload["sps"])} SP-years, '
+          f'{len(payload.get("rps", []))} RP-years, years '
           f'{payload["years"][0]}-{payload["years"][-1]}', flush=True)
 
     html = render_page(payload)

@@ -1,0 +1,182 @@
+{
+  "cohort_floor": {
+    "G_min": 20,
+    "TBF_min": 50,
+    "TBF_side_min_B": 25
+  },
+  "years_pairs": "2018-2019, ..., 2024-2025",
+  "test_A": [
+    {
+      "metric": "SWING_MISS (swstr_pct)",
+      "column": "swstr_pct",
+      "n_pairs": 1014,
+      "r": 0.6293,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "SWING_MISS (c_plus_swstr CSW)",
+      "column": "c_plus_swstr",
+      "n_pairs": 1014,
+      "r": 0.5072,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "CALLED_STRIKE (called_strike rate)",
+      "column": "called_strike_rate",
+      "n_pairs": 1014,
+      "r": 0.6149,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "DAMAGE_SUPP (xwoba_contact)",
+      "column": "xwoba_contact",
+      "n_pairs": 1014,
+      "r": 0.1189,
+      "verdict": "DROP"
+    },
+    {
+      "metric": "DAMAGE_SUPP (barrel_pct)",
+      "column": "barrel_pct",
+      "n_pairs": 1014,
+      "r": 0.2019,
+      "verdict": "MAYBE"
+    },
+    {
+      "metric": "GB_TENDENCY (gb_pct)",
+      "column": "gb_pct",
+      "n_pairs": 1014,
+      "r": 0.7136,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "WALK_AVOID (bb_pct)",
+      "column": "bb_pct",
+      "n_pairs": 1014,
+      "r": 0.4438,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "velo_rating (avg_velo)",
+      "column": "avg_velo",
+      "n_pairs": 1014,
+      "r": 0.9272,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "K_RATE (k_pct, reference)",
+      "column": "k_pct",
+      "n_pairs": 1014,
+      "r": 0.5717,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "xwoba_per_pa (overall reference)",
+      "column": "xwoba_per_pa",
+      "n_pairs": 1014,
+      "r": 0.2014,
+      "verdict": "MAYBE"
+    }
+  ],
+  "test_B": [
+    {
+      "cohort": "ALL_RPs",
+      "side": "vs_L",
+      "n_pairs": 473,
+      "r": 0.3095,
+      "verdict": "MAYBE"
+    },
+    {
+      "cohort": "RHP",
+      "side": "vs_L",
+      "n_pairs": 342,
+      "r": 0.2567,
+      "verdict": "MAYBE"
+    },
+    {
+      "cohort": "LHP",
+      "side": "vs_L",
+      "n_pairs": 131,
+      "r": 0.0798,
+      "verdict": "DROP"
+    },
+    {
+      "cohort": "ALL_RPs",
+      "side": "vs_R",
+      "n_pairs": 474,
+      "r": 0.2554,
+      "verdict": "MAYBE"
+    },
+    {
+      "cohort": "RHP",
+      "side": "vs_R",
+      "n_pairs": 343,
+      "r": 0.2433,
+      "verdict": "MAYBE"
+    },
+    {
+      "cohort": "LHP",
+      "side": "vs_R",
+      "n_pairs": 131,
+      "r": 0.126,
+      "verdict": "DROP"
+    }
+  ],
+  "test_C": {
+    "persistence": [
+      {
+        "role": "CLOSER",
+        "n_year_t": 128,
+        "persist_pct": 0.578125
+      },
+      {
+        "role": "MIDDLE",
+        "n_year_t": 457,
+        "persist_pct": 0.5361050328227571
+      },
+      {
+        "role": "MOPUP",
+        "n_year_t": 203,
+        "persist_pct": 0.24630541871921183
+      },
+      {
+        "role": "SETUP",
+        "n_year_t": 226,
+        "persist_pct": 0.3141592920353982
+      }
+    ],
+    "overall_any_role_match": 0.4339250493096647,
+    "confusion_normalized": {
+      "CLOSER": {
+        "CLOSER": 0.578,
+        "MIDDLE": 0.05,
+        "MOPUP": 0.099,
+        "SETUP": 0.088
+      },
+      "MIDDLE": {
+        "CLOSER": 0.18,
+        "MIDDLE": 0.536,
+        "MOPUP": 0.448,
+        "SETUP": 0.358
+      },
+      "MOPUP": {
+        "CLOSER": 0.164,
+        "MIDDLE": 0.21,
+        "MOPUP": 0.246,
+        "SETUP": 0.239
+      },
+      "SETUP": {
+        "CLOSER": 0.078,
+        "MIDDLE": 0.204,
+        "MOPUP": 0.207,
+        "SETUP": 0.314
+      }
+    }
+  },
+  "test_D_status": "BLOCKED - data absent",
+  "test_E": {
+    "metric": "ip_per_appearance",
+    "n_pairs": 1014,
+    "r": 0.4694,
+    "verdict": "KEEP"
+  }
+}

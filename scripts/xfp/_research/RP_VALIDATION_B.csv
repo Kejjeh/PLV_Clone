@@ -1,0 +1,7 @@
+cohort,side,n_pairs,r,verdict
+ALL_RPs,vs_L,473,0.3095,MAYBE
+RHP,vs_L,342,0.2567,MAYBE
+LHP,vs_L,131,0.0798,DROP
+ALL_RPs,vs_R,474,0.2554,MAYBE
+RHP,vs_R,343,0.2433,MAYBE
+LHP,vs_R,131,0.126,DROP

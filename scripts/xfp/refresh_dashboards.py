@@ -79,6 +79,14 @@ def main():
         'python -X utf8 scripts/xfp/build_hitter_archetypes.py',
         timeout=120)
 
+    run('2.75. Derive RP damage/GB columns from statcast (one-time-ish)',
+        'python -X utf8 scripts/xfp/build_rp_damage_gb_from_statcast.py',
+        timeout=300)
+
+    run('2.8. Build RP archetype ratings panel (20-80 + trajectories)',
+        'python -X utf8 scripts/xfp/build_rp_archetypes.py',
+        timeout=120)
+
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 

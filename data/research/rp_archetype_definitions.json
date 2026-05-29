@@ -1,0 +1,110 @@
+{
+  "PLUS/PLUS/PLUS": {
+    "label": "ELITE_CLOSER_STUFF",
+    "description": "Triple-plus reliever: closer-grade stuff + control + bulk/GB. Edwin Diaz peak, Felix Bautista 23."
+  },
+  "PLUS/PLUS/AVG": {
+    "label": "LATE_INNING_STUFF_CTRL",
+    "description": "High-K + low-walk late-inning weapon: Hader peak, Iglesias 24."
+  },
+  "PLUS/PLUS/MINUS": {
+    "label": "K_AND_CTRL_LITE_BULK",
+    "description": "High-K + control, light bulk usage: short-burst closer pattern."
+  },
+  "PLUS/AVG/PLUS": {
+    "label": "STUFF_GB_HYBRID",
+    "description": "Whiff + worm-burner profile, walks ok: Devin Williams blend."
+  },
+  "PLUS/AVG/AVG": {
+    "label": "PURE_STUFF_RP",
+    "description": "K-driven RP: Mason Miller, Helsley pre-decline."
+  },
+  "PLUS/AVG/MINUS": {
+    "label": "STUFF_NO_BULK",
+    "description": "High-K short-burst, avg control, light volume: setup-style."
+  },
+  "PLUS/MINUS/PLUS": {
+    "label": "WILD_GB_STUFF",
+    "description": "High-K + GB but walks problem: rare; Aroldis-class outliers."
+  },
+  "PLUS/MINUS/AVG": {
+    "label": "WILD_FIREBALLER_RP",
+    "description": "High-K, walk-prone, avg batted-ball: Chapman 23, Jansen 21."
+  },
+  "PLUS/MINUS/MINUS": {
+    "label": "WILD_HIGH_LEVERAGE",
+    "description": "Stuff carries despite walks, short bursts: Estevez 24 style."
+  },
+  "AVG/PLUS/PLUS": {
+    "label": "GB_INNINGS_EATER",
+    "description": "Sinker-heavy multi-inning workhorse: Holmes 23, Bednar 22."
+  },
+  "AVG/PLUS/AVG": {
+    "label": "COMMAND_MIDDLE",
+    "description": "Avg stuff + plus control, generic middle-relief: workhorse."
+  },
+  "AVG/PLUS/MINUS": {
+    "label": "CONTROL_RP_LITE",
+    "description": "Avg stuff + control, light usage: matchup setup."
+  },
+  "AVG/AVG/PLUS": {
+    "label": "BULK_GB_RP",
+    "description": "Avg everything except GB + multi-inning: bulk options."
+  },
+  "AVG/AVG/AVG": {
+    "label": "GENERIC_MIDDLE",
+    "description": "Mid-tier middle relief \u2014 most common archetype."
+  },
+  "AVG/AVG/MINUS": {
+    "label": "LIGHT_USE_MIDDLE",
+    "description": "Generic stuff + control, low IP/G: short-leash."
+  },
+  "AVG/MINUS/PLUS": {
+    "label": "GB_BULK_WILD",
+    "description": "GB+bulk innings but walks problem: long-relief rough."
+  },
+  "AVG/MINUS/AVG": {
+    "label": "AVG_STUFF_WILD",
+    "description": "Avg stuff + walks: bottom of bullpen."
+  },
+  "AVG/MINUS/MINUS": {
+    "label": "WILD_LIGHT_USE",
+    "description": "Walks + light volume: fringe reliever."
+  },
+  "MINUS/PLUS/PLUS": {
+    "label": "SOFT_GB_INNINGS_EATER",
+    "description": "Low-K + GB + bulk: classic long-relief grinder."
+  },
+  "MINUS/PLUS/AVG": {
+    "label": "PITCH_TO_CONTACT_RP",
+    "description": "Low-K + plus control: junkball middle relief."
+  },
+  "MINUS/PLUS/MINUS": {
+    "label": "CONTROL_LITE_USE",
+    "description": "Low-K + control, light usage: matchup."
+  },
+  "MINUS/AVG/PLUS": {
+    "label": "LOW_K_GB_BULK",
+    "description": "Low-K + GB + bulk: pure long-relief filler."
+  },
+  "MINUS/AVG/AVG": {
+    "label": "FILLER_RP",
+    "description": "Below-K average rest: replacement-level RP."
+  },
+  "MINUS/AVG/MINUS": {
+    "label": "LOW_K_LIGHT_USE",
+    "description": "Below-K, avg control, light IP/G: dispensable."
+  },
+  "MINUS/MINUS/PLUS": {
+    "label": "GB_WALK_GRINDER",
+    "description": "GB + bulk despite walks: emergency long man."
+  },
+  "MINUS/MINUS/AVG": {
+    "label": "STRUGGLING_RP",
+    "description": "Below-K + walks, avg batted-ball: replacement-level."
+  },
+  "MINUS/MINUS/MINUS": {
+    "label": "FRINGE_RP",
+    "description": "Below everything \u2014 bottom-of-roster RP."
+  }
+}

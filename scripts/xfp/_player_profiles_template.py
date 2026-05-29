@@ -834,7 +834,7 @@ PITCHERS_TAB = """
     <span class="chip-group-label">Position</span>
     <button type="button" class="pill active" data-value="all">All</button>
     <button type="button" class="pill" data-value="SP">SP</button>
-    <button type="button" class="pill" data-value="RP" disabled title="RP archetypes coming soon">RP</button>
+    <button type="button" class="pill" data-value="RP">RP</button>
     <span class="group-note" id="s-pos-note"></span>
   </div>
   <div class="alltable-controls">
@@ -873,9 +873,22 @@ JS = r"""
 <script>
 const D = window.PROFILES_DATA;
 const HITTERS = D.hitters;
-const SPS     = D.sps;
+const SPS_ONLY = D.sps || [];
+const RPS      = D.rps || [];
+// Unified pitcher pool — SP + RP rows live in the same `SPS` array so the
+// existing SP-shaped renderers (quadrant, archetype tables, all-pitcher table,
+// leaderboard, snapshot movers, blend) keep working unchanged. Each row carries
+// `role: 'SP' | 'RP'`; the modal + sub-domain hover branch on that. RP rows
+// have schema-bridge fields populated by build_rp_records() so the SP code
+// path can read STUFF/MOVEMENT/CONTROL/velo_rating/gs/fp_per_start uniformly.
+const SPS     = SPS_ONLY.concat(RPS);
 const HDEFS   = D.hitter_archetype_defs;
-const SDEFS   = D.sp_archetype_defs;
+const SDEFS_RAW = D.sp_archetype_defs;
+const RDEFS    = D.rp_archetype_defs || {};
+// Merge SP + RP archetype defs into the same lookup map. Labels are disjoint
+// (verified in build script) so `SDEFS` can serve both roles for description
+// lookups in the legend, archetype table, hero, etc.
+const SDEFS   = Object.assign({}, SDEFS_RAW, RDEFS);
 
 const HARCH_DESC = {}; Object.values(HDEFS).forEach(v => HARCH_DESC[v.label] = v.description);
 const SARCH_DESC = {}; Object.values(SDEFS).forEach(v => SARCH_DESC[v.label] = v.description);
@@ -978,6 +991,38 @@ const SP_ARCH_CAT = {
   BAD_BIG_INNINGS:       'BELOW',
   PIT_CHF:               'BELOW',
   FRINGE:                'BELOW',
+
+  // RP archetypes — reuse the SP category axes so RP rows share a legend +
+  // color family with their nearest SP analog. RP cells STUFF/CONTROL/
+  // BATTED_BALL map roughly to SP STUFF/CONTROL/MOVEMENT, so MOVEMENT-tagged
+  // categories cover batted-ball-led RPs.
+  ELITE_CLOSER_STUFF:      'ELITE',
+  LATE_INNING_STUFF_CTRL:  'ELITE',
+  K_AND_CTRL_LITE_BULK:    'ELITE',
+  STUFF_GB_HYBRID:         'STUFF',
+  PURE_STUFF_RP:           'STUFF',
+  STUFF_NO_BULK:           'STUFF',
+  WILD_GB_STUFF:           'STUFF',
+  WILD_FIREBALLER_RP:      'STUFF',
+  WILD_HIGH_LEVERAGE:      'STUFF',
+  GB_INNINGS_EATER:        'MOVEMENT',
+  BULK_GB_RP:              'MOVEMENT',
+  SOFT_GB_INNINGS_EATER:   'MOVEMENT',
+  LOW_K_GB_BULK:           'MOVEMENT',
+  GB_BULK_WILD:            'MOVEMENT',
+  GB_WALK_GRINDER:         'MOVEMENT',
+  COMMAND_MIDDLE:          'CONTROL',
+  CONTROL_RP_LITE:         'CONTROL',
+  PITCH_TO_CONTACT_RP:     'CONTROL',
+  CONTROL_LITE_USE:        'CONTROL',
+  GENERIC_MIDDLE:          'AVERAGE',
+  LIGHT_USE_MIDDLE:        'AVERAGE',
+  AVG_STUFF_WILD:          'AVERAGE',
+  FILLER_RP:               'BELOW',
+  LOW_K_LIGHT_USE:         'BELOW',
+  WILD_LIGHT_USE:          'BELOW',
+  STRUGGLING_RP:           'BELOW',
+  FRINGE_RP:               'BELOW',
 };
 
 // Category color anchors + a small family ramp per category
@@ -1100,25 +1145,35 @@ function olsLine(xs, ys) {
 // ── Filtering / blend ─────────────────────────────────────────────────
 function bucket(v) { return v >= 60 ? 'PLUS' : (v >= 40 ? 'AVG' : 'MINUS'); }
 function lookupHitterArch(c,p,d){ return (HDEFS[bucket(c)+'/'+bucket(p)+'/'+bucket(d)] || {label:'UNKNOWN'}).label; }
-function lookupSpArch(s,m,c){ return (SDEFS[bucket(s)+'/'+bucket(m)+'/'+bucket(c)] || {label:'UNKNOWN'}).label; }
+function lookupSpArch(s,m,c){ return (SDEFS_RAW[bucket(s)+'/'+bucket(m)+'/'+bucket(c)] || {label:'UNKNOWN'}).label; }
+// RP cells are STUFF / CONTROL / BATTED_BALL — order matches the rp def json keys.
+function lookupRpArch(s,c,b){ return (RDEFS[bucket(s)+'/'+bucket(c)+'/'+bucket(b)] || {label:'UNKNOWN'}).label; }
 
 function paWeightBlend(rows, idKey, fpKey) {
+  // Group by (id, role) so a swingman with both SP and RP rows in the pool
+  // doesn't get cross-blended across two different rating spaces.
   const byId = {};
-  rows.forEach(r => { (byId[r[idKey]] = byId[r[idKey]] || []).push(r); });
+  rows.forEach(r => {
+    const k = (idKey === 'batter') ? String(r.batter) : `${r.role || 'SP'}|${r.pitcher}`;
+    (byId[k] = byId[k] || []).push(r);
+  });
   const PA_KEY = idKey === 'batter' ? 'pa' : 'gs';
   const HITTER_NUMS = ['CONTACT','POWER','DISCIPLINE','SB',
     'r_Contact','r_K','r_BABIP','r_xCON','r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB',
     'r_BB','r_Chase','r_ZSwing','r_SBrate','r_Sprint'];
   const SP_NUMS = ['STUFF','MOVEMENT','CONTROL','velo_rating',
     'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB'];
-  const NUMS = idKey === 'batter' ? HITTER_NUMS : SP_NUMS;
+  const RP_NUMS = ['STUFF','CONTROL','BATTED_BALL','MOVEMENT','velo_rating',
+    'SWING_MISS','CALLED_STRIKE','VELO','WALK_AVOID','GB_TENDENCY','BULK_IP','r_K'];
   const out = [];
-  Object.entries(byId).forEach(([id, recs]) => {
+  Object.values(byId).forEach(recs => {
     const sel = recs.filter(r => r.year === 2025 || r.year === 2026);
     if (!sel.length) return;
     const wsum = sel.reduce((a,r) => a + (r[PA_KEY] || 0), 0);
     if (!wsum) return;
     const last = sel.slice().sort((a,b) => b.year - a.year)[0];
+    const isRP = last.role === 'RP';
+    const NUMS = idKey === 'batter' ? HITTER_NUMS : (isRP ? RP_NUMS : SP_NUMS);
     const blend = { ...last };
     blend.year = 'blend';
     NUMS.forEach(c => {
@@ -1129,7 +1184,9 @@ function paWeightBlend(rows, idKey, fpKey) {
     blend[PA_KEY] = wsum;
     blend.archetype = idKey === 'batter'
       ? lookupHitterArch(blend.CONTACT, blend.POWER, blend.DISCIPLINE)
-      : lookupSpArch(blend.STUFF, blend.MOVEMENT, blend.CONTROL);
+      : (isRP
+          ? lookupRpArch(blend.STUFF, blend.CONTROL, blend.BATTED_BALL)
+          : lookupSpArch(blend.STUFF, blend.MOVEMENT, blend.CONTROL));
     blend[fpKey] = sel.reduce((a,r) => a + (r[fpKey] || 0) * (r[PA_KEY] || 0), 0) / wsum;
     blend.rank_in_year = null;
     out.push(blend);
@@ -1676,13 +1733,28 @@ function openModal(role, id) {
     hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${role === 'hitter' ? 'pa' : 'start'} next yr</div>`;
     hero += `</div>`;
   }
-  // T+2 projection (SPs only — dynasty/keeper context)
+  // T+2 projection (pitchers — dynasty/keeper context). Label adapts to RP role.
   if (role === 'sp' && cur.t2_fp_projection != null) {
+    const isRP_t2 = cur.role === 'RP';
     hero += `<div class="hero-overall" style="border-left:3px solid var(--dim);padding-left:.8em;">`;
     hero += `<div class="label">T+2 projection</div>`;
     hero += `<div class="val" style="font-size:1.5em;">${cur.t2_fp_projection.toFixed(2)}</div>`;
-    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/start in 2 yrs</div>`;
+    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${isRP_t2 ? 'g' : 'start'} in 2 yrs</div>`;
     hero += `</div>`;
+  }
+  // RP role tags (CLOSER / HIGH_LEVERAGE / MULTI_INNING_BULK / PLATOON)
+  if (role === 'sp' && cur.role === 'RP' && Array.isArray(cur.rp_tags) && cur.rp_tags.length) {
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--accent);padding-left:.8em;">`;
+    hero += `<div class="label">Role tags</div>`;
+    hero += `<div style="display:flex;flex-wrap:wrap;gap:.3em;margin-top:.3em;">`;
+    cur.rp_tags.forEach(t => {
+      const cls = (t === 'CLOSER') ? 'plus'
+                : (t === 'HIGH_LEVERAGE') ? 'plus'
+                : (t === 'MULTI_INNING_BULK') ? 'avg'
+                : 'minus';
+      hero += `<span class="badge ${cls}">${prettyLabel(t)}</span>`;
+    });
+    hero += `</div></div>`;
   }
   // Park-adjusted HR rate chip (hitters only) — surfaces park inflation/deflation
   if (role === 'hitter' && cur.r_HRrate_parkadj != null && cur.hr_parkadj_delta != null && Math.abs(cur.hr_parkadj_delta) >= 3) {
@@ -1723,8 +1795,10 @@ function openModal(role, id) {
   tabs += '</div>';
 
   // ── Year table header + rows (shared by years panel) ──
+  const yearIsRP = (role === 'sp' && cur.role === 'RP');
   let yearHeader = '<tr><th class="num">Year</th><th class="num">Age</th><th class="num">Overall</th>';
   if (role === 'hitter') yearHeader += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th>';
+  else if (yearIsRP)      yearHeader += '<th class="num">S</th><th class="num">C</th><th class="num">BB</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/g</th><th class="num">Rank</th>';
   else                    yearHeader += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Archetype</th><th>Subtypes</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th>';
   yearHeader += '</tr>';
 
@@ -1743,6 +1817,19 @@ function openModal(role, id) {
             + `<td><span style="color:var(--dim);">${subStr}</span></td>`
             + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
+            + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
+    } else if (r.role === 'RP') {
+      // For RP rows, display the canonical S / C / BB triplet (BATTED_BALL is
+      // mirrored into MOVEMENT in the SP-shaped record, but we read the real
+      // BATTED_BALL field here for honest labeling).
+      yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
+            + `<td class="num"><b>${r.OVERALL}</b></td>`
+            + `<td class="num">${r.STUFF}</td><td class="num">${r.CONTROL}</td>`
+            + `<td class="num">${r.BATTED_BALL}</td><td class="num">${r.velo_rating ?? ''}</td>`
+            + `<td>${prettyLabel(r.archetype)}</td>`
+            + `<td><span style="color:var(--dim);">${subStr}</span></td>`
+            + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
+            + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
       yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
@@ -1788,13 +1875,27 @@ function openModal(role, id) {
     CONTROL:  [['WALK_AVOID', 0.90, 'Walk avoidance'],
                 ['STRIKE_THROWING', 0.10, 'Strike-throwing (zone%)']],
   };
+  // RP domains differ from SP — STUFF / CONTROL / BATTED_BALL with 6 distinct
+  // sub-domains. Weights are placeholder readability-buckets, not the canonical
+  // RP archetype weights (those live in build_rp_archetypes.py).
+  const SUB_W_R = {
+    STUFF:       [['SWING_MISS', 0.60, 'Swing-and-miss'],
+                  ['CALLED_STRIKE', 0.40, 'Called strike']],
+    CONTROL:     [['WALK_AVOID', 0.65, 'Walk avoidance'],
+                  ['VELO', 0.35, 'Velocity']],
+    BATTED_BALL: [['GB_TENDENCY', 0.65, 'GB tendency'],
+                  ['BULK_IP', 0.35, 'Bulk IP per appearance']],
+  };
 
   let comp = `<div class="composition"><div style="color:var(--dim);font-size:.8em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Composition for ${cur.year}${cur.data_tier === 'PARTIAL' ? ' (PARTIAL season)' : ''}</div>`;
 
-  const subMap = role === 'hitter' ? SUB_W_H : SUB_W_S;
+  const isRP = (role === 'sp' && cur.role === 'RP');
+  const subMap = role === 'hitter' ? SUB_W_H : (isRP ? SUB_W_R : SUB_W_S);
   const domainMap = role === 'hitter'
     ? { CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB (overlay)' }
-    : { STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control' };
+    : (isRP
+        ? { STUFF: 'Stuff', CONTROL: 'Control', BATTED_BALL: 'Batted ball' }
+        : { STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control' });
 
   Object.entries(domainMap).forEach(([dom, label]) => {
     const subs = subMap[dom] || [];
@@ -1886,8 +1987,13 @@ function findSubDomainComps(focal, role, k) {
                        'RAW_POWER','LAUNCH_OPTIM','DAMAGE_PROD',
                        'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION'];
   const SUB_KEYS_S = ['SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID','STRIKE_THROWING'];
-  const keys = role === 'hitter' ? SUB_KEYS_H : SUB_KEYS_S;
-  const pool = role === 'hitter' ? HITTERS : SPS;
+  const SUB_KEYS_R = ['SWING_MISS','CALLED_STRIKE','VELO','WALK_AVOID','GB_TENDENCY','BULK_IP'];
+  const isRP = (role === 'sp' && focal.role === 'RP');
+  const keys = role === 'hitter' ? SUB_KEYS_H : (isRP ? SUB_KEYS_R : SUB_KEYS_S);
+  // Search within the same role bucket — RP focal compares only to RP pool.
+  const pool = role === 'hitter'
+    ? HITTERS
+    : (isRP ? RPS : SPS_ONLY);
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
   const focalId = focal[idKey];
   const focalYr = focal.year;
@@ -1973,8 +2079,9 @@ function buildSearchIndex() {
   });
   Object.entries(S_BY_ID).forEach(([id, recs]) => {
     const last = recs.slice().sort((a,b) => b.year - a.year)[0];
+    const tag = last.role === 'RP' ? 'RP' : 'SP';
     idx.push({ id: parseInt(id), role: 'sp', name: last.player_name,
-               label: last.player_name, meta: `SP · last ${last.year}` });
+               label: last.player_name, meta: `${tag} · last ${last.year}` });
   });
   return idx;
 }
@@ -2032,14 +2139,15 @@ const H_TBL_COLS = [
 ];
 
 const S_TBL_COLS = [
-  { key: 'player_name', label: 'Pitcher', text: true, w: 15 },
+  { key: 'player_name', label: 'Pitcher', text: true, w: 14 },
+  { key: 'role',        label: 'Role', text: true, cat: true, w: 3 },
   { key: 'year',        label: 'Yr',  num: true, w: 3 },
-  { key: 'gs',          label: 'GS',  num: true, w: 3 },
+  { key: 'gs',          label: 'G/GS',  num: true, w: 3 },
   { key: 'tbf',         label: 'TBF', num: true, w: 3 },
-  { key: 'fp_per_start', label: 'FP/start', num: true, w: 5, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'fp_per_start', label: 'FP rate', num: true, w: 5, fmt: v => (v == null ? '' : v.toFixed(2)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'STUFF',       label: 'S',   num: true, w: 3 },
-  { key: 'MOVEMENT',    label: 'M',   num: true, w: 3 },
+  { key: 'MOVEMENT',    label: 'M/BB',num: true, w: 3 },
   { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
   { key: 'velo_rating', label: 'Velo', num: true, w: 4 },
   { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 11 },
@@ -2082,31 +2190,35 @@ const H_SUB_COLS = [
 ];
 
 const S_SUB_COLS = [
-  { key: 'player_name', label: 'Pitcher', text: true, w: 22 },
+  { key: 'player_name', label: 'Pitcher', text: true, w: 18 },
+  { key: 'role',        label: 'Role',   text: true, cat: true, w: 4 },
   { key: 'year',        label: 'Yr', num: true, w: 4 },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 6 },
-  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 6 },
-  { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 5 },
-  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 5 },
-  { key: 'MOVEMENT',      label: 'Move',   num: true, bold: true, w: 6 },
-  { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true, w: 5 },
-  { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 5 },
-  { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 6 },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 5 },
+  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 5 },
+  { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 4 },
+  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 4 },
+  { key: 'MOVEMENT',      label: 'Mv/BB',  num: true, bold: true, w: 5 },
+  { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true, w: 4 },
+  { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 4 },
+  { key: 'BULK_IP',       label: 'Bulk',   num: true, w: 4 },
+  { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 5 },
   { key: 'WALK_AVOID',    label: 'BB-avoid',num: true, w: 5 },
   { key: 'STRIKE_THROWING', label: 'Strikes', num: true, w: 5 },
-  { key: 'velo_rating',   label: 'Velo',   num: true, w: 6 },
-  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 6 },
-  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 5 },
+  { key: 'velo_rating',   label: 'Velo',   num: true, w: 4 },
+  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 5 },
+  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 4 },
 ];
 
 function tblRowMatches(r, q) {
   if (!q) return true;
   const ql = q.toLowerCase();
-  // Search across text-ish fields
+  // Search across text-ish fields. RP-only fields (role, rp_tags) included so
+  // typing "closer" / "rp" surfaces the right rows.
   const candidates = [r.player_name, r.team, r.archetype, r.contact_subtype, r.power_subtype,
                        r.discipline_subtype, r.sb_tier, r.spray_archetype, r.age_tier,
                        r.boundary_tier, r.data_tier, r.stuff_subtype, r.velo_tier,
-                       r.pitch_archetype, r.primary_group];
+                       r.pitch_archetype, r.primary_group, r.role,
+                       Array.isArray(r.rp_tags) ? r.rp_tags.join(' ') : null];
   for (const c of candidates) {
     if (c && String(c).toLowerCase().includes(ql)) return true;
   }
@@ -2913,12 +3025,15 @@ function init() {
   wireChipGroup('s-roster-chips', 'sp',     'roster');
   wireChipGroup('s-pos-chips',    'sp',     'pos');
 
-  // RP archetypes don't ship yet — payload.rp_available is False today, so we
-  // belt-and-suspenders the disabled attribute in case the server-side flag
-  // ever flips to True before the dataset actually carries RP rows.
-  if (D.rp_available === true) {
+  // RP archetypes shipped 2026-05-29 — payload.rp_available gates the chip in
+  // case the dataset ever regresses below the ≥25 current-year-record threshold.
+  // When unavailable, re-disable the button defensively.
+  if (D.rp_available !== true) {
     const rpBtn = document.querySelector('#s-pos-chips button.pill[data-value="RP"]');
-    if (rpBtn) { rpBtn.disabled = false; rpBtn.removeAttribute('title'); }
+    if (rpBtn) {
+      rpBtn.disabled = true;
+      rpBtn.setAttribute('title', 'RP archetypes unavailable (insufficient data)');
+    }
   }
 
   // Sub-domain table search (debounced)
@@ -3043,6 +3158,7 @@ def render_page(payload: dict) -> str:
     meta = (f'<div class="meta">Generated {payload["last_refresh"]} · '
             f'{len(payload["hitters"])} hitter-years · '
             f'{len(payload["sps"])} SP-years · '
+            f'{len(payload.get("rps", []))} RP-years · '
             f'years {payload["years"][0]}–{payload["years"][-1]}</div>')
     return (HEAD
             + '<body>\n'

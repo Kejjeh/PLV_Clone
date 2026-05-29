@@ -1,0 +1,592 @@
+{
+  "STUFF_GB_HYBRID": {
+    "n_total_transitions": 8,
+    "n_stayed": 4,
+    "retention_pct": 50.0,
+    "top_destinations": [
+      [
+        "STUFF_GB_HYBRID",
+        4,
+        50.0
+      ],
+      [
+        "AVG_STUFF_WILD",
+        2,
+        25.0
+      ],
+      [
+        "GENERIC_MIDDLE",
+        1,
+        12.5
+      ]
+    ],
+    "fp_if_stayed": 4.25,
+    "fp_if_left": 2.96,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 5,
+        "retention_pct": 60.0
+      }
+    }
+  },
+  "BULK_GB_RP": {
+    "n_total_transitions": 57,
+    "n_stayed": 12,
+    "retention_pct": 21.1,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        23,
+        40.4
+      ],
+      [
+        "BULK_GB_RP",
+        12,
+        21.1
+      ],
+      [
+        "FILLER_RP",
+        5,
+        8.8
+      ]
+    ],
+    "fp_if_stayed": 3.43,
+    "fp_if_left": 2.75,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 8,
+        "retention_pct": 12.5
+      },
+      "PEAK": {
+        "n": 37,
+        "retention_pct": 18.9
+      },
+      "POST_PEAK": {
+        "n": 12,
+        "retention_pct": 33.3
+      }
+    }
+  },
+  "COMMAND_MIDDLE": {
+    "n_total_transitions": 79,
+    "n_stayed": 23,
+    "retention_pct": 29.1,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        26,
+        32.9
+      ],
+      [
+        "COMMAND_MIDDLE",
+        23,
+        29.1
+      ],
+      [
+        "PURE_STUFF_RP",
+        5,
+        6.3
+      ]
+    ],
+    "fp_if_stayed": 3.58,
+    "fp_if_left": 3.13,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 36,
+        "retention_pct": 27.8
+      },
+      "POST_PEAK": {
+        "n": 39,
+        "retention_pct": 33.3
+      }
+    }
+  },
+  "GENERIC_MIDDLE": {
+    "n_total_transitions": 278,
+    "n_stayed": 119,
+    "retention_pct": 42.8,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        119,
+        42.8
+      ],
+      [
+        "FILLER_RP",
+        26,
+        9.4
+      ],
+      [
+        "COMMAND_MIDDLE",
+        24,
+        8.6
+      ]
+    ],
+    "fp_if_stayed": 2.95,
+    "fp_if_left": 2.83,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 21,
+        "retention_pct": 38.1
+      },
+      "PEAK": {
+        "n": 147,
+        "retention_pct": 45.6
+      },
+      "POST_PEAK": {
+        "n": 110,
+        "retention_pct": 40.0
+      }
+    }
+  },
+  "PURE_STUFF_RP": {
+    "n_total_transitions": 86,
+    "n_stayed": 27,
+    "retention_pct": 31.4,
+    "top_destinations": [
+      [
+        "PURE_STUFF_RP",
+        27,
+        31.4
+      ],
+      [
+        "GENERIC_MIDDLE",
+        23,
+        26.7
+      ],
+      [
+        "LIGHT_USE_MIDDLE",
+        6,
+        7.0
+      ]
+    ],
+    "fp_if_stayed": 4.99,
+    "fp_if_left": 3.63,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 9,
+        "retention_pct": 55.6
+      },
+      "PEAK": {
+        "n": 53,
+        "retention_pct": 35.8
+      },
+      "POST_PEAK": {
+        "n": 24,
+        "retention_pct": 12.5
+      }
+    }
+  },
+  "LATE_INNING_STUFF_CTRL": {
+    "n_total_transitions": 19,
+    "n_stayed": 1,
+    "retention_pct": 5.3,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        6,
+        31.6
+      ],
+      [
+        "PURE_STUFF_RP",
+        6,
+        31.6
+      ],
+      [
+        "STUFF_NO_BULK",
+        2,
+        10.5
+      ]
+    ],
+    "fp_if_stayed": 5.76,
+    "fp_if_left": 4.15,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 11,
+        "retention_pct": 0.0
+      },
+      "POST_PEAK": {
+        "n": 7,
+        "retention_pct": 0.0
+      }
+    }
+  },
+  "LIGHT_USE_MIDDLE": {
+    "n_total_transitions": 51,
+    "n_stayed": 18,
+    "retention_pct": 35.3,
+    "top_destinations": [
+      [
+        "LIGHT_USE_MIDDLE",
+        18,
+        35.3
+      ],
+      [
+        "GENERIC_MIDDLE",
+        9,
+        17.6
+      ],
+      [
+        "WILD_LIGHT_USE",
+        7,
+        13.7
+      ]
+    ],
+    "fp_if_stayed": 3.26,
+    "fp_if_left": 2.78,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 19,
+        "retention_pct": 36.8
+      },
+      "POST_PEAK": {
+        "n": 32,
+        "retention_pct": 34.4
+      }
+    }
+  },
+  "SOFT_GB_INNINGS_EATER": {
+    "n_total_transitions": 12,
+    "n_stayed": 5,
+    "retention_pct": 41.7,
+    "top_destinations": [
+      [
+        "SOFT_GB_INNINGS_EATER",
+        5,
+        41.7
+      ],
+      [
+        "LOW_K_GB_BULK",
+        2,
+        16.7
+      ],
+      [
+        "COMMAND_MIDDLE",
+        2,
+        16.7
+      ]
+    ],
+    "fp_if_stayed": 2.31,
+    "fp_if_left": 2.35,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 5,
+        "retention_pct": 20.0
+      },
+      "POST_PEAK": {
+        "n": 7,
+        "retention_pct": 57.1
+      }
+    }
+  },
+  "LOW_K_GB_BULK": {
+    "n_total_transitions": 11,
+    "n_stayed": 1,
+    "retention_pct": 9.1,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        5,
+        45.5
+      ],
+      [
+        "GB_INNINGS_EATER",
+        2,
+        18.2
+      ],
+      [
+        "SOFT_GB_INNINGS_EATER",
+        2,
+        18.2
+      ]
+    ],
+    "fp_if_stayed": 2.18,
+    "fp_if_left": 2.67,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 8,
+        "retention_pct": 12.5
+      }
+    }
+  },
+  "STUFF_NO_BULK": {
+    "n_total_transitions": 29,
+    "n_stayed": 6,
+    "retention_pct": 20.7,
+    "top_destinations": [
+      [
+        "STUFF_NO_BULK",
+        6,
+        20.7
+      ],
+      [
+        "GENERIC_MIDDLE",
+        5,
+        17.2
+      ],
+      [
+        "WILD_LIGHT_USE",
+        4,
+        13.8
+      ]
+    ],
+    "fp_if_stayed": 4.5,
+    "fp_if_left": 3.54,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 14,
+        "retention_pct": 14.3
+      },
+      "POST_PEAK": {
+        "n": 15,
+        "retention_pct": 26.7
+      }
+    }
+  },
+  "WILD_FIREBALLER_RP": {
+    "n_total_transitions": 22,
+    "n_stayed": 5,
+    "retention_pct": 22.7,
+    "top_destinations": [
+      [
+        "PURE_STUFF_RP",
+        7,
+        31.8
+      ],
+      [
+        "WILD_FIREBALLER_RP",
+        5,
+        22.7
+      ],
+      [
+        "AVG_STUFF_WILD",
+        3,
+        13.6
+      ]
+    ],
+    "fp_if_stayed": 2.82,
+    "fp_if_left": 3.88,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 12,
+        "retention_pct": 16.7
+      },
+      "POST_PEAK": {
+        "n": 8,
+        "retention_pct": 25.0
+      }
+    }
+  },
+  "GB_INNINGS_EATER": {
+    "n_total_transitions": 22,
+    "n_stayed": 3,
+    "retention_pct": 13.6,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        8,
+        36.4
+      ],
+      [
+        "GB_INNINGS_EATER",
+        3,
+        13.6
+      ],
+      [
+        "FILLER_RP",
+        2,
+        9.1
+      ]
+    ],
+    "fp_if_stayed": 2.58,
+    "fp_if_left": 2.88,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 12,
+        "retention_pct": 0.0
+      },
+      "POST_PEAK": {
+        "n": 7,
+        "retention_pct": 28.6
+      }
+    }
+  },
+  "AVG_STUFF_WILD": {
+    "n_total_transitions": 41,
+    "n_stayed": 10,
+    "retention_pct": 24.4,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        17,
+        41.5
+      ],
+      [
+        "AVG_STUFF_WILD",
+        10,
+        24.4
+      ],
+      [
+        "PURE_STUFF_RP",
+        6,
+        14.6
+      ]
+    ],
+    "fp_if_stayed": 2.57,
+    "fp_if_left": 2.92,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 5,
+        "retention_pct": 0.0
+      },
+      "PEAK": {
+        "n": 25,
+        "retention_pct": 20.0
+      },
+      "POST_PEAK": {
+        "n": 11,
+        "retention_pct": 45.5
+      }
+    }
+  },
+  "PITCH_TO_CONTACT_RP": {
+    "n_total_transitions": 16,
+    "n_stayed": 6,
+    "retention_pct": 37.5,
+    "top_destinations": [
+      [
+        "PITCH_TO_CONTACT_RP",
+        6,
+        37.5
+      ],
+      [
+        "SOFT_GB_INNINGS_EATER",
+        4,
+        25.0
+      ],
+      [
+        "GENERIC_MIDDLE",
+        3,
+        18.8
+      ]
+    ],
+    "fp_if_stayed": 2.77,
+    "fp_if_left": 2.67,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 5,
+        "retention_pct": 40.0
+      },
+      "POST_PEAK": {
+        "n": 11,
+        "retention_pct": 36.4
+      }
+    }
+  },
+  "CONTROL_RP_LITE": {
+    "n_total_transitions": 11,
+    "n_stayed": 2,
+    "retention_pct": 18.2,
+    "top_destinations": [
+      [
+        "LIGHT_USE_MIDDLE",
+        5,
+        45.5
+      ],
+      [
+        "CONTROL_RP_LITE",
+        2,
+        18.2
+      ],
+      [
+        "STUFF_NO_BULK",
+        1,
+        9.1
+      ]
+    ],
+    "fp_if_stayed": 2.88,
+    "fp_if_left": 3.55,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 6,
+        "retention_pct": 16.7
+      },
+      "POST_PEAK": {
+        "n": 5,
+        "retention_pct": 20.0
+      }
+    }
+  },
+  "FILLER_RP": {
+    "n_total_transitions": 39,
+    "n_stayed": 10,
+    "retention_pct": 25.6,
+    "top_destinations": [
+      [
+        "GENERIC_MIDDLE",
+        12,
+        30.8
+      ],
+      [
+        "FILLER_RP",
+        10,
+        25.6
+      ],
+      [
+        "PITCH_TO_CONTACT_RP",
+        6,
+        15.4
+      ]
+    ],
+    "fp_if_stayed": 2.39,
+    "fp_if_left": 2.53,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 5,
+        "retention_pct": 0.0
+      },
+      "PEAK": {
+        "n": 12,
+        "retention_pct": 33.3
+      },
+      "POST_PEAK": {
+        "n": 22,
+        "retention_pct": 27.3
+      }
+    }
+  },
+  "WILD_LIGHT_USE": {
+    "n_total_transitions": 12,
+    "n_stayed": 1,
+    "retention_pct": 8.3,
+    "top_destinations": [
+      [
+        "AVG_STUFF_WILD",
+        4,
+        33.3
+      ],
+      [
+        "LIGHT_USE_MIDDLE",
+        3,
+        25.0
+      ],
+      [
+        "GENERIC_MIDDLE",
+        2,
+        16.7
+      ]
+    ],
+    "fp_if_stayed": 2.48,
+    "fp_if_left": 2.64,
+    "by_age_tier": {
+      "PEAK": {
+        "n": 6,
+        "retention_pct": 16.7
+      },
+      "POST_PEAK": {
+        "n": 6,
+        "retention_pct": 0.0
+      }
+    }
+  }
+}
