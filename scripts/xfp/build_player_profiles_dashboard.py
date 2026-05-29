@@ -52,7 +52,7 @@ S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
     'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
-    'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+    'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
     'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
     'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION',
     'babip_career', 'babip_delta', 'babip_luck_flag',
@@ -111,7 +111,7 @@ def assert_schema():
         _fail(f'sp master has {n} duplicate (pitcher, year) rows')
 
     for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year',
-              'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+              'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
               'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
               'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         n = int(h[c].isna().sum())
@@ -144,7 +144,7 @@ def build_hitter_records(h: pd.DataFrame):
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
     for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL',
-              'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+              'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
               'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
               'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         df[c] = df[c].astype(int)

@@ -213,6 +213,9 @@ def build_ratings_panel(current_year=2026):
     m['babip']        = derive_babip(m)
     m['rate_2b3b']    = derive_2b3b_rate(m)
     m['sb_per_opp']   = derive_sb_per_opp(m)
+    # O-Contact% = chase contact rate = (contact - z_contact) / o_swing
+    m['o_contact']     = (m['contact'] - m['z_contact']).clip(lower=0)
+    m['o_contact_pct'] = (m['o_contact'] / m['o_swing'].clip(lower=1)).clip(0, 1)
 
     # Apply PA floor: every year uses the sample-stability floor so debutants
     # and mid-season call-ups are visible. data_tier flags durable vs partial.
@@ -223,8 +226,13 @@ def build_ratings_panel(current_year=2026):
     g = qual.groupby('year')
 
     # CONTACT components — bat-to-ball + K avoidance + BIP quality + spray diversity
-    qual['r_Contact'] = rating_20_80(qual['contact_pct'],      g['contact_pct']).round(0).astype(int)
-    qual['r_K']       = rating_20_80(qual['k_pct'],            g['k_pct'], invert=True).round(0).astype(int)
+    qual['r_Contact']  = rating_20_80(qual['contact_pct'],      g['contact_pct']).round(0).astype(int)
+    # Z-Contact / O-Contact split: kept primarily for diagnostic distinction
+    # (Judge = elite Z, weak O; Yandy Diaz = opposite). They feed the new
+    # Z_CONTACT / O_CONTACT sub-domains; r_Contact retained for backwards compat.
+    qual['r_ZContact'] = rating_20_80(qual['z_contact_pct'],    g['z_contact_pct']).round(0).astype(int)
+    qual['r_OContact'] = rating_20_80(qual['o_contact_pct'],    g['o_contact_pct']).round(0).astype(int)
+    qual['r_K']        = rating_20_80(qual['k_pct'],            g['k_pct'], invert=True).round(0).astype(int)
     qual['r_BABIP']   = rating_20_80(qual['babip'],            g['babip']).round(0).astype(int)
     qual['r_xCON']    = rating_20_80(qual['xwoba_on_contact'], g['xwoba_on_contact']).round(0).astype(int)
     # Spray entropy — captures spray diversity (high entropy = balanced pull/cent/oppo,
@@ -267,18 +275,22 @@ def build_ratings_panel(current_year=2026):
     # domain. Computed FIRST: components → simple mean → re-rated 20-80 within
     # year. Domains are then computed as empirically-weighted sums of these
     # sub-domain ratings (see below).
-    qual['_BAT_TO_BALL_raw']     = qual[['r_Contact','r_K']].mean(axis=1)
+    qual['_Z_CONTACT_raw']       = qual['r_ZContact']
+    qual['_O_CONTACT_raw']       = qual['r_OContact']
+    qual['_K_AVOIDANCE_raw']     = qual['r_K']
     qual['_CONTACT_QUALITY_raw'] = qual['r_xCON']
     qual['_SPRAY_PROFILE_raw']   = qual['r_SprayEnt']
-    qual['_RAW_POWER_raw']       = qual[['r_HardHit','r_Barrel']].mean(axis=1)
-    qual['_LAUNCH_OPTIM_raw']    = qual[['r_SweetSpot','r_EV90','r_PullFB']].mean(axis=1)
+    qual['_RAW_POWER_raw']       = qual[['r_HardHit','r_Barrel','r_EV90']].mean(axis=1)
+    qual['_LAUNCH_OPTIM_raw']    = qual[['r_SweetSpot','r_PullFB']].mean(axis=1)
     qual['_DAMAGE_PROD_raw']     = qual[['r_ISO','r_HRrate']].mean(axis=1)
     qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase','r_HBP']].mean(axis=1)
     qual['_AGGRESSION_raw']      = qual['r_ZSwing']
     qual['_SPEED_TOOL_raw']      = qual['r_Sprint']
     qual['_SB_CONVERSION_raw']   = qual['r_SBrate']
     g_sub = qual.groupby('year')
-    qual['BAT_TO_BALL']     = rating_20_80(qual['_BAT_TO_BALL_raw'],     g_sub['_BAT_TO_BALL_raw']).round(0).astype(int)
+    qual['Z_CONTACT']       = rating_20_80(qual['_Z_CONTACT_raw'],       g_sub['_Z_CONTACT_raw']).round(0).astype(int)
+    qual['O_CONTACT']       = rating_20_80(qual['_O_CONTACT_raw'],       g_sub['_O_CONTACT_raw']).round(0).astype(int)
+    qual['K_AVOIDANCE']     = rating_20_80(qual['_K_AVOIDANCE_raw'],     g_sub['_K_AVOIDANCE_raw']).round(0).astype(int)
     qual['CONTACT_QUALITY'] = rating_20_80(qual['_CONTACT_QUALITY_raw'], g_sub['_CONTACT_QUALITY_raw']).round(0).astype(int)
     qual['SPRAY_PROFILE']   = rating_20_80(qual['_SPRAY_PROFILE_raw'],   g_sub['_SPRAY_PROFILE_raw']).round(0).astype(int)
     qual['RAW_POWER']       = rating_20_80(qual['_RAW_POWER_raw'],       g_sub['_RAW_POWER_raw']).round(0).astype(int)
@@ -288,7 +300,8 @@ def build_ratings_panel(current_year=2026):
     qual['AGGRESSION']      = rating_20_80(qual['_AGGRESSION_raw'],      g_sub['_AGGRESSION_raw']).round(0).astype(int)
     qual['SPEED_TOOL']      = rating_20_80(qual['_SPEED_TOOL_raw'],      g_sub['_SPEED_TOOL_raw']).round(0).astype(int)
     qual['SB_CONVERSION']   = rating_20_80(qual['_SB_CONVERSION_raw'],   g_sub['_SB_CONVERSION_raw']).round(0).astype(int)
-    qual = qual.drop(columns=['_BAT_TO_BALL_raw','_CONTACT_QUALITY_raw','_SPRAY_PROFILE_raw',
+    qual = qual.drop(columns=['_Z_CONTACT_raw','_O_CONTACT_raw','_K_AVOIDANCE_raw',
+                                '_CONTACT_QUALITY_raw','_SPRAY_PROFILE_raw',
                                 '_RAW_POWER_raw','_LAUNCH_OPTIM_raw','_DAMAGE_PROD_raw',
                                 '_PATIENCE_raw','_AGGRESSION_raw','_SPEED_TOOL_raw','_SB_CONVERSION_raw'])
 
@@ -302,9 +315,17 @@ def build_ratings_panel(current_year=2026):
     # This properly weights xwOBACON (Quality) at 45% of CONTACT instead of 25%
     # under the prior equal-mean architecture, and DAMAGE_PROD at 65% of POWER
     # instead of 14%. Better reflects what actually drives FP/PA.
-    qual['_CONTACT_raw']    = (0.45 * qual['BAT_TO_BALL']
-                              + 0.45 * qual['CONTACT_QUALITY']
-                              + 0.10 * qual['SPRAY_PROFILE'])
+    # CONTACT now decomposes into 5 sub-domains. Empirical weights from OLS
+    # regression of fp_per_pa on the 5 sub-domain ratings (FULL pool n=3,163):
+    #   Z_CONTACT=0.03 / O_CONTACT=0.01 / K_AVOIDANCE=0.47 / QUALITY=0.42 / SPRAY=0.08
+    # Rounded with token weights for Z/O (their signal collapses behind K_AVOID
+    # in the regression — they're kept primarily for diagnostic distinction:
+    # Judge has elite Z, weak O; Yandy Diaz has the opposite).
+    qual['_CONTACT_raw']    = (0.05 * qual['Z_CONTACT']
+                              + 0.05 * qual['O_CONTACT']
+                              + 0.45 * qual['K_AVOIDANCE']
+                              + 0.40 * qual['CONTACT_QUALITY']
+                              + 0.05 * qual['SPRAY_PROFILE'])
     qual['_POWER_raw']      = (0.25 * qual['RAW_POWER']
                               + 0.10 * qual['LAUNCH_OPTIM']
                               + 0.65 * qual['DAMAGE_PROD'])
@@ -469,7 +490,7 @@ def main():
     master_cols = [
         'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
         'OVERALL','CONTACT','POWER','DISCIPLINE','SB',
-        'BAT_TO_BALL','CONTACT_QUALITY','SPRAY_PROFILE',
+        'Z_CONTACT','O_CONTACT','K_AVOIDANCE','CONTACT_QUALITY','SPRAY_PROFILE',
         'RAW_POWER','LAUNCH_OPTIM','DAMAGE_PROD',
         'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION',
         'archetype','contact_subtype','power_subtype','discipline_subtype',
@@ -477,10 +498,12 @@ def main():
         'age','age_tier','career_year',
         'bd_C','bd_P','bd_D','boundary_distance','boundary_tier',
         'r_Contact','r_K','r_BABIP','r_xCON','r_SprayEnt',
+        'r_ZContact','r_OContact',
         'r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate',
         'r_BB','r_Chase','r_HBP','r_ZSwing',
         'r_SBrate','r_Sprint',
         'contact_pct','k_pct','babip','babip_career','babip_delta','babip_luck_flag','xwoba_on_contact',
+        'z_contact_pct','o_contact_pct',
         'barrel_pct','hard_hit_pct','sweet_spot_pct','ev90','iso','hr_per_pa','pull_fb_pct',
         'bb_pct','chase_pct','hbp_pct','z_swing_pct',
         'sb_per_opp','sprint_speed',

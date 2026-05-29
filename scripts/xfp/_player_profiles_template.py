@@ -400,13 +400,25 @@ HOME_TAB = """
       / Control 0.15 (n=1,205, R²=0.74).</i> Year-by-year weights vary by
       ±2-3pp. Overall correlates with realized FP rate at r=0.86 (hitters)
       and r=0.81 (SPs).</p>
-      <p><b>Sub-domains.</b> Each domain decomposes into 2 conceptually distinct
-      sub-ratings (also 20-80), shown in the per-player modal's Composition tab.
-      Hitters: Contact = Bat-to-ball / Contact quality; Power = Raw power /
-      Damage production; Discipline = Patience / Aggression; SB = Speed /
-      Conversion. SPs: Stuff = Swing-and-miss / Called strike; Movement = Damage
-      suppression / GB tendency; Control = Walk avoidance only. Sub-domain to
-      domain weights from OLS regression on the FULL-tier pool.</p>
+      <p><b>Sub-domains.</b> Each domain decomposes into conceptually distinct
+      sub-ratings (all 20-80), shown in the per-player modal's Composition tab and the
+      "Sub-domain ratings" section at the bottom of each tab.</p>
+      <p>Hitters:<br>
+      • CONTACT = 0.05 Z-Contact + 0.05 Chase-contact + 0.45 K-avoidance
+      + 0.40 Contact quality (xwOBACON) + 0.05 Spray diversity<br>
+      • POWER = 0.25 Raw power (HardHit+Barrel+EV90) + 0.10 Launch optimization
+      (SweetSpot+PullFB) + 0.65 Damage production (ISO+HR rate)<br>
+      • DISCIPLINE = 0.70 Patience + 0.30 Aggression<br>
+      • SB = 0.30 Speed tool + 0.70 SB conversion</p>
+      <p>SPs:<br>
+      • STUFF = 0.65 Swing-and-miss + 0.35 Called-strike<br>
+      • MOVEMENT = 0.85 Damage suppression + 0.15 GB tendency<br>
+      • CONTROL = Walk avoidance</p>
+      <p>Sub-domain weights derived from OLS regression of FP rate on sub-domain
+      ratings, FULL-tier pool only. Z-contact and O-contact are kept primarily
+      for diagnostic distinction even though their predictive weight is small —
+      they let you see whether a hitter's contact comes from elite swing path
+      (Z) vs salvaging bad swings (O).</p>
       <p><b>BABIP luck context.</b> BABIP year-to-year stability is r=0.39
       (mostly noise). Each batter-year's BABIP is compared to that batter's
       career mean; deltas ≥ +0.030 trigger a "Hot" flag (running hot, outcomes
@@ -1247,12 +1259,14 @@ function openModal(role, id) {
 
   // ── Composition panel — sub-domain breakdown for the most recent year ──
   const SUB_W_H = {
-    CONTACT:    [['BAT_TO_BALL', 0.45, 'Bat-to-ball'],
-                  ['CONTACT_QUALITY', 0.45, 'Contact quality'],
-                  ['SPRAY_PROFILE', 0.10, 'Spray diversity']],
-    POWER:      [['RAW_POWER', 0.25, 'Raw power tools'],
-                  ['LAUNCH_OPTIM', 0.10, 'Launch optimization'],
-                  ['DAMAGE_PROD', 0.65, 'Damage production']],
+    CONTACT:    [['Z_CONTACT', 0.05, 'In-zone contact'],
+                  ['O_CONTACT', 0.05, 'Chase contact'],
+                  ['K_AVOIDANCE', 0.45, 'K avoidance'],
+                  ['CONTACT_QUALITY', 0.40, 'Contact quality (xwOBACON)'],
+                  ['SPRAY_PROFILE', 0.05, 'Spray diversity']],
+    POWER:      [['RAW_POWER', 0.25, 'Raw power tools (HardHit+Barrel+EV90)'],
+                  ['LAUNCH_OPTIM', 0.10, 'Launch optimization (SweetSpot+PullFB)'],
+                  ['DAMAGE_PROD', 0.65, 'Damage production (ISO+HR rate)']],
     DISCIPLINE: [['PATIENCE', 0.70, 'Patience (BB+chase+HBP)'],
                   ['AGGRESSION', 0.30, 'Aggression in zone']],
     SB:         [['SPEED_TOOL', 0.30, 'Speed tool'],
@@ -1464,7 +1478,9 @@ const H_SUB_COLS = [
   { key: 'year',        label: 'Yr', num: true },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
   { key: 'CONTACT',         label: 'Contact', num: true, bold: true },
-  { key: 'BAT_TO_BALL',     label: 'B2B',     num: true },
+  { key: 'Z_CONTACT',       label: 'Z-Cont', num: true },
+  { key: 'O_CONTACT',       label: 'O-Cont', num: true },
+  { key: 'K_AVOIDANCE',     label: 'K-Avoid', num: true },
   { key: 'CONTACT_QUALITY', label: 'Quality', num: true },
   { key: 'SPRAY_PROFILE',   label: 'Spray',   num: true },
   { key: 'POWER',           label: 'Power',   num: true, bold: true },
@@ -1554,7 +1570,11 @@ function renderAllTable(rows, role, kind) {
   // Domain → sub-domain map for hover tooltips on the per-domain cells
   const DOMAIN_SUBS = role === 'hitter'
     ? {
-        CONTACT:    [['BAT_TO_BALL', 'Bat-to-ball'], ['CONTACT_QUALITY', 'Quality'], ['SPRAY_PROFILE', 'Spray']],
+        CONTACT:    [['Z_CONTACT', 'Z-contact'],
+                      ['O_CONTACT', 'Chase-contact'],
+                      ['K_AVOIDANCE', 'K-avoid'],
+                      ['CONTACT_QUALITY', 'Quality'],
+                      ['SPRAY_PROFILE', 'Spray']],
         POWER:      [['RAW_POWER', 'Raw'], ['LAUNCH_OPTIM', 'Launch'], ['DAMAGE_PROD', 'Production']],
         DISCIPLINE: [['PATIENCE', 'Patience'], ['AGGRESSION', 'Aggression']],
         SB:         [['SPEED_TOOL', 'Speed'], ['SB_CONVERSION', 'Conversion']],
