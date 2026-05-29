@@ -1168,8 +1168,20 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
         return f'<h2>🔄 Drop / Pickup Suggestions</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def render_2start_gems():
-    """League-wide 2-start SP gems available on waivers."""
+def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
+    """Streamer targets ranked by next-start expected FP.
+
+    Ranking:  baseline_per_start  ×  park_adj  ×  opp_adj
+      - baseline:  rp3 per-start projection (validated model)
+      - park_adj:  1 − 0.5 × (pf_wOBA − 1)  for the venue of the next start
+      - opp_adj:   1 − 0.7 × (bat_index_recent − 1)  for the opposing offense
+    Multiplier clipped to [0.6, 1.4]. Coefficients are heuristic (matched to
+    SP-FP elasticity vs opp xwOBA ≈ −0.7 from the formula structure) — direction
+    is validated, magnitude is conservative. Pitcher L/R splits intentionally
+    excluded: YoY stability of pitcher split xwOBA = 0.05–0.09 (test B1, this
+    session) — would add noise, not signal. Team-level offensive index and park
+    factors ARE stable across years.
+    """
     try:
         from plv_clone.league_state import LeagueState
         league = LeagueState()._get_league()
@@ -1183,31 +1195,132 @@ def render_2start_gems():
         rp3 = pd.read_csv(rp3_path).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
 
-        # NOTE: For full 2-start detection we'd need to fetch every team's
-        # probable pitchers this week. For dashboard speed, surface top-20 FA SPs
-        # by per_start_sched as candidate streamer/2-start targets.
-        fas = league.free_agents(size=300)
-        gems = []
+        # Validated multipliers
+        pf_path = CACHE / 'park_factors_2018_2026.csv'
+        ts_path = CACHE / 'team_strength_2026.csv'
+        pf_map = {}
+        if pf_path.exists():
+            pf_df = pd.read_csv(pf_path)
+            pf_cur = pf_df[pf_df['year'] == pf_df['year'].max()]
+            pf_map = dict(zip(pf_cur['team_abbr'].str.upper(), pf_cur['pf_wOBA']))
+        ts_map_local = {}
+        if ts_path.exists():
+            ts_df = pd.read_csv(ts_path)
+            ts_map_local = {row['team'].upper():
+                            (row['bat_index_recent'] if pd.notna(row.get('bat_index_recent'))
+                             else row.get('bat_index', 1.0))
+                            for _, row in ts_df.iterrows()}
+
+        # Collect candidate FAs with baseline projection
+        candidates = []
+        fas = league.free_agents(size=2000)  # full pool — avoid silent truncation
         for fa in fas:
-            if getattr(fa, 'position', '') != 'SP': continue
+            if getattr(fa, 'position', '') != 'SP':
+                continue
             nk = _norm(fa.name)
-            if nk in rostered: continue
+            if nk in rostered:
+                continue
             info = rp3[rp3['nk'] == nk]
-            if info.empty: continue
-            per_start = info.iloc[0].get('xfp_rp3_per_start_sched') or info.iloc[0].get('xfp_rp3_per_start') or 0
-            if per_start < 9: continue
-            gems.append({'name': fa.name, 'team': getattr(fa, 'proTeam', '?'),
-                          'per_start': per_start,
-                          'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0)})
-        gems.sort(key=lambda g: -g['per_start'])
-        if not gems:
-            return '<h2>💎 Streamer / 2-Start Targets</h2><p class="muted">No standouts in FA pool.</p>'
-        out = ['<h2>💎 Top Streamer Targets <small class="muted">(FAs by per-start FP projection)</small></h2>',
-               '<table><thead><tr><th>Pitcher</th><th>Team</th><th>%Own</th><th>per_GS</th></tr></thead><tbody>']
-        for g in gems[:10]:
-            out.append(f'<tr><td>{h(g["name"])}</td><td>{h(g["team"])}</td>'
-                       f'<td>{g["pct_owned"]:.0f}%</td>'
-                       f'<td><b>{g["per_start"]:.2f}</b></td></tr>')
+            if info.empty:
+                continue
+            per_start = (info.iloc[0].get('xfp_rp3_per_start_sched')
+                         or info.iloc[0].get('xfp_rp3_per_start') or 0)
+            if per_start < 9:
+                continue
+            candidates.append({
+                'name': fa.name,
+                'team': (getattr(fa, 'proTeam', '?') or '?').upper(),
+                'per_start': float(per_start),
+                'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0),
+            })
+
+        if not candidates:
+            return '<h2>💎 Streamer Targets</h2><p class="muted">No FA SPs above baseline.</p>'
+
+        # Resolve next start for each candidate
+        next_start_by_name = {}
+        if schedules_by_team and today and week_end:
+            mlbam_by_name = {}
+            for c in candidates:
+                pid = _resolve_mlbam_via_api(c['name'])
+                if pid:
+                    mlbam_by_name[c['name']] = int(pid)
+            if mlbam_by_name:
+                starts = build_sp_starts_by_pitcher(
+                    set(mlbam_by_name.values()), schedules_by_team, today, week_end)
+                for nm, pid in mlbam_by_name.items():
+                    games = starts.get(pid, [])
+                    if games:
+                        next_start_by_name[nm] = games[0]  # already sorted by date
+
+        # Rank by adjusted expected FP
+        for c in candidates:
+            ns = next_start_by_name.get(c['name'])
+            if ns:
+                opp = (ns.get('opp_team') or '').upper()
+                is_home = bool(ns.get('is_home'))
+                venue = c['team'] if is_home else opp
+                pf_wOBA = pf_map.get(venue, 1.0)
+                opp_idx = ts_map_local.get(opp, 1.0)
+                mult = (1 - 0.5 * (pf_wOBA - 1)) * (1 - 0.7 * (opp_idx - 1))
+                mult = max(0.6, min(1.4, mult))
+                c['opp'] = opp
+                c['is_home'] = is_home
+                c['pf_wOBA'] = pf_wOBA
+                c['opp_idx'] = opp_idx
+                c['adj_mult'] = mult
+                c['exp_fp'] = c['per_start'] * mult
+                c['date'] = ns.get('date', '')
+                c['confirmed'] = ns.get('confirmed', False)
+            else:
+                c['opp'] = '—'
+                c['is_home'] = None
+                c['pf_wOBA'] = 1.0
+                c['opp_idx'] = 1.0
+                c['adj_mult'] = 1.0
+                c['exp_fp'] = c['per_start']
+                c['date'] = ''
+                c['confirmed'] = False
+
+        candidates.sort(key=lambda x: -x['exp_fp'])
+
+        out = [
+            '<h2>💎 Top Streamer Targets <small class="muted">'
+            '(next-start expected FP — baseline × park × opponent)</small></h2>',
+            '<p class="notes">'
+            'Ranking = rp3 baseline × park factor × opponent batting index. '
+            'Pitcher L/R splits excluded (failed YoY stability validation, B1). '
+            'Coefficients heuristic; direction validated.'
+            '</p>',
+            '<table><thead><tr>'
+            '<th>Pitcher</th><th>Team</th><th>%Own</th>'
+            '<th>Next vs</th><th>Date</th>'
+            '<th>Park</th><th>Opp idx</th>'
+            '<th>Baseline</th><th>Exp FP</th>'
+            '</tr></thead><tbody>',
+        ]
+        for g in candidates[:12]:
+            opp_disp = g['opp']
+            if g['opp'] != '—':
+                arrow = 'vs' if g.get('is_home') else '@'
+                opp_disp = f"{arrow} {g['opp']}"
+                if not g['confirmed']:
+                    opp_disp += ' <small class="muted">(pred)</small>'
+            adj_pct = (g['adj_mult'] - 1) * 100
+            adj_class = 'pos' if adj_pct >= 1 else ('neg' if adj_pct <= -1 else 'muted')
+            out.append(
+                f'<tr><td>{h(g["name"])}</td>'
+                f'<td>{h(g["team"])}</td>'
+                f'<td>{g["pct_owned"]:.0f}%</td>'
+                f'<td>{opp_disp}</td>'
+                f'<td>{h(g["date"])}</td>'
+                f'<td>{g["pf_wOBA"]:.3f}</td>'
+                f'<td>{g["opp_idx"]:.3f}</td>'
+                f'<td>{g["per_start"]:.2f}</td>'
+                f'<td><b>{g["exp_fp"]:.2f}</b> '
+                f'<small class="{adj_class}">({adj_pct:+.0f}%)</small></td>'
+                f'</tr>'
+            )
         out.append('</tbody></table>')
         return '\n'.join(out)
     except Exception as e:
@@ -1754,7 +1867,7 @@ def main():
     print('  building enhancement sections...')
     power_block = render_power_rankings()
     drop_pickup_block = render_drop_pickup_suggestions(mu['my_lineup'], rh3_map)
-    streamer_block = render_2start_gems()
+    streamer_block = render_2start_gems(schedules_by_team, today, week_end)
     cap_block = render_cap_status(my_proj)
     closer_block = render_closer_tracker()
     diff_block = render_snapshot_diff()
