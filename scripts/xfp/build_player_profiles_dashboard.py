@@ -61,12 +61,13 @@ H_COLS = [
     'sb_tier', 'spray_archetype',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
     'r_Contact', 'r_K', 'r_BABIP', 'r_xCON',
-    'r_Barrel', 'r_HardHit', 'r_ISO', 'r_HRrate', 'r_PullFB',
+    'r_Barrel', 'r_HardHit', 'r_ISO', 'r_HRrate', 'r_HRrate_parkadj', 'hr_parkadj_delta', 'pf_HR', 'r_PullFB',
     'r_BB', 'r_Chase', 'r_ZSwing',
     'r_SBrate', 'r_Sprint',
 ]
 S_COLS = [
-    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 't1_fp_projection',
+    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start',
+    't1_fp_projection', 't2_fp_projection',
     'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag', 'data_tier',
     'OVERALL', 'STUFF', 'MOVEMENT', 'CONTROL',
     'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID', 'STRIKE_THROWING',

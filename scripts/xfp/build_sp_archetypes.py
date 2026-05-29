@@ -335,20 +335,46 @@ def build_ratings_panel(current_year=2026):
     # and the original `g` becomes stale, producing NaN ranks after assignment.
     qual['rank_in_year'] = qual.groupby('year')['fp_per_start_actual'].rank(ascending=False, method='min')
 
-    # T+1 FP projection — linear combo of sub-domain ratings + velo + age.
-    # Coefficients from OLS regression of next-year fp_per_start on these features.
-    T1_SP_INTERCEPT = -4.19245
+    # T+1 FP projection — linear model + SWING_MISS × WALK_AVOID interaction.
+    # Refit 2026-05-28 with the interaction term (E test): R² 0.358 → 0.414.
+    # Main effects on SWING_MISS and WALK_AVOID go slightly negative because
+    # the interaction absorbs the bulk of the "elite stuff with control" signal.
+    T1_SP_INTERCEPT = 5.67540
     T1_SP_BETAS = {
-        'SWING_MISS': 0.15731, 'CALLED_STRIKE': 0.03395,
-        'DAMAGE_SUPP': 0.03748, 'GB_TENDENCY': 0.00898,
-        'WALK_AVOID': 0.04229,
-        'velo_rating': 0.02993, 'age': -0.03390,
+        'SWING_MISS':    -0.02019,
+        'CALLED_STRIKE':  0.03617,
+        'DAMAGE_SUPP':    0.02963,
+        'GB_TENDENCY':   -0.00145,
+        'WALK_AVOID':    -0.10736,
+        'velo_rating':    0.03779,
+        'age':           -0.05181,
     }
+    T1_SP_INTERACTION = 0.00314  # SWING_MISS × WALK_AVOID
     qual['t1_fp_proj_raw'] = T1_SP_INTERCEPT + sum(
         qual[k].fillna(50) * v for k, v in T1_SP_BETAS.items()
-    )
+    ) + T1_SP_INTERACTION * qual['SWING_MISS'].fillna(50) * qual['WALK_AVOID'].fillna(50)
     qual['t1_fp_projection'] = qual['t1_fp_proj_raw'].clip(lower=2.0, upper=22.0).round(2)
     qual = qual.drop(columns=['t1_fp_proj_raw'])
+
+    # T+2 FP projection — linear (no interaction tested; not enough sample).
+    # Sample n=290 from FULL pool. R² = 0.39 (close to T+1). For dynasty/keeper.
+    # SWING_MISS dominates (+0.15); age coefficient is sharper at T+2 (-0.15
+    # vs T+1's -0.05) — confirms age dominates longer horizons.
+    T2_SP_INTERCEPT = -0.59491
+    T2_SP_BETAS = {
+        'SWING_MISS':    0.15162,
+        'CALLED_STRIKE': 0.02281,
+        'DAMAGE_SUPP':   0.04651,
+        'GB_TENDENCY':   0.00427,
+        'WALK_AVOID':    0.03159,
+        'velo_rating':   0.05569,
+        'age':          -0.14705,
+    }
+    qual['t2_fp_proj_raw'] = T2_SP_INTERCEPT + sum(
+        qual[k].fillna(50) * v for k, v in T2_SP_BETAS.items()
+    )
+    qual['t2_fp_projection'] = qual['t2_fp_proj_raw'].clip(lower=2.0, upper=22.0).round(2)
+    qual = qual.drop(columns=['t2_fp_proj_raw'])
 
     # Trajectory alerts — 3-year OVERALL slope + career percentile.
     # Slope = linear-regression slope of OVERALL on year over the last 3 seasons
@@ -494,7 +520,7 @@ def main():
     print(f'  arsenal joined: {n_arsenal} of {len(qual)} pitcher-years have pitch data', flush=True)
 
     # Master ratings CSV (human-readable)
-    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','t1_fp_projection','data_tier',
+    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','t1_fp_projection','t2_fp_projection','data_tier',
                    'OVERALL','OVERALL_slope_3yr','OVERALL_career_pct','traj_flag',
                    'STUFF','MOVEMENT','CONTROL',
                    'SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID','STRIKE_THROWING',

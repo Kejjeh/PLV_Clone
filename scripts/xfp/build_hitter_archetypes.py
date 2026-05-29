@@ -29,6 +29,7 @@ from pathlib import Path
 REPO = Path(r'c:\Users\Joshua\plv_clone')
 HIST_CSV = REPO / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 AGE_CSV  = REPO / 'data/outputs/hitter_age_career.csv'
+PARK_CSV = REPO / 'data/research/xfp_cache/park_factors_2018_2026.csv'
 OUT_DIR  = REPO / 'data/research'
 
 # Sample-stability floor (BB% stabilizes ~120 PA; 100 is the practical edge
@@ -391,6 +392,27 @@ def build_ratings_panel(current_year=2026):
     qual['fp_per_pa'] = qual['fp_per_pa_actual']
     qual['rank_in_year'] = qual.groupby('year')['fp_per_pa_actual'].rank(ascending=False, method='min')
 
+    # Park-adjusted HR rate (transparency column, never feeds composites).
+    # Loaded from park_factors_2018_2026.csv. hr_per_pa_parkadj = hr_per_pa / pf_HR;
+    # Coors (pf_HR ~1.3-1.4) deflated, Petco (~0.85) inflated. T+1 mover regression
+    # shows +0.012 R² lift — below ship bar for composite swap, but useful display.
+    # Placed AFTER all other ratings so the park-factor merge doesn't disturb the
+    # within-year groupbys used upstream.
+    if PARK_CSV.exists():
+        pf = pd.read_csv(PARK_CSV)[['year','team_abbr','pf_HR']]
+        pf = pf.rename(columns={'team_abbr': 'team'}).drop_duplicates(['year','team'])
+        qual = qual.merge(pf, on=['year','team'], how='left')
+        qual['pf_HR'] = qual['pf_HR'].fillna(1.0)
+        qual['hr_per_pa_parkadj'] = qual['hr_per_pa'] / qual['pf_HR']
+        adj = rating_20_80(qual['hr_per_pa_parkadj'], qual.groupby('year')['hr_per_pa_parkadj'])
+        qual['r_HRrate_parkadj'] = adj.fillna(qual['r_HRrate']).round(0).astype(int)
+        qual['hr_parkadj_delta'] = (qual['r_HRrate_parkadj'] - qual['r_HRrate']).fillna(0).astype(int)
+    else:
+        qual['pf_HR'] = 1.0
+        qual['hr_per_pa_parkadj'] = qual['hr_per_pa']
+        qual['r_HRrate_parkadj'] = qual['r_HRrate']
+        qual['hr_parkadj_delta'] = 0
+
     # T+1 FP/PA projection — linear combo of sub-domain ratings + age.
     # Coefficients from OLS regression of next-year fp_per_pa on these features.
     T1_HITTER_INTERCEPT = -0.59929
@@ -560,7 +582,7 @@ def main():
         'bd_C','bd_P','bd_D','boundary_distance','boundary_tier',
         'r_Contact','r_K','r_BABIP','r_xCON','r_SprayEnt',
         'r_ZContact','r_OContact',
-        'r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate',
+        'r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate','r_HRrate_parkadj','hr_parkadj_delta','pf_HR',
         'r_BB','r_Chase','r_HBP','r_ZSwing',
         'r_SBrate','r_Sprint',
         'contact_pct','k_pct','babip','babip_career','babip_delta','babip_luck_flag','xwoba_on_contact',

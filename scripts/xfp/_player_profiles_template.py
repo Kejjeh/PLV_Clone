@@ -417,7 +417,11 @@ HOME_TAB = """
 
       <p><b>Trajectory.</b> Each player-year gets a 3-year OVERALL slope (linear-regression slope across their last 3 seasons) and a career-percentile rank (where this OVERALL sits in their own historical distribution). Flags: <i>Trending up</i> (slope ≥ +3 per year), <i>Trending down</i> (slope ≤ -3), <i>Career high</i> (≥ 90th career percentile), <i>Career low</i> (≤ 10th). Shown as a chip in the modal hero.</p>
 
-      <p><b>T+1 FP projection.</b> Each player-year's predicted FP rate for NEXT season, computed from a linear model regressing next-year FP on current-year sub-domain ratings + age. Trained on FULL-tier seasons 2015-2025. R² = 0.29 hitters / 0.33 SPs — explains about a third of next-year FP variance, which is typical for predictive baseball models. Top T+1 predictive features: RAW_POWER, K_AVOIDANCE, age (hitters); SWING_MISS, age, velo (SPs). Notable: xwOBACON (CONTACT_QUALITY) has near-zero T+1 weight despite dominating current-year FP — confirms it's a noisy single-year signal.</p>
+      <p><b>T+1 FP projection.</b> Each player-year's predicted FP rate for NEXT season, computed from a linear model regressing next-year FP on current-year sub-domain ratings + age. Trained on FULL-tier seasons 2015-2025. R² = 0.29 hitters / <b>0.41 SPs</b> (after adding the SWING_MISS × WALK_AVOID interaction term — "elite stuff WITH control"). Top T+1 predictive features: RAW_POWER, K_AVOIDANCE, age (hitters); SWING_MISS, age, velo (SPs). Notable: xwOBACON (CONTACT_QUALITY) has near-zero T+1 weight despite dominating current-year FP — confirms it's a noisy single-year signal.</p>
+
+      <p><b>T+2 FP projection (SPs only).</b> 2-year-out projection for keeper / dynasty contexts. R² = 0.39 (n=290). SWING_MISS dominates (β=+0.15) and the age coefficient is sharper than at T+1 (-0.15 vs -0.05) — confirms age dominates longer horizons. Hitter T+3 R² goes negative (worse than mean), so hitter horizons stop at T+1.</p>
+
+      <p><b>Park-adjusted HR rate.</b> Raw HR rate divided by team's pf_HR park factor — exposes how much a hitter's HR rate is being boosted or suppressed by their home ballpark. Coors (pf_HR ~1.3-1.4) gets deflated; pitcher-friendly parks like Petco / Angel Stadium (~0.6-0.7) get inflated. Shown as a chip in the modal hero only when |delta| ≥ 3 rating points. <b>Display only — does not feed into POWER or OVERALL.</b> Empirical T+1 R² gain was +0.012 for team-movers but below the +0.02 ship threshold.</p>
 
       <p><b>Sub-domain comps.</b> Each player's modal includes a "Comps" tab listing the 5 historical seasons closest by Euclidean distance over the 12-dimensional sub-domain space (5 for SPs). Click any comp to drill into that player's career.</p>
       <p>Sub-domain weights derived from OLS regression of FP rate on sub-domain
@@ -1224,6 +1228,26 @@ function openModal(role, id) {
     hero += `<div class="label">T+1 projection</div>`;
     hero += `<div class="val" style="font-size:1.5em;">${cur.t1_fp_projection.toFixed(role === 'hitter' ? 3 : 2)}</div>`;
     hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${role === 'hitter' ? 'pa' : 'start'} next yr</div>`;
+    hero += `</div>`;
+  }
+  // T+2 projection (SPs only — dynasty/keeper context)
+  if (role === 'sp' && cur.t2_fp_projection != null) {
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--dim);padding-left:.8em;">`;
+    hero += `<div class="label">T+2 projection</div>`;
+    hero += `<div class="val" style="font-size:1.5em;">${cur.t2_fp_projection.toFixed(2)}</div>`;
+    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/start in 2 yrs</div>`;
+    hero += `</div>`;
+  }
+  // Park-adjusted HR rate chip (hitters only) — surfaces park inflation/deflation
+  if (role === 'hitter' && cur.r_HRrate_parkadj != null && cur.hr_parkadj_delta != null && Math.abs(cur.hr_parkadj_delta) >= 3) {
+    const d = cur.hr_parkadj_delta;
+    const sign = d > 0 ? '+' : '';
+    const flag = d <= -5 ? 'Park inflated' : d >= 5 ? 'Park suppressed' : 'Park-adj';
+    const color = d <= -3 ? 'warn' : 'pos';
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--${color});padding-left:.8em;">`;
+    hero += `<div class="label">Park-adj HR</div>`;
+    hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.95em;color:var(--text);"><b>${cur.r_HRrate}</b> raw → <b>${cur.r_HRrate_parkadj}</b> adj</div>`;
+    hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.78em;color:var(--${color});">${sign}${d} · ${flag} · pf=${(cur.pf_HR||1).toFixed(2)}</div>`;
     hero += `</div>`;
   }
   // BABIP luck context chip (hitters only)
