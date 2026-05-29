@@ -391,6 +391,66 @@ def build_ratings_panel(current_year=2026):
     qual['fp_per_pa'] = qual['fp_per_pa_actual']
     qual['rank_in_year'] = qual.groupby('year')['fp_per_pa_actual'].rank(ascending=False, method='min')
 
+    # T+1 FP/PA projection — linear combo of sub-domain ratings + age.
+    # Coefficients from OLS regression of next-year fp_per_pa on these features.
+    T1_HITTER_INTERCEPT = -0.59929
+    T1_HITTER_BETAS = {
+        'Z_CONTACT': 0.00117, 'O_CONTACT': 0.00294, 'K_AVOIDANCE': 0.00535,
+        'CONTACT_QUALITY': -0.00018, 'SPRAY_PROFILE': -0.00022,
+        'RAW_POWER': 0.00626, 'LAUNCH_OPTIM': 0.00086, 'DAMAGE_PROD': 0.00151,
+        'PATIENCE': 0.00125, 'AGGRESSION': 0.00100,
+        'SPEED_TOOL': 0.00132, 'SB_CONVERSION': 0.00147,
+        'age': -0.00284,
+    }
+    qual['t1_fp_proj_raw'] = T1_HITTER_INTERCEPT + sum(
+        qual[k].fillna(50) * v for k, v in T1_HITTER_BETAS.items()
+    )
+    qual['t1_fp_projection'] = qual['t1_fp_proj_raw'].clip(lower=0.1, upper=1.2).round(3)
+    qual = qual.drop(columns=['t1_fp_proj_raw'])
+
+    # Trajectory alerts — 3-year OVERALL slope + career percentile.
+    # Slope = linear-regression slope of OVERALL on year over the last 3 seasons
+    # (including current). Career percentile = where current OVERALL sits within
+    # this player's own historical distribution.
+    idkey = 'batter'
+    qual_sorted = qual.sort_values([idkey, 'year'])[[idkey, 'year', 'OVERALL']].copy()
+
+    def _trajectory_metrics(group):
+        g = group.sort_values('year').reset_index(drop=True)
+        g['OVERALL_slope_3yr'] = np.nan
+        g['OVERALL_career_pct'] = np.nan
+        for i in range(len(g)):
+            # Slope from last 3 (or fewer) seasons up to and including current
+            window = g.iloc[max(0, i-2):i+1]
+            if len(window) >= 2 and window['year'].max() - window['year'].min() >= 1:
+                slope = np.polyfit(window['year'].values, window['OVERALL'].values, 1)[0]
+                g.loc[g.index[i], 'OVERALL_slope_3yr'] = slope
+            # Career percentile: where current overall sits in player's history (inclusive)
+            career = g.iloc[:i+1]['OVERALL']
+            g.loc[g.index[i], 'OVERALL_career_pct'] = (career < g.loc[g.index[i], 'OVERALL']).sum() / len(career)
+        return g
+
+    qual_sorted = qual_sorted.groupby(idkey, group_keys=False)[[idkey, 'year', 'OVERALL']].apply(_trajectory_metrics)
+    qual_sorted['OVERALL_slope_3yr'] = qual_sorted['OVERALL_slope_3yr'].round(2)
+    qual_sorted['OVERALL_career_pct'] = qual_sorted['OVERALL_career_pct'].round(3)
+
+    # Trajectory flag
+    def _traj_flag(row):
+        s = row['OVERALL_slope_3yr']
+        p = row['OVERALL_career_pct']
+        if pd.notna(s) and s >= 3.0: return 'TRENDING_UP'
+        if pd.notna(s) and s <= -3.0: return 'TRENDING_DOWN'
+        if pd.notna(p) and p >= 0.90: return 'CAREER_HIGH'
+        if pd.notna(p) and p <= 0.10: return 'CAREER_LOW'
+        return 'STABLE'
+    qual_sorted['traj_flag'] = qual_sorted.apply(_traj_flag, axis=1)
+
+    # Merge back into qual (preserve row order)
+    qual = qual.merge(
+        qual_sorted[[idkey, 'year', 'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag']],
+        on=[idkey, 'year'], how='left'
+    )
+
     return qual
 
 
@@ -488,8 +548,9 @@ def main():
 
     # Master ratings CSV (human-readable)
     master_cols = [
-        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
-        'OVERALL','CONTACT','POWER','DISCIPLINE','SB',
+        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','t1_fp_projection','data_tier',
+        'OVERALL','OVERALL_slope_3yr','OVERALL_career_pct','traj_flag',
+        'CONTACT','POWER','DISCIPLINE','SB',
         'Z_CONTACT','O_CONTACT','K_AVOIDANCE','CONTACT_QUALITY','SPRAY_PROFILE',
         'RAW_POWER','LAUNCH_OPTIM','DAMAGE_PROD',
         'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION',

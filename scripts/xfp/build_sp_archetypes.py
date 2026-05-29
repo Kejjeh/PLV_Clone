@@ -240,6 +240,7 @@ def build_ratings_panel(current_year=2026):
     qual = m[m['gs'] >= GS_FLOOR_RATED].copy()
     qual = qual[qual['year'] != 2020]  # exclude COVID short season
     qual['data_tier'] = np.where(qual['gs'] >= GS_FLOOR_FULL, 'FULL', 'PARTIAL')
+    qual['zone_pct'] = qual['in_zone'] / qual['pitches'].clip(lower=1)
 
     g = qual.groupby('year')
 
@@ -257,6 +258,7 @@ def build_ratings_panel(current_year=2026):
 
     # CONTROL components (1): BB%
     qual['r_BB'] = rating_20_80(qual['bb_pct'], g['bb_pct'], invert=True).round(0).astype(int)
+    qual['r_ZonePct'] = rating_20_80(qual['zone_pct'], g['zone_pct']).round(0).astype(int)
 
     # Sub-domain ratings — computed FIRST. Each is the simple mean of its
     # components, then re-rated 20-80 within year. Domains below are then
@@ -266,13 +268,15 @@ def build_ratings_panel(current_year=2026):
     qual['_DAMAGE_SUPP_raw']   = qual[['r_HRrate','r_Barrel','r_HardHit','r_xCON']].mean(axis=1)
     qual['_GB_TENDENCY_raw']   = qual['r_GB']
     qual['_WALK_AVOID_raw']    = qual['r_BB']
+    qual['_STRIKE_THROWING_raw'] = qual['r_ZonePct']
     g_sub = qual.groupby('year')
     qual['SWING_MISS']    = rating_20_80(qual['_SWING_MISS_raw'],    g_sub['_SWING_MISS_raw']).round(0).astype(int)
     qual['CALLED_STRIKE'] = rating_20_80(qual['_CALLED_STRIKE_raw'], g_sub['_CALLED_STRIKE_raw']).round(0).astype(int)
     qual['DAMAGE_SUPP']   = rating_20_80(qual['_DAMAGE_SUPP_raw'],   g_sub['_DAMAGE_SUPP_raw']).round(0).astype(int)
     qual['GB_TENDENCY']   = rating_20_80(qual['_GB_TENDENCY_raw'],   g_sub['_GB_TENDENCY_raw']).round(0).astype(int)
     qual['WALK_AVOID']    = rating_20_80(qual['_WALK_AVOID_raw'],    g_sub['_WALK_AVOID_raw']).round(0).astype(int)
-    qual = qual.drop(columns=['_SWING_MISS_raw','_CALLED_STRIKE_raw','_DAMAGE_SUPP_raw','_GB_TENDENCY_raw','_WALK_AVOID_raw'])
+    qual['STRIKE_THROWING'] = rating_20_80(qual['_STRIKE_THROWING_raw'], g_sub['_STRIKE_THROWING_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_SWING_MISS_raw','_CALLED_STRIKE_raw','_DAMAGE_SUPP_raw','_GB_TENDENCY_raw','_WALK_AVOID_raw','_STRIKE_THROWING_raw'])
 
     # Domain composites — empirically-weighted sums of sub-domain ratings,
     # re-rated to 20-80 within year. Weights from OLS regression of
@@ -285,8 +289,11 @@ def build_ratings_panel(current_year=2026):
     qual['_MOVEMENT_raw'] = 0.85 * qual['DAMAGE_SUPP'] + 0.15 * qual['GB_TENDENCY']
     qual['STUFF']    = rating_20_80(qual['_STUFF_raw'],    g2['_STUFF_raw']).round(0).astype(int)
     qual['MOVEMENT'] = rating_20_80(qual['_MOVEMENT_raw'], g2['_MOVEMENT_raw']).round(0).astype(int)
-    qual['CONTROL']  = qual['WALK_AVOID']
-    qual = qual.drop(columns=['_STUFF_raw','_MOVEMENT_raw'])
+    # CONTROL now has 2 sub-domains. Empirical weights from OLS:
+    #   WALK_AVOID 0.893 / STRIKE_THROWING 0.107 — rounded.
+    qual['_CONTROL_raw'] = 0.90 * qual['WALK_AVOID'] + 0.10 * qual['STRIKE_THROWING']
+    qual['CONTROL'] = rating_20_80(qual['_CONTROL_raw'], qual.groupby('year')['_CONTROL_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_STUFF_raw','_MOVEMENT_raw','_CONTROL_raw'])
 
     # Overall composite — weighted mean of the three archetype-driving domains,
     # then re-rated within year to a clean 20-80 distribution. Weights derived
@@ -327,6 +334,64 @@ def build_ratings_panel(current_year=2026):
     # Use a fresh groupby on current qual — attach_age() above can reshape row indices
     # and the original `g` becomes stale, producing NaN ranks after assignment.
     qual['rank_in_year'] = qual.groupby('year')['fp_per_start_actual'].rank(ascending=False, method='min')
+
+    # T+1 FP projection — linear combo of sub-domain ratings + velo + age.
+    # Coefficients from OLS regression of next-year fp_per_start on these features.
+    T1_SP_INTERCEPT = -4.19245
+    T1_SP_BETAS = {
+        'SWING_MISS': 0.15731, 'CALLED_STRIKE': 0.03395,
+        'DAMAGE_SUPP': 0.03748, 'GB_TENDENCY': 0.00898,
+        'WALK_AVOID': 0.04229,
+        'velo_rating': 0.02993, 'age': -0.03390,
+    }
+    qual['t1_fp_proj_raw'] = T1_SP_INTERCEPT + sum(
+        qual[k].fillna(50) * v for k, v in T1_SP_BETAS.items()
+    )
+    qual['t1_fp_projection'] = qual['t1_fp_proj_raw'].clip(lower=2.0, upper=22.0).round(2)
+    qual = qual.drop(columns=['t1_fp_proj_raw'])
+
+    # Trajectory alerts — 3-year OVERALL slope + career percentile.
+    # Slope = linear-regression slope of OVERALL on year over the last 3 seasons
+    # (including current). Career percentile = where current OVERALL sits within
+    # this player's own historical distribution.
+    idkey = 'pitcher'
+    qual_sorted = qual.sort_values([idkey, 'year'])[[idkey, 'year', 'OVERALL']].copy()
+
+    def _trajectory_metrics(group):
+        g = group.sort_values('year').reset_index(drop=True)
+        g['OVERALL_slope_3yr'] = np.nan
+        g['OVERALL_career_pct'] = np.nan
+        for i in range(len(g)):
+            # Slope from last 3 (or fewer) seasons up to and including current
+            window = g.iloc[max(0, i-2):i+1]
+            if len(window) >= 2 and window['year'].max() - window['year'].min() >= 1:
+                slope = np.polyfit(window['year'].values, window['OVERALL'].values, 1)[0]
+                g.loc[g.index[i], 'OVERALL_slope_3yr'] = slope
+            # Career percentile: where current overall sits in player's history (inclusive)
+            career = g.iloc[:i+1]['OVERALL']
+            g.loc[g.index[i], 'OVERALL_career_pct'] = (career < g.loc[g.index[i], 'OVERALL']).sum() / len(career)
+        return g
+
+    qual_sorted = qual_sorted.groupby(idkey, group_keys=False)[[idkey, 'year', 'OVERALL']].apply(_trajectory_metrics)
+    qual_sorted['OVERALL_slope_3yr'] = qual_sorted['OVERALL_slope_3yr'].round(2)
+    qual_sorted['OVERALL_career_pct'] = qual_sorted['OVERALL_career_pct'].round(3)
+
+    # Trajectory flag
+    def _traj_flag(row):
+        s = row['OVERALL_slope_3yr']
+        p = row['OVERALL_career_pct']
+        if pd.notna(s) and s >= 3.0: return 'TRENDING_UP'
+        if pd.notna(s) and s <= -3.0: return 'TRENDING_DOWN'
+        if pd.notna(p) and p >= 0.90: return 'CAREER_HIGH'
+        if pd.notna(p) and p <= 0.10: return 'CAREER_LOW'
+        return 'STABLE'
+    qual_sorted['traj_flag'] = qual_sorted.apply(_traj_flag, axis=1)
+
+    # Merge back into qual (preserve row order)
+    qual = qual.merge(
+        qual_sorted[[idkey, 'year', 'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag']],
+        on=[idkey, 'year'], how='left'
+    )
 
     return qual
 
@@ -429,22 +494,24 @@ def main():
     print(f'  arsenal joined: {n_arsenal} of {len(qual)} pitcher-years have pitch data', flush=True)
 
     # Master ratings CSV (human-readable)
-    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','data_tier',
-                   'OVERALL','STUFF','MOVEMENT','CONTROL',
-                   'SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID',
+    master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','t1_fp_projection','data_tier',
+                   'OVERALL','OVERALL_slope_3yr','OVERALL_career_pct','traj_flag',
+                   'STUFF','MOVEMENT','CONTROL',
+                   'SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID','STRIKE_THROWING',
                    'archetype','stuff_subtype','cell',
                    'velo_rating','velo_tier','pitch_archetype','primary_group','secondary_group',
                    'age','age_tier','career_year',
                    'bd_S','bd_M','bd_C','boundary_distance','boundary_tier',
-                   'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB',
+                   'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB','r_ZonePct',
                    'k_pct','bb_pct','hr_per_bf','swstr_pct','c_plus_swstr','xwoba_contact',
-                   'barrel_pct','hard_hit_pct','gb_pct','avg_velo',
+                   'barrel_pct','hard_hit_pct','gb_pct','avg_velo','zone_pct',
                    'FB_pct','SL_pct','CB_pct','CH_pct','FS_pct','arsenal_entropy']
     master = qual[master_cols].sort_values(['year','rank_in_year']).copy()
     master['fp_per_start'] = master['fp_per_start'].round(2)
     for col, factor, prec in [('k_pct',100,1),('bb_pct',100,1),('hr_per_bf',100,2),
                                ('swstr_pct',100,1),('c_plus_swstr',100,1),('xwoba_contact',1,3),
-                               ('barrel_pct',100,1),('hard_hit_pct',100,1),('gb_pct',100,1),('avg_velo',1,1)]:
+                               ('barrel_pct',100,1),('hard_hit_pct',100,1),('gb_pct',100,1),('avg_velo',1,1),
+                               ('zone_pct',100,1)]:
         master[col] = (master[col] * factor).round(prec)
     for col in ['FB_pct','SL_pct','CB_pct','CH_pct','FS_pct']:
         master[col] = (master[col] * 100).round(1)

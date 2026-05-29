@@ -50,7 +50,8 @@ S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 
 # Whitelisted columns — drives payload size.
 H_COLS = [
-    'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
+    'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 't1_fp_projection',
+    'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag', 'data_tier',
     'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
     'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
     'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
@@ -65,9 +66,10 @@ H_COLS = [
     'r_SBrate', 'r_Sprint',
 ]
 S_COLS = [
-    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 'data_tier',
+    'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 't1_fp_projection',
+    'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag', 'data_tier',
     'OVERALL', 'STUFF', 'MOVEMENT', 'CONTROL',
-    'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID',
+    'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID', 'STRIKE_THROWING',
     'archetype', 'stuff_subtype',
     'velo_rating', 'velo_tier', 'pitch_archetype', 'primary_group',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
@@ -117,7 +119,8 @@ def assert_schema():
         n = int(h[c].isna().sum())
         if n: _fail(f'hitter master {c} has {n} null rows')
     for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'OVERALL', 'rank_in_year',
-              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID']:
+              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID',
+              'STRIKE_THROWING']:
         n = int(s[c].isna().sum())
         if n: _fail(f'sp master {c} has {n} null rows')
 
@@ -159,7 +162,8 @@ def build_sp_records(s: pd.DataFrame):
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
     for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'velo_rating', 'OVERALL',
-              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID']:
+              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID',
+              'STRIKE_THROWING']:
         df[c] = df[c].astype('Int64')
     return json.loads(df.to_json(orient='records'))
 

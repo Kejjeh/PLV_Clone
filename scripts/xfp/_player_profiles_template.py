@@ -413,7 +413,13 @@ HOME_TAB = """
       <p>SPs:<br>
       • STUFF = 0.65 Swing-and-miss + 0.35 Called-strike<br>
       • MOVEMENT = 0.85 Damage suppression + 0.15 GB tendency<br>
-      • CONTROL = Walk avoidance</p>
+      • CONTROL = 0.90 Walk avoidance + 0.10 Strike-throwing (zone%)</p>
+
+      <p><b>Trajectory.</b> Each player-year gets a 3-year OVERALL slope (linear-regression slope across their last 3 seasons) and a career-percentile rank (where this OVERALL sits in their own historical distribution). Flags: <i>Trending up</i> (slope ≥ +3 per year), <i>Trending down</i> (slope ≤ -3), <i>Career high</i> (≥ 90th career percentile), <i>Career low</i> (≤ 10th). Shown as a chip in the modal hero.</p>
+
+      <p><b>T+1 FP projection.</b> Each player-year's predicted FP rate for NEXT season, computed from a linear model regressing next-year FP on current-year sub-domain ratings + age. Trained on FULL-tier seasons 2015-2025. R² = 0.29 hitters / 0.33 SPs — explains about a third of next-year FP variance, which is typical for predictive baseball models. Top T+1 predictive features: RAW_POWER, K_AVOIDANCE, age (hitters); SWING_MISS, age, velo (SPs). Notable: xwOBACON (CONTACT_QUALITY) has near-zero T+1 weight despite dominating current-year FP — confirms it's a noisy single-year signal.</p>
+
+      <p><b>Sub-domain comps.</b> Each player's modal includes a "Comps" tab listing the 5 historical seasons closest by Euclidean distance over the 12-dimensional sub-domain space (5 for SPs). Click any comp to drill into that player's career.</p>
       <p>Sub-domain weights derived from OLS regression of FP rate on sub-domain
       ratings, FULL-tier pool only. Z-contact and O-contact are kept primarily
       for diagnostic distinction even though their predictive weight is small —
@@ -1073,14 +1079,16 @@ function renderArchetypeTables(rows, role, targetId) {
 function renderLeaderboard(rows, role, targetId) {
   const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
   const top = rows.slice().sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0)).slice(0, 15);
-  let html = '<table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Overall</th>';
+  let html = '<table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Overall</th><th class="num">T+1</th>';
   if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
   else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
+    const t1 = r.t1_fp_projection;
     html += `<tr><td class="num">${i+1}</td>`
           + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
-          + `<td class="num"><b>${r.OVERALL}</b></td>`;
+          + `<td class="num"><b>${r.OVERALL}</b></td>`
+          + `<td class="num">${t1 != null ? t1.toFixed(role === 'hitter' ? 3 : 2) : ''}</td>`;
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
@@ -1186,8 +1194,39 @@ function openModal(role, id) {
   hero += `<div class="hero-stats">`;
   hero += `<div class="hero-archetype">${prettyLabel(last.archetype)}</div>`;
   hero += `<div class="hero-overall"><div class="label">Overall</div><div class="val">${last.OVERALL}</div></div>`;
-  // BABIP luck context chip (hitters only)
   const cur = sorted[sorted.length - 1];
+  // Trajectory chip
+  if (cur.traj_flag && cur.traj_flag !== 'STABLE') {
+    const flag = cur.traj_flag;
+    const color = flag === 'TRENDING_UP' || flag === 'CAREER_HIGH' ? 'pos'
+                : flag === 'TRENDING_DOWN' || flag === 'CAREER_LOW' ? 'neg' : 'dim';
+    const label = flag === 'TRENDING_UP'   ? 'Trending up'
+                : flag === 'TRENDING_DOWN' ? 'Trending down'
+                : flag === 'CAREER_HIGH'   ? 'Career high'
+                : flag === 'CAREER_LOW'    ? 'Career low' : 'Stable';
+    const slopeStr = cur.OVERALL_slope_3yr != null
+      ? `${cur.OVERALL_slope_3yr > 0 ? '+' : ''}${cur.OVERALL_slope_3yr.toFixed(1)}/yr`
+      : '';
+    const pctStr = cur.OVERALL_career_pct != null
+      ? `${Math.round(cur.OVERALL_career_pct * 100)}th pctile`
+      : '';
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--${color});padding-left:.8em;">`;
+    hero += `<div class="label">Trajectory</div>`;
+    hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.95em;color:var(--text);"><b>${label}</b></div>`;
+    if (slopeStr || pctStr) {
+      hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.78em;color:var(--dim);">${slopeStr}${slopeStr && pctStr ? ' · ' : ''}${pctStr}</div>`;
+    }
+    hero += `</div>`;
+  }
+  // T+1 projection chip
+  if (cur.t1_fp_projection != null) {
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--accent);padding-left:.8em;">`;
+    hero += `<div class="label">T+1 projection</div>`;
+    hero += `<div class="val" style="font-size:1.5em;">${cur.t1_fp_projection.toFixed(role === 'hitter' ? 3 : 2)}</div>`;
+    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${role === 'hitter' ? 'pa' : 'start'} next yr</div>`;
+    hero += `</div>`;
+  }
+  // BABIP luck context chip (hitters only)
   if (role === 'hitter' && cur.babip_delta != null) {
     const delta = cur.babip_delta;
     const flag = cur.babip_luck_flag;
@@ -1209,6 +1248,7 @@ function openModal(role, id) {
   tabs += '<button class="active" data-mtab="arc">Career arc</button>';
   tabs += '<button data-mtab="years">Year-by-year</button>';
   tabs += '<button data-mtab="comp">Composition</button>';
+  tabs += '<button data-mtab="comps">Comps</button>';
   if (hasSnap) tabs += '<button data-mtab="snap">In-season</button>';
   tabs += '</div>';
 
@@ -1275,7 +1315,8 @@ function openModal(role, id) {
   const SUB_W_S = {
     STUFF:    [['SWING_MISS', 0.65, 'Swing-and-miss'], ['CALLED_STRIKE', 0.35, 'Called strike']],
     MOVEMENT: [['DAMAGE_SUPP', 0.85, 'Damage suppression'], ['GB_TENDENCY', 0.15, 'GB tendency']],
-    CONTROL:  [['WALK_AVOID', 1.00, 'Walk avoidance']],
+    CONTROL:  [['WALK_AVOID', 0.90, 'Walk avoidance'],
+                ['STRIKE_THROWING', 0.10, 'Strike-throwing (zone%)']],
   };
 
   let comp = `<div class="composition"><div style="color:var(--dim);font-size:.8em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Composition for ${cur.year}${cur.data_tier === 'PARTIAL' ? ' (PARTIAL season)' : ''}</div>`;
@@ -1305,6 +1346,15 @@ function openModal(role, id) {
 
   panels += '<div class="modal-mtab-panel" data-mtab="comp">' + comp + '</div>';
 
+  // Comps panel — find 5 nearest historical seasons by sub-domain Euclidean distance
+  panels += '<div class="modal-mtab-panel" data-mtab="comps">';
+  panels += `<h3 style="color:var(--accent);">Most similar historical seasons (sub-domain distance)</h3>`;
+  panels += '<div style="color:var(--dim);font-size:.82em;font-family:\'IBM Plex Mono\',monospace;margin-bottom:.4em;">';
+  panels += 'Top 5 player-years closest to ' + cur.player_name + ' ' + cur.year + ' by Euclidean distance over the 12 sub-domain ratings.';
+  panels += '</div>';
+  panels += '<div class="table-scroll"><table id="modal-comps-table"></table></div>';
+  panels += '</div>';
+
   if (hasSnap) {
     panels += '<div class="modal-mtab-panel" data-mtab="snap">';
     panels += `<h3 style="color:var(--accent);">In-season trajectory · ${state.singleYear}</h3>`;
@@ -1314,6 +1364,7 @@ function openModal(role, id) {
 
   document.getElementById('modal-content').innerHTML = hero + tabs + panels;
   document.getElementById('modal-bg').classList.add('open');
+  renderModalComps(cur, role);
 
   // Wire modal-tab click handler
   document.querySelectorAll('.modal-tabs button').forEach(b => {
@@ -1358,6 +1409,64 @@ function renderSnapshotTrajectory(rows, role) {
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
+
+function findSubDomainComps(focal, role, k) {
+  k = k || 5;
+  const SUB_KEYS_H = ['Z_CONTACT','O_CONTACT','K_AVOIDANCE','CONTACT_QUALITY','SPRAY_PROFILE',
+                       'RAW_POWER','LAUNCH_OPTIM','DAMAGE_PROD',
+                       'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION'];
+  const SUB_KEYS_S = ['SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID','STRIKE_THROWING'];
+  const keys = role === 'hitter' ? SUB_KEYS_H : SUB_KEYS_S;
+  const pool = role === 'hitter' ? HITTERS : SPS;
+  const idKey = role === 'hitter' ? 'batter' : 'pitcher';
+  const focalId = focal[idKey];
+  const focalYr = focal.year;
+  // Filter: same role, different (player, year) than focal
+  const candidates = pool.filter(r => !(r[idKey] === focalId && r.year === focalYr));
+  // Compute squared euclidean distance
+  candidates.forEach(c => {
+    let d = 0;
+    for (let i = 0; i < keys.length; i++) {
+      const a = focal[keys[i]], b = c[keys[i]];
+      if (a == null || b == null) continue;
+      d += (a - b) * (a - b);
+    }
+    c._dist = Math.sqrt(d);
+  });
+  candidates.sort((a, b) => a._dist - b._dist);
+  return candidates.slice(0, k);
+}
+
+function renderModalComps(focal, role) {
+  const comps = findSubDomainComps(focal, role, 5);
+  const tbl = document.getElementById('modal-comps-table');
+  if (!tbl) return;
+  let html = '<thead><tr><th class="num">#</th><th>Player</th><th class="num">Yr</th><th class="num">Overall</th>';
+  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th>';
+  else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th>';
+  html += '<th class="num">Dist</th><th class="num">FP/' + (role === 'hitter' ? 'PA' : 'start') + '</th></tr></thead><tbody>';
+  comps.forEach((c, i) => {
+    html += `<tr><td class="num">${i+1}</td>`;
+    html += `<td class="player" data-role="${role}" data-id="${c[role === 'hitter' ? 'batter' : 'pitcher']}">${c.player_name}</td>`;
+    html += `<td class="num">${c.year}</td>`;
+    html += `<td class="num"><b>${c.OVERALL}</b></td>`;
+    if (role === 'hitter') {
+      html += `<td class="num">${c.CONTACT}</td><td class="num">${c.POWER}</td>`;
+      html += `<td class="num">${c.DISCIPLINE}</td><td class="num">${c.SB}</td>`;
+    } else {
+      html += `<td class="num">${c.STUFF}</td><td class="num">${c.MOVEMENT}</td><td class="num">${c.CONTROL}</td>`;
+    }
+    const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+    html += `<td class="num">${c._dist.toFixed(1)}</td>`;
+    html += `<td class="num">${(c[fpKey] || 0).toFixed(role === 'hitter' ? 3 : 2)}</td></tr>`;
+  });
+  html += '</tbody>';
+  tbl.innerHTML = html;
+  // Wire player clicks
+  tbl.querySelectorAll('td.player').forEach(td => {
+    td.addEventListener('click', () => openModal(td.dataset.role, parseInt(td.dataset.id)));
+  });
+}
 
 function renderSparkline(sorted, role) {
   const xs = sorted.map(r => r.year);
@@ -1510,6 +1619,7 @@ const S_SUB_COLS = [
   { key: 'GB_TENDENCY',   label: 'GB',     num: true },
   { key: 'CONTROL',       label: 'Control',num: true, bold: true },
   { key: 'WALK_AVOID',    label: 'BB-avoid',num: true },
+  { key: 'STRIKE_THROWING', label: 'Strikes', num: true },
   { key: 'velo_rating',   label: 'Velo',   num: true },
   { key: 'age_tier',      label: 'Age',    text: true, pretty: true },
   { key: 'data_tier',     label: 'Tier',   text: true, pretty: true },
@@ -1582,7 +1692,7 @@ function renderAllTable(rows, role, kind) {
     : {
         STUFF:    [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
         MOVEMENT: [['DAMAGE_SUPP', 'Suppr'], ['GB_TENDENCY', 'GB']],
-        CONTROL:  [['WALK_AVOID', 'BB-avoid']],
+        CONTROL:  [['WALK_AVOID', 'BB-avoid'], ['STRIKE_THROWING', 'Strikes']],
       };
 
   const filtered = rows.filter(r => tblRowMatches(r, q));
