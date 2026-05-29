@@ -1,14 +1,14 @@
 {
   "EDGE": {
-    "n_transitions": 530,
-    "retention_pct": 30.0
+    "n_transitions": 546,
+    "retention_pct": 29.1
   },
   "NEAR_EDGE": {
-    "n_transitions": 350,
-    "retention_pct": 46.3
+    "n_transitions": 327,
+    "retention_pct": 41.0
   },
   "SOLID": {
-    "n_transitions": 107,
-    "retention_pct": 63.6
+    "n_transitions": 114,
+    "retention_pct": 58.8
   }
 }

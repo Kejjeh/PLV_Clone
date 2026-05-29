@@ -253,8 +253,8 @@ def build_ratings_panel(current_year=2026):
     # compresses the composite SD (~5 vs target ~10), crushing ~95% of batters into
     # the AVG bucket and collapsing the archetype matrix. Re-rating restores the
     # designed PLUS/AVG/MINUS spread (~16/68/16%) per domain.
-    qual['_CONTACT_raw']    = qual[['r_Contact','r_K','r_BABIP','r_xCON']].mean(axis=1)
-    qual['_POWER_raw']      = qual[['r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB']].mean(axis=1)
+    qual['_CONTACT_raw']    = qual[['r_Contact','r_K','r_xCON']].mean(axis=1)
+    qual['_POWER_raw']      = qual[['r_Barrel','r_HardHit','r_ISO','r_HRrate']].mean(axis=1)
     qual['_DISCIPLINE_raw'] = qual[['r_BB','r_Chase','r_ZSwing']].mean(axis=1)
     qual['_SB_raw']         = qual[['r_SBrate','r_Sprint']].mean(axis=1)
     g2 = qual.groupby('year')
@@ -264,12 +264,47 @@ def build_ratings_panel(current_year=2026):
     qual['SB']         = rating_20_80(qual['_SB_raw'],         g2['_SB_raw']).round(0).astype(int)
     qual = qual.drop(columns=['_CONTACT_raw','_POWER_raw','_DISCIPLINE_raw','_SB_raw'])
 
+    # Sub-domain ratings (intermediate diagnostic layer). Each maps a coherent
+    # slice of an existing domain. All 20-80, re-rated within year so the
+    # distributions are clean (mean=50, sd~10). Sub-domain to domain weights
+    # documented in the dashboard glossary.
+    qual['_BAT_TO_BALL_raw']     = qual[['r_Contact','r_K']].mean(axis=1)
+    qual['_CONTACT_QUALITY_raw'] = qual['r_xCON']
+    qual['_RAW_POWER_raw']       = qual[['r_HardHit','r_Barrel']].mean(axis=1)
+    qual['_DAMAGE_PROD_raw']     = qual[['r_ISO','r_HRrate']].mean(axis=1)
+    qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase']].mean(axis=1)
+    qual['_AGGRESSION_raw']      = qual['r_ZSwing']
+    qual['_SPEED_TOOL_raw']      = qual['r_Sprint']
+    qual['_SB_CONVERSION_raw']   = qual['r_SBrate']
+    g_sub = qual.groupby('year')
+    qual['BAT_TO_BALL']     = rating_20_80(qual['_BAT_TO_BALL_raw'],     g_sub['_BAT_TO_BALL_raw']).round(0).astype(int)
+    qual['CONTACT_QUALITY'] = rating_20_80(qual['_CONTACT_QUALITY_raw'], g_sub['_CONTACT_QUALITY_raw']).round(0).astype(int)
+    qual['RAW_POWER']       = rating_20_80(qual['_RAW_POWER_raw'],       g_sub['_RAW_POWER_raw']).round(0).astype(int)
+    qual['DAMAGE_PROD']     = rating_20_80(qual['_DAMAGE_PROD_raw'],     g_sub['_DAMAGE_PROD_raw']).round(0).astype(int)
+    qual['PATIENCE']        = rating_20_80(qual['_PATIENCE_raw'],        g_sub['_PATIENCE_raw']).round(0).astype(int)
+    qual['AGGRESSION']      = rating_20_80(qual['_AGGRESSION_raw'],      g_sub['_AGGRESSION_raw']).round(0).astype(int)
+    qual['SPEED_TOOL']      = rating_20_80(qual['_SPEED_TOOL_raw'],      g_sub['_SPEED_TOOL_raw']).round(0).astype(int)
+    qual['SB_CONVERSION']   = rating_20_80(qual['_SB_CONVERSION_raw'],   g_sub['_SB_CONVERSION_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_BAT_TO_BALL_raw','_CONTACT_QUALITY_raw','_RAW_POWER_raw','_DAMAGE_PROD_raw',
+                                '_PATIENCE_raw','_AGGRESSION_raw','_SPEED_TOOL_raw','_SB_CONVERSION_raw'])
+
+    # BABIP luck context — career mean + delta from career mean per batter-year.
+    # Year-to-year BABIP stability is r~0.39 (mostly noise); large deltas usually
+    # indicate batted-ball luck. Threshold +-0.030 chosen to roughly correspond
+    # to ~1 SD of within-batter year-to-year BABIP variance.
+    career_babip = qual.groupby('batter')['babip'].transform('mean')
+    qual['babip_career'] = career_babip.round(3)
+    qual['babip_delta']  = (qual['babip'] - qual['babip_career']).round(3)
+    qual['babip_luck_flag'] = qual['babip_delta'].apply(
+        lambda d: 'HOT' if d >= 0.030 else ('COLD' if d <= -0.030 else 'NORMAL'))
+
     # Overall composite — weighted mean of the three archetype-driving domains,
     # then re-rated within year to a clean 20-80 distribution. Weights derived
     # from OLS regression of fp_per_pa ~ CONTACT + POWER + DISCIPLINE on the
-    # FULL-tier pool (n=3,163, R^2=0.73). Empirical: 0.58/0.37/0.05; rounded.
+    # FULL-tier pool. Refit after dropping BABIP from CONTACT and PullFB from
+    # POWER. New empirical 0.66/0.28/0.06 (R²=0.72) on FULL-tier n=3,163.
     # SB intentionally excluded (overlay, not part of archetype identity).
-    OVERALL_W = {'CONTACT': 0.55, 'POWER': 0.40, 'DISCIPLINE': 0.05}
+    OVERALL_W = {'CONTACT': 0.65, 'POWER': 0.30, 'DISCIPLINE': 0.05}
     qual['_OVERALL_raw'] = (qual['CONTACT']    * OVERALL_W['CONTACT']
                           + qual['POWER']      * OVERALL_W['POWER']
                           + qual['DISCIPLINE'] * OVERALL_W['DISCIPLINE'])
@@ -402,6 +437,8 @@ def main():
     master_cols = [
         'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
         'OVERALL','CONTACT','POWER','DISCIPLINE','SB',
+        'BAT_TO_BALL','CONTACT_QUALITY','RAW_POWER','DAMAGE_PROD',
+        'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION',
         'archetype','contact_subtype','power_subtype','discipline_subtype',
         'sb_tier','spray_archetype','cell',
         'age','age_tier','career_year',
@@ -410,7 +447,7 @@ def main():
         'r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB',
         'r_BB','r_Chase','r_ZSwing',
         'r_SBrate','r_Sprint',
-        'contact_pct','k_pct','babip','xwoba_on_contact',
+        'contact_pct','k_pct','babip','babip_career','babip_delta','babip_luck_flag','xwoba_on_contact',
         'barrel_pct','hard_hit_pct','iso','hr_per_pa','pull_fb_pct',
         'bb_pct','chase_pct','z_swing_pct',
         'sb_per_opp','sprint_speed',

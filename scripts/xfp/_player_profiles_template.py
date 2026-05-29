@@ -274,6 +274,45 @@ header.collapsed { padding-top: .35em; padding-bottom: .35em; }
 header.collapsed h1 { font-size: 1.25em; transition: font-size .2s ease; }
 header.collapsed .controls { display: none; }
 header.collapsed nav.topnav a { padding-top: .25em; padding-bottom: .25em; }
+
+/* Composition tab — sub-domain breakdown for the selected year */
+.composition { display: flex; flex-direction: column; gap: 1em; padding: .5em 0; }
+.comp-domain { background: var(--panel); border: 1px solid var(--border);
+                border-radius: 5px; padding: .9em 1.1em; }
+.comp-domain h4 { margin: 0 0 .6em 0; color: var(--accent); font-size: .95em;
+                   font-family: 'Source Serif 4', serif; display: flex;
+                   justify-content: space-between; align-items: baseline; }
+.comp-domain h4 .domain-rating { color: var(--text); font-family: 'IBM Plex Mono', monospace;
+                                  font-size: .85em; font-weight: 400; }
+.comp-bars { display: grid; grid-template-columns: 130px 1fr 40px; gap: .5em .8em;
+              align-items: center; }
+.comp-bars .sub-label { color: var(--dim); font-family: 'IBM Plex Mono', monospace;
+                         font-size: .78em; text-transform: uppercase; letter-spacing: .08em; }
+.comp-bars .sub-track { background: var(--stripe); height: 12px; border-radius: 6px;
+                         position: relative; overflow: hidden; }
+.comp-bars .sub-fill { position: absolute; left: 0; top: 0; bottom: 0;
+                        background: var(--accent); border-radius: 6px;
+                        transition: width .3s ease; }
+.comp-bars .sub-fill.plus  { background: var(--pos); }
+.comp-bars .sub-fill.minus { background: var(--neg); }
+.comp-bars .sub-track .ref-50 { position: absolute; left: 50%; top: 0; bottom: 0;
+                                  border-left: 1px dashed var(--dim); pointer-events: none; }
+.comp-bars .sub-val { font-family: 'IBM Plex Mono', monospace; font-size: .9em;
+                       text-align: right; color: var(--text); }
+.comp-weight { color: var(--dim); font-size: .75em; font-family: 'IBM Plex Mono', monospace; }
+
+/* Domain-cell hover tooltip in all-players table */
+.alltable td.domain-cell { position: relative; cursor: help; }
+.domain-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+                   background: var(--bg); border: 1px solid var(--border); border-radius: 4px;
+                   padding: .55em .8em; font-family: 'IBM Plex Mono', monospace;
+                   font-size: .78em; white-space: nowrap; z-index: 50;
+                   box-shadow: 0 4px 12px rgba(0,0,0,0.4); display: none;
+                   margin-bottom: 5px; }
+.alltable td.domain-cell:hover .domain-tooltip { display: block; }
+.domain-tooltip .dom-sub { display: flex; justify-content: space-between; gap: 1.2em; }
+.domain-tooltip .dom-sub b { color: var(--accent); }
+.domain-tooltip .dom-sub .name { color: var(--dim); }
 </style>
 </head>
 """
@@ -361,6 +400,18 @@ HOME_TAB = """
       / Control 0.15 (n=1,205, R²=0.74).</i> Year-by-year weights vary by
       ±2-3pp. Overall correlates with realized FP rate at r=0.86 (hitters)
       and r=0.81 (SPs).</p>
+      <p><b>Sub-domains.</b> Each domain decomposes into 2 conceptually distinct
+      sub-ratings (also 20-80), shown in the per-player modal's Composition tab.
+      Hitters: Contact = Bat-to-ball / Contact quality; Power = Raw power /
+      Damage production; Discipline = Patience / Aggression; SB = Speed /
+      Conversion. SPs: Stuff = Swing-and-miss / Called strike; Movement = Damage
+      suppression / GB tendency; Control = Walk avoidance only. Sub-domain to
+      domain weights from OLS regression on the FULL-tier pool.</p>
+      <p><b>BABIP luck context.</b> BABIP year-to-year stability is r=0.39
+      (mostly noise). Each batter-year's BABIP is compared to that batter's
+      career mean; deltas ≥ +0.030 trigger a "Hot" flag (running hot, outcomes
+      outpacing skill) and ≤ -0.030 trigger "Cold" (likely unlucky, buy-low).
+      Shown as a chip in the per-player modal hero.</p>
       <p><b>Archetype color groupings.</b> Within the legend, archetypes are
       grouped by primary trait family: hitters use ELITE / POWER / CONTACT /
       DISCIPLINE / AVERAGE / BELOW; SPs use ELITE / STUFF / MOVEMENT / CONTROL
@@ -1096,12 +1147,29 @@ function openModal(role, id) {
   hero += `<div class="hero-stats">`;
   hero += `<div class="hero-archetype">${prettyLabel(last.archetype)}</div>`;
   hero += `<div class="hero-overall"><div class="label">Overall</div><div class="val">${last.OVERALL}</div></div>`;
+  // BABIP luck context chip (hitters only)
+  const cur = sorted[sorted.length - 1];
+  if (role === 'hitter' && cur.babip_delta != null) {
+    const delta = cur.babip_delta;
+    const flag = cur.babip_luck_flag;
+    const sign = delta > 0 ? '+' : '';
+    const label = flag === 'HOT' ? 'Hot' : (flag === 'COLD' ? 'Cold' : 'Normal');
+    const borderColor = flag === 'HOT' ? 'neg' : (flag === 'COLD' ? 'warn' : 'dim');
+    const textColor   = flag === 'HOT' ? 'neg' : (flag === 'COLD' ? 'warn' : 'dim');
+    const babipVal = (cur.babip != null) ? cur.babip : ((cur.babip_career || 0) + (cur.babip_delta || 0));
+    hero += `<div class="hero-overall" style="border-left:3px solid var(--${borderColor});padding-left:.8em;">`;
+    hero += `<div class="label">BABIP context</div>`;
+    hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.95em;color:var(--text);"><b>${babipVal.toFixed(3)}</b> <span style="color:var(--dim);">vs career ${(cur.babip_career ?? 0).toFixed(3)}</span></div>`;
+    hero += `<div style="font-family:'IBM Plex Mono',monospace;font-size:.85em;color:var(--${textColor});">${sign}${delta.toFixed(3)} · ${label}</div>`;
+    hero += `</div>`;
+  }
   hero += `</div></div>`;
 
   // ── Modal tabs ──
   let tabs = '<div class="modal-tabs">';
   tabs += '<button class="active" data-mtab="arc">Career arc</button>';
   tabs += '<button data-mtab="years">Year-by-year</button>';
+  tabs += '<button data-mtab="comp">Composition</button>';
   if (hasSnap) tabs += '<button data-mtab="snap">In-season</button>';
   tabs += '</div>';
 
@@ -1149,6 +1217,46 @@ function openModal(role, id) {
   panels += '<div class="modal-mtab-panel" data-mtab="years">';
   panels += '<div class="table-scroll"><table><thead>' + yearHeader + '</thead><tbody>' + yearRows + '</tbody></table></div>';
   panels += '</div>';
+
+  // ── Composition panel — sub-domain breakdown for the most recent year ──
+  const SUB_W_H = {
+    CONTACT:    [['BAT_TO_BALL', 0.50, 'Bat-to-ball'], ['CONTACT_QUALITY', 0.50, 'Contact quality']],
+    POWER:      [['RAW_POWER', 0.30, 'Raw power tools'], ['DAMAGE_PROD', 0.70, 'Damage production']],
+    DISCIPLINE: [['PATIENCE', 0.70, 'Patience'], ['AGGRESSION', 0.30, 'Aggression in zone']],
+    SB:         [['SPEED_TOOL', 0.30, 'Speed tool'], ['SB_CONVERSION', 0.70, 'SB conversion']],
+  };
+  const SUB_W_S = {
+    STUFF:    [['SWING_MISS', 0.65, 'Swing-and-miss'], ['CALLED_STRIKE', 0.35, 'Called strike']],
+    MOVEMENT: [['DAMAGE_SUPP', 0.85, 'Damage suppression'], ['GB_TENDENCY', 0.15, 'GB tendency']],
+    CONTROL:  [['WALK_AVOID', 1.00, 'Walk avoidance']],
+  };
+
+  let comp = `<div class="composition"><div style="color:var(--dim);font-size:.8em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Composition for ${cur.year}${cur.data_tier === 'PARTIAL' ? ' (PARTIAL season)' : ''}</div>`;
+
+  const subMap = role === 'hitter' ? SUB_W_H : SUB_W_S;
+  const domainMap = role === 'hitter'
+    ? { CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB (overlay)' }
+    : { STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control' };
+
+  Object.entries(domainMap).forEach(([dom, label]) => {
+    const subs = subMap[dom] || [];
+    const domVal = cur[dom];
+    comp += `<div class="comp-domain"><h4>${label}<span class="domain-rating">domain rating <b>${domVal}</b></span></h4>`;
+    comp += '<div class="comp-bars">';
+    subs.forEach(([key, weight, name]) => {
+      const v = cur[key];
+      if (v == null) return;
+      const pctWidth = Math.max(0, Math.min(100, (v - 20) / 60 * 100));
+      const cls = v >= 60 ? 'plus' : (v < 40 ? 'minus' : '');
+      comp += `<div class="sub-label">${name}</div>`;
+      comp += `<div class="sub-track"><div class="ref-50"></div><div class="sub-fill ${cls}" style="width:${pctWidth}%;"></div></div>`;
+      comp += `<div class="sub-val">${v} <span class="comp-weight">x${weight.toFixed(2)}</span></div>`;
+    });
+    comp += '</div></div>';
+  });
+  comp += '</div>';
+
+  panels += '<div class="modal-mtab-panel" data-mtab="comp">' + comp + '</div>';
 
   if (hasSnap) {
     panels += '<div class="modal-mtab-panel" data-mtab="snap">';
@@ -1356,6 +1464,20 @@ function renderAllTable(rows, role) {
   const cntEl = document.getElementById(role === 'hitter' ? 'h-alltable-count' : 's-alltable-count');
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
 
+  // Domain → sub-domain map for hover tooltips on the per-domain cells
+  const DOMAIN_SUBS = role === 'hitter'
+    ? {
+        CONTACT:    [['BAT_TO_BALL', 'Bat-to-ball'], ['CONTACT_QUALITY', 'Quality']],
+        POWER:      [['RAW_POWER', 'Raw'], ['DAMAGE_PROD', 'Production']],
+        DISCIPLINE: [['PATIENCE', 'Patience'], ['AGGRESSION', 'Aggression']],
+        SB:         [['SPEED_TOOL', 'Speed'], ['SB_CONVERSION', 'Conversion']],
+      }
+    : {
+        STUFF:    [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
+        MOVEMENT: [['DAMAGE_SUPP', 'Suppr'], ['GB_TENDENCY', 'GB']],
+        CONTROL:  [['WALK_AVOID', 'BB-avoid']],
+      };
+
   const filtered = rows.filter(r => tblRowMatches(r, q));
   const sorted   = tblSortRows(filtered, sort, cols);
 
@@ -1388,9 +1510,20 @@ function renderAllTable(rows, role) {
       const display = c.bold ? `<b>${v}</b>` : v;
       if (c.key === 'player_name') {
         h += `<td class="${cellCls.trim()}" data-role="${role}" data-id="${r[idKey]}">${display}${tier}</td>`;
-      } else {
-        h += `<td class="${cellCls.trim()}">${display}</td>`;
+        return;
       }
+      if (DOMAIN_SUBS[c.key]) {
+        const subs = DOMAIN_SUBS[c.key];
+        let tip = '<div class="domain-tooltip">';
+        subs.forEach(([k, name]) => {
+          if (r[k] == null) return;
+          tip += `<div class="dom-sub"><span class="name">${name}</span><b>${r[k]}</b></div>`;
+        });
+        tip += '</div>';
+        h += `<td class="${cellCls.trim()} domain-cell">${display}${tip}</td>`;
+        return;
+      }
+      h += `<td class="${cellCls.trim()}">${display}</td>`;
     });
     h += '</tr>';
   });

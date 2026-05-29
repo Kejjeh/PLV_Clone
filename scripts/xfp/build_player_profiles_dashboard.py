@@ -52,6 +52,9 @@ S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
     'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
+    'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+    'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION',
+    'babip_career', 'babip_delta', 'babip_luck_flag',
     'archetype', 'contact_subtype', 'power_subtype', 'discipline_subtype',
     'sb_tier', 'spray_archetype',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
@@ -63,6 +66,7 @@ H_COLS = [
 S_COLS = [
     'pitcher', 'year', 'player_name', 'gs', 'tbf', 'fp_per_start', 'data_tier',
     'OVERALL', 'STUFF', 'MOVEMENT', 'CONTROL',
+    'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID',
     'archetype', 'stuff_subtype',
     'velo_rating', 'velo_tier', 'pitch_archetype', 'primary_group',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
@@ -105,10 +109,13 @@ def assert_schema():
         n = int(s.duplicated(['pitcher', 'year']).sum())
         _fail(f'sp master has {n} duplicate (pitcher, year) rows')
 
-    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year']:
+    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year',
+              'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+              'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         n = int(h[c].isna().sum())
         if n: _fail(f'hitter master {c} has {n} null rows')
-    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'OVERALL', 'rank_in_year']:
+    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'OVERALL', 'rank_in_year',
+              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID']:
         n = int(s[c].isna().sum())
         if n: _fail(f'sp master {c} has {n} null rows')
 
@@ -134,7 +141,9 @@ def build_hitter_records(h: pd.DataFrame):
     df['fp_per_pa'] = df['fp_per_pa'].round(3)
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
-    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL']:
+    for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL',
+              'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+              'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         df[c] = df[c].astype(int)
     # Component r_* are ints in source; preserve.
     return json.loads(df.to_json(orient='records'))
@@ -146,7 +155,8 @@ def build_sp_records(s: pd.DataFrame):
     df['fp_per_start'] = df['fp_per_start'].round(2)
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
-    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'velo_rating', 'OVERALL']:
+    for c in ['STUFF', 'MOVEMENT', 'CONTROL', 'velo_rating', 'OVERALL',
+              'SWING_MISS', 'CALLED_STRIKE', 'DAMAGE_SUPP', 'GB_TENDENCY', 'WALK_AVOID']:
         df[c] = df[c].astype('Int64')
     return json.loads(df.to_json(orient='records'))
 
@@ -234,7 +244,7 @@ def build_hitter_snapshots():
 
         info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
         # Weighted Overall — same coefficients as the master CSV builder.
-        OVERALL = int(round(CONTACT * 0.55 + POWER * 0.40 + DISCIPLINE * 0.05))
+        OVERALL = int(round(CONTACT * 0.65 + POWER * 0.30 + DISCIPLINE * 0.05))
         out.append({
             'batter': int(row['batter']),
             'player_name': info.get('player_name'),

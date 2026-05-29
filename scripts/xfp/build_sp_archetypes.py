@@ -260,13 +260,29 @@ def build_ratings_panel(current_year=2026):
 
     # Composite domain ratings
     qual['STUFF']    = qual[['r_K','r_SwStr','r_CSW']].mean(axis=1).round(0).astype(int)
-    qual['MOVEMENT'] = qual[['r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON']].mean(axis=1).round(0).astype(int)
+    qual['MOVEMENT'] = qual[['r_HRrate','r_Barrel','r_HardHit','r_xCON']].mean(axis=1).round(0).astype(int)
     qual['CONTROL']  = qual['r_BB']
+
+    # Sub-domain ratings — intermediate diagnostic layer, each on 20-80 within year.
+    qual['_SWING_MISS_raw']    = qual[['r_SwStr','r_K']].mean(axis=1)
+    qual['_CALLED_STRIKE_raw'] = qual['r_CSW']
+    qual['_DAMAGE_SUPP_raw']   = qual[['r_HRrate','r_Barrel','r_HardHit','r_xCON']].mean(axis=1)
+    qual['_GB_TENDENCY_raw']   = qual['r_GB']
+    qual['_WALK_AVOID_raw']    = qual['r_BB']
+    g_sub = qual.groupby('year')
+    qual['SWING_MISS']    = rating_20_80(qual['_SWING_MISS_raw'],    g_sub['_SWING_MISS_raw']).round(0).astype(int)
+    qual['CALLED_STRIKE'] = rating_20_80(qual['_CALLED_STRIKE_raw'], g_sub['_CALLED_STRIKE_raw']).round(0).astype(int)
+    qual['DAMAGE_SUPP']   = rating_20_80(qual['_DAMAGE_SUPP_raw'],   g_sub['_DAMAGE_SUPP_raw']).round(0).astype(int)
+    qual['GB_TENDENCY']   = rating_20_80(qual['_GB_TENDENCY_raw'],   g_sub['_GB_TENDENCY_raw']).round(0).astype(int)
+    qual['WALK_AVOID']    = rating_20_80(qual['_WALK_AVOID_raw'],    g_sub['_WALK_AVOID_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_SWING_MISS_raw','_CALLED_STRIKE_raw','_DAMAGE_SUPP_raw','_GB_TENDENCY_raw','_WALK_AVOID_raw'])
 
     # Overall composite — weighted mean of the three archetype-driving domains,
     # then re-rated within year to a clean 20-80 distribution. Weights derived
     # from OLS regression of fp_per_start ~ STUFF + MOVEMENT + CONTROL on the
-    # FULL-tier pool (n=1,205, R^2=0.74). Empirical: 0.49/0.34/0.17; rounded.
+    # FULL-tier pool. Refit after dropping r_GB from MOVEMENT composite.
+    # New empirical 0.47/0.36/0.17 (R²=0.75) on FULL-tier n=1,205 — rounded
+    # weights unchanged.
     # Velo intentionally excluded (sub-classifier, not part of archetype identity).
     OVERALL_W = {'STUFF': 0.50, 'MOVEMENT': 0.35, 'CONTROL': 0.15}
     qual['_OVERALL_raw'] = (qual['STUFF']    * OVERALL_W['STUFF']
@@ -403,7 +419,9 @@ def main():
 
     # Master ratings CSV (human-readable)
     master_cols = ['year','rank_in_year','pitcher','player_name','gs','tbf','fp_per_start','data_tier',
-                   'OVERALL','STUFF','MOVEMENT','CONTROL','archetype','stuff_subtype','cell',
+                   'OVERALL','STUFF','MOVEMENT','CONTROL',
+                   'SWING_MISS','CALLED_STRIKE','DAMAGE_SUPP','GB_TENDENCY','WALK_AVOID',
+                   'archetype','stuff_subtype','cell',
                    'velo_rating','velo_tier','pitch_archetype','primary_group','secondary_group',
                    'age','age_tier','career_year',
                    'bd_S','bd_M','bd_C','boundary_distance','boundary_tier',
