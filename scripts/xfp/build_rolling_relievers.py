@@ -33,7 +33,7 @@ SPLIT_DAYS = [30, 60, 90, 120]
 # Weekly cadence for the Player-Profiles RP trajectory view. Only applied for
 # 2024-2026 to keep runtime manageable (older years stay monthly for the model).
 WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
-WEEKLY_YEARS = {2024, 2025, 2026}
+WEEKLY_YEARS = {2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026}
 SEASON_STARTS = {
     2018: '2018-03-29', 2019: '2019-03-20',
     2021: '2021-04-01', 2022: '2022-04-07', 2023: '2023-03-30',

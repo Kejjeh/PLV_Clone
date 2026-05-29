@@ -28,7 +28,7 @@ SPLIT_DAYS_OF_SEASON = [30, 60, 90, 120]
 # step 7 days through day 200. Applied only for years in WEEKLY_YEARS so we
 # don't 7× the runtime on the full 2018-2023 history.
 WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
-WEEKLY_YEARS = {2024, 2025, 2026}
+WEEKLY_YEARS = {2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026}
 
 
 def annotate_pitches(d: pd.DataFrame) -> pd.DataFrame:
