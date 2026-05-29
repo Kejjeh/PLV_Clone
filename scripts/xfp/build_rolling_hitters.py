@@ -41,7 +41,21 @@ SWSTR_DESC = {'swinging_strike','swinging_strike_blocked','foul_tip','missed_bun
 # Split dates per year — the dates at which we slice the season into
 # "to-date" vs "rest-of-season". Multiple splits per year give the model
 # exposure to different sample-size regimes.
-SPLIT_DAYS_OF_SEASON = [30, 60, 90, 120]  # days into season
+SPLIT_DAYS_OF_SEASON = [30, 60, 90, 120]  # days into season — monthly cadence
+
+# Weekly cadence: ~7-day stride from day 30 through season-end (~day 200).
+# Used for years where we want the Player-Profiles intra-season trajectory to
+# render many dots (every Sunday-ish), not just 4 monthly anchors. We keep day
+# 30 as the first cutoff (matches monthly so models trained on both behave the
+# same) then step every 7 days through day 200. For an in-progress year the
+# build_year() function already crops to data-available cutoffs.
+WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
+
+# Years for which we emit weekly snapshots. Older years stay monthly because
+# (a) the Player Profiles dashboard prior-year overlay only needs 2024-2026
+# at high resolution and (b) regenerating 2018-2023 weekly would balloon
+# runtime ~7×. Documented in CHANGELOG of refresh_dashboards.py step 1b.
+WEEKLY_YEARS = {2024, 2025, 2026}
 
 
 def lineup_aggregate(year: int, cutoff: pd.Timestamp,
@@ -223,16 +237,20 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     # so the projection uses today's snapshot at today's time (not split=30
     # cutoff data labeled with stale day count).
     max_data_date = pitches['game_date'].max()
+    # Pick split-day list: weekly for recent years (for dense Profiles dashboard
+    # trajectory), monthly for older years to control runtime.
+    base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS_OF_SEASON
     if is_in_progress:
         elapsed_days = int((today - season_start).days)
-        splits_to_use = [s for s in SPLIT_DAYS_OF_SEASON
+        splits_to_use = [s for s in base_splits
                          if season_start + pd.Timedelta(days=s) <= max_data_date]
         if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
             splits_to_use = list(splits_to_use) + [elapsed_days]
         print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
-              f'elapsed={elapsed_days}d -> splits {splits_to_use}', flush=True)
+              f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
+              f'({"weekly" if year in WEEKLY_YEARS else "monthly"})', flush=True)
     else:
-        splits_to_use = SPLIT_DAYS_OF_SEASON
+        splits_to_use = base_splits
 
     rows = []
     for split_day in splits_to_use:

@@ -50,8 +50,10 @@ R_BOUND  = RES / 'rp_boundary_validation.json'
 
 H_ROLLING = CACHE / 'rolling_hitters_2018_2026.csv'
 S_ROLLING = CACHE / 'rolling_pitchers_2018_2026.csv'
+R_ROLLING = CACHE / 'rolling_relievers_2018_2026.csv'
 H_SRC     = CACHE / 'hitters_multiyr_2015_2026.csv'
 S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
+R_SRC     = CACHE / 'relievers_multiyr_2018_2026.csv'
 
 # Whitelisted columns — drives payload size.
 H_COLS = [
@@ -465,6 +467,111 @@ def build_sp_snapshots():
     return out
 
 
+def build_rp_snapshots():
+    """Per-(pitcher, year, snapshot_date) STUFF / CONTROL / BATTED_BALL ratings
+    for relievers — same shape as build_sp_snapshots() so the JS template can
+    drive the In-season trajectory + Snapshot-movers views uniformly.
+
+    Maps the columns the rolling-relievers cache carries onto the RP 3-domain
+    structure:
+      STUFF        ← SWING_MISS (swstr_pct) + CALLED_STRIKE (c_plus_swstr)
+      CONTROL      ← WALK_AVOID (bb_pct, inverted) + VELO (avg_velo)
+      BATTED_BALL  ← xwoba_per_pa (inverted; honest stand-in since the
+                     rolling RP cache doesn't carry per-cutoff gb% / barrel%)
+
+    Archetype label is recomputed per snapshot from the rolling S/C/BB triplet.
+    """
+    if not R_ROLLING.exists() or not R_SRC.exists():
+        print('  ⚠ RP rolling/source not found — skipping RP snapshot build')
+        return []
+    r = pd.read_csv(R_ROLLING)
+    src = pd.read_csv(R_SRC)
+    r['cutoff_date'] = pd.to_datetime(r['cutoff_date'])
+    name_lookup = (src.sort_values('year').groupby('pitcher')
+                   .agg({'name': 'last'}).to_dict('index'))
+
+    BASELINE_COLS = ['swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo', 'xwoba_per_pa']
+    baselines = {}
+    for yr, grp in src.groupby('year'):
+        baselines[int(yr)] = {}
+        for c in BASELINE_COLS:
+            if c not in grp.columns:
+                continue
+            baselines[int(yr)][c] = (grp[c].mean(), grp[c].std())
+
+    # RP eligibility floor — same MIN_G_TO=5 the model uses; matches the
+    # rolling cache filter so we don't double-restrict here.
+    r = r[r['g_to'] >= 5].copy()
+    if not len(r):
+        return []
+
+    # Load RP archetype defs to assign label per snapshot
+    with open(R_DEFS, encoding='utf-8') as f:
+        rdefs = json.load(f)
+
+    out = []
+    for _, row in r.iterrows():
+        yr = int(row['year'])
+        baseline_yr = yr - 1 if (yr - 1) in baselines else yr
+        if baseline_yr not in baselines:
+            continue
+        b = baselines[baseline_yr]
+        if not all(k in b for k in BASELINE_COLS):
+            continue
+
+        rSW  = _rate(row['swstr_pct_to'],     *b['swstr_pct'])
+        rCSW = _rate(row['c_plus_swstr_to'],  *b['c_plus_swstr'])
+        rBB  = _rate(row['bb_pct_to'],        *b['bb_pct'], invert=True)
+        rV   = _rate(row['avg_velo_to'],      *b['avg_velo'])
+        rXC  = _rate(row['xwoba_per_pa_to'],  *b['xwoba_per_pa'], invert=True)
+
+        s_vals = [v for v in [rSW, rCSW] if v is not None]
+        c_vals = [v for v in [rBB, rV] if v is not None]
+        # BATTED_BALL placeholder from xwoba_per_pa (the rolling RP cache
+        # doesn't carry per-cutoff gb%/barrel%); honest single-component value.
+        bb_vals = [v for v in [rXC] if v is not None]
+        if not (s_vals and c_vals and bb_vals):
+            continue
+        STUFF       = int(round(sum(s_vals) / len(s_vals)))
+        CONTROL     = int(round(sum(c_vals) / len(c_vals)))
+        BATTED_BALL = int(round(sum(bb_vals) / len(bb_vals)))
+
+        def _b(v):
+            if v >= 60: return 'PLUS'
+            if v >= 40: return 'AVG'
+            return 'MINUS'
+        cell = f'{_b(STUFF)}/{_b(CONTROL)}/{_b(BATTED_BALL)}'
+        arch = rdefs.get(cell, {}).get('label', 'UNKNOWN')
+
+        info = name_lookup.get(int(row['pitcher']), {'name': None})
+        nm = info.get('name')
+        if isinstance(nm, str) and ',' in nm:
+            a, c = nm.split(',', 1)
+            nm = f'{c.strip()} {a.strip()}'
+
+        # Weighted Overall — placeholder weights that match build_rp_records
+        # blending intent (STUFF dominant, CONTROL secondary, BB tertiary).
+        OVERALL = int(round(STUFF * 0.45 + CONTROL * 0.30 + BATTED_BALL * 0.25))
+
+        # Bridge fields so the JS template's SP path can read MOVEMENT/velo_rating
+        # uniformly off RP snapshot rows (mirror of build_rp_records bridges).
+        out.append({
+            'pitcher': int(row['pitcher']),
+            'player_name': nm,
+            'year': yr,
+            'date': row['cutoff_date'].strftime('%Y-%m-%d'),
+            'gs_to': int(row['g_to']),  # g count — SP-shaped path reads gs_to
+            'OVERALL': OVERALL,
+            'STUFF': STUFF, 'CONTROL': CONTROL, 'BATTED_BALL': BATTED_BALL,
+            'MOVEMENT': BATTED_BALL,    # bridge alias so SP code path works
+            'velo_rating': rV if rV is not None else 50,
+            'cell': cell, 'archetype': arch,
+            'role': 'RP',
+        })
+    print(f'  RP snapshots: {len(out)} rows ({len(set((o["pitcher"], o["year"]) for o in out))} reliever-years)', flush=True)
+    return out
+
+
 # ── ESPN roster-status + eligibility ─────────────────────────────────────────
 MY_TEAM_NAME = 'New York Ligers'
 # ESPN exposes slot strings like 'C','1B','2B','3B','SS','LF','CF','RF','OF',
@@ -607,6 +714,7 @@ def build_payload():
     print('Computing intra-season snapshots...', flush=True)
     hitter_snapshots = build_hitter_snapshots()
     sp_snapshots = build_sp_snapshots()
+    rp_snapshots = build_rp_snapshots()
 
     hitter_records = build_hitter_records(h)
     sp_records = build_sp_records(s)
@@ -639,6 +747,7 @@ def build_payload():
         'rps': rp_records,
         'hitter_snapshots': hitter_snapshots,
         'sp_snapshots': sp_snapshots,
+        'rp_snapshots': rp_snapshots,
         'rp_available': bool(rp_available),
         'my_team_name': MY_TEAM_NAME,
     }

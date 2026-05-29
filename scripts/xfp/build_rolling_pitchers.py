@@ -24,6 +24,11 @@ SWING_DESC = {'swinging_strike','swinging_strike_blocked','foul','foul_tip','hit
 SWSTR_DESC = {'swinging_strike','swinging_strike_blocked','foul_tip','missed_bunt'}
 
 SPLIT_DAYS_OF_SEASON = [30, 60, 90, 120]
+# Weekly cadence for the Player-Profiles trajectory dashboard. Day 30 anchor,
+# step 7 days through day 200. Applied only for years in WEEKLY_YEARS so we
+# don't 7× the runtime on the full 2018-2023 history.
+WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
+WEEKLY_YEARS = {2024, 2025, 2026}
 
 
 def annotate_pitches(d: pd.DataFrame) -> pd.DataFrame:
@@ -181,16 +186,18 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     today = pd.Timestamp(_date.today())
     is_in_progress = year >= today.year
     max_data_date = pitches['game_date'].max()
+    base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS_OF_SEASON
     if is_in_progress:
         elapsed_days = int((today - season_start).days)
-        splits_to_use = [s for s in SPLIT_DAYS_OF_SEASON
+        splits_to_use = [s for s in base_splits
                          if season_start + pd.Timedelta(days=s) <= max_data_date]
         if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
             splits_to_use = list(splits_to_use) + [elapsed_days]
         print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
-              f'elapsed={elapsed_days}d -> splits {splits_to_use}', flush=True)
+              f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
+              f'({"weekly" if year in WEEKLY_YEARS else "monthly"})', flush=True)
     else:
-        splits_to_use = SPLIT_DAYS_OF_SEASON
+        splits_to_use = base_splits
 
     rows = []
     for split_day in splits_to_use:

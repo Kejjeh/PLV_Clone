@@ -30,6 +30,10 @@ OUT = CACHE / 'rolling_relievers_2018_2026.csv'
 
 YEARS = [2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]  # skip 2020
 SPLIT_DAYS = [30, 60, 90, 120]
+# Weekly cadence for the Player-Profiles RP trajectory view. Only applied for
+# 2024-2026 to keep runtime manageable (older years stay monthly for the model).
+WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
+WEEKLY_YEARS = {2024, 2025, 2026}
 SEASON_STARTS = {
     2018: '2018-03-29', 2019: '2019-03-20',
     2021: '2021-04-01', 2022: '2022-04-07', 2023: '2023-03-30',
@@ -197,12 +201,14 @@ def build_year(year: int) -> pd.DataFrame:
     # "current" row using actual elapsed days as split_day so the projection
     # uses today's snapshot at today's elapsed time (not at day 120's label).
     elapsed_days = int((max_data_date - season_start).days)
-    splits_to_use = [s for s in SPLIT_DAYS if season_start + pd.Timedelta(days=s) <= max_data_date]
+    base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS
+    splits_to_use = [s for s in base_splits if season_start + pd.Timedelta(days=s) <= max_data_date]
     # If the current cutoff is between defined split_days, add an actual-elapsed row.
     if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
         splits_to_use = list(splits_to_use) + [elapsed_days]
     print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
-          f'elapsed={elapsed_days}d -> splits {splits_to_use}')
+          f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
+          f'({"weekly" if year in WEEKLY_YEARS else "monthly"})')
 
     rows = []
     for split_day in splits_to_use:

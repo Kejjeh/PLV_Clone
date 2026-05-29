@@ -58,6 +58,20 @@ def main():
     run('1b. Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 
+    # Snapshot rolling caches — feed the Player-Profiles intra-season trajectory
+    # view. Weekly cadence (2024-2026), monthly for older years (cost control).
+    # Each ~30-90s. Failure here only affects the Profiles trajectory dots, not
+    # the live ranker, so keep going.
+    run('1c. Build hitter rolling snapshot cache (weekly cadence 2024-2026)',
+        'python -X utf8 scripts/xfp/build_rolling_hitters.py',
+        timeout=300)
+    run('1d. Build SP rolling snapshot cache (weekly cadence 2024-2026)',
+        'python -X utf8 scripts/xfp/build_rolling_pitchers.py',
+        timeout=300)
+    run('1e. Build RP rolling snapshot cache (weekly cadence 2024-2026)',
+        'python -X utf8 scripts/xfp/build_rolling_relievers.py',
+        timeout=300)
+
     if not args.no_models:
         ok = run('2. Rebuild xFP models', 'python -X utf8 scripts/xfp/refresh_all.py',
                   timeout=1800)

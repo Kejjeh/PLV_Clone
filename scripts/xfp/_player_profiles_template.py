@@ -236,7 +236,7 @@ table.alltable { width: 100%; table-layout: fixed; margin-bottom: 0;
 table.alltable th, table.alltable td { white-space: nowrap; }
 /* Slightly more vertical breathing room on rows. */
 table.alltable td { padding: .75em .9em; font-size: 1em; }
-table.alltable th { padding: .85em .9em; font-size: .9em; }
+table.alltable th { padding: 1em 1.1em; font-size: .9em; }
 /* Truncate-with-ellipsis on non-domain cells. Domain cells host an absolutely-
    positioned tooltip via .domain-tooltip and must NOT clip, so they keep
    `overflow: visible` (the default). */
@@ -803,6 +803,7 @@ PITCHERS_TAB = """
     </select>
     <span class="r-display" id="s-r"></span>
   </div>
+  <div id="s-quad-note" style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin:.4em 0;"></div>
   <div class="quadrant-host"><div id="s-quad" style="height: 640px;"></div></div>
   </section>
 
@@ -896,9 +897,15 @@ const SARCH_DESC = {}; Object.values(SDEFS).forEach(v => SARCH_DESC[v.label] = v
 const H_BY_ID = {}; HITTERS.forEach(r => { (H_BY_ID[r.batter] = H_BY_ID[r.batter] || []).push(r); });
 const S_BY_ID = {}; SPS.forEach(r => { (S_BY_ID[r.pitcher] = S_BY_ID[r.pitcher] || []).push(r); });
 
-// Snapshots — indexed by (id, year) for per-player trajectories, and by (year, date) for movers
-const HSNAP = D.hitter_snapshots || [];
-const SSNAP = D.sp_snapshots     || [];
+// Snapshots — indexed by (id, year) for per-player trajectories, and by (year, date) for movers.
+// RP snapshots are merged into the SP-side index so the SP-shaped JS code path
+// (snapshot-mover tables, In-season trajectory chart, YoY overlay) works for
+// relievers without branching. Each RP row carries `role: 'RP'` and bridge
+// fields MOVEMENT/velo_rating that the SP code reads.
+const HSNAP        = D.hitter_snapshots || [];
+const SSNAP_SP_ONLY = D.sp_snapshots    || [];
+const RSNAP        = D.rp_snapshots     || [];
+const SSNAP        = SSNAP_SP_ONLY.concat(RSNAP);
 const HSNAP_BY_PY = {}; HSNAP.forEach(r => { const k = `${r.batter}|${r.year}`; (HSNAP_BY_PY[k] = HSNAP_BY_PY[k] || []).push(r); });
 const SSNAP_BY_PY = {}; SSNAP.forEach(r => { const k = `${r.pitcher}|${r.year}`; (SSNAP_BY_PY[k] = SSNAP_BY_PY[k] || []).push(r); });
 Object.values(HSNAP_BY_PY).forEach(arr => arr.sort((a,b) => a.date.localeCompare(b.date)));
@@ -911,6 +918,7 @@ function snapshotDatesForYear(snaps, year) {
 // ── Axis labels (display only) ──────────────────────────────────────────
 const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
 const SP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
+const RP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Batted-ball', CONTROL: 'Control', velo_rating: 'Velo' };
 
 // Convert SCREAMING_SNAKE_CASE labels to "Title Case" for display
 function prettyLabel(s) {
@@ -1223,12 +1231,14 @@ function hoverText(r, role) {
        + `FP/start = ${(r.fp_per_start||0).toFixed(2)}`;
 }
 
-function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
+function renderQuadrant(divId, rDispId, rows, xKey, yKey, role, opts) {
+  opts = opts || {};
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
   const catMap = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
   const colorMap = role === 'hitter' ? HITTER_COLOR : SP_COLOR;
   const catOrder = role === 'hitter' ? CAT_ORDER_HITTER : CAT_ORDER_SP;
-  const axisLabel = role === 'hitter' ? HITTER_AXIS_LABEL : SP_AXIS_LABEL;
+  const axisLabel = opts.axisLabel ||
+    (role === 'hitter' ? HITTER_AXIS_LABEL : SP_AXIS_LABEL);
 
   // build aligned points
   const px=[], py=[], meta=[];
@@ -1927,8 +1937,26 @@ function openModal(role, id) {
   panels += '</div>';
 
   if (hasSnap) {
+    // YoY overlay: check if the prior year has any snapshots for this player.
+    // Option A chosen — augment the existing single-year trajectory chart with
+    // a toggle and re-align x-axis to day-of-year when overlaying. Keeps one
+    // chart, one tab; doesn't break the single-year rendering when toggle is
+    // off. See JS comment in renderSnapshotTrajectory() for x-axis math.
+    const priorYear = state.singleYear - 1;
+    const priorKey  = `${id}|${priorYear}`;
+    const priorRows = role === 'hitter' ? HSNAP_BY_PY[priorKey] : SSNAP_BY_PY[priorKey];
+    const hasPrior  = priorRows && priorRows.length >= 2;
     panels += '<div class="modal-mtab-panel" data-mtab="snap">';
     panels += `<h3 style="color:var(--accent);">In-season trajectory · ${state.singleYear}</h3>`;
+    if (hasPrior) {
+      panels += `<div style="margin:.3em 0 .6em 0;display:flex;gap:.6em;align-items:center;font-family:'IBM Plex Mono',monospace;font-size:.85em;">`;
+      panels += `<label style="cursor:pointer;display:flex;align-items:center;gap:.4em;">`;
+      panels += `<input type="checkbox" id="snap-yoy-toggle"/>`;
+      panels += `<span>Overlay ${priorYear} (year-over-year, aligned by day-of-year)</span>`;
+      panels += `</label></div>`;
+    } else {
+      panels += `<div style="margin:.2em 0 .5em 0;color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:.78em;">No ${priorYear} snapshots — YoY overlay unavailable for this player.</div>`;
+    }
     panels += '<div id="modal-snap" style="height: 320px;"></div>';
     panels += '</div>';
   }
@@ -1951,7 +1979,34 @@ function openModal(role, id) {
   });
 
   renderSparkline(sorted, role);
-  if (hasSnap) renderSnapshotTrajectory(snapRows, role);
+  if (hasSnap) {
+    renderSnapshotTrajectory(snapRows, role);
+    // Wire YoY toggle if available — re-renders the same chart with prior-year
+    // overlay on top, x-axis switched to day-of-year for season-aligned compare.
+    const toggle = document.getElementById('snap-yoy-toggle');
+    if (toggle) {
+      const priorYear = state.singleYear - 1;
+      const priorKey  = `${id}|${priorYear}`;
+      const priorRows = role === 'hitter' ? HSNAP_BY_PY[priorKey] : SSNAP_BY_PY[priorKey];
+      toggle.addEventListener('change', () => {
+        if (toggle.checked && priorRows && priorRows.length) {
+          renderSnapshotTrajectoryYoY(snapRows, priorRows, role, state.singleYear, priorYear);
+        } else {
+          renderSnapshotTrajectory(snapRows, role);
+        }
+      });
+    }
+  }
+}
+
+// Convert an ISO date (YYYY-MM-DD) to its day-of-year (1-366). Used for the
+// YoY overlay so snapshots from different calendar years align on the same
+// season-time x-axis.
+function _dayOfYear(iso) {
+  const [y, m, d] = iso.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  const start = new Date(Date.UTC(y, 0, 1));
+  return Math.floor((dt - start) / 86400000) + 1;
 }
 
 function renderSnapshotTrajectory(rows, role) {
@@ -1976,6 +2031,63 @@ function renderSnapshotTrajectory(rows, role) {
     yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
     shapes,
     legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono' } },
+  }, { displayModeBar: false, responsive: true });
+}
+
+// YoY overlay variant: same chart, but x-axis is day-of-year (1-366) so the
+// current-year line and prior-year line sit side-by-side at "same season date".
+// Current-year traces use solid lines + larger markers; prior-year uses dashed
+// lines + smaller markers + ` (YYYY)` suffix in the legend. Each dim renders as
+// two traces in the same color family; tooltip shows the date, day-of-year,
+// and rating value.
+function renderSnapshotTrajectoryYoY(curRows, priorRows, role, curYear, priorYear) {
+  const keys = role === 'hitter'
+    ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
+    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+
+  const mkTrace = (rows, k, color, year, dashed) => ({
+    x: rows.map(r => _dayOfYear(r.date)),
+    y: rows.map(r => r[k]),
+    text: rows.map(r => `${r.date} · ${k} ${r[k]}`),
+    hovertemplate: '%{text}<extra></extra>',
+    mode: 'lines+markers',
+    name: dashed ? `${k} (${year})` : `${k} (${year})`,
+    line: { color, width: dashed ? 1.5 : 2.2, dash: dashed ? 'dot' : 'solid' },
+    marker: { size: dashed ? 5 : 8, opacity: dashed ? 0.65 : 1 },
+    legendgroup: k,
+  });
+
+  const traces = [];
+  keys.forEach(([k, color]) => {
+    traces.push(mkTrace(priorRows, k, color, priorYear, true));
+    traces.push(mkTrace(curRows,   k, color, curYear,   false));
+  });
+
+  const shapes = [
+    { type:'line', xref:'paper', x0:0, x1:1, y0:60, y1:60, line:{ color:'#7fb069', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50, line:{ color:'#8d8579', dash:'dot', width:1 } },
+    { type:'line', xref:'paper', x0:0, x1:1, y0:40, y1:40, line:{ color:'#c1666b', dash:'dot', width:1 } },
+  ];
+  // X-axis: day-of-year with month tick labels for legibility.
+  const monthStartDOY = [
+    { d: 1,   m: 'Jan' }, { d: 32,  m: 'Feb' }, { d: 60,  m: 'Mar' },
+    { d: 91,  m: 'Apr' }, { d: 121, m: 'May' }, { d: 152, m: 'Jun' },
+    { d: 182, m: 'Jul' }, { d: 213, m: 'Aug' }, { d: 244, m: 'Sep' },
+    { d: 274, m: 'Oct' },
+  ];
+  Plotly.react('modal-snap', traces, {
+    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
+    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    margin: { l: 50, r: 10, t: 10, b: 50 },
+    xaxis: {
+      gridcolor: '#34302a', title: 'Day of season (aligned across years)',
+      tickmode: 'array',
+      tickvals: monthStartDOY.map(o => o.d),
+      ticktext: monthStartDOY.map(o => o.m),
+    },
+    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
+    shapes,
+    legend: { orientation: 'h', y: -0.18, font: { size: 10, family: 'IBM Plex Mono' } },
   }, { displayModeBar: false, responsive: true });
 }
 
@@ -2114,99 +2226,159 @@ function runSearch(q) {
 // then enforces them. Categorical (cat) cols get a multi-select popover; numeric
 // cols get a min/max range popover. text-only cols without `cat` are not filterable
 // (e.g. player_name — use the search box instead).
+// Descriptive header tooltips keyed by column `key` (not label, since labels
+// overlap across the four column lists). Falls back to label when missing.
+const COL_TOOLTIPS = {
+  player_name: 'Player name — click row to open profile modal',
+  team: 'Most recent MLB team',
+  year: 'MLB season',
+  role: 'Pitcher role — SP (starter) or RP (reliever)',
+  age: 'Age on July 1 of the season',
+  pa: 'Plate appearances this season',
+  gs: 'Games started (SP) or games (RP)',
+  tbf: 'Total batters faced',
+  fp_per_pa: 'Fantasy points per plate appearance: (R+TB+RBI+BB+HBP+SB−K) / PA',
+  fp_per_start: 'Fantasy points per start: (K+IP*3.3−H−2*ER−BB−HBP) / GS',
+  t1_fp_projection: 'Next-year FP rate projection (T+1) from OLS on the 6 sub-domain ratings + age',
+  t2_fp_projection: 'Two-year-out FP rate projection (T+2). RP version R²=0.26, SP R²=0.39 — directional',
+  OVERALL: 'Composite 20-80 rating: 0.55*CONTACT + 0.35*POWER + 0.10*DISCIPLINE (hitters) or empirical weights (pitchers). Higher = better.',
+  CONTACT: 'Contact domain 20-80 rating — within-year z-score of (Z-contact + Chase-contact + K-avoid + Quality + Spray). Higher = better.',
+  POWER: 'Power domain 20-80 rating — within-year z-score of (Raw EV + Launch + Damage production). Higher = better.',
+  DISCIPLINE: 'Discipline domain 20-80 rating — within-year z-score of (Patience + Aggression). Higher = better.',
+  SB: 'Speed/SB domain 20-80 — within-year z-score of (Speed tool + SB conversion). Higher = better.',
+  STUFF: 'Pitcher stuff domain 20-80 — within-year z-score. SP: SwM+Velo. RP: 0.85*SwM + 0.15*Velo. Higher = better.',
+  MOVEMENT: 'Pitcher movement domain 20-80 (SP). RP rows show BATTED_BALL here (GB + Bulk IP). Higher = better.',
+  CONTROL: 'Pitcher control domain 20-80 — within-year z-score. SP: WalkAvoid+CalledStrike. RP: 0.85*WalkAvoid + 0.15*CalledStrike. Higher = better.',
+  velo_rating: 'Average fastball velocity 20-80, within-year z-score. Higher = harder.',
+  SWING_MISS: 'Swing-and-miss rate 20-80 — derived from SwStr% (whiffs / pitches). Higher = better.',
+  CALLED_STRIKE: 'Called strike rate 20-80 — called strikes / pitches outside swings. Higher = better.',
+  WALK_AVOID: 'Walk avoidance 20-80 (inverted BB%) — lower BB% scores higher.',
+  STRIKE_THROWING: 'Strike-throwing rate 20-80 — overall strike%. Higher = better.',
+  DAMAGE_SUPP: 'Damage suppression 20-80 — derived from xwOBA-on-contact. SP only (RP failed YoY r=0.12).',
+  GB_TENDENCY: 'Ground ball % 20-80 — GB / (GB+FB+LD+PU). Higher = more grounders.',
+  BULK_IP: 'Multi-inning capacity 20-80 (RP only) — innings per appearance. Higher = bulk reliever.',
+  Z_CONTACT: 'Contact rate on in-zone pitches 20-80. Higher = better.',
+  O_CONTACT: 'Contact rate on out-of-zone (chase) pitches 20-80. Higher = better.',
+  K_AVOIDANCE: 'Strikeout avoidance 20-80 (inverted K% — lower K rate scores higher).',
+  CONTACT_QUALITY: 'xwOBA-on-contact 20-80 — quality of contact, not quantity. Higher = better.',
+  SPRAY_PROFILE: 'Pull-side fly ball rate 20-80. Higher = more pulled-FB damage.',
+  RAW_POWER: 'Raw exit velocity 20-80 (EV90 — 90th-pct EV). Higher = harder contact.',
+  LAUNCH_OPTIM: 'Launch angle optimization 20-80 (Barrel% + HardHit% blend). Higher = better.',
+  DAMAGE_PROD: 'Damage production 20-80 (ISO + HR/PA blend). Higher = more pop.',
+  PATIENCE: 'Walk + chase-rate composite 20-80. Higher = more patient.',
+  AGGRESSION: 'Zone-swing rate 20-80 — higher = more aggressive on hittable pitches.',
+  SPEED_TOOL: 'Sprint speed 20-80 (Statcast feet/sec). Higher = faster.',
+  SB_CONVERSION: 'SB success rate 20-80 (SB / opp). Higher = better basestealer.',
+  archetype: '27-cell archetype label from bucketing the 3 domains into EDGE_LO / SOLID / EDGE_HI',
+  contact_subtype: 'Contact dominant sub-tier label',
+  power_subtype: 'Power dominant sub-tier label',
+  discipline_subtype: 'Discipline dominant sub-tier label',
+  stuff_subtype: 'Within-Stuff dominant axis (SwM-dominant, Velo-dominant, etc.)',
+  pitch_archetype: 'Pitch-mix archetype (FB-heavy, sinker-baller, etc.)',
+  primary_group: 'Primary pitch family grouping (fastball / breaking / offspeed lead)',
+  spray_archetype: 'Pull/Spray/Oppo batted-ball tendency',
+  sb_tier: 'Categorical SB-rate tier (Elite / Plus / Avg / Below)',
+  velo_tier: 'Categorical fastball-velo tier (Elite / Plus / Avg / Below)',
+  age_tier: 'Age tier — hitters PRE_PEAK≤25 / PEAK 26-30 / POST_PEAK 31+; SP tiers similar',
+  boundary_tier: 'Boundary tier — EDGE rows are within 0.25 SD of a tier cutoff; SOLID rows are interior',
+  data_tier: 'Data-coverage tier — FULL vs PARTIAL season (PARTIAL flagged in player cell)',
+  babip_luck_flag: 'BABIP-luck flag — BABIP vs xwOBACON divergence (lucky / neutral / unlucky)',
+  rank_in_year: 'Within-year rank by FP rate (1 = best)',
+};
+
 const H_TBL_COLS = [
   { key: 'player_name', label: 'Player', text: true, w: 14 },
   { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
-  { key: 'year',        label: 'Yr',  num: true, w: 3 },
-  { key: 'pa',          label: 'PA',  num: true, w: 3 },
+  { key: 'year',        label: 'Yr',  num: true, w: 2 },
+  { key: 'pa',          label: 'PA',  num: true, w: 2 },
   { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'CONTACT',     label: 'C',   num: true, w: 3 },
   { key: 'POWER',       label: 'P',   num: true, w: 3 },
   { key: 'DISCIPLINE',  label: 'D',   num: true, w: 3 },
   { key: 'SB',          label: 'SB',  num: true, w: 3 },
-  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 11 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
   { key: 'contact_subtype',     label: 'Contact sub', text: true, cat: true, pretty: true, w: 6 },
   { key: 'power_subtype',       label: 'Power sub',   text: true, cat: true, pretty: true, w: 6 },
   { key: 'discipline_subtype',  label: 'Disc sub',    text: true, cat: true, pretty: true, w: 5 },
   { key: 'sb_tier',             label: 'SB tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'spray_archetype',     label: 'Spray',   text: true, cat: true, pretty: true, w: 4 },
-  { key: 'age',                 label: 'Age', num: true, w: 3 },
+  { key: 'age',                 label: 'Age', num: true, w: 2 },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 5 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
   { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 3 },
-  { key: 'rank_in_year',        label: 'Rank', num: true, w: 3 },
+  { key: 'rank_in_year',        label: 'Rank', num: true, w: 2 },
 ];
 
 const S_TBL_COLS = [
   { key: 'player_name', label: 'Pitcher', text: true, w: 14 },
   { key: 'role',        label: 'Role', text: true, cat: true, w: 3 },
-  { key: 'year',        label: 'Yr',  num: true, w: 3 },
+  { key: 'year',        label: 'Yr',  num: true, w: 2 },
   { key: 'gs',          label: 'G/GS',  num: true, w: 3 },
   { key: 'tbf',         label: 'TBF', num: true, w: 3 },
-  { key: 'fp_per_start', label: 'FP rate', num: true, w: 5, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'fp_per_start', label: 'FP rate', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(2)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'STUFF',       label: 'S',   num: true, w: 3 },
   { key: 'MOVEMENT',    label: 'M/BB',num: true, w: 3 },
   { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
   { key: 'velo_rating', label: 'Velo', num: true, w: 4 },
-  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 11 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
   { key: 'stuff_subtype',       label: 'Stuff sub', text: true, cat: true, pretty: true, w: 6 },
   { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
-  { key: 'pitch_archetype',     label: 'Pitch arch', text: true, cat: true, pretty: true, w: 7 },
-  { key: 'primary_group',       label: 'Primary', text: true, cat: true, pretty: true, w: 6 },
-  { key: 'age',                 label: 'Age', num: true, w: 3 },
+  { key: 'pitch_archetype',     label: 'Pitch arch', text: true, cat: true, pretty: true, w: 8 },
+  { key: 'primary_group',       label: 'Primary', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'age',                 label: 'Age', num: true, w: 2 },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
-  { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 3 },
-  { key: 'rank_in_year',        label: 'Rank', num: true, w: 3 },
+  { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 2 },
+  { key: 'rank_in_year',        label: 'Rank', num: true, w: 2 },
 ];
 
 // Sub-domain tables — focused on the intermediate-layer ratings.
 const H_SUB_COLS = [
   { key: 'player_name', label: 'Player', text: true, w: 16 },
   { key: 'team',        label: 'Tm', text: true, cat: true, w: 5 },
-  { key: 'year',        label: 'Yr', num: true, w: 3 },
+  { key: 'year',        label: 'Yr', num: true, w: 2 },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'CONTACT',         label: 'Contact', num: true, bold: true, w: 4 },
   { key: 'Z_CONTACT',       label: 'Z-Cont', num: true, w: 3 },
   { key: 'O_CONTACT',       label: 'O-Cont', num: true, w: 3 },
-  { key: 'K_AVOIDANCE',     label: 'K-Avoid', num: true, w: 4 },
-  { key: 'CONTACT_QUALITY', label: 'Quality', num: true, w: 4 },
+  { key: 'K_AVOIDANCE',     label: 'K-Avoid', num: true, w: 5 },
+  { key: 'CONTACT_QUALITY', label: 'Quality', num: true, w: 5 },
   { key: 'SPRAY_PROFILE',   label: 'Spray',   num: true, w: 3 },
   { key: 'POWER',           label: 'Power',   num: true, bold: true, w: 4 },
   { key: 'RAW_POWER',       label: 'Raw',     num: true, w: 3 },
   { key: 'LAUNCH_OPTIM',    label: 'Launch',  num: true, w: 3 },
   { key: 'DAMAGE_PROD',     label: 'Prod',    num: true, w: 3 },
   { key: 'DISCIPLINE',      label: 'Disc',    num: true, bold: true, w: 4 },
-  { key: 'PATIENCE',        label: 'Patience',num: true, w: 4 },
-  { key: 'AGGRESSION',      label: 'Aggr',    num: true, w: 4 },
+  { key: 'PATIENCE',        label: 'Patience',num: true, w: 5 },
+  { key: 'AGGRESSION',      label: 'Aggr',    num: true, w: 5 },
   { key: 'SB',              label: 'SB',      num: true, bold: true, w: 4 },
   { key: 'SPEED_TOOL',      label: 'Speed',   num: true, w: 3 },
   { key: 'SB_CONVERSION',   label: 'Conv',    num: true, w: 3 },
-  { key: 'babip_luck_flag', label: 'BABIP',   text: true, cat: true, pretty: true, w: 5 },
-  { key: 'age_tier',        label: 'Age',     text: true, cat: true, pretty: true, w: 5 },
-  { key: 'data_tier',       label: 'Tier',    text: true, cat: true, pretty: true, w: 6 },
+  { key: 'babip_luck_flag', label: 'BABIP',   text: true, cat: true, pretty: true, w: 3 },
+  { key: 'age_tier',        label: 'Age',     text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',       label: 'Tier',    text: true, cat: true, pretty: true, w: 3 },
 ];
 
 const S_SUB_COLS = [
   { key: 'player_name', label: 'Pitcher', text: true, w: 18 },
-  { key: 'role',        label: 'Role',   text: true, cat: true, w: 4 },
-  { key: 'year',        label: 'Yr', num: true, w: 4 },
+  { key: 'role',        label: 'Role',   text: true, cat: true, w: 3 },
+  { key: 'year',        label: 'Yr', num: true, w: 2 },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 5 },
   { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 5 },
   { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 4 },
-  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 4 },
+  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 5 },
   { key: 'MOVEMENT',      label: 'Mv/BB',  num: true, bold: true, w: 5 },
   { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true, w: 4 },
   { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 4 },
   { key: 'BULK_IP',       label: 'Bulk',   num: true, w: 4 },
   { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 5 },
-  { key: 'WALK_AVOID',    label: 'BB-avoid',num: true, w: 5 },
-  { key: 'STRIKE_THROWING', label: 'Strikes', num: true, w: 5 },
+  { key: 'WALK_AVOID',    label: 'BB-avoid',num: true, w: 6 },
+  { key: 'STRIKE_THROWING', label: 'Strikes', num: true, w: 6 },
   { key: 'velo_rating',   label: 'Velo',   num: true, w: 4 },
-  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 5 },
-  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 4 },
+  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 3 },
 ];
 
 function tblRowMatches(r, q) {
@@ -2618,12 +2790,13 @@ function renderAllTable(rows, role, kind) {
 
   // Build header
   h += '<thead><tr>';
-  h += '<th class="num"><div class="th-inner"><span class="th-label">#</span></div></th>';
+  h += '<th class="num"><div class="th-inner"><span class="th-label" title="Row number within current sort/filter">#</span></div></th>';
   cols.forEach(c => {
     const cls = (c.num ? 'num ' : '') + (sort.col === c.key ? `sort-${sort.dir}` : '');
     const isFilterable = !!(c.cat || c.num);
     const hasFilter = !!filters[c.key];
-    let inner = `<span class="th-label" data-col="${c.key}" title="Sort by ${c.label}">${c.label}</span>`;
+    const tipText = (COL_TOOLTIPS[c.key] || c.label).replace(/"/g, '&quot;');
+    let inner = `<span class="th-label" data-col="${c.key}" title="${tipText}">${c.label}</span>`;
     if (isFilterable) {
       inner += `<button class="th-filter${hasFilter ? ' active' : ''}" data-filter-col="${c.key}" title="Filter ${c.label}">▾</button>`;
     }
@@ -2822,7 +2995,32 @@ function renderAll() {
   renderLeaderboard(spRows,    'sp',     'lb-sps');
 
   renderQuadrant('h-quad', 'h-r', hitterRows, state.hX, state.hY, 'hitter');
-  renderQuadrant('s-quad', 's-r', spRows,     state.sX, state.sY, 'sp');
+
+  // SP quadrant — gate by position chip so SP and RP don't pool into one
+  // misleading axis label. MOVEMENT slot carries different meaning for RP
+  // rows (BATTED_BALL via schema bridge), so we render one sub-pool at a
+  // time and relabel the axis accordingly. 'all' defaults to SP-only.
+  const sPosF = chipFiltersActive() ? state.sPosFilter : 'all';
+  const sQuadNote = document.getElementById('s-quad-note');
+  let sQuadRows, sQuadAxisLabel, sQuadNoteText;
+  if (sPosF === 'RP') {
+    sQuadRows = spRows.filter(r => r.role === 'RP');
+    sQuadAxisLabel = RP_AXIS_LABEL;
+    sQuadNoteText = `RP-only view (n=${sQuadRows.length}) · MOVEMENT slot shows BATTED_BALL (GB + Bulk IP) for relievers.`;
+  } else if (sPosF === 'SP') {
+    sQuadRows = spRows.filter(r => r.role !== 'RP');
+    sQuadAxisLabel = SP_AXIS_LABEL;
+    sQuadNoteText = `SP-only view (n=${sQuadRows.length}).`;
+  } else {
+    // 'all' — default to SP view, note that RPs are not plotted (their
+    // MOVEMENT axis label would be wrong here).
+    sQuadRows = spRows.filter(r => r.role !== 'RP');
+    sQuadAxisLabel = SP_AXIS_LABEL;
+    const nRP = spRows.filter(r => r.role === 'RP').length;
+    sQuadNoteText = `Showing SP (n=${sQuadRows.length}). RPs (${nRP}) not plotted — select the RP chip to view RP quadrant with BATTED_BALL axis.`;
+  }
+  if (sQuadNote) sQuadNote.textContent = sQuadNoteText;
+  renderQuadrant('s-quad', 's-r', sQuadRows, state.sX, state.sY, 'sp', { axisLabel: sQuadAxisLabel });
 
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
   renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
@@ -3017,6 +3215,29 @@ function init() {
         const rows = role === 'hitter'
           ? filterRows(HITTERS, 'hitter') : filterRows(SPS, 'sp');
         renderAllTable(rows, role);
+        // The SP quadrant is gated by sPosFilter (SP/RP/all → different axis
+        // labels and sub-pool). Re-render it whenever the SP pos chip changes.
+        if (role === 'sp' && group === 'pos') {
+          const sPosF = chipFiltersActive() ? state.sPosFilter : 'all';
+          const note = document.getElementById('s-quad-note');
+          let qRows, qAxis, qNote;
+          if (sPosF === 'RP') {
+            qRows = rows.filter(r => r.role === 'RP');
+            qAxis = RP_AXIS_LABEL;
+            qNote = `RP-only view (n=${qRows.length}) · MOVEMENT slot shows BATTED_BALL (GB + Bulk IP) for relievers.`;
+          } else if (sPosF === 'SP') {
+            qRows = rows.filter(r => r.role !== 'RP');
+            qAxis = SP_AXIS_LABEL;
+            qNote = `SP-only view (n=${qRows.length}).`;
+          } else {
+            qRows = rows.filter(r => r.role !== 'RP');
+            qAxis = SP_AXIS_LABEL;
+            const nRP = rows.filter(r => r.role === 'RP').length;
+            qNote = `Showing SP (n=${qRows.length}). RPs (${nRP}) not plotted — select the RP chip to view RP quadrant with BATTED_BALL axis.`;
+          }
+          if (note) note.textContent = qNote;
+          renderQuadrant('s-quad', 's-r', qRows, state.sX, state.sY, 'sp', { axisLabel: qAxis });
+        }
       });
     });
   }
