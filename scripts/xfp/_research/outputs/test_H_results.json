@@ -1,0 +1,55 @@
+{
+  "shrinkage_config": {
+    "pa_ref": 250,
+    "prior_mean": 50.0,
+    "prior_var": 100.0
+  },
+  "n_partial": 1650,
+  "n_full": 3163,
+  "results": {
+    "current_year": {
+      "test_year": 2024,
+      "partial_subset_baseline_raw": {
+        "r2": 0.7381995540097126,
+        "mae": 0.05340523370868658,
+        "n_train": 3612,
+        "n_test": 130
+      },
+      "partial_subset_shrunk": {
+        "r2": 0.3625804309096795,
+        "mae": 0.08413837485562925,
+        "n_train": 3612,
+        "n_test": 130
+      },
+      "delta_r2_partial": -0.3756191231000331,
+      "full_only_reference": {
+        "r2": 0.8530344889320991,
+        "mae": 0.035710363069842696,
+        "n_train": 2530,
+        "n_test": 325
+      }
+    },
+    "t1": {
+      "test_year": 2024,
+      "partial_subset_baseline_raw": {
+        "r2": 0.23889906660327798,
+        "mae": 0.08962850361276112,
+        "n_train": 2431,
+        "n_test": 78
+      },
+      "partial_subset_shrunk": {
+        "r2": 0.1995728373124751,
+        "mae": 0.0948153569246759,
+        "n_train": 2431,
+        "n_test": 78
+      },
+      "delta_r2_partial": -0.03932622929080287,
+      "full_only_reference": {
+        "r2": 0.28517282032641456,
+        "mae": 0.08533239949278028,
+        "n_train": 1915,
+        "n_test": 284
+      }
+    }
+  }
+}

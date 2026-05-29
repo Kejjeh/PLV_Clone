@@ -1,0 +1,167 @@
+{
+  "current_year": {
+    "test_year": 2024,
+    "raw": {
+      "r2": 0.8910194777150768,
+      "mae": 0.03100086255588806,
+      "n_train": 1592,
+      "n_test": 325
+    },
+    "parkadj": {
+      "r2": 0.8799333457182167,
+      "mae": 0.0321195007159605,
+      "n_train": 1592,
+      "n_test": 325
+    },
+    "delta_r2": -0.011086131996860149
+  },
+  "t1": {
+    "test_year": 2024,
+    "raw": {
+      "r2": 0.3045754532682299,
+      "mae": 0.0855620653169656,
+      "n_train": 1101,
+      "n_test": 284
+    },
+    "parkadj": {
+      "r2": 0.3134445311270707,
+      "mae": 0.08486342985037756,
+      "n_train": 1101,
+      "n_test": 284
+    },
+    "delta_r2": 0.008869077858840835
+  },
+  "team_movers": {
+    "test_year_T+1_via_2024": {
+      "raw": {
+        "r2": 0.1728298761785586,
+        "mae": 0.10719672319491408,
+        "n_train": 1101,
+        "n_test_movers": 54
+      },
+      "parkadj": {
+        "r2": 0.18520413270423108,
+        "mae": 0.10596402748350618,
+        "n_train": 1101,
+        "n_test_movers": 54
+      }
+    },
+    "test_year_currentY_2024": {
+      "raw": {
+        "r2": 0.876389612825085,
+        "mae": 0.03392613933386269,
+        "n_train": 1592,
+        "n_test_movers": 75
+      },
+      "parkadj": {
+        "r2": 0.8599091270340073,
+        "mae": 0.035106404108613765,
+        "n_train": 1592,
+        "n_test_movers": 75
+      }
+    }
+  },
+  "spot_check_rockies_top_park_adj_drops": [
+    {
+      "player": "C.J. Cron",
+      "year": 2022,
+      "team": "COL",
+      "pf_HR": 1.4248,
+      "hr_per_pa": 4.59,
+      "r_HRrate_raw": 62.0,
+      "r_HRrate_parkadj": 53.46175152011788,
+      "delta": -8.538248479882121
+    },
+    {
+      "player": "Nolan Arenado",
+      "year": 2019,
+      "team": "COL",
+      "pf_HR": 1.278,
+      "hr_per_pa": 6.18,
+      "r_HRrate_raw": 65.0,
+      "r_HRrate_parkadj": 57.026067015768604,
+      "delta": -7.973932984231396
+    },
+    {
+      "player": "Charlie Blackmon",
+      "year": 2019,
+      "team": "COL",
+      "pf_HR": 1.278,
+      "hr_per_pa": 5.05,
+      "r_HRrate_raw": 59.0,
+      "r_HRrate_parkadj": 52.694146425586716,
+      "delta": -6.305853574413284
+    },
+    {
+      "player": "Trevor Story",
+      "year": 2019,
+      "team": "COL",
+      "pf_HR": 1.278,
+      "hr_per_pa": 5.31,
+      "r_HRrate_raw": 60.0,
+      "r_HRrate_parkadj": 53.98494805261107,
+      "delta": -6.015051947388933
+    },
+    {
+      "player": "Michael Toglia",
+      "year": 2024,
+      "team": "COL",
+      "pf_HR": 1.0898,
+      "hr_per_pa": 5.46,
+      "r_HRrate_raw": 68.0,
+      "r_HRrate_parkadj": 62.154990151531436,
+      "delta": -5.845009848468564
+    },
+    {
+      "player": "Hunter Goodman",
+      "year": 2025,
+      "team": "COL",
+      "pf_HR": 1.2065,
+      "hr_per_pa": 5.35,
+      "r_HRrate_raw": 66.0,
+      "r_HRrate_parkadj": 60.56647592767545,
+      "delta": -5.433524072324552
+    },
+    {
+      "player": "Ryan McMahon",
+      "year": 2022,
+      "team": "COL",
+      "pf_HR": 1.4248,
+      "hr_per_pa": 3.34,
+      "r_HRrate_raw": 54.0,
+      "r_HRrate_parkadj": 48.74069299179304,
+      "delta": -5.25930700820696
+    },
+    {
+      "player": "Randal Grichuk",
+      "year": 2022,
+      "team": "COL",
+      "pf_HR": 1.4248,
+      "hr_per_pa": 3.52,
+      "r_HRrate_raw": 55.0,
+      "r_HRrate_parkadj": 49.75946876527005,
+      "delta": -5.24053123472995
+    },
+    {
+      "player": "Ian Desmond",
+      "year": 2019,
+      "team": "COL",
+      "pf_HR": 1.278,
+      "hr_per_pa": 4.14,
+      "r_HRrate_raw": 54.0,
+      "r_HRrate_parkadj": 48.83277104134945,
+      "delta": -5.167228958650547
+    },
+    {
+      "player": "Mickey Moniak",
+      "year": 2025,
+      "team": "COL",
+      "pf_HR": 1.2065,
+      "hr_per_pa": 5.21,
+      "r_HRrate_raw": 65.0,
+      "r_HRrate_parkadj": 60.012564948213495,
+      "delta": -4.987435051786505
+    }
+  ],
+  "n_rows_with_park": 3495
+}
