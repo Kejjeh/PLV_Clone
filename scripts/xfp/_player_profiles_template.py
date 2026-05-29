@@ -535,7 +535,8 @@ BODY_HEADER = """
 <div class="tabs">
   <button data-tab="home" class="active">Home</button>
   <button data-tab="hitters">Hitters</button>
-  <button data-tab="pitchers">Pitchers</button>
+  <button data-tab="sps">SPs</button>
+  <button data-tab="rps">RPs</button>
 </div>
 </header>
 """
@@ -546,9 +547,10 @@ HOME_TAB = """
   <h2>League archetype distribution by year</h2>
   <div id="home-arch-hit" style="height: 580px;"></div>
   <div id="home-arch-sp"  style="height: 580px; margin-top: 1.2em;"></div>
+  <div id="home-arch-rp"  style="height: 580px; margin-top: 1.2em;"></div>
 
   <h2>Current view leaderboards</h2>
-  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em;">
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5em;">
     <div>
       <h3>Top hitters</h3>
       <div id="lb-hitters"></div>
@@ -556,6 +558,10 @@ HOME_TAB = """
     <div>
       <h3>Top starting pitchers</h3>
       <div id="lb-sps"></div>
+    </div>
+    <div>
+      <h3>Top relievers</h3>
+      <div id="lb-rps"></div>
     </div>
   </div>
 
@@ -748,13 +754,13 @@ HITTERS_TAB = """
 """
 
 
-PITCHERS_TAB = """
-<div id="tab-pitchers" class="tab-panel">
+SPS_TAB = """
+<div id="tab-sps" class="tab-panel">
   <nav id="s-toc" class="toc-strip">
     <a href="#s-section-snapshots">Snapshot movers</a>
     <a href="#s-section-quadrant">Quadrant</a>
     <a href="#s-section-roster">Roster</a>
-    <a href="#s-section-all">All pitchers</a>
+    <a href="#s-section-all">All SPs</a>
     <a href="#s-section-subs">Sub-domains</a>
   </nav>
   <section id="s-section-snapshots">
@@ -783,7 +789,7 @@ PITCHERS_TAB = """
   </section>
 
   <section id="s-section-quadrant">
-  <h2>Pitcher custom quadrant</h2>
+  <h2>SP custom quadrant</h2>
   <div class="quad-controls">
     <label>X axis</label>
     <select id="s-x">
@@ -808,7 +814,7 @@ PITCHERS_TAB = """
   </section>
 
   <section id="s-section-roster">
-  <h2>Pitcher archetype roster</h2>
+  <h2>SP archetype roster</h2>
   <div class="arch-controls" id="s-arch-controls">
     <label for="s-arch-filter">Archetype</label>
     <select id="s-arch-filter"><option value="__ALL__">All archetypes</option></select>
@@ -822,7 +828,7 @@ PITCHERS_TAB = """
   </section>
 
   <section id="s-section-all">
-  <h2>All pitchers — sortable</h2>
+  <h2>All SPs — sortable</h2>
   <div class="chip-group" id="s-roster-chips" data-group="roster" data-role="sp">
     <span class="chip-group-label">Roster</span>
     <button type="button" class="pill active" data-value="all">All players</button>
@@ -830,13 +836,6 @@ PITCHERS_TAB = """
     <button type="button" class="pill" data-value="fa">Free agents</button>
     <button type="button" class="pill" data-value="taken">Other teams</button>
     <span class="group-note" id="s-roster-note"></span>
-  </div>
-  <div class="chip-group" id="s-pos-chips" data-group="pos" data-role="sp">
-    <span class="chip-group-label">Position</span>
-    <button type="button" class="pill active" data-value="all">All</button>
-    <button type="button" class="pill" data-value="SP">SP</button>
-    <button type="button" class="pill" data-value="RP">RP</button>
-    <span class="group-note" id="s-pos-note"></span>
   </div>
   <div class="alltable-controls">
     <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
@@ -847,7 +846,7 @@ PITCHERS_TAB = """
   </section>
 
   <section id="s-section-subs">
-  <h2>Sub-domain ratings — all pitchers</h2>
+  <h2>Sub-domain ratings — all SPs</h2>
   <p style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Each domain decomposed into its underlying sub-ratings (20-80 within year). Sort by any column.</p>
   <div class="alltable-controls">
     <input type="text" id="s-subtable-search" placeholder="Search name…" autocomplete="off">
@@ -855,6 +854,111 @@ PITCHERS_TAB = """
   </div>
   <div id="s-subtable-chips" class="filter-chips" style="display:none;"></div>
   <div class="table-scroll"><table id="s-subtable" class="alltable"></table></div>
+  </section>
+</div>
+"""
+
+
+RPS_TAB = """
+<div id="tab-rps" class="tab-panel">
+  <nav id="rp-toc" class="toc-strip">
+    <a href="#rp-section-snapshots">Snapshot movers</a>
+    <a href="#rp-section-quadrant">Quadrant</a>
+    <a href="#rp-section-roster">Roster</a>
+    <a href="#rp-section-all">All RPs</a>
+    <a href="#rp-section-subs">Sub-domains</a>
+  </nav>
+  <section id="rp-section-snapshots">
+  <div id="rp-snapshots-section" style="display:none;">
+    <h2>Season progression — snapshot movers</h2>
+    <div class="quad-controls" style="margin-bottom:.4em;">
+      <label>At date</label>
+      <select id="rp-snap-at"></select>
+      <label>Compared to</label>
+      <select id="rp-snap-vs"></select>
+      <label>Sort by</label>
+      <select id="rp-snap-sort">
+        <option value="net">Net |ΔS|+|ΔC|+|ΔBB|</option>
+        <option value="S">ΔS (Stuff)</option>
+        <option value="C">ΔC (Control)</option>
+        <option value="BB">ΔBB (Batted-ball)</option>
+        <option value="V">ΔVelo</option>
+      </select>
+      <span id="rp-snap-note" class="filter-summary"></span>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5em;">
+      <div><h3 style="color:var(--pos);">Risers</h3><div id="rp-snap-up"></div></div>
+      <div><h3 style="color:var(--neg);">Fallers</h3><div id="rp-snap-down"></div></div>
+    </div>
+  </div>
+  </section>
+
+  <section id="rp-section-quadrant">
+  <h2>RP custom quadrant</h2>
+  <div class="quad-controls">
+    <label>X axis</label>
+    <select id="rp-x">
+      <option value="OVERALL">Overall</option>
+      <option value="STUFF">Stuff</option>
+      <option value="CONTROL">Control</option>
+      <option value="BATTED_BALL" selected>Batted-ball</option>
+      <option value="velo_rating">Velo</option>
+    </select>
+    <label>Y axis</label>
+    <select id="rp-y">
+      <option value="OVERALL">Overall</option>
+      <option value="STUFF" selected>Stuff</option>
+      <option value="CONTROL">Control</option>
+      <option value="BATTED_BALL">Batted-ball</option>
+      <option value="velo_rating">Velo</option>
+    </select>
+    <span class="r-display" id="rp-r"></span>
+  </div>
+  <div id="rp-quad-note" style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin:.4em 0;"></div>
+  <div class="quadrant-host"><div id="rp-quad" style="height: 640px;"></div></div>
+  </section>
+
+  <section id="rp-section-roster">
+  <h2>RP archetype roster</h2>
+  <div class="arch-controls" id="rp-arch-controls">
+    <label for="rp-arch-filter">Archetype</label>
+    <select id="rp-arch-filter"><option value="__ALL__">All archetypes</option></select>
+    <label for="rp-arch-search">Search</label>
+    <input type="text" id="rp-arch-search" placeholder="Name, sub-type, tag…" autocomplete="off">
+    <button type="button" class="arch-toggle" id="rp-arch-expand">Expand all</button>
+    <button type="button" class="arch-toggle" id="rp-arch-collapse">Collapse all</button>
+    <span class="arch-count" id="rp-arch-count"></span>
+  </div>
+  <div id="rp-archetype-tables"></div>
+  </section>
+
+  <section id="rp-section-all">
+  <h2>All RPs — sortable</h2>
+  <div class="chip-group" id="rp-roster-chips" data-group="roster" data-role="rp">
+    <span class="chip-group-label">Roster</span>
+    <button type="button" class="pill active" data-value="all">All players</button>
+    <button type="button" class="pill" data-value="mine">My team</button>
+    <button type="button" class="pill" data-value="fa">Free agents</button>
+    <button type="button" class="pill" data-value="taken">Other teams</button>
+    <span class="group-note" id="rp-roster-note"></span>
+  </div>
+  <div class="alltable-controls">
+    <input type="text" id="rp-alltable-search" placeholder="Search name, archetype, tag…" autocomplete="off">
+    <span id="rp-alltable-count" class="filter-summary"></span>
+  </div>
+  <div id="rp-alltable-chips" class="filter-chips" style="display:none;"></div>
+  <div class="table-scroll"><table id="rp-alltable" class="alltable"></table></div>
+  </section>
+
+  <section id="rp-section-subs">
+  <h2>Sub-domain ratings — all RPs</h2>
+  <p style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Each domain decomposed into its underlying sub-ratings (20-80 within year). Sort by any column.</p>
+  <div class="alltable-controls">
+    <input type="text" id="rp-subtable-search" placeholder="Search name…" autocomplete="off">
+    <span id="rp-subtable-count" class="filter-summary"></span>
+  </div>
+  <div id="rp-subtable-chips" class="filter-chips" style="display:none;"></div>
+  <div class="table-scroll"><table id="rp-subtable" class="alltable"></table></div>
   </section>
 </div>
 """
@@ -918,7 +1022,10 @@ function snapshotDatesForYear(snaps, year) {
 // ── Axis labels (display only) ──────────────────────────────────────────
 const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
 const SP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
-const RP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Batted-ball', CONTROL: 'Control', velo_rating: 'Velo' };
+// RP axes use BATTED_BALL natively now that the RP tab reads directly from
+// the RP master fields (no more MOVEMENT bridge). The MOVEMENT entry remains
+// for backwards compatibility with old #hash URLs that may carry rpX=MOVEMENT.
+const RP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', CONTROL: 'Control', BATTED_BALL: 'Batted-ball', MOVEMENT: 'Batted-ball', velo_rating: 'Velo' };
 
 // Convert SCREAMING_SNAKE_CASE labels to "Title Case" for display
 function prettyLabel(s) {
@@ -1076,46 +1183,59 @@ const state = {
   includePartial: true,
   hX: 'POWER', hY: 'CONTACT',
   sX: 'MOVEMENT', sY: 'STUFF',
+  rpX: 'BATTED_BALL', rpY: 'STUFF',
   hSnapAt: null, hSnapVs: null, hSnapSort: 'net',
   sSnapAt: null, sSnapVs: null, sSnapSort: 'net',
+  rpSnapAt: null, rpSnapVs: null, rpSnapSort: 'net',
   // All-players table state — initial sort by Overall descending
-  hTblSort: { col: 'OVERALL', dir: 'desc' },
-  sTblSort: { col: 'OVERALL', dir: 'desc' },
+  hTblSort:  { col: 'OVERALL', dir: 'desc' },
+  sTblSort:  { col: 'OVERALL', dir: 'desc' },
+  rpTblSort: { col: 'OVERALL', dir: 'desc' },
   hTblQuery: '',
   sTblQuery: '',
+  rpTblQuery: '',
   // Per-column filters for the alltable + subtable variants. Schema per key:
   //   { type: 'set', values: Set<string> }  — categorical (multi-select)
   //   { type: 'range', min: number|null, max: number|null }  — numeric
   // Missing entries = no filter on that column.
-  hAllFilters:  {},
-  sAllFilters:  {},
-  hSubFilters:  {},
-  sSubFilters:  {},
+  hAllFilters:   {},
+  sAllFilters:   {},
+  rpAllFilters:  {},
+  hSubFilters:   {},
+  sSubFilters:   {},
+  rpSubFilters:  {},
   // Sub-domain table state — also defaults to Overall desc
-  hSubSort: { col: 'OVERALL', dir: 'desc' },
-  sSubSort: { col: 'OVERALL', dir: 'desc' },
+  hSubSort:  { col: 'OVERALL', dir: 'desc' },
+  sSubSort:  { col: 'OVERALL', dir: 'desc' },
+  rpSubSort: { col: 'OVERALL', dir: 'desc' },
   hSubQuery: '',
   sSubQuery: '',
+  rpSubQuery: '',
   // Archetype-roster table state (each archetype block is independently
   // sorted by FP rate desc by default; the dropdown narrows to a single
   // archetype, the search box filters rows across all visible blocks).
-  hArchSort: { col: 'fp_per_pa',    dir: 'desc' },
-  sArchSort: { col: 'fp_per_start', dir: 'desc' },
+  hArchSort:  { col: 'fp_per_pa',    dir: 'desc' },
+  sArchSort:  { col: 'fp_per_start', dir: 'desc' },
+  rpArchSort: { col: 'fp_per_g',     dir: 'desc' },
   hArchQuery: '',
   sArchQuery: '',
-  hArchFilter: '__ALL__',
-  sArchFilter: '__ALL__',
+  rpArchQuery: '',
+  hArchFilter:  '__ALL__',
+  sArchFilter:  '__ALL__',
+  rpArchFilter: '__ALL__',
   // Track which archetype <details> blocks are open so a re-render after
   // a search/sort doesn't snap everything closed.
-  hArchOpen: {},
-  sArchOpen: {},
+  hArchOpen:  {},
+  sArchOpen:  {},
+  rpArchOpen: {},
   // Roster-status + position chip filters for the all-tables. These are
   // single-select per group, mirror the xFP dashboard's chip-row pattern,
   // and ONLY apply in Single Year = current year mode (see updateChipAvailability).
   hRosterFilter: 'all',   // 'all' | 'mine' | 'fa' | 'taken'
   sRosterFilter: 'all',
+  rpRosterFilter: 'all',
   hPosFilter:    'all',   // 'all' | 'C' | '1B' | '2B' | '3B' | 'SS' | 'OF' | 'DH' | '1B/3B' | '2B/SS'
-  sPosFilter:    'all',   // 'all' | 'SP' | 'RP'  (RP disabled until archetypes ship)
+  sPosFilter:    'all',   // legacy slot — SP tab is SP-only now; kept so old hash URLs don't crash
 };
 
 // Inline badge for partial-season players
@@ -1165,7 +1285,8 @@ function paWeightBlend(rows, idKey, fpKey) {
     const k = (idKey === 'batter') ? String(r.batter) : `${r.role || 'SP'}|${r.pitcher}`;
     (byId[k] = byId[k] || []).push(r);
   });
-  const PA_KEY = idKey === 'batter' ? 'pa' : 'gs';
+  // RP appearance counts live in `g` (gs is typically 0 for pure relievers).
+  // Pick the weight column per row's role so RP blends actually carry weight.
   const HITTER_NUMS = ['CONTACT','POWER','DISCIPLINE','SB',
     'r_Contact','r_K','r_BABIP','r_xCON','r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB',
     'r_BB','r_Chase','r_ZSwing','r_SBrate','r_Sprint'];
@@ -1173,15 +1294,17 @@ function paWeightBlend(rows, idKey, fpKey) {
     'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB'];
   const RP_NUMS = ['STUFF','CONTROL','BATTED_BALL','MOVEMENT','velo_rating',
     'SWING_MISS','CALLED_STRIKE','VELO','WALK_AVOID','GB_TENDENCY','BULK_IP','r_K'];
+  const weightCol = r => idKey === 'batter' ? 'pa' : (r.role === 'RP' ? 'g' : 'gs');
   const out = [];
   Object.values(byId).forEach(recs => {
     const sel = recs.filter(r => r.year === 2025 || r.year === 2026);
     if (!sel.length) return;
-    const wsum = sel.reduce((a,r) => a + (r[PA_KEY] || 0), 0);
+    const wsum = sel.reduce((a,r) => a + (r[weightCol(r)] || 0), 0);
     if (!wsum) return;
     const last = sel.slice().sort((a,b) => b.year - a.year)[0];
     const isRP = last.role === 'RP';
     const NUMS = idKey === 'batter' ? HITTER_NUMS : (isRP ? RP_NUMS : SP_NUMS);
+    const PA_KEY = idKey === 'batter' ? 'pa' : (isRP ? 'g' : 'gs');
     const blend = { ...last };
     blend.year = 'blend';
     NUMS.forEach(c => {
@@ -1294,7 +1417,7 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role, opts) {
   });
 
   // Plot range — keep [20,80] when both axes are 20-80 ratings; auto for velo
-  const ratingAxes = ['CONTACT','POWER','DISCIPLINE','SB','STUFF','MOVEMENT','CONTROL','velo_rating'];
+  const ratingAxes = ['CONTACT','POWER','DISCIPLINE','SB','STUFF','MOVEMENT','CONTROL','BATTED_BALL','velo_rating'];
   const xRange = ratingAxes.includes(xKey) ? [20, 80] : undefined;
   const yRange = ratingAxes.includes(yKey) ? [20, 80] : undefined;
 
@@ -1383,6 +1506,22 @@ const S_ARCH_COLS = [
   { key: 'rank_in_year',  label: 'Rank',     num: true },
 ];
 
+const RP_ARCH_COLS = [
+  { key: '_n',            label: '#',        num: true, text: true },
+  { key: 'player_name',   label: 'Reliever', text: true, idCol: true },
+  { key: 'OVERALL',       label: 'Overall',  num: true, bold: true },
+  { key: 'STUFF',         label: 'S',        num: true, domain: 'STUFF' },
+  { key: 'CONTROL',       label: 'C',        num: true, domain: 'CONTROL' },
+  { key: 'BATTED_BALL',   label: 'BB',       num: true, domain: 'BATTED_BALL' },
+  { key: 'velo_rating',   label: 'Velo',     num: true },
+  { key: 'leverage_tier', label: 'Lev',      text: true, pretty: true },
+  { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
+  { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
+  { key: 'fp_per_g',      label: 'FP/g',     num: true,
+    fmt: v => (v == null ? '' : (+v).toFixed(2)) },
+  { key: 'rank_in_year',  label: 'Rank',     num: true },
+];
+
 // Same DOMAIN_SUBS table as renderAllTable uses — preserves the existing
 // hover-tooltip behavior.
 const ARCH_DOMAIN_SUBS_HITTER = {
@@ -1397,6 +1536,11 @@ const ARCH_DOMAIN_SUBS_SP = {
   STUFF:    [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
   MOVEMENT: [['DAMAGE_SUPP', 'Suppr'], ['GB_TENDENCY', 'GB']],
   CONTROL:  [['WALK_AVOID', 'BB-avoid'], ['STRIKE_THROWING', 'Strikes']],
+};
+const ARCH_DOMAIN_SUBS_RP = {
+  STUFF:       [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
+  CONTROL:     [['WALK_AVOID', 'BB-avoid'], ['VELO', 'Velo']],
+  BATTED_BALL: [['GB_TENDENCY', 'GB'], ['BULK_IP', 'Bulk-IP']],
 };
 
 function archRowMatches(r, q) {
@@ -1429,19 +1573,41 @@ function archSortRows(rows, sort, cols) {
 }
 
 function renderArchetypeTables(rows, role, targetId) {
-  const fpKey   = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
-  const idKey   = role === 'hitter' ? 'batter'    : 'pitcher';
-  const cols    = role === 'hitter' ? H_ARCH_COLS : S_ARCH_COLS;
-  const subsMap = role === 'hitter' ? ARCH_DOMAIN_SUBS_HITTER : ARCH_DOMAIN_SUBS_SP;
+  const fpKey   = role === 'hitter' ? 'fp_per_pa'
+               : role === 'rp'     ? 'fp_per_g'
+               :                     'fp_per_start';
+  const idKey   = role === 'hitter' ? 'batter' : 'pitcher';
+  const cols    = role === 'hitter' ? H_ARCH_COLS
+               : role === 'rp'     ? RP_ARCH_COLS
+               :                     S_ARCH_COLS;
+  const subsMap = role === 'hitter' ? ARCH_DOMAIN_SUBS_HITTER
+               : role === 'rp'     ? ARCH_DOMAIN_SUBS_RP
+               :                     ARCH_DOMAIN_SUBS_SP;
+  // RP archetype descriptions live in RDEFS; the merged SDEFS lookup already
+  // contains them, so SARCH_DESC covers RP labels too.
   const archDesc = role === 'hitter' ? HARCH_DESC : SARCH_DESC;
   const catMap   = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
   const catOrder = role === 'hitter' ? CAT_ORDER_HITTER : CAT_ORDER_SP;
-  const sort   = role === 'hitter' ? state.hArchSort   : state.sArchSort;
-  const query  = role === 'hitter' ? state.hArchQuery  : state.sArchQuery;
-  const archF  = role === 'hitter' ? state.hArchFilter : state.sArchFilter;
-  const openMap= role === 'hitter' ? state.hArchOpen   : state.sArchOpen;
-  const countEl = document.getElementById(role === 'hitter' ? 'h-arch-count' : 's-arch-count');
-  const filterSel = document.getElementById(role === 'hitter' ? 'h-arch-filter' : 's-arch-filter');
+  const sort   = role === 'hitter' ? state.hArchSort
+               : role === 'rp'     ? state.rpArchSort
+               :                     state.sArchSort;
+  const query  = role === 'hitter' ? state.hArchQuery
+               : role === 'rp'     ? state.rpArchQuery
+               :                     state.sArchQuery;
+  const archF  = role === 'hitter' ? state.hArchFilter
+               : role === 'rp'     ? state.rpArchFilter
+               :                     state.sArchFilter;
+  const openMap= role === 'hitter' ? state.hArchOpen
+               : role === 'rp'     ? state.rpArchOpen
+               :                     state.sArchOpen;
+  const countEl = document.getElementById(
+    role === 'hitter' ? 'h-arch-count'
+    : role === 'rp'   ? 'rp-arch-count'
+    :                   's-arch-count');
+  const filterSel = document.getElementById(
+    role === 'hitter' ? 'h-arch-filter'
+    : role === 'rp'   ? 'rp-arch-filter'
+    :                   's-arch-filter');
 
   // Group rows by archetype on the UNFILTERED set so the dropdown options
   // remain stable as the user searches.
@@ -1478,8 +1644,9 @@ function renderArchetypeTables(rows, role, targetId) {
     filterSel.innerHTML = optHtml;
     // Restore selection if still valid; otherwise drop to __ALL__.
     filterSel.value = expectedOpts.includes(archF) ? archF : '__ALL__';
-    if (role === 'hitter') state.hArchFilter = filterSel.value;
-    else                   state.sArchFilter = filterSel.value;
+    if      (role === 'hitter') state.hArchFilter  = filterSel.value;
+    else if (role === 'rp')     state.rpArchFilter = filterSel.value;
+    else                        state.sArchFilter  = filterSel.value;
   }
 
   let visibleRows = 0;
@@ -1594,22 +1761,35 @@ function renderArchetypeTables(rows, role, targetId) {
 
 // ── Leaderboards ──────────────────────────────────────────────────────
 function renderLeaderboard(rows, role, targetId) {
-  const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+  // 'role' here is 'hitter' | 'sp' | 'rp'. The modal opens with 'sp' for both
+  // SP and RP rows (S_BY_ID covers both), so card-click data-role stays 'sp'
+  // for the RP leaderboard.
+  const fpKey = role === 'hitter' ? 'fp_per_pa'
+              : role === 'rp'     ? 'fp_per_g'
+              :                     'fp_per_start';
+  const modalRole = role === 'hitter' ? 'hitter' : 'sp';
+  const idKey = role === 'hitter' ? 'batter' : 'pitcher';
   const top = rows.slice().sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0)).slice(0, 15);
   let html = '<table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Overall</th><th class="num">T+1</th>';
-  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
-  else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
+  if      (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
+  else if (role === 'rp')     html += '<th class="num">S</th><th class="num">C</th><th class="num">BB</th><th>Archetype</th><th class="num">FP/g</th>';
+  else                        html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
     const t1 = r.t1_fp_projection;
+    const fmtDigits = role === 'hitter' ? 3 : 2;
     html += `<tr><td class="num">${i+1}</td>`
-          + `<td class="player" data-role="${role}" data-id="${role==='hitter'?r.batter:r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
+          + `<td class="player" data-role="${modalRole}" data-id="${r[idKey]}">${r.player_name}${partialBadge(r)}</td>`
           + `<td class="num"><b>${r.OVERALL}</b></td>`
-          + `<td class="num">${t1 != null ? t1.toFixed(role === 'hitter' ? 3 : 2) : ''}</td>`;
+          + `<td class="num">${t1 != null ? t1.toFixed(fmtDigits) : ''}</td>`;
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
             + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`;
+    } else if (role === 'rp') {
+      html += `<td class="num">${r.STUFF}</td><td class="num">${r.CONTROL}</td>`
+            + `<td class="num">${r.BATTED_BALL}</td>`
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_g||0).toFixed(2)}</td>`;
     } else {
       html += `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td>`
@@ -1626,8 +1806,12 @@ function renderLeaderboard(rows, role, targetId) {
 
 // ── Home stacked-bar archetype distribution (grouped by category) ─────
 function renderHomeArchDist() {
-  renderStackedArchDist('home-arch-hit', HITTERS, HITTER_ARCH_CAT, CAT_ORDER_HITTER, HITTER_COLOR, 'Hitter archetypes per year');
-  renderStackedArchDist('home-arch-sp',  SPS,     SP_ARCH_CAT,     CAT_ORDER_SP,     SP_COLOR,     'SP archetypes per year');
+  renderStackedArchDist('home-arch-hit', HITTERS,  HITTER_ARCH_CAT, CAT_ORDER_HITTER, HITTER_COLOR, 'Hitter archetypes per year');
+  renderStackedArchDist('home-arch-sp',  SPS_ONLY, SP_ARCH_CAT,     CAT_ORDER_SP,     SP_COLOR,     'SP archetypes per year');
+  // RP archetype categories live in the same SP_ARCH_CAT map (RP cells were
+  // appended there for shared legend/color family), so SP_COLOR maps RP
+  // archetype labels to colors too.
+  renderStackedArchDist('home-arch-rp',  RPS,      SP_ARCH_CAT,     CAT_ORDER_SP,     SP_COLOR,     'RP archetypes per year');
 }
 
 function renderStackedArchDist(divId, rows, catMap, catOrder, colorMap, title) {
@@ -2284,6 +2468,21 @@ const COL_TOOLTIPS = {
   data_tier: 'Data-coverage tier — FULL vs PARTIAL season (PARTIAL flagged in player cell)',
   babip_luck_flag: 'BABIP-luck flag — BABIP vs xwOBACON divergence (lucky / neutral / unlucky)',
   rank_in_year: 'Within-year rank by FP rate (1 = best)',
+  // RP-specific columns
+  g: 'Games appeared',
+  sv: 'Saves',
+  hld: 'Holds',
+  ip_per_appearance: 'Innings per outing — BULK_IP rating substrate',
+  fp_per_g: 'Fantasy points per game appearance: (K+IP*3.3−H−2*ER−BB−HBP+5*SV+2*HLD) / G',
+  BATTED_BALL: 'Batted-ball domain 20-80: 0.50 GB% + 0.50 BULK_IP — RP only',
+  BULK_IP: 'Multi-inning capacity 20-80 — IP per appearance',
+  VELO: 'Average fastball velocity 20-80',
+  gmli: 'Game-entry leverage index from FanGraphs — average leverage at moment of entry',
+  pli: 'Average leverage during the appearance',
+  inherited_stranded_pct: 'IR-S% — fraction of inherited runners who did not score',
+  leverage_tier: 'Continuous leverage tier from gmLI: ELITE ≥1.5, HIGH 1.2-1.5, MID 0.85-1.2, LOW 0.5-0.85, GARBAGE <0.5',
+  CLOSER: 'Save count ≥15 in the year',
+  MULTI_INNING_BULK: "ip_per_appearance ≥ 1.3 — the 'bulk guy' archetype",
 };
 
 const H_TBL_COLS = [
@@ -2312,14 +2511,13 @@ const H_TBL_COLS = [
 
 const S_TBL_COLS = [
   { key: 'player_name', label: 'Pitcher', text: true, w: 14 },
-  { key: 'role',        label: 'Role', text: true, cat: true, w: 3 },
   { key: 'year',        label: 'Yr',  num: true, w: 2 },
-  { key: 'gs',          label: 'G/GS',  num: true, w: 3 },
+  { key: 'gs',          label: 'GS',  num: true, w: 3 },
   { key: 'tbf',         label: 'TBF', num: true, w: 3 },
-  { key: 'fp_per_start', label: 'FP rate', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'fp_per_start', label: 'FP/start', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(2)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'STUFF',       label: 'S',   num: true, w: 3 },
-  { key: 'MOVEMENT',    label: 'M/BB',num: true, w: 3 },
+  { key: 'MOVEMENT',    label: 'M',   num: true, w: 3 },
   { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
   { key: 'velo_rating', label: 'Velo', num: true, w: 4 },
   { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
@@ -2327,6 +2525,39 @@ const S_TBL_COLS = [
   { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
   { key: 'pitch_archetype',     label: 'Pitch arch', text: true, cat: true, pretty: true, w: 8 },
   { key: 'primary_group',       label: 'Primary', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'age',                 label: 'Age', num: true, w: 2 },
+  { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
+  { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 2 },
+  { key: 'rank_in_year',        label: 'Rank', num: true, w: 2 },
+];
+
+// RP all-players table — drops MOVEMENT/gs/tbf/fp_per_start schema bridges
+// from the SP table and uses the true RP fields. BATTED_BALL replaces
+// MOVEMENT as the 3rd domain rating; usage columns are G/SV/HLD/IP-per.
+// TODO(modal-refactor): once the modal stops consuming the SP bridge fields
+// (MOVEMENT ← BATTED_BALL, gs ← g, fp_per_start ← fp_per_g), build_rp_records
+// can drop them entirely; this table no longer reads them.
+const RP_TBL_COLS = [
+  { key: 'player_name', label: 'Reliever', text: true, w: 14 },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
+  { key: 'year',        label: 'Yr',  num: true, w: 2 },
+  { key: 'g',           label: 'G',   num: true, w: 2 },
+  { key: 'sv',          label: 'SV',  num: true, w: 2 },
+  { key: 'hld',         label: 'HLD', num: true, w: 2 },
+  { key: 'ip_per_appearance', label: 'IP/g', num: true, w: 3, fmt: v => (v == null ? '' : (+v).toFixed(2)) },
+  { key: 'fp_per_g',    label: 'FP/g', num: true, w: 4, fmt: v => (v == null ? '' : (+v).toFixed(2)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
+  { key: 'STUFF',       label: 'S',   num: true, w: 3 },
+  { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
+  { key: 'BATTED_BALL', label: 'Btd-Ball', num: true, w: 4 },
+  { key: 'velo_rating', label: 'Velo', num: true, w: 3 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
+  { key: 'stuff_subtype',       label: 'Stuff sub', text: true, cat: true, pretty: true, w: 6 },
+  { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'leverage_tier',       label: 'Lev', text: true, cat: true, pretty: true, w: 4 },
+  { key: 'CLOSER',              label: 'Closer', text: true, cat: true, w: 3 },
+  { key: 'MULTI_INNING_BULK',   label: 'Bulk', text: true, cat: true, w: 3 },
   { key: 'age',                 label: 'Age', num: true, w: 2 },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
@@ -2363,20 +2594,40 @@ const H_SUB_COLS = [
 
 const S_SUB_COLS = [
   { key: 'player_name', label: 'Pitcher', text: true, w: 18 },
-  { key: 'role',        label: 'Role',   text: true, cat: true, w: 3 },
   { key: 'year',        label: 'Yr', num: true, w: 2 },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 5 },
   { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 5 },
   { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 4 },
   { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 5 },
-  { key: 'MOVEMENT',      label: 'Mv/BB',  num: true, bold: true, w: 5 },
+  { key: 'MOVEMENT',      label: 'Movement', num: true, bold: true, w: 5 },
   { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true, w: 4 },
   { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 4 },
-  { key: 'BULK_IP',       label: 'Bulk',   num: true, w: 4 },
   { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 5 },
   { key: 'WALK_AVOID',    label: 'BB-avoid',num: true, w: 6 },
   { key: 'STRIKE_THROWING', label: 'Strikes', num: true, w: 6 },
   { key: 'velo_rating',   label: 'Velo',   num: true, w: 4 },
+  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 3 },
+];
+
+// RP sub-domain table — RP has 3 domains (STUFF / CONTROL / BATTED_BALL)
+// with 6 sub-ratings (SWING_MISS, CALLED_STRIKE under STUFF; WALK_AVOID,
+// VELO under CONTROL; GB_TENDENCY, BULK_IP under BATTED_BALL).
+const RP_SUB_COLS = [
+  { key: 'player_name', label: 'Reliever', text: true, w: 18 },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
+  { key: 'year',        label: 'Yr', num: true, w: 2 },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 5 },
+  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 5 },
+  { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 4 },
+  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 5 },
+  { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 5 },
+  { key: 'WALK_AVOID',    label: 'BB-avoid', num: true, w: 6 },
+  { key: 'VELO',          label: 'Velo',   num: true, w: 4 },
+  { key: 'BATTED_BALL',   label: 'Btd-Ball', num: true, bold: true, w: 5 },
+  { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 4 },
+  { key: 'BULK_IP',       label: 'Bulk',   num: true, w: 4 },
+  { key: 'leverage_tier', label: 'Lev',    text: true, cat: true, pretty: true, w: 4 },
   { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 3 },
   { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 3 },
 ];
@@ -2425,8 +2676,12 @@ const POS_BUTTON_MATCH = {
 
 function rowPassesChipFilters(r, role) {
   if (!chipFiltersActive()) return true;
-  const rosterF = role === 'hitter' ? state.hRosterFilter : state.sRosterFilter;
-  const posF    = role === 'hitter' ? state.hPosFilter    : state.sPosFilter;
+  const rosterF = role === 'hitter' ? state.hRosterFilter
+                : role === 'rp'     ? state.rpRosterFilter
+                : state.sRosterFilter;
+  // Position chip group only exists on the hitter tab now. SP and RP tabs
+  // are role-implied so we skip the pos filter for non-hitter roles.
+  const posF = role === 'hitter' ? state.hPosFilter : 'all';
   if (rosterF && rosterF !== 'all') {
     if ((r.roster_status || null) !== rosterF) return false;
   }
@@ -2446,14 +2701,14 @@ function rowPassesChipFilters(r, role) {
 // user flips back to Single/current the prior selection re-applies.
 function updateChipAvailability() {
   const active = chipFiltersActive();
-  ['h-roster-chips','h-pos-chips','s-roster-chips','s-pos-chips'].forEach(id => {
+  ['h-roster-chips','h-pos-chips','s-roster-chips','rp-roster-chips'].forEach(id => {
     const host = document.getElementById(id);
     if (!host) return;
     host.style.opacity = active ? '1' : '0.45';
     host.style.pointerEvents = active ? '' : 'none';
   });
-  const noteText = active ? '' : `Roster + position filters apply to ${D.current_year} only`;
-  ['h-roster-note','h-pos-note','s-roster-note','s-pos-note'].forEach(id => {
+  const noteText = active ? '' : `Roster filter applies to ${D.current_year} only`;
+  ['h-roster-note','h-pos-note','s-roster-note','rp-roster-note'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = noteText;
   });
@@ -2498,9 +2753,9 @@ function distinctColValues(rows, key) {
 }
 
 function filterKeyForTable(role, isSub) {
-  return role === 'hitter'
-    ? (isSub ? 'hSubFilters' : 'hAllFilters')
-    : (isSub ? 'sSubFilters' : 'sAllFilters');
+  if (role === 'hitter') return isSub ? 'hSubFilters'  : 'hAllFilters';
+  if (role === 'rp')     return isSub ? 'rpSubFilters' : 'rpAllFilters';
+  return                          isSub ? 'sSubFilters'  : 'sAllFilters';
 }
 
 function activeFilterCount(filters) {
@@ -2516,12 +2771,12 @@ function activeFilterCount(filters) {
 
 function renderFilterChips(role, isSub) {
   const fkey  = filterKeyForTable(role, isSub);
-  const cols  = role === 'hitter'
-    ? (isSub ? H_SUB_COLS : H_TBL_COLS)
-    : (isSub ? S_SUB_COLS : S_TBL_COLS);
-  const chipsId = role === 'hitter'
-    ? (isSub ? 'h-subtable-chips' : 'h-alltable-chips')
-    : (isSub ? 's-subtable-chips' : 's-alltable-chips');
+  const cols  = role === 'hitter' ? (isSub ? H_SUB_COLS : H_TBL_COLS)
+              : role === 'rp'     ? (isSub ? RP_SUB_COLS : RP_TBL_COLS)
+              :                     (isSub ? S_SUB_COLS : S_TBL_COLS);
+  const chipsId = role === 'hitter' ? (isSub ? 'h-subtable-chips' : 'h-alltable-chips')
+                : role === 'rp'     ? (isSub ? 'rp-subtable-chips' : 'rp-alltable-chips')
+                :                     (isSub ? 's-subtable-chips' : 's-alltable-chips');
   const host = document.getElementById(chipsId);
   if (!host) return;
   const filters = state[fkey];
@@ -2691,7 +2946,10 @@ function openFilterPopover(thEl, col, role, isSub, sourceRowsForOptions) {
 // Convenience — fetch the current filterRows result for a role. Used by chip
 // removal and filter Apply to trigger a re-render.
 function allTableRows(role) {
-  return filterRows(role === 'hitter' ? HITTERS : SPS, role);
+  const pool = role === 'hitter' ? HITTERS
+             : role === 'rp'     ? RPS
+             :                     SPS_ONLY;
+  return filterRows(pool, role);
 }
 
 function tblSortRows(rows, sort, cols) {
@@ -2714,22 +2972,22 @@ function tblSortRows(rows, sort, cols) {
 
 function renderAllTable(rows, role, kind) {
   const isSub = kind === 'sub';
-  const cols = role === 'hitter'
-    ? (isSub ? H_SUB_COLS : H_TBL_COLS)
-    : (isSub ? S_SUB_COLS : S_TBL_COLS);
-  const tblId = role === 'hitter'
-    ? (isSub ? 'h-subtable' : 'h-alltable')
-    : (isSub ? 's-subtable' : 's-alltable');
+  const cols = role === 'hitter' ? (isSub ? H_SUB_COLS : H_TBL_COLS)
+             : role === 'rp'     ? (isSub ? RP_SUB_COLS : RP_TBL_COLS)
+             :                     (isSub ? S_SUB_COLS : S_TBL_COLS);
+  const tblId = role === 'hitter' ? (isSub ? 'h-subtable' : 'h-alltable')
+              : role === 'rp'     ? (isSub ? 'rp-subtable' : 'rp-alltable')
+              :                     (isSub ? 's-subtable' : 's-alltable');
   const sort = isSub
-    ? (role === 'hitter' ? state.hSubSort : state.sSubSort)
-    : (role === 'hitter' ? state.hTblSort : state.sTblSort);
+    ? (role === 'hitter' ? state.hSubSort : role === 'rp' ? state.rpSubSort : state.sSubSort)
+    : (role === 'hitter' ? state.hTblSort : role === 'rp' ? state.rpTblSort : state.sTblSort);
   const q = isSub
-    ? (role === 'hitter' ? state.hSubQuery : state.sSubQuery)
-    : (role === 'hitter' ? state.hTblQuery : state.sTblQuery);
+    ? (role === 'hitter' ? state.hSubQuery : role === 'rp' ? state.rpSubQuery : state.sSubQuery)
+    : (role === 'hitter' ? state.hTblQuery : role === 'rp' ? state.rpTblQuery : state.sTblQuery);
   const cntEl = document.getElementById(
-    role === 'hitter'
-      ? (isSub ? 'h-subtable-count' : 'h-alltable-count')
-      : (isSub ? 's-subtable-count' : 's-alltable-count'));
+    role === 'hitter' ? (isSub ? 'h-subtable-count' : 'h-alltable-count')
+    : role === 'rp'   ? (isSub ? 'rp-subtable-count' : 'rp-alltable-count')
+    :                   (isSub ? 's-subtable-count' : 's-alltable-count'));
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
 
   // Domain → sub-domain map for hover tooltips on the per-domain cells
@@ -2743,6 +3001,12 @@ function renderAllTable(rows, role, kind) {
         POWER:      [['RAW_POWER', 'Raw'], ['LAUNCH_OPTIM', 'Launch'], ['DAMAGE_PROD', 'Production']],
         DISCIPLINE: [['PATIENCE', 'Patience'], ['AGGRESSION', 'Aggression']],
         SB:         [['SPEED_TOOL', 'Speed'], ['SB_CONVERSION', 'Conversion']],
+      }
+    : role === 'rp'
+    ? {
+        STUFF:       [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
+        CONTROL:     [['WALK_AVOID', 'BB-avoid'], ['VELO', 'Velo']],
+        BATTED_BALL: [['GB_TENDENCY', 'GB'], ['BULK_IP', 'Bulk-IP']],
       }
     : {
         STUFF:    [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
@@ -2762,8 +3026,10 @@ function renderAllTable(rows, role, kind) {
   const nActiveFilters = activeFilterCount(filters);
   const chipBits = [];
   if (chipFiltersActive()) {
-    const rosterF = role === 'hitter' ? state.hRosterFilter : state.sRosterFilter;
-    const posF    = role === 'hitter' ? state.hPosFilter    : state.sPosFilter;
+    const rosterF = role === 'hitter' ? state.hRosterFilter
+                  : role === 'rp'     ? state.rpRosterFilter
+                  : state.sRosterFilter;
+    const posF    = role === 'hitter' ? state.hPosFilter : 'all';
     if (rosterF && rosterF !== 'all') chipBits.push(`roster=${rosterF}`);
     if (posF    && posF    !== 'all') chipBits.push(`pos=${posF}`);
   }
@@ -2880,38 +3146,65 @@ function renderAllTable(rows, role, kind) {
 
 // ── Snapshot section (Single Year mode only) ──────────────────────
 function populateSnapshotPickers(role) {
-  const snaps = role === 'hitter' ? HSNAP : SSNAP;
+  // SP path uses SSNAP_SP_ONLY (the unified SSNAP merged in RP snapshots for
+  // the legacy SP-only-RP combined view; we now route them separately).
+  const snaps = role === 'hitter' ? HSNAP
+              : role === 'rp'     ? RSNAP
+              :                     SSNAP_SP_ONLY;
   const dates = snapshotDatesForYear(snaps, state.singleYear);
-  const sec   = document.getElementById(role === 'hitter' ? 'h-snapshots-section' : 's-snapshots-section');
-  const note  = document.getElementById(role === 'hitter' ? 'h-snap-note' : 's-snap-note');
+  const secId = role === 'hitter' ? 'h-snapshots-section'
+              : role === 'rp'     ? 'rp-snapshots-section'
+              :                     's-snapshots-section';
+  const noteId = role === 'hitter' ? 'h-snap-note'
+               : role === 'rp'     ? 'rp-snap-note'
+               :                     's-snap-note';
+  const sec  = document.getElementById(secId);
+  const note = document.getElementById(noteId);
   if (!dates.length) {
-    sec.style.display = 'none';
+    if (sec) sec.style.display = 'none';
     return false;
   }
   sec.style.display = state.yearMode === 'single' ? '' : 'none';
-  const selAt = document.getElementById(role === 'hitter' ? 'h-snap-at' : 's-snap-at');
-  const selVs = document.getElementById(role === 'hitter' ? 'h-snap-vs' : 's-snap-vs');
+  const atId = role === 'hitter' ? 'h-snap-at'
+             : role === 'rp'     ? 'rp-snap-at'
+             :                     's-snap-at';
+  const vsId = role === 'hitter' ? 'h-snap-vs'
+             : role === 'rp'     ? 'rp-snap-vs'
+             :                     's-snap-vs';
+  const selAt = document.getElementById(atId);
+  const selVs = document.getElementById(vsId);
   selAt.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
   selVs.innerHTML = dates.map(d => `<option value="${d}">${d}</option>`).join('');
   selAt.value = dates[dates.length - 1];
   selVs.value = dates[Math.max(0, dates.length - 2)];
-  if (role === 'hitter') {
-    state.hSnapAt = selAt.value; state.hSnapVs = selVs.value;
-    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
-  } else {
-    state.sSnapAt = selAt.value; state.sSnapVs = selVs.value;
-    note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
-  }
+  if      (role === 'hitter') { state.hSnapAt  = selAt.value; state.hSnapVs  = selVs.value; }
+  else if (role === 'rp')     { state.rpSnapAt = selAt.value; state.rpSnapVs = selVs.value; }
+  else                        { state.sSnapAt  = selAt.value; state.sSnapVs  = selVs.value; }
+  note.textContent = `${dates.length} snapshot${dates.length>1?'s':''} for ${state.singleYear}`;
   return true;
 }
 
 function renderSnapshotMovers(role) {
-  const snaps = role === 'hitter' ? HSNAP : SSNAP;
-  const at = role === 'hitter' ? state.hSnapAt : state.sSnapAt;
-  const vs = role === 'hitter' ? state.hSnapVs : state.sSnapVs;
-  const sort = role === 'hitter' ? state.hSnapSort : state.sSnapSort;
-  const upDiv   = document.getElementById(role === 'hitter' ? 'h-snap-up' : 's-snap-up');
-  const downDiv = document.getElementById(role === 'hitter' ? 'h-snap-down' : 's-snap-down');
+  const snaps = role === 'hitter' ? HSNAP
+              : role === 'rp'     ? RSNAP
+              :                     SSNAP_SP_ONLY;
+  const at = role === 'hitter' ? state.hSnapAt
+           : role === 'rp'     ? state.rpSnapAt
+           :                     state.sSnapAt;
+  const vs = role === 'hitter' ? state.hSnapVs
+           : role === 'rp'     ? state.rpSnapVs
+           :                     state.sSnapVs;
+  const sort = role === 'hitter' ? state.hSnapSort
+             : role === 'rp'     ? state.rpSnapSort
+             :                     state.sSnapSort;
+  const upDiv = document.getElementById(
+    role === 'hitter' ? 'h-snap-up'
+    : role === 'rp'   ? 'rp-snap-up'
+    :                   's-snap-up');
+  const downDiv = document.getElementById(
+    role === 'hitter' ? 'h-snap-down'
+    : role === 'rp'   ? 'rp-snap-down'
+    :                   's-snap-down');
   if (!at || !vs) { upDiv.innerHTML = downDiv.innerHTML = ''; return; }
 
   const yr = state.singleYear;
@@ -2921,9 +3214,14 @@ function renderSnapshotMovers(role) {
   const vsByID = {};
   vsRows.forEach(r => { vsByID[r[idKey]] = r; });
 
-  const dims = role === 'hitter' ? ['CONTACT','POWER','DISCIPLINE'] : ['STUFF','MOVEMENT','CONTROL'];
-  const dimAlias = role === 'hitter' ? { C:'CONTACT', P:'POWER', D:'DISCIPLINE' }
-                                      : { S:'STUFF', M:'MOVEMENT', C:'CONTROL', V:'velo_rating' };
+  const dims = role === 'hitter' ? ['CONTACT','POWER','DISCIPLINE']
+             : role === 'rp'     ? ['STUFF','CONTROL','BATTED_BALL']
+             :                     ['STUFF','MOVEMENT','CONTROL'];
+  const dimAlias = role === 'hitter'
+    ? { C:'CONTACT', P:'POWER', D:'DISCIPLINE' }
+    : role === 'rp'
+    ? { S:'STUFF', C:'CONTROL', BB:'BATTED_BALL', V:'velo_rating' }
+    : { S:'STUFF', M:'MOVEMENT', C:'CONTROL', V:'velo_rating' };
   const movers = [];
   atRows.forEach(at_r => {
     const vs_r = vsByID[at_r[idKey]];
@@ -2940,27 +3238,26 @@ function renderSnapshotMovers(role) {
     movers.push({ at: at_r, vs: vs_r, deltas, primary });
   });
 
-  const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
-  const rateAtVal = at_r => null; // snapshot rows don't carry fp/pa; skip rate display
+  // RP modal role is 'sp' (S_BY_ID is the unified pitcher index covering both).
+  const modalRole = role === 'hitter' ? 'hitter' : 'sp';
 
   const buildTable = (rows, descending) => {
     rows = rows.slice().sort((a,b) => descending ? b.primary - a.primary : a.primary - b.primary);
     rows = sort === 'net' ? rows : rows.slice(0, 15);
     rows = sort === 'net' ? rows.slice(0, 15) : rows;
     let h = '<table><thead><tr><th class="num">#</th><th>Player</th>';
-    if (role === 'hitter') h += '<th class="num">ΔC</th><th class="num">ΔP</th><th class="num">ΔD</th><th class="num">C now</th><th class="num">P now</th><th class="num">D now</th>';
-    else                    h += '<th class="num">ΔS</th><th class="num">ΔM</th><th class="num">ΔC</th><th class="num">S now</th><th class="num">M now</th><th class="num">C now</th>';
+    if      (role === 'hitter') h += '<th class="num">ΔC</th><th class="num">ΔP</th><th class="num">ΔD</th><th class="num">C now</th><th class="num">P now</th><th class="num">D now</th>';
+    else if (role === 'rp')     h += '<th class="num">ΔS</th><th class="num">ΔC</th><th class="num">ΔBB</th><th class="num">S now</th><th class="num">C now</th><th class="num">BB now</th>';
+    else                        h += '<th class="num">ΔS</th><th class="num">ΔM</th><th class="num">ΔC</th><th class="num">S now</th><th class="num">M now</th><th class="num">C now</th>';
     h += '</tr></thead><tbody>';
     rows.forEach((m, i) => {
       const r = m.at;
       const id = role === 'hitter' ? r.batter : r.pitcher;
       const fmtD = v => (v > 0 ? '+' : '') + v;
       const cls = v => v > 0 ? 'pos' : (v < 0 ? 'neg' : 'dim');
-      const k1 = role === 'hitter' ? 'CONTACT'    : 'STUFF';
-      const k2 = role === 'hitter' ? 'POWER'      : 'MOVEMENT';
-      const k3 = role === 'hitter' ? 'DISCIPLINE' : 'CONTROL';
+      const k1 = dims[0], k2 = dims[1], k3 = dims[2];
       h += `<tr><td class="num">${i+1}</td>`
-         + `<td class="player" data-role="${role}" data-id="${id}">${r.player_name}</td>`
+         + `<td class="player" data-role="${modalRole}" data-id="${id}">${r.player_name}</td>`
          + `<td class="num" style="color:var(--${cls(m.deltas[k1])})">${fmtD(m.deltas[k1])}</td>`
          + `<td class="num" style="color:var(--${cls(m.deltas[k2])})">${fmtD(m.deltas[k2])}</td>`
          + `<td class="num" style="color:var(--${cls(m.deltas[k3])})">${fmtD(m.deltas[k3])}</td>`
@@ -2983,60 +3280,56 @@ function renderSnapshotMovers(role) {
 
 // ── Master render ──────────────────────────────────────────────────
 function renderAll() {
-  const hitterRows = filterRows(HITTERS, 'hitter');
-  const spRows     = filterRows(SPS,     'sp');
+  const hitterRows = filterRows(HITTERS,  'hitter');
+  const spRows     = filterRows(SPS_ONLY, 'sp');
+  const rpRows     = filterRows(RPS,      'rp');
 
   const ym = state.yearMode === 'single' ? `Single ${state.singleYear}` :
              state.yearMode === 'all'    ? 'All years' : '2025+2026 Blend';
   document.getElementById('filter-summary').textContent =
-    `${ym} · ${hitterRows.length} hitters · ${spRows.length} SPs`;
+    `${ym} · ${hitterRows.length} hitters · ${spRows.length} SPs · ${rpRows.length} RPs`;
 
   renderLeaderboard(hitterRows, 'hitter', 'lb-hitters');
-  renderLeaderboard(spRows,    'sp',     'lb-sps');
+  renderLeaderboard(spRows,     'sp',     'lb-sps');
+  renderLeaderboard(rpRows,     'rp',     'lb-rps');
 
   renderQuadrant('h-quad', 'h-r', hitterRows, state.hX, state.hY, 'hitter');
 
-  // SP quadrant — gate by position chip so SP and RP don't pool into one
-  // misleading axis label. MOVEMENT slot carries different meaning for RP
-  // rows (BATTED_BALL via schema bridge), so we render one sub-pool at a
-  // time and relabel the axis accordingly. 'all' defaults to SP-only.
-  const sPosF = chipFiltersActive() ? state.sPosFilter : 'all';
+  // SP quadrant — pure SP now that RPs have their own tab. The schema-bridge
+  // fields on RP rows (MOVEMENT ← BATTED_BALL, etc.) are no longer pooled
+  // into the SP-side rendering, so no role gating is needed.
   const sQuadNote = document.getElementById('s-quad-note');
-  let sQuadRows, sQuadAxisLabel, sQuadNoteText;
-  if (sPosF === 'RP') {
-    sQuadRows = spRows.filter(r => r.role === 'RP');
-    sQuadAxisLabel = RP_AXIS_LABEL;
-    sQuadNoteText = `RP-only view (n=${sQuadRows.length}) · MOVEMENT slot shows BATTED_BALL (GB + Bulk IP) for relievers.`;
-  } else if (sPosF === 'SP') {
-    sQuadRows = spRows.filter(r => r.role !== 'RP');
-    sQuadAxisLabel = SP_AXIS_LABEL;
-    sQuadNoteText = `SP-only view (n=${sQuadRows.length}).`;
-  } else {
-    // 'all' — default to SP view, note that RPs are not plotted (their
-    // MOVEMENT axis label would be wrong here).
-    sQuadRows = spRows.filter(r => r.role !== 'RP');
-    sQuadAxisLabel = SP_AXIS_LABEL;
-    const nRP = spRows.filter(r => r.role === 'RP').length;
-    sQuadNoteText = `Showing SP (n=${sQuadRows.length}). RPs (${nRP}) not plotted — select the RP chip to view RP quadrant with BATTED_BALL axis.`;
-  }
-  if (sQuadNote) sQuadNote.textContent = sQuadNoteText;
-  renderQuadrant('s-quad', 's-r', sQuadRows, state.sX, state.sY, 'sp', { axisLabel: sQuadAxisLabel });
+  if (sQuadNote) sQuadNote.textContent = `SP-only view (n=${spRows.length}).`;
+  renderQuadrant('s-quad', 's-r', spRows, state.sX, state.sY, 'sp', { axisLabel: SP_AXIS_LABEL });
+
+  // RP quadrant — true RP fields (BATTED_BALL native, no MOVEMENT bridge).
+  const rpQuadNote = document.getElementById('rp-quad-note');
+  if (rpQuadNote) rpQuadNote.textContent = `RP-only view (n=${rpRows.length}) · axes are RP-native (Stuff / Control / Batted-ball / Velo).`;
+  renderQuadrant('rp-quad', 'rp-r', rpRows, state.rpX, state.rpY, 'rp', { axisLabel: RP_AXIS_LABEL });
 
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
   renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
+  renderArchetypeTables(rpRows,     'rp',     'rp-archetype-tables');
 
   renderAllTable(hitterRows, 'hitter');
   renderAllTable(spRows,     'sp');
+  renderAllTable(rpRows,     'rp');
   renderAllTable(hitterRows, 'hitter', 'sub');
   renderAllTable(spRows,     'sp',     'sub');
+  renderAllTable(rpRows,     'rp',     'sub');
 
   // Snapshot movers — only in Single Year mode
   if (state.yearMode === 'single') {
     if (populateSnapshotPickers('hitter')) renderSnapshotMovers('hitter');
     if (populateSnapshotPickers('sp'))     renderSnapshotMovers('sp');
+    if (populateSnapshotPickers('rp'))     renderSnapshotMovers('rp');
   } else {
-    document.getElementById('h-snapshots-section').style.display = 'none';
-    document.getElementById('s-snapshots-section').style.display = 'none';
+    const hSec  = document.getElementById('h-snapshots-section');
+    const sSec  = document.getElementById('s-snapshots-section');
+    const rpSec = document.getElementById('rp-snapshots-section');
+    if (hSec)  hSec.style.display  = 'none';
+    if (sSec)  sSec.style.display  = 'none';
+    if (rpSec) rpSec.style.display = 'none';
   }
 
   encodeStateToHash();
@@ -3044,9 +3337,12 @@ function renderAll() {
 
 // ── Resize Plotly when its tab becomes visible ──────────────────────
 function resizeCurrentTabPlots() {
-  const ids = state.tab === 'home'    ? ['home-arch-hit','home-arch-sp']
+  const ids = state.tab === 'home'    ? ['home-arch-hit','home-arch-sp','home-arch-rp']
             : state.tab === 'hitters' ? ['h-quad']
-            : state.tab === 'pitchers'? ['s-quad'] : [];
+            : state.tab === 'sps'     ? ['s-quad']
+            : state.tab === 'rps'     ? ['rp-quad']
+            : state.tab === 'pitchers'? ['s-quad']  // legacy hash compat
+            : [];
   ids.forEach(id => {
     const el = document.getElementById(id);
     if (el && el.data) Plotly.Plots.resize(el);
@@ -3060,8 +3356,9 @@ function encodeStateToHash() {
   parts.push(`year=${state.singleYear}`);
   parts.push(`partial=${state.includePartial ? '1' : '0'}`);
   parts.push(`tab=${state.tab}`);
-  parts.push(`hx=${state.hX}`); parts.push(`hy=${state.hY}`);
-  parts.push(`sx=${state.sX}`); parts.push(`sy=${state.sY}`);
+  parts.push(`hx=${state.hX}`);   parts.push(`hy=${state.hY}`);
+  parts.push(`sx=${state.sX}`);   parts.push(`sy=${state.sY}`);
+  parts.push(`rpx=${state.rpX}`); parts.push(`rpy=${state.rpY}`);
   history.replaceState(null, '', '#' + parts.join('&'));
 }
 
@@ -3073,11 +3370,17 @@ function loadStateFromHash() {
   if (map.mode) state.yearMode = map.mode;
   if (map.year) state.singleYear = parseInt(map.year);
   if (map.partial) state.includePartial = map.partial === '1';
-  if (map.tab) state.tab = map.tab;
+  if (map.tab) {
+    // Legacy: the 'pitchers' tab was split into 'sps' + 'rps'. Default the
+    // landing to the SP side so old bookmarks don't 404 a non-existent tab.
+    state.tab = (map.tab === 'pitchers') ? 'sps' : map.tab;
+  }
   if (map.hx) state.hX = map.hx;
   if (map.hy) state.hY = map.hy;
   if (map.sx) state.sX = map.sx;
-  if (map.sy) state.sy = map.sy;
+  if (map.sy) state.sY = map.sy;
+  if (map.rpx) state.rpX = map.rpx;
+  if (map.rpy) state.rpY = map.rpy;
 }
 
 // ── Init ───────────────────────────────────────────────────────────
@@ -3120,17 +3423,21 @@ function init() {
   });
 
   // Axis selectors — reflect loaded state then wire change handlers
-  document.getElementById('h-x').value = state.hX;
-  document.getElementById('h-y').value = state.hY;
-  document.getElementById('s-x').value = state.sX;
-  document.getElementById('s-y').value = state.sY;
-  document.getElementById('h-x').addEventListener('change', e => { state.hX = e.target.value; renderAll(); });
-  document.getElementById('h-y').addEventListener('change', e => { state.hY = e.target.value; renderAll(); });
-  document.getElementById('s-x').addEventListener('change', e => { state.sX = e.target.value; renderAll(); });
-  document.getElementById('s-y').addEventListener('change', e => { state.sY = e.target.value; renderAll(); });
+  document.getElementById('h-x').value  = state.hX;
+  document.getElementById('h-y').value  = state.hY;
+  document.getElementById('s-x').value  = state.sX;
+  document.getElementById('s-y').value  = state.sY;
+  document.getElementById('rp-x').value = state.rpX;
+  document.getElementById('rp-y').value = state.rpY;
+  document.getElementById('h-x').addEventListener('change',  e => { state.hX  = e.target.value; renderAll(); });
+  document.getElementById('h-y').addEventListener('change',  e => { state.hY  = e.target.value; renderAll(); });
+  document.getElementById('s-x').addEventListener('change',  e => { state.sX  = e.target.value; renderAll(); });
+  document.getElementById('s-y').addEventListener('change',  e => { state.sY  = e.target.value; renderAll(); });
+  document.getElementById('rp-x').addEventListener('change', e => { state.rpX = e.target.value; renderAll(); });
+  document.getElementById('rp-y').addEventListener('change', e => { state.rpY = e.target.value; renderAll(); });
 
   // All-players search (debounced)
-  let hSearchTimer = null, sSearchTimer = null;
+  let hSearchTimer = null, sSearchTimer = null, rpSearchTimer = null;
   document.getElementById('h-alltable-search').addEventListener('input', e => {
     clearTimeout(hSearchTimer);
     hSearchTimer = setTimeout(() => {
@@ -3142,17 +3449,28 @@ function init() {
     clearTimeout(sSearchTimer);
     sSearchTimer = setTimeout(() => {
       state.sTblQuery = e.target.value.trim();
-      renderAllTable(filterRows(SPS, 'sp'), 'sp');
+      renderAllTable(filterRows(SPS_ONLY, 'sp'), 'sp');
+    }, 120);
+  });
+  document.getElementById('rp-alltable-search').addEventListener('input', e => {
+    clearTimeout(rpSearchTimer);
+    rpSearchTimer = setTimeout(() => {
+      state.rpTblQuery = e.target.value.trim();
+      renderAllTable(filterRows(RPS, 'rp'), 'rp');
     }, 120);
   });
 
   // Archetype-roster controls — dropdown, free-text search, expand/collapse
   function rerenderArch(role) {
-    const rows = filterRows(role === 'hitter' ? HITTERS : SPS, role);
-    renderArchetypeTables(rows, role,
-      role === 'hitter' ? 'h-archetype-tables' : 's-archetype-tables');
+    const pool = role === 'hitter' ? HITTERS
+               : role === 'rp'     ? RPS
+               :                     SPS_ONLY;
+    const tgt  = role === 'hitter' ? 'h-archetype-tables'
+               : role === 'rp'     ? 'rp-archetype-tables'
+               :                     's-archetype-tables';
+    renderArchetypeTables(filterRows(pool, role), role, tgt);
   }
-  let hArchTimer = null, sArchTimer = null;
+  let hArchTimer = null, sArchTimer = null, rpArchTimer = null;
   document.getElementById('h-arch-search').addEventListener('input', e => {
     clearTimeout(hArchTimer);
     hArchTimer = setTimeout(() => {
@@ -3167,16 +3485,30 @@ function init() {
       rerenderArch('sp');
     }, 120);
   });
+  document.getElementById('rp-arch-search').addEventListener('input', e => {
+    clearTimeout(rpArchTimer);
+    rpArchTimer = setTimeout(() => {
+      state.rpArchQuery = e.target.value.trim();
+      rerenderArch('rp');
+    }, 120);
+  });
   document.getElementById('h-arch-filter').addEventListener('change', e => {
     state.hArchFilter = e.target.value; rerenderArch('hitter');
   });
   document.getElementById('s-arch-filter').addEventListener('change', e => {
     state.sArchFilter = e.target.value; rerenderArch('sp');
   });
+  document.getElementById('rp-arch-filter').addEventListener('change', e => {
+    state.rpArchFilter = e.target.value; rerenderArch('rp');
+  });
   function archBulkToggle(role, open) {
-    const tgt = document.getElementById(
-      role === 'hitter' ? 'h-archetype-tables' : 's-archetype-tables');
-    const openMap = role === 'hitter' ? state.hArchOpen : state.sArchOpen;
+    const tgtId = role === 'hitter' ? 'h-archetype-tables'
+                : role === 'rp'     ? 'rp-archetype-tables'
+                :                     's-archetype-tables';
+    const tgt = document.getElementById(tgtId);
+    const openMap = role === 'hitter' ? state.hArchOpen
+                  : role === 'rp'     ? state.rpArchOpen
+                  :                     state.sArchOpen;
     tgt.querySelectorAll('details.arch-block').forEach(d => {
       d.open = open;
       openMap[d.dataset.arch] = open;
@@ -3190,11 +3522,16 @@ function init() {
     () => archBulkToggle('sp', true));
   document.getElementById('s-arch-collapse').addEventListener('click',
     () => archBulkToggle('sp', false));
+  document.getElementById('rp-arch-expand').addEventListener('click',
+    () => archBulkToggle('rp', true));
+  document.getElementById('rp-arch-collapse').addEventListener('click',
+    () => archBulkToggle('rp', false));
 
   // Chip groups (roster status + position) — single-select per group, only
   // active in Single Year = current year. Disabled-state is handled by
   // updateChipAvailability(); we still defensively re-check chipFiltersActive
-  // inside the click handler.
+  // inside the click handler. The SP and RP tabs are role-implied, so only
+  // the roster chip group is wired for them (no pos group).
   function wireChipGroup(hostId, role, group) {
     const host = document.getElementById(hostId);
     if (!host) return;
@@ -3206,59 +3543,42 @@ function init() {
         host.querySelectorAll('button.pill').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         if (group === 'roster') {
-          if (role === 'hitter') state.hRosterFilter = val;
-          else                   state.sRosterFilter = val;
+          if      (role === 'hitter') state.hRosterFilter  = val;
+          else if (role === 'rp')     state.rpRosterFilter = val;
+          else                        state.sRosterFilter  = val;
         } else {
+          // 'pos' group only exists on the hitter tab now.
           if (role === 'hitter') state.hPosFilter = val;
-          else                   state.sPosFilter = val;
         }
-        const rows = role === 'hitter'
-          ? filterRows(HITTERS, 'hitter') : filterRows(SPS, 'sp');
+        const pool = role === 'hitter' ? HITTERS
+                   : role === 'rp'     ? RPS
+                   :                     SPS_ONLY;
+        const rows = filterRows(pool, role);
         renderAllTable(rows, role);
-        // The SP quadrant is gated by sPosFilter (SP/RP/all → different axis
-        // labels and sub-pool). Re-render it whenever the SP pos chip changes.
-        if (role === 'sp' && group === 'pos') {
-          const sPosF = chipFiltersActive() ? state.sPosFilter : 'all';
-          const note = document.getElementById('s-quad-note');
-          let qRows, qAxis, qNote;
-          if (sPosF === 'RP') {
-            qRows = rows.filter(r => r.role === 'RP');
-            qAxis = RP_AXIS_LABEL;
-            qNote = `RP-only view (n=${qRows.length}) · MOVEMENT slot shows BATTED_BALL (GB + Bulk IP) for relievers.`;
-          } else if (sPosF === 'SP') {
-            qRows = rows.filter(r => r.role !== 'RP');
-            qAxis = SP_AXIS_LABEL;
-            qNote = `SP-only view (n=${qRows.length}).`;
-          } else {
-            qRows = rows.filter(r => r.role !== 'RP');
-            qAxis = SP_AXIS_LABEL;
-            const nRP = rows.filter(r => r.role === 'RP').length;
-            qNote = `Showing SP (n=${qRows.length}). RPs (${nRP}) not plotted — select the RP chip to view RP quadrant with BATTED_BALL axis.`;
-          }
-          if (note) note.textContent = qNote;
-          renderQuadrant('s-quad', 's-r', qRows, state.sX, state.sY, 'sp', { axisLabel: qAxis });
-        }
       });
     });
   }
-  wireChipGroup('h-roster-chips', 'hitter', 'roster');
-  wireChipGroup('h-pos-chips',    'hitter', 'pos');
-  wireChipGroup('s-roster-chips', 'sp',     'roster');
-  wireChipGroup('s-pos-chips',    'sp',     'pos');
+  wireChipGroup('h-roster-chips',  'hitter', 'roster');
+  wireChipGroup('h-pos-chips',     'hitter', 'pos');
+  wireChipGroup('s-roster-chips',  'sp',     'roster');
+  wireChipGroup('rp-roster-chips', 'rp',     'roster');
 
-  // RP archetypes shipped 2026-05-29 — payload.rp_available gates the chip in
-  // case the dataset ever regresses below the ≥25 current-year-record threshold.
-  // When unavailable, re-disable the button defensively.
+  // RP archetypes shipped 2026-05-29 — payload.rp_available gates the RP tab
+  // in case the dataset ever regresses below the ≥25 current-year-record
+  // threshold. When unavailable, disable the RPs tab button + add an explanatory
+  // title so users understand why it's grayed out.
   if (D.rp_available !== true) {
-    const rpBtn = document.querySelector('#s-pos-chips button.pill[data-value="RP"]');
-    if (rpBtn) {
-      rpBtn.disabled = true;
-      rpBtn.setAttribute('title', 'RP archetypes unavailable (insufficient data)');
+    const rpsBtn = document.querySelector('.tabs button[data-tab="rps"]');
+    if (rpsBtn) {
+      rpsBtn.disabled = true;
+      rpsBtn.style.opacity = '0.4';
+      rpsBtn.style.cursor = 'not-allowed';
+      rpsBtn.setAttribute('title', 'RP archetypes unavailable (insufficient current-year data)');
     }
   }
 
   // Sub-domain table search (debounced)
-  let hSubTimer = null, sSubTimer = null;
+  let hSubTimer = null, sSubTimer = null, rpSubTimer = null;
   document.getElementById('h-subtable-search').addEventListener('input', e => {
     clearTimeout(hSubTimer);
     hSubTimer = setTimeout(() => {
@@ -3270,21 +3590,32 @@ function init() {
     clearTimeout(sSubTimer);
     sSubTimer = setTimeout(() => {
       state.sSubQuery = e.target.value.trim();
-      renderAllTable(filterRows(SPS, 'sp'), 'sp', 'sub');
+      renderAllTable(filterRows(SPS_ONLY, 'sp'), 'sp', 'sub');
+    }, 120);
+  });
+  document.getElementById('rp-subtable-search').addEventListener('input', e => {
+    clearTimeout(rpSubTimer);
+    rpSubTimer = setTimeout(() => {
+      state.rpSubQuery = e.target.value.trim();
+      renderAllTable(filterRows(RPS, 'rp'), 'rp', 'sub');
     }, 120);
   });
 
   // Snapshot pickers
-  document.getElementById('h-snap-at').addEventListener('change', e => { state.hSnapAt = e.target.value; renderSnapshotMovers('hitter'); });
-  document.getElementById('h-snap-vs').addEventListener('change', e => { state.hSnapVs = e.target.value; renderSnapshotMovers('hitter'); });
+  document.getElementById('h-snap-at').addEventListener('change',   e => { state.hSnapAt   = e.target.value; renderSnapshotMovers('hitter'); });
+  document.getElementById('h-snap-vs').addEventListener('change',   e => { state.hSnapVs   = e.target.value; renderSnapshotMovers('hitter'); });
   document.getElementById('h-snap-sort').addEventListener('change', e => { state.hSnapSort = e.target.value; renderSnapshotMovers('hitter'); });
-  document.getElementById('s-snap-at').addEventListener('change', e => { state.sSnapAt = e.target.value; renderSnapshotMovers('sp'); });
-  document.getElementById('s-snap-vs').addEventListener('change', e => { state.sSnapVs = e.target.value; renderSnapshotMovers('sp'); });
+  document.getElementById('s-snap-at').addEventListener('change',   e => { state.sSnapAt   = e.target.value; renderSnapshotMovers('sp'); });
+  document.getElementById('s-snap-vs').addEventListener('change',   e => { state.sSnapVs   = e.target.value; renderSnapshotMovers('sp'); });
   document.getElementById('s-snap-sort').addEventListener('change', e => { state.sSnapSort = e.target.value; renderSnapshotMovers('sp'); });
+  document.getElementById('rp-snap-at').addEventListener('change',   e => { state.rpSnapAt   = e.target.value; renderSnapshotMovers('rp'); });
+  document.getElementById('rp-snap-vs').addEventListener('change',   e => { state.rpSnapVs   = e.target.value; renderSnapshotMovers('rp'); });
+  document.getElementById('rp-snap-sort').addEventListener('change', e => { state.rpSnapSort = e.target.value; renderSnapshotMovers('rp'); });
 
   // Tabs
   document.querySelectorAll('.tabs button').forEach(b => {
     b.addEventListener('click', () => {
+      if (b.disabled) return;
       document.querySelectorAll('.tabs button').forEach(x => x.classList.remove('active'));
       document.querySelectorAll('.tab-panel').forEach(x => x.classList.remove('active'));
       b.classList.add('active');
@@ -3292,7 +3623,9 @@ function init() {
       // Show the TOC for the active tab; hide others
       document.querySelectorAll('.toc-strip').forEach(t => t.classList.remove('active'));
       const tocId = b.dataset.tab === 'hitters' ? 'h-toc'
-                  : b.dataset.tab === 'pitchers' ? 's-toc' : null;
+                  : b.dataset.tab === 'sps'     ? 's-toc'
+                  : b.dataset.tab === 'rps'     ? 'rp-toc'
+                  : null;
       if (tocId) document.getElementById(tocId).classList.add('active');
       state.tab = b.dataset.tab;
       // After display:block transition, ask Plotly to recompute sizes
@@ -3386,7 +3719,8 @@ def render_page(payload: dict) -> str:
             + BODY_HEADER
             + HOME_TAB
             + HITTERS_TAB
-            + PITCHERS_TAB
+            + SPS_TAB
+            + RPS_TAB
             + MODAL_HTML
             + meta
             + CLOSE
