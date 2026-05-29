@@ -1247,10 +1247,16 @@ function openModal(role, id) {
 
   // ── Composition panel — sub-domain breakdown for the most recent year ──
   const SUB_W_H = {
-    CONTACT:    [['BAT_TO_BALL', 0.50, 'Bat-to-ball'], ['CONTACT_QUALITY', 0.50, 'Contact quality']],
-    POWER:      [['RAW_POWER', 0.30, 'Raw power tools'], ['DAMAGE_PROD', 0.70, 'Damage production']],
-    DISCIPLINE: [['PATIENCE', 0.70, 'Patience'], ['AGGRESSION', 0.30, 'Aggression in zone']],
-    SB:         [['SPEED_TOOL', 0.30, 'Speed tool'], ['SB_CONVERSION', 0.70, 'SB conversion']],
+    CONTACT:    [['BAT_TO_BALL', 0.45, 'Bat-to-ball'],
+                  ['CONTACT_QUALITY', 0.45, 'Contact quality'],
+                  ['SPRAY_PROFILE', 0.10, 'Spray diversity']],
+    POWER:      [['RAW_POWER', 0.20, 'Raw power tools'],
+                  ['LAUNCH_OPTIM', 0.15, 'Launch optimization'],
+                  ['DAMAGE_PROD', 0.65, 'Damage production']],
+    DISCIPLINE: [['PATIENCE', 0.75, 'Patience (BB+chase+HBP)'],
+                  ['AGGRESSION', 0.25, 'Aggression in zone']],
+    SB:         [['SPEED_TOOL', 0.30, 'Speed tool'],
+                  ['SB_CONVERSION', 0.70, 'SB conversion']],
   };
   const SUB_W_S = {
     STUFF:    [['SWING_MISS', 0.65, 'Swing-and-miss'], ['CALLED_STRIKE', 0.35, 'Called strike']],
@@ -1460,8 +1466,10 @@ const H_SUB_COLS = [
   { key: 'CONTACT',         label: 'Contact', num: true, bold: true },
   { key: 'BAT_TO_BALL',     label: 'B2B',     num: true },
   { key: 'CONTACT_QUALITY', label: 'Quality', num: true },
+  { key: 'SPRAY_PROFILE',   label: 'Spray',   num: true },
   { key: 'POWER',           label: 'Power',   num: true, bold: true },
   { key: 'RAW_POWER',       label: 'Raw',     num: true },
+  { key: 'LAUNCH_OPTIM',    label: 'Launch',  num: true },
   { key: 'DAMAGE_PROD',     label: 'Prod',    num: true },
   { key: 'DISCIPLINE',      label: 'Disc',    num: true, bold: true },
   { key: 'PATIENCE',        label: 'Patience',num: true },
@@ -1546,8 +1554,8 @@ function renderAllTable(rows, role, kind) {
   // Domain → sub-domain map for hover tooltips on the per-domain cells
   const DOMAIN_SUBS = role === 'hitter'
     ? {
-        CONTACT:    [['BAT_TO_BALL', 'Bat-to-ball'], ['CONTACT_QUALITY', 'Quality']],
-        POWER:      [['RAW_POWER', 'Raw'], ['DAMAGE_PROD', 'Production']],
+        CONTACT:    [['BAT_TO_BALL', 'Bat-to-ball'], ['CONTACT_QUALITY', 'Quality'], ['SPRAY_PROFILE', 'Spray']],
+        POWER:      [['RAW_POWER', 'Raw'], ['LAUNCH_OPTIM', 'Launch'], ['DAMAGE_PROD', 'Production']],
         DISCIPLINE: [['PATIENCE', 'Patience'], ['AGGRESSION', 'Aggression']],
         SB:         [['SPEED_TOOL', 'Speed'], ['SB_CONVERSION', 'Conversion']],
       }

@@ -222,23 +222,38 @@ def build_ratings_panel(current_year=2026):
 
     g = qual.groupby('year')
 
-    # CONTACT components (4) — bat-to-ball + K avoidance + BIP outcome + BIP quality
+    # CONTACT components — bat-to-ball + K avoidance + BIP quality + spray diversity
     qual['r_Contact'] = rating_20_80(qual['contact_pct'],      g['contact_pct']).round(0).astype(int)
     qual['r_K']       = rating_20_80(qual['k_pct'],            g['k_pct'], invert=True).round(0).astype(int)
     qual['r_BABIP']   = rating_20_80(qual['babip'],            g['babip']).round(0).astype(int)
     qual['r_xCON']    = rating_20_80(qual['xwoba_on_contact'], g['xwoba_on_contact']).round(0).astype(int)
+    # Spray entropy — captures spray diversity (high entropy = balanced pull/cent/oppo,
+    # predicts BABIP stability under shifts). YoY r ~0.52.
+    def _spray_entropy(row):
+        vals = [row.get('pull_pct'), row.get('cent_pct'), row.get('oppo_pct')]
+        vals = [v for v in vals if pd.notna(v) and v > 0]
+        if not vals: return np.nan
+        s = sum(vals)
+        return -sum((v/s) * np.log(v/s) for v in vals) if s else np.nan
+    qual['spray_entropy'] = qual.apply(_spray_entropy, axis=1)
+    qual['r_SprayEnt'] = rating_20_80(qual['spray_entropy'],   g['spray_entropy']).round(0).astype(int)
 
-    # POWER components (5) — quality of contact for damage
+    # POWER components — quality + launch optimization + production
     qual['r_Barrel']  = rating_20_80(qual['barrel_pct'],       g['barrel_pct']).round(0).astype(int)
     qual['r_HardHit'] = rating_20_80(qual['hard_hit_pct'],     g['hard_hit_pct']).round(0).astype(int)
     qual['r_ISO']     = rating_20_80(qual['iso'],              g['iso']).round(0).astype(int)
     qual['r_HRrate']  = rating_20_80(qual['hr_per_pa'],        g['hr_per_pa']).round(0).astype(int)
     qual['r_PullFB']  = rating_20_80(qual['pull_fb_pct'],      g['pull_fb_pct']).round(0).astype(int)
+    # Launch-optimization components — sweet spot rate + EV90 (top-end EV).
+    # EV90 has excellent YoY r=0.87 — one of the most stable hitter metrics.
+    qual['r_SweetSpot'] = rating_20_80(qual['sweet_spot_pct'], g['sweet_spot_pct']).round(0).astype(int)
+    qual['r_EV90']      = rating_20_80(qual['ev90'],           g['ev90']).round(0).astype(int)
 
-    # DISCIPLINE components (3) — eye
+    # DISCIPLINE components — eye + HBP (each HBP = +1 FP, same as a walk)
     qual['r_BB']      = rating_20_80(qual['bb_pct'],           g['bb_pct']).round(0).astype(int)
     qual['r_Chase']   = rating_20_80(qual['chase_pct'],        g['chase_pct'], invert=True).round(0).astype(int)
     qual['r_ZSwing']  = rating_20_80(qual['z_swing_pct'],      g['z_swing_pct']).round(0).astype(int)
+    qual['r_HBP']     = rating_20_80(qual['hbp_pct'],          g['hbp_pct']).round(0).astype(int)
 
     # SB overlay components (2) — sb rate + sprint speed (sprint missing pre-2017)
     qual['r_SBrate']  = rating_20_80(qual['sb_per_opp'],       g['sb_per_opp']).round(0).astype(int)
@@ -253,9 +268,11 @@ def build_ratings_panel(current_year=2026):
     # compresses the composite SD (~5 vs target ~10), crushing ~95% of batters into
     # the AVG bucket and collapsing the archetype matrix. Re-rating restores the
     # designed PLUS/AVG/MINUS spread (~16/68/16%) per domain.
-    qual['_CONTACT_raw']    = qual[['r_Contact','r_K','r_xCON']].mean(axis=1)
-    qual['_POWER_raw']      = qual[['r_Barrel','r_HardHit','r_ISO','r_HRrate']].mean(axis=1)
-    qual['_DISCIPLINE_raw'] = qual[['r_BB','r_Chase','r_ZSwing']].mean(axis=1)
+    # CONTACT now includes r_SprayEnt; POWER includes r_SweetSpot, r_EV90, r_PullFB
+    # (resurrected as part of LAUNCH_OPTIM sub-domain); DISCIPLINE adds r_HBP.
+    qual['_CONTACT_raw']    = qual[['r_Contact','r_K','r_xCON','r_SprayEnt']].mean(axis=1)
+    qual['_POWER_raw']      = qual[['r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate']].mean(axis=1)
+    qual['_DISCIPLINE_raw'] = qual[['r_BB','r_Chase','r_HBP','r_ZSwing']].mean(axis=1)
     qual['_SB_raw']         = qual[['r_SBrate','r_Sprint']].mean(axis=1)
     g2 = qual.groupby('year')
     qual['CONTACT']    = rating_20_80(qual['_CONTACT_raw'],    g2['_CONTACT_raw']).round(0).astype(int)
@@ -270,22 +287,27 @@ def build_ratings_panel(current_year=2026):
     # documented in the dashboard glossary.
     qual['_BAT_TO_BALL_raw']     = qual[['r_Contact','r_K']].mean(axis=1)
     qual['_CONTACT_QUALITY_raw'] = qual['r_xCON']
+    qual['_SPRAY_PROFILE_raw']   = qual['r_SprayEnt']               # NEW
     qual['_RAW_POWER_raw']       = qual[['r_HardHit','r_Barrel']].mean(axis=1)
+    qual['_LAUNCH_OPTIM_raw']    = qual[['r_SweetSpot','r_EV90','r_PullFB']].mean(axis=1)  # NEW
     qual['_DAMAGE_PROD_raw']     = qual[['r_ISO','r_HRrate']].mean(axis=1)
-    qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase']].mean(axis=1)
+    qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase','r_HBP']].mean(axis=1)            # HBP folded in
     qual['_AGGRESSION_raw']      = qual['r_ZSwing']
     qual['_SPEED_TOOL_raw']      = qual['r_Sprint']
     qual['_SB_CONVERSION_raw']   = qual['r_SBrate']
     g_sub = qual.groupby('year')
     qual['BAT_TO_BALL']     = rating_20_80(qual['_BAT_TO_BALL_raw'],     g_sub['_BAT_TO_BALL_raw']).round(0).astype(int)
     qual['CONTACT_QUALITY'] = rating_20_80(qual['_CONTACT_QUALITY_raw'], g_sub['_CONTACT_QUALITY_raw']).round(0).astype(int)
+    qual['SPRAY_PROFILE']   = rating_20_80(qual['_SPRAY_PROFILE_raw'],   g_sub['_SPRAY_PROFILE_raw']).round(0).astype(int)
     qual['RAW_POWER']       = rating_20_80(qual['_RAW_POWER_raw'],       g_sub['_RAW_POWER_raw']).round(0).astype(int)
+    qual['LAUNCH_OPTIM']    = rating_20_80(qual['_LAUNCH_OPTIM_raw'],    g_sub['_LAUNCH_OPTIM_raw']).round(0).astype(int)
     qual['DAMAGE_PROD']     = rating_20_80(qual['_DAMAGE_PROD_raw'],     g_sub['_DAMAGE_PROD_raw']).round(0).astype(int)
     qual['PATIENCE']        = rating_20_80(qual['_PATIENCE_raw'],        g_sub['_PATIENCE_raw']).round(0).astype(int)
     qual['AGGRESSION']      = rating_20_80(qual['_AGGRESSION_raw'],      g_sub['_AGGRESSION_raw']).round(0).astype(int)
     qual['SPEED_TOOL']      = rating_20_80(qual['_SPEED_TOOL_raw'],      g_sub['_SPEED_TOOL_raw']).round(0).astype(int)
     qual['SB_CONVERSION']   = rating_20_80(qual['_SB_CONVERSION_raw'],   g_sub['_SB_CONVERSION_raw']).round(0).astype(int)
-    qual = qual.drop(columns=['_BAT_TO_BALL_raw','_CONTACT_QUALITY_raw','_RAW_POWER_raw','_DAMAGE_PROD_raw',
+    qual = qual.drop(columns=['_BAT_TO_BALL_raw','_CONTACT_QUALITY_raw','_SPRAY_PROFILE_raw',
+                                '_RAW_POWER_raw','_LAUNCH_OPTIM_raw','_DAMAGE_PROD_raw',
                                 '_PATIENCE_raw','_AGGRESSION_raw','_SPEED_TOOL_raw','_SB_CONVERSION_raw'])
 
     # BABIP luck context — career mean + delta from career mean per batter-year.
@@ -299,12 +321,13 @@ def build_ratings_panel(current_year=2026):
         lambda d: 'HOT' if d >= 0.030 else ('COLD' if d <= -0.030 else 'NORMAL'))
 
     # Overall composite — weighted mean of the three archetype-driving domains,
-    # then re-rated within year to a clean 20-80 distribution. Weights derived
-    # from OLS regression of fp_per_pa ~ CONTACT + POWER + DISCIPLINE on the
-    # FULL-tier pool. Refit after dropping BABIP from CONTACT and PullFB from
-    # POWER. New empirical 0.66/0.28/0.06 (R²=0.72) on FULL-tier n=3,163.
+    # then re-rated within year to a clean 20-80 distribution. Refit after the
+    # 2026-05 expansion: CONTACT now includes SprayEnt; POWER now includes
+    # SweetSpot+EV90+PullFB (LAUNCH_OPTIM sub-domain); DISCIPLINE now includes
+    # HBP. New empirical OLS: 0.565/0.328/0.107 (R²=0.60) on FULL-tier pool.
+    # Rounded for clean numbers; user can tune in dashboard discussion.
     # SB intentionally excluded (overlay, not part of archetype identity).
-    OVERALL_W = {'CONTACT': 0.65, 'POWER': 0.30, 'DISCIPLINE': 0.05}
+    OVERALL_W = {'CONTACT': 0.55, 'POWER': 0.35, 'DISCIPLINE': 0.10}
     qual['_OVERALL_raw'] = (qual['CONTACT']    * OVERALL_W['CONTACT']
                           + qual['POWER']      * OVERALL_W['POWER']
                           + qual['DISCIPLINE'] * OVERALL_W['DISCIPLINE'])
@@ -437,21 +460,22 @@ def main():
     master_cols = [
         'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','data_tier',
         'OVERALL','CONTACT','POWER','DISCIPLINE','SB',
-        'BAT_TO_BALL','CONTACT_QUALITY','RAW_POWER','DAMAGE_PROD',
+        'BAT_TO_BALL','CONTACT_QUALITY','SPRAY_PROFILE',
+        'RAW_POWER','LAUNCH_OPTIM','DAMAGE_PROD',
         'PATIENCE','AGGRESSION','SPEED_TOOL','SB_CONVERSION',
         'archetype','contact_subtype','power_subtype','discipline_subtype',
         'sb_tier','spray_archetype','cell',
         'age','age_tier','career_year',
         'bd_C','bd_P','bd_D','boundary_distance','boundary_tier',
-        'r_Contact','r_K','r_BABIP','r_xCON',
-        'r_Barrel','r_HardHit','r_ISO','r_HRrate','r_PullFB',
-        'r_BB','r_Chase','r_ZSwing',
+        'r_Contact','r_K','r_BABIP','r_xCON','r_SprayEnt',
+        'r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate',
+        'r_BB','r_Chase','r_HBP','r_ZSwing',
         'r_SBrate','r_Sprint',
         'contact_pct','k_pct','babip','babip_career','babip_delta','babip_luck_flag','xwoba_on_contact',
-        'barrel_pct','hard_hit_pct','iso','hr_per_pa','pull_fb_pct',
-        'bb_pct','chase_pct','z_swing_pct',
+        'barrel_pct','hard_hit_pct','sweet_spot_pct','ev90','iso','hr_per_pa','pull_fb_pct',
+        'bb_pct','chase_pct','hbp_pct','z_swing_pct',
         'sb_per_opp','sprint_speed',
-        'pull_pct','cent_pct','oppo_pct',
+        'pull_pct','cent_pct','oppo_pct','spray_entropy',
     ]
     # Some cols may be missing in older years — keep only what exists
     master_cols = [c for c in master_cols if c in qual.columns]

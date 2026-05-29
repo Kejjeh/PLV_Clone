@@ -52,7 +52,8 @@ S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 'data_tier',
     'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
-    'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+    'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+    'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
     'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION',
     'babip_career', 'babip_delta', 'babip_luck_flag',
     'archetype', 'contact_subtype', 'power_subtype', 'discipline_subtype',
@@ -110,7 +111,8 @@ def assert_schema():
         _fail(f'sp master has {n} duplicate (pitcher, year) rows')
 
     for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL', 'rank_in_year',
-              'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+              'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+              'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
               'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         n = int(h[c].isna().sum())
         if n: _fail(f'hitter master {c} has {n} null rows')
@@ -142,7 +144,8 @@ def build_hitter_records(h: pd.DataFrame):
     for c in ['age', 'rank_in_year']:
         df[c] = df[c].astype('Int64')
     for c in ['CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'OVERALL',
-              'BAT_TO_BALL', 'CONTACT_QUALITY', 'RAW_POWER', 'DAMAGE_PROD',
+              'BAT_TO_BALL', 'CONTACT_QUALITY', 'SPRAY_PROFILE',
+              'RAW_POWER', 'LAUNCH_OPTIM', 'DAMAGE_PROD',
               'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION']:
         df[c] = df[c].astype(int)
     # Component r_* are ints in source; preserve.
@@ -244,7 +247,7 @@ def build_hitter_snapshots():
 
         info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
         # Weighted Overall — same coefficients as the master CSV builder.
-        OVERALL = int(round(CONTACT * 0.65 + POWER * 0.30 + DISCIPLINE * 0.05))
+        OVERALL = int(round(CONTACT * 0.55 + POWER * 0.35 + DISCIPLINE * 0.10))
         out.append({
             'batter': int(row['batter']),
             'player_name': info.get('player_name'),
