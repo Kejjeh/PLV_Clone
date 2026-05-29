@@ -440,6 +440,7 @@ HITTERS_TAB = """
     <a href="#h-section-quadrant">Quadrant</a>
     <a href="#h-section-roster">Roster</a>
     <a href="#h-section-all">All hitters</a>
+    <a href="#h-section-subs">Sub-domains</a>
   </nav>
   <section id="h-section-snapshots">
   <div id="h-snapshots-section" style="display:none;">
@@ -502,6 +503,16 @@ HITTERS_TAB = """
   </div>
   <div class="table-scroll"><table id="h-alltable" class="alltable"></table></div>
   </section>
+
+  <section id="h-section-subs">
+  <h2>Sub-domain ratings — all hitters</h2>
+  <p style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Each domain decomposed into its underlying sub-ratings (20-80 within year). Sort by any column.</p>
+  <div class="alltable-controls">
+    <input type="text" id="h-subtable-search" placeholder="Search name, team…" autocomplete="off">
+    <span id="h-subtable-count" class="filter-summary"></span>
+  </div>
+  <div class="table-scroll"><table id="h-subtable" class="alltable"></table></div>
+  </section>
 </div>
 """
 
@@ -513,6 +524,7 @@ PITCHERS_TAB = """
     <a href="#s-section-quadrant">Quadrant</a>
     <a href="#s-section-roster">Roster</a>
     <a href="#s-section-all">All pitchers</a>
+    <a href="#s-section-subs">Sub-domains</a>
   </nav>
   <section id="s-section-snapshots">
   <div id="s-snapshots-section" style="display:none;">
@@ -575,6 +587,16 @@ PITCHERS_TAB = """
     <span id="s-alltable-count" class="filter-summary"></span>
   </div>
   <div class="table-scroll"><table id="s-alltable" class="alltable"></table></div>
+  </section>
+
+  <section id="s-section-subs">
+  <h2>Sub-domain ratings — all pitchers</h2>
+  <p style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin-bottom:.4em;">Each domain decomposed into its underlying sub-ratings (20-80 within year). Sort by any column.</p>
+  <div class="alltable-controls">
+    <input type="text" id="s-subtable-search" placeholder="Search name…" autocomplete="off">
+    <span id="s-subtable-count" class="filter-summary"></span>
+  </div>
+  <div class="table-scroll"><table id="s-subtable" class="alltable"></table></div>
   </section>
 </div>
 """
@@ -751,6 +773,11 @@ const state = {
   sTblSort: { col: 'OVERALL', dir: 'desc' },
   hTblQuery: '',
   sTblQuery: '',
+  // Sub-domain table state — also defaults to Overall desc
+  hSubSort: { col: 'OVERALL', dir: 'desc' },
+  sSubSort: { col: 'OVERALL', dir: 'desc' },
+  hSubQuery: '',
+  sSubQuery: '',
 };
 
 // Inline badge for partial-season players
@@ -1424,6 +1451,46 @@ const S_TBL_COLS = [
   { key: 'rank_in_year',        label: 'Rank', num: true },
 ];
 
+// Sub-domain tables — focused on the intermediate-layer ratings.
+const H_SUB_COLS = [
+  { key: 'player_name', label: 'Player', text: true },
+  { key: 'team',        label: 'Tm', text: true },
+  { key: 'year',        label: 'Yr', num: true },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
+  { key: 'CONTACT',         label: 'Contact', num: true, bold: true },
+  { key: 'BAT_TO_BALL',     label: 'B2B',     num: true },
+  { key: 'CONTACT_QUALITY', label: 'Quality', num: true },
+  { key: 'POWER',           label: 'Power',   num: true, bold: true },
+  { key: 'RAW_POWER',       label: 'Raw',     num: true },
+  { key: 'DAMAGE_PROD',     label: 'Prod',    num: true },
+  { key: 'DISCIPLINE',      label: 'Disc',    num: true, bold: true },
+  { key: 'PATIENCE',        label: 'Patience',num: true },
+  { key: 'AGGRESSION',      label: 'Aggr',    num: true },
+  { key: 'SB',              label: 'SB',      num: true, bold: true },
+  { key: 'SPEED_TOOL',      label: 'Speed',   num: true },
+  { key: 'SB_CONVERSION',   label: 'Conv',    num: true },
+  { key: 'babip_luck_flag', label: 'BABIP',   text: true, pretty: true },
+  { key: 'age_tier',        label: 'Age',     text: true, pretty: true },
+  { key: 'data_tier',       label: 'Tier',    text: true, pretty: true },
+];
+
+const S_SUB_COLS = [
+  { key: 'player_name', label: 'Pitcher', text: true },
+  { key: 'year',        label: 'Yr', num: true },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
+  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true },
+  { key: 'SWING_MISS',    label: 'SwM',    num: true },
+  { key: 'CALLED_STRIKE', label: 'Called', num: true },
+  { key: 'MOVEMENT',      label: 'Move',   num: true, bold: true },
+  { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true },
+  { key: 'GB_TENDENCY',   label: 'GB',     num: true },
+  { key: 'CONTROL',       label: 'Control',num: true, bold: true },
+  { key: 'WALK_AVOID',    label: 'BB-avoid',num: true },
+  { key: 'velo_rating',   label: 'Velo',   num: true },
+  { key: 'age_tier',      label: 'Age',    text: true, pretty: true },
+  { key: 'data_tier',     label: 'Tier',   text: true, pretty: true },
+];
+
 function tblRowMatches(r, q) {
   if (!q) return true;
   const ql = q.toLowerCase();
@@ -1456,12 +1523,24 @@ function tblSortRows(rows, sort, cols) {
   });
 }
 
-function renderAllTable(rows, role) {
-  const cols = role === 'hitter' ? H_TBL_COLS : S_TBL_COLS;
-  const tblId = role === 'hitter' ? 'h-alltable' : 's-alltable';
-  const sort = role === 'hitter' ? state.hTblSort : state.sTblSort;
-  const q    = role === 'hitter' ? state.hTblQuery : state.sTblQuery;
-  const cntEl = document.getElementById(role === 'hitter' ? 'h-alltable-count' : 's-alltable-count');
+function renderAllTable(rows, role, kind) {
+  const isSub = kind === 'sub';
+  const cols = role === 'hitter'
+    ? (isSub ? H_SUB_COLS : H_TBL_COLS)
+    : (isSub ? S_SUB_COLS : S_TBL_COLS);
+  const tblId = role === 'hitter'
+    ? (isSub ? 'h-subtable' : 'h-alltable')
+    : (isSub ? 's-subtable' : 's-alltable');
+  const sort = isSub
+    ? (role === 'hitter' ? state.hSubSort : state.sSubSort)
+    : (role === 'hitter' ? state.hTblSort : state.sTblSort);
+  const q = isSub
+    ? (role === 'hitter' ? state.hSubQuery : state.sSubQuery)
+    : (role === 'hitter' ? state.hTblQuery : state.sTblQuery);
+  const cntEl = document.getElementById(
+    role === 'hitter'
+      ? (isSub ? 'h-subtable-count' : 'h-alltable-count')
+      : (isSub ? 's-subtable-count' : 's-alltable-count'));
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
 
   // Domain → sub-domain map for hover tooltips on the per-domain cells
@@ -1540,7 +1619,7 @@ function renderAllTable(rows, role) {
       const k = th.dataset.col;
       if (sort.col === k) sort.dir = (sort.dir === 'asc' ? 'desc' : 'asc');
       else { sort.col = k; sort.dir = 'desc'; }
-      renderAllTable(rows, role);
+      renderAllTable(rows, role, kind);
     });
   });
   // Wire player click → modal
@@ -1673,6 +1752,8 @@ function renderAll() {
 
   renderAllTable(hitterRows, 'hitter');
   renderAllTable(spRows,     'sp');
+  renderAllTable(hitterRows, 'hitter', 'sub');
+  renderAllTable(spRows,     'sp',     'sub');
 
   // Snapshot movers — only in Single Year mode
   if (state.yearMode === 'single') {
@@ -1782,6 +1863,23 @@ function init() {
     sSearchTimer = setTimeout(() => {
       state.sTblQuery = e.target.value.trim();
       renderAllTable(filterRows(SPS, 'sp'), 'sp');
+    }, 120);
+  });
+
+  // Sub-domain table search (debounced)
+  let hSubTimer = null, sSubTimer = null;
+  document.getElementById('h-subtable-search').addEventListener('input', e => {
+    clearTimeout(hSubTimer);
+    hSubTimer = setTimeout(() => {
+      state.hSubQuery = e.target.value.trim();
+      renderAllTable(filterRows(HITTERS, 'hitter'), 'hitter', 'sub');
+    }, 120);
+  });
+  document.getElementById('s-subtable-search').addEventListener('input', e => {
+    clearTimeout(sSubTimer);
+    sSubTimer = setTimeout(() => {
+      state.sSubQuery = e.target.value.trim();
+      renderAllTable(filterRows(SPS, 'sp'), 'sp', 'sub');
     }, 120);
   });
 
