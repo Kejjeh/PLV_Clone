@@ -759,7 +759,28 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
-<style>html,body{margin:0;padding:0;}*{box-sizing:border-box;}</style>
+<style>html,body{margin:0;padding:0;}*{box-sizing:border-box;}
+/* Top-nav strip — mirrors the structure used on player_profiles.html so the
+   four dashboards share a single navigation pattern. Class names are the
+   canonical `nav.topnav` from the profiles template; colors are inlined here
+   to fit the existing xFP GitHub-dark palette without introducing new CSS
+   custom properties (no var(--accent) etc. defined on this page). The
+   wrapper `.xfp-topnav-bar` is uniquely prefixed to avoid colliding with any
+   React-rendered class names elsewhere in this file. */
+.xfp-topnav-bar { background:#161b22; border-bottom:1px solid #30363d;
+  padding:.55em 1em; display:flex; justify-content:flex-end; }
+.xfp-topnav-bar nav.topnav { display:flex; align-items:center; gap:0;
+  font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:.72em;
+  text-transform:uppercase; letter-spacing:.15em; }
+.xfp-topnav-bar nav.topnav a { color:#8b949e; text-decoration:none;
+  padding:.35em .9em; border:1px solid #30363d; border-right:0; }
+.xfp-topnav-bar nav.topnav a:first-child { border-radius:3px 0 0 3px; }
+.xfp-topnav-bar nav.topnav a:last-child  { border-radius:0 3px 3px 0;
+  border-right:1px solid #30363d; }
+.xfp-topnav-bar nav.topnav a:hover { color:#c9d1d9; background:#0d1117; }
+.xfp-topnav-bar nav.topnav a.current { color:#58a6ff; background:#0d1117;
+  border-color:#58a6ff; }
+</style>
 <script>
 window.XFP_META = __META_JSON__;
 window.XFP_H2_META = __H2_META_JSON__;
@@ -776,13 +797,13 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin></script>
 </head>
 <body>
-<div style="background:#161b22;border-bottom:1px solid #30363d;padding:.5em 1em;text-align:right;font-family:system-ui,sans-serif;font-size:.85em;color:#8b949e;">
-  <a href="live_dashboard.html" style="color:#3fb950;text-decoration:none;font-weight:bold;">🔴 LIVE TODAY</a>
-  &nbsp;·&nbsp;
-  <a href="matchup.html" style="color:#58a6ff;text-decoration:none;">Matchup</a>
-  &nbsp;·&nbsp;
-  <a href="player_profiles.html" style="color:#d2a8ff;text-decoration:none;font-weight:bold;">🪪 PROFILES</a>
-  &nbsp;·&nbsp; archetype browser (rebuild via <code style="color:#79c0ff">python scripts/xfp/build_player_profiles_dashboard.py</code>)
+<div class="xfp-topnav-bar">
+  <nav class="topnav">
+    <a class="current">XFP</a>
+    <a href="matchup.html">Matchup</a>
+    <a href="live_dashboard.html">Live</a>
+    <a href="player_profiles.html">Profiles</a>
+  </nav>
 </div>
 <div id="root"></div>
 <script type="text/babel">
@@ -4242,7 +4263,8 @@ def build_team_audit() -> dict:
         for _, r in rh.iterrows():
             if r['key'] in rostered_keys:
                 continue
-            prim = (r.get('primary_position') or '').upper()
+            prim_raw = r.get('primary_position')
+            prim = prim_raw.upper() if isinstance(prim_raw, str) else ''
             if pos_filter == 'OF':
                 if not (prim in ('OF', 'LF', 'CF', 'RF') or 'OF' in prim):
                     continue

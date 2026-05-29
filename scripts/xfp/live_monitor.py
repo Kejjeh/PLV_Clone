@@ -291,7 +291,7 @@ def render_console(d, games, my_rows, opp_rows, opp_name):
 
 
 def _render_sp_alerts_html() -> str:
-    """Read sp_alerts.json and render an HTML alerts block."""
+    """Read sp_alerts.json and render an HTML alerts block (editorial palette)."""
     alerts_file = OUT / 'sp_alerts.json'
     if not alerts_file.exists():
         return ''
@@ -302,29 +302,29 @@ def _render_sp_alerts_html() -> str:
     alerts = data.get('alerts', [])
     if not alerts:
         return (
-            '<h2 style="color:#79c0ff;">⚡ SP Upgrade Alerts</h2>'
-            '<p style="color:#6e7681;font-style:italic;">No FA SP upgrades detected today.</p>'
+            '<h2>SP Upgrade Alerts</h2>'
+            '<p style="color:var(--dim);font-style:italic;">No FA SP upgrades detected today.</p>'
         )
     floor = data.get('upgrade_floor_fpp', 0)
     generated = data.get('generated', '')
     rows = []
     for a in alerts:
-        tier_color = '#f85149' if a['tier'] == 'HIGH' else '#d29922'
+        tier_color = 'var(--neg)' if a['tier'] == 'HIGH' else 'var(--warn)'
         sigs = ' '.join(a['signals'])
         rows.append(
             f'<tr>'
             f'<td>{h(a["name"])}</td>'
-            f'<td style="color:{tier_color};font-weight:bold;">{h(a["tier"])}</td>'
+            f'<td style="color:{tier_color};font-weight:600;">{h(a["tier"])}</td>'
             f'<td>{a["gs"]}</td>'
-            f'<td style="color:{"#3fb950" if a["fpp"]>=0 else "#f85149"};">'
+            f'<td style="color:{"var(--pos)" if a["fpp"]>=0 else "var(--neg)"};">'
             f'{a["fpp"]:+.4f}</td>'
-            f'<td style="color:{"#3fb950" if a["fpp_gap"]>=0.030 else "#d29922"};">'
+            f'<td style="color:{"var(--pos)" if a["fpp_gap"]>=0.030 else "var(--warn)"};">'
             f'{a["fpp_gap"]:+.3f}</td>'
             f'<td>{a["l4"]}</td>'
             f'<td>{a["whiff_pct"]:.1f}%</td>'
             f'<td>{a["xwoba_con"]:.3f}</td>'
             f'<td>#{a["rp3_rank"]}</td>'
-            f'<td style="color:#d2a8ff;">{h(sigs)}</td>'
+            f'<td style="color:var(--accent);">{h(sigs)}</td>'
             f'</tr>'
         )
     rows_html = '\n'.join(rows)
@@ -333,14 +333,14 @@ def _render_sp_alerts_html() -> str:
     hit_floor = data.get('hit_upgrade_floor_xwoba', 0)
     hit_rows = []
     for a in hitter_alerts:
-        tier_color = '#f85149' if a['tier'] == 'HIGH' else '#d29922'
+        tier_color = 'var(--neg)' if a['tier'] == 'HIGH' else 'var(--warn)'
         hit_rows.append(
             f'<tr>'
             f'<td>{h(a["name"])}</td>'
-            f'<td style="color:{tier_color};font-weight:bold;">{h(a["tier"])}</td>'
+            f'<td style="color:{tier_color};font-weight:600;">{h(a["tier"])}</td>'
             f'<td>{a["pa"]}</td>'
-            f'<td style="color:#3fb950;">{a["xwoba_szn"]:.3f}</td>'
-            f'<td style="color:{"#3fb950" if a["xwoba_gap"]>=0.040 else "#d29922"};">'
+            f'<td style="color:var(--pos);">{a["xwoba_szn"]:.3f}</td>'
+            f'<td style="color:{"var(--pos)" if a["xwoba_gap"]>=0.040 else "var(--warn)"};">'
             f'{a["xwoba_gap"]:+.3f}</td>'
             f'<td>{a["xwoba_con"]:.3f}</td>'
             f'<td>#{a["rh3_rank"]}</td>'
@@ -350,8 +350,8 @@ def _render_sp_alerts_html() -> str:
     hit_block = ''
     if hitter_alerts:
         hit_block = f'''
-<h2 style="color:#79c0ff;">⚡ Hitter Upgrade Alerts
-  <span style="float:right;font-size:0.75em;color:#8b949e;">floor xwOBA={hit_floor:.3f}</span>
+<h2>Hitter Upgrade Alerts
+  <span style="float:right;font-size:0.6em;font-weight:400;color:var(--dim);font-family:'IBM Plex Mono',monospace;">floor xwOBA={hit_floor:.3f}</span>
 </h2>
 <table>
 <thead><tr>
@@ -362,8 +362,8 @@ def _render_sp_alerts_html() -> str:
 </table>'''
 
     return f'''
-<h2 style="color:#79c0ff;">⚡ SP Upgrade Alerts
-  <span style="float:right;font-size:0.75em;color:#8b949e;">
+<h2>SP Upgrade Alerts
+  <span style="float:right;font-size:0.6em;font-weight:400;color:var(--dim);font-family:'IBM Plex Mono',monospace;">
     floor={floor:+.4f} · {h(generated)}
   </span>
 </h2>
@@ -404,47 +404,154 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
 
     now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     html = f'''<!DOCTYPE html>
-<html><head>
+<html lang="en"><head>
 <meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="refresh" content="{refresh_secs}">
 <title>Ligers Live — {h(d)}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-body {{ font-family: -apple-system, system-ui, sans-serif; background: #0d1117; color: #c9d1d9; max-width: 1200px; margin: 0 auto; padding: 1em; }}
-h1 {{ color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: .3em; }}
-h2 {{ color: #79c0ff; }}
-.total {{ float: right; font-size: 0.9em; color: #d2a8ff; }}
-.scoreboard {{ background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 1em; margin: 1em 0; font-size: 1.2em; text-align: center; }}
-.scoreboard .me {{ color: #3fb950; font-weight: bold; }}
-.scoreboard .opp {{ color: #f85149; font-weight: bold; }}
-.scoreboard .gap {{ font-size: 1.5em; margin-top: .5em; }}
-table {{ border-collapse: collapse; width: 100%; margin-bottom: 2em; }}
-th {{ background: #161b22; padding: .5em; text-align: left; border-bottom: 2px solid #30363d; }}
-td {{ padding: .4em .5em; border-bottom: 1px solid #21262d; font-size: .95em; }}
-tr:hover {{ background: #161b22; }}
-.pos {{ color: #3fb950; font-weight: bold; }}
-.neg {{ color: #f85149; font-weight: bold; }}
-.zero {{ color: #8b949e; }}
-.line {{ color: #8b949e; font-family: monospace; font-size: .9em; }}
-.hl {{ color: #d2a8ff; font-weight: bold; }}
-.empty {{ color: #6e7681; font-style: italic; }}
-.meta {{ color: #6e7681; font-size: .85em; margin-top: 1em; }}
+:root {{
+  --bg: #1a1815;
+  --panel: #211e1a;
+  --stripe: #1d1b17;
+  --border: #34302a;
+  --text: #f5f1ea;
+  --dim: #a89e8a;
+  --faint: #3a352e;
+  --accent: #d97757;
+  --pos: #7fb069;
+  --neg: #c1666b;
+  --warn: #d4a945;
+}}
+* {{ box-sizing: border-box; }}
+html, body {{ margin: 0; padding: 0; }}
+body {{ font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
+       background: var(--bg); color: var(--text);
+       font-size: 16px; line-height: 1.6; }}
+.wrap {{ max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }}
+
+header {{ border-bottom: 1px solid var(--border); padding: .9em 0;
+         position: sticky; top: 0; background: var(--bg); z-index: 100;
+         margin-bottom: 1em; }}
+.header-row {{ display: flex; justify-content: space-between; align-items: baseline;
+              flex-wrap: wrap; gap: 1.2em; }}
+h1 {{ color: var(--accent); margin: 0; font-size: 2em; font-weight: 700;
+     letter-spacing: .01em; line-height: 1.15;
+     font-family: 'Source Serif 4', Georgia, serif; }}
+h1 .date-tag {{ color: var(--dim); font-size: .55em; font-weight: 400;
+               margin-left: .8em; letter-spacing: .12em;
+               font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; }}
+h2 {{ color: var(--text); margin-top: 2em; font-size: 1.4em; font-weight: 600;
+     border-bottom: 1px solid var(--border); padding-bottom: .35em;
+     letter-spacing: .01em; line-height: 1.2;
+     font-family: 'Source Serif 4', Georgia, serif; }}
+.total {{ float: right; font-size: .65em; font-weight: 400; color: var(--accent);
+         font-family: 'IBM Plex Mono', monospace; }}
+
+nav.topnav {{ display: flex; align-items: center; gap: 0;
+             font-family: 'IBM Plex Mono', monospace;
+             font-size: .72em; text-transform: uppercase; letter-spacing: .15em;
+             margin-top: .4em; }}
+nav.topnav a {{ color: var(--dim); text-decoration: none; padding: .35em .9em;
+               border: 1px solid var(--border); border-right: 0;
+               cursor: pointer; }}
+nav.topnav a:first-child {{ border-radius: 3px 0 0 3px; }}
+nav.topnav a:last-child  {{ border-radius: 0 3px 3px 0; border-right: 1px solid var(--border); }}
+nav.topnav a:hover {{ color: var(--text); background: var(--panel); }}
+nav.topnav a.current {{ color: var(--accent); background: var(--panel); border-color: var(--accent); }}
+
+.scoreboard {{ background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
+              padding: 1.2em 1.5em; margin: 1em 0; font-size: 1.2em; text-align: center; }}
+.scoreboard .me {{ color: var(--pos); font-weight: 700;
+                   font-family: 'Source Serif 4', Georgia, serif;
+                   font-variant-numeric: tabular-nums; }}
+.scoreboard .opp {{ color: var(--neg); font-weight: 700;
+                    font-family: 'Source Serif 4', Georgia, serif;
+                    font-variant-numeric: tabular-nums; }}
+.scoreboard .sep {{ color: var(--dim); margin: 0 .5em;
+                    font-family: 'IBM Plex Mono', monospace; }}
+.scoreboard .gap {{ font-size: 1.4em; margin-top: .5em; color: var(--text);
+                    font-family: 'Source Serif 4', Georgia, serif;
+                    font-weight: 600; }}
+.scoreboard .gap.up {{ color: var(--pos); }}
+.scoreboard .gap.down {{ color: var(--neg); }}
+
+table {{ border-collapse: collapse; width: 100%; margin-bottom: 1.5em;
+        font-family: 'IBM Plex Mono', ui-monospace, monospace; font-size: .87em; }}
+th {{ background: var(--panel); padding: .65em .8em; text-align: left;
+      border-bottom: 1px solid var(--border); border-top: 1px solid var(--border);
+      font-weight: 600; color: var(--dim);
+      text-transform: uppercase; font-size: .72em; letter-spacing: .12em;
+      font-family: 'IBM Plex Mono', monospace; }}
+td {{ padding: .55em .8em; border-bottom: 1px solid var(--faint);
+      font-variant-numeric: tabular-nums; }}
+tbody tr:nth-child(even) td {{ background: var(--stripe); }}
+tbody tr:hover td {{ background: var(--panel); }}
+.pos {{ color: var(--pos); font-weight: 600; }}
+.neg {{ color: var(--neg); font-weight: 600; }}
+.zero {{ color: var(--dim); }}
+.line {{ color: var(--dim); font-family: 'IBM Plex Mono', monospace; font-size: .88em; }}
+.hl {{ color: var(--accent); font-weight: 600; }}
+.empty {{ color: var(--dim); font-style: italic;
+         font-family: 'Source Serif 4', Georgia, serif; }}
+.meta {{ color: var(--dim); font-size: .78em; margin-top: 2em; text-align: center;
+         border-top: 1px solid var(--faint); padding-top: 1em;
+         font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; }}
+
+/* Two-column layout for the my-team / opponent blocks at wide widths */
+.team-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em; align-items: start; }}
+.team-grid > div {{ min-width: 0; }}
+.team-grid table {{ margin-bottom: .5em; }}
+@media (max-width: 1100px) {{
+  .team-grid {{ grid-template-columns: 1fr; gap: 0; }}
+}}
+
+@media (max-width: 700px) {{
+  h1 {{ font-size: 1.4em; }}
+  h2 {{ font-size: 1.1em; }}
+  .scoreboard {{ font-size: 1em; padding: .9em 1em; }}
+  table {{ font-size: .82em; }}
+  th, td {{ padding: .45em .55em; }}
+}}
 </style></head><body>
-<h1>🏟️  Ligers Live — {h(d)}</h1>
+<div class="wrap">
+<header>
+  <div class="header-row">
+    <div>
+      <h1>Ligers Live <span class="date-tag">{h(d)}</span></h1>
+      <nav class="topnav">
+        <a class="current">Live</a>
+        <a href="matchup.html">Matchup</a>
+        <a href="player_profiles.html">Profiles</a>
+        <a href="index.html">XFP</a>
+      </nav>
+    </div>
+  </div>
+</header>
 <div class="scoreboard">
-  <span class="me">{h(my_name)}: {my_total:+.2f}</span>  vs
-  <span class="opp">{h(opp_name or "Opponent")}: {opp_total:+.2f}</span>
-  <div class="gap">{'🟢 UP' if gap >= 0 else '🔴 DOWN'} by {abs(gap):.2f} FP today</div>
+  <span class="me">{h(my_name)}: {my_total:+.2f}</span><span class="sep">vs</span><span class="opp">{h(opp_name or "Opponent")}: {opp_total:+.2f}</span>
+  <div class="gap {'up' if gap >= 0 else 'down'}">{'▲ UP' if gap >= 0 else '▼ DOWN'} by {abs(gap):.2f} FP today</div>
 </div>
-{block_html(f"{my_name} — Today's Lines", my_rows)}
-{block_html(f"{opp_name or 'Opponent'} — Today's Lines", opp_rows)}
+<div class="team-grid">
+  <div>{block_html(f"{my_name} — Today's Lines", my_rows)}</div>
+  <div>{block_html(f"{opp_name or 'Opponent'} — Today's Lines", opp_rows)}</div>
+</div>
 <p class="meta">Last refresh: {h(now)} · auto-refresh every {refresh_secs}s · MLB Stats API live feed</p>
+</div>
 </body></html>
 '''
     sp_alerts_block = _render_sp_alerts_html()
 
     target = OUT / 'live_dashboard.html'
-    target.write_text(html.replace('</body></html>', sp_alerts_block + '\n</body></html>'),
-                      encoding='utf-8')
+    # Inject alerts inside the .wrap container (before its closing </div>) so
+    # they inherit max-width + padding tokens consistently.
+    target.write_text(
+        html.replace('</div>\n</body></html>', sp_alerts_block + '\n</div>\n</body></html>'),
+        encoding='utf-8'
+    )
 
 
 def main():

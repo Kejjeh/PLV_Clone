@@ -43,8 +43,14 @@ HEAD = r"""<!doctype html>
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
-       background: var(--bg); color: var(--text); font-size: 16px; line-height: 1.6; }
-.wrap { max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }
+       background: var(--bg); color: var(--text); font-size: 17px; line-height: 1.6; }
+/* Full-window-width layout (mirrors xfp index dashboard).
+   No outer max-width; padding scales with viewport so we don't hug the edges.
+   Prose-style blocks (glossary, paragraph copy) constrain themselves where
+   their CSS pins a sensible reading width. */
+.wrap { max-width: none; width: 100%; margin: 0; padding: 0 2em 4em 2em; }
+@media (min-width: 1600px) { .wrap { padding: 0 3em 4em 3em; } }
+@media (min-width: 2000px) { .wrap { padding: 0 4em 4em 4em; } }
 .mono { font-family: 'IBM Plex Mono', ui-monospace, monospace; }
 
 header { border-bottom: 1px solid var(--border); padding: .9em 0;
@@ -204,6 +210,63 @@ table.alltable th:hover { color: var(--accent); background: var(--stripe); }
 table.alltable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
 table.alltable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
 
+/* Archetype-roster tables — wider, more readable, with sortable headers and
+   a top-level controls bar (archetype dropdown + free-text search).
+   The bigger row padding + slightly larger numerics is the readability win
+   the user explicitly asked for. */
+.arch-controls { display: flex; flex-wrap: wrap; gap: 1em; align-items: center;
+                  margin: .4em 0 1.1em 0; padding: .6em .8em;
+                  background: var(--panel); border: 1px solid var(--border);
+                  border-radius: 4px;
+                  font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
+.arch-controls label { color: var(--dim); text-transform: uppercase;
+                        letter-spacing: .1em; font-size: .85em; margin-right: .35em; }
+.arch-controls select, .arch-controls input {
+    background: var(--bg); color: var(--text); border: 1px solid var(--border);
+    border-radius: 3px; padding: .4em .6em;
+    font-family: 'IBM Plex Mono', monospace; font-size: .92em; }
+.arch-controls input { min-width: 280px; }
+.arch-controls select:focus, .arch-controls input:focus {
+    outline: 0; border-color: var(--accent); }
+.arch-controls .arch-count { margin-left: auto; color: var(--dim);
+                              font-style: italic; font-size: .88em; }
+.arch-controls button.arch-toggle { background: transparent; color: var(--dim);
+    border: 1px solid var(--border); border-radius: 3px; padding: .35em .8em;
+    cursor: pointer; font-family: inherit; font-size: .8em;
+    text-transform: uppercase; letter-spacing: .1em; }
+.arch-controls button.arch-toggle:hover { color: var(--accent); border-color: var(--accent); }
+
+details.arch-block { margin: .35em 0 .9em 0; border: 1px solid var(--border);
+                      border-radius: 4px; background: var(--panel); overflow: hidden; }
+details.arch-block > summary { padding: .85em 1.1em; font-size: 1em;
+                                border-bottom: 1px solid transparent; }
+details.arch-block[open] > summary { border-bottom-color: var(--border);
+                                      background: var(--stripe); }
+details.arch-block .arch-table-scroll { overflow-x: auto;
+                                          -webkit-overflow-scrolling: touch;
+                                          background: var(--bg); }
+details.arch-block .arch-table-scroll::-webkit-scrollbar { height: 10px; }
+details.arch-block .arch-table-scroll::-webkit-scrollbar-track { background: var(--stripe); }
+details.arch-block .arch-table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+
+table.archtable { min-width: max-content; width: max-content;
+                   margin: 0; font-size: .98em; }
+table.archtable th, table.archtable td { white-space: nowrap;
+                                            padding: .85em 1.1em; }
+table.archtable th { font-size: .8em; cursor: pointer; user-select: none;
+                      background: var(--bg); border-top: 0; }
+table.archtable th:hover { color: var(--accent); background: var(--stripe); }
+table.archtable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
+table.archtable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
+table.archtable td.player { font-size: 1.05em; }
+table.archtable td.num { font-size: 1em; }
+table.archtable tbody tr:nth-child(even) td { background: var(--stripe); }
+table.archtable tbody tr:hover td { background: rgba(217,119,87,0.06); }
+/* Numeric domain cells in archtable inherit the same hover tooltip
+   behavior as the alltable's domain cells — see .domain-tooltip below. */
+table.archtable td.domain-cell { position: relative; cursor: help; }
+table.archtable td.domain-cell:hover .domain-tooltip { display: block; }
+
 /* Quadrant — one big customizable scatter per side */
 .quad-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
                   font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
@@ -232,7 +295,8 @@ details > summary .desc { color: var(--dim); font-weight: 400; font-size: .82em;
                           font-family: 'Source Serif 4', Georgia, serif; letter-spacing: 0; }
 
 .glossary { background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
-            padding: 1em 1.4em; margin: 1em 0; font-size: .92em; }
+            padding: 1em 1.4em; margin: 1em 0; font-size: .92em;
+            max-width: 1400px; }
 .glossary p { color: var(--text); }
 .glossary .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5em; margin-top: .7em; }
 @media (max-width: 700px) { .glossary .grid { grid-template-columns: 1fr; } }
@@ -509,11 +573,20 @@ HITTERS_TAB = """
     </select>
     <span class="r-display" id="h-r"></span>
   </div>
-  <div class="quadrant-host"><div id="h-quad" style="height: 540px;"></div></div>
+  <div class="quadrant-host"><div id="h-quad" style="height: 640px;"></div></div>
   </section>
 
   <section id="h-section-roster">
   <h2>Hitter archetype roster</h2>
+  <div class="arch-controls" id="h-arch-controls">
+    <label for="h-arch-filter">Archetype</label>
+    <select id="h-arch-filter"><option value="__ALL__">All archetypes</option></select>
+    <label for="h-arch-search">Search</label>
+    <input type="text" id="h-arch-search" placeholder="Name, team, sub-type…" autocomplete="off">
+    <button type="button" class="arch-toggle" id="h-arch-expand">Expand all</button>
+    <button type="button" class="arch-toggle" id="h-arch-collapse">Collapse all</button>
+    <span class="arch-count" id="h-arch-count"></span>
+  </div>
   <div id="h-archetype-tables"></div>
   </section>
 
@@ -594,11 +667,20 @@ PITCHERS_TAB = """
     </select>
     <span class="r-display" id="s-r"></span>
   </div>
-  <div class="quadrant-host"><div id="s-quad" style="height: 540px;"></div></div>
+  <div class="quadrant-host"><div id="s-quad" style="height: 640px;"></div></div>
   </section>
 
   <section id="s-section-roster">
   <h2>Pitcher archetype roster</h2>
+  <div class="arch-controls" id="s-arch-controls">
+    <label for="s-arch-filter">Archetype</label>
+    <select id="s-arch-filter"><option value="__ALL__">All archetypes</option></select>
+    <label for="s-arch-search">Search</label>
+    <input type="text" id="s-arch-search" placeholder="Name, sub-type, pitch mix…" autocomplete="off">
+    <button type="button" class="arch-toggle" id="s-arch-expand">Expand all</button>
+    <button type="button" class="arch-toggle" id="s-arch-collapse">Collapse all</button>
+    <span class="arch-count" id="s-arch-count"></span>
+  </div>
   <div id="s-archetype-tables"></div>
   </section>
 
@@ -800,6 +882,19 @@ const state = {
   sSubSort: { col: 'OVERALL', dir: 'desc' },
   hSubQuery: '',
   sSubQuery: '',
+  // Archetype-roster table state (each archetype block is independently
+  // sorted by FP rate desc by default; the dropdown narrows to a single
+  // archetype, the search box filters rows across all visible blocks).
+  hArchSort: { col: 'fp_per_pa',    dir: 'desc' },
+  sArchSort: { col: 'fp_per_start', dir: 'desc' },
+  hArchQuery: '',
+  sArchQuery: '',
+  hArchFilter: '__ALL__',
+  sArchFilter: '__ALL__',
+  // Track which archetype <details> blocks are open so a re-render after
+  // a search/sort doesn't snap everything closed.
+  hArchOpen: {},
+  sArchOpen: {},
 };
 
 // Inline badge for partial-season players
@@ -1016,11 +1111,105 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role) {
 }
 
 // ── Archetype tables ──────────────────────────────────────────────────
+// Column definitions per role. Each entry: {key, label, num?, bold?, pretty?,
+// text?, fmt?, domain?, idCol?, teamCol?}. `domain` flags a numeric domain
+// cell that should expose the existing hover tooltip showing sub-domain
+// component ratings (same UX as the alltable).
+const H_ARCH_COLS = [
+  { key: '_n',            label: '#',        num: true, text: true },  // rank within block
+  { key: 'player_name',   label: 'Player',   text: true, idCol: true },
+  { key: 'team',          label: 'Team',     text: true },
+  { key: 'OVERALL',       label: 'Overall',  num: true, bold: true },
+  { key: 'CONTACT',       label: 'C',        num: true, domain: 'CONTACT' },
+  { key: 'POWER',         label: 'P',        num: true, domain: 'POWER' },
+  { key: 'DISCIPLINE',    label: 'D',        num: true, domain: 'DISCIPLINE' },
+  { key: 'SB',            label: 'SB',       num: true, domain: 'SB' },
+  { key: 'sb_tier',       label: 'SB tier',  text: true, pretty: true },
+  { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
+  { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
+  { key: 'fp_per_pa',     label: 'FP/PA',    num: true,
+    fmt: v => (v == null ? '' : (+v).toFixed(3)) },
+  { key: 'rank_in_year',  label: 'Rank',     num: true },
+];
+
+const S_ARCH_COLS = [
+  { key: '_n',            label: '#',        num: true, text: true },
+  { key: 'player_name',   label: 'Pitcher',  text: true, idCol: true },
+  { key: 'OVERALL',       label: 'Overall',  num: true, bold: true },
+  { key: 'STUFF',         label: 'S',        num: true, domain: 'STUFF' },
+  { key: 'MOVEMENT',      label: 'M',        num: true, domain: 'MOVEMENT' },
+  { key: 'CONTROL',       label: 'C',        num: true, domain: 'CONTROL' },
+  { key: 'velo_rating',   label: 'Velo',     num: true },
+  { key: 'velo_tier',     label: 'Velo tier',text: true, pretty: true },
+  { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
+  { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
+  { key: 'fp_per_start',  label: 'FP/start', num: true,
+    fmt: v => (v == null ? '' : (+v).toFixed(2)) },
+  { key: 'rank_in_year',  label: 'Rank',     num: true },
+];
+
+// Same DOMAIN_SUBS table as renderAllTable uses — preserves the existing
+// hover-tooltip behavior.
+const ARCH_DOMAIN_SUBS_HITTER = {
+  CONTACT:    [['Z_CONTACT', 'Z-contact'], ['O_CONTACT', 'Chase-contact'],
+                ['K_AVOIDANCE', 'K-avoid'], ['CONTACT_QUALITY', 'Quality'],
+                ['SPRAY_PROFILE', 'Spray']],
+  POWER:      [['RAW_POWER', 'Raw'], ['LAUNCH_OPTIM', 'Launch'], ['DAMAGE_PROD', 'Production']],
+  DISCIPLINE: [['PATIENCE', 'Patience'], ['AGGRESSION', 'Aggression']],
+  SB:         [['SPEED_TOOL', 'Speed'], ['SB_CONVERSION', 'Conversion']],
+};
+const ARCH_DOMAIN_SUBS_SP = {
+  STUFF:    [['SWING_MISS', 'SwM'], ['CALLED_STRIKE', 'Called']],
+  MOVEMENT: [['DAMAGE_SUPP', 'Suppr'], ['GB_TENDENCY', 'GB']],
+  CONTROL:  [['WALK_AVOID', 'BB-avoid'], ['STRIKE_THROWING', 'Strikes']],
+};
+
+function archRowMatches(r, q) {
+  if (!q) return true;
+  const ql = q.toLowerCase();
+  const candidates = [r.player_name, r.team, r.archetype, r.contact_subtype,
+                       r.power_subtype, r.discipline_subtype, r.sb_tier,
+                       r.spray_archetype, r.age_tier, r.boundary_tier,
+                       r.data_tier, r.stuff_subtype, r.velo_tier,
+                       r.pitch_archetype, r.primary_group];
+  for (const c of candidates) {
+    if (c && String(c).toLowerCase().includes(ql)) return true;
+  }
+  return false;
+}
+
+function archSortRows(rows, sort, cols) {
+  const col = cols.find(c => c.key === sort.col);
+  if (!col) return rows;
+  const dir = sort.dir === 'asc' ? 1 : -1;
+  const numeric = !!col.num && col.key !== '_n';
+  return rows.slice().sort((a, b) => {
+    let va = a[col.key], vb = b[col.key];
+    if (va == null && vb == null) return 0;
+    if (va == null) return 1;
+    if (vb == null) return -1;
+    if (numeric) { va = +va; vb = +vb; return dir * (va - vb); }
+    return dir * String(va).localeCompare(String(vb));
+  });
+}
+
 function renderArchetypeTables(rows, role, targetId) {
-  const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+  const fpKey   = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+  const idKey   = role === 'hitter' ? 'batter'    : 'pitcher';
+  const cols    = role === 'hitter' ? H_ARCH_COLS : S_ARCH_COLS;
+  const subsMap = role === 'hitter' ? ARCH_DOMAIN_SUBS_HITTER : ARCH_DOMAIN_SUBS_SP;
   const archDesc = role === 'hitter' ? HARCH_DESC : SARCH_DESC;
-  const catMap = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
+  const catMap   = role === 'hitter' ? HITTER_ARCH_CAT : SP_ARCH_CAT;
   const catOrder = role === 'hitter' ? CAT_ORDER_HITTER : CAT_ORDER_SP;
+  const sort   = role === 'hitter' ? state.hArchSort   : state.sArchSort;
+  const query  = role === 'hitter' ? state.hArchQuery  : state.sArchQuery;
+  const archF  = role === 'hitter' ? state.hArchFilter : state.sArchFilter;
+  const openMap= role === 'hitter' ? state.hArchOpen   : state.sArchOpen;
+  const countEl = document.getElementById(role === 'hitter' ? 'h-arch-count' : 's-arch-count');
+  const filterSel = document.getElementById(role === 'hitter' ? 'h-arch-filter' : 's-arch-filter');
+
+  // Group rows by archetype on the UNFILTERED set so the dropdown options
+  // remain stable as the user searches.
   const byArch = {};
   rows.forEach(r => { (byArch[r.archetype] = byArch[r.archetype] || []).push(r); });
 
@@ -1033,50 +1222,139 @@ function renderArchetypeTables(rows, role, targetId) {
     return b.mean - a.mean;
   });
 
+  // Rebuild the filter dropdown if its option set has drifted. Grouped by
+  // category so "ELITE → POWER → CONTACT …" stays readable.
+  const expectedOpts = ['__ALL__'].concat(arches.map(x => x.arch));
+  const currentOpts = Array.from(filterSel.options).map(o => o.value);
+  const optsChanged = expectedOpts.length !== currentOpts.length
+    || expectedOpts.some((v, i) => v !== currentOpts[i]);
+  if (optsChanged) {
+    let optHtml = '<option value="__ALL__">All archetypes</option>';
+    let lastCat2 = null;
+    arches.forEach(({arch, cat, rows: rs}) => {
+      if (cat !== lastCat2) {
+        if (lastCat2 != null) optHtml += '</optgroup>';
+        optHtml += `<optgroup label="${prettyLabel(cat)}">`;
+        lastCat2 = cat;
+      }
+      optHtml += `<option value="${arch}">${prettyLabel(arch)} (n=${rs.length})</option>`;
+    });
+    if (lastCat2 != null) optHtml += '</optgroup>';
+    filterSel.innerHTML = optHtml;
+    // Restore selection if still valid; otherwise drop to __ALL__.
+    filterSel.value = expectedOpts.includes(archF) ? archF : '__ALL__';
+    if (role === 'hitter') state.hArchFilter = filterSel.value;
+    else                   state.sArchFilter = filterSel.value;
+  }
+
+  let visibleRows = 0;
+  let visibleArches = 0;
   let html = '';
   let lastCat = null;
   arches.forEach(({arch, rows: rs, mean, cat}) => {
+    if (archF !== '__ALL__' && arch !== archF) return;
+    const matched = rs.filter(r => archRowMatches(r, query));
+    if (!matched.length) return;
     if (cat !== lastCat) {
-      html += `<h3 style="color:var(--dim);font-size:.85em;letter-spacing:.05em;margin-top:1.2em;border-bottom:1px solid var(--faint);padding-bottom:.3em;">${prettyLabel(cat)}</h3>`;
+      html += `<h3 style="color:var(--dim);font-size:.95em;letter-spacing:.05em;margin-top:1.4em;border-bottom:1px solid var(--faint);padding-bottom:.35em;">${prettyLabel(cat)}</h3>`;
       lastCat = cat;
     }
-    rs.sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0));
+    visibleArches += 1;
+    visibleRows += matched.length;
+    // Compute display mean over the FILTERED set so the summary matches what
+    // the user sees expanded. Falls back to overall arch mean when search
+    // is empty.
+    const dispMean = (query || archF !== '__ALL__')
+      ? matched.reduce((s,r) => s + (r[fpKey]||0), 0) / matched.length
+      : mean;
     const desc = archDesc[arch] || '';
-    html += `<details><summary>${prettyLabel(arch)}<span class="count">n=${rs.length}, mean ${fpKey}=${mean.toFixed(role==='hitter'?3:2)}</span><span class="desc">${desc}</span></summary><table><thead>`;
-    if (role === 'hitter') {
-      html += '<tr><th class="num">#</th><th>Player</th><th>Team</th><th class="num">Overall</th><th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>SB tier</th><th>Age</th><th>Bnd</th><th class="num">FP/PA</th><th class="num">Rank</th></tr></thead><tbody>';
-      rs.forEach((r, i) => {
-        html += `<tr><td class="num">${i+1}</td>`
-              + `<td class="player" data-role="hitter" data-id="${r.batter}">${r.player_name}${partialBadge(r)}</td>`
-              + `<td>${r.team||''}</td>`
-              + `<td class="num"><b>${r.OVERALL}</b></td>`
-              + `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
-              + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
-              + `<td>${prettyLabel(r.sb_tier||'')}</td><td>${prettyLabel(r.age_tier||'')}</td>`
-              + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
-              + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
-              + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
+    // Default: open when filtered to a single archetype or when search is
+    // active (so results aren't hidden behind a closed accordion). Otherwise
+    // respect the stored open state.
+    const forcedOpen = (archF !== '__ALL__') || !!query;
+    const isOpen = forcedOpen || !!openMap[arch];
+    const sortedRs = archSortRows(matched, sort, cols);
+
+    html += `<details class="arch-block" data-arch="${arch}"${isOpen ? ' open' : ''}>`
+         +  `<summary>${prettyLabel(arch)}`
+         +    `<span class="count">n=${matched.length}${matched.length !== rs.length ? `/${rs.length}` : ''}, mean ${fpKey}=${dispMean.toFixed(role==='hitter'?3:2)}</span>`
+         +    `<span class="desc">${desc}</span>`
+         +  `</summary>`
+         +  `<div class="arch-table-scroll"><table class="archtable"><thead><tr>`;
+    cols.forEach(c => {
+      const cls = (c.num ? 'num ' : '') + (sort.col === c.key ? `sort-${sort.dir}` : '');
+      html += `<th class="${cls.trim()}" data-col="${c.key}">${c.label}</th>`;
+    });
+    html += '</tr></thead><tbody>';
+    sortedRs.forEach((r, i) => {
+      html += '<tr>';
+      cols.forEach(c => {
+        if (c.key === '_n') { html += `<td class="num">${i+1}</td>`; return; }
+        let v = r[c.key];
+        if (c.fmt) v = c.fmt(v);
+        else if (c.pretty) v = (v == null ? '' : prettyLabel(v));
+        else if (v == null) v = '';
+        const display = c.bold ? `<b>${v}</b>` : v;
+        if (c.idCol) {
+          const tier = r.data_tier === 'PARTIAL' ? partialBadge(r) : '';
+          html += `<td class="player" data-role="${role}" data-id="${r[idKey]}">${display}${tier}</td>`;
+          return;
+        }
+        if (c.domain && subsMap[c.domain]) {
+          let tip = '<div class="domain-tooltip">';
+          subsMap[c.domain].forEach(([k, name]) => {
+            if (r[k] == null) return;
+            tip += `<div class="dom-sub"><span class="name">${name}</span><b>${r[k]}</b></div>`;
+          });
+          tip += '</div>';
+          html += `<td class="num domain-cell">${display}${tip}</td>`;
+          return;
+        }
+        const cellCls = c.num ? 'num' : '';
+        html += `<td class="${cellCls}">${display}</td>`;
       });
-    } else {
-      html += '<tr><th class="num">#</th><th>Pitcher</th><th class="num">Overall</th><th class="num">S</th><th class="num">M</th><th class="num">C</th><th class="num">Velo</th><th>Velo tier</th><th>Age</th><th>Bnd</th><th class="num">FP/start</th><th class="num">Rank</th></tr></thead><tbody>';
-      rs.forEach((r, i) => {
-        html += `<tr><td class="num">${i+1}</td>`
-              + `<td class="player" data-role="sp" data-id="${r.pitcher}">${r.player_name}${partialBadge(r)}</td>`
-              + `<td class="num"><b>${r.OVERALL}</b></td>`
-              + `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
-              + `<td class="num">${r.CONTROL}</td><td class="num">${r.velo_rating??''}</td>`
-              + `<td>${prettyLabel(r.velo_tier||'')}</td><td>${prettyLabel(r.age_tier||'')}</td>`
-              + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
-              + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
-              + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
-      });
-    }
-    html += '</tbody></table></details>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></details>';
   });
-  document.getElementById(targetId).innerHTML = html;
-  document.querySelectorAll(`#${targetId} td.player`).forEach(td => {
+
+  if (!visibleArches) {
+    html = `<div style="color:var(--dim);font-style:italic;padding:1.2em;text-align:center;border:1px dashed var(--border);border-radius:4px;">No matches — try clearing the search or selecting "All archetypes".</div>`;
+  }
+
+  const tgt = document.getElementById(targetId);
+  tgt.innerHTML = html;
+
+  // Persist open/close state on user toggle.
+  tgt.querySelectorAll('details.arch-block').forEach(d => {
+    const arch = d.dataset.arch;
+    d.addEventListener('toggle', () => { openMap[arch] = d.open; });
+  });
+  // Header click → sort, re-render whole block group.
+  tgt.querySelectorAll('table.archtable thead th[data-col]').forEach(th => {
+    th.addEventListener('click', () => {
+      const k = th.dataset.col;
+      if (k === '_n') return;  // not meaningfully sortable
+      if (sort.col === k) sort.dir = (sort.dir === 'asc' ? 'desc' : 'asc');
+      else { sort.col = k; sort.dir = 'desc'; }
+      renderArchetypeTables(rows, role, targetId);
+    });
+  });
+  // Player click → modal.
+  tgt.querySelectorAll('td.player').forEach(td => {
     td.addEventListener('click', () => openModal(td.dataset.role, parseInt(td.dataset.id)));
   });
+
+  // Summary line.
+  const totalRows = rows.length;
+  if (query || archF !== '__ALL__') {
+    const bits = [];
+    if (archF !== '__ALL__') bits.push(`archetype "${prettyLabel(archF)}"`);
+    if (query) bits.push(`search "${query}"`);
+    countEl.textContent = `${visibleRows} of ${totalRows} rows · ${visibleArches} archetype${visibleArches===1?'':'s'} · ${bits.join(' + ')}`;
+  } else {
+    countEl.textContent = `${totalRows} rows · ${visibleArches} archetypes`;
+  }
 }
 
 // ── Leaderboards ──────────────────────────────────────────────────────
@@ -2027,6 +2305,51 @@ function init() {
       renderAllTable(filterRows(SPS, 'sp'), 'sp');
     }, 120);
   });
+
+  // Archetype-roster controls — dropdown, free-text search, expand/collapse
+  function rerenderArch(role) {
+    const rows = filterRows(role === 'hitter' ? HITTERS : SPS, role);
+    renderArchetypeTables(rows, role,
+      role === 'hitter' ? 'h-archetype-tables' : 's-archetype-tables');
+  }
+  let hArchTimer = null, sArchTimer = null;
+  document.getElementById('h-arch-search').addEventListener('input', e => {
+    clearTimeout(hArchTimer);
+    hArchTimer = setTimeout(() => {
+      state.hArchQuery = e.target.value.trim();
+      rerenderArch('hitter');
+    }, 120);
+  });
+  document.getElementById('s-arch-search').addEventListener('input', e => {
+    clearTimeout(sArchTimer);
+    sArchTimer = setTimeout(() => {
+      state.sArchQuery = e.target.value.trim();
+      rerenderArch('sp');
+    }, 120);
+  });
+  document.getElementById('h-arch-filter').addEventListener('change', e => {
+    state.hArchFilter = e.target.value; rerenderArch('hitter');
+  });
+  document.getElementById('s-arch-filter').addEventListener('change', e => {
+    state.sArchFilter = e.target.value; rerenderArch('sp');
+  });
+  function archBulkToggle(role, open) {
+    const tgt = document.getElementById(
+      role === 'hitter' ? 'h-archetype-tables' : 's-archetype-tables');
+    const openMap = role === 'hitter' ? state.hArchOpen : state.sArchOpen;
+    tgt.querySelectorAll('details.arch-block').forEach(d => {
+      d.open = open;
+      openMap[d.dataset.arch] = open;
+    });
+  }
+  document.getElementById('h-arch-expand').addEventListener('click',
+    () => archBulkToggle('hitter', true));
+  document.getElementById('h-arch-collapse').addEventListener('click',
+    () => archBulkToggle('hitter', false));
+  document.getElementById('s-arch-expand').addEventListener('click',
+    () => archBulkToggle('sp', true));
+  document.getElementById('s-arch-collapse').addEventListener('click',
+    () => archBulkToggle('sp', false));
 
   // Sub-domain table search (debounced)
   let hSubTimer = null, sSubTimer = null;
