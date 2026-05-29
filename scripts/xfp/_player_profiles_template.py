@@ -187,12 +187,34 @@ td.player:hover { text-decoration: underline; }
 
 /* All-players sortable table */
 .alltable-controls { display: flex; gap: 1em; align-items: center; margin-bottom: .5em;
-                      font-family: 'IBM Plex Mono', monospace; font-size: .82em; }
+                      font-family: 'IBM Plex Mono', monospace; font-size: .92em; }
 .alltable-controls input { background: var(--panel); color: var(--text);
                             border: 1px solid var(--border); border-radius: 3px;
-                            padding: .35em .55em; font-family: 'IBM Plex Mono', monospace;
-                            font-size: .9em; min-width: 320px; }
+                            padding: .5em .7em; font-family: 'IBM Plex Mono', monospace;
+                            font-size: 1em; min-width: 320px; }
 .alltable-controls input:focus { outline: 0; border-color: var(--accent); }
+
+/* Chip-group bars above each all-table (roster status + position).
+   Matches xFP's pill-button pattern: pill border + hover/active accent.
+   Single-select per group; clicking already-active button does nothing. */
+.chip-group { display: flex; flex-wrap: wrap; gap: .5em; align-items: center;
+              margin: .35em 0 .55em 0;
+              font-family: 'IBM Plex Mono', monospace; font-size: .9em; }
+.chip-group .chip-group-label { color: var(--dim); text-transform: uppercase;
+              letter-spacing: .12em; font-size: .8em; margin-right: .35em; }
+.chip-group button.pill { background: var(--panel); color: var(--text);
+              border: 1px solid var(--border); border-radius: 999px;
+              padding: .5em 1em; font-family: 'IBM Plex Mono', monospace;
+              font-size: .92em; cursor: pointer; min-height: 32px;
+              letter-spacing: .04em; transition: color .12s ease, border-color .12s ease, background .12s ease; }
+.chip-group button.pill:hover { color: var(--accent); border-color: var(--accent); }
+.chip-group button.pill.active { background: var(--accent); color: var(--bg);
+              border-color: var(--accent); font-weight: 600; }
+.chip-group button.pill[disabled] { color: var(--faint); cursor: not-allowed;
+              border-color: var(--faint); }
+.chip-group button.pill[disabled]:hover { color: var(--faint); border-color: var(--faint); }
+.chip-group .group-note { color: var(--dim); font-style: italic; font-size: .82em;
+              margin-left: .4em; }
 
 /* Horizontal scroll wrapper — works on both alltable and any wide table */
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch;
@@ -207,8 +229,14 @@ td.player:hover { text-decoration: underline; }
    wrapper no longer needs to scroll — and `overflow: visible` is required so
    the per-column filter popover and the domain hover tooltip aren't clipped. */
 .table-scroll:has(table.alltable) { overflow: visible; }
-table.alltable { width: 100%; table-layout: fixed; margin-bottom: 0; }
+table.alltable { width: 100%; table-layout: fixed; margin-bottom: 0;
+    /* Bumped from inherited .87em so rows are comfortably readable at 1080p.
+       Numeric tabular alignment is preserved via font-variant-numeric on td. */
+    font-size: 1em; }
 table.alltable th, table.alltable td { white-space: nowrap; }
+/* Slightly more vertical breathing room on rows. */
+table.alltable td { padding: .75em .9em; font-size: 1em; }
+table.alltable th { padding: .85em .9em; font-size: .9em; }
 /* Truncate-with-ellipsis on non-domain cells. Domain cells host an absolutely-
    positioned tooltip via .domain-tooltip and must NOT clip, so they keep
    `overflow: visible` (the default). */
@@ -217,22 +245,28 @@ table.alltable th { overflow: visible; }
 /* Header is a flex row so the sort-label and the filter button sit side by side
    without the filter button being treated as part of the click-to-sort target. */
 table.alltable th { user-select: none; position: relative; }
-table.alltable th .th-inner { display: flex; align-items: center; gap: .35em;
-    width: 100%; }
+table.alltable th .th-inner { display: flex; align-items: center; gap: .4em;
+    width: 100%; min-height: 28px; }
 table.alltable th .th-label { flex: 1; cursor: pointer; overflow: hidden;
-    text-overflow: ellipsis; }
+    text-overflow: ellipsis; padding: .25em 0; min-height: 24px;
+    display: inline-flex; align-items: center; }
 table.alltable th .th-label:hover { color: var(--accent); }
 table.alltable th.num .th-inner { justify-content: flex-end; }
-table.alltable th.num .th-label { flex: 0 1 auto; text-align: right; }
-table.alltable th.sort-asc  .th-label::after { content: ' ▲'; color: var(--accent); font-size: .85em; }
-table.alltable th.sort-desc .th-label::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
+table.alltable th.num .th-label { flex: 0 1 auto; text-align: right;
+    justify-content: flex-end; }
+table.alltable th.sort-asc  .th-label::after { content: ' ▲'; color: var(--accent); font-size: .95em; }
+table.alltable th.sort-desc .th-label::after { content: ' ▼'; color: var(--accent); font-size: .95em; }
 
-/* Per-column filter button + popover (Excel-style) */
-.th-filter { background: transparent; color: var(--dim); border: 0;
-    cursor: pointer; padding: 0 .2em; font-size: .9em; line-height: 1;
-    font-family: inherit; flex: 0 0 auto; }
-.th-filter:hover { color: var(--accent); }
-.th-filter.active { color: var(--accent); }
+/* Per-column filter button + popover (Excel-style). Bumped from a ~12px hit
+   target to a comfortable ~26px square so it's easy to click on a laptop. */
+.th-filter { background: transparent; color: var(--dim); border: 1px solid transparent;
+    cursor: pointer; padding: 0; font-size: 1.05em; line-height: 1;
+    font-family: inherit; flex: 0 0 auto;
+    width: 26px; height: 26px; border-radius: 4px;
+    display: inline-flex; align-items: center; justify-content: center; }
+.th-filter:hover { color: var(--accent); border-color: var(--border);
+    background: var(--stripe); }
+.th-filter.active { color: var(--accent); border-color: var(--accent); }
 .th-filter.active::after { content: ' •'; color: var(--accent); }
 .filter-popover { position: absolute; top: 100%; left: 0; min-width: 220px;
     max-width: 320px; background: var(--bg); border: 1px solid var(--border);
@@ -327,16 +361,17 @@ details.arch-block .arch-table-scroll::-webkit-scrollbar-track { background: var
 details.arch-block .arch-table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
 
 table.archtable { min-width: max-content; width: max-content;
-                   margin: 0; font-size: .98em; }
+                   margin: 0; font-size: 1.05em; }
 table.archtable th, table.archtable td { white-space: nowrap;
-                                            padding: .85em 1.1em; }
-table.archtable th { font-size: .8em; cursor: pointer; user-select: none;
-                      background: var(--bg); border-top: 0; }
+                                            padding: .95em 1.1em; }
+table.archtable th { font-size: .92em; cursor: pointer; user-select: none;
+                      background: var(--bg); border-top: 0; min-height: 30px;
+                      letter-spacing: .1em; }
 table.archtable th:hover { color: var(--accent); background: var(--stripe); }
-table.archtable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
-table.archtable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
-table.archtable td.player { font-size: 1.05em; }
-table.archtable td.num { font-size: 1em; }
+table.archtable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .95em; }
+table.archtable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .95em; }
+table.archtable td.player { font-size: 1.1em; }
+table.archtable td.num { font-size: 1.05em; }
 table.archtable tbody tr:nth-child(even) td { background: var(--stripe); }
 table.archtable tbody tr:hover td { background: rgba(217,119,87,0.06); }
 /* Numeric domain cells in archtable inherit the same hover tooltip
@@ -669,6 +704,28 @@ HITTERS_TAB = """
 
   <section id="h-section-all">
   <h2>All hitters — sortable</h2>
+  <div class="chip-group" id="h-roster-chips" data-group="roster" data-role="hitter">
+    <span class="chip-group-label">Roster</span>
+    <button type="button" class="pill active" data-value="all">All players</button>
+    <button type="button" class="pill" data-value="mine">My team</button>
+    <button type="button" class="pill" data-value="fa">Free agents</button>
+    <button type="button" class="pill" data-value="taken">Other teams</button>
+    <span class="group-note" id="h-roster-note"></span>
+  </div>
+  <div class="chip-group" id="h-pos-chips" data-group="pos" data-role="hitter">
+    <span class="chip-group-label">Position</span>
+    <button type="button" class="pill active" data-value="all">All</button>
+    <button type="button" class="pill" data-value="C">C</button>
+    <button type="button" class="pill" data-value="1B">1B</button>
+    <button type="button" class="pill" data-value="2B">2B</button>
+    <button type="button" class="pill" data-value="3B">3B</button>
+    <button type="button" class="pill" data-value="SS">SS</button>
+    <button type="button" class="pill" data-value="OF">OF</button>
+    <button type="button" class="pill" data-value="DH">DH</button>
+    <button type="button" class="pill" data-value="1B/3B">1B/3B</button>
+    <button type="button" class="pill" data-value="2B/SS">2B/SS</button>
+    <span class="group-note" id="h-pos-note"></span>
+  </div>
   <div class="alltable-controls">
     <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
     <span id="h-alltable-count" class="filter-summary"></span>
@@ -765,6 +822,21 @@ PITCHERS_TAB = """
 
   <section id="s-section-all">
   <h2>All pitchers — sortable</h2>
+  <div class="chip-group" id="s-roster-chips" data-group="roster" data-role="sp">
+    <span class="chip-group-label">Roster</span>
+    <button type="button" class="pill active" data-value="all">All players</button>
+    <button type="button" class="pill" data-value="mine">My team</button>
+    <button type="button" class="pill" data-value="fa">Free agents</button>
+    <button type="button" class="pill" data-value="taken">Other teams</button>
+    <span class="group-note" id="s-roster-note"></span>
+  </div>
+  <div class="chip-group" id="s-pos-chips" data-group="pos" data-role="sp">
+    <span class="chip-group-label">Position</span>
+    <button type="button" class="pill active" data-value="all">All</button>
+    <button type="button" class="pill" data-value="SP">SP</button>
+    <button type="button" class="pill" data-value="RP" disabled title="RP archetypes coming soon">RP</button>
+    <span class="group-note" id="s-pos-note"></span>
+  </div>
   <div class="alltable-controls">
     <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
     <span id="s-alltable-count" class="filter-summary"></span>
@@ -984,6 +1056,13 @@ const state = {
   // a search/sort doesn't snap everything closed.
   hArchOpen: {},
   sArchOpen: {},
+  // Roster-status + position chip filters for the all-tables. These are
+  // single-select per group, mirror the xFP dashboard's chip-row pattern,
+  // and ONLY apply in Single Year = current year mode (see updateChipAvailability).
+  hRosterFilter: 'all',   // 'all' | 'mine' | 'fa' | 'taken'
+  sRosterFilter: 'all',
+  hPosFilter:    'all',   // 'all' | 'C' | '1B' | '2B' | '3B' | 'SS' | 'OF' | 'DH' | '1B/3B' | '2B/SS'
+  sPosFilter:    'all',   // 'all' | 'SP' | 'RP'  (RP disabled until archetypes ship)
 };
 
 // Inline badge for partial-season players
@@ -2034,6 +2113,68 @@ function tblRowMatches(r, q) {
   return false;
 }
 
+// ── Chip-group helpers (roster status + position) ─────────────────
+// Chip filters only fire when the user is in Single Year = current year
+// mode. Historical rows have no live ESPN mapping, so applying them there
+// would zero out the table. We visually disable the chip groups in those
+// modes (see updateChipAvailability).
+function chipFiltersActive() {
+  return state.yearMode === 'single' && state.singleYear === D.current_year;
+}
+
+// Maps the hybrid position buttons to the set of underlying ESPN slot
+// strings that count as a match. `eligible_positions` on each row is
+// already normalized (LF/CF/RF -> OF, etc.).
+const POS_BUTTON_MATCH = {
+  'C':     ['C'],
+  '1B':    ['1B'],
+  '2B':    ['2B'],
+  '3B':    ['3B'],
+  'SS':    ['SS'],
+  'OF':    ['OF'],
+  'DH':    ['DH'],
+  '1B/3B': ['1B', '3B'],
+  '2B/SS': ['2B', 'SS'],
+  'SP':    ['SP'],
+  'RP':    ['RP'],
+};
+
+function rowPassesChipFilters(r, role) {
+  if (!chipFiltersActive()) return true;
+  const rosterF = role === 'hitter' ? state.hRosterFilter : state.sRosterFilter;
+  const posF    = role === 'hitter' ? state.hPosFilter    : state.sPosFilter;
+  if (rosterF && rosterF !== 'all') {
+    if ((r.roster_status || null) !== rosterF) return false;
+  }
+  if (posF && posF !== 'all') {
+    const want = POS_BUTTON_MATCH[posF] || [posF];
+    const have = r.eligible_positions || [];
+    let hit = false;
+    for (const w of want) { if (have.indexOf(w) !== -1) { hit = true; break; } }
+    if (!hit) return false;
+  }
+  return true;
+}
+
+// Toggle pill-disabled styling + the inline note when chip filters can't
+// apply (historical year / All Years / Blend). Disabling visually + at the
+// click handler is enough — the underlying state is preserved so when the
+// user flips back to Single/current the prior selection re-applies.
+function updateChipAvailability() {
+  const active = chipFiltersActive();
+  ['h-roster-chips','h-pos-chips','s-roster-chips','s-pos-chips'].forEach(id => {
+    const host = document.getElementById(id);
+    if (!host) return;
+    host.style.opacity = active ? '1' : '0.45';
+    host.style.pointerEvents = active ? '' : 'none';
+  });
+  const noteText = active ? '' : `Roster + position filters apply to ${D.current_year} only`;
+  ['h-roster-note','h-pos-note','s-roster-note','s-pos-note'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = noteText;
+  });
+}
+
 // ── Per-column filter helpers ────────────────────────────────────
 // `filters` is the state map (e.g. state.hAllFilters).
 function rowPassesFilters(r, filters, cols) {
@@ -2327,22 +2468,28 @@ function renderAllTable(rows, role, kind) {
 
   const fkey   = filterKeyForTable(role, isSub);
   const filters = state[fkey];
-  // Order matters: first search, then per-column filters, then sort
-  const searched = rows.filter(r => tblRowMatches(r, q));
+  // Order matters: chip filters (roster status + position) first because they're
+  // the broadest-stroke gate, then text search, then per-column filters, then sort.
+  const chipped  = rows.filter(r => rowPassesChipFilters(r, role));
+  const searched = chipped.filter(r => tblRowMatches(r, q));
   const filtered = searched.filter(r => rowPassesFilters(r, filters, cols));
   const sorted   = tblSortRows(filtered, sort, cols);
 
   const nActiveFilters = activeFilterCount(filters);
-  let countLabel;
-  if (q && nActiveFilters > 0) {
-    countLabel = `${filtered.length} of ${rows.length} (search + ${nActiveFilters} filter${nActiveFilters>1?'s':''})`;
-  } else if (q) {
-    countLabel = `${filtered.length} of ${rows.length} match "${q}"`;
-  } else if (nActiveFilters > 0) {
-    countLabel = `${filtered.length} of ${rows.length} (${nActiveFilters} filter${nActiveFilters>1?'s':''})`;
-  } else {
-    countLabel = `${rows.length} rows`;
+  const chipBits = [];
+  if (chipFiltersActive()) {
+    const rosterF = role === 'hitter' ? state.hRosterFilter : state.sRosterFilter;
+    const posF    = role === 'hitter' ? state.hPosFilter    : state.sPosFilter;
+    if (rosterF && rosterF !== 'all') chipBits.push(`roster=${rosterF}`);
+    if (posF    && posF    !== 'all') chipBits.push(`pos=${posF}`);
   }
+  const parts = [];
+  if (chipBits.length) parts.push(chipBits.join(' · '));
+  if (q) parts.push(`search "${q}"`);
+  if (nActiveFilters > 0) parts.push(`${nActiveFilters} col filter${nActiveFilters>1?'s':''}`);
+  const countLabel = parts.length
+    ? `${filtered.length} of ${rows.length} (${parts.join(' + ')})`
+    : `${rows.length} rows`;
   cntEl.textContent = countLabel;
 
   // Render chips above table reflecting current filter state
@@ -2633,7 +2780,11 @@ function init() {
     if (y === state.singleYear) o.selected = true;
     sel.appendChild(o);
   });
-  sel.addEventListener('change', () => { state.singleYear = parseInt(sel.value); renderAll(); });
+  sel.addEventListener('change', () => {
+    state.singleYear = parseInt(sel.value);
+    updateChipAvailability();
+    renderAll();
+  });
 
   // Reflect loaded state into UI controls
   const ymRadio = document.querySelector(`input[name="year-mode"][value="${state.yearMode}"]`);
@@ -2647,6 +2798,7 @@ function init() {
       state.yearMode = rb.value;
       document.getElementById('single-year-wrap').style.display =
         state.yearMode === 'single' ? '' : 'none';
+      updateChipAvailability();
       renderAll();
     });
   });
@@ -2728,6 +2880,46 @@ function init() {
     () => archBulkToggle('sp', true));
   document.getElementById('s-arch-collapse').addEventListener('click',
     () => archBulkToggle('sp', false));
+
+  // Chip groups (roster status + position) — single-select per group, only
+  // active in Single Year = current year. Disabled-state is handled by
+  // updateChipAvailability(); we still defensively re-check chipFiltersActive
+  // inside the click handler.
+  function wireChipGroup(hostId, role, group) {
+    const host = document.getElementById(hostId);
+    if (!host) return;
+    host.querySelectorAll('button.pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        if (!chipFiltersActive()) return;
+        const val = btn.dataset.value;
+        host.querySelectorAll('button.pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        if (group === 'roster') {
+          if (role === 'hitter') state.hRosterFilter = val;
+          else                   state.sRosterFilter = val;
+        } else {
+          if (role === 'hitter') state.hPosFilter = val;
+          else                   state.sPosFilter = val;
+        }
+        const rows = role === 'hitter'
+          ? filterRows(HITTERS, 'hitter') : filterRows(SPS, 'sp');
+        renderAllTable(rows, role);
+      });
+    });
+  }
+  wireChipGroup('h-roster-chips', 'hitter', 'roster');
+  wireChipGroup('h-pos-chips',    'hitter', 'pos');
+  wireChipGroup('s-roster-chips', 'sp',     'roster');
+  wireChipGroup('s-pos-chips',    'sp',     'pos');
+
+  // RP archetypes don't ship yet — payload.rp_available is False today, so we
+  // belt-and-suspenders the disabled attribute in case the server-side flag
+  // ever flips to True before the dataset actually carries RP rows.
+  if (D.rp_available === true) {
+    const rpBtn = document.querySelector('#s-pos-chips button.pill[data-value="RP"]');
+    if (rpBtn) { rpBtn.disabled = false; rpBtn.removeAttribute('title'); }
+  }
 
   // Sub-domain table search (debounced)
   let hSubTimer = null, sSubTimer = null;
@@ -2811,6 +3003,7 @@ function init() {
 
   renderBoundaryGlossary();
   renderHomeArchDist();
+  updateChipAvailability();
   renderAll();
 
   // After initial paint, resize again to ensure off-tab plots size correctly when first shown

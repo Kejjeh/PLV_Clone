@@ -642,9 +642,16 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
 
     # MA6 — IL-window pro-rate. #10: prefer upstream-cached _IL_RETURNS map
     # (built from get_injury_details()) since `player.returnDate` is usually None.
+    # IL audit: skip is UNCONDITIONAL (not gated on _ADJUSTERS_ON) — an IL'd
+    # player must not be projected for any games/starts they cannot play.
+    # If no return date is known, zero them out entirely (no day-of-week
+    # heroics; ESPN-confirmed probable starts override this via the SP path
+    # in main() which already filters healthy SPs upstream).
     il_factor = 1.0
     inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
-    if _ADJUSTERS_ON and inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+    IL_STATES = ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
+                 'INJURY_RESERVE', 'OUT')
+    if inj in IL_STATES:
         pid_for_il = getattr(player, 'playerId', None)
         rd = _IL_RETURNS.get(pid_for_il) if pid_for_il else None
         if rd is None:
@@ -660,6 +667,9 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                 il_factor = days_avail / days_total
             else:
                 return out  # returns after window — zero
+        else:
+            # No known return date — assume out for the week.
+            return out
 
     if pos == 'SP':
         # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
@@ -1237,8 +1247,13 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         if not candidates:
             return '<h2>💎 Streamer Targets</h2><p class="muted">No FA SPs above baseline.</p>'
 
-        # Resolve next start for each candidate
+        # Resolve next start for each candidate. Only keep starts whose date
+        # falls in the current week window (today..week_end). Candidates with
+        # no in-window start (typically IL'd, or whose next start is in a
+        # later week) are dropped entirely — we never render them with `—`.
         next_start_by_name = {}
+        today_s = today.isoformat() if today else ''
+        week_end_s = week_end.isoformat() if week_end else ''
         if schedules_by_team and today and week_end:
             mlbam_by_name = {}
             for c in candidates:
@@ -1250,37 +1265,37 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
                     set(mlbam_by_name.values()), schedules_by_team, today, week_end)
                 for nm, pid in mlbam_by_name.items():
                     games = starts.get(pid, [])
-                    if games:
-                        next_start_by_name[nm] = games[0]  # already sorted by date
+                    in_window = [g for g in games
+                                 if today_s <= g.get('date', '') <= week_end_s]
+                    if in_window:
+                        next_start_by_name[nm] = in_window[0]  # sorted by date
+
+        # Filter: only candidates with a confirmed/predicted start IN the
+        # current week window. Drops IL'd pitchers and pitchers whose next
+        # start is outside this week — those are not streamable today.
+        candidates = [c for c in candidates if c['name'] in next_start_by_name]
+        if not candidates:
+            return ('<h2>💎 Streamer Targets</h2>'
+                    '<p class="muted">No FA SPs with starts this week.</p>')
 
         # Rank by adjusted expected FP
         for c in candidates:
-            ns = next_start_by_name.get(c['name'])
-            if ns:
-                opp = (ns.get('opp_team') or '').upper()
-                is_home = bool(ns.get('is_home'))
-                venue = c['team'] if is_home else opp
-                pf_wOBA = pf_map.get(venue, 1.0)
-                opp_idx = ts_map_local.get(opp, 1.0)
-                mult = (1 - 0.5 * (pf_wOBA - 1)) * (1 - 0.7 * (opp_idx - 1))
-                mult = max(0.6, min(1.4, mult))
-                c['opp'] = opp
-                c['is_home'] = is_home
-                c['pf_wOBA'] = pf_wOBA
-                c['opp_idx'] = opp_idx
-                c['adj_mult'] = mult
-                c['exp_fp'] = c['per_start'] * mult
-                c['date'] = ns.get('date', '')
-                c['confirmed'] = ns.get('confirmed', False)
-            else:
-                c['opp'] = '—'
-                c['is_home'] = None
-                c['pf_wOBA'] = 1.0
-                c['opp_idx'] = 1.0
-                c['adj_mult'] = 1.0
-                c['exp_fp'] = c['per_start']
-                c['date'] = ''
-                c['confirmed'] = False
+            ns = next_start_by_name[c['name']]
+            opp = (ns.get('opp_team') or '').upper()
+            is_home = bool(ns.get('is_home'))
+            venue = c['team'] if is_home else opp
+            pf_wOBA = pf_map.get(venue, 1.0)
+            opp_idx = ts_map_local.get(opp, 1.0)
+            mult = (1 - 0.5 * (pf_wOBA - 1)) * (1 - 0.7 * (opp_idx - 1))
+            mult = max(0.6, min(1.4, mult))
+            c['opp'] = opp
+            c['is_home'] = is_home
+            c['pf_wOBA'] = pf_wOBA
+            c['opp_idx'] = opp_idx
+            c['adj_mult'] = mult
+            c['exp_fp'] = c['per_start'] * mult
+            c['date'] = ns.get('date', '')
+            c['confirmed'] = ns.get('confirmed', False)
 
         candidates.sort(key=lambda x: -x['exp_fp'])
 

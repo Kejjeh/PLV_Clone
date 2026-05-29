@@ -22,8 +22,10 @@ Schema assertions fail-fast before HTML emission. Refresh wiring is fail-closed.
 """
 from __future__ import annotations
 import json
+import re
 import shutil
 import sys
+import unicodedata
 from datetime import datetime
 from pathlib import Path
 
@@ -361,6 +363,124 @@ def build_sp_snapshots():
     return out
 
 
+# ── ESPN roster-status + eligibility ─────────────────────────────────────────
+MY_TEAM_NAME = 'New York Ligers'
+# ESPN exposes slot strings like 'C','1B','2B','3B','SS','LF','CF','RF','OF',
+# 'DH','SP','RP'. We collapse the corner-outfield strings into 'OF' for filters.
+_OUTFIELD_SLOTS = {'OF', 'LF', 'CF', 'RF'}
+
+
+def _norm_name(n: str) -> str:
+    if not isinstance(n, str):
+        return ''
+    s = unicodedata.normalize('NFKD', n)
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    s = re.sub(r"[^a-z0-9]", '', s.lower())
+    return s
+
+
+def _normalize_eligible_positions(slots) -> list[str]:
+    """ESPN eligibleSlots -> deduped list of fantasy-relevant positions.
+
+    Keeps C/1B/2B/3B/SS/DH/SP/RP as-is; collapses LF/CF/RF/OF into a single
+    'OF'. Drops bench / IL / utility-only slots that aren't positions.
+    """
+    if not slots:
+        return []
+    keep = {'C', '1B', '2B', '3B', 'SS', 'DH', 'SP', 'RP'}
+    out = []
+    seen = set()
+    for s in slots:
+        if not isinstance(s, str):
+            continue
+        s = s.strip().upper()
+        if s in _OUTFIELD_SLOTS:
+            pos = 'OF'
+        elif s in keep:
+            pos = s
+        else:
+            continue
+        if pos in seen:
+            continue
+        seen.add(pos)
+        out.append(pos)
+    return out
+
+
+def fetch_espn_roster_map() -> dict:
+    """Pull every rostered player from ESPN once.
+
+    Returns dict keyed by normalized name with values:
+      {'team_name': str, 'is_mine': bool, 'eligible_positions': list[str]}
+
+    Fails CLOSED but soft: on any error, returns {} so every current-year row
+    falls through to 'fa' (the safer default for a public dashboard than
+    misleadingly tagging everyone as 'mine'/'taken').
+    """
+    try:
+        sys.path.insert(0, str(REPO))
+        from app.espn_connector import _get_league  # type: ignore
+        league = _get_league()
+    except Exception as e:
+        print(f'  ESPN unavailable — roster_status will fall back to "fa": {e}',
+              flush=True)
+        return {}
+
+    out: dict = {}
+    try:
+        for team in league.teams:
+            tname = getattr(team, 'team_name', '') or ''
+            is_mine = ('ligers' in tname.lower())
+            for player in team.roster:
+                name = getattr(player, 'name', '') or ''
+                key = _norm_name(name)
+                if not key:
+                    continue
+                slots = getattr(player, 'eligibleSlots', []) or []
+                out[key] = {
+                    'team_name': tname,
+                    'is_mine': is_mine,
+                    'eligible_positions': _normalize_eligible_positions(slots),
+                }
+    except Exception as e:
+        print(f'  ESPN team-walk failed mid-pull — partial roster map: {e}',
+              flush=True)
+    print(f'  ESPN roster map: {len(out)} rostered players', flush=True)
+    return out
+
+
+def annotate_current_year_rows(records: list[dict], current_year: int,
+                                roster_map: dict, role: str) -> None:
+    """In-place: add roster_status + eligible_positions to current-year rows.
+
+    Non-current-year rows get roster_status=None (the UI hides the chip group
+    for those modes). For pitcher rows we also default eligible_positions to
+    ['SP'] when ESPN has no entry — the SP master is SP-only by construction.
+    """
+    n_mine = n_taken = n_fa = 0
+    for r in records:
+        if r.get('year') != current_year:
+            r['roster_status'] = None
+            r['eligible_positions'] = []
+            continue
+        key = _norm_name(r.get('player_name') or '')
+        hit = roster_map.get(key)
+        if hit is None:
+            r['roster_status'] = 'fa'
+            # No ESPN row -> fall back to role-implied position
+            r['eligible_positions'] = ['SP'] if role == 'sp' else []
+            n_fa += 1
+        else:
+            if hit['is_mine']:
+                r['roster_status'] = 'mine'; n_mine += 1
+            else:
+                r['roster_status'] = 'taken'; n_taken += 1
+            r['eligible_positions'] = hit['eligible_positions'] or (
+                ['SP'] if role == 'sp' else [])
+    print(f'  {role}: mine={n_mine} taken={n_taken} fa={n_fa} '
+          f'(current_year={current_year})', flush=True)
+
+
 def build_payload():
     h, s = assert_schema()
 
@@ -380,6 +500,29 @@ def build_payload():
     hitter_snapshots = build_hitter_snapshots()
     sp_snapshots = build_sp_snapshots()
 
+    hitter_records = build_hitter_records(h)
+    sp_records = build_sp_records(s)
+
+    print('Fetching ESPN roster map (once)...', flush=True)
+    roster_map = fetch_espn_roster_map()
+    annotate_current_year_rows(hitter_records, current_year, roster_map, 'hitter')
+    annotate_current_year_rows(sp_records,     current_year, roster_map, 'sp')
+
+    # Flag whether a meaningful RP-archetype pool exists. The current SP master
+    # is SP-only by construction (built from gs_to); only a handful of dual-
+    # eligible swingmen will show RP in their ESPN slots, which is NOT a true
+    # RP archetype dataset. Require ≥25 RP-eligible current-year records before
+    # enabling the RP position filter — keeps the user's "coming soon" intent
+    # intact until a real RP archetype build lands.
+    rp_count = sum(1 for r in sp_records
+                   if r.get('year') == current_year
+                   and 'RP' in (r.get('eligible_positions') or []))
+    rp_available = rp_count >= 25
+    if rp_count:
+        print(f'  RP-eligible SP records: {rp_count} '
+              f'(RP filter {"ENABLED" if rp_available else "disabled until archetype build lands"})',
+              flush=True)
+
     return {
         'last_refresh': datetime.now().strftime('%Y-%m-%d %H:%M'),
         'years': [int(y) for y in years],
@@ -388,10 +531,12 @@ def build_payload():
         'sp_archetype_defs': s_defs,
         'hitter_boundary': h_bound,
         'sp_boundary': s_bound,
-        'hitters': build_hitter_records(h),
-        'sps': build_sp_records(s),
+        'hitters': hitter_records,
+        'sps': sp_records,
         'hitter_snapshots': hitter_snapshots,
         'sp_snapshots': sp_snapshots,
+        'rp_available': bool(rp_available),
+        'my_team_name': MY_TEAM_NAME,
     }
 
 
