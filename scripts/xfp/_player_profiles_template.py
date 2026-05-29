@@ -203,12 +203,89 @@ td.player:hover { text-decoration: underline; }
 .table-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
 .table-scroll::-webkit-scrollbar-thumb:hover { background: var(--dim); }
 
-table.alltable { min-width: max-content; width: max-content; margin-bottom: 0; }
+/* Alltable lives inside .table-scroll. Since fixed-layout fits 100%, the
+   wrapper no longer needs to scroll — and `overflow: visible` is required so
+   the per-column filter popover and the domain hover tooltip aren't clipped. */
+.table-scroll:has(table.alltable) { overflow: visible; }
+table.alltable { width: 100%; table-layout: fixed; margin-bottom: 0; }
 table.alltable th, table.alltable td { white-space: nowrap; }
-table.alltable th { cursor: pointer; user-select: none; }
-table.alltable th:hover { color: var(--accent); background: var(--stripe); }
-table.alltable th.sort-asc::after  { content: ' ▲'; color: var(--accent); font-size: .85em; }
-table.alltable th.sort-desc::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
+/* Truncate-with-ellipsis on non-domain cells. Domain cells host an absolutely-
+   positioned tooltip via .domain-tooltip and must NOT clip, so they keep
+   `overflow: visible` (the default). */
+table.alltable td:not(.domain-cell) { overflow: hidden; text-overflow: ellipsis; }
+table.alltable th { overflow: visible; }
+/* Header is a flex row so the sort-label and the filter button sit side by side
+   without the filter button being treated as part of the click-to-sort target. */
+table.alltable th { user-select: none; position: relative; }
+table.alltable th .th-inner { display: flex; align-items: center; gap: .35em;
+    width: 100%; }
+table.alltable th .th-label { flex: 1; cursor: pointer; overflow: hidden;
+    text-overflow: ellipsis; }
+table.alltable th .th-label:hover { color: var(--accent); }
+table.alltable th.num .th-inner { justify-content: flex-end; }
+table.alltable th.num .th-label { flex: 0 1 auto; text-align: right; }
+table.alltable th.sort-asc  .th-label::after { content: ' ▲'; color: var(--accent); font-size: .85em; }
+table.alltable th.sort-desc .th-label::after { content: ' ▼'; color: var(--accent); font-size: .85em; }
+
+/* Per-column filter button + popover (Excel-style) */
+.th-filter { background: transparent; color: var(--dim); border: 0;
+    cursor: pointer; padding: 0 .2em; font-size: .9em; line-height: 1;
+    font-family: inherit; flex: 0 0 auto; }
+.th-filter:hover { color: var(--accent); }
+.th-filter.active { color: var(--accent); }
+.th-filter.active::after { content: ' •'; color: var(--accent); }
+.filter-popover { position: absolute; top: 100%; left: 0; min-width: 220px;
+    max-width: 320px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 4px; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 400;
+    padding: .55em .6em; font-family: 'IBM Plex Mono', monospace;
+    font-size: .82em; color: var(--text); }
+.filter-popover.right-align { left: auto; right: 0; }
+.filter-popover h5 { margin: 0 0 .4em 0; color: var(--dim); font-size: .75em;
+    text-transform: uppercase; letter-spacing: .1em; font-weight: 600; }
+.filter-popover input[type="text"], .filter-popover input[type="number"] {
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 3px; padding: .3em .45em; font-family: inherit; font-size: .9em;
+    width: 100%; box-sizing: border-box; }
+.filter-popover input:focus { outline: 0; border-color: var(--accent); }
+.filter-popover .pop-actions { display: flex; gap: .4em; justify-content: space-between;
+    margin-top: .5em; }
+.filter-popover .pop-actions button { background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 3px; padding: .3em .6em;
+    cursor: pointer; font-family: inherit; font-size: .8em; }
+.filter-popover .pop-actions button:hover { color: var(--accent); border-color: var(--accent); }
+.filter-popover .opt-list { max-height: 260px; overflow-y: auto;
+    border: 1px solid var(--border); border-radius: 3px; padding: .3em .4em;
+    margin-top: .4em; background: var(--panel); }
+.filter-popover .opt-list label { display: flex; align-items: center; gap: .4em;
+    padding: .15em 0; cursor: pointer; color: var(--text); text-transform: none;
+    letter-spacing: 0; font-size: .85em; }
+.filter-popover .opt-list label:hover { color: var(--accent); }
+.filter-popover .opt-list input[type="checkbox"] { accent-color: var(--accent);
+    flex: 0 0 auto; }
+.filter-popover .opt-list .opt-text { overflow: hidden; text-overflow: ellipsis;
+    white-space: nowrap; }
+.filter-popover .range-row { display: flex; gap: .4em; align-items: center;
+    margin-top: .35em; }
+.filter-popover .range-row label { color: var(--dim); font-size: .78em;
+    text-transform: uppercase; letter-spacing: .08em; min-width: 32px; }
+.filter-popover .empty-note { color: var(--dim); font-style: italic; padding: .3em 0; }
+.filter-popover .toggle-all { color: var(--dim); font-size: .75em; cursor: pointer;
+    text-transform: uppercase; letter-spacing: .08em; padding: .25em 0;
+    display: inline-block; }
+.filter-popover .toggle-all:hover { color: var(--accent); }
+
+.filter-chips { display: flex; flex-wrap: wrap; gap: .4em; margin: .35em 0 .55em 0;
+    align-items: center; }
+.filter-chips .chip { background: var(--panel); border: 1px solid var(--accent);
+    color: var(--text); border-radius: 3px; padding: .2em .55em; font-size: .78em;
+    font-family: 'IBM Plex Mono', monospace; letter-spacing: .04em;
+    display: inline-flex; align-items: center; gap: .35em; }
+.filter-chips .chip .chip-x { cursor: pointer; color: var(--dim); font-weight: 600; }
+.filter-chips .chip .chip-x:hover { color: var(--neg); }
+.filter-chips .clear-all { background: transparent; color: var(--dim); border: 0;
+    cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: .78em;
+    text-transform: uppercase; letter-spacing: .1em; padding: .2em .4em; }
+.filter-chips .clear-all:hover { color: var(--neg); }
 
 /* Archetype-roster tables — wider, more readable, with sortable headers and
    a top-level controls bar (archetype dropdown + free-text search).
@@ -596,6 +673,7 @@ HITTERS_TAB = """
     <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
     <span id="h-alltable-count" class="filter-summary"></span>
   </div>
+  <div id="h-alltable-chips" class="filter-chips" style="display:none;"></div>
   <div class="table-scroll"><table id="h-alltable" class="alltable"></table></div>
   </section>
 
@@ -606,6 +684,7 @@ HITTERS_TAB = """
     <input type="text" id="h-subtable-search" placeholder="Search name, team…" autocomplete="off">
     <span id="h-subtable-count" class="filter-summary"></span>
   </div>
+  <div id="h-subtable-chips" class="filter-chips" style="display:none;"></div>
   <div class="table-scroll"><table id="h-subtable" class="alltable"></table></div>
   </section>
 </div>
@@ -690,6 +769,7 @@ PITCHERS_TAB = """
     <input type="text" id="s-alltable-search" placeholder="Search name, archetype, sub-type, pitch mix…" autocomplete="off">
     <span id="s-alltable-count" class="filter-summary"></span>
   </div>
+  <div id="s-alltable-chips" class="filter-chips" style="display:none;"></div>
   <div class="table-scroll"><table id="s-alltable" class="alltable"></table></div>
   </section>
 
@@ -700,6 +780,7 @@ PITCHERS_TAB = """
     <input type="text" id="s-subtable-search" placeholder="Search name…" autocomplete="off">
     <span id="s-subtable-count" class="filter-summary"></span>
   </div>
+  <div id="s-subtable-chips" class="filter-chips" style="display:none;"></div>
   <div class="table-scroll"><table id="s-subtable" class="alltable"></table></div>
   </section>
 </div>
@@ -877,6 +958,14 @@ const state = {
   sTblSort: { col: 'OVERALL', dir: 'desc' },
   hTblQuery: '',
   sTblQuery: '',
+  // Per-column filters for the alltable + subtable variants. Schema per key:
+  //   { type: 'set', values: Set<string> }  — categorical (multi-select)
+  //   { type: 'range', min: number|null, max: number|null }  — numeric
+  // Missing entries = no filter on that column.
+  hAllFilters:  {},
+  sAllFilters:  {},
+  hSubFilters:  {},
+  sSubFilters:  {},
   // Sub-domain table state — also defaults to Overall desc
   hSubSort: { col: 'OVERALL', dir: 'desc' },
   sSubSort: { col: 'OVERALL', dir: 'desc' },
@@ -1835,96 +1924,100 @@ function runSearch(q) {
 // ── All-players sortable table ────────────────────────────────────
 // Column definitions: { key, label, num (right-align + numeric sort), w (optional width) }
 // `pretty: true` means the cell's text value should pass through prettyLabel().
+// Column widths sum (with the leading `#` col at 3%) to 100% — `table-layout:fixed`
+// then enforces them. Categorical (cat) cols get a multi-select popover; numeric
+// cols get a min/max range popover. text-only cols without `cat` are not filterable
+// (e.g. player_name — use the search box instead).
 const H_TBL_COLS = [
-  { key: 'player_name', label: 'Player', text: true },
-  { key: 'team',        label: 'Tm', text: true },
-  { key: 'year',        label: 'Yr',  num: true },
-  { key: 'pa',          label: 'PA',  num: true },
-  { key: 'fp_per_pa',   label: 'FP/PA', num: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
-  { key: 'CONTACT',     label: 'C',   num: true },
-  { key: 'POWER',       label: 'P',   num: true },
-  { key: 'DISCIPLINE',  label: 'D',   num: true },
-  { key: 'SB',          label: 'SB',  num: true },
-  { key: 'archetype',           label: 'Archetype', text: true, pretty: true },
-  { key: 'contact_subtype',     label: 'Contact sub', text: true, pretty: true },
-  { key: 'power_subtype',       label: 'Power sub',   text: true, pretty: true },
-  { key: 'discipline_subtype',  label: 'Disc sub',    text: true, pretty: true },
-  { key: 'sb_tier',             label: 'SB tier', text: true, pretty: true },
-  { key: 'spray_archetype',     label: 'Spray',   text: true, pretty: true },
-  { key: 'age',                 label: 'Age', num: true },
-  { key: 'age_tier',            label: 'Age tier', text: true, pretty: true },
-  { key: 'boundary_tier',       label: 'Bnd', text: true, pretty: true },
-  { key: 'data_tier',           label: 'Tier', text: true, pretty: true },
-  { key: 'rank_in_year',        label: 'Rank', num: true },
+  { key: 'player_name', label: 'Player', text: true, w: 14 },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
+  { key: 'year',        label: 'Yr',  num: true, w: 3 },
+  { key: 'pa',          label: 'PA',  num: true, w: 3 },
+  { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
+  { key: 'CONTACT',     label: 'C',   num: true, w: 3 },
+  { key: 'POWER',       label: 'P',   num: true, w: 3 },
+  { key: 'DISCIPLINE',  label: 'D',   num: true, w: 3 },
+  { key: 'SB',          label: 'SB',  num: true, w: 3 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 11 },
+  { key: 'contact_subtype',     label: 'Contact sub', text: true, cat: true, pretty: true, w: 6 },
+  { key: 'power_subtype',       label: 'Power sub',   text: true, cat: true, pretty: true, w: 6 },
+  { key: 'discipline_subtype',  label: 'Disc sub',    text: true, cat: true, pretty: true, w: 5 },
+  { key: 'sb_tier',             label: 'SB tier', text: true, cat: true, pretty: true, w: 4 },
+  { key: 'spray_archetype',     label: 'Spray',   text: true, cat: true, pretty: true, w: 4 },
+  { key: 'age',                 label: 'Age', num: true, w: 3 },
+  { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 3 },
+  { key: 'rank_in_year',        label: 'Rank', num: true, w: 3 },
 ];
 
 const S_TBL_COLS = [
-  { key: 'player_name', label: 'Pitcher', text: true },
-  { key: 'year',        label: 'Yr',  num: true },
-  { key: 'gs',          label: 'GS',  num: true },
-  { key: 'tbf',         label: 'TBF', num: true },
-  { key: 'fp_per_start', label: 'FP/start', num: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
-  { key: 'STUFF',       label: 'S',   num: true },
-  { key: 'MOVEMENT',    label: 'M',   num: true },
-  { key: 'CONTROL',     label: 'C',   num: true },
-  { key: 'velo_rating', label: 'Velo', num: true },
-  { key: 'archetype',           label: 'Archetype', text: true, pretty: true },
-  { key: 'stuff_subtype',       label: 'Stuff sub', text: true, pretty: true },
-  { key: 'velo_tier',           label: 'Velo tier', text: true, pretty: true },
-  { key: 'pitch_archetype',     label: 'Pitch arch', text: true, pretty: true },
-  { key: 'primary_group',       label: 'Primary', text: true, pretty: true },
-  { key: 'age',                 label: 'Age', num: true },
-  { key: 'age_tier',            label: 'Age tier', text: true, pretty: true },
-  { key: 'boundary_tier',       label: 'Bnd', text: true, pretty: true },
-  { key: 'data_tier',           label: 'Tier', text: true, pretty: true },
-  { key: 'rank_in_year',        label: 'Rank', num: true },
+  { key: 'player_name', label: 'Pitcher', text: true, w: 15 },
+  { key: 'year',        label: 'Yr',  num: true, w: 3 },
+  { key: 'gs',          label: 'GS',  num: true, w: 3 },
+  { key: 'tbf',         label: 'TBF', num: true, w: 3 },
+  { key: 'fp_per_start', label: 'FP/start', num: true, w: 5, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
+  { key: 'STUFF',       label: 'S',   num: true, w: 3 },
+  { key: 'MOVEMENT',    label: 'M',   num: true, w: 3 },
+  { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
+  { key: 'velo_rating', label: 'Velo', num: true, w: 4 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 11 },
+  { key: 'stuff_subtype',       label: 'Stuff sub', text: true, cat: true, pretty: true, w: 6 },
+  { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'pitch_archetype',     label: 'Pitch arch', text: true, cat: true, pretty: true, w: 7 },
+  { key: 'primary_group',       label: 'Primary', text: true, cat: true, pretty: true, w: 6 },
+  { key: 'age',                 label: 'Age', num: true, w: 3 },
+  { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
+  { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
+  { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 3 },
+  { key: 'rank_in_year',        label: 'Rank', num: true, w: 3 },
 ];
 
 // Sub-domain tables — focused on the intermediate-layer ratings.
 const H_SUB_COLS = [
-  { key: 'player_name', label: 'Player', text: true },
-  { key: 'team',        label: 'Tm', text: true },
-  { key: 'year',        label: 'Yr', num: true },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
-  { key: 'CONTACT',         label: 'Contact', num: true, bold: true },
-  { key: 'Z_CONTACT',       label: 'Z-Cont', num: true },
-  { key: 'O_CONTACT',       label: 'O-Cont', num: true },
-  { key: 'K_AVOIDANCE',     label: 'K-Avoid', num: true },
-  { key: 'CONTACT_QUALITY', label: 'Quality', num: true },
-  { key: 'SPRAY_PROFILE',   label: 'Spray',   num: true },
-  { key: 'POWER',           label: 'Power',   num: true, bold: true },
-  { key: 'RAW_POWER',       label: 'Raw',     num: true },
-  { key: 'LAUNCH_OPTIM',    label: 'Launch',  num: true },
-  { key: 'DAMAGE_PROD',     label: 'Prod',    num: true },
-  { key: 'DISCIPLINE',      label: 'Disc',    num: true, bold: true },
-  { key: 'PATIENCE',        label: 'Patience',num: true },
-  { key: 'AGGRESSION',      label: 'Aggr',    num: true },
-  { key: 'SB',              label: 'SB',      num: true, bold: true },
-  { key: 'SPEED_TOOL',      label: 'Speed',   num: true },
-  { key: 'SB_CONVERSION',   label: 'Conv',    num: true },
-  { key: 'babip_luck_flag', label: 'BABIP',   text: true, pretty: true },
-  { key: 'age_tier',        label: 'Age',     text: true, pretty: true },
-  { key: 'data_tier',       label: 'Tier',    text: true, pretty: true },
+  { key: 'player_name', label: 'Player', text: true, w: 16 },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 5 },
+  { key: 'year',        label: 'Yr', num: true, w: 3 },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
+  { key: 'CONTACT',         label: 'Contact', num: true, bold: true, w: 4 },
+  { key: 'Z_CONTACT',       label: 'Z-Cont', num: true, w: 3 },
+  { key: 'O_CONTACT',       label: 'O-Cont', num: true, w: 3 },
+  { key: 'K_AVOIDANCE',     label: 'K-Avoid', num: true, w: 4 },
+  { key: 'CONTACT_QUALITY', label: 'Quality', num: true, w: 4 },
+  { key: 'SPRAY_PROFILE',   label: 'Spray',   num: true, w: 3 },
+  { key: 'POWER',           label: 'Power',   num: true, bold: true, w: 4 },
+  { key: 'RAW_POWER',       label: 'Raw',     num: true, w: 3 },
+  { key: 'LAUNCH_OPTIM',    label: 'Launch',  num: true, w: 3 },
+  { key: 'DAMAGE_PROD',     label: 'Prod',    num: true, w: 3 },
+  { key: 'DISCIPLINE',      label: 'Disc',    num: true, bold: true, w: 4 },
+  { key: 'PATIENCE',        label: 'Patience',num: true, w: 4 },
+  { key: 'AGGRESSION',      label: 'Aggr',    num: true, w: 4 },
+  { key: 'SB',              label: 'SB',      num: true, bold: true, w: 4 },
+  { key: 'SPEED_TOOL',      label: 'Speed',   num: true, w: 3 },
+  { key: 'SB_CONVERSION',   label: 'Conv',    num: true, w: 3 },
+  { key: 'babip_luck_flag', label: 'BABIP',   text: true, cat: true, pretty: true, w: 5 },
+  { key: 'age_tier',        label: 'Age',     text: true, cat: true, pretty: true, w: 5 },
+  { key: 'data_tier',       label: 'Tier',    text: true, cat: true, pretty: true, w: 6 },
 ];
 
 const S_SUB_COLS = [
-  { key: 'player_name', label: 'Pitcher', text: true },
-  { key: 'year',        label: 'Yr', num: true },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true },
-  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true },
-  { key: 'SWING_MISS',    label: 'SwM',    num: true },
-  { key: 'CALLED_STRIKE', label: 'Called', num: true },
-  { key: 'MOVEMENT',      label: 'Move',   num: true, bold: true },
-  { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true },
-  { key: 'GB_TENDENCY',   label: 'GB',     num: true },
-  { key: 'CONTROL',       label: 'Control',num: true, bold: true },
-  { key: 'WALK_AVOID',    label: 'BB-avoid',num: true },
-  { key: 'STRIKE_THROWING', label: 'Strikes', num: true },
-  { key: 'velo_rating',   label: 'Velo',   num: true },
-  { key: 'age_tier',      label: 'Age',    text: true, pretty: true },
-  { key: 'data_tier',     label: 'Tier',   text: true, pretty: true },
+  { key: 'player_name', label: 'Pitcher', text: true, w: 22 },
+  { key: 'year',        label: 'Yr', num: true, w: 4 },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 6 },
+  { key: 'STUFF',         label: 'Stuff',  num: true, bold: true, w: 6 },
+  { key: 'SWING_MISS',    label: 'SwM',    num: true, w: 5 },
+  { key: 'CALLED_STRIKE', label: 'Called', num: true, w: 5 },
+  { key: 'MOVEMENT',      label: 'Move',   num: true, bold: true, w: 6 },
+  { key: 'DAMAGE_SUPP',   label: 'Suppr',  num: true, w: 5 },
+  { key: 'GB_TENDENCY',   label: 'GB',     num: true, w: 5 },
+  { key: 'CONTROL',       label: 'Control',num: true, bold: true, w: 6 },
+  { key: 'WALK_AVOID',    label: 'BB-avoid',num: true, w: 5 },
+  { key: 'STRIKE_THROWING', label: 'Strikes', num: true, w: 5 },
+  { key: 'velo_rating',   label: 'Velo',   num: true, w: 6 },
+  { key: 'age_tier',      label: 'Age',    text: true, cat: true, pretty: true, w: 6 },
+  { key: 'data_tier',     label: 'Tier',   text: true, cat: true, pretty: true, w: 5 },
 ];
 
 function tblRowMatches(r, q) {
@@ -1939,6 +2032,241 @@ function tblRowMatches(r, q) {
     if (c && String(c).toLowerCase().includes(ql)) return true;
   }
   return false;
+}
+
+// ── Per-column filter helpers ────────────────────────────────────
+// `filters` is the state map (e.g. state.hAllFilters).
+function rowPassesFilters(r, filters, cols) {
+  for (const key of Object.keys(filters)) {
+    const f = filters[key];
+    if (!f) continue;
+    const v = r[key];
+    if (f.type === 'set') {
+      if (!f.values || f.values.size === 0) continue;
+      const sv = (v == null ? '__null__' : String(v));
+      if (!f.values.has(sv)) return false;
+    } else if (f.type === 'range') {
+      if (f.min == null && f.max == null) continue;
+      if (v == null || !Number.isFinite(+v)) return false;
+      const nv = +v;
+      if (f.min != null && nv < f.min) return false;
+      if (f.max != null && nv > f.max) return false;
+    }
+  }
+  return true;
+}
+
+function distinctColValues(rows, key) {
+  const seen = new Set();
+  const arr = [];
+  for (const r of rows) {
+    const v = r[key];
+    const sv = (v == null || v === '' ? '__null__' : String(v));
+    if (!seen.has(sv)) { seen.add(sv); arr.push(sv); }
+  }
+  arr.sort((a, b) => {
+    if (a === '__null__') return 1;
+    if (b === '__null__') return -1;
+    return a.localeCompare(b);
+  });
+  return arr;
+}
+
+function filterKeyForTable(role, isSub) {
+  return role === 'hitter'
+    ? (isSub ? 'hSubFilters' : 'hAllFilters')
+    : (isSub ? 'sSubFilters' : 'sAllFilters');
+}
+
+function activeFilterCount(filters) {
+  let n = 0;
+  for (const k of Object.keys(filters)) {
+    const f = filters[k];
+    if (!f) continue;
+    if (f.type === 'set' && f.values && f.values.size > 0) n++;
+    else if (f.type === 'range' && (f.min != null || f.max != null)) n++;
+  }
+  return n;
+}
+
+function renderFilterChips(role, isSub) {
+  const fkey  = filterKeyForTable(role, isSub);
+  const cols  = role === 'hitter'
+    ? (isSub ? H_SUB_COLS : H_TBL_COLS)
+    : (isSub ? S_SUB_COLS : S_TBL_COLS);
+  const chipsId = role === 'hitter'
+    ? (isSub ? 'h-subtable-chips' : 'h-alltable-chips')
+    : (isSub ? 's-subtable-chips' : 's-alltable-chips');
+  const host = document.getElementById(chipsId);
+  if (!host) return;
+  const filters = state[fkey];
+  const labelByKey = {};
+  cols.forEach(c => { labelByKey[c.key] = c.label; });
+  const chips = [];
+  Object.keys(filters).forEach(k => {
+    const f = filters[k];
+    if (!f) return;
+    const lbl = labelByKey[k] || k;
+    if (f.type === 'set' && f.values && f.values.size > 0) {
+      const vals = [...f.values].map(v => v === '__null__' ? '∅' : prettyLabel(v));
+      const short = vals.length <= 3 ? vals.join(', ') : `${vals.slice(0,2).join(', ')} +${vals.length - 2}`;
+      chips.push(`<span class="chip" data-col="${k}">${lbl}: ${short} <span class="chip-x" data-col="${k}">✕</span></span>`);
+    } else if (f.type === 'range' && (f.min != null || f.max != null)) {
+      const parts = [];
+      if (f.min != null) parts.push(`≥${f.min}`);
+      if (f.max != null) parts.push(`≤${f.max}`);
+      chips.push(`<span class="chip" data-col="${k}">${lbl}: ${parts.join(' ')} <span class="chip-x" data-col="${k}">✕</span></span>`);
+    }
+  });
+  if (!chips.length) { host.style.display = 'none'; host.innerHTML = ''; return; }
+  host.style.display = 'flex';
+  host.innerHTML = chips.join('') +
+    `<button class="clear-all" data-clear="${fkey}">Clear all filters</button>`;
+  host.querySelectorAll('.chip-x').forEach(x => {
+    x.addEventListener('click', () => {
+      delete state[fkey][x.dataset.col];
+      renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+    });
+  });
+  const clr = host.querySelector('.clear-all');
+  if (clr) clr.addEventListener('click', () => {
+    state[fkey] = {};
+    renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+  });
+}
+
+// Filter popovers — one shared root that re-attaches each time. Closes on
+// outside click and Escape (wired once in init()).
+let _openPopover = null;
+function closeFilterPopover() {
+  if (_openPopover && _openPopover.parentNode) {
+    _openPopover.parentNode.removeChild(_openPopover);
+  }
+  _openPopover = null;
+}
+
+function openFilterPopover(thEl, col, role, isSub, sourceRowsForOptions) {
+  closeFilterPopover();
+  const fkey = filterKeyForTable(role, isSub);
+  const filters = state[fkey];
+  const current = filters[col.key];
+
+  const pop = document.createElement('div');
+  pop.className = 'filter-popover';
+  pop.addEventListener('click', e => e.stopPropagation());
+
+  if (col.cat || (col.text && !col.num)) {
+    // Categorical multi-select
+    const distinct = distinctColValues(sourceRowsForOptions, col.key);
+    const selected = (current && current.type === 'set' && current.values)
+      ? new Set(current.values) : new Set(distinct);
+    // First-open default = all checked = no filter.
+    const initiallyAll = !current;
+    const initSelected = initiallyAll ? new Set(distinct) : selected;
+
+    pop.innerHTML = `
+      <h5>Filter ${col.label}</h5>
+      <input type="text" class="pop-search" placeholder="Search values…">
+      <span class="toggle-all" data-act="all">Select all</span>
+      <span class="toggle-all" data-act="none" style="margin-left:.6em;">Clear</span>
+      <div class="opt-list"></div>
+      <div class="pop-actions">
+        <button data-act="reset">Reset</button>
+        <button data-act="apply">Apply</button>
+      </div>`;
+
+    const optList = pop.querySelector('.opt-list');
+    const renderOpts = (query) => {
+      const ql = (query || '').toLowerCase();
+      const items = distinct.filter(v => {
+        if (!ql) return true;
+        const disp = v === '__null__' ? '(empty)' : (col.pretty ? prettyLabel(v) : v);
+        return String(disp).toLowerCase().includes(ql);
+      });
+      optList.innerHTML = items.map(v => {
+        const disp = v === '__null__' ? '(empty)' : (col.pretty ? prettyLabel(v) : v);
+        const safe = String(v).replace(/"/g, '&quot;');
+        const chk = initSelected.has(v) ? 'checked' : '';
+        return `<label><input type="checkbox" value="${safe}" ${chk}><span class="opt-text">${disp}</span></label>`;
+      }).join('') || '<div class="empty-note">No matches</div>';
+    };
+    renderOpts('');
+    pop.querySelector('.pop-search').addEventListener('input', e => renderOpts(e.target.value));
+    pop.querySelector('[data-act="all"]').addEventListener('click', () => {
+      pop.querySelectorAll('.opt-list input[type="checkbox"]').forEach(i => i.checked = true);
+    });
+    pop.querySelector('[data-act="none"]').addEventListener('click', () => {
+      pop.querySelectorAll('.opt-list input[type="checkbox"]').forEach(i => i.checked = false);
+    });
+    pop.querySelector('[data-act="reset"]').addEventListener('click', () => {
+      delete state[fkey][col.key];
+      closeFilterPopover();
+      renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+    });
+    pop.querySelector('[data-act="apply"]').addEventListener('click', () => {
+      const chosen = new Set();
+      pop.querySelectorAll('.opt-list input[type="checkbox"]:checked').forEach(i => chosen.add(i.value));
+      if (chosen.size === 0 || chosen.size === distinct.length) {
+        // None or all selected = treat as no filter
+        delete state[fkey][col.key];
+      } else {
+        state[fkey][col.key] = { type: 'set', values: chosen };
+      }
+      closeFilterPopover();
+      renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+    });
+  } else {
+    // Numeric range
+    const cur = (current && current.type === 'range') ? current : { min: null, max: null };
+    pop.innerHTML = `
+      <h5>Filter ${col.label}</h5>
+      <div class="range-row"><label>Min</label><input type="number" class="pop-min" value="${cur.min ?? ''}" placeholder="—"></div>
+      <div class="range-row"><label>Max</label><input type="number" class="pop-max" value="${cur.max ?? ''}" placeholder="—"></div>
+      <div class="pop-actions">
+        <button data-act="reset">Reset</button>
+        <button data-act="apply">Apply</button>
+      </div>`;
+    const minEl = pop.querySelector('.pop-min');
+    const maxEl = pop.querySelector('.pop-max');
+    let dbTimer = null;
+    const applyDebounced = () => {
+      clearTimeout(dbTimer);
+      dbTimer = setTimeout(() => {
+        const minS = minEl.value.trim(), maxS = maxEl.value.trim();
+        const minN = minS === '' ? null : (Number.isFinite(+minS) ? +minS : null);
+        const maxN = maxS === '' ? null : (Number.isFinite(+maxS) ? +maxS : null);
+        if (minN == null && maxN == null) {
+          delete state[fkey][col.key];
+        } else {
+          state[fkey][col.key] = { type: 'range', min: minN, max: maxN };
+        }
+        renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+        // Don't close popover on debounced auto-apply; let user keep typing
+      }, 200);
+    };
+    minEl.addEventListener('input', applyDebounced);
+    maxEl.addEventListener('input', applyDebounced);
+    pop.querySelector('[data-act="reset"]').addEventListener('click', () => {
+      delete state[fkey][col.key];
+      closeFilterPopover();
+      renderAllTable(allTableRows(role), role, isSub ? 'sub' : undefined);
+    });
+    pop.querySelector('[data-act="apply"]').addEventListener('click', () => {
+      closeFilterPopover();
+    });
+  }
+
+  thEl.appendChild(pop);
+  // Anchor right-edge if it would overflow the viewport
+  const rect = pop.getBoundingClientRect();
+  if (rect.right > window.innerWidth - 12) pop.classList.add('right-align');
+  _openPopover = pop;
+}
+
+// Convenience — fetch the current filterRows result for a role. Used by chip
+// removal and filter Apply to trigger a re-render.
+function allTableRows(role) {
+  return filterRows(role === 'hitter' ? HITTERS : SPS, role);
 }
 
 function tblSortRows(rows, sort, cols) {
@@ -1997,19 +2325,50 @@ function renderAllTable(rows, role, kind) {
         CONTROL:  [['WALK_AVOID', 'BB-avoid'], ['STRIKE_THROWING', 'Strikes']],
       };
 
-  const filtered = rows.filter(r => tblRowMatches(r, q));
+  const fkey   = filterKeyForTable(role, isSub);
+  const filters = state[fkey];
+  // Order matters: first search, then per-column filters, then sort
+  const searched = rows.filter(r => tblRowMatches(r, q));
+  const filtered = searched.filter(r => rowPassesFilters(r, filters, cols));
   const sorted   = tblSortRows(filtered, sort, cols);
 
-  cntEl.textContent = q
-    ? `${filtered.length} of ${rows.length} match "${q}"`
-    : `${rows.length} rows`;
+  const nActiveFilters = activeFilterCount(filters);
+  let countLabel;
+  if (q && nActiveFilters > 0) {
+    countLabel = `${filtered.length} of ${rows.length} (search + ${nActiveFilters} filter${nActiveFilters>1?'s':''})`;
+  } else if (q) {
+    countLabel = `${filtered.length} of ${rows.length} match "${q}"`;
+  } else if (nActiveFilters > 0) {
+    countLabel = `${filtered.length} of ${rows.length} (${nActiveFilters} filter${nActiveFilters>1?'s':''})`;
+  } else {
+    countLabel = `${rows.length} rows`;
+  }
+  cntEl.textContent = countLabel;
+
+  // Render chips above table reflecting current filter state
+  renderFilterChips(role, isSub);
+
+  // Build colgroup so table-layout: fixed has explicit widths to honor
+  let h = '<colgroup>';
+  h += '<col style="width:3%">';
+  cols.forEach(c => {
+    const w = (c.w != null) ? `${c.w}%` : 'auto';
+    h += `<col style="width:${w}">`;
+  });
+  h += '</colgroup>';
 
   // Build header
-  let h = '<thead><tr>';
-  h += '<th class="num">#</th>';
+  h += '<thead><tr>';
+  h += '<th class="num"><div class="th-inner"><span class="th-label">#</span></div></th>';
   cols.forEach(c => {
     const cls = (c.num ? 'num ' : '') + (sort.col === c.key ? `sort-${sort.dir}` : '');
-    h += `<th class="${cls.trim()}" data-col="${c.key}">${c.label}</th>`;
+    const isFilterable = !!(c.cat || c.num);
+    const hasFilter = !!filters[c.key];
+    let inner = `<span class="th-label" data-col="${c.key}" title="Sort by ${c.label}">${c.label}</span>`;
+    if (isFilterable) {
+      inner += `<button class="th-filter${hasFilter ? ' active' : ''}" data-filter-col="${c.key}" title="Filter ${c.label}">▾</button>`;
+    }
+    h += `<th class="${cls.trim()}"><div class="th-inner">${inner}</div></th>`;
   });
   h += '</tr></thead><tbody>';
 
@@ -2053,13 +2412,32 @@ function renderAllTable(rows, role, kind) {
   const tbl = document.getElementById(tblId);
   tbl.innerHTML = h;
 
-  // Wire header click → sort
-  tbl.querySelectorAll('thead th[data-col]').forEach(th => {
-    th.addEventListener('click', () => {
-      const k = th.dataset.col;
+  // Wire header label click → sort (filter button has its own handler below)
+  tbl.querySelectorAll('thead .th-label[data-col]').forEach(lbl => {
+    lbl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const k = lbl.dataset.col;
       if (sort.col === k) sort.dir = (sort.dir === 'asc' ? 'desc' : 'asc');
       else { sort.col = k; sort.dir = 'desc'; }
       renderAllTable(rows, role, kind);
+    });
+  });
+  // Wire filter button → open popover. We pass the pre-filter-pre-search row
+  // set (`rows`) as the source so the value list inside the popover stays
+  // stable across filter changes — Excel-style behavior.
+  tbl.querySelectorAll('thead .th-filter').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const k = btn.dataset.filterCol;
+      const col = cols.find(c => c.key === k);
+      if (!col) return;
+      const th = btn.closest('th');
+      // Toggle: if already open for this column, close
+      if (_openPopover && _openPopover.parentNode === th) {
+        closeFilterPopover();
+        return;
+      }
+      openFilterPopover(th, col, role, isSub, rows);
     });
   });
   // Wire player click → modal
@@ -2403,7 +2781,19 @@ function init() {
 
   // Modal
   document.getElementById('modal-bg').addEventListener('click', closeModal);
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeModal(); closeFilterPopover(); }
+  });
+
+  // Filter popover — close on outside click
+  document.addEventListener('click', (e) => {
+    if (!_openPopover) return;
+    // Click inside popover or on its anchor's filter button = keep open
+    if (_openPopover.contains(e.target)) return;
+    const btn = e.target.closest && e.target.closest('.th-filter');
+    if (btn) return;  // openFilterPopover handles toggle itself
+    closeFilterPopover();
+  });
 
   // "/" hotkey focuses the search box
   document.addEventListener('keydown', e => {
