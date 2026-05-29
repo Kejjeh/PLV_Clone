@@ -1,334 +1,250 @@
 {
-  "PURE_HITTER": {
-    "n_total_transitions": 241,
-    "n_stayed": 109,
-    "retention_pct": 45.2,
+  "CONTACT_POWER": {
+    "n_total_transitions": 144,
+    "n_stayed": 28,
+    "retention_pct": 19.4,
     "top_destinations": [
+      [
+        "AVERAGE_HITTER",
+        38,
+        26.4
+      ],
+      [
+        "CONTACT_POWER",
+        28,
+        19.4
+      ],
       [
         "PURE_HITTER",
-        109,
-        45.2
-      ],
-      [
-        "AVERAGE_HITTER",
-        48,
-        19.9
-      ],
-      [
-        "AVG_HACKER",
-        11,
-        4.6
+        24,
+        16.7
       ]
     ],
-    "fp_if_stayed": 0.589,
-    "fp_if_left": 0.535,
+    "fp_if_stayed": 0.693,
+    "fp_if_left": 0.567,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 54,
-        "retention_pct": 53.7
+        "n": 34,
+        "retention_pct": 17.6
       },
       "PEAK": {
-        "n": 100,
-        "retention_pct": 41.0
+        "n": 58,
+        "retention_pct": 22.4
       },
       "POST_PEAK": {
-        "n": 87,
-        "retention_pct": 44.8
-      }
-    }
-  },
-  "POWER_EYE": {
-    "n_total_transitions": 104,
-    "n_stayed": 26,
-    "retention_pct": 25.0,
-    "top_destinations": [
-      [
-        "POWER_EYE",
-        26,
-        25.0
-      ],
-      [
-        "BALANCED_EYE",
-        23,
-        22.1
-      ],
-      [
-        "AVERAGE_HITTER",
-        16,
-        15.4
-      ]
-    ],
-    "fp_if_stayed": 0.627,
-    "fp_if_left": 0.504,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 17,
-        "retention_pct": 29.4
-      },
-      "PEAK": {
-        "n": 50,
-        "retention_pct": 26.0
-      },
-      "POST_PEAK": {
-        "n": 37,
-        "retention_pct": 21.6
-      }
-    }
-  },
-  "BACKUP_BAT": {
-    "n_total_transitions": 120,
-    "n_stayed": 28,
-    "retention_pct": 23.3,
-    "top_destinations": [
-      [
-        "AVERAGE_HITTER",
-        51,
-        42.5
-      ],
-      [
-        "BACKUP_BAT",
-        28,
-        23.3
-      ],
-      [
-        "POWER_HITTER",
-        7,
-        5.8
-      ]
-    ],
-    "fp_if_stayed": 0.289,
-    "fp_if_left": 0.44,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 45,
-        "retention_pct": 20.0
-      },
-      "PEAK": {
         "n": 52,
-        "retention_pct": 23.1
-      },
-      "POST_PEAK": {
-        "n": 23,
-        "retention_pct": 30.4
+        "retention_pct": 17.3
       }
     }
   },
   "GOAT_TIER": {
-    "n_total_transitions": 37,
-    "n_stayed": 13,
-    "retention_pct": 35.1,
+    "n_total_transitions": 91,
+    "n_stayed": 35,
+    "retention_pct": 38.5,
     "top_destinations": [
       [
         "GOAT_TIER",
-        13,
-        35.1
+        35,
+        38.5
       ],
       [
-        "BALANCED_EYE",
-        5,
-        13.5
+        "CONTACT_POWER",
+        11,
+        12.1
       ],
       [
         "POWER_EYE",
-        5,
-        13.5
+        8,
+        8.8
       ]
     ],
-    "fp_if_stayed": 0.795,
-    "fp_if_left": 0.652,
+    "fp_if_stayed": 0.734,
+    "fp_if_left": 0.564,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 8,
-        "retention_pct": 50.0
+        "n": 17,
+        "retention_pct": 52.9
       },
       "PEAK": {
-        "n": 18,
-        "retention_pct": 33.3
+        "n": 43,
+        "retention_pct": 37.2
       },
       "POST_PEAK": {
-        "n": 11,
-        "retention_pct": 27.3
+        "n": 31,
+        "retention_pct": 32.3
       }
     }
   },
   "AVERAGE_HITTER": {
-    "n_total_transitions": 977,
-    "n_stayed": 518,
-    "retention_pct": 53.0,
+    "n_total_transitions": 986,
+    "n_stayed": 511,
+    "retention_pct": 51.8,
     "top_destinations": [
       [
         "AVERAGE_HITTER",
-        518,
-        53.0
+        511,
+        51.8
       ],
       [
         "BALANCED_EYE",
-        67,
-        6.9
+        63,
+        6.4
       ],
       [
-        "POWER_HITTER",
-        64,
-        6.6
+        "AVG_HACKER",
+        62,
+        6.3
       ]
     ],
-    "fp_if_stayed": 0.476,
-    "fp_if_left": 0.471,
+    "fp_if_stayed": 0.478,
+    "fp_if_left": 0.475,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 234,
-        "retention_pct": 48.7
+        "n": 238,
+        "retention_pct": 52.1
       },
       "PEAK": {
         "n": 472,
-        "retention_pct": 55.5
+        "retention_pct": 52.5
       },
       "POST_PEAK": {
-        "n": 271,
-        "retention_pct": 52.4
+        "n": 276,
+        "retention_pct": 50.4
+      }
+    }
+  },
+  "PURE_HITTER": {
+    "n_total_transitions": 214,
+    "n_stayed": 77,
+    "retention_pct": 36.0,
+    "top_destinations": [
+      [
+        "PURE_HITTER",
+        77,
+        36.0
+      ],
+      [
+        "AVERAGE_HITTER",
+        59,
+        27.6
+      ],
+      [
+        "CONTACT_POWER",
+        20,
+        9.3
+      ]
+    ],
+    "fp_if_stayed": 0.6,
+    "fp_if_left": 0.547,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 47,
+        "retention_pct": 46.8
+      },
+      "PEAK": {
+        "n": 98,
+        "retention_pct": 34.7
+      },
+      "POST_PEAK": {
+        "n": 69,
+        "retention_pct": 30.4
       }
     }
   },
   "BALANCED_EYE": {
-    "n_total_transitions": 228,
-    "n_stayed": 65,
-    "retention_pct": 28.5,
+    "n_total_transitions": 232,
+    "n_stayed": 69,
+    "retention_pct": 29.7,
     "top_destinations": [
       [
         "BALANCED_EYE",
-        65,
-        28.5
+        69,
+        29.7
       ],
       [
         "AVERAGE_HITTER",
         56,
-        24.6
+        24.1
       ],
       [
         "POWER_EYE",
-        20,
-        8.8
+        14,
+        6.0
       ]
     ],
-    "fp_if_stayed": 0.491,
-    "fp_if_left": 0.482,
+    "fp_if_stayed": 0.492,
+    "fp_if_left": 0.467,
     "by_age_tier": {
       "PRE_PEAK": {
         "n": 33,
-        "retention_pct": 15.2
+        "retention_pct": 18.2
       },
       "PEAK": {
-        "n": 110,
-        "retention_pct": 29.1
+        "n": 118,
+        "retention_pct": 30.5
       },
       "POST_PEAK": {
-        "n": 85,
-        "retention_pct": 32.9
+        "n": 81,
+        "retention_pct": 33.3
       }
     }
   },
   "SLAP_HITTER": {
-    "n_total_transitions": 68,
-    "n_stayed": 21,
-    "retention_pct": 30.9,
+    "n_total_transitions": 16,
+    "n_stayed": 4,
+    "retention_pct": 25.0,
     "top_destinations": [
-      [
-        "SLAP_HITTER",
-        21,
-        30.9
-      ],
-      [
-        "PURE_HITTER",
-        15,
-        22.1
-      ],
       [
         "GENERIC_NO_POWER",
-        11,
-        16.2
-      ]
-    ],
-    "fp_if_stayed": 0.49,
-    "fp_if_left": 0.484,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 14,
-        "retention_pct": 42.9
-      },
-      "PEAK": {
-        "n": 33,
-        "retention_pct": 30.3
-      },
-      "POST_PEAK": {
-        "n": 21,
-        "retention_pct": 23.8
-      }
-    }
-  },
-  "CONTACT_HACKER": {
-    "n_total_transitions": 41,
-    "n_stayed": 8,
-    "retention_pct": 19.5,
-    "top_destinations": [
+        5,
+        31.2
+      ],
       [
-        "AVG_HACKER",
-        10,
-        24.4
+        "SLAP_HITTER",
+        4,
+        25.0
       ],
       [
         "PURE_HITTER",
-        8,
-        19.5
-      ],
-      [
-        "CONTACT_HACKER",
-        8,
-        19.5
+        3,
+        18.8
       ]
     ],
-    "fp_if_stayed": 0.552,
-    "fp_if_left": 0.506,
+    "fp_if_stayed": 0.541,
+    "fp_if_left": 0.476,
     "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 8,
-        "retention_pct": 0.0
-      },
       "PEAK": {
-        "n": 17,
-        "retention_pct": 17.6
-      },
-      "POST_PEAK": {
-        "n": 16,
-        "retention_pct": 31.2
+        "n": 9,
+        "retention_pct": 33.3
       }
     }
   },
-  "CONTACT_POWER": {
-    "n_total_transitions": 69,
-    "n_stayed": 15,
-    "retention_pct": 21.7,
+  "CONTACT_EYE": {
+    "n_total_transitions": 53,
+    "n_stayed": 11,
+    "retention_pct": 20.8,
     "top_destinations": [
       [
-        "CONTACT_POWER",
-        15,
-        21.7
+        "BALANCED_EYE",
+        12,
+        22.6
+      ],
+      [
+        "CONTACT_EYE",
+        11,
+        20.8
       ],
       [
         "AVERAGE_HITTER",
-        13,
-        18.8
-      ],
-      [
-        "PURE_HITTER",
-        12,
-        17.4
+        9,
+        17.0
       ]
     ],
-    "fp_if_stayed": 0.682,
-    "fp_if_left": 0.629,
+    "fp_if_stayed": 0.659,
+    "fp_if_left": 0.558,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 15,
+        "n": 6,
         "retention_pct": 33.3
       },
       "PEAK": {
@@ -336,338 +252,346 @@
         "retention_pct": 19.2
       },
       "POST_PEAK": {
-        "n": 28,
-        "retention_pct": 17.9
+        "n": 21,
+        "retention_pct": 19.0
       }
     }
   },
-  "POWER_HITTER": {
-    "n_total_transitions": 247,
-    "n_stayed": 83,
-    "retention_pct": 33.6,
+  "CONTACT_HACKER": {
+    "n_total_transitions": 24,
+    "n_stayed": 5,
+    "retention_pct": 20.8,
+    "top_destinations": [
+      [
+        "AVG_HACKER",
+        6,
+        25.0
+      ],
+      [
+        "CONTACT_HACKER",
+        5,
+        20.8
+      ],
+      [
+        "AVERAGE_HITTER",
+        5,
+        20.8
+      ]
+    ],
+    "fp_if_stayed": 0.561,
+    "fp_if_left": 0.503,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 7,
+        "retention_pct": 28.6
+      },
+      "PEAK": {
+        "n": 11,
+        "retention_pct": 9.1
+      },
+      "POST_PEAK": {
+        "n": 6,
+        "retention_pct": 33.3
+      }
+    }
+  },
+  "POWER_EYE": {
+    "n_total_transitions": 66,
+    "n_stayed": 8,
+    "retention_pct": 12.1,
     "top_destinations": [
       [
         "AVERAGE_HITTER",
-        88,
-        35.6
-      ],
-      [
-        "POWER_HITTER",
-        83,
-        33.6
+        15,
+        22.7
       ],
       [
         "BALANCED_EYE",
         14,
-        5.7
-      ]
-    ],
-    "fp_if_stayed": 0.555,
-    "fp_if_left": 0.484,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 67,
-        "retention_pct": 31.3
-      },
-      "PEAK": {
-        "n": 128,
-        "retention_pct": 36.7
-      },
-      "POST_PEAK": {
-        "n": 52,
-        "retention_pct": 28.8
-      }
-    }
-  },
-  "THREE_TRUE_OUTCOMES": {
-    "n_total_transitions": 25,
-    "n_stayed": 4,
-    "retention_pct": 16.0,
-    "top_destinations": [
-      [
-        "PATIENT_K",
-        5,
-        20.0
-      ],
-      [
-        "POWER_EYE",
-        4,
-        16.0
-      ],
-      [
-        "BACKUP_BAT",
-        4,
-        16.0
-      ]
-    ],
-    "fp_if_stayed": 0.336,
-    "fp_if_left": 0.43,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 6,
-        "retention_pct": 0.0
-      },
-      "PEAK": {
-        "n": 15,
-        "retention_pct": 26.7
-      }
-    }
-  },
-  "AGGRESSIVE_SLAP": {
-    "n_total_transitions": 35,
-    "n_stayed": 11,
-    "retention_pct": 31.4,
-    "top_destinations": [
-      [
-        "AGGRESSIVE_SLAP",
-        11,
-        31.4
-      ],
-      [
-        "NO_POWER_HACKER",
-        6,
-        17.1
-      ],
-      [
-        "AVG_HACKER",
-        5,
-        14.3
-      ]
-    ],
-    "fp_if_stayed": 0.487,
-    "fp_if_left": 0.466,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 5,
-        "retention_pct": 60.0
-      },
-      "PEAK": {
-        "n": 23,
-        "retention_pct": 30.4
-      },
-      "POST_PEAK": {
-        "n": 7,
-        "retention_pct": 14.3
-      }
-    }
-  },
-  "AVG_HACKER": {
-    "n_total_transitions": 188,
-    "n_stayed": 54,
-    "retention_pct": 28.7,
-    "top_destinations": [
-      [
-        "AVERAGE_HITTER",
-        67,
-        35.6
-      ],
-      [
-        "AVG_HACKER",
-        54,
-        28.7
+        21.2
       ],
       [
         "POWER_HITTER",
-        13,
-        6.9
+        8,
+        12.1
       ]
     ],
-    "fp_if_stayed": 0.436,
+    "fp_if_stayed": 0.519,
+    "fp_if_left": 0.466,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 12,
+        "retention_pct": 8.3
+      },
+      "PEAK": {
+        "n": 31,
+        "retention_pct": 19.4
+      },
+      "POST_PEAK": {
+        "n": 23,
+        "retention_pct": 4.3
+      }
+    }
+  },
+  "POWER_HITTER": {
+    "n_total_transitions": 222,
+    "n_stayed": 56,
+    "retention_pct": 25.2,
+    "top_destinations": [
+      [
+        "AVERAGE_HITTER",
+        74,
+        33.3
+      ],
+      [
+        "POWER_HITTER",
+        56,
+        25.2
+      ],
+      [
+        "BALANCED_EYE",
+        20,
+        9.0
+      ]
+    ],
+    "fp_if_stayed": 0.524,
     "fp_if_left": 0.467,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 59,
-        "retention_pct": 35.6
+        "n": 65,
+        "retention_pct": 24.6
       },
       "PEAK": {
-        "n": 91,
-        "retention_pct": 25.3
+        "n": 112,
+        "retention_pct": 25.9
       },
       "POST_PEAK": {
-        "n": 38,
-        "retention_pct": 26.3
-      }
-    }
-  },
-  "CONTACT_EYE": {
-    "n_total_transitions": 56,
-    "n_stayed": 12,
-    "retention_pct": 21.4,
-    "top_destinations": [
-      [
-        "CONTACT_EYE",
-        12,
-        21.4
-      ],
-      [
-        "PURE_HITTER",
-        11,
-        19.6
-      ],
-      [
-        "AVERAGE_HITTER",
-        10,
-        17.9
-      ]
-    ],
-    "fp_if_stayed": 0.631,
-    "fp_if_left": 0.525,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 8,
-        "retention_pct": 12.5
-      },
-      "PEAK": {
-        "n": 28,
-        "retention_pct": 21.4
-      },
-      "POST_PEAK": {
-        "n": 20,
-        "retention_pct": 25.0
-      }
-    }
-  },
-  "NO_POWER_HACKER": {
-    "n_total_transitions": 43,
-    "n_stayed": 11,
-    "retention_pct": 25.6,
-    "top_destinations": [
-      [
-        "AVG_HACKER",
-        12,
-        27.9
-      ],
-      [
-        "NO_POWER_HACKER",
-        11,
-        25.6
-      ],
-      [
-        "GENERIC_NO_POWER",
-        6,
-        14.0
-      ]
-    ],
-    "fp_if_stayed": 0.346,
-    "fp_if_left": 0.418,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 15,
-        "retention_pct": 26.7
-      },
-      "PEAK": {
-        "n": 17,
-        "retention_pct": 23.5
-      },
-      "POST_PEAK": {
-        "n": 11,
-        "retention_pct": 27.3
+        "n": 45,
+        "retention_pct": 24.4
       }
     }
   },
   "GENERIC_NO_POWER": {
-    "n_total_transitions": 117,
-    "n_stayed": 41,
-    "retention_pct": 35.0,
+    "n_total_transitions": 149,
+    "n_stayed": 53,
+    "retention_pct": 35.6,
     "top_destinations": [
       [
         "GENERIC_NO_POWER",
-        41,
-        35.0
+        53,
+        35.6
       ],
       [
         "AVERAGE_HITTER",
-        32,
-        27.4
+        36,
+        24.2
       ],
       [
-        "FRINGE",
-        10,
-        8.5
+        "NO_POWER_HACKER",
+        13,
+        8.7
       ]
     ],
-    "fp_if_stayed": 0.382,
-    "fp_if_left": 0.431,
+    "fp_if_stayed": 0.412,
+    "fp_if_left": 0.457,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 34,
-        "retention_pct": 23.5
+        "n": 41,
+        "retention_pct": 34.1
       },
       "PEAK": {
-        "n": 55,
-        "retention_pct": 32.7
+        "n": 68,
+        "retention_pct": 27.9
       },
       "POST_PEAK": {
-        "n": 28,
-        "retention_pct": 53.6
+        "n": 40,
+        "retention_pct": 50.0
+      }
+    }
+  },
+  "NO_POWER_HACKER": {
+    "n_total_transitions": 63,
+    "n_stayed": 20,
+    "retention_pct": 31.7,
+    "top_destinations": [
+      [
+        "NO_POWER_HACKER",
+        20,
+        31.7
+      ],
+      [
+        "GENERIC_NO_POWER",
+        12,
+        19.0
+      ],
+      [
+        "AVG_HACKER",
+        12,
+        19.0
+      ]
+    ],
+    "fp_if_stayed": 0.41,
+    "fp_if_left": 0.443,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 13,
+        "retention_pct": 38.5
+      },
+      "PEAK": {
+        "n": 35,
+        "retention_pct": 25.7
+      },
+      "POST_PEAK": {
+        "n": 15,
+        "retention_pct": 40.0
+      }
+    }
+  },
+  "AVG_HACKER": {
+    "n_total_transitions": 201,
+    "n_stayed": 64,
+    "retention_pct": 31.8,
+    "top_destinations": [
+      [
+        "AVG_HACKER",
+        64,
+        31.8
+      ],
+      [
+        "AVERAGE_HITTER",
+        60,
+        29.9
+      ],
+      [
+        "NO_POWER_HACKER",
+        21,
+        10.4
+      ]
+    ],
+    "fp_if_stayed": 0.469,
+    "fp_if_left": 0.459,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 57,
+        "retention_pct": 38.6
+      },
+      "PEAK": {
+        "n": 93,
+        "retention_pct": 31.2
+      },
+      "POST_PEAK": {
+        "n": 51,
+        "retention_pct": 25.5
       }
     }
   },
   "ALL_OR_NOTHING": {
-    "n_total_transitions": 16,
-    "n_stayed": 3,
-    "retention_pct": 18.8,
+    "n_total_transitions": 20,
+    "n_stayed": 2,
+    "retention_pct": 10.0,
     "top_destinations": [
+      [
+        "AVERAGE_HITTER",
+        7,
+        35.0
+      ],
       [
         "POWER_HITTER",
         4,
-        25.0
+        20.0
       ],
       [
-        "AVERAGE_HITTER",
-        3,
-        18.8
-      ],
-      [
-        "AVG_HACKER",
-        3,
-        18.8
+        "ALL_OR_NOTHING",
+        2,
+        10.0
       ]
     ],
-    "fp_if_stayed": 0.542,
-    "fp_if_left": 0.525,
+    "fp_if_stayed": 0.558,
+    "fp_if_left": 0.442,
     "by_age_tier": {
-      "PEAK": {
+      "PRE_PEAK": {
         "n": 7,
-        "retention_pct": 28.6
+        "retention_pct": 0.0
+      },
+      "PEAK": {
+        "n": 8,
+        "retention_pct": 25.0
       },
       "POST_PEAK": {
-        "n": 6,
-        "retention_pct": 16.7
+        "n": 5,
+        "retention_pct": 0.0
       }
     }
   },
-  "POWER_K": {
-    "n_total_transitions": 44,
-    "n_stayed": 7,
-    "retention_pct": 15.9,
+  "BACKUP_BAT": {
+    "n_total_transitions": 124,
+    "n_stayed": 26,
+    "retention_pct": 21.0,
     "top_destinations": [
+      [
+        "AVERAGE_HITTER",
+        52,
+        41.9
+      ],
+      [
+        "BACKUP_BAT",
+        26,
+        21.0
+      ],
+      [
+        "BALANCED_EYE",
+        9,
+        7.3
+      ]
+    ],
+    "fp_if_stayed": 0.291,
+    "fp_if_left": 0.432,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 42,
+        "retention_pct": 14.3
+      },
+      "PEAK": {
+        "n": 54,
+        "retention_pct": 25.9
+      },
+      "POST_PEAK": {
+        "n": 28,
+        "retention_pct": 21.4
+      }
+    }
+  },
+  "PATIENT_K": {
+    "n_total_transitions": 42,
+    "n_stayed": 5,
+    "retention_pct": 11.9,
+    "top_destinations": [
+      [
+        "AVERAGE_HITTER",
+        10,
+        23.8
+      ],
       [
         "BACKUP_BAT",
         8,
-        18.2
+        19.0
       ],
       [
-        "POWER_K",
-        7,
-        15.9
-      ],
-      [
-        "POWER_HITTER",
-        6,
-        13.6
+        "BALANCED_EYE",
+        8,
+        19.0
       ]
     ],
     "fp_if_stayed": 0.374,
-    "fp_if_left": 0.395,
+    "fp_if_left": 0.383,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 12,
-        "retention_pct": 16.7
+        "n": 9,
+        "retention_pct": 11.1
       },
       "PEAK": {
-        "n": 19,
-        "retention_pct": 10.5
+        "n": 20,
+        "retention_pct": 5.0
       },
       "POST_PEAK": {
         "n": 13,
@@ -675,144 +599,177 @@
       }
     }
   },
-  "PATIENT_K": {
-    "n_total_transitions": 50,
-    "n_stayed": 13,
-    "retention_pct": 26.0,
-    "top_destinations": [
-      [
-        "AVERAGE_HITTER",
-        13,
-        26.0
-      ],
-      [
-        "PATIENT_K",
-        13,
-        26.0
-      ],
-      [
-        "BALANCED_EYE",
-        7,
-        14.0
-      ]
-    ],
-    "fp_if_stayed": 0.412,
-    "fp_if_left": 0.381,
-    "by_age_tier": {
-      "PRE_PEAK": {
-        "n": 9,
-        "retention_pct": 11.1
-      },
-      "PEAK": {
-        "n": 23,
-        "retention_pct": 21.7
-      },
-      "POST_PEAK": {
-        "n": 18,
-        "retention_pct": 38.9
-      }
-    }
-  },
   "K_PRONE_FILLER": {
-    "n_total_transitions": 30,
-    "n_stayed": 6,
-    "retention_pct": 20.0,
+    "n_total_transitions": 32,
+    "n_stayed": 7,
+    "retention_pct": 21.9,
     "top_destinations": [
       [
-        "AVERAGE_HITTER",
-        9,
-        30.0
+        "AVG_HACKER",
+        8,
+        25.0
       ],
       [
         "K_PRONE_FILLER",
-        6,
-        20.0
+        7,
+        21.9
       ],
       [
-        "AVG_HACKER",
-        5,
-        16.7
+        "AVERAGE_HITTER",
+        6,
+        18.8
       ]
     ],
-    "fp_if_stayed": 0.264,
-    "fp_if_left": 0.406,
+    "fp_if_stayed": 0.309,
+    "fp_if_left": 0.414,
     "by_age_tier": {
       "PRE_PEAK": {
         "n": 12,
-        "retention_pct": 16.7
+        "retention_pct": 8.3
       },
       "PEAK": {
-        "n": 14,
-        "retention_pct": 21.4
+        "n": 15,
+        "retention_pct": 33.3
+      },
+      "POST_PEAK": {
+        "n": 5,
+        "retention_pct": 20.0
       }
     }
   },
   "FRINGE": {
-    "n_total_transitions": 14,
-    "n_stayed": 1,
-    "retention_pct": 7.1,
+    "n_total_transitions": 41,
+    "n_stayed": 12,
+    "retention_pct": 29.3,
     "top_destinations": [
       [
+        "AVERAGE_HITTER",
+        15,
+        36.6
+      ],
+      [
+        "FRINGE",
+        12,
+        29.3
+      ],
+      [
         "GENERIC_NO_POWER",
-        6,
-        42.9
-      ],
-      [
-        "BACKUP_BAT",
-        2,
-        14.3
-      ],
-      [
-        "BALANCED_EYE",
-        1,
-        7.1
+        5,
+        12.2
       ]
     ],
-    "fp_if_stayed": 0.257,
-    "fp_if_left": 0.357,
+    "fp_if_stayed": 0.256,
+    "fp_if_left": 0.405,
     "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 11,
+        "retention_pct": 18.2
+      },
       "PEAK": {
-        "n": 7,
-        "retention_pct": 14.3
+        "n": 17,
+        "retention_pct": 41.2
+      },
+      "POST_PEAK": {
+        "n": 13,
+        "retention_pct": 23.1
       }
     }
   },
-  "SECONDARY_LEADOFF": {
-    "n_total_transitions": 25,
-    "n_stayed": 1,
-    "retention_pct": 4.0,
+  "BUST": {
+    "n_total_transitions": 11,
+    "n_stayed": 0,
+    "retention_pct": 0.0,
     "top_destinations": [
       [
-        "GENERIC_NO_POWER",
-        9,
-        36.0
+        "AVERAGE_HITTER",
+        5,
+        45.5
       ],
       [
-        "BALANCED_EYE",
-        8,
-        32.0
+        "NO_POWER_HACKER",
+        2,
+        18.2
       ],
       [
-        "SLAP_HITTER",
-        3,
-        12.0
+        "AVG_HACKER",
+        1,
+        9.1
       ]
     ],
-    "fp_if_stayed": 0.361,
-    "fp_if_left": 0.423,
+    "fp_if_stayed": NaN,
+    "fp_if_left": 0.363,
     "by_age_tier": {
       "PRE_PEAK": {
-        "n": 7,
+        "n": 5,
         "retention_pct": 0.0
       },
       "PEAK": {
-        "n": 12,
-        "retention_pct": 8.3
-      },
-      "POST_PEAK": {
         "n": 6,
         "retention_pct": 0.0
       }
     }
+  },
+  "SECONDARY_LEADOFF": {
+    "n_total_transitions": 28,
+    "n_stayed": 2,
+    "retention_pct": 7.1,
+    "top_destinations": [
+      [
+        "GENERIC_NO_POWER",
+        11,
+        39.3
+      ],
+      [
+        "BALANCED_EYE",
+        9,
+        32.1
+      ],
+      [
+        "AVERAGE_HITTER",
+        4,
+        14.3
+      ]
+    ],
+    "fp_if_stayed": 0.337,
+    "fp_if_left": 0.453,
+    "by_age_tier": {
+      "PRE_PEAK": {
+        "n": 6,
+        "retention_pct": 0.0
+      },
+      "PEAK": {
+        "n": 11,
+        "retention_pct": 9.1
+      },
+      "POST_PEAK": {
+        "n": 11,
+        "retention_pct": 9.1
+      }
+    }
+  },
+  "WALK_ONLY_FRINGE": {
+    "n_total_transitions": 8,
+    "n_stayed": 0,
+    "retention_pct": 0.0,
+    "top_destinations": [
+      [
+        "BALANCED_EYE",
+        2,
+        25.0
+      ],
+      [
+        "BACKUP_BAT",
+        2,
+        25.0
+      ],
+      [
+        "AVERAGE_HITTER",
+        2,
+        25.0
+      ]
+    ],
+    "fp_if_stayed": NaN,
+    "fp_if_left": 0.401,
+    "by_age_tier": {}
   }
 }

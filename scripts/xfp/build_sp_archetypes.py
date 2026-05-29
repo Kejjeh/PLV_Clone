@@ -258,12 +258,9 @@ def build_ratings_panel(current_year=2026):
     # CONTROL components (1): BB%
     qual['r_BB'] = rating_20_80(qual['bb_pct'], g['bb_pct'], invert=True).round(0).astype(int)
 
-    # Composite domain ratings
-    qual['STUFF']    = qual[['r_K','r_SwStr','r_CSW']].mean(axis=1).round(0).astype(int)
-    qual['MOVEMENT'] = qual[['r_HRrate','r_Barrel','r_HardHit','r_xCON']].mean(axis=1).round(0).astype(int)
-    qual['CONTROL']  = qual['r_BB']
-
-    # Sub-domain ratings — intermediate diagnostic layer, each on 20-80 within year.
+    # Sub-domain ratings — computed FIRST. Each is the simple mean of its
+    # components, then re-rated 20-80 within year. Domains below are then
+    # empirically-weighted sums of these sub-domain ratings.
     qual['_SWING_MISS_raw']    = qual[['r_SwStr','r_K']].mean(axis=1)
     qual['_CALLED_STRIKE_raw'] = qual['r_CSW']
     qual['_DAMAGE_SUPP_raw']   = qual[['r_HRrate','r_Barrel','r_HardHit','r_xCON']].mean(axis=1)
@@ -276,6 +273,20 @@ def build_ratings_panel(current_year=2026):
     qual['GB_TENDENCY']   = rating_20_80(qual['_GB_TENDENCY_raw'],   g_sub['_GB_TENDENCY_raw']).round(0).astype(int)
     qual['WALK_AVOID']    = rating_20_80(qual['_WALK_AVOID_raw'],    g_sub['_WALK_AVOID_raw']).round(0).astype(int)
     qual = qual.drop(columns=['_SWING_MISS_raw','_CALLED_STRIKE_raw','_DAMAGE_SUPP_raw','_GB_TENDENCY_raw','_WALK_AVOID_raw'])
+
+    # Domain composites — empirically-weighted sums of sub-domain ratings,
+    # re-rated to 20-80 within year. Weights from OLS regression of
+    # fp_per_start on sub-domain ratings (FULL pool n=1,205):
+    #   STUFF    = 0.628 SWING_MISS  + 0.372 CALLED_STRIKE  (rounded 0.65/0.35)
+    #   MOVEMENT = 0.837 DAMAGE_SUPP + 0.163 GB_TENDENCY    (rounded 0.85/0.15)
+    #   CONTROL  = 1.00 WALK_AVOID
+    g2 = qual.groupby('year')
+    qual['_STUFF_raw']    = 0.65 * qual['SWING_MISS']  + 0.35 * qual['CALLED_STRIKE']
+    qual['_MOVEMENT_raw'] = 0.85 * qual['DAMAGE_SUPP'] + 0.15 * qual['GB_TENDENCY']
+    qual['STUFF']    = rating_20_80(qual['_STUFF_raw'],    g2['_STUFF_raw']).round(0).astype(int)
+    qual['MOVEMENT'] = rating_20_80(qual['_MOVEMENT_raw'], g2['_MOVEMENT_raw']).round(0).astype(int)
+    qual['CONTROL']  = qual['WALK_AVOID']
+    qual = qual.drop(columns=['_STUFF_raw','_MOVEMENT_raw'])
 
     # Overall composite — weighted mean of the three archetype-driving domains,
     # then re-rated within year to a clean 20-80 distribution. Weights derived

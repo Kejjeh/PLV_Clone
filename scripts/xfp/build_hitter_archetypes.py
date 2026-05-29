@@ -263,35 +263,17 @@ def build_ratings_panel(current_year=2026):
     else:
         qual['r_Sprint'] = 50
 
-    # Composite domain ratings: mean of components, then re-rescaled to 20-80 within year.
-    # Re-rescaling is required because averaging highly-correlated component ratings
-    # compresses the composite SD (~5 vs target ~10), crushing ~95% of batters into
-    # the AVG bucket and collapsing the archetype matrix. Re-rating restores the
-    # designed PLUS/AVG/MINUS spread (~16/68/16%) per domain.
-    # CONTACT now includes r_SprayEnt; POWER includes r_SweetSpot, r_EV90, r_PullFB
-    # (resurrected as part of LAUNCH_OPTIM sub-domain); DISCIPLINE adds r_HBP.
-    qual['_CONTACT_raw']    = qual[['r_Contact','r_K','r_xCON','r_SprayEnt']].mean(axis=1)
-    qual['_POWER_raw']      = qual[['r_Barrel','r_HardHit','r_SweetSpot','r_EV90','r_PullFB','r_ISO','r_HRrate']].mean(axis=1)
-    qual['_DISCIPLINE_raw'] = qual[['r_BB','r_Chase','r_HBP','r_ZSwing']].mean(axis=1)
-    qual['_SB_raw']         = qual[['r_SBrate','r_Sprint']].mean(axis=1)
-    g2 = qual.groupby('year')
-    qual['CONTACT']    = rating_20_80(qual['_CONTACT_raw'],    g2['_CONTACT_raw']).round(0).astype(int)
-    qual['POWER']      = rating_20_80(qual['_POWER_raw'],      g2['_POWER_raw']).round(0).astype(int)
-    qual['DISCIPLINE'] = rating_20_80(qual['_DISCIPLINE_raw'], g2['_DISCIPLINE_raw']).round(0).astype(int)
-    qual['SB']         = rating_20_80(qual['_SB_raw'],         g2['_SB_raw']).round(0).astype(int)
-    qual = qual.drop(columns=['_CONTACT_raw','_POWER_raw','_DISCIPLINE_raw','_SB_raw'])
-
-    # Sub-domain ratings (intermediate diagnostic layer). Each maps a coherent
-    # slice of an existing domain. All 20-80, re-rated within year so the
-    # distributions are clean (mean=50, sd~10). Sub-domain to domain weights
-    # documented in the dashboard glossary.
+    # Sub-domain ratings (intermediate layer). Each maps a coherent slice of a
+    # domain. Computed FIRST: components → simple mean → re-rated 20-80 within
+    # year. Domains are then computed as empirically-weighted sums of these
+    # sub-domain ratings (see below).
     qual['_BAT_TO_BALL_raw']     = qual[['r_Contact','r_K']].mean(axis=1)
     qual['_CONTACT_QUALITY_raw'] = qual['r_xCON']
-    qual['_SPRAY_PROFILE_raw']   = qual['r_SprayEnt']               # NEW
+    qual['_SPRAY_PROFILE_raw']   = qual['r_SprayEnt']
     qual['_RAW_POWER_raw']       = qual[['r_HardHit','r_Barrel']].mean(axis=1)
-    qual['_LAUNCH_OPTIM_raw']    = qual[['r_SweetSpot','r_EV90','r_PullFB']].mean(axis=1)  # NEW
+    qual['_LAUNCH_OPTIM_raw']    = qual[['r_SweetSpot','r_EV90','r_PullFB']].mean(axis=1)
     qual['_DAMAGE_PROD_raw']     = qual[['r_ISO','r_HRrate']].mean(axis=1)
-    qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase','r_HBP']].mean(axis=1)            # HBP folded in
+    qual['_PATIENCE_raw']        = qual[['r_BB','r_Chase','r_HBP']].mean(axis=1)
     qual['_AGGRESSION_raw']      = qual['r_ZSwing']
     qual['_SPEED_TOOL_raw']      = qual['r_Sprint']
     qual['_SB_CONVERSION_raw']   = qual['r_SBrate']
@@ -309,6 +291,33 @@ def build_ratings_panel(current_year=2026):
     qual = qual.drop(columns=['_BAT_TO_BALL_raw','_CONTACT_QUALITY_raw','_SPRAY_PROFILE_raw',
                                 '_RAW_POWER_raw','_LAUNCH_OPTIM_raw','_DAMAGE_PROD_raw',
                                 '_PATIENCE_raw','_AGGRESSION_raw','_SPEED_TOOL_raw','_SB_CONVERSION_raw'])
+
+    # Domain composites — weighted sum of SUB-DOMAIN ratings, re-rated to 20-80
+    # within year. Sub-domain weights derived from OLS regression of fp_per_pa
+    # on the sub-domain ratings (FULL pool n=3,163). Empirical weights:
+    #   CONTACT    = 0.465 B2B + 0.461 QUALITY + 0.074 SPRAY  (rounded 0.45/0.45/0.10)
+    #   POWER      = 0.233 RAW + 0.080 LAUNCH  + 0.687 PROD   (rounded 0.25/0.10/0.65)
+    #   DISCIPLINE = 0.695 PATIENCE + 0.305 AGGRESSION         (rounded 0.70/0.30)
+    #   SB         = 0.338 SPEED   + 0.662 CONVERSION          (rounded 0.30/0.70)
+    # This properly weights xwOBACON (Quality) at 45% of CONTACT instead of 25%
+    # under the prior equal-mean architecture, and DAMAGE_PROD at 65% of POWER
+    # instead of 14%. Better reflects what actually drives FP/PA.
+    qual['_CONTACT_raw']    = (0.45 * qual['BAT_TO_BALL']
+                              + 0.45 * qual['CONTACT_QUALITY']
+                              + 0.10 * qual['SPRAY_PROFILE'])
+    qual['_POWER_raw']      = (0.25 * qual['RAW_POWER']
+                              + 0.10 * qual['LAUNCH_OPTIM']
+                              + 0.65 * qual['DAMAGE_PROD'])
+    qual['_DISCIPLINE_raw'] = (0.70 * qual['PATIENCE']
+                              + 0.30 * qual['AGGRESSION'])
+    qual['_SB_raw']         = (0.30 * qual['SPEED_TOOL']
+                              + 0.70 * qual['SB_CONVERSION'])
+    g2 = qual.groupby('year')
+    qual['CONTACT']    = rating_20_80(qual['_CONTACT_raw'],    g2['_CONTACT_raw']).round(0).astype(int)
+    qual['POWER']      = rating_20_80(qual['_POWER_raw'],      g2['_POWER_raw']).round(0).astype(int)
+    qual['DISCIPLINE'] = rating_20_80(qual['_DISCIPLINE_raw'], g2['_DISCIPLINE_raw']).round(0).astype(int)
+    qual['SB']         = rating_20_80(qual['_SB_raw'],         g2['_SB_raw']).round(0).astype(int)
+    qual = qual.drop(columns=['_CONTACT_raw','_POWER_raw','_DISCIPLINE_raw','_SB_raw'])
 
     # BABIP luck context — career mean + delta from career mean per batter-year.
     # Year-to-year BABIP stability is r~0.39 (mostly noise); large deltas usually
