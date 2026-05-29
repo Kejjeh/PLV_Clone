@@ -61,6 +61,7 @@ AGE_CSV       = REPO / 'data/outputs/sp_age_career.csv'
 BIRTHDATE_CSV = REPO / 'data/research/xfp_cache/milb_pitcher_ages.csv'
 RPRS2_CSV     = REPO / 'data/outputs/xfp_rprs2_projections.csv'
 SPLITS_CSV    = REPO / 'data/research/xfp_cache/pitcher_splits.csv'
+FG_LEVERAGE_CSV = REPO / 'data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv'
 OUT_DIR       = REPO / 'data/research'
 
 # Sample-stability floor — matches RP_SUBDOMAIN_VALIDATION cohort
@@ -300,6 +301,64 @@ def build_ratings_panel():
     qual['HIGH_LEVERAGE'] = qual['CLOSER'] | (qual['hld'] >= 15)
     qual['MULTI_INNING_BULK'] = (qual['ip_per_appearance'] >= 1.3)
 
+    # ── FanGraphs leverage join (gmLI / pLI / WPA / Shutdowns / Meltdowns) ───
+    # 2018-2026 ex-2020. ~100% join coverage on eligible cohort (verified
+    # 2026-05-29). gmLI replaces the binary HIGH_LEVERAGE tag where present.
+    # NOTE: FG's combined-stats JSON endpoint (type=8) does NOT expose IR /
+    # IR-S% inherited-runner data — confirmed by exhaustive key-dump on
+    # 2026-05-29. The "FIREMAN" archetype tag (IR≥20 AND IS%≥80%) cannot be
+    # implemented from current FG cache and is deferred to v2 (would need a
+    # different FG endpoint or Baseball-Reference scrape).
+    if FG_LEVERAGE_CSV.exists():
+        lev = pd.read_csv(FG_LEVERAGE_CSV)
+        lev['mlb_id'] = pd.to_numeric(lev['mlb_id'], errors='coerce').astype('Int64')
+        lev['season'] = pd.to_numeric(lev['season'], errors='coerce').astype('Int64')
+        keep = ['mlb_id', 'season', 'gmli', 'pli', 'exli', 'inli',
+                'wpa', 'wpa_per_li', 're24', 'rew',
+                'shutdowns', 'meltdowns']
+        keep = [c for c in keep if c in lev.columns]
+        lev_slim = lev[keep].drop_duplicates(['mlb_id', 'season'])
+        # Cast qual keys for clean join
+        qual['pitcher'] = pd.to_numeric(qual['pitcher'], errors='coerce').astype('Int64')
+        qual['year']    = pd.to_numeric(qual['year'],    errors='coerce').astype('Int64')
+        qual = qual.merge(
+            lev_slim,
+            left_on=['pitcher', 'year'],
+            right_on=['mlb_id', 'season'],
+            how='left',
+        ).drop(columns=['mlb_id', 'season'], errors='ignore')
+
+        # leverage_tier — continuous gmLI replaces binary HIGH_LEVERAGE where data exists
+        def _leverage_tier(row):
+            g = row.get('gmli')
+            if pd.notna(g):
+                if g >= 1.5:  return 'ELITE_LEVERAGE'
+                if g >= 1.2:  return 'HIGH_LEVERAGE'
+                if g >= 0.85: return 'MID_LEVERAGE'
+                if g >= 0.5:  return 'LOW_LEVERAGE'
+                return 'GARBAGE_TIME'
+            # Fallback to SV/HLD-derived binary when gmLI is null
+            return 'HIGH_LEVERAGE' if row.get('HIGH_LEVERAGE', False) else 'MID_LEVERAGE'
+        qual['leverage_tier'] = qual.apply(_leverage_tier, axis=1)
+
+        # FIREMAN tag NOT computable from current FG cache (IR/IS% missing
+        # from type=8 endpoint). Stub the column False with note for users.
+        qual['FIREMAN'] = False  # see note above; v2 unlock
+    else:
+        # No leverage cache → leverage_tier from binary HIGH_LEVERAGE only
+        qual['gmli'] = np.nan
+        qual['pli']  = np.nan
+        qual['exli'] = np.nan
+        qual['inli'] = np.nan
+        qual['wpa']  = np.nan
+        qual['wpa_per_li'] = np.nan
+        qual['re24'] = np.nan
+        qual['rew']  = np.nan
+        qual['shutdowns'] = np.nan
+        qual['meltdowns'] = np.nan
+        qual['leverage_tier'] = np.where(qual['HIGH_LEVERAGE'], 'HIGH_LEVERAGE', 'MID_LEVERAGE')
+        qual['FIREMAN'] = False
+
     # Optional platoon tag — only computable for 2022+ with sufficient TBF
     if SPLITS_CSV.exists():
         splits = pd.read_csv(SPLITS_CSV)
@@ -485,6 +544,9 @@ def main():
                    'age', 'age_tier', 'career_year',
                    'bd_S', 'bd_C', 'bd_B', 'boundary_distance', 'boundary_tier',
                    'CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY',
+                   'leverage_tier', 'FIREMAN',
+                   'gmli', 'pli', 'exli', 'inli', 'wpa', 'wpa_per_li', 're24', 'rew',
+                   'shutdowns', 'meltdowns',
                    'r_K',
                    'k_pct', 'bb_pct', 'swstr_pct', 'c_plus_swstr', 'called_strike_rate',
                    'avg_velo', 'gb_pct', 'barrel_pct', 'hard_hit_pct', 'xwobacon',

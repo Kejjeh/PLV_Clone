@@ -476,8 +476,22 @@ def build_rp_snapshots():
     structure:
       STUFF        ← SWING_MISS (swstr_pct) + CALLED_STRIKE (c_plus_swstr)
       CONTROL      ← WALK_AVOID (bb_pct, inverted) + VELO (avg_velo)
-      BATTED_BALL  ← xwoba_per_pa (inverted; honest stand-in since the
-                     rolling RP cache doesn't carry per-cutoff gb% / barrel%)
+      BATTED_BALL  ← weighted blend of gb_pct (positive) + barrel_pct (inv)
+                     + hard_hit_pct (inv) + xwoba_on_contact (inv). Mirrors
+                     the SP snapshot decomposition (2026-05-29 extension);
+                     the per-cutoff BIP rates were added to the rolling
+                     reliever cache in build_rolling_relievers.py.
+
+    BATTED_BALL blend weights (chosen 2026-05-29):
+      gb_pct           0.40   ← dominant share, mirrors archetype master
+                                where GB_TENDENCY carries 0.50 of BATTED_BALL
+      xwoba_on_contact 0.20   ← best single damage-suppression summary
+      barrel_pct       0.25   ← inverted; high-leverage damage tail
+      hard_hit_pct     0.15   ← inverted; broad contact-quality floor
+    Baselines for the four new metrics come from rp_ratings_master.csv (the
+    only RP CSV that carries gb_pct / barrel_pct / hard_hit_pct / xwobacon
+    aligned to the archetype master). swstr/csw/bb/velo/xwoba_per_pa baselines
+    continue to come from relievers_multiyr.
 
     Archetype label is recomputed per snapshot from the rolling S/C/BB triplet.
     """
@@ -499,6 +513,29 @@ def build_rp_snapshots():
                 continue
             baselines[int(yr)][c] = (grp[c].mean(), grp[c].std())
 
+    # Pull BIP-rate baselines from rp_ratings_master (per-year mean/SD of
+    # gb_pct / barrel_pct / hard_hit_pct / xwobacon over the qualified RP
+    # cohort the archetype master labels). Falls back gracefully if missing.
+    # IMPORTANT unit alignment: rp_ratings_master stores gb_pct / barrel_pct /
+    # hard_hit_pct as PERCENTAGES (0-100). The rolling cache stores them as
+    # FRACTIONS (0-1). Divide the percentage cols by 100 before computing
+    # baselines so the z-score is on the same scale as the rolling _to value.
+    # xwobacon is already a fraction in both sources.
+    BIP_BASELINE_COLS = ['gb_pct', 'barrel_pct', 'hard_hit_pct', 'xwobacon']
+    BIP_PCT_COLS = {'gb_pct', 'barrel_pct', 'hard_hit_pct'}
+    if R_MASTER.exists():
+        rmaster = pd.read_csv(R_MASTER, usecols=lambda c: c in (['year'] + BIP_BASELINE_COLS))
+        for yr, grp in rmaster.groupby('year'):
+            baselines.setdefault(int(yr), {})
+            for c in BIP_BASELINE_COLS:
+                if c not in grp.columns:
+                    continue
+                vals = pd.to_numeric(grp[c], errors='coerce').dropna()
+                if c in BIP_PCT_COLS:
+                    vals = vals / 100.0
+                if len(vals) >= 5:
+                    baselines[int(yr)][c] = (vals.mean(), vals.std())
+
     # RP eligibility floor — same MIN_G_TO=5 the model uses; matches the
     # rolling cache filter so we don't double-restrict here.
     r = r[r['g_to'] >= 5].copy()
@@ -508,6 +545,15 @@ def build_rp_snapshots():
     # Load RP archetype defs to assign label per snapshot
     with open(R_DEFS, encoding='utf-8') as f:
         rdefs = json.load(f)
+
+    # BATTED_BALL blend weights — see docstring. Re-normalized over available
+    # components per-row so that early-season nulls don't collapse the rating.
+    BB_BLEND = {
+        'gb_pct':           ('gb_pct_to',           0.40, False),
+        'xwoba_on_contact': ('xwoba_on_contact_to', 0.20, True),
+        'barrel_pct':       ('barrel_pct_to',       0.25, True),
+        'hard_hit_pct':     ('hard_hit_pct_to',     0.15, True),
+    }
 
     out = []
     for _, row in r.iterrows():
@@ -523,18 +569,35 @@ def build_rp_snapshots():
         rCSW = _rate(row['c_plus_swstr_to'],  *b['c_plus_swstr'])
         rBB  = _rate(row['bb_pct_to'],        *b['bb_pct'], invert=True)
         rV   = _rate(row['avg_velo_to'],      *b['avg_velo'])
-        rXC  = _rate(row['xwoba_per_pa_to'],  *b['xwoba_per_pa'], invert=True)
+
+        # BATTED_BALL components — each rated 20-80 against prior-year RP
+        # cohort baseline, then blended via BB_BLEND weights. Components
+        # whose baseline or current value is missing are skipped and the
+        # remaining weights re-normalized so partial coverage still rates.
+        bb_components = []
+        for baseline_key, (rolling_col, weight, invert) in BB_BLEND.items():
+            if baseline_key not in b:
+                continue
+            if rolling_col not in row.index:
+                continue
+            mu, sd = b[baseline_key]
+            rated = _rate(row[rolling_col], mu, sd, invert=invert)
+            if rated is None:
+                continue
+            bb_components.append((rated, weight))
 
         s_vals = [v for v in [rSW, rCSW] if v is not None]
         c_vals = [v for v in [rBB, rV] if v is not None]
-        # BATTED_BALL placeholder from xwoba_per_pa (the rolling RP cache
-        # doesn't carry per-cutoff gb%/barrel%); honest single-component value.
-        bb_vals = [v for v in [rXC] if v is not None]
-        if not (s_vals and c_vals and bb_vals):
+        if not (s_vals and c_vals and bb_components):
             continue
         STUFF       = int(round(sum(s_vals) / len(s_vals)))
         CONTROL     = int(round(sum(c_vals) / len(c_vals)))
-        BATTED_BALL = int(round(sum(bb_vals) / len(bb_vals)))
+        # Weighted mean of BATTED_BALL components, weights re-normalized
+        # over whatever components were available.
+        bb_w_sum = sum(w for _, w in bb_components)
+        BATTED_BALL = int(round(
+            sum(v * w for v, w in bb_components) / bb_w_sum
+        )) if bb_w_sum > 0 else 50
 
         def _b(v):
             if v >= 60: return 'PLUS'
@@ -549,9 +612,10 @@ def build_rp_snapshots():
             a, c = nm.split(',', 1)
             nm = f'{c.strip()} {a.strip()}'
 
-        # Weighted Overall — placeholder weights that match build_rp_records
-        # blending intent (STUFF dominant, CONTROL secondary, BB tertiary).
-        OVERALL = int(round(STUFF * 0.45 + CONTROL * 0.30 + BATTED_BALL * 0.25))
+        # Weighted Overall — mirrors OVERALL_W in build_rp_archetypes.py
+        # (STUFF 0.55 / CONTROL 0.30 / BATTED_BALL 0.15) so the snapshot
+        # rating aligns with the master CSV's archetype label.
+        OVERALL = int(round(STUFF * 0.55 + CONTROL * 0.30 + BATTED_BALL * 0.15))
 
         # Bridge fields so the JS template's SP path can read MOVEMENT/velo_rating
         # uniformly off RP snapshot rows (mirror of build_rp_records bridges).

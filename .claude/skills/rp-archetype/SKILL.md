@@ -68,10 +68,29 @@ Full label set: `data/research/rp_archetype_definitions.json`.
 
 ### Role tags (orthogonal to archetype)
 - **CLOSER** — primary save-getter for team (SV-rate threshold)
-- **HIGH_LEVERAGE** — late-inning role (HLD + SV usage)
+- **HIGH_LEVERAGE** — late-inning role (HLD + SV usage; legacy binary tag)
 - **MULTI_INNING_BULK** — IP/appearance ≥ 1.4 (long-relief / bulk)
+- **FIREMAN** — currently stubbed `False` across the panel. IS%/IR data is **not exposed** by the FG combined-stats JSON endpoint (confirmed by exhaustive key-dump 2026-05-29). Tag remains in the schema for forward compatibility but cannot fire until a different source (FG splits / B-Ref) is wired in v2.
 
 A reliever can carry multiple tags. Role tags are **display only** — they describe usage, not skill, and aren't used in comp distance.
+
+### Leverage tier (NEW 2026-05-29 — continuous replacement for binary HIGH_LEVERAGE)
+
+Derived from FanGraphs **gmLI** (game-entry Leverage Index, average over the reliever's appearances). Join coverage on the qualifying cohort: **2,086 / 2,087 (99.95%)** RP-years 2018-2026 (no 2020).
+
+| Tier | gmLI band | Meaning |
+|---|---|---|
+| `ELITE_LEVERAGE` | ≥ 1.5 | Primary closer / true high-leverage role (Munoz, Suarez, Diaz, Mason Miller) |
+| `HIGH_LEVERAGE` | 1.2 – 1.49 | Setup / co-closer (Clase 25, Bednar) |
+| `MID_LEVERAGE` | 0.85 – 1.19 | Middle relief w/ occasional late work |
+| `LOW_LEVERAGE` | 0.5 – 0.84 | Long relief / blowout role |
+| `GARBAGE_TIME` | < 0.5 | Mop-up only |
+
+Falls back to the SV/HLD-derived binary tag when gmLI is null (pre-qualifier RPs only — should be rare).
+
+**Verified 2025 distribution**: 54 ELITE / 71 HIGH / 95 MID / 49 LOW / 10 GARBAGE.
+
+**Usage note**: `leverage_tier` is a usage/role signal, NOT a skill signal — it's a display column + filter, not part of the archetype label, sub-domains, or comp distance.
 
 ### Boundary risk (RP-calibrated, 2026-05-28)
 - `boundary_distance` = min distance across S/C/B to nearest threshold (40 or 60)
@@ -360,3 +379,16 @@ Mason Miller 2026 (age 27, PEAK) — role: closer
 - **20-80 ratings + archetype + role tags + comps**: 2018-2026 (no 2020 — COVID year excluded)
 - **2026 is in-progress** — RPs with TBF < 80 will have noisy ratings; flag in output
 - **Stickiness JSON `by_age_tier` may be sparse** for rare archetypes (e.g., ELITE_CLOSER_STUFF n=8 total). Fall back to overall retention when a tier sample is < 5.
+- **gmLI / leverage_tier**: 2018-2026 ex-2020 at 99.95% join coverage. Sourced from FanGraphs relief leaderboard via `pull_fg_rp_leverage.py` → `data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv`. The scrape is browser-driven (undetected-chromedriver) and must be refreshed manually — it is NOT wired into the daily `refresh_dashboards.py` chain. Re-run when usage patterns shift (e.g. mid-season closer changes).
+
+## v2 unlocks (what's still missing)
+
+The audit (RP_DATA_AUDIT.md) called out four FG signals that would expand the RP archetype kit. Status:
+
+| Signal | v1 status | Notes |
+|---|---|---|
+| **gmLI** | ✅ **shipped 2026-05-29** | Drives `leverage_tier`. |
+| **pLI / exLI / inLI** | ✅ display columns shipped | Per-PA, exit, and inherited leverage indices. |
+| **WPA / WPA-LI / RE24 / REW** | ✅ display columns shipped | Cumulative leverage-weighted outcome — useful but season-counting, not per-outing. |
+| **Shutdowns / Meltdowns** | ✅ display columns shipped | High-leverage outing outcome tally. |
+| **IR / IR-S% (inherited stranded)** | ❌ **NOT available** | FG's combined-stats JSON endpoint (`type=8`) does NOT expose these. Exhaustive key dump 2026-05-29: 544 keys checked, no IR or strand-rate columns. Would need a different FG endpoint (splits tool?) or Baseball-Reference scrape to fire the FIREMAN archetype tag. Stub column exists (`FIREMAN=False`) for forward compatibility. |

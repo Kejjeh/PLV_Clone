@@ -97,6 +97,14 @@ def main():
         'python -X utf8 scripts/xfp/build_rp_damage_gb_from_statcast.py',
         timeout=300)
 
+    # NOTE: FG RP leverage cache (gmLI / pLI / Shutdowns / Meltdowns) is
+    # browser-driven via undetected-chromedriver and NOT wired into the daily
+    # chain — same pattern as pull_fg_undetected.py. Re-run manually after
+    # mid-season closer changes:
+    #   python -X utf8 scripts/xfp/pull_fg_rp_leverage.py
+    # Output: data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv
+    # build_rp_archetypes.py reads it directly if present (drives leverage_tier).
+
     run('2.8. Build RP archetype ratings panel (20-80 + trajectories)',
         'python -X utf8 scripts/xfp/build_rp_archetypes.py',
         timeout=120)
