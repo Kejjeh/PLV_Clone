@@ -110,6 +110,12 @@ The verdict tag is one of:
 - **STRONG HOLD/BUY** — all three converge in the top tier
 - **BUY — archetype breakout** — archetype TRENDING_UP with model lag >50 ranks
 - **BUY — model anchored on prior** — model rank far below PL+archetype
+- **BUY — process upgrade** — archetype TRENDING_UP top-tier with moderate model/PL lag
+- **BUY — under-the-radar** — PL hasn't ranked but model + archetype both endorse
+- **BUY — outcomes only (no archetype)** — rookie with strong model, no process layer yet
+- **HOLD — speed profile** *(4th-lens override)* — hitter with SB/SPEED_TOOL ≥ 60 trending down; archetype label undervalues SB anchor
+- **HOLD — post-TJ ramp candidate** *(4th-lens override)* — SP CAREER_LOW + WILD_MID/FILLER but SwingMiss far outpaces WalkAvoid (walk-driven, stuff intact)
+- **HOLD — process intact** *(4th-lens override)* — SP trajectory bearish but model still ranks top-50 (model disagrees with archetype's trajectory call)
 - **FADE — PL chasing outcomes** — PL rank far above model+archetype OVERALL
 - **CAUTION** — at least one process red flag (TRENDING_DOWN with high PL, GENERIC_HR_PRONE archetype, FINESSE velo declining, CAREER_LOW)
 - **MIXED — see profile** — signals don't converge; surface the table and let the user decide
@@ -159,6 +165,36 @@ When the verdict is BUY or FADE, suggest the natural follow-up skill:
    - velo_tier == FINESSE AND TRENDING_DOWN
 
 9. MIXED — see profile  (fallback when no rule fires)
+
+# ---- 4th-lens overrides ----
+# Applied AFTER the rules above. May upgrade a FADE/CAUTION verdict to a HOLD tier
+# when a fourth signal contradicts the bearish call. Each override sets `override_tag`
+# in the CSV output so downstream filtering can find them.
+
+A. HOLD — speed profile     (SPEED_PROFILE override; suppresses FADE/CAUTION)
+   bucket == 'H'
+   AND archetype.have AND (sub_ratings.SPEED_TOOL >= 60 OR ratings.SB >= 60)
+   AND archetype.traj in (TRENDING_DOWN, STABLE)
+   # Rationale: hitter archetype label undervalues speed-anchored fantasy floor.
+   # Canonical case: Trea Turner 2026 (SB rating 68, AVERAGE_HITTER TRENDING_DOWN)
+   # — bear case ignores that his fantasy value is SB-anchored, not contact-anchored.
+
+B. HOLD — post-TJ ramp candidate     (POST_TJ_RAMP override; suppresses CAUTION)
+   bucket == 'SP'
+   AND archetype.career_pct == 0  AND archetype.career_year >= 3
+   AND archetype.label in {WILD_MID, FILLER, GENERIC_HR_PRONE}
+   AND (sub_ratings.SWING_MISS - sub_ratings.WALK_AVOID) >= 10
+   # Rationale: walk-driven downgrade with K-stuff intact = post-injury command lag,
+   # not stuff loss. Canonical case: Kyle Bradish 2026 (CAREER_LOW WILD_MID, SwingMiss 48
+   # vs WalkAvoid 34, career_yr 5 — post-TJ return where command returns last).
+
+C. HOLD — process intact     (PROCESS_INTACT override; suppresses CAUTION)
+   bucket == 'SP'
+   AND archetype.traj in (TRENDING_DOWN, CAREER_LOW)
+   AND model_rank int and <= 50
+   # Rationale: the model integrates career + recency and still ranks the SP top-50,
+   # disagreeing with the archetype's within-year peer-relative trajectory call.
+   # Canonical case: Framber Valdez 2026 (TRENDING_DOWN archetype, but model #29 SP).
 ```
 
 ---

@@ -335,6 +335,12 @@ def archetype_row(player: dict) -> dict:
     if bucket == 'SP':
         out['ratings'] = {'STUFF': int(r['STUFF']), 'MOVEMENT': int(r['MOVEMENT']), 'CONTROL': int(r['CONTROL'])}
         out['pitch_archetype'] = r.get('pitch_archetype')
+        # Sub-ratings used by 4th-lens overrides (post-TJ / CSW intact detection)
+        for sub in ('SWING_MISS','CALLED_STRIKE','WALK_AVOID','STRIKE_THROWING'):
+            if sub in p.columns and pd.notna(r.get(sub)):
+                out.setdefault('sub_ratings', {})[sub] = int(r[sub])
+        if pd.notna(r.get('career_year')):
+            out['career_year'] = int(r['career_year'])
     elif bucket == 'RP':
         out['ratings'] = {'STUFF': int(r['STUFF']), 'CONTROL': int(r['CONTROL']), 'BATTED_BALL': int(r['BATTED_BALL'])}
         out['leverage_tier'] = r.get('leverage_tier')
@@ -346,6 +352,9 @@ def archetype_row(player: dict) -> dict:
         for k in ('C','P','D','SB'):
             if k in p.columns:
                 out.setdefault('ratings', {})[k] = int(r[k]) if pd.notna(r.get(k)) else None
+        # SPEED_TOOL is the canonical 20-80 speed rating (more granular than SB)
+        if 'SPEED_TOOL' in p.columns and pd.notna(r.get('SPEED_TOOL')):
+            out.setdefault('sub_ratings', {})['SPEED_TOOL'] = int(r['SPEED_TOOL'])
     # career arc — last 4 years
     arc = rows.tail(4)[['year','archetype','OVERALL']]
     out['arc'] = [(int(y), a, int(o) if pd.notna(o) else None) for y,a,o in zip(arc['year'],arc['archetype'],arc['OVERALL'])]
@@ -420,6 +429,76 @@ def synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, 
     if not notes:
         return 'MIXED — see profile', "Signals don't converge to a single verdict; weigh the rate metrics against the trajectory before acting."
     return 'CAUTION', ' '.join(notes)
+
+# ---------- 4th-lens overrides ----------
+#
+# These fire AFTER synthesize() and suppress unfounded FADE/CAUTION verdicts when
+# a fourth signal (not captured by the archetype label alone) argues for holding.
+# Documented in SKILL.md "Verdict decision tree" section.
+#
+#   A. SPEED_PROFILE          — hitter with SB/SPEED_TOOL ≥60 + TRENDING_DOWN
+#                               (archetype label undervalues speed-anchored fantasy value)
+#   B. POST_TJ_RAMP           — SP with CAREER_LOW + walk-driven archetype but intact
+#                               SwingMiss rating (stuff back, BB% lags — TJ recovery pattern)
+#   C. PROCESS_INTACT         — SP TRENDING_DOWN but SwingMiss rating ≥50 (K-rate noise,
+#                               not skill decline; declining outcomes outpace declining process)
+
+def apply_overrides(verdict, rationale, player, arche, model):
+    """Return possibly-upgraded (verdict, rationale, override_tag) when a 4th lens contradicts a bearish verdict."""
+    if not arche.get('have'):
+        return verdict, rationale, None
+    is_bearish = verdict.startswith('FADE') or verdict.startswith('CAUTION')
+    if not is_bearish:
+        return verdict, rationale, None
+
+    bucket = player['bucket']
+    sub = arche.get('sub_ratings', {}) or {}
+
+    # Override A — SPEED_PROFILE (hitters)
+    if bucket == 'H':
+        ratings = arche.get('ratings', {}) or {}
+        sb = sub.get('SPEED_TOOL') if 'SPEED_TOOL' in sub else ratings.get('SB')
+        if sb is not None and sb >= 60 and arche.get('traj_flag') in ('TRENDING_DOWN','STABLE'):
+            return (
+                'HOLD — speed profile',
+                f"4th-lens override: SB/SPEED rating {sb} (elite) — archetype label undervalues the speed-anchored fantasy floor. Original: {verdict}.",
+                'SPEED_PROFILE',
+            )
+
+    # Override B — POST_TJ_RAMP (SP CAREER_LOW with walk-driven-not-stuff-driven downgrade)
+    # Signature: K-stuff (SwingMiss) materially outpaces command (WalkAvoid). The CAREER_LOW
+    # is driven by walks lagging, not by stuff erosion — canonical post-TJ pattern.
+    if bucket == 'SP':
+        sm = sub.get('SWING_MISS')
+        wa = sub.get('WALK_AVOID')
+        cy = arche.get('career_year') or 0
+        cp = arche.get('career_pct')
+        is_career_low = (cp is not None and not pd.isna(cp) and cp <= 0.0)
+        walk_driven = arche.get('archetype') in ('WILD_MID','FILLER','GENERIC_HR_PRONE')
+        if (is_career_low and cy >= 3 and walk_driven
+            and sm is not None and wa is not None and (sm - wa) >= 10):
+            return (
+                'HOLD — post-TJ ramp candidate',
+                f"4th-lens override: CAREER_LOW + {arche.get('archetype')} but SwingMiss rating {sm} far outpaces WalkAvoid {wa} (Δ +{sm-wa}); career_yr={cy} (not a true rookie). Walk-driven downgrade with K-stuff intact = post-injury command-recovery pattern. Original: {verdict}.",
+                'POST_TJ_RAMP',
+            )
+
+    # Override C — PROCESS_INTACT (SP archetype trajectory disagrees with strong model rank)
+    # When archetype label is bearish but the model still ranks the player as a top-50 SP,
+    # the model (which integrates career + recent regression-shrunk outcomes) is anchoring on
+    # process the archetype's within-year peer-relative scaling is masking.
+    if bucket == 'SP':
+        m_r = model.get('rank')
+        m_traj = arche.get('traj_flag')
+        if (m_traj in ('TRENDING_DOWN','CAREER_LOW')
+            and isinstance(m_r, int) and m_r <= 50):
+            return (
+                'HOLD — process intact',
+                f"4th-lens override: archetype {m_traj} but model still ranks #{m_r} (top-50 SP). Outcome decline outpacing process decline — model disagrees with the archetype's trajectory call. Often a walk/BABIP blip. Original: {verdict}.",
+                'PROCESS_INTACT',
+            )
+
+    return verdict, rationale, None
 
 # ---------- output ----------
 
@@ -566,6 +645,8 @@ def main():
         pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name']) if bucket == 'SP' else ('—', None, None)
         arche = archetype_row(player)
         verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
+        # 4th-lens overrides — may upgrade FADE/CAUTION to a HOLD tier
+        verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
         # Verdict filter — skip non-matching rows entirely
         if not _verdict_matches(verdict, filters):
@@ -575,6 +656,7 @@ def main():
             'player': player, 'pl_main': pl_main, 'pl_main_date': pl_main_date,
             'pl_stream': pl_stream, 'pl_stream_date': pl_stream_date,
             'model': model, 'arche': arche, 'verdict': verdict, 'rationale': rationale,
+            'override_tag': override_tag,
         })
         if args.csv_out:
             rec = {
@@ -601,6 +683,7 @@ def main():
                 'arche_velo_tier': arche.get('velo_tier') if arche.get('have') else None,
                 'verdict': verdict,
                 'rationale': rationale,
+                'override_tag': override_tag,
             }
             if category_map:
                 rec['category'] = category_map.get(name)
