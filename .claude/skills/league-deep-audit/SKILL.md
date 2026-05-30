@@ -36,6 +36,30 @@ orchestration and interpretation wrapper.
 
 ---
 
+## 11 layers as independent lenses
+
+The audit's power comes from running 11 statistical layers that each anchor on a different aspect of player evaluation. They are **not** redundant — each lens has a different known failure mode, and the audit's verdicts depend on the agreement pattern across the panel. Reading "the X% bounce" without knowing which layer it came from is a category error.
+
+| # | Layer | What it measures | Anchor | Known failure mode |
+|---|---|---|---|---|
+| 1 | Career-form percentile | Where current L150 sits in this player's career rolling-150 distribution | Career distribution | Mis-states "trough depth" when career sample is thin (<5 prior windows); a true rookie always looks at career-low |
+| 2 | 9-marker sustainability | Statcast process decomposition: EV, EV90, HardHit, Barrel, xwOBA-contact, K, BB, chase, sweet-spot | Recent window vs season | Markers move on different time-scales — bat-speed stabilizes fast, K% slowly; reading the panel as one number flattens the signal |
+| 3 | xwOBACON Bayesian shrinkage | Shrunk xwOBACON gap vs career baseline | Conjugate normal prior on career | Strong-prior veterans get pulled toward career mean regardless of how bad the season is, masking true decline |
+| 4 | Anchor-in-CI test | Does the 95% CI of L21d xwOBA contain career baseline? | Sample-size statistical confidence | A wide CI (~80 PA) yields "noise" verdicts even when underlying decline is real but slow |
+| 5 | Process metrics audit | Bat speed / whiff / chase / Z-contact / EV90 trend vs baseline | Within-player year-over-year | Year-over-year alone misses regime shifts — a player who lost EV in April and stabilized at lower level looks "stable" by August |
+| 6 | Slump trajectory + K%-decomp | K%-by-pitch-type to identify which pitches are eating the bat | Pitch-shape attribution | Sample-size noise per pitch type — needs ~60 PA per pitch family to be stable; thin for short-stretch slumps |
+| 7 | PEAK validator (PROCESS vs OUTCOME) | Distinguishes a peak driven by process improvement vs outcome variance | Recency-weighted process anchor | Threshold (EV ≥ 92.0) calibrated to single-pitch EV not window mean — currently under-reports STRONG tier |
+| 8 | Injury signal integration | ESPN DTD/IL overlap with slump start window | Time-aligned injury timeline | ESPN injury data has lag and granularity issues; "playing through" undeclared injuries produces decline signature without an injury flag |
+| 9 | MC bounce simulator (10k sims, λ=0.20) | Recency-decayed bootstrap of career rolling-150 windows | Career distribution with exponential decay | Adjacent windows share 149/150 events — i.i.d. assumption violated; stated probability precision is slightly optimistic |
+| 10 | Bayesian posterior talent | Conjugate update P(true talent > threshold) | Career mean + recent data | Identical to lens 3 plus formal P() language — provides a number but is co-linear with shrinkage layer; agreement is structural, not independent confirmation |
+| 11 | Historical comp matcher | 54k 2015-2025 snapshots, age-matched ±3yr | Population of comparable situations | Bucketing on age + percentile + month misses archetype context (power vs contact); thin for very old / very young players |
+
+**Auxiliary**: SP velo/k-form (pitcher subset) — measures FB-velo trend + K-rate-stability for SPs. Failure mode: rookies + post-TJ pitchers have insufficient velo history to anchor.
+
+**How to read disagreement**: the highest-value moments are when lenses point in different directions. Lens 9 (MC) says "bounce" but lens 4 (CI anchor) says "L21d CI excludes baseline" = the slump is statistically real even if it's historically common. Lens 2 (process markers) say "improving" while lens 11 (comps) say "fade" = the player has a new skill but historically that profile hasn't sustained — a real edge if your league hasn't priced it in.
+
+---
+
 ## Inputs (all optional — sensible defaults apply)
 
 1. **Focus** — `full` (default) / `hitters-only` / `pitchers-only`

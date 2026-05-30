@@ -7,500 +7,32 @@ Usage:
     python scripts/xfp/run_triangulate.py "Reid Detmers" "Ryan Weathers" "Ryne Nelson"
     python scripts/xfp/run_triangulate.py --bucket SP "Reid Detmers"
 
-Reads PL ranks from data/research/pl_cache/ (the SKILL.md tells Claude how to
-refresh those caches via WebFetch when stale).
-
-Outputs a markdown card per player + a comparison table if multiple players.
+Thin CLI shell. Analytical logic lives in `scripts/xfp/lib/`.
+Other skills should import from `scripts.xfp.lib.triangulate_core` directly.
 """
 
 from __future__ import annotations
-import argparse, json, os, sys, unicodedata, glob, io, functools
-from datetime import datetime, date
+import argparse, io, os, sys
 import pandas as pd
 
 # Force UTF-8 for stdout on Windows so arrows / accents don't crash
 if sys.platform == 'win32':
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
-PL_CACHE_DIR = 'data/research/pl_cache'
-ARCHETYPE_PANELS = {
-    'H':  'data/research/hitter_archetype_career_panel.parquet',
-    'SP': 'data/research/sp_archetype_career_panel.parquet',
-    'RP': 'data/research/rp_archetype_career_panel.parquet',
-}
-PROJECTIONS = {
-    'H':  'data/outputs/xfp_rh3_projections.csv',
-    'SP': 'data/outputs/xfp_rp3_projections.csv',
-    'RP': 'data/outputs/xfp_rprs2_projections.csv',
-}
-PL_CACHE_FILES = {
-    'H':         'pl_hitters_top150.json',
-    'SP':        'pl_sps_top100.json',
-    'SP_STREAM': 'pl_sp_streamers_latest.json',
-    'RP':        'pl_closers.json',
-}
+# Make `scripts.xfp.lib.*` importable when this file is run as a script
+# (python scripts/xfp/run_triangulate.py). External skills that already have
+# the project root on sys.path get this for free.
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-# Article-universe sizes — used to distinguish "snubbed" (UR) from "out-of-scope" (—).
-# The closers article only covers ~50 names; RP model ranks 250+, so anyone past #50
-# is OUT OF SCOPE not "unranked".
-PL_UNIVERSE_SIZE = {'H': 150, 'SP': 100, 'RP': 50}
+from scripts.xfp.lib.bucket_dispatch import resolve_player
+from scripts.xfp.lib.pl_cache import pl_rank, pl_streamer_rank, _warn_stale_caches
+from scripts.xfp.lib.triangulate_core import (
+    model_row, archetype_row, synthesize, apply_overrides,
+)
 
-# ---------- helpers ----------
-
-def _norm(s: str) -> str:
-    return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
-
-def _flip_lastfirst(s: str) -> str:
-    if ',' in str(s):
-        a, b = s.split(',', 1)
-        return f"{b.strip()} {a.strip()}"
-    return str(s)
-
-# ---------- cached loaders (module-level, one read per process) ----------
-
-@functools.lru_cache(maxsize=None)
-def _load_projection(bucket: str) -> pd.DataFrame:
-    """Load + cache a projection CSV. Adds a normalized '_key' column."""
-    df = pd.read_csv(PROJECTIONS[bucket])
-    if bucket == 'H':
-        df['_key'] = df['player_name'].apply(_norm)
-    elif bucket == 'SP':
-        df['_key'] = df['player_name'].apply(_flip_lastfirst).apply(_norm)
-    else:  # RP
-        df['_key'] = df['name_api'].apply(_norm)
-    return df
-
-@functools.lru_cache(maxsize=None)
-def _load_archetype(bucket: str) -> pd.DataFrame | None:
-    """Load + cache an archetype panel parquet."""
-    panel_path = ARCHETYPE_PANELS[bucket]
-    if not os.path.exists(panel_path):
-        return None
-    p = pd.read_parquet(panel_path)
-    name_col = 'player_name' if 'player_name' in p.columns else 'name'
-    p['_key'] = p[name_col].apply(_norm)
-    return p
-
-@functools.lru_cache(maxsize=None)
-def _load_pl_cache(filename: str) -> dict:
-    path = os.path.join(PL_CACHE_DIR, filename)
-    if not os.path.exists(path):
-        return {'fetched': None, 'source_url': None, 'ranks': {}}
-    with open(path, 'r', encoding='utf-8') as f:
-        return json.load(f)
-
-@functools.lru_cache(maxsize=None)
-def _load_pl_streamer_cache() -> tuple[dict, str]:
-    """Find newest pl_sp_streamers_*.json by filename date; fall back to latest."""
-    # Glob date-keyed streamer files (pl_sp_streamers_YYYY-MM-DD.json)
-    pattern = os.path.join(PL_CACHE_DIR, 'pl_sp_streamers_*.json')
-    candidates = []
-    for path in glob.glob(pattern):
-        base = os.path.basename(path)
-        # skip the 'latest' alias for first-pass; we want date-keyed
-        if base == 'pl_sp_streamers_latest.json':
-            continue
-        # extract date portion between 'pl_sp_streamers_' and '.json'
-        stem = base[len('pl_sp_streamers_'):-len('.json')]
-        try:
-            datetime.strptime(stem, '%Y-%m-%d')
-            candidates.append((stem, path))
-        except ValueError:
-            continue
-    if candidates:
-        candidates.sort(key=lambda x: x[0], reverse=True)
-        date_str, path = candidates[0]
-        with open(path, 'r', encoding='utf-8') as f:
-            return json.load(f), date_str
-    # Fallback to legacy 'latest' file
-    cache = _load_pl_cache('pl_sp_streamers_latest.json')
-    return cache, cache.get('fetched', '') or ''
-
-# ---------- staleness warning ----------
-
-def _warn_stale_caches():
-    """Walk the 4 PL cache files; warn on stale entries. Print to stderr."""
-    today = date.today()
-    # (filename, threshold_days)
-    items = [
-        ('pl_hitters_top150.json', 7),
-        ('pl_sps_top100.json',     7),
-        ('pl_closers.json',        7),
-        ('pl_sp_streamers_latest.json', 2),
-    ]
-    for fname, thresh in items:
-        path = os.path.join(PL_CACHE_DIR, fname)
-        if not os.path.exists(path):
-            print(f"WARN {fname} is MISSING", file=sys.stderr)
-            continue
-        try:
-            with open(path, 'r', encoding='utf-8') as f:
-                cache = json.load(f)
-        except Exception:
-            continue
-        fetched = cache.get('fetched')
-        if not fetched:
-            continue
-        try:
-            fdate = datetime.strptime(fetched[:10], '%Y-%m-%d').date()
-        except ValueError:
-            continue
-        age = (today - fdate).days
-        if age > thresh:
-            print(f"WARN {fname} is {age}d stale (fetched {fetched})", file=sys.stderr)
-
-# ---------- name resolution ----------
-
-def resolve_player(name: str, hint: str | None = None) -> dict | None:
-    """Return {'id', 'bucket', 'display_name', 'team', 'position'} or None."""
-    key = _norm(name)
-    # Try each projection file; first hit wins. If bucket hint provided, try that first.
-    order = [hint] + [b for b in ('H','SP','RP') if b != hint] if hint else ['H','SP','RP']
-    for bucket in order:
-        if bucket is None: continue
-        df = _load_projection(bucket)
-        if bucket == 'H':
-            id_col, name_col = 'batter', 'player_name'
-        elif bucket == 'SP':
-            id_col, name_col = 'pitcher', 'player_name'
-        else:  # RP — rprs2 uses 'name_api'
-            id_col, name_col = 'pitcher', 'name_api'
-        m = df[df['_key'] == key]
-        if not m.empty:
-            if len(m) > 1:
-                first = m.iloc[0]
-                ft = first.get('team', '?')
-                fp = first.get('primary_position', bucket) if bucket == 'H' else bucket
-                print(f"WARN MULTI-MATCH for \"{name}\" — took {ft} {fp}; ignored {len(m)-1} other(s)", file=sys.stderr)
-            r = m.iloc[0]
-            disp = r[name_col]
-            if bucket == 'SP':
-                disp = _flip_lastfirst(disp)
-            return {
-                'id': int(r[id_col]),
-                'bucket': bucket,
-                'display_name': disp,
-                'team': r.get('team', ''),
-                'position': r.get('primary_position', '') if bucket == 'H' else bucket,
-            }
-    # Fallback: try archetype panels (for rookies not in projections yet)
-    for bucket in ('H', 'SP', 'RP'):
-        p = _load_archetype(bucket)
-        if p is None:
-            continue
-        name_col = 'player_name' if 'player_name' in p.columns else 'name'
-        m = p[p['_key'] == key]
-        if not m.empty:
-            if m[name_col].nunique() > 1:
-                first = m.iloc[0]
-                print(f"WARN MULTI-MATCH for \"{name}\" in archetype panel — took first; ignored {m[name_col].nunique()-1} other(s)", file=sys.stderr)
-            r = m.sort_values('year').iloc[-1]
-            id_col = 'batter' if bucket == 'H' else 'pitcher'
-            return {
-                'id': int(r[id_col]),
-                'bucket': bucket,
-                'display_name': r[name_col],
-                'team': r.get('team', ''),
-                'position': bucket,
-            }
-    return None
-
-# ---------- PL rank ----------
-
-def pl_rank(name: str, bucket: str, model_rank=None) -> tuple[int | str, str | None]:
-    """Return (rank|'UR'|'—', cache_date).
-
-    'UR' = in PL universe scope but missing (snubbed).
-    '—'  = out of PL universe scope (model rank past article universe size).
-    """
-    cache_key = bucket  # H / SP / RP
-    cache = _load_pl_cache(PL_CACHE_FILES[cache_key])
-    ranks = cache.get('ranks', {})
-    fetched = cache.get('fetched')
-    # exact-norm match
-    nk = _norm(name)
-    for pl_name, rk in ranks.items():
-        if _norm(pl_name) == nk:
-            return rk, fetched
-    # No match — distinguish in-scope (UR) vs out-of-scope (—).
-    if not ranks:
-        return '—', None
-    universe = PL_UNIVERSE_SIZE.get(bucket, 150)
-    if isinstance(model_rank, int) and model_rank > universe:
-        return '—', fetched
-    return 'UR', fetched
-
-def pl_streamer_rank(name: str) -> tuple[str, str | None, str | None]:
-    """For SPs only: return (rank+tier string, opp, cache_date) from newest streamer cache."""
-    cache, date_str = _load_pl_streamer_cache()
-    ranks = cache.get('ranks', {})  # name -> {rank, tier, opp}
-    fetched = cache.get('fetched') or date_str
-    nk = _norm(name)
-    for pl_name, info in ranks.items():
-        if _norm(pl_name) == nk:
-            return f"#{info.get('rank','?')} [{info.get('tier','?')}]", info.get('opp'), fetched
-    return '—', None, fetched
-
-# ---------- model row ----------
-
-def model_row(player: dict) -> dict:
-    bucket = player['bucket']
-    df = _load_projection(bucket)
-    if bucket == 'H':
-        m = df[df['batter'] == player['id']]
-    else:
-        m = df[df['pitcher'] == player['id']]
-    if m.empty:
-        return {'rank': '—', 'proj': None, 'signal': '—', 'rep_delta': None, 'recform': None}
-    r = m.iloc[0]
-    if bucket == 'H':
-        return {
-            'rank': int(r['rank']),
-            'proj_label': 'fp/game',
-            'proj': float(r['xfp_rh3_per_game']),
-            'signal': r['signal'],
-            'rep_delta': float(r['replacement_delta']),
-            'recform': float(r['recency_form_gap']),
-            'extra': f"pa_to={int(r['pa_to'])}",
-        }
-    if bucket == 'SP':
-        return {
-            'rank': int(r['rank']),
-            'proj_label': 'fp/start',
-            'proj': float(r['xfp_rp3_per_start']),
-            'signal': r['signal'],
-            'rep_delta': float(r['replacement_delta']),
-            'recform': float(r['recency_form_gap']),
-            'extra': f"gs_to={int(r['gs_to'])}",
-        }
-    # RP
-    return {
-        'rank': int(r['rank']),
-        'proj_label': 'xfp_ros',
-        'proj': float(r['xfp_ros']),
-        'signal': r['signal'],
-        'rep_delta': float(r['replacement_delta']),
-        'recform': None,
-        'extra': f"role={r['role_lag1']} sv_to={int(r.get('sv_to') or 0)} hld_to={int(r.get('hld_to') or 0)}",
-    }
-
-# ---------- archetype row ----------
-
-def _is_truthy_flag(v) -> bool:
-    """RP role-tag fields are floats (0.0/1.0/NaN); plain truthy check treats NaN as True."""
-    if v is None:
-        return False
-    try:
-        if pd.isna(v):
-            return False
-    except (TypeError, ValueError):
-        return False
-    try:
-        return float(v) > 0
-    except (TypeError, ValueError):
-        return bool(v)
-
-def archetype_row(player: dict) -> dict:
-    bucket = player['bucket']
-    p = _load_archetype(bucket)
-    if p is None:
-        return {'have': False, 'reason': 'panel missing'}
-    id_col = 'batter' if bucket == 'H' else 'pitcher'
-    rows = p[p[id_col] == player['id']].sort_values('year')
-    if rows.empty:
-        return {'have': False, 'reason': 'not in archetype panel (insufficient innings/PA)'}
-    cur = rows[rows['year'] == 2026]
-    if cur.empty:
-        cur = rows.iloc[[-1]]
-    r = cur.iloc[0]
-    out = {
-        'have': True,
-        'year': int(r['year']),
-        'archetype': r.get('archetype'),
-        'cell': r.get('cell'),
-        'stuff_subtype': r.get('stuff_subtype'),
-        'age': int(r['age']) if pd.notna(r.get('age')) else None,
-        'age_tier': r.get('age_tier'),
-        'overall': int(r['OVERALL']) if pd.notna(r.get('OVERALL')) else None,
-        'traj_flag': r.get('traj_flag'),
-        'slope_3yr': r.get('OVERALL_slope_3yr'),
-        'career_pct': r.get('OVERALL_career_pct'),
-        't1_fp': r.get('t1_fp_projection'),
-        't2_fp': r.get('t2_fp_projection'),
-        'velo': r.get('avg_velo'),
-        'velo_tier': r.get('velo_tier'),
-        'boundary_tier': r.get('boundary_tier'),
-    }
-    # bucket-specific ratings
-    if bucket == 'SP':
-        out['ratings'] = {'STUFF': int(r['STUFF']), 'MOVEMENT': int(r['MOVEMENT']), 'CONTROL': int(r['CONTROL'])}
-        out['pitch_archetype'] = r.get('pitch_archetype')
-        # Sub-ratings used by 4th-lens overrides (post-TJ / CSW intact detection)
-        for sub in ('SWING_MISS','CALLED_STRIKE','WALK_AVOID','STRIKE_THROWING'):
-            if sub in p.columns and pd.notna(r.get(sub)):
-                out.setdefault('sub_ratings', {})[sub] = int(r[sub])
-        if pd.notna(r.get('career_year')):
-            out['career_year'] = int(r['career_year'])
-    elif bucket == 'RP':
-        out['ratings'] = {'STUFF': int(r['STUFF']), 'CONTROL': int(r['CONTROL']), 'BATTED_BALL': int(r['BATTED_BALL'])}
-        out['leverage_tier'] = r.get('leverage_tier')
-        # Role tags are floats (0.0/1.0/NaN) — normalize to booleans
-        out['closer']   = _is_truthy_flag(r.get('CLOSER'))
-        out['fireman']  = _is_truthy_flag(r.get('FIREMAN'))
-        out['high_lev'] = _is_truthy_flag(r.get('HIGH_LEVERAGE'))
-    else:  # H
-        for k in ('C','P','D','SB'):
-            if k in p.columns:
-                out.setdefault('ratings', {})[k] = int(r[k]) if pd.notna(r.get(k)) else None
-        # SPEED_TOOL is the canonical 20-80 speed rating (more granular than SB)
-        if 'SPEED_TOOL' in p.columns and pd.notna(r.get('SPEED_TOOL')):
-            out.setdefault('sub_ratings', {})['SPEED_TOOL'] = int(r['SPEED_TOOL'])
-    # career arc — last 4 years
-    arc = rows.tail(4)[['year','archetype','OVERALL']]
-    out['arc'] = [(int(y), a, int(o) if pd.notna(o) else None) for y,a,o in zip(arc['year'],arc['archetype'],arc['OVERALL'])]
-    return out
-
-# ---------- verdict synthesis ----------
-
-def synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche):
-    """Return a verdict tag + 1-2 sentence rationale."""
-    bucket = player['bucket']
-    notes = []
-    pl_r = pl_main
-    m_r = model.get('rank')
-    a_t1 = arche.get('t1_fp') if arche.get('have') else None
-    a_traj = arche.get('traj_flag') if arche.get('have') else None
-    a_cell = arche.get('cell') if arche.get('have') else None
-    a_archetype = arche.get('archetype') if arche.get('have') else None
-    overall = arche.get('overall', 50) if arche.get('have') else 50
-    label = a_archetype
-
-    # Archetype trajectory + cell-based reads
-    if arche.get('have'):
-        if a_traj == 'TRENDING_UP' and isinstance(pl_r, int) and isinstance(m_r, int) and (m_r - pl_r) > 50:
-            return 'BUY — archetype breakout', f"Archetype TRENDING_UP to {a_archetype} ({a_cell}); PL has caught it (#{pl_r}); model lagging (#{m_r}). Buy before model catches up."
-        if a_traj == 'TRENDING_DOWN' and isinstance(pl_r, int) and pl_r <= 50:
-            notes.append(f"WARN Archetype TRENDING_DOWN (slope {arche['slope_3yr']:+.1f}) while PL still has him #{pl_r} — sell-high candidate.")
-        if a_archetype in ('GENERIC_HR_PRONE','FILLER','WILD_MID','PIT_CHF'):
-            notes.append(f"WARN Archetype flag: {a_archetype} — bottom-tier process profile.")
-        if a_traj in ('CAREER_LOW',) and arche.get('career_pct',0) == 0:
-            notes.append(f"WARN Career-low season ({arche['career_pct']*100:.0f}% career-percentile).")
-        velo_tier = arche.get('velo_tier')
-        if velo_tier == 'FINESSE' and a_traj == 'TRENDING_DOWN':
-            notes.append("WARN FINESSE velo tier + declining = drop tier.")
-
-    # PL high, model high, archetype OVERALL high → strong hold
-    if isinstance(pl_r, int) and isinstance(m_r, int) and arche.get('have'):
-        ov = arche.get('overall',50)
-        if pl_r <= 30 and m_r <= 50 and ov >= 55:
-            return 'STRONG HOLD/BUY', f"All 3 lenses agree — PL #{pl_r}, model #{m_r}, archetype OVERALL {ov} ({a_archetype}). High conviction."
-
-    # Disagreement triage
-    if isinstance(pl_r, int) and isinstance(m_r, int):
-        gap = m_r - pl_r
-        if gap > 60 and arche.get('have') and arche.get('overall',50) < 50 and a_traj != 'TRENDING_UP':
-            return 'FADE — PL chasing outcomes', f"PL #{pl_r} but model #{m_r} and archetype OVERALL {arche['overall']} ({a_archetype}) — process doesn't support PL rank."
-        if gap < -50 and arche.get('have') and arche.get('overall',50) >= 55:
-            return 'BUY — model anchored on prior', f"Model #{m_r} but PL #{pl_r} and archetype OVERALL {arche['overall']} ({a_archetype}) — model lagging."
-
-    # New tier (a): process upgrade — strong archetype trending up, ranked top-80 by at least one outcome lens
-    if arche.get('have') and overall >= 60 and a_traj == 'TRENDING_UP' and \
-       ((isinstance(pl_r, int) and pl_r <= 80) or (isinstance(m_r, int) and m_r <= 80)):
-        return 'BUY — process upgrade', (
-            f"Archetype {label} OVERALL {overall} TRENDING_UP; ranked top-80 by at least one outcome lens. "
-            f"Process leads the outcomes."
-        )
-
-    # New tier (b): under-the-radar — PL hasn't ranked but model + archetype both endorse
-    if (pl_r in ('UR','—')) and isinstance(m_r, int) and m_r <= 80 \
-       and arche.get('have') and overall >= 60:
-        return 'BUY — under-the-radar', (
-            f"PL hasn't ranked him but model #{m_r} and archetype OVERALL {overall} ({label}) both endorse."
-        )
-
-    # New tier (c): outcomes only (no archetype) — rookies/short-sample with strong model
-    if (not arche.get('have')) and isinstance(m_r, int) and m_r <= 60 \
-       and (model.get('rep_delta') or 0) > 0:
-        rd = model.get('rep_delta') or 0.0
-        return 'BUY — outcomes only (no archetype)', (
-            f"Model #{m_r} with rep_d {rd:+.2f}; insufficient IP/PA for archetype profile yet."
-        )
-
-    if not notes:
-        return 'MIXED — see profile', "Signals don't converge to a single verdict; weigh the rate metrics against the trajectory before acting."
-    return 'CAUTION', ' '.join(notes)
-
-# ---------- 4th-lens overrides ----------
-#
-# These fire AFTER synthesize() and suppress unfounded FADE/CAUTION verdicts when
-# a fourth signal (not captured by the archetype label alone) argues for holding.
-# Documented in SKILL.md "Verdict decision tree" section.
-#
-#   A. SPEED_PROFILE          — hitter with SB/SPEED_TOOL ≥60 + TRENDING_DOWN
-#                               (archetype label undervalues speed-anchored fantasy value)
-#   B. POST_TJ_RAMP           — SP with CAREER_LOW + walk-driven archetype but intact
-#                               SwingMiss rating (stuff back, BB% lags — TJ recovery pattern)
-#   C. PROCESS_INTACT         — SP TRENDING_DOWN but SwingMiss rating ≥50 (K-rate noise,
-#                               not skill decline; declining outcomes outpace declining process)
-
-def apply_overrides(verdict, rationale, player, arche, model):
-    """Return possibly-upgraded (verdict, rationale, override_tag) when a 4th lens contradicts a bearish verdict."""
-    if not arche.get('have'):
-        return verdict, rationale, None
-    is_bearish = verdict.startswith('FADE') or verdict.startswith('CAUTION')
-    if not is_bearish:
-        return verdict, rationale, None
-
-    bucket = player['bucket']
-    sub = arche.get('sub_ratings', {}) or {}
-
-    # Override A — SPEED_PROFILE (hitters)
-    if bucket == 'H':
-        ratings = arche.get('ratings', {}) or {}
-        sb = sub.get('SPEED_TOOL') if 'SPEED_TOOL' in sub else ratings.get('SB')
-        if sb is not None and sb >= 60 and arche.get('traj_flag') in ('TRENDING_DOWN','STABLE'):
-            return (
-                'HOLD — speed profile',
-                f"4th-lens override: SB/SPEED rating {sb} (elite) — archetype label undervalues the speed-anchored fantasy floor. Original: {verdict}.",
-                'SPEED_PROFILE',
-            )
-
-    # Override B — POST_TJ_RAMP (SP CAREER_LOW with walk-driven-not-stuff-driven downgrade)
-    # Signature: K-stuff (SwingMiss) materially outpaces command (WalkAvoid). The CAREER_LOW
-    # is driven by walks lagging, not by stuff erosion — canonical post-TJ pattern.
-    if bucket == 'SP':
-        sm = sub.get('SWING_MISS')
-        wa = sub.get('WALK_AVOID')
-        cy = arche.get('career_year') or 0
-        cp = arche.get('career_pct')
-        is_career_low = (cp is not None and not pd.isna(cp) and cp <= 0.0)
-        walk_driven = arche.get('archetype') in ('WILD_MID','FILLER','GENERIC_HR_PRONE')
-        if (is_career_low and cy >= 3 and walk_driven
-            and sm is not None and wa is not None and (sm - wa) >= 10):
-            return (
-                'HOLD — post-TJ ramp candidate',
-                f"4th-lens override: CAREER_LOW + {arche.get('archetype')} but SwingMiss rating {sm} far outpaces WalkAvoid {wa} (Δ +{sm-wa}); career_yr={cy} (not a true rookie). Walk-driven downgrade with K-stuff intact = post-injury command-recovery pattern. Original: {verdict}.",
-                'POST_TJ_RAMP',
-            )
-
-    # Override C — PROCESS_INTACT (SP archetype trajectory disagrees with strong model rank)
-    # When archetype label is bearish but the model still ranks the player as a top-50 SP,
-    # the model (which integrates career + recent regression-shrunk outcomes) is anchoring on
-    # process the archetype's within-year peer-relative scaling is masking.
-    if bucket == 'SP':
-        m_r = model.get('rank')
-        m_traj = arche.get('traj_flag')
-        if (m_traj in ('TRENDING_DOWN','CAREER_LOW')
-            and isinstance(m_r, int) and m_r <= 50):
-            return (
-                'HOLD — process intact',
-                f"4th-lens override: archetype {m_traj} but model still ranks #{m_r} (top-50 SP). Outcome decline outpacing process decline — model disagrees with the archetype's trajectory call. Often a walk/BABIP blip. Original: {verdict}.",
-                'PROCESS_INTACT',
-            )
-
-    return verdict, rationale, None
-
-# ---------- output ----------
+# ---------- presentation layer (stays in the CLI) ----------
 
 def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale):
     lines = []
@@ -508,9 +40,8 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     lines.append(f"\n## {player['display_name']} ({bucket}) — {verdict}\n")
     lines.append(f"*{rationale}*\n")
 
-    # 3-source table
-    pl_label = {'H':'PL Top150', 'SP':'PL Top100', 'RP':'PL Closers'}[bucket]
-    model_label = {'H':'rh3', 'SP':'rp3', 'RP':'rprs2'}[bucket]
+    pl_label = {'H': 'PL Top150', 'SP': 'PL Top100', 'RP': 'PL Closers'}[bucket]
+    model_label = {'H': 'rh3', 'SP': 'rp3', 'RP': 'rprs2'}[bucket]
     lines.append("| Lens | Rank | Headline | Detail |")
     lines.append("|---|---|---|---|")
     pl_show = f"#{pl_main}" if isinstance(pl_main, int) else pl_main
@@ -520,8 +51,6 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     if model['rank'] != '—':
         proj = model['proj']
         proj_s = f"{proj:.2f} {model['proj_label']}" if proj is not None else '—'
-        # The rp3 'signal=il' is a known-defective column (213/264 SPs). Only render
-        # signal for RPs (rprs2's signal IS validated). Keep it in CSV for debug.
         sig = f"signal={model['signal']}" if bucket == 'RP' else ''
         rep = f"rep_d={model['rep_delta']:+.2f}" if model['rep_delta'] is not None else ''
         recf = f"recform={model['recform']:+.3f}" if model.get('recform') is not None else ''
@@ -531,21 +60,18 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     else:
         lines.append(f"| **{model_label}** | — | not in projection file | — |")
     if arche.get('have'):
-        rstr = ' / '.join(f"{k}={v}" for k,v in arche['ratings'].items())
+        rstr = ' / '.join(f"{k}={v}" for k, v in arche['ratings'].items())
         ar_h = f"OVERALL {arche['overall']} ({arche['archetype']} / {arche['cell']})"
         cp = arche.get('career_pct')
         cpstr = f", career-pct {cp*100:.0f}%" if cp is not None and pd.notna(cp) else ''
         sl = arche.get('slope_3yr')
         slstr = f", 3yr-slope {sl:+.1f}" if sl is not None and pd.notna(sl) else ''
         lines.append(f"| **Archetype** | — | {ar_h} | {rstr} | traj {arche['traj_flag']}{slstr}{cpstr} |")
-        # Career arc inline
-        arc = ' → '.join(f"{y}:{a}({o})" for y,a,o in arche['arc'])
+        arc = ' → '.join(f"{y}:{a}({o})" for y, a, o in arche['arc'])
         lines.append(f"\n**Career arc:** {arc}")
-        # T+1
         if arche.get('t1_fp') is not None and pd.notna(arche['t1_fp']):
-            unit = {'SP':'start', 'H':'PA', 'RP':'g'}[bucket]
+            unit = {'SP': 'start', 'H': 'PA', 'RP': 'g'}[bucket]
             lines.append(f"\n**Archetype T+1 projection:** {arche['t1_fp']:.3f} fp/{unit}")
-        # Role/leverage for RPs
         if bucket == 'RP':
             roles = []
             if arche.get('closer'):   roles.append('CLOSER')
@@ -554,7 +80,6 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             lev = arche.get('leverage_tier')
             tagstr = ', '.join(roles) if roles else 'non-role'
             lines.append(f"\n**Role tags:** {tagstr} | leverage_tier={lev}")
-        # Velo
         v = arche.get('velo'); vt = arche.get('velo_tier')
         if v is not None and pd.notna(v):
             lines.append(f"\n**Velo:** {v:.1f} mph [{vt}]")
@@ -562,8 +87,8 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         lines.append(f"| **Archetype** | — | NOT AVAILABLE | {arche.get('reason','')} |")
     return '\n'.join(lines)
 
+
 def compare_table(rows):
-    """Render a comparison table across all profiled players."""
     out = ["\n## Comparison\n"]
     out.append("| Player | Bucket | PL | Model | Archetype OVERALL | T+1 | Traj | Verdict |")
     out.append("|---|---|---|---|---|---|---|---|")
@@ -580,18 +105,20 @@ def compare_table(rows):
         out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} | {t1} | {tr} | {r['verdict']} |")
     return '\n'.join(out)
 
+
 def _verdict_matches(verdict: str, filters: list[str]) -> bool:
     if not filters:
         return True
     v = verdict.lower()
     return any(tok in v for tok in filters)
 
+
 # ---------- main ----------
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('names', nargs='*', help='Player names (or use --names-file)')
-    ap.add_argument('--bucket', choices=['H','SP','RP'], default=None,
+    ap.add_argument('--bucket', choices=['H', 'SP', 'RP'], default=None,
                     help='Force a position bucket (otherwise auto-detected)')
     ap.add_argument('--names-file', default=None, help='CSV with a player_name column (batch mode)')
     ap.add_argument('--csv-out', default=None, help='Write batch results to this CSV (instead of per-player cards)')
@@ -603,12 +130,10 @@ def main():
 
     _warn_stale_caches()
 
-    # Parse filter
     filters = []
     if args.filter:
         filters = [t.strip().lower() for t in args.filter.split(',') if t.strip()]
 
-    # Load batch input (preserve all columns for category propagation)
     input_df = None
     if args.names_file:
         input_df = pd.read_csv(args.names_file)
@@ -616,7 +141,6 @@ def main():
     else:
         name_list = args.names
 
-    # Build name → category map if present (case-sensitive name match by raw input)
     category_map = {}
     if input_df is not None and 'category' in input_df.columns:
         for _, row in input_df.iterrows():
@@ -639,16 +163,13 @@ def main():
             continue
         bucket = player['bucket']
         model = model_row(player)
-        # pl_rank needs model_rank to distinguish UR vs out-of-scope
         m_rank_int = model.get('rank') if isinstance(model.get('rank'), int) else None
         pl_main, pl_main_date = pl_rank(player['display_name'], bucket, model_rank=m_rank_int)
         pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name']) if bucket == 'SP' else ('—', None, None)
         arche = archetype_row(player)
         verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
-        # 4th-lens overrides — may upgrade FADE/CAUTION to a HOLD tier
         verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
-        # Verdict filter — skip non-matching rows entirely
         if not _verdict_matches(verdict, filters):
             continue
 
@@ -666,7 +187,7 @@ def main():
                 'pl_rank_raw': pl_main,
                 'model_rank': model.get('rank') if model.get('rank') != '—' else None,
                 'model_proj': model.get('proj'),
-                'model_signal': model.get('signal'),   # keep raw signal in CSV for debug
+                'model_signal': model.get('signal'),
                 'model_rep_delta': model.get('rep_delta'),
                 'model_recform': model.get('recform'),
                 'arche_have': arche.get('have', False),
@@ -697,6 +218,7 @@ def main():
         print(f"Wrote {len(csv_rows)} rows to {args.csv_out}")
     elif len(rows) > 1:
         print(compare_table(rows))
+
 
 if __name__ == '__main__':
     main()

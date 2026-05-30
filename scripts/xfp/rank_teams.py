@@ -11,13 +11,15 @@ def verdict_pts(v):
     v = str(v)
     if 'STRONG HOLD' in v: return 5
     if v.startswith('BUY'):
-        # Differentiate BUY tiers slightly
         if 'archetype breakout' in v: return 4
         if 'process upgrade' in v: return 3
         if 'under-the-radar' in v: return 3
         if 'model anchored' in v: return 3
         if 'outcomes only' in v: return 2
         return 3
+    # 4th-lens HOLD overrides — positive but weaker than BUY (verdict was upgraded
+    # from FADE/CAUTION; player is held with confidence but not a buy target)
+    if v.startswith('HOLD'): return 1
     if v.startswith('FADE'): return -3
     if v.startswith('CAUTION'): return -1
     return 0  # MIXED, etc.

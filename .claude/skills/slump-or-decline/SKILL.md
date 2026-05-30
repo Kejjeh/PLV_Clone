@@ -20,6 +20,20 @@ calibrated verdicts, not noisy point estimates.
 
 ---
 
+## Three lenses with named failure modes
+
+The convergence panel is built on **three independent statistical lenses**, each with its own anchor and its own known failure mode. The DROP verdict requires all three to agree — disagreement is the insight, not noise.
+
+| Lens | What it measures | Anchor | Known failure mode |
+|---|---|---|---|
+| **MC bounce simulator** | 10k bootstrap sims from career rolling-150 distribution → "what fraction of career windows recover to median within the next 150 PA?" | Career rolling-150 distribution (stationarity assumed) | Mis-weights regime shifts: if the hitter's true talent has stepped down (post-injury, age cliff), the career distribution over-represents prior talent. Sims look bullish on a player whose underlying talent has actually decayed. |
+| **Bayesian posterior talent** | Conjugate normal-normal update: prior = career mean; data = recent window; output = P(true talent > .320) | Prior strength scales with career PA — large careers anchor strongly | Strong-prior players (e.g. 10+ year vets) get pulled toward career baseline regardless of how bad the recent stretch is, masking real decline. Conversely, short-career players over-fit recent noise. |
+| **Historical comp matcher** | 54k snapshots 2015-2025; match on career %ile + PA + month-of-season; report empirical T+150 distribution | Population of comparable past situations | Bucketing on career %ile alone misses archetype context — a power hitter at career-low and a contact hitter at career-low have different recovery base rates. Comp set quality depends on having enough age-matched snapshots; thin for very old or very young players. |
+
+The diagnostic value is in **disagreement**: if MC says bounce but Bayesian says decline, the lenses are disagreeing on the regime-shift question, and the call should be SELL-HIGH (intermediate verdict) rather than HOLD or DROP.
+
+---
+
 ## Inputs
 
 1. **Player name(s)** — single or short list (≤5). For a roster-wide
@@ -684,6 +698,43 @@ available. Use it as the second key. If `pro_team` is absent, call
   to 0.363 xwOBA was built on the 0.396 platform — the 2026 recovery ceiling is lower.
   Always run Step 4.5 before citing a prior slump/recovery as evidence that a current
   trough will fully bounce back.
+
+---
+
+## Verdict decision tree (pseudo-code)
+
+The four verdicts (HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL) emerge from
+the three-lens convergence panel + the xwOBACON trajectory gate. Rules fire in
+priority order; first match wins.
+
+```
+# Required pre-check (Step 4.5)
+xwobacon_floor_intact = (current_xwobacon >= 0.95 * career_peak_xwobacon)
+
+1. NOT-SLUMPING-STRUCTURAL
+   L21d xwOBA 95% CI INCLUDES career baseline
+   AND Bayesian-shrunk gap > −0.040
+   # The slump is noise — sample size doesn't support a decline call
+
+2. DROP
+   MC P(bounce) < 0.50
+   AND Bayesian P(true talent > .320) < 0.40
+   AND historical_comp_recovery_rate < 0.40
+   AND NOT xwobacon_floor_intact     # all 3 lenses agree, contact quality cracked
+   # The Turner-pattern gate prevents a DROP call when xwOBACON
+   # platform suggests the bear case is over-reading
+
+3. SELL-HIGH
+   Lenses DISAGREE — at least one bullish, at least one bearish
+   # The window of opportunity to move the player before the
+   # disagreement resolves toward decline
+
+4. HOLD                            # fallback when lenses lean bullish or noise
+```
+
+The pre-check on Step 4.5 (xwOBACON year-over-year trajectory) is load-bearing —
+it prevents the "prior-slump-recovered" template from being applied when the
+underlying contact-quality platform has dropped.
 
 ---
 
