@@ -48,6 +48,29 @@ python scripts/xfp/run_triangulate.py \
 
 ---
 
+## CLI commands (delta + cache + schedule)
+
+| Flag | Purpose |
+|---|---|
+| `--snapshot LABEL` | After a batch run with `--csv-out`, also save a dated copy to `data/research/triangulate_universe/snapshots/triangulate_{LABEL}_{YYYY-MM-DD}.csv`. Use to lock in a baseline before a roster/FA shuffle. |
+| `--diff PRIOR_CSV` | After the current `--csv-out` run, emit a markdown diff vs PRIOR_CSV (verdict changes, override flips, new/dropped players). Written to `data/research/triangulate_universe/diff_{YYYY-MM-DD}.md` and the top 20 changes are echoed to stdout. |
+| `--check-caches` | Print refresh instructions (WebSearch query + WebFetch save-path) for any stale PL cache file, then exit without running. Thresholds: 7d for weekly caches, 2d for streamers. |
+
+### `schedule_idx` CSV column (SP only)
+
+Each SP row carries a `schedule_idx` float in `[0, 1]` — the SP's next-14-day
+opponent offensive-strength index, normalised across the current SP universe.
+`1.0` = facing the toughest offenses; `0.0` = softest. `None`/blank when the
+underlying `next2_avg_bat_index` is missing in `xfp_rp3_projections.csv`
+(the schedule_idx layer requires `data/outputs/week_schedule_tilt.csv` to be
+populated upstream of the rp3 pipeline; otherwise it falls back to None).
+
+The field is also exposed on the in-process model dict as `model['schedule_idx']`
+for downstream callers. No override consumes it yet — it is surfaced for ad-hoc
+inspection and future calibration.
+
+---
+
 ## Inputs
 
 - **1 to ~6 player names** (positional args)
@@ -103,6 +126,19 @@ The script:
 - Reads the archetype row (OVERALL, archetype label, cell, sub-ratings, traj_flag, 3yr slope, career percentile, T+1 fp, career arc, velo + tier)
 - Synthesizes a verdict from the agreement pattern
 - Prints a markdown card per player and a side-by-side comparison table (interactive mode) OR writes a CSV (batch mode)
+
+#### Public API fields (returned by `triangulate_player()` and written to `--csv-out`)
+
+| Field | Type | Description |
+|---|---|---|
+| `verdict` | str | Full label (back-compatible; one of 11 strings — see decision tree) |
+| `verdict_top` | str | Collapsed top-level: `BUY` / `HOLD` / `CAUTION` / `FADE` / `MIXED` |
+| `reason_tag` | str | Original specifier: `strong_hold`, `archetype_breakout`, `model_anchored`, `process_upgrade`, `under_the_radar`, `outcomes_only_rookie`, `post_tj_ramp`, `process_intact`, `process_red_flag`, `pl_outcome_chase`, `no_convergence` |
+| `confidence` | float 0-1 | Fraction of 4 independent signals (PL aligned / model aligned / archetype present / arche traj aligned) that converge with `verdict_top`. STRONG HOLD with all 4 signals = 1.0 |
+| `watch_list` | list[str] (dict) / `;`-joined str (CSV) | 4-5 counterfactual triggers that would flip the verdict — surfaced for HOLD/CAUTION/MIXED especially |
+| `within_bucket_rank` | int / None | Batch mode only: per `(category, bucket)` group, rank by `model_rank` asc. Tells you "this is the user's #3 SP" vs "#11 SP" — critical for the 10-start cap. `None` when input CSV has no `category` column. |
+
+The `format_card()` output now includes a `**Confidence:** N (X of Y signals agree)` line and a `**Watch list:** ...; ...` line.
 
 ### Step 3 — Read the output and offer follow-ups
 
@@ -165,6 +201,18 @@ When the verdict is BUY or FADE, suggest the natural follow-up skill:
    - velo_tier == FINESSE AND TRENDING_DOWN
 
 9. MIXED — see profile  (fallback when no rule fires)
+
+# ---- post-verdict augmentation ----
+# After the verdict label is finalized (including 4th-lens overrides), the engine
+# computes 5 additional fields surfaced on every dict + CSV row:
+#   - verdict_top:    BUY / HOLD / CAUTION / FADE / MIXED  (collapsed from the 11 full labels)
+#   - reason_tag:     stable specifier (strong_hold, archetype_breakout, model_anchored,
+#                     process_upgrade, under_the_radar, outcomes_only_rookie, post_tj_ramp,
+#                     process_intact, process_red_flag, pl_outcome_chase, no_convergence)
+#   - confidence:     fraction in [0,1] = (# of {PL aligned, model aligned, archetype present,
+#                     traj aligned}) / 4 — independent signals that agree with verdict_top
+#   - watch_list:     4-5 counterfactual triggers that would flip the verdict
+#   - within_bucket_rank: batch-mode only; per (category, bucket) group, model_rank ascending
 
 # ---- 4th-lens overrides ----
 # Applied AFTER the rules above. May upgrade a FADE/CAUTION verdict to a HOLD tier
@@ -271,9 +319,62 @@ The universe builder handles the four standard categories (`ROSTER`, `MY_DROP`, 
 
 ---
 
+## Dashboard view
+
+A browser-based view of the triangulate results lives at `xfp-model/docs/triangulate.html` (published via GitHub Pages alongside the other dashboards). It loads a sibling JSON file `triangulate_data.json` at page-load and renders:
+
+- generated timestamp + player/bucket counts header
+- verdict-distribution bars (color-coded: BUY=green, HOLD=blue, CAUTION=amber, FADE=red, MIXED=gray)
+- override-counts mini-table
+- a filterable + sortable player table (Name, Team, Bucket, PL, Model, Arche OVERALL, Label, Traj, Verdict, T+1, Rationale) with filters by team (dropdown), bucket (H/SP/RP buttons), verdict (multi-select), override (multi-select), and a name search box
+
+### `--json-out` flag
+
+The engine accepts `--json-out PATH` in batch mode. May coexist with `--csv-out` (both will be written). When set alone, no per-player cards are printed. JSON schema:
+
+```json
+{
+  "generated": "2026-05-30T...Z",
+  "n_players": 230,
+  "n_unresolved": 0,
+  "verdict_counts": {"STRONG HOLD/BUY": 40, "FADE": 9},
+  "override_counts": {"PROCESS_INTACT": 3, "POST_TJ_RAMP": 1},
+  "bucket_counts": {"H": 130, "SP": 70, "RP": 30},
+  "players": [
+    {
+      "name": "Aaron Judge", "bucket": "H", "team": "NYY",
+      "pl_rank": 1, "model_rank": 2, "model_proj": 2.48, "model_proj_label": "fp/PA",
+      "arche_overall": 74, "arche_label": "GOAT_TIER", "arche_traj": "TRENDING_DOWN",
+      "arche_t1_fp": 0.566, "arche_career_pct": 0.99,
+      "verdict": "STRONG HOLD/BUY", "rationale": "...", "override_tag": null,
+      "category": "New York Ligers"
+    }
+  ]
+}
+```
+
+### Data refresh
+
+```bash
+python scripts/xfp/run_triangulate.py \
+    --names-file data/research/triangulate_universe/all_teams_roster.csv \
+    --json-out   xfp-model/docs/triangulate_data.json
+```
+
+### Local preview
+
+```bash
+python -m http.server 8000 --directory xfp-model/docs
+# then open http://localhost:8000/triangulate.html
+```
+
+The dashboard is fully self-contained (inline CSS + vanilla JS, no build step) and uses the same Source Serif 4 / IBM Plex Mono palette as the other docs in `xfp-model/docs/`.
+
+---
+
 ## Files
 
-- Engine: [scripts/xfp/run_triangulate.py](../../scripts/xfp/run_triangulate.py) — supports both interactive (`names ...`) and batch (`--names-file`, `--csv-out`) modes
+- Engine: [scripts/xfp/run_triangulate.py](../../scripts/xfp/run_triangulate.py) — supports both interactive (`names ...`) and batch (`--names-file`, `--csv-out`, `--json-out`) modes
 - Universe builder: [scripts/xfp/build_triangulate_universe.py](../../scripts/xfp/build_triangulate_universe.py) — for the mega-research workflow; pulls roster + transactions + FAs and writes the 4 category CSVs
 - PL cache dir: [data/research/pl_cache/](../../data/research/pl_cache/)
 - Mega-research output dir: [data/research/triangulate_universe/](../../data/research/triangulate_universe/) (created on first universe build)

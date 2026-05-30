@@ -75,3 +75,65 @@ def _warn_stale_caches():
         age = (today - fdate).days
         if age > thresh:
             print(f"WARN {fname} is {age}d stale (fetched {fetched})", file=sys.stderr)
+
+
+# ---- refresh-instructions helper ---------------------------------------
+
+_CACHE_REFRESH_SPEC = [
+    ('pl_hitters_top150.json',       7, 'hitters', 'pitcherlist.com top 150 hitters {YEAR} week {WEEK}'),
+    ('pl_sps_top100.json',           7, 'sps',     'pitcherlist.com top 100 starting pitchers {YEAR} week {WEEK}'),
+    ('pl_closers.json',              7, 'closers', 'pitcherlist.com closers and saves {YEAR} week {WEEK}'),
+    ('pl_sp_streamers_latest.json',  2, 'streamers', 'pitcherlist.com SP streamers week {WEEK} {YEAR}'),
+]
+
+
+def print_refresh_instructions() -> None:
+    """Print step-by-step WebSearch + WebFetch instructions for stale caches."""
+    today = date.today()
+    year = today.year
+    # Rough ISO week within the season — close enough for a search hint
+    week = today.isocalendar().week
+
+    print("=== PL cache refresh check ===\n")
+    any_stale = False
+    for fname, thresh, _kind, query_tmpl in _CACHE_REFRESH_SPEC:
+        path = os.path.join(PL_CACHE_DIR, fname)
+        if not os.path.exists(path):
+            any_stale = True
+            print(f"MISSING: {fname}. To create:")
+            _print_refresh_block(fname, query_tmpl.format(YEAR=year, WEEK=week))
+            continue
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                cache = json.load(f)
+        except Exception as e:
+            print(f"UNREADABLE: {fname} ({e})\n")
+            continue
+        fetched = cache.get('fetched')
+        if not fetched:
+            print(f"NO-DATE: {fname} (no 'fetched' field — treat as stale)\n")
+            any_stale = True
+            continue
+        try:
+            fdate = datetime.strptime(fetched[:10], '%Y-%m-%d').date()
+        except ValueError:
+            print(f"BAD-DATE: {fname} (fetched={fetched})\n")
+            continue
+        age = (today - fdate).days
+        if age > thresh:
+            any_stale = True
+            print(f"STALE: {fname} ({age}d old, threshold {thresh}d). To refresh:")
+            _print_refresh_block(fname, query_tmpl.format(YEAR=year, WEEK=week))
+        else:
+            print(f"FRESH: {fname} ({age}d old, threshold {thresh}d)\n")
+
+    if not any_stale:
+        print("All PL caches are fresh — nothing to do.")
+
+
+def _print_refresh_block(fname: str, query: str) -> None:
+    print(f"  1. WebSearch \"{query}\" with allowed_domains=['pitcherlist.com']")
+    print(f"  2. WebFetch the latest URL, ask for the FULL list as `rank. Player Name`")
+    print(f"  3. Save to {PL_CACHE_DIR}/{fname} with schema "
+          "{source_url, fetched, week, ranks}")
+    print()

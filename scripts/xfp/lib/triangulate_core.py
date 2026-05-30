@@ -7,6 +7,7 @@ import pandas as pd
 from .bucket_dispatch import resolve_player
 from .cached_data import _load_projection, _load_archetype
 from .pl_cache import pl_rank, pl_streamer_rank
+from .schedule_strength import schedule_idx_for
 
 
 # ---------- model row ----------
@@ -19,7 +20,7 @@ def model_row(player: dict) -> dict:
     else:
         m = df[df['pitcher'] == player['id']]
     if m.empty:
-        return {'rank': '—', 'proj': None, 'signal': '—', 'rep_delta': None, 'recform': None}
+        return {'rank': '—', 'proj': None, 'signal': '—', 'rep_delta': None, 'recform': None, 'schedule_idx': None}
     r = m.iloc[0]
     if bucket == 'H':
         return {
@@ -32,6 +33,7 @@ def model_row(player: dict) -> dict:
             'extra': f"pa_to={int(r['pa_to'])}",
         }
     if bucket == 'SP':
+        sched = schedule_idx_for(player['id'])
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -40,6 +42,7 @@ def model_row(player: dict) -> dict:
             'rep_delta': float(r['replacement_delta']),
             'recform': float(r['recency_form_gap']),
             'extra': f"gs_to={int(r['gs_to'])}",
+            'schedule_idx': sched,
         }
     return {
         'rank': int(r['rank']),
@@ -250,6 +253,152 @@ def apply_overrides(verdict, rationale, player, arche, model):
     return verdict, rationale, None
 
 
+# ---------- verdict consolidation ----------
+
+# Map full verdict label -> (verdict_top, reason_tag).
+_VERDICT_MAP = {
+    'STRONG HOLD/BUY':                    ('BUY',     'strong_hold'),
+    'BUY — archetype breakout':           ('BUY',     'archetype_breakout'),
+    'BUY — model anchored on prior':      ('BUY',     'model_anchored'),
+    'BUY — process upgrade':              ('BUY',     'process_upgrade'),
+    'BUY — under-the-radar':              ('BUY',     'under_the_radar'),
+    'BUY — outcomes only (no archetype)': ('BUY',     'outcomes_only_rookie'),
+    'HOLD — post-TJ ramp candidate':      ('HOLD',    'post_tj_ramp'),
+    'HOLD — process intact':              ('HOLD',    'process_intact'),
+    'CAUTION':                            ('CAUTION', 'process_red_flag'),
+    'FADE — PL chasing outcomes':         ('FADE',    'pl_outcome_chase'),
+    'MIXED — see profile':                ('MIXED',   'no_convergence'),
+}
+
+
+def consolidate_verdict(verdict: str) -> tuple[str, str]:
+    """Collapse full verdict label to (verdict_top, reason_tag)."""
+    if verdict in _VERDICT_MAP:
+        return _VERDICT_MAP[verdict]
+    # Prefix fallback for any unexpected variant
+    if verdict.startswith('STRONG'):    return ('BUY',     'strong_hold')
+    if verdict.startswith('BUY'):       return ('BUY',     'other')
+    if verdict.startswith('HOLD'):      return ('HOLD',    'other')
+    if verdict.startswith('FADE'):      return ('FADE',    'other')
+    if verdict.startswith('CAUTION'):   return ('CAUTION', 'process_red_flag')
+    if verdict.startswith('MIXED'):     return ('MIXED',   'no_convergence')
+    return ('MIXED', 'unknown')
+
+
+# ---------- confidence scoring ----------
+
+def _verdict_direction(verdict_top: str) -> str:
+    """bullish / bearish / neutral for alignment scoring."""
+    if verdict_top == 'BUY':
+        return 'bullish'
+    if verdict_top in ('FADE', 'CAUTION'):
+        return 'bearish'
+    return 'neutral'  # HOLD, MIXED
+
+
+def compute_confidence(verdict_top: str, pl_rank, model_rank, arche: dict) -> tuple[float, int, int]:
+    """Return (confidence_0_1, n_signals_aligned, n_signals_available)."""
+    direction = _verdict_direction(verdict_top)
+    aligned = 0
+    available = 4
+
+    pl_int = pl_rank if isinstance(pl_rank, int) else None
+    m_int = model_rank if isinstance(model_rank, int) else None
+    has_arche = bool(arche.get('have'))
+    a_traj = arche.get('traj_flag') if has_arche else None
+    a_overall = arche.get('overall') if has_arche else None
+
+    # Signal 1: PL rank alignment
+    if pl_int is not None:
+        if direction == 'bullish' and pl_int <= 80:
+            aligned += 1
+        elif direction == 'bearish' and pl_int > 80:
+            aligned += 1
+        elif direction == 'neutral':
+            aligned += 1  # presence counts for HOLD/MIXED
+    elif direction == 'bullish' and verdict_top == 'BUY':
+        # UR/unranked is consistent with under-the-radar BUYs
+        pass
+
+    # Signal 2: Model rank alignment
+    if m_int is not None:
+        if direction == 'bullish' and m_int <= 80:
+            aligned += 1
+        elif direction == 'bearish' and m_int > 80:
+            aligned += 1
+        elif direction == 'neutral':
+            aligned += 1
+
+    # Signal 3: Archetype data present
+    if has_arche:
+        aligned += 1
+
+    # Signal 4: Archetype trajectory aligned
+    if has_arche and a_traj is not None:
+        if direction == 'bullish' and a_traj == 'TRENDING_UP':
+            aligned += 1
+        elif direction == 'bearish' and a_traj in ('TRENDING_DOWN', 'CAREER_LOW'):
+            aligned += 1
+        elif direction == 'neutral' and a_traj in ('STABLE', 'TRENDING_UP', 'TRENDING_DOWN', 'CAREER_LOW', 'CAREER_HIGH'):
+            # Any concrete trajectory counts as a signal for HOLD/MIXED
+            aligned += 1
+
+    confidence = aligned / available
+    return confidence, aligned, available
+
+
+# ---------- counterfactual watch-list ----------
+
+def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict, pl_rank) -> list[str]:
+    """4-5 templated counterfactual triggers that would flip the verdict."""
+    m_rank = model.get('rank') if isinstance(model.get('rank'), int) else None
+    has_arche = bool(arche.get('have'))
+    overall = arche.get('overall') if has_arche else None
+    a_traj = arche.get('traj_flag') if has_arche else None
+
+    items: list[str] = []
+
+    if verdict_top == 'HOLD':
+        if reason_tag == 'process_intact':
+            items.append(f"model rank slips past #35 (currently #{m_rank})")
+            items.append("SwingMiss sub-rating drops below 45")
+            items.append("archetype trajectory worsens to CAREER_LOW")
+            items.append("velo_tier drops to FINESSE")
+        elif reason_tag == 'post_tj_ramp':
+            items.append("SwingMiss rating falls below 50 (stuff actually eroding)")
+            items.append("WalkAvoid fails to recover above 45 after 4 starts")
+            items.append("model rank slips past #60")
+            items.append("archetype label shifts away from WILD_MID/FILLER without K-rate gain")
+        else:
+            items.append(f"model rank moves outside top-50 (currently #{m_rank})")
+            items.append("archetype OVERALL drops below 50")
+            items.append("traj_flag flips to TRENDING_DOWN")
+    elif verdict_top == 'CAUTION':
+        items.append("career_pct drops below current floor")
+        items.append("L21d xwOBACON drops more than 0.020 from season")
+        items.append("archetype OVERALL drops below 45")
+        items.append(f"PL rank deteriorates past #100 (currently {pl_rank})")
+        if has_arche and arche.get('velo_tier') == 'FINESSE':
+            items.append("velo drops further (already FINESSE tier)")
+    elif verdict_top == 'MIXED':
+        items.append(f"PL rank changes by >20 (currently {pl_rank})")
+        items.append(f"model rank changes by >20 (currently #{m_rank})")
+        items.append(f"archetype OVERALL changes by >10 (currently {overall})")
+        items.append("traj_flag flips direction")
+    elif verdict_top == 'BUY':
+        items.append("archetype trajectory flips to TRENDING_DOWN")
+        items.append("model rank slips past #80")
+        items.append("PL rank drops more than 30 ranks")
+        items.append("archetype OVERALL drops below 55")
+    elif verdict_top == 'FADE':
+        items.append("model rank improves to top-50")
+        items.append("archetype OVERALL climbs above 55")
+        items.append("traj_flag flips to TRENDING_UP")
+        items.append("PL rank holds or improves over next 2 weeks")
+
+    return items[:5]
+
+
 # ---------- public high-level entry point ----------
 
 def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
@@ -272,6 +421,11 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
     verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
     verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
+    verdict_top, reason_tag = consolidate_verdict(verdict)
+    m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
+    confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
+    watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main)
+
     return {
         'player': player,
         'bucket': b,
@@ -289,6 +443,12 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
         'model': model,
         'arche': arche,
         'verdict': verdict,
+        'verdict_top': verdict_top,
+        'reason_tag': reason_tag,
+        'confidence': confidence,
+        'confidence_n_aligned': n_aligned,
+        'confidence_n_available': n_avail,
+        'watch_list': watch_list,
         'rationale': rationale,
         'override_tag': override_tag,
     }
