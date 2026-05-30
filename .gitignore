@@ -69,6 +69,14 @@ data/research/xfp_cache/*.parquet.bak
 # Archetype career panels — regenerated daily by build_*_archetypes.py
 data/research/hitter_archetype_career_panel.parquet
 data/research/sp_archetype_career_panel.parquet
+data/research/rp_archetype_career_panel.parquet
+
+# HR-14d analog research scratch (regenerable from statcast cache)
+data/research/hr14d_*.parquet
+data/research/batter_name_map.parquet
+
+# Triangulate mega-research ephemeral outputs (live roster + FA snapshots)
+data/research/triangulate_universe/
 
 # Research archive — historical snapshots, local-only (see _archive/README.md)
 data/research/_archive/

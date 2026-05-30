@@ -189,6 +189,13 @@ python scripts/xfp/run_roster_audit.py
   breached by upcoming IL activations, pre-identify cut candidates from
   rp3 rankings, simulate full IL return cascade. Use when multiple IL
   starters (Glasnow/Fried pattern) are returning in close succession.
+- `/triangulate` — unified three-lens player analysis: PL rank + our
+  model (rh3/rp3/rprs2) + archetype model (20-80 ratings + cell +
+  trajectory + T+1) in a single card per player, with auto-synthesized
+  verdict from the agreement/disagreement pattern. Works on H/SP/RP via
+  position auto-detect. PL ranks cached in `data/research/pl_cache/`
+  (refresh weekly for Top150/Top100/Closers, daily for streamers).
+  Engine: `scripts/xfp/run_triangulate.py`.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
