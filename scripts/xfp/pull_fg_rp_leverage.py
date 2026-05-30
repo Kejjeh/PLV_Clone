@@ -22,8 +22,8 @@ OUT_DIR = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PATH = OUT_DIR / 'fangraphs_rp_leverage_2018_2026.csv'
 
-# 2018-2026 minus 2020 (COVID-short, excluded from RP archetype panel)
-YEARS = [2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]
+# 2017-2026 minus 2020 (COVID-short, excluded from RP archetype panel)
+YEARS = [2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]
 
 # FG relief-leaderboard column mapping.
 # Source columns picked from the FG `stats=rel&type=8` leaderboard schema.

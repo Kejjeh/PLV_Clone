@@ -36,7 +36,7 @@ RP_MULTIYR = REPO / 'data/research/xfp_cache/relievers_multiyr_2018_2026.csv'
 STATCAST_DIR = REPO / 'data/research/xfp_cache'
 OUT_CSV = REPO / 'data/research/xfp_cache/rp_damage_gb_2018_2026.csv'
 
-YEARS = list(range(2018, 2027))
+YEARS = list(range(2017, 2027))
 G_FLOOR = 20
 TBF_FLOOR = 50
 BIP_FLOOR = 30

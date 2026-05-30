@@ -440,22 +440,59 @@ def build_ratings_panel(current_year=2026):
     # serialization converts NaN to null which is correct for the frontend.
     qual['lineup_role_tier'] = qual['lineup_role_tier'].fillna('UNKNOWN')
 
-    # T+1 FP/PA projection — linear combo of sub-domain ratings + age.
-    # Coefficients from OLS regression of next-year fp_per_pa on these features.
-    T1_HITTER_INTERCEPT = -0.59929
+    # T+1 FP/PA projection — linear OLS on the 12 sub-domain ratings + age +
+    # mean_lineup_spot. Refit 2026-05-30 to include mean_lineup_spot as
+    # orthogonal context (higher spot # = lower in order → mechanically less
+    # production via PA volume). Cohort: 250+ PA, next_year == year+1.
+    # n_pairs = 1,150. R² = 0.3351 (vs 0.32 without lineup spot).
+    # mean_lineup_spot beta = -0.00565 (sign matches: batting lower hurts).
+    T1_HITTER_INTERCEPT = -0.46358
     T1_HITTER_BETAS = {
-        'Z_CONTACT': 0.00117, 'O_CONTACT': 0.00294, 'K_AVOIDANCE': 0.00535,
-        'CONTACT_QUALITY': -0.00018, 'SPRAY_PROFILE': -0.00022,
-        'RAW_POWER': 0.00626, 'LAUNCH_OPTIM': 0.00086, 'DAMAGE_PROD': 0.00151,
-        'PATIENCE': 0.00125, 'AGGRESSION': 0.00100,
-        'SPEED_TOOL': 0.00132, 'SB_CONVERSION': 0.00147,
-        'age': -0.00284,
+        'Z_CONTACT': 0.00103, 'O_CONTACT': 0.00189, 'K_AVOIDANCE': 0.00508,
+        'CONTACT_QUALITY': -0.00159, 'SPRAY_PROFILE': -0.00005,
+        'RAW_POWER': 0.00572, 'LAUNCH_OPTIM': 0.00079, 'DAMAGE_PROD': 0.00204,
+        'PATIENCE': 0.00190, 'AGGRESSION': 0.00128,
+        'SPEED_TOOL': 0.00142, 'SB_CONVERSION': 0.00134,
+        'age': -0.00281,
+        'mean_lineup_spot': -0.00565,
     }
+    # mean_lineup_spot fillna: pre-2018 rows have no lineup data; use league
+    # median (~5.0) as a neutral fallback so the projection still computes.
+    LINEUP_SPOT_FALLBACK = 5.0
+    def _feat_series(k):
+        if k == 'mean_lineup_spot':
+            return qual[k].fillna(LINEUP_SPOT_FALLBACK)
+        return qual[k].fillna(50)
     qual['t1_fp_proj_raw'] = T1_HITTER_INTERCEPT + sum(
-        qual[k].fillna(50) * v for k, v in T1_HITTER_BETAS.items()
+        _feat_series(k) * v for k, v in T1_HITTER_BETAS.items()
     )
     qual['t1_fp_projection'] = qual['t1_fp_proj_raw'].clip(lower=0.1, upper=1.2).round(3)
     qual = qual.drop(columns=['t1_fp_proj_raw'])
+
+    # T+2 FP/PA projection — linear OLS on the same features, target two years
+    # out. Cohort: 250+ PA, t2_year == year+2. n_pairs = 531. R² = 0.2759.
+    # Age coefficient sharper (-0.00423 vs T+1's -0.00281) — age dominates
+    # longer horizons (mirrors SP T+2 finding). mean_lineup_spot beta likewise
+    # more negative (-0.00880); structural lineup decay compounds.
+    T2_HITTER_INTERCEPT = -0.23537
+    T2_HITTER_BETAS = {
+        'Z_CONTACT': 0.00141, 'O_CONTACT': 0.00083, 'K_AVOIDANCE': 0.00450,
+        'CONTACT_QUALITY': -0.00012, 'SPRAY_PROFILE': -0.00085,
+        'RAW_POWER': 0.00426, 'LAUNCH_OPTIM': 0.00032, 'DAMAGE_PROD': 0.00128,
+        'PATIENCE': 0.00193, 'AGGRESSION': 0.00112,
+        'SPEED_TOOL': 0.00148, 'SB_CONVERSION': 0.00109,
+        'age': -0.00423,
+        'mean_lineup_spot': -0.00880,
+    }
+    def _feat_series_t2(k):
+        if k == 'mean_lineup_spot':
+            return qual[k].fillna(LINEUP_SPOT_FALLBACK)
+        return qual[k].fillna(50)
+    qual['t2_fp_proj_raw'] = T2_HITTER_INTERCEPT + sum(
+        _feat_series_t2(k) * v for k, v in T2_HITTER_BETAS.items()
+    )
+    qual['t2_fp_projection'] = qual['t2_fp_proj_raw'].clip(lower=0.1, upper=1.2).round(3)
+    qual = qual.drop(columns=['t2_fp_proj_raw'])
 
     # Trajectory alerts — 3-year OVERALL slope + career percentile.
     # Slope = linear-regression slope of OVERALL on year over the last 3 seasons
@@ -597,7 +634,7 @@ def main():
 
     # Master ratings CSV (human-readable)
     master_cols = [
-        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','t1_fp_projection','data_tier',
+        'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','t1_fp_projection','t2_fp_projection','data_tier',
         # Lineup-spot context (display-only structural-leverage signal — gmLI
         # analog). Positioned near team/pa as a usage/context field; never
         # feeds the rated CONTACT/POWER/DISCIPLINE/SB domains.

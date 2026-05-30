@@ -36,8 +36,8 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 OUT_PATH = OUT_DIR / 'rp_ir_is_2018_2026.csv'
 FG_LEVERAGE_CSV = OUT_DIR / 'fangraphs_rp_leverage_2018_2026.csv'
 
-# 2018-2026 minus 2020 (matches RP archetype convention)
-YEARS = [2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]
+# 2017-2026 minus 2020 (matches RP archetype convention)
+YEARS = [2017, 2018, 2019, 2021, 2022, 2023, 2024, 2025, 2026]
 
 UA = ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
       '(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36')

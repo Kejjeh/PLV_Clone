@@ -192,6 +192,24 @@ Loaded from `data/research/hitter_decline_baselines.json`:
 
 Slightly less brutal than SP elite decline (59%) but similar story. **Methodology note** — same as SP: elite T+1 decline is a base rate, not an actionable alert; pre-decline process drops correlate with mean reversion not amplified decline. Do not use prior-year skill drops as a "decline imminent" signal.
 
+### T+1 / T+2 FP/PA projections
+
+Each row in the master carries `t1_fp_projection` and `t2_fp_projection` from an OLS regression on the 12 sub-domain ratings (`Z_CONTACT`, `O_CONTACT`, `K_AVOIDANCE`, `CONTACT_QUALITY`, `SPRAY_PROFILE`, `RAW_POWER`, `LAUNCH_OPTIM`, `DAMAGE_PROD`, `PATIENCE`, `AGGRESSION`, `SPEED_TOOL`, `SB_CONVERSION`) plus `age` and `mean_lineup_spot`.
+
+| Horizon | Cohort | n_pairs | R² | Age β | Lineup-spot β |
+|---|---|---|---|---|---|
+| T+1 | PA ≥ 250, next_year = year+1 | 1,150 | **0.34** | −0.00281 | −0.00565 |
+| T+2 | PA ≥ 250, t2_year = year+2 | 531 | **0.28** | −0.00423 | −0.00880 |
+
+Honest expectations:
+- T+1 R² = 0.34 is slightly weaker than the SP T+1 (R² = 0.41) — hitter FP/PA has higher YoY variance because BABIP / role / lineup-spot churn add noise on top of skill drift.
+- T+2 R² = 0.28 is close to the SP T+2 (R² = 0.39 on a tiny n=290). Age coefficient roughly doubles at T+2 — age dominates longer horizons (mirrors the SP finding).
+- Lineup-spot beta is negative as expected: moving down in the order mechanically reduces FP/PA via fewer PAs per game and a worse run-environment.
+
+**Use case:** sanity-check the verdict. A current-year FP/PA at 0.700 with a T+1 projection of 0.500 is a regression-flag, but at this R² treat the gap as directional. Do **not** publish T+1 as a point estimate to the user — quote it alongside current FP/PA as "model projects X next year vs Y current" and let the gap drive the framing.
+
+Constants live in `scripts/xfp/build_hitter_archetypes.py` (`T1_HITTER_INTERCEPT`/`T1_HITTER_BETAS` and the T+2 pair). Refit when the master schema changes.
+
 ---
 
 ## Data sources
@@ -238,7 +256,8 @@ rows = master[master['player_name'].str.contains(name_pattern, case=False, na=Fa
 3. **Boundary risk** — `boundary_distance` value + tier + which domain is closest to flipping. E.g., "boundary distance = 1 → EDGE; POWER=61 is 1 point from flipping the PLUS-power label"
 4. **Age-conditioned stickiness** — retention% for this archetype AT THIS AGE TIER (not just overall), pulled from `hitter_archetype_stickiness.json` per-age block if available.
 5. **Career arc** — year-by-year archetype trail with FP/PA AND age AND boundary tier AND lineup_role_tier. **Format each line with C/P/D/SB explicit:** `2024 (age 24) CONTACT_POWER [C=75 P=63 D=51 SB=69] NEAR_EDGE TOP_ORDER(2.0), FP/PA=0.842`. The lineup tier in the trail surfaces role drift: a hitter who slipped from HEART_OF_ORDER → ROTATIONAL year-over-year is losing manager confidence even if C/P/D ratings hold.
-6. **Verdict** — 1-2 sentences synthesizing what kind of hitter they are and what the data says about durability, weighted by both age tier and boundary tier (SOLID labels deserve more weight than EDGE labels). Reference specific C/P/D values when arguing the verdict. If `lineup_role_tier` mismatches archetype quality (e.g., elite archetype but ROTATIONAL tier, or `BACKUP_BAT` with HEART_OF_ORDER usage), flag it explicitly — usage and skill are independently informative.
+6. **T+1 / T+2 FP/PA projections** — report `t1_fp_projection` (next year) and `t2_fp_projection` (two years out) for the current row. Both come from OLS regression on the 12 sub-domain ratings + `age` + `mean_lineup_spot`. T+1 R² = 0.34 on n=1,150 batter-year pairs (cohort: PA ≥ 250, next_year == year+1). T+2 R² = 0.28 on n=531. Compare to SP T+1 R² = 0.41 — hitter T+1 is slightly weaker because year-to-year FP/PA variance is higher (BABIP / role / lineup-spot churn). Lineup-spot beta is negative (-0.00565 for T+1, -0.00880 for T+2) — moving down in the order mechanically reduces FP/PA via PA-volume and run-environment effects. Use as a **directional check** on the verdict, not a point estimate: a T+1 dramatically below current FP/PA flags regression-baked-in even before mean reversion.
+7. **Verdict** — 1-2 sentences synthesizing what kind of hitter they are and what the data says about durability, weighted by both age tier and boundary tier (SOLID labels deserve more weight than EDGE labels). Reference specific C/P/D values when arguing the verdict. If `lineup_role_tier` mismatches archetype quality (e.g., elite archetype but ROTATIONAL tier, or `BACKUP_BAT` with HEART_OF_ORDER usage), flag it explicitly — usage and skill are independently informative.
 
 ### Mode 2 — League-wide trajectory scan: `/hitter-archetype scan`
 

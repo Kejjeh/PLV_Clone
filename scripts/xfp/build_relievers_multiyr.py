@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = CACHE / 'relievers_multiyr_2018_2026.csv'
 
-YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 
 SWING_DESC = {'swinging_strike','swinging_strike_blocked','foul','foul_tip',
               'hit_into_play','foul_bunt','missed_bunt'}

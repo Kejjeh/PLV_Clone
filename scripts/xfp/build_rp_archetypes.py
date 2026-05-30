@@ -3,7 +3,7 @@ build_rp_archetypes.py — daily build of RP 20-80 ratings + archetype labels +
 trajectories + stickiness + comp panel. RP analog of build_sp_archetypes.py.
 
 Outputs (all written to data/research/):
-  rp_ratings_master.csv             — RP-years 2018-2026 with full 20-80 ratings
+  rp_ratings_master.csv             — RP-years 2017-2026 (ex-2020) with full 20-80 ratings
   rp_archetype_career_panel.parquet — same data + T+1/T+2 outcomes for comp matching
   rp_archetype_definitions.json     — 27 cell labels with descriptions
   rp_archetype_stickiness.json      — year-over-year retention rates per archetype

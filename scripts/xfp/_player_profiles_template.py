@@ -1966,13 +1966,15 @@ function openModal(role, id) {
     hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${t1Unit} next yr</div>`;
     hero += `</div>`;
   }
-  // T+2 projection (pitchers — dynasty/keeper context). Label adapts to RP role.
-  if (role === 'sp' && cur.t2_fp_projection != null) {
-    const isRP_t2 = cur.role === 'RP';
+  // T+2 projection — pitchers (dynasty/keeper) + hitters (added 2026-05-30).
+  // Label adapts to RP role; hitter unit is fp/pa.
+  if (cur.t2_fp_projection != null) {
+    const isRP_t2 = (role === 'sp' && cur.role === 'RP');
+    const t2Unit  = role === 'hitter' ? 'pa' : (isRP_t2 ? 'g' : 'start');
     hero += `<div class="hero-overall" style="border-left:3px solid var(--dim);padding-left:.8em;">`;
     hero += `<div class="label">T+2 projection</div>`;
-    hero += `<div class="val" style="font-size:1.5em;">${cur.t2_fp_projection.toFixed(2)}</div>`;
-    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${isRP_t2 ? 'g' : 'start'} in 2 yrs</div>`;
+    hero += `<div class="val" style="font-size:1.5em;">${cur.t2_fp_projection.toFixed(role === 'hitter' ? 3 : 2)}</div>`;
+    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${t2Unit} in 2 yrs</div>`;
     hero += `</div>`;
   }
   // RP role tags (CLOSER / HIGH_LEVERAGE / MULTI_INNING_BULK / PLATOON)
@@ -2491,8 +2493,8 @@ const COL_TOOLTIPS = {
   tbf: 'Total batters faced',
   fp_per_pa: 'Fantasy points per plate appearance: (R+TB+RBI+BB+HBP+SB−K) / PA',
   fp_per_start: 'Fantasy points per start: (K+IP*3.3−H−2*ER−BB−HBP) / GS',
-  t1_fp_projection: 'Next-year FP rate projection (T+1) from OLS on the 6 sub-domain ratings + age',
-  t2_fp_projection: 'Two-year-out FP rate projection (T+2). RP version R²=0.26, SP R²=0.39 — directional',
+  t1_fp_projection: 'Next-year FP rate projection (T+1) from OLS on sub-domain ratings + age. Hitters: 12 sub-domains + age + mean_lineup_spot, R²=0.34 on n=1,150 pairs. SP: R²=0.41. RP: R²=0.36.',
+  t2_fp_projection: 'Two-year-out FP rate projection (T+2). Hitters: R²=0.28 on n=531 pairs (age coefficient sharper than T+1). SP R²=0.39. RP R²=0.26. Directional for dynasty/keeper.',
   OVERALL: 'Composite 20-80 rating: 0.55*CONTACT + 0.35*POWER + 0.10*DISCIPLINE (hitters) or empirical weights (pitchers). Higher = better.',
   CONTACT: 'Contact domain 20-80 rating — within-year z-score of (Z-contact + Chase-contact + K-avoid + Quality + Spray). Higher = better.',
   POWER: 'Power domain 20-80 rating — within-year z-score of (Raw EV + Launch + Damage production). Higher = better.',
@@ -2569,6 +2571,8 @@ const H_TBL_COLS = [
   { key: 'year',        label: 'Yr',  num: true, w: 2 },
   { key: 'pa',          label: 'PA',  num: true, w: 2 },
   { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 't1_fp_projection', label: 'T+1', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 't2_fp_projection', label: 'T+2', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
   { key: 'CONTACT',     label: 'C',   num: true, w: 3 },
   { key: 'POWER',       label: 'P',   num: true, w: 3 },

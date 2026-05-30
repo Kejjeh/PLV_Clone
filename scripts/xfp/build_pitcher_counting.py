@@ -15,7 +15,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
-YEARS = [2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
+YEARS = [2017, 2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026]
 
 # Stats we want from MLB API (paginated; up to 1000 per request).
 KEEP_STAT_FIELDS = [
