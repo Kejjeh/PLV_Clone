@@ -146,6 +146,44 @@ Loaded from `data/research/hitter_archetype_stickiness.json`. 22 of 27 archetype
 
 **General pattern** — labels stabilize with streak length: 1st-year-in-arch retention is lowest, multi-year sustained archetypes are stickier. Always check streak length.
 
+### Context layer — lineup-spot tier (structural-leverage signal)
+
+Hitters carry a **lineup_role_tier** display field — the structural-leverage analog of gmLI on the RP side. Derived from per-game starting-lineup spots (`data/research/xfp_cache/hitter_lineup_features_2018_2026.csv`) and joined onto every batter-year row in `hitter_ratings_master.csv` for years ≥ 2018 (pre-2018 batter-years carry `lineup_role_tier = UNKNOWN`). It is **display-only** — never feeds CONTACT / POWER / DISCIPLINE / SB ratings.
+
+| Tier | Rule | What it means |
+|---|---|---|
+| `LEADOFF`        | mean spot ≤ 1.8 AND mode_share ≥ 0.5 | Locked-in #1 hitter |
+| `TOP_ORDER`      | top3_share ≥ 0.70 (and not LEADOFF) | Mostly hits 1-3, often 2-hole regulars (Witt Jr. 2.0, Judge 2.5) |
+| `HEART_OF_ORDER` | mode_lineup_spot ∈ {3,4,5} AND mode_share ≥ 0.5 | Locked-in cleanup/heart bat (Yordan, Yelich mode-3) |
+| `MIDDLE_ORDER`   | top5_share ≥ 0.75 AND top3_share < 0.70 | Mostly 4-5, no top-of-order time |
+| `BOTTOM_ORDER`   | bottom_share ≥ 0.50 (spots 7-9) | Bottom-third role |
+| `ROTATIONAL`     | mode_share < 0.40 | Shuffled across spots — platoon/utility |
+
+Companion numeric fields:
+- `mean_lineup_spot` — average spot (1.0 = leadoff every game; 4.0 = cleanup)
+- `top5_share` — fraction of games at spot 1-5 (heart of order)
+- `lineup_spot_entropy` — Shannon entropy in nats. 0 = always same spot; ~2.2 = fully shuffled. Lower = more role-locked.
+
+**Empirical foundation** (validated 2026-05-30 external-signals audit):
+- `mean_lineup_spot` YoY r = **0.682** (n=1,118 pairs, 250+ PA cohort)
+- `top5_share` YoY r = **0.647**
+- Same-year vs FP/PA r = ±0.55 (stronger than xwoba_per_pa)
+- Predictive next-year FP/PA r = ±0.35 — **~80% as predictive as the rate-skill baseline, and orthogonal to it**
+
+That's why this is the hitter analog of gmLI for RPs: it's not a skill rating, it's a *role* signal — how the manager is *using* the bat — and it's largely orthogonal to the C/P/D/SB ratings.
+
+**Why this matters at the archetype layer**: two hitters with the same archetype label can have very different fantasy ceilings if their lineup roles differ. A `CONTACT_POWER` HEART_OF_ORDER bat sees ~20-30% more RBI opportunities than a `CONTACT_POWER` ROTATIONAL utility piece. Always report `lineup_role_tier` alongside the archetype in profile mode.
+
+**Typical lineup_role_tier patterns by archetype:**
+- `GOAT_TIER`, `CONTACT_POWER`, `POWER_EYE`, `POWER_HITTER` → typically `HEART_OF_ORDER` or `TOP_ORDER` (managers protect their best bats in run-producing spots)
+- `CONTACT_EYE`, `PURE_HITTER`, `SLAP_AND_WALK`, `SECONDARY_LEADOFF` → tend to `LEADOFF` or `TOP_ORDER` (table-setter usage)
+- `THREE_TRUE_OUTCOMES`, `ALL_OR_NOTHING`, `POWER_K` → `HEART_OF_ORDER` or `MIDDLE_ORDER` (power despite K rate)
+- `BALANCED_EYE`, `AVERAGE_HITTER` → `MIDDLE_ORDER` or `BOTTOM_ORDER` (back-half utility)
+- `BACKUP_BAT`, `K_PRONE_FILLER`, `FRINGE`, `BUST` → predominantly `ROTATIONAL` or `BOTTOM_ORDER` (low-leverage / spot-start)
+- Any archetype + `ROTATIONAL` → flag as platoon / utility usage; ceiling capped by playing time
+
+A mismatch between archetype quality and lineup tier is itself a signal — a SOLID `CONTACT_POWER` stuck in `ROTATIONAL` flags either an injury-led usage break or a manager who doesn't trust the bat (the second is rare; investigate).
+
 ### Decline base rates (use as context, not alert)
 
 Loaded from `data/research/hitter_decline_baselines.json`:
@@ -195,12 +233,12 @@ rows = master[master['player_name'].str.contains(name_pattern, case=False, na=Fa
 ```
 
 **Output sections** (in this order):
-1. **Current rating snapshot** — Lead with `C=X P=Y D=Z SB=W` on the first line. Follow with the component breakdown (Contact/K_inv/BABIP/xCON, Barrel/HardHit/ISO/HRrate/PullFB, BB/Chase_inv/ZSwing, SBrate/Sprint). Include age + age tier.
+1. **Current rating snapshot** — Lead with `C=X P=Y D=Z SB=W` on the first line. Follow with the component breakdown (Contact/K_inv/BABIP/xCON, Barrel/HardHit/ISO/HRrate/PullFB, BB/Chase_inv/ZSwing, SBrate/Sprint). Include age + age tier. Also report **lineup context**: `lineup_role_tier` + `mean_lineup_spot` (e.g., "Lineup: TOP_ORDER, mean spot 2.0"). This is the structural-leverage / usage signal and is mandatory in every profile.
 2. **Full label** — e.g., `CONTACT_POWER / PURE_CONTACT / ELITE_RAW / SELECTIVE_AGGRESSIVE / HI_SB / PULL_HEAVY / PRE_PEAK / NEAR_EDGE` (archetype + C-subtype + P-subtype + D-subtype + SB-tier + spray + age-tier + boundary-tier). Always pair with `(C=X P=Y D=Z SB=W)` on the same line so the label is never disconnected from the numbers.
 3. **Boundary risk** — `boundary_distance` value + tier + which domain is closest to flipping. E.g., "boundary distance = 1 → EDGE; POWER=61 is 1 point from flipping the PLUS-power label"
 4. **Age-conditioned stickiness** — retention% for this archetype AT THIS AGE TIER (not just overall), pulled from `hitter_archetype_stickiness.json` per-age block if available.
-5. **Career arc** — year-by-year archetype trail with FP/PA AND age AND boundary tier. **Format each line with C/P/D/SB explicit:** `2024 (age 24) CONTACT_POWER [C=75 P=63 D=51 SB=69] NEAR_EDGE, FP/PA=0.842`
-6. **Verdict** — 1-2 sentences synthesizing what kind of hitter they are and what the data says about durability, weighted by both age tier and boundary tier (SOLID labels deserve more weight than EDGE labels). Reference specific C/P/D values when arguing the verdict.
+5. **Career arc** — year-by-year archetype trail with FP/PA AND age AND boundary tier AND lineup_role_tier. **Format each line with C/P/D/SB explicit:** `2024 (age 24) CONTACT_POWER [C=75 P=63 D=51 SB=69] NEAR_EDGE TOP_ORDER(2.0), FP/PA=0.842`. The lineup tier in the trail surfaces role drift: a hitter who slipped from HEART_OF_ORDER → ROTATIONAL year-over-year is losing manager confidence even if C/P/D ratings hold.
+6. **Verdict** — 1-2 sentences synthesizing what kind of hitter they are and what the data says about durability, weighted by both age tier and boundary tier (SOLID labels deserve more weight than EDGE labels). Reference specific C/P/D values when arguing the verdict. If `lineup_role_tier` mismatches archetype quality (e.g., elite archetype but ROTATIONAL tier, or `BACKUP_BAT` with HEART_OF_ORDER usage), flag it explicitly — usage and skill are independently informative.
 
 ### Mode 2 — League-wide trajectory scan: `/hitter-archetype scan`
 

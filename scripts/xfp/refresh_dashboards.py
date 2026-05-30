@@ -89,6 +89,13 @@ def main():
         'python -X utf8 scripts/xfp/build_sp_archetypes.py',
         timeout=120)
 
+    # Lineup-spot context (structural-leverage signal, gmLI analog for hitters).
+    # Display-only; joined into the hitter master in step 2.7 below. Must run
+    # BEFORE step 2.7 so the new columns are populated downstream.
+    run('2.65. Build hitter lineup-spot features (mean_lineup_spot / tier / entropy)',
+        'python -X utf8 scripts/xfp/build_hitter_lineup_features.py',
+        timeout=300)
+
     run('2.7. Build hitter archetype ratings panel (20-80 + trajectories)',
         'python -X utf8 scripts/xfp/build_hitter_archetypes.py',
         timeout=120)

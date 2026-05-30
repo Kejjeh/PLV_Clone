@@ -732,6 +732,17 @@ HITTERS_TAB = """
     <button type="button" class="pill" data-value="2B/SS">2B/SS</button>
     <span class="group-note" id="h-pos-note"></span>
   </div>
+  <div class="chip-group" id="h-lineup-chips" data-group="lineup" data-role="hitter">
+    <span class="chip-group-label">Lineup role</span>
+    <button type="button" class="pill active" data-value="all">All</button>
+    <button type="button" class="pill" data-value="LEADOFF">Leadoff</button>
+    <button type="button" class="pill" data-value="TOP_ORDER">Top</button>
+    <button type="button" class="pill" data-value="HEART_OF_ORDER">Heart</button>
+    <button type="button" class="pill" data-value="MIDDLE_ORDER">Middle</button>
+    <button type="button" class="pill" data-value="BOTTOM_ORDER">Bottom</button>
+    <button type="button" class="pill" data-value="ROTATIONAL">Rotational</button>
+    <span class="group-note" id="h-lineup-note"></span>
+  </div>
   <div class="alltable-controls">
     <input type="text" id="h-alltable-search" placeholder="Search name, team, archetype, sub-type…" autocomplete="off">
     <span id="h-alltable-count" class="filter-summary"></span>
@@ -1236,6 +1247,10 @@ const state = {
   rpRosterFilter: 'all',
   hPosFilter:    'all',   // 'all' | 'C' | '1B' | '2B' | '3B' | 'SS' | 'OF' | 'DH' | '1B/3B' | '2B/SS'
   sPosFilter:    'all',   // legacy slot — SP tab is SP-only now; kept so old hash URLs don't crash
+  // Lineup-role chip — hitters only, single-select, parallel to the position
+  // chip group. UNKNOWN tier rows (pre-2018 data) bypass via the same
+  // chipFiltersActive() gate so they never get hidden in current-year view.
+  hLineupFilter: 'all',   // 'all' | 'LEADOFF' | 'TOP_ORDER' | 'HEART_OF_ORDER' | 'MIDDLE_ORDER' | 'BOTTOM_ORDER' | 'ROTATIONAL'
 };
 
 // Inline badge for partial-season players
@@ -1899,6 +1914,20 @@ function openModal(role, id) {
   hero += `<div class="hero-meta">`;
   if (role === 'hitter') hero += `Latest: ${last.team || '—'} · age ${last.age ?? '?'} (${prettyLabel(last.age_tier)})`;
   else                    hero += `Latest: age ${last.age ?? '?'} (${prettyLabel(last.age_tier)})`;
+  // Lineup-role chip (hitters only) — small tag alongside team/age in the
+  // hero meta line. Structural-leverage signal (gmLI analog). Color-coded:
+  // LEADOFF/TOP_ORDER/HEART_OF_ORDER use var(--pos), MIDDLE_ORDER var(--text),
+  // BOTTOM_ORDER/ROTATIONAL var(--dim). UNKNOWN (pre-2018 data) suppressed.
+  if (role === 'hitter' && last.lineup_role_tier && last.lineup_role_tier !== 'UNKNOWN') {
+    const tier = last.lineup_role_tier;
+    const lc = (tier === 'LEADOFF' || tier === 'TOP_ORDER' || tier === 'HEART_OF_ORDER')
+                  ? 'var(--pos)'
+                : (tier === 'MIDDLE_ORDER') ? 'var(--text)'
+                :                              'var(--dim)';
+    const spotStr = (last.mean_lineup_spot != null)
+        ? ` · spot ${(+last.mean_lineup_spot).toFixed(1)}` : '';
+    hero += ` · <span style="color:${lc};font-weight:600;" title="${(COL_TOOLTIPS.lineup_role_tier || '').replace(/"/g,'&quot;')}">${prettyLabel(tier)}</span>${spotStr}`;
+  }
   hero += `</div></div>`;
   hero += `<div class="hero-stats">`;
   hero += `<div class="hero-archetype">${prettyLabel(last.archetype)}</div>`;
@@ -2524,11 +2553,19 @@ const COL_TOOLTIPS = {
   CLOSER: 'Save count ≥15 in the year',
   FIREMAN: 'IS% ≥ 80% AND IR ≥ 20 — true fireman role (cleans up bases-loaded jams, not just clean-inning save)',
   MULTI_INNING_BULK: "ip_per_appearance ≥ 1.3 — the 'bulk guy' archetype",
+  // Hitter lineup-spot context (structural-leverage signal, gmLI analog).
+  // Display-only — never feeds CONTACT / POWER / DISCIPLINE / SB ratings.
+  mean_lineup_spot: 'Average batting order spot across games this year (1=leadoff, 9=bottom)',
+  top5_share: 'Fraction of games batting in heart of order (spots 1-5)',
+  lineup_role_tier: 'Lineup role classification: LEADOFF / TOP_ORDER / HEART_OF_ORDER / MIDDLE_ORDER / BOTTOM_ORDER / ROTATIONAL',
+  lineup_spot_entropy: 'Shannon entropy of lineup spots (in nats). 0 = always same spot, ~2.2 = fully shuffled. Lower = role-locked.',
 };
 
 const H_TBL_COLS = [
   { key: 'player_name', label: 'Player', text: true, w: 14 },
   { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
+  { key: 'lineup_role_tier', label: 'Lineup', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'mean_lineup_spot', label: 'Spot', num: true, w: 3, fmt: v => (v == null ? '' : (+v).toFixed(1)) },
   { key: 'year',        label: 'Yr',  num: true, w: 2 },
   { key: 'pa',          label: 'PA',  num: true, w: 2 },
   { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
@@ -2725,6 +2762,8 @@ function rowPassesChipFilters(r, role) {
   // Position chip group only exists on the hitter tab now. SP and RP tabs
   // are role-implied so we skip the pos filter for non-hitter roles.
   const posF = role === 'hitter' ? state.hPosFilter : 'all';
+  // Lineup-role chip — hitters only.
+  const lineupF = role === 'hitter' ? state.hLineupFilter : 'all';
   if (rosterF && rosterF !== 'all') {
     if ((r.roster_status || null) !== rosterF) return false;
   }
@@ -2735,6 +2774,9 @@ function rowPassesChipFilters(r, role) {
     for (const w of want) { if (have.indexOf(w) !== -1) { hit = true; break; } }
     if (!hit) return false;
   }
+  if (lineupF && lineupF !== 'all') {
+    if ((r.lineup_role_tier || null) !== lineupF) return false;
+  }
   return true;
 }
 
@@ -2744,14 +2786,14 @@ function rowPassesChipFilters(r, role) {
 // user flips back to Single/current the prior selection re-applies.
 function updateChipAvailability() {
   const active = chipFiltersActive();
-  ['h-roster-chips','h-pos-chips','s-roster-chips','rp-roster-chips'].forEach(id => {
+  ['h-roster-chips','h-pos-chips','h-lineup-chips','s-roster-chips','rp-roster-chips'].forEach(id => {
     const host = document.getElementById(id);
     if (!host) return;
     host.style.opacity = active ? '1' : '0.45';
     host.style.pointerEvents = active ? '' : 'none';
   });
   const noteText = active ? '' : `Roster filter applies to ${D.current_year} only`;
-  ['h-roster-note','h-pos-note','s-roster-note','rp-roster-note'].forEach(id => {
+  ['h-roster-note','h-pos-note','h-lineup-note','s-roster-note','rp-roster-note'].forEach(id => {
     const el = document.getElementById(id);
     if (el) el.textContent = noteText;
   });
@@ -3589,9 +3631,12 @@ function init() {
           if      (role === 'hitter') state.hRosterFilter  = val;
           else if (role === 'rp')     state.rpRosterFilter = val;
           else                        state.sRosterFilter  = val;
-        } else {
+        } else if (group === 'pos') {
           // 'pos' group only exists on the hitter tab now.
           if (role === 'hitter') state.hPosFilter = val;
+        } else if (group === 'lineup') {
+          // 'lineup' group is hitters only — structural-leverage filter.
+          if (role === 'hitter') state.hLineupFilter = val;
         }
         const pool = role === 'hitter' ? HITTERS
                    : role === 'rp'     ? RPS
@@ -3603,6 +3648,7 @@ function init() {
   }
   wireChipGroup('h-roster-chips',  'hitter', 'roster');
   wireChipGroup('h-pos-chips',     'hitter', 'pos');
+  wireChipGroup('h-lineup-chips',  'hitter', 'lineup');
   wireChipGroup('s-roster-chips',  'sp',     'roster');
   wireChipGroup('rp-roster-chips', 'rp',     'roster');
 

@@ -58,6 +58,9 @@ R_SRC     = CACHE / 'relievers_multiyr_2018_2026.csv'
 # Whitelisted columns — drives payload size.
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 't1_fp_projection',
+    # Lineup-spot context (structural-leverage signal, gmLI analog).
+    # Display-only — never enters the rated domains.
+    'mean_lineup_spot', 'top5_share', 'lineup_role_tier', 'lineup_spot_entropy',
     'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag', 'data_tier',
     'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB',
     'Z_CONTACT', 'O_CONTACT', 'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE',

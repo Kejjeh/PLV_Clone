@@ -30,6 +30,12 @@ REPO = Path(r'c:\Users\Joshua\plv_clone')
 HIST_CSV = REPO / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 AGE_CSV  = REPO / 'data/outputs/hitter_age_career.csv'
 PARK_CSV = REPO / 'data/research/xfp_cache/park_factors_2018_2026.csv'
+# Lineup-spot features (mean_lineup_spot, top5_share, lineup_role_tier,
+# lineup_spot_entropy) — DISPLAY-ONLY structural-leverage context signals,
+# the hitter analog of gmLI on the RP side. Derived from per-game lineup
+# appearances by build_hitter_lineup_features.py. Do NOT feed these into
+# any of the 4 rated domains (CONTACT / POWER / DISCIPLINE / SB).
+LINEUP_CSV = REPO / 'data/research/xfp_cache/hitter_lineup_features_2018_2026.csv'
 OUT_DIR  = REPO / 'data/research'
 
 # Sample-stability floor (BB% stabilizes ~120 PA; 100 is the practical edge
@@ -413,6 +419,27 @@ def build_ratings_panel(current_year=2026):
         qual['r_HRrate_parkadj'] = qual['r_HRrate']
         qual['hr_parkadj_delta'] = 0
 
+    # Lineup-spot features — structural-leverage context signal (the gmLI
+    # analog for hitters). DISPLAY-ONLY: do NOT feed into any of the 4 rated
+    # domains. Joined by (batter, year). 2018+ coverage only — pre-2018 rows
+    # get NaN/UNKNOWN fillers below. Validated YoY r=0.682 on mean_lineup_spot
+    # (n=1,118 pairs, 250+ PA cohort, 2026-05-30 external-signals audit).
+    if LINEUP_CSV.exists():
+        lf = pd.read_csv(LINEUP_CSV)[[
+            'batter', 'year', 'mean_lineup_spot', 'top5_share',
+            'lineup_role_tier', 'lineup_spot_entropy',
+        ]]
+        qual = qual.merge(lf, on=['batter', 'year'], how='left')
+    else:
+        qual['mean_lineup_spot']   = np.nan
+        qual['top5_share']         = np.nan
+        qual['lineup_role_tier']   = 'UNKNOWN'
+        qual['lineup_spot_entropy'] = np.nan
+    # Fill missing tier with UNKNOWN so the downstream template can show
+    # something rather than NaN-blank. Numeric columns left as NaN — the JSON
+    # serialization converts NaN to null which is correct for the frontend.
+    qual['lineup_role_tier'] = qual['lineup_role_tier'].fillna('UNKNOWN')
+
     # T+1 FP/PA projection — linear combo of sub-domain ratings + age.
     # Coefficients from OLS regression of next-year fp_per_pa on these features.
     T1_HITTER_INTERCEPT = -0.59929
@@ -571,6 +598,10 @@ def main():
     # Master ratings CSV (human-readable)
     master_cols = [
         'year','rank_in_year','batter','player_name','team','pa','fp_per_pa','t1_fp_projection','data_tier',
+        # Lineup-spot context (display-only structural-leverage signal — gmLI
+        # analog). Positioned near team/pa as a usage/context field; never
+        # feeds the rated CONTACT/POWER/DISCIPLINE/SB domains.
+        'mean_lineup_spot','top5_share','lineup_role_tier','lineup_spot_entropy',
         'OVERALL','OVERALL_slope_3yr','OVERALL_career_pct','traj_flag',
         'CONTACT','POWER','DISCIPLINE','SB',
         'Z_CONTACT','O_CONTACT','K_AVOIDANCE','CONTACT_QUALITY','SPRAY_PROFILE',
