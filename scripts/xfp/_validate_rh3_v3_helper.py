@@ -60,6 +60,30 @@ def load_and_prep_rh3_inputs() -> pd.DataFrame:
     else:
         rolling["xwoba_residual_career"] = 0.0
 
+    # ros_opp_sp_xwoba_weighted — in RH3_FEATS, must be merged for Rule 9 baseline
+    # parity. Mirrors src/plv_clone/models/xfp/rh3.py lines ~325-337.
+    # Idempotent: if already present (e.g. caller pre-merged), skip.
+    if "ros_opp_sp_xwoba_weighted" in rolling.columns:
+        pass
+    elif rh3.ROS_OPP_SP_CSV.exists():
+        opp_sp = pd.read_csv(rh3.ROS_OPP_SP_CSV)[
+            ["batter", "year", "split_day", "ros_opp_sp_xwoba_weighted"]
+        ]
+        rolling = rolling.merge(
+            opp_sp, on=["batter", "year", "split_day"], how="left"
+        )
+        year_means = rolling.groupby("year")["ros_opp_sp_xwoba_weighted"].transform(
+            "mean"
+        )
+        rolling["ros_opp_sp_xwoba_weighted"] = rolling[
+            "ros_opp_sp_xwoba_weighted"
+        ].fillna(year_means)
+        rolling["ros_opp_sp_xwoba_weighted"] = rolling[
+            "ros_opp_sp_xwoba_weighted"
+        ].fillna(rolling["ros_opp_sp_xwoba_weighted"].mean())
+    else:
+        rolling["ros_opp_sp_xwoba_weighted"] = 0.0
+
     # xwoba_gap_to (derived; not currently in FEATS but computed for parity)
     if "xwoba_on_contact_to" in rolling.columns and "woba_d_sum_to" in rolling.columns:
         rolling["actual_woba_per_pa_to"] = np.where(
