@@ -97,13 +97,22 @@ def main():
         'python -X utf8 scripts/xfp/build_rp_damage_gb_from_statcast.py',
         timeout=300)
 
-    # NOTE: FG RP leverage cache (gmLI / pLI / Shutdowns / Meltdowns) is
-    # browser-driven via undetected-chromedriver and NOT wired into the daily
-    # chain — same pattern as pull_fg_undetected.py. Re-run manually after
-    # mid-season closer changes:
-    #   python -X utf8 scripts/xfp/pull_fg_rp_leverage.py
-    # Output: data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv
-    # build_rp_archetypes.py reads it directly if present (drives leverage_tier).
+    # NOTE: Two RP-tag caches are populated by manual scrapers and NOT wired
+    # into the daily chain. Both are read directly by build_rp_archetypes.py
+    # if present. Re-run manually after mid-season closer / role changes:
+    #
+    #   1. FanGraphs leverage (gmLI / pLI / Shutdowns / Meltdowns):
+    #      python -X utf8 scripts/xfp/pull_fg_rp_leverage.py
+    #      Output: data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv
+    #      Browser-driven (undetected-chromedriver) — same pattern as
+    #      pull_fg_undetected.py. Drives `leverage_tier`.
+    #
+    #   2. Baseball-Reference IR / IS% (inherited-runner stranded% → FIREMAN):
+    #      python -X utf8 scripts/xfp/pull_bref_rp_ir.py
+    #      Output: data/research/xfp_cache/rp_ir_is_2018_2026.csv
+    #      Plain requests+BS4 (no browser), ~1 min for all years. BBRef's
+    #      `inherited_score_perc` is inverted to stranded%. Drives FIREMAN tag
+    #      (`inherited_stranded_pct ≥ 80 AND ir ≥ 20`).
 
     run('2.8. Build RP archetype ratings panel (20-80 + trajectories)',
         'python -X utf8 scripts/xfp/build_rp_archetypes.py',

@@ -1292,7 +1292,10 @@ function paWeightBlend(rows, idKey, fpKey) {
     'r_BB','r_Chase','r_ZSwing','r_SBrate','r_Sprint'];
   const SP_NUMS = ['STUFF','MOVEMENT','CONTROL','velo_rating',
     'r_K','r_SwStr','r_CSW','r_HRrate','r_Barrel','r_HardHit','r_GB','r_xCON','r_BB'];
-  const RP_NUMS = ['STUFF','CONTROL','BATTED_BALL','MOVEMENT','velo_rating',
+  // RP native fields only — build_rp_records no longer injects MOVEMENT /
+  // velo_rating / fp_per_start / gs SP-shaped bridges, so the blend reads
+  // straight off VELO + BATTED_BALL.
+  const RP_NUMS = ['STUFF','CONTROL','BATTED_BALL',
     'SWING_MISS','CALLED_STRIKE','VELO','WALK_AVOID','GB_TENDENCY','BULK_IP','r_K'];
   const weightCol = r => idKey === 'batter' ? 'pa' : (r.role === 'RP' ? 'g' : 'gs');
   const out = [];
@@ -1329,10 +1332,15 @@ function paWeightBlend(rows, idKey, fpKey) {
 
 function filterRows(rows, role) {
   let r;
+  // Per-role rate key: hitter=fp_per_pa, sp=fp_per_start, rp=fp_per_g.
+  // (Previously rp used fp_per_start via the build_rp_records schema bridge;
+  // bridges removed, so rp now reads its native fp_per_g.)
+  const fpKey = role === 'hitter' ? 'fp_per_pa'
+              : role === 'rp'     ? 'fp_per_g'
+              :                     'fp_per_start';
   if (state.yearMode === 'single')      r = rows.filter(x => x.year === state.singleYear);
   else if (state.yearMode === 'all')    r = rows.slice();
-  else r = paWeightBlend(rows, role === 'hitter' ? 'batter' : 'pitcher',
-                          role === 'hitter' ? 'fp_per_pa' : 'fp_per_start');
+  else r = paWeightBlend(rows, role === 'hitter' ? 'batter' : 'pitcher', fpKey);
   // Partial-season filter — blend mode keeps everyone (already aggregated)
   if (!state.includePartial && state.yearMode !== 'blend') {
     r = r.filter(x => x.data_tier !== 'PARTIAL');
@@ -1919,12 +1927,14 @@ function openModal(role, id) {
     }
     hero += `</div>`;
   }
-  // T+1 projection chip
+  // T+1 projection chip — RP rate unit is fp/g, SP is fp/start, hitter is fp/pa.
   if (cur.t1_fp_projection != null) {
+    const isRP_t1 = (role === 'sp' && cur.role === 'RP');
+    const t1Unit  = role === 'hitter' ? 'pa' : (isRP_t1 ? 'g' : 'start');
     hero += `<div class="hero-overall" style="border-left:3px solid var(--accent);padding-left:.8em;">`;
     hero += `<div class="label">T+1 projection</div>`;
     hero += `<div class="val" style="font-size:1.5em;">${cur.t1_fp_projection.toFixed(role === 'hitter' ? 3 : 2)}</div>`;
-    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${role === 'hitter' ? 'pa' : 'start'} next yr</div>`;
+    hero += `<div style="color:var(--dim);font-size:.7em;font-family:'IBM Plex Mono',monospace;">fp/${t1Unit} next yr</div>`;
     hero += `</div>`;
   }
   // T+2 projection (pitchers — dynasty/keeper context). Label adapts to RP role.
@@ -2013,17 +2023,17 @@ function openModal(role, id) {
             + `<td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else if (r.role === 'RP') {
-      // For RP rows, display the canonical S / C / BB triplet (BATTED_BALL is
-      // mirrored into MOVEMENT in the SP-shaped record, but we read the real
-      // BATTED_BALL field here for honest labeling).
+      // RP rows render the canonical S / C / BB triplet from native RP fields.
+      // build_rp_records no longer injects SP-shaped bridges, so we read
+      // BATTED_BALL / VELO / fp_per_g directly.
       yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
             + `<td class="num"><b>${r.OVERALL}</b></td>`
             + `<td class="num">${r.STUFF}</td><td class="num">${r.CONTROL}</td>`
-            + `<td class="num">${r.BATTED_BALL}</td><td class="num">${r.velo_rating ?? ''}</td>`
+            + `<td class="num">${r.BATTED_BALL}</td><td class="num">${r.VELO ?? ''}</td>`
             + `<td>${prettyLabel(r.archetype)}</td>`
             + `<td><span style="color:var(--dim);">${subStr}</span></td>`
             + `<td>${prettyLabel(r.boundary_tier||'')}</td>`
-            + `<td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`
+            + `<td class="num">${(r.fp_per_g||0).toFixed(2)}</td>`
             + `<td class="num">${r.rank_in_year ?? ''}</td></tr>`;
     } else {
       yearRows += `<tr><td class="num">${r.year}${r.data_tier==='PARTIAL'?' <span class="badge partial">P</span>':''}</td><td class="num">${r.age ?? ''}</td>`
@@ -2195,11 +2205,18 @@ function _dayOfYear(iso) {
 
 function renderSnapshotTrajectory(rows, role) {
   const xs = rows.map(r => r.date);
+  // Snapshot rows for RPs carry native BATTED_BALL — read it directly when
+  // any row in the series is RP-tagged (whole series is one player so role
+  // is uniform).
+  const isRP = (role === 'sp' && rows.length && rows[0].role === 'RP');
   const keys = role === 'hitter'
     ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
-    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+    : isRP
+      ? [['STUFF','#c1666b'], ['BATTED_BALL','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']]
+      : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
   const traces = keys.map(([k, color]) => ({
-    x: xs, y: rows.map(r => r[k]), mode: 'lines+markers', name: k,
+    x: xs, y: rows.map(r => r[k]), mode: 'lines+markers',
+    name: (k === 'BATTED_BALL' ? 'Batted-ball' : k),
     line: { color, width: 2 }, marker: { size: 8 },
   }));
   const shapes = [
@@ -2225,9 +2242,16 @@ function renderSnapshotTrajectory(rows, role) {
 // two traces in the same color family; tooltip shows the date, day-of-year,
 // and rating value.
 function renderSnapshotTrajectoryYoY(curRows, priorRows, role, curYear, priorYear) {
+  // role==='sp' covers both SP and RP modal opens; if any snapshot row is
+  // RP-tagged, use the native RP BATTED_BALL key for the 2nd-domain trace.
+  const sampleRow = (curRows && curRows.length) ? curRows[0]
+                  : (priorRows && priorRows.length ? priorRows[0] : null);
+  const isRP = (role === 'sp' && sampleRow && sampleRow.role === 'RP');
   const keys = role === 'hitter'
     ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
-    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+    : isRP
+      ? [['STUFF','#c1666b'], ['BATTED_BALL','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']]
+      : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
 
   const mkTrace = (rows, k, color, year, dashed) => ({
     x: rows.map(r => _dayOfYear(r.date)),
@@ -2313,10 +2337,15 @@ function renderModalComps(focal, role) {
   const comps = findSubDomainComps(focal, role, 5);
   const tbl = document.getElementById('modal-comps-table');
   if (!tbl) return;
+  // RP focal opens with role='sp' but each comp row carries its own role.
+  // Header is role-aware off the FOCAL (the comp pool is same-role).
+  const isRP = (role === 'sp' && focal.role === 'RP');
   let html = '<thead><tr><th class="num">#</th><th>Player</th><th class="num">Yr</th><th class="num">Overall</th>';
-  if (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th>';
+  if (role === 'hitter')  html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th>';
+  else if (isRP)          html += '<th class="num">S</th><th class="num">C</th><th class="num">BB</th>';
   else                    html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th>';
-  html += '<th class="num">Dist</th><th class="num">FP/' + (role === 'hitter' ? 'PA' : 'start') + '</th></tr></thead><tbody>';
+  const fpLabel = role === 'hitter' ? 'PA' : (isRP ? 'g' : 'start');
+  html += '<th class="num">Dist</th><th class="num">FP/' + fpLabel + '</th></tr></thead><tbody>';
   comps.forEach((c, i) => {
     html += `<tr><td class="num">${i+1}</td>`;
     html += `<td class="player" data-role="${role}" data-id="${c[role === 'hitter' ? 'batter' : 'pitcher']}">${c.player_name}</td>`;
@@ -2325,10 +2354,12 @@ function renderModalComps(focal, role) {
     if (role === 'hitter') {
       html += `<td class="num">${c.CONTACT}</td><td class="num">${c.POWER}</td>`;
       html += `<td class="num">${c.DISCIPLINE}</td><td class="num">${c.SB}</td>`;
+    } else if (isRP) {
+      html += `<td class="num">${c.STUFF}</td><td class="num">${c.CONTROL}</td><td class="num">${c.BATTED_BALL}</td>`;
     } else {
       html += `<td class="num">${c.STUFF}</td><td class="num">${c.MOVEMENT}</td><td class="num">${c.CONTROL}</td>`;
     }
-    const fpKey = role === 'hitter' ? 'fp_per_pa' : 'fp_per_start';
+    const fpKey = role === 'hitter' ? 'fp_per_pa' : (isRP ? 'fp_per_g' : 'fp_per_start');
     html += `<td class="num">${c._dist.toFixed(1)}</td>`;
     html += `<td class="num">${(c[fpKey] || 0).toFixed(role === 'hitter' ? 3 : 2)}</td></tr>`;
   });
@@ -2342,11 +2373,19 @@ function renderModalComps(focal, role) {
 
 function renderSparkline(sorted, role) {
   const xs = sorted.map(r => r.year);
+  // RP records carry native STUFF/CONTROL/BATTED_BALL/VELO (no SP-bridge aliases),
+  // so the sparkline keys flip per role. Determine from the latest row's `role`
+  // field since `role` argument is 'sp' for both SP and RP modal opens.
+  const last = sorted[sorted.length - 1];
+  const isRP = (role === 'sp' && last && last.role === 'RP');
   const keys = role === 'hitter'
     ? [['CONTACT','#7fb069'], ['POWER','#c1666b'], ['DISCIPLINE','#b099d4'], ['SB','#d97757']]
-    : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
+    : isRP
+      ? [['STUFF','#c1666b'], ['BATTED_BALL','#7fb069'], ['CONTROL','#b099d4'], ['VELO','#d97757']]
+      : [['STUFF','#c1666b'], ['MOVEMENT','#7fb069'], ['CONTROL','#b099d4'], ['velo_rating','#d97757']];
   const traces = keys.map(([k, color]) => ({
-    x: xs, y: sorted.map(r => r[k]), mode: 'lines+markers', name: k,
+    x: xs, y: sorted.map(r => r[k]), mode: 'lines+markers',
+    name: (k === 'BATTED_BALL' ? 'Batted-ball' : (k === 'VELO' ? 'Velo' : k)),
     line: { color, width: 2 }, marker: { size: 8 },
   }));
   const shapes = [
@@ -2479,9 +2518,11 @@ const COL_TOOLTIPS = {
   VELO: 'Average fastball velocity 20-80',
   gmli: 'Game-entry leverage index from FanGraphs — average leverage at moment of entry',
   pli: 'Average leverage during the appearance',
-  inherited_stranded_pct: 'IR-S% — fraction of inherited runners who did not score',
+  inherited_stranded_pct: 'Inherited-runner stranded rate — fraction of inherited runners who did not score (fireman skill)',
+  ir: 'Inherited runners — count of runners on base when entering an appearance, summed across the season',
   leverage_tier: 'Continuous leverage tier from gmLI: ELITE ≥1.5, HIGH 1.2-1.5, MID 0.85-1.2, LOW 0.5-0.85, GARBAGE <0.5',
   CLOSER: 'Save count ≥15 in the year',
+  FIREMAN: 'IS% ≥ 80% AND IR ≥ 20 — true fireman role (cleans up bases-loaded jams, not just clean-inning save)',
   MULTI_INNING_BULK: "ip_per_appearance ≥ 1.3 — the 'bulk guy' archetype",
 };
 
@@ -2557,6 +2598,8 @@ const RP_TBL_COLS = [
   { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
   { key: 'leverage_tier',       label: 'Lev', text: true, cat: true, pretty: true, w: 4 },
   { key: 'CLOSER',              label: 'Closer', text: true, cat: true, w: 3 },
+  { key: 'FIREMAN',             label: 'Fire', text: true, cat: true, w: 3 },
+  { key: 'inherited_stranded_pct', label: 'IR-S%', num: true, w: 4, fmt: v => (v == null ? '' : (+v).toFixed(0)) },
   { key: 'MULTI_INNING_BULK',   label: 'Bulk', text: true, cat: true, w: 3 },
   { key: 'age',                 label: 'Age', num: true, w: 2 },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },

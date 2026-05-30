@@ -62,6 +62,7 @@ BIRTHDATE_CSV = REPO / 'data/research/xfp_cache/milb_pitcher_ages.csv'
 RPRS2_CSV     = REPO / 'data/outputs/xfp_rprs2_projections.csv'
 SPLITS_CSV    = REPO / 'data/research/xfp_cache/pitcher_splits.csv'
 FG_LEVERAGE_CSV = REPO / 'data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv'
+BREF_IR_CSV     = REPO / 'data/research/xfp_cache/rp_ir_is_2018_2026.csv'
 OUT_DIR       = REPO / 'data/research'
 
 # Sample-stability floor — matches RP_SUBDOMAIN_VALIDATION cohort
@@ -304,11 +305,10 @@ def build_ratings_panel():
     # ── FanGraphs leverage join (gmLI / pLI / WPA / Shutdowns / Meltdowns) ───
     # 2018-2026 ex-2020. ~100% join coverage on eligible cohort (verified
     # 2026-05-29). gmLI replaces the binary HIGH_LEVERAGE tag where present.
-    # NOTE: FG's combined-stats JSON endpoint (type=8) does NOT expose IR /
-    # IR-S% inherited-runner data — confirmed by exhaustive key-dump on
-    # 2026-05-29. The "FIREMAN" archetype tag (IR≥20 AND IS%≥80%) cannot be
-    # implemented from current FG cache and is deferred to v2 (would need a
-    # different FG endpoint or Baseball-Reference scrape).
+    # IR / IS% (inherited-runner stranded%) come from Baseball-Reference via
+    # pull_bref_rp_ir.py — FG's combined-stats type=8 endpoint does NOT
+    # expose them (confirmed by 544-key dump 2026-05-29). The Baseball-Reference
+    # path ships the FIREMAN tag: stranded% ≥ 80% AND IR ≥ 20.
     if FG_LEVERAGE_CSV.exists():
         lev = pd.read_csv(FG_LEVERAGE_CSV)
         lev['mlb_id'] = pd.to_numeric(lev['mlb_id'], errors='coerce').astype('Int64')
@@ -341,9 +341,6 @@ def build_ratings_panel():
             return 'HIGH_LEVERAGE' if row.get('HIGH_LEVERAGE', False) else 'MID_LEVERAGE'
         qual['leverage_tier'] = qual.apply(_leverage_tier, axis=1)
 
-        # FIREMAN tag NOT computable from current FG cache (IR/IS% missing
-        # from type=8 endpoint). Stub the column False with note for users.
-        qual['FIREMAN'] = False  # see note above; v2 unlock
     else:
         # No leverage cache → leverage_tier from binary HIGH_LEVERAGE only
         qual['gmli'] = np.nan
@@ -357,6 +354,41 @@ def build_ratings_panel():
         qual['shutdowns'] = np.nan
         qual['meltdowns'] = np.nan
         qual['leverage_tier'] = np.where(qual['HIGH_LEVERAGE'], 'HIGH_LEVERAGE', 'MID_LEVERAGE')
+
+    # ── Baseball-Reference IR / IS% join (fireman skill) ────────────────────
+    # Output of pull_bref_rp_ir.py. is_pct is STRANDED% (we invert BBRef's
+    # scored% so higher = better, consistent with FG IR-S% convention).
+    # FIREMAN = (inherited_stranded_pct >= 80) AND (ir >= 20).
+    # 99.7% join coverage on the qualifying RP cohort (verified 2026-05-30).
+    if BREF_IR_CSV.exists():
+        bref = pd.read_csv(BREF_IR_CSV)
+        bref['mlb_id'] = pd.to_numeric(bref['mlb_id'], errors='coerce').astype('Int64')
+        bref['season'] = pd.to_numeric(bref['season'], errors='coerce').astype('Int64')
+        keep_ir = ['mlb_id', 'season', 'ir', 'is_pct']
+        keep_ir = [c for c in keep_ir if c in bref.columns]
+        bref_slim = (bref[keep_ir]
+                     .dropna(subset=['mlb_id', 'season'])
+                     .drop_duplicates(['mlb_id', 'season']))
+        bref_slim = bref_slim.rename(columns={'is_pct': 'inherited_stranded_pct'})
+        # Cast qual keys for clean join (idempotent — leverage merge already did this)
+        qual['pitcher'] = pd.to_numeric(qual['pitcher'], errors='coerce').astype('Int64')
+        qual['year']    = pd.to_numeric(qual['year'],    errors='coerce').astype('Int64')
+        qual = qual.merge(
+            bref_slim,
+            left_on=['pitcher', 'year'],
+            right_on=['mlb_id', 'season'],
+            how='left',
+        ).drop(columns=['mlb_id', 'season'], errors='ignore')
+        # FIREMAN: validated fireman role — strands ≥80% of inherited runners
+        # on a meaningful sample (≥20 IR opportunities). Pure 9th-inning
+        # closers have fewer IR opportunities and won't tag positive.
+        qual['FIREMAN'] = (
+            (qual['inherited_stranded_pct'].fillna(-1) >= 80.0) &
+            (qual['ir'].fillna(0) >= 20)
+        )
+    else:
+        qual['ir'] = np.nan
+        qual['inherited_stranded_pct'] = np.nan
         qual['FIREMAN'] = False
 
     # Optional platoon tag — only computable for 2022+ with sufficient TBF
@@ -547,6 +579,7 @@ def main():
                    'leverage_tier', 'FIREMAN',
                    'gmli', 'pli', 'exli', 'inli', 'wpa', 'wpa_per_li', 're24', 'rew',
                    'shutdowns', 'meltdowns',
+                   'ir', 'inherited_stranded_pct',
                    'r_K',
                    'k_pct', 'bb_pct', 'swstr_pct', 'c_plus_swstr', 'called_strike_rate',
                    'avg_velo', 'gb_pct', 'barrel_pct', 'hard_hit_pct', 'xwobacon',

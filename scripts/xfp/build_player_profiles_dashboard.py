@@ -102,6 +102,7 @@ R_COLS = [
     'archetype', 'stuff_subtype', 'cell', 'velo_tier',
     'age', 'age_tier', 'boundary_tier', 'rank_in_year',
     'CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY',
+    'leverage_tier', 'FIREMAN', 'ir', 'inherited_stranded_pct',
     'r_K',
 ]
 
@@ -212,19 +213,16 @@ def build_sp_records(s: pd.DataFrame):
 
 
 def build_rp_records(rp: pd.DataFrame):
-    """Map RP master rows to the same record shape SP rows use, plus RP-specific
-    tags and the unique BATTED_BALL / BULK_IP / VELO sub-domain fields.
+    """Map RP master rows to record shape, with role='RP' tag plus the RP-native
+    BATTED_BALL / BULK_IP / VELO sub-domain fields and CLOSER / HIGH_LEVERAGE /
+    MULTI_INNING_BULK / PLATOON role chips.
 
-    Schema bridging so the existing pitcher table/leaderboard/quadrant code paths
-    consume RP rows with minimal branching:
-
-        gs            ← g                  (appearance count)
-        fp_per_start  ← fp_per_g           (RP rate = FP per appearance)
-        MOVEMENT      ← BATTED_BALL        (alias so the S/M/C triplet renders)
-        velo_rating   ← VELO               (matches SP velo_rating semantics)
-
-    The original BATTED_BALL / BULK_IP / VELO fields are kept on each record
-    so the modal can render the correct RP-domain labels and weights.
+    The SP-shaped schema bridges (gs ← g, fp_per_start ← fp_per_g, MOVEMENT
+    ← BATTED_BALL, velo_rating ← VELO) were removed 2026-05-30 — the Pitchers
+    tab is now split into role-native SP and RP tabs, and the modal reads RP
+    fields directly off `role === 'RP'` branches. The native fields below
+    (BATTED_BALL / VELO / g / fp_per_g) are the only pitcher-rate keys an RP
+    record carries.
     """
     df = rp[R_COLS].copy()
     df['player_name'] = df['player_name'].apply(pretty_sp_name)
@@ -237,10 +235,6 @@ def build_rp_records(rp: pd.DataFrame):
               'GB_TENDENCY', 'BULK_IP']:
         df[c] = df[c].astype('Int64')
 
-    # Bridge fields so the existing SP-shaped renderers work for RP rows too.
-    df['fp_per_start'] = df['fp_per_g']
-    df['MOVEMENT'] = df['BATTED_BALL']
-    df['velo_rating'] = df['VELO']
     df['team'] = df['team_abbr']
 
     # RP-specific fields the SP path doesn't have — null them so column lookups
@@ -259,8 +253,9 @@ def build_rp_records(rp: pd.DataFrame):
     df['r_BB'] = None
 
     # Cast tag bools to plain python bool so JSON serializes cleanly.
-    for c in ['CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY']:
-        df[c] = df[c].astype(bool)
+    for c in ['CLOSER', 'HIGH_LEVERAGE', 'MULTI_INNING_BULK', 'OBVIOUS_PLATOON_GUY', 'FIREMAN']:
+        if c in df.columns:
+            df[c] = df[c].fillna(False).astype(bool)
 
     recs = json.loads(df.to_json(orient='records'))
     for r in recs:
@@ -268,6 +263,7 @@ def build_rp_records(rp: pd.DataFrame):
         # Compact tag list for chip rendering in the modal.
         tags = []
         if r.get('CLOSER'):            tags.append('CLOSER')
+        if r.get('FIREMAN'):           tags.append('FIREMAN')
         if r.get('HIGH_LEVERAGE'):     tags.append('HIGH_LEVERAGE')
         if r.get('MULTI_INNING_BULK'): tags.append('MULTI_INNING_BULK')
         if r.get('OBVIOUS_PLATOON_GUY'): tags.append('PLATOON')

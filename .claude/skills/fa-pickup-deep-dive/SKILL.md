@@ -1,6 +1,6 @@
 ---
 name: fa-pickup-deep-dive
-description: Structured FA pickup analysis for a single player — pulls model projection (xfp_rh3/rp3/rprs2), recent Statcast pitch-shape or bat-tracking, ESPN injury status with return date, ownership %, and produces a PASS / CONSIDER / SKIP recommendation. Use whenever the user asks "should I pick up X", "deep dive on X", "what does the model say about X", or shows a screenshot of a single player.
+description: Structured FA pickup analysis for a single player — pulls model projection (xfp_rh3/rp3/rprs2), recent Statcast pitch-shape or bat-tracking, ESPN injury status with return date, ownership %, an archetype layer (label + sub-types + T+1/T+2 + top-5 historical comps with comp-density and trajectory adjustments; for RPs, leverage_tier + CLOSER + FIREMAN role tags), and produces a PASS / CONSIDER / SKIP recommendation. Use whenever the user asks "should I pick up X", "deep dive on X", "what does the model say about X", or shows a screenshot of a single player.
 ---
 
 # fa-pickup-deep-dive
@@ -247,6 +247,70 @@ verdict is already clear.
 
 ---
 
+## Step 7.5 — Archetype layer (supplementary)
+
+The model (rh3/rp3/rprs2) is still the **primary** verdict driver. The
+archetype layer adds character/comp/forward-trajectory color. It is
+process-based, complementary to rh3/rp3/rprs2 (outcome-based).
+
+Read the relevant current-year row from the master CSV:
+
+| Bucket | File | Key cols |
+|---|---|---|
+| Hitter | `data/research/hitter_ratings_master.csv` | `archetype`, `contact_subtype`, `power_subtype`, `discipline_subtype`, `sb_tier`, `CONTACT`, `POWER`, `DISCIPLINE`, `SB`, `age_tier`, `boundary_tier`, `t1_fp_projection`, `fp_per_pa` |
+| SP | `data/research/sp_ratings_master.csv` | `archetype`, `stuff_subtype`, `velo_tier`, `pitch_archetype`, `primary_group`, `STUFF`, `MOVEMENT`, `CONTROL`, `velo_rating`, `SWING_MISS`, `CALLED_STRIKE`, `DAMAGE_SUPP`, `GB_TENDENCY`, `WALK_AVOID`, `age_tier`, `boundary_tier`, `t1_fp_projection`, `t2_fp_projection`, `fp_per_start` |
+| RP | `data/research/rp_ratings_master.csv` | `archetype`, `stuff_subtype`, `STUFF`, `CONTROL`, `BATTED_BALL`, `VELO` (rating), `SWING_MISS`, `CALLED_STRIKE`, `WALK_AVOID`, `GB_TENDENCY`, `BULK_IP`, `age_tier`, `boundary_tier`, `CLOSER`, `leverage_tier`, `HIGH_LEVERAGE`, `MULTI_INNING_BULK`, `FIREMAN` (may be absent — gracefully handle), `gmli`, `t1_fp_projection`, `t2_fp_projection`, `fp_per_g` |
+
+If the player has no current-year row in the master (rookie, low PA/IP),
+note that and skip this section.
+
+### Top 3-5 historical comps
+
+Filter the master CSV to age within ±3 of the target's `age`, then take
+the 3-5 nearest neighbors by Euclidean distance in the rating space:
+
+- **Hitter**: distance over `(CONTACT, POWER, DISCIPLINE)` — SB rated and shown but **excluded from distance** (matches `/hitter-archetype`).
+- **SP**: distance over `(SWING_MISS, CALLED_STRIKE, DAMAGE_SUPP, GB_TENDENCY, WALK_AVOID, velo_rating)`.
+- **RP**: distance over `(SWING_MISS, CALLED_STRIKE, WALK_AVOID, VELO, GB_TENDENCY, BULK_IP)`.
+
+For each comp, pull the next-year row (`year+1`) keyed on the comp's
+`batter`/`pitcher` ID to surface the T+1 actual outcome (and T+2 for
+SP/RP). Report:
+
+- Hitter: `<year> <name> — archetype@T → archetype@T+1` plus `fp_per_pa T → fp_per_pa T+1`
+- SP / RP: `<year> <name> — archetype@T → @T+1 → @T+2` plus `fp_per_start T → T+1 → T+2` (or `fp_per_g` for RP)
+
+If a comp has no T+1 row (career ended / injury year), mark as `NO_T+1`.
+
+### Output block
+
+```markdown
+## Archetype layer
+- **Archetype:** <LABEL> (Contact <C>, Power <P>, Discipline <D>[, SB <S>])
+- **Sub-types:** <contact_subtype>, <power_subtype>, <discipline_subtype>[, <sb_tier>]
+- **Boundary tier:** <SOLID | NEAR_EDGE | EDGE> (clearly inside / borderline)
+- **Age tier:** <PRE_PEAK | PEAK | POST_PEAK> (<age>)
+- **T+1 projection:** <X.XXX> <FP/PA or FP/start> (vs current <Y.YYY>)
+- **T+2 projection (SP/RP only):** <Z.ZZZ>
+- **RP-only tags:** CLOSER=<bool>, leverage_tier=<ELITE/HIGH/MID/LOW/GARBAGE>, HIGH_LEVERAGE=<bool>, MULTI_INNING_BULK=<bool>, FIREMAN=<bool|n/a>, gmLI=<X.XX>
+- **Closest 5 historical comps** (age ±3, Euclidean over rating sub-domains):
+  1. <year> <name> — <arch@T> → <arch@T+1> [→ <arch@T+2>] | <fp@T> → <fp@T+1> [→ <fp@T+2>]
+  2. ...
+- **Comp verdict:** <K>/<N> sustained-or-improved at T+1 → SUPPORTS_<CONSIDER|SKIP|NEUTRAL>
+- **Archetype trajectory:** <UPGRADE | STABLE | DOWNGRADE> vs prior year
+```
+
+> Caveat for RPs: rprs2 R² ≈ 0.246 and `t1_fp_projection` from the RP
+> master is **directional only**, not a precise forecast. Use it for
+> sign, not magnitude.
+
+If the player's archetype looks edge-case (`boundary_tier == NEAR_EDGE`
+or `EDGE`) OR the comp distribution is wide, suggest the user run
+`/hitter-archetype profile <name>` or `/sp-archetype profile <name>` or
+`/rp-archetype profile <name>` for the full archetype deep-dive.
+
+---
+
 ## Step 8 — Produce the writeup
 
 Format:
@@ -264,7 +328,7 @@ Format:
 - <key metric trend>: <values>
 - <notable velo/whiff/bat-tracking observation>
 
-### Injury status: <ACTIVE | IL10/IL15/IL60 with return date> 
+### Injury status: <ACTIVE | IL10/IL15/IL60 with return date>
 - <short_comment if injured>
 
 ### Availability:
@@ -276,8 +340,53 @@ Format:
 - Net weekly FP gain if swap: <±N>
 - Positional flex: <note>
 
+### Archetype layer:
+- Archetype: <LABEL> (<C/P/D or S/M/C ratings>), boundary <tier>, age tier <tier>
+- T+1: <X.XXX> (and T+2 if SP/RP)
+- RP-only: CLOSER/leverage_tier/FIREMAN tags
+- Comps (3-5): <one-line summary of T+1 outcome distribution>
+- Comp verdict: SUPPORTS_<CONSIDER|SKIP|NEUTRAL>
+
 ### Verdict: **PASS / CONSIDER / SKIP** (with one-sentence reason)
+- Primary driver: <rh3/rp3/rprs2 signal>
+- Archetype adjustment: <bumped toward X because Y, or "no adjustment">
 ```
+
+### Verdict adjustment rules (archetype layer)
+
+The model verdict is the anchor. Apply at most one archetype bump
+(don't double-count):
+
+1. **Comp-density rule.** Define "meaningfully" as ≥ 10% relative change
+   in fp_per_pa (hitter), fp_per_start (SP), or fp_per_g (RP).
+   - If ≥ 4 of 5 comps had T+1 outcomes meaningfully BELOW their T-year
+     level → bump verdict one step toward SKIP.
+   - If ≥ 4 of 5 comps had T+1 outcomes meaningfully ABOVE T-year level
+     → bump verdict one step toward CONSIDER, even if rh3/rp3 is
+     lukewarm.
+   - Otherwise neutral.
+
+2. **Archetype-trajectory rule.** Compare current-year archetype to the
+   prior-year row (same player) if present:
+   - DOWNGRADE (e.g. ELITE → POWER_EYE, or SP STUFF tier drop): bump
+     toward SKIP **unless** rh3/rp3 is strongly positive (recency_form_gap
+     ≥ +1.0 FP/start or +0.020 FP/PA).
+   - UPGRADE (e.g. POWER → ELITE): bump toward CONSIDER.
+   - STABLE: no adjustment.
+
+3. **RP role overlay** (RPs only; applies BEFORE generic rules):
+   - `leverage_tier in {MID, LOW, GARBAGE}` → cap verdict at SKIP
+     regardless of rprs2. They are not seeing save/hold opportunities,
+     and rprs2 can't fix that.
+   - `CLOSER == True AND leverage_tier in {ELITE_LEVERAGE, HIGH_LEVERAGE,
+     ELITE, HIGH}` → real add; bump toward CONSIDER if model is even
+     neutral.
+   - `FIREMAN == True` (when column present) → flag as "wins in tight
+     games" — informational, no automatic bump.
+
+If the archetype layer would flip PASS → SKIP or SKIP → CONSIDER, say
+so explicitly in the verdict line ("Model said CONSIDER, archetype
+downgraded to SKIP because 4/5 comps declined at T+1").
 
 ---
 
