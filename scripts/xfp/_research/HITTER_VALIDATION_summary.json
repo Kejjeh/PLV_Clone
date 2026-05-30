@@ -1,0 +1,336 @@
+{
+  "cohort_floor": {
+    "PA_min": 250,
+    "years": [
+      2018,
+      2019,
+      2021,
+      2022,
+      2023,
+      2024,
+      2025
+    ]
+  },
+  "test_A_raw_inputs": [
+    {
+      "metric": "r_Contact (contact_pct)",
+      "column": "contact_pct",
+      "n_pairs": 1141,
+      "r": 0.8707,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_ZContact (z_contact_pct)",
+      "column": "z_contact_pct",
+      "n_pairs": 1141,
+      "r": 0.8275,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_OContact (o_contact_pct)",
+      "column": "o_contact_pct",
+      "n_pairs": 1141,
+      "r": 0.8315,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_K (k_pct)",
+      "column": "k_pct",
+      "n_pairs": 1141,
+      "r": 0.8187,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_BABIP (babip)",
+      "column": "babip",
+      "n_pairs": 1141,
+      "r": 0.3881,
+      "verdict": "MAYBE"
+    },
+    {
+      "metric": "r_xCON (xwoba_on_contact)",
+      "column": "xwoba_on_contact",
+      "n_pairs": 1141,
+      "r": 0.7397,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_SprayEnt (spray_entropy)",
+      "column": "spray_entropy",
+      "n_pairs": 1141,
+      "r": 0.6266,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_Barrel (barrel_pct)",
+      "column": "barrel_pct",
+      "n_pairs": 1141,
+      "r": 0.778,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_HardHit (hard_hit_pct)",
+      "column": "hard_hit_pct",
+      "n_pairs": 1141,
+      "r": 0.7916,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_SweetSpot (sweet_spot_pct)",
+      "column": "sweet_spot_pct",
+      "n_pairs": 1141,
+      "r": 0.458,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_EV90 (ev90)",
+      "column": "ev90",
+      "n_pairs": 1141,
+      "r": 0.8923,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_ISO (iso)",
+      "column": "iso",
+      "n_pairs": 1141,
+      "r": 0.5783,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_HRrate (hr_per_pa)",
+      "column": "hr_per_pa",
+      "n_pairs": 1141,
+      "r": 0.5837,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_PullFB (pull_fb_pct)",
+      "column": "pull_fb_pct",
+      "n_pairs": 1141,
+      "r": 0.598,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_BB (bb_pct)",
+      "column": "bb_pct",
+      "n_pairs": 1141,
+      "r": 0.7222,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_Chase (chase_pct)",
+      "column": "chase_pct",
+      "n_pairs": 1141,
+      "r": 0.8405,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_ZSwing (z_swing_pct)",
+      "column": "z_swing_pct",
+      "n_pairs": 1141,
+      "r": 0.8094,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_HBP (hbp_pct)",
+      "column": "hbp_pct",
+      "n_pairs": 1141,
+      "r": 0.597,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_SBrate (sb_per_opp)",
+      "column": "sb_per_opp",
+      "n_pairs": 1141,
+      "r": 0.7654,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "r_Sprint (sprint_speed)",
+      "column": "sprint_speed_filled",
+      "n_pairs": 1141,
+      "r": 0.9493,
+      "verdict": "KEEP"
+    }
+  ],
+  "test_B_subdomains": [
+    {
+      "subdomain": "Z_CONTACT",
+      "inputs": "z_z_contact_pct",
+      "n_pairs": 1141,
+      "r": 0.8725,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "O_CONTACT",
+      "inputs": "z_o_contact_pct",
+      "n_pairs": 1141,
+      "r": 0.8312,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "K_AVOIDANCE",
+      "inputs": "z_k_pct",
+      "n_pairs": 1141,
+      "r": 0.82,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "CONTACT_QUALITY",
+      "inputs": "z_xwoba_on_contact",
+      "n_pairs": 1141,
+      "r": 0.7549,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "SPRAY_PROFILE",
+      "inputs": "z_spray_entropy",
+      "n_pairs": 1141,
+      "r": 0.6153,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "RAW_POWER",
+      "inputs": "z_hard_hit_pct+z_barrel_pct+z_ev90",
+      "n_pairs": 1141,
+      "r": 0.8652,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "LAUNCH_OPTIM",
+      "inputs": "z_sweet_spot_pct+z_pull_fb_pct",
+      "n_pairs": 1141,
+      "r": 0.5358,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "DAMAGE_PROD",
+      "inputs": "z_iso+z_hr_per_pa",
+      "n_pairs": 1141,
+      "r": 0.6172,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "PATIENCE",
+      "inputs": "z_bb_pct+z_chase_pct+z_hbp_pct",
+      "n_pairs": 1141,
+      "r": 0.764,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "AGGRESSION",
+      "inputs": "z_z_swing_pct",
+      "n_pairs": 1141,
+      "r": 0.8162,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "SPEED_TOOL",
+      "inputs": "z_sprint_speed_filled",
+      "n_pairs": 1141,
+      "r": 0.9471,
+      "verdict": "KEEP"
+    },
+    {
+      "subdomain": "SB_CONVERSION",
+      "inputs": "z_sb_per_opp",
+      "n_pairs": 1141,
+      "r": 0.7678,
+      "verdict": "KEEP"
+    }
+  ],
+  "test_C_alternatives": [
+    {
+      "metric": "ALT_SPRAY_pull_pct",
+      "column": "pull_pct",
+      "n_pairs": 1141,
+      "r": 0.6816,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "ALT_SPRAY_oppo_pct",
+      "column": "oppo_pct",
+      "n_pairs": 1141,
+      "r": 0.6288,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "ALT_SPRAY_pull_fb_pct",
+      "column": "pull_fb_pct",
+      "n_pairs": 1141,
+      "r": 0.598,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "ALT_CONTACT_QUALITY_xwoba_bip",
+      "column": "xwoba_bip",
+      "n_pairs": 1141,
+      "r": 0.7397,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "ALT_CONTACT_QUALITY_avg_ev",
+      "column": "avg_ev",
+      "n_pairs": 1141,
+      "r": 0.781,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "ALT_LAUNCH_blast_rate",
+      "column": "blast_rate",
+      "n_pairs": 0,
+      "r": null,
+      "verdict": "INSUFFICIENT"
+    },
+    {
+      "metric": "ALT_LAUNCH_squared_up_rate",
+      "column": "squared_up_rate",
+      "n_pairs": 0,
+      "r": null,
+      "verdict": "INSUFFICIENT"
+    },
+    {
+      "metric": "ALT_LAUNCH_avg_swing_speed",
+      "column": "avg_swing_speed",
+      "n_pairs": 0,
+      "r": null,
+      "verdict": "INSUFFICIENT"
+    },
+    {
+      "metric": "ALT_SB_sb_per_pa",
+      "column": "sb_per_pa",
+      "n_pairs": 1141,
+      "r": 0.75,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "REF_xwoba_per_pa",
+      "column": "xwoba_per_pa",
+      "n_pairs": 1141,
+      "r": 0.6502,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "REF_fp_per_pa_actual",
+      "column": "fp_per_pa_actual",
+      "n_pairs": 1141,
+      "r": 0.5137,
+      "verdict": "KEEP"
+    },
+    {
+      "metric": "REF_avg_swing_speed",
+      "column": "avg_swing_speed",
+      "n_pairs": 0,
+      "r": null,
+      "verdict": "INSUFFICIENT"
+    },
+    {
+      "metric": "REF_blast_rate",
+      "column": "blast_rate",
+      "n_pairs": 0,
+      "r": null,
+      "verdict": "INSUFFICIENT"
+    }
+  ],
+  "methodology": "YoY Pearson r at batter-year level. Cohort: PA>=250 in BOTH year T and T+1. Bar: r>=0.40 KEEP, 0.20-0.40 MAYBE, <0.20 DROP. 2020 excluded (COVID short season). 2026 excluded (in-progress). YoY pairs: 2018->2019, 2021->2022, 2022->2023, 2023->2024, 2024->2025."
+}

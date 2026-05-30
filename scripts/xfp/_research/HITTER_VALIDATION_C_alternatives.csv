@@ -1,0 +1,14 @@
+metric,column,n_pairs,r,verdict
+ALT_SPRAY_pull_pct,pull_pct,1141,0.6816,KEEP
+ALT_SPRAY_oppo_pct,oppo_pct,1141,0.6288,KEEP
+ALT_SPRAY_pull_fb_pct,pull_fb_pct,1141,0.598,KEEP
+ALT_CONTACT_QUALITY_xwoba_bip,xwoba_bip,1141,0.7397,KEEP
+ALT_CONTACT_QUALITY_avg_ev,avg_ev,1141,0.781,KEEP
+ALT_LAUNCH_blast_rate,blast_rate,0,,INSUFFICIENT
+ALT_LAUNCH_squared_up_rate,squared_up_rate,0,,INSUFFICIENT
+ALT_LAUNCH_avg_swing_speed,avg_swing_speed,0,,INSUFFICIENT
+ALT_SB_sb_per_pa,sb_per_pa,1141,0.75,KEEP
+REF_xwoba_per_pa,xwoba_per_pa,1141,0.6502,KEEP
+REF_fp_per_pa_actual,fp_per_pa_actual,1141,0.5137,KEEP
+REF_avg_swing_speed,avg_swing_speed,0,,INSUFFICIENT
+REF_blast_rate,blast_rate,0,,INSUFFICIENT

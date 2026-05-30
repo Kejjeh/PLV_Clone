@@ -28,6 +28,11 @@ All signals live here. Add new signals to this table when validated.
 | G | Holds-Only Elite RP | RP | fp_proxy/bf >= 0.04 in >= 20 apps, sv_season = 0, rprs2 rank > 60 | HIGH | 2026-05-25 |
 | H | SP Roster Upgrade Alert | SP | FA SP fpp >= user's 3rd-weakest SP fpp + 0.015 AND rp3 rank ≤ 150 AND GS >= 4 (OR Signal A HIGH fires) | HIGH PRIORITY if gap >= +0.030 or Signal A HIGH; MONITOR if gap >= +0.015 | 2026-05-25 |
 | I | Hitter Roster Upgrade Available | H | FA hitter xwOBA >= user's 3rd-weakest active hitter xwOBA + 0.025 AND rh3 rank ≤ 150 AND 75+ PA AND xwOBACON >= 0.350 | HIGH PRIORITY if gap >= +0.040 AND rh3 rank ≤ 75; MONITOR if gap >= +0.025 | 2026-05-25 |
+| J | LEVERAGE_RISE_FA | RP | leverage_tier {LOW,MID} 2025 → {HIGH,ELITE} 2026 AND gmLI_2026 ≥ 1.2 | HIGH if ELITE tier + gmLI ≥ 1.6; MED if gmLI ≥ 1.4; LOW otherwise | 2026-05-30 |
+| K | NEW_CLOSER_FA | RP | sv_2026 ≥ 3 AND no CLOSER tag in 2025 (rookie / first-time-closer included) | HIGH if sv_2026 ≥ 8; MED if ≥ 5; LOW if ≥ 3 | 2026-05-30 |
+| L | FIREMAN_BREAKOUT | RP | FIREMAN tag True in 2026 AND False in 2025 (IS% ≥ 80, IR ≥ 20) | HIGH if rprs2 rank ≤ 60 AND gmLI ≥ 1.3; MED otherwise | 2026-05-30 |
+| M | VELO_SPIKE_RP | RP | VELO rating (20-80 scale) +5 vs 2025 AND swstr_pct +0.5pp vs 2025 | HIGH if VELO Δ ≥ 8 AND swstr Δ ≥ 1.5pp; MED if VELO Δ ≥ 5 AND swstr Δ ≥ 1.0pp; LOW otherwise | 2026-05-30 |
+| N | MULTI_INNING_BULK_VALUE | RP | MULTI_INNING_BULK_26 True AND rprs2 rank ≤ 80 | HIGH if rprs2 ≤ 50 + gmLI ≥ 1.2 OR new MIB role; MED if rank ≤ 60; LOW otherwise | 2026-05-30 |
 
 ---
 
@@ -692,6 +697,87 @@ consumer to read both alert types from a single output artifact.
 
 ---
 
+## Signals J–N — RP Archetype Layer (added 2026-05-30)
+
+Built on the `rp_ratings_master.csv` archetype + leverage panel. All five share
+one 2025↔2026 year-over-year join on pitcher ID (`load_rp_archetype_join()`
+in `run_fa_monitor.py`). Augments the shallow B/F closer coverage with role,
+stuff, and leverage trajectory.
+
+### Signal J — LEVERAGE_RISE_FA
+
+FA RP whose `leverage_tier` rose from {LOW, MID} 2025 → {HIGH, ELITE} 2026
+**and** current `gmLI ≥ 1.2`. Indicates real role change in progress.
+
+Severity:
+- HIGH — landed in ELITE_LEVERAGE AND gmLI ≥ 1.6
+- MED — gmLI ≥ 1.4
+- LOW — meets baseline but gmLI ≥ 1.2 < 1.4
+
+Output shows `gmLI 2025 → gmLI 2026` delta and rprs2 rank.
+
+### Signal K — NEW_CLOSER_FA
+
+FA RP who's stockpiling saves now (`sv_2026 ≥ 3`) but had no `CLOSER` tag in
+2025. The "just took the job" signal — surfaces players the formal CLOSER
+classifier hasn't caught up to.
+
+Severity:
+- HIGH — sv_2026 ≥ 8 (entrenched)
+- MED — sv_2026 ≥ 5 (real run of saves)
+- LOW — sv_2026 ≥ 3 (small sample)
+
+Note: 2025 sv is shown but doesn't gate the signal — many rookies (no 2025
+season) qualify legitimately.
+
+### Signal L — FIREMAN_BREAKOUT
+
+FA RP newly tagged `FIREMAN` for 2026 (IS% ≥ 80, IR ≥ 20 in the rp_archetype
+build) who wasn't FIREMAN in 2025. These guys win close inherited-runner
+situations and pile holds.
+
+Severity:
+- HIGH — rprs2 rank ≤ 60 AND gmLI ≥ 1.3 (model + leverage both agree)
+- MED — otherwise
+
+### Signal M — VELO_SPIKE_RP
+
+FA RP whose VELO rating (20-80 scale, from rp_ratings_master) is ≥ +5 above
+2025 AND swstr_pct is up by ≥ 0.5pp. Real stuff improvement, often precedes
+role increase.
+
+Severity:
+- HIGH — VELO Δ ≥ 8 AND swstr Δ ≥ 1.5pp
+- MED — VELO Δ ≥ 5 AND swstr Δ ≥ 1.0pp
+- LOW — meets baseline
+
+Output also shows raw `avg_velo` delta in mph.
+
+### Signal N — MULTI_INNING_BULK_VALUE
+
+FA RP with `MULTI_INNING_BULK` tag in 2026 (IP/G ≥ 1.3) AND rprs2 rank ≤ 80.
+The 2-IP setup man who can outscore most pure closers in BrownU scoring
+(K + IP*3.3 contribution from the second inning is large).
+
+Severity:
+- HIGH — rprs2 rank ≤ 50 + gmLI ≥ 1.2, OR newly MIB this year
+- MED — rprs2 rank ≤ 60
+- LOW — meets baseline
+
+### Output block format (RP signals)
+
+```
+🔥 LEVERAGE_RISE_FA — Andres Munoz (SEA)
+   gmLI 2025: 0.95 (MID_LEVERAGE) → 2026: 2.16 (ELITE_LEVERAGE)
+   rprs2 rank: 28
+   Recommendation: deep-dive via /fa-pickup-deep-dive
+```
+
+The script prints these in a dedicated `## RP ARCHETYPE SIGNALS (J-N)` block
+with HIGH/MED/LOW subsections, distinct from the A-F report above.
+
+---
+
 ## Step 2 — Output
 
 ```
@@ -802,3 +888,10 @@ Signals calibrated from 2026 retroactive analysis (2026-05-25):
   floor and fires even if the FA xwOBA is only modestly above the user's weakest.
 - Signals D-F: designed from pattern analysis, not yet calibrated against full
   season history. Flag as MONITOR tier until validated.
+- Signals J-N added 2026-05-30. Built on `rp_ratings_master.csv` 2025↔2026 join
+  (108 RPs with both years' data). Dry-run on 2026-05-30 live FA pool fired:
+  J=27 alerts (5 HIGH), K=12 alerts (2 HIGH: Seranthony Dominguez SV 2→11,
+  Lucas Erceg SV 2→11), L=3 alerts (1 HIGH: Kevin Kelly), M=3 alerts (Jacob
+  Webb +5/+3.7pp), N=3 alerts (1 HIGH: Sam Bachman, new MIB role). Designed
+  signals — not yet calibrated against forward outcomes; treat MED/LOW tiers
+  as watchlist until 2026 season completes.

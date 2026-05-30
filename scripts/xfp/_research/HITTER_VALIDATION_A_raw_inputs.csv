@@ -1,0 +1,21 @@
+metric,column,n_pairs,r,verdict
+r_Contact (contact_pct),contact_pct,1141,0.8707,KEEP
+r_ZContact (z_contact_pct),z_contact_pct,1141,0.8275,KEEP
+r_OContact (o_contact_pct),o_contact_pct,1141,0.8315,KEEP
+r_K (k_pct),k_pct,1141,0.8187,KEEP
+r_BABIP (babip),babip,1141,0.3881,MAYBE
+r_xCON (xwoba_on_contact),xwoba_on_contact,1141,0.7397,KEEP
+r_SprayEnt (spray_entropy),spray_entropy,1141,0.6266,KEEP
+r_Barrel (barrel_pct),barrel_pct,1141,0.778,KEEP
+r_HardHit (hard_hit_pct),hard_hit_pct,1141,0.7916,KEEP
+r_SweetSpot (sweet_spot_pct),sweet_spot_pct,1141,0.458,KEEP
+r_EV90 (ev90),ev90,1141,0.8923,KEEP
+r_ISO (iso),iso,1141,0.5783,KEEP
+r_HRrate (hr_per_pa),hr_per_pa,1141,0.5837,KEEP
+r_PullFB (pull_fb_pct),pull_fb_pct,1141,0.598,KEEP
+r_BB (bb_pct),bb_pct,1141,0.7222,KEEP
+r_Chase (chase_pct),chase_pct,1141,0.8405,KEEP
+r_ZSwing (z_swing_pct),z_swing_pct,1141,0.8094,KEEP
+r_HBP (hbp_pct),hbp_pct,1141,0.597,KEEP
+r_SBrate (sb_per_opp),sb_per_opp,1141,0.7654,KEEP
+r_Sprint (sprint_speed),sprint_speed_filled,1141,0.9493,KEEP

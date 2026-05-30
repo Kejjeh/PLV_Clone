@@ -1370,14 +1370,13 @@ def render_cap_status(my_proj):
     return msg
 
 
-def render_closer_tracker():
-    """Show save-leaders by team with role status."""
+def _render_closer_tracker_simple():
+    """Original simple table fallback — used if the leverage join fails."""
     try:
         save_csv = OUT / 'save_handcuffs.csv'
         if not save_csv.exists():
             return '<h2>🔒 Closer Tracker</h2><p class="muted">save_handcuffs.csv not found</p>'
         df = pd.read_csv(save_csv)
-        # take top SV-leader per team
         if 'team' in df.columns and 'role' in df.columns:
             closers = df.groupby('team').first().reset_index() if 'role_rank' not in df.columns else df[df['role_rank'] == 1]
         else:
@@ -1400,6 +1399,290 @@ def render_closer_tracker():
         return '\n'.join(out)
     except Exception as e:
         return f'<h2>🔒 Closer Tracker</h2><p class="muted">error: {h(str(e))}</p>'
+
+
+# MLB team-id → ESPN-style abbreviation. Inverse of ESPN_TO_MLB_TEAM.
+_MLB_TO_ABBR = {
+    108: 'LAA', 109: 'ARI', 110: 'BAL', 111: 'BOS', 112: 'CHC', 113: 'CIN',
+    114: 'CLE', 115: 'COL', 116: 'DET', 117: 'HOU', 118: 'KC', 119: 'LAD',
+    120: 'WSH', 121: 'NYM', 133: 'ATH', 134: 'PIT', 135: 'SD', 136: 'SEA',
+    137: 'SF', 138: 'STL', 139: 'TB', 140: 'TEX', 141: 'TOR', 142: 'MIN',
+    143: 'PHI', 144: 'ATL', 145: 'CWS', 146: 'MIA', 147: 'NYY', 158: 'MIL',
+}
+
+_TIER_ORDER = {
+    'ELITE_LEVERAGE': 0, 'HIGH_LEVERAGE': 1, 'MID_LEVERAGE': 2,
+    'LOW_LEVERAGE': 3, 'GARBAGE_TIME': 4,
+}
+
+_TIER_COLOR_VAR = {
+    'ELITE_LEVERAGE': '--pos',
+    'HIGH_LEVERAGE': '--text',
+    'MID_LEVERAGE': '--dim',
+    'LOW_LEVERAGE': '--neg',
+    'GARBAGE_TIME': '--neg',
+}
+
+
+def _tier_html(tier):
+    """Wrap a leverage_tier value in a span colored by the dashboard token."""
+    if not tier or pd.isna(tier):
+        return '<span class="muted">—</span>'
+    var = _TIER_COLOR_VAR.get(str(tier), '--dim')
+    return f'<span style="color: var({var})">{h(str(tier))}</span>'
+
+
+def _fetch_team_leaders(team_id, category, limit=5):
+    """One MLB Stats API call for a team's season leader board on a stat
+    (e.g. 'saves' or 'holds'). Returns list of dicts with name, value."""
+    url = (f'https://statsapi.mlb.com/api/v1/teams/{team_id}/leaders?'
+           f'leaderCategories={category}&season=2026&limit={limit}')
+    try:
+        data = _fetch_json(url)
+    except Exception:
+        return []
+    out = []
+    for cat in data.get('teamLeaders', []):
+        for ldr in cat.get('leaders', []):
+            person = ldr.get('person') or {}
+            name = person.get('fullName')
+            try:
+                val = int(ldr.get('value', 0) or 0)
+            except Exception:
+                val = 0
+            if name:
+                out.append({'name': name, 'value': val})
+    return out
+
+
+def _load_closer_leaders_cache():
+    """Per-day cache of closer/setup leader board across all MLB teams.
+
+    Structure: {team_abbr: {'saves': [{name, value}], 'holds': [{name, value}]}}.
+    One file per day so the dashboard refresh stays cheap after the first call.
+    """
+    cache_path = OUT / f'closer_leaders_{date.today().isoformat()}.json'
+    if cache_path.exists():
+        try:
+            with open(cache_path, 'r', encoding='utf-8') as f:
+                return json.load(f)
+        except Exception:
+            pass
+    cache = {}
+    for mlb_id, abbr in _MLB_TO_ABBR.items():
+        saves = _fetch_team_leaders(mlb_id, 'saves', limit=3)
+        holds = _fetch_team_leaders(mlb_id, 'holds', limit=5)
+        cache[abbr] = {'saves': saves, 'holds': holds}
+    try:
+        with open(cache_path, 'w', encoding='utf-8') as f:
+            json.dump(cache, f, separators=(',', ':'))
+    except Exception:
+        pass
+    return cache
+
+
+def render_closer_tracker():
+    """Closer-of-record tracker enriched with rp_ratings_master leverage data.
+
+    Main table columns: Team | Closer | Archetype | leverage_tier | gmLI |
+    SV | FIREMAN. Sorted by leverage_tier (ELITE first) then SV desc.
+
+    WATCH LIST: next-in-line setup RPs per team whose leverage_tier matches
+    or exceeds the closer-of-record's tier (handcuff candidates).
+
+    Falls back to the original simple table if rp_ratings_master.csv or the
+    MLB team-leaders API are unavailable.
+    """
+    try:
+        rp_path = ROOT / 'data' / 'research' / 'rp_ratings_master.csv'
+        if not rp_path.exists():
+            return _render_closer_tracker_simple()
+        rp_df = pd.read_csv(rp_path)
+        rp_df = rp_df[rp_df['year'] == 2026].copy()
+        if rp_df.empty:
+            return _render_closer_tracker_simple()
+        rp_df['nk'] = rp_df['player_name'].astype(str).map(_norm)
+        # Keep one row per player (highest gmli wins on dup) so lookups are stable.
+        rp_df = (rp_df.sort_values('gmli', ascending=False)
+                      .drop_duplicates('nk', keep='first'))
+        rp_lookup = {row['nk']: row for _, row in rp_df.iterrows()}
+
+        # Fetch closer/setup leaders per team (cached per day).
+        leaders = _load_closer_leaders_cache()
+        if not leaders:
+            return _render_closer_tracker_simple()
+
+        closer_rows = []
+        watch_rows = []
+        for abbr in sorted(leaders.keys()):
+            entry = leaders.get(abbr) or {}
+            saves = entry.get('saves') or []
+            holds = entry.get('holds') or []
+            if not saves:
+                continue
+            closer = saves[0]
+            closer_nk = _norm(closer['name'])
+            cinfo = rp_lookup.get(closer_nk)
+            closer_tier = (str(cinfo['leverage_tier'])
+                           if cinfo is not None and pd.notna(cinfo.get('leverage_tier'))
+                           else None)
+            closer_gmli = (float(cinfo['gmli'])
+                           if cinfo is not None and pd.notna(cinfo.get('gmli'))
+                           else None)
+            closer_arch = (str(cinfo['archetype'])
+                           if cinfo is not None and pd.notna(cinfo.get('archetype'))
+                           else None)
+            closer_fireman = bool(cinfo.get('FIREMAN')) if cinfo is not None else False
+            closer_rows.append({
+                'team': abbr,
+                'name': closer['name'],
+                'archetype': closer_arch,
+                'leverage_tier': closer_tier,
+                'gmli': closer_gmli,
+                'sv': closer['value'],
+                'fireman': closer_fireman,
+                'tier_rank': _TIER_ORDER.get(closer_tier, 9),
+            })
+
+            # WATCH LIST: any candidate with HLD ≥ 5 OR HIGH_LEVERAGE tag in
+            # rp_ratings_master whose leverage_tier ≥ closer's tier.
+            closer_rank = _TIER_ORDER.get(closer_tier, 9)
+            seen = {closer_nk}
+            # Candidate pool = top setup men by HLD + any other top SV man.
+            pool = []
+            for h_row in holds:
+                pool.append({'name': h_row['name'], 'hld': h_row['value'], 'sv': 0})
+            for s_row in saves[1:]:  # rank 2+ save earners (also count as candidates)
+                # match into existing pool by name, else add
+                match = next((p for p in pool
+                              if _norm(p['name']) == _norm(s_row['name'])), None)
+                if match is not None:
+                    match['sv'] = s_row['value']
+                else:
+                    pool.append({'name': s_row['name'], 'hld': 0,
+                                 'sv': s_row['value']})
+            for cand in pool:
+                cnk = _norm(cand['name'])
+                if cnk in seen:
+                    continue
+                cand_info = rp_lookup.get(cnk)
+                # Trigger: HLD ≥ 5 OR (HIGH_LEVERAGE tag in rp_master).
+                hld_trigger = cand['hld'] >= 5
+                hl_trigger = bool(cand_info is not None
+                                  and cand_info.get('HIGH_LEVERAGE'))
+                if not (hld_trigger or hl_trigger):
+                    continue
+                cand_tier = (str(cand_info['leverage_tier'])
+                             if cand_info is not None
+                             and pd.notna(cand_info.get('leverage_tier'))
+                             else None)
+                cand_rank = _TIER_ORDER.get(cand_tier, 9)
+                # "Next in line if closer falters": tier ≥ closer's tier (i.e.
+                # lower-or-equal numeric rank — lower = better).
+                if cand_rank > closer_rank:
+                    continue
+                cand_gmli = (float(cand_info['gmli'])
+                             if cand_info is not None
+                             and pd.notna(cand_info.get('gmli'))
+                             else None)
+                notes = []
+                if cand['hld']:
+                    notes.append(f'HLD {cand["hld"]}')
+                if cand['sv']:
+                    notes.append(f'SV {cand["sv"]}')
+                if cand_info is not None and bool(cand_info.get('FIREMAN')):
+                    notes.append('FIREMAN')
+                if cand_info is not None and bool(cand_info.get('HIGH_LEVERAGE')):
+                    notes.append('HIGH_LEV tag')
+                watch_rows.append({
+                    'team': abbr,
+                    'closer': closer['name'],
+                    'next': cand['name'],
+                    'gmli': cand_gmli,
+                    'tier': cand_tier,
+                    'notes': ', '.join(notes) or '—',
+                    'tier_rank': cand_rank,
+                })
+                seen.add(cnk)
+
+        if not closer_rows:
+            return _render_closer_tracker_simple()
+
+        # Sort main table: leverage_tier ELITE→HIGH→MID→LOW→GARBAGE, then SV desc.
+        closer_rows.sort(key=lambda r: (r['tier_rank'], -r['sv']))
+
+        out = [
+            '<h2>🔒 Closer-of-Record Tracker</h2>',
+            '<p class="notes">'
+            'Closer-of-record from MLB Stats API season SV leaders, enriched '
+            'with leverage_tier / gmLI / archetype / FIREMAN tags from '
+            'rp_ratings_master.csv. Sorted by leverage_tier (ELITE first) '
+            'then SV desc. Cross-reference with closer_persistence (~83%).'
+            '</p>',
+            '<table><thead><tr>'
+            '<th>Team</th><th>Closer</th><th>Archetype</th>'
+            '<th>leverage_tier</th><th>gmLI</th><th>SV</th>'
+            '<th title="FIREMAN = high-leverage multi-inning fireman role '
+            '(enters mid-game with runners on, not just 9th-inning)">'
+            'FIREMAN</th>'
+            '</tr></thead><tbody>',
+        ]
+        for r in closer_rows:
+            gmli_disp = f'{r["gmli"]:.2f}' if r['gmli'] is not None else '—'
+            arch_disp = h(r['archetype']) if r['archetype'] else '<span class="muted">—</span>'
+            fire_disp = ('<b class="pos" title="High-leverage fireman role — '
+                         'enters with runners on in tight games">🚒</b>'
+                         if r['fireman'] else '')
+            out.append(
+                f'<tr><td>{h(r["team"])}</td>'
+                f'<td>{h(r["name"])}</td>'
+                f'<td>{arch_disp}</td>'
+                f'<td>{_tier_html(r["leverage_tier"])}</td>'
+                f'<td>{gmli_disp}</td>'
+                f'<td>{r["sv"]}</td>'
+                f'<td>{fire_disp}</td>'
+                f'</tr>'
+            )
+        out.append('</tbody></table>')
+
+        # WATCH LIST sub-section.
+        if watch_rows:
+            watch_rows.sort(key=lambda r: (r['tier_rank'],
+                                            r['gmli'] is None,
+                                            -(r['gmli'] or 0)))
+            out.append(
+                '<h3>👀 Watch List — If Your Closer Falters</h3>'
+                '<p class="notes">'
+                'Setup RPs (HLD ≥ 5 OR HIGH_LEVERAGE in rp_ratings_master) '
+                'whose leverage_tier matches or exceeds the closer-of-record. '
+                'These are the most likely save-vultures or next-man-up '
+                'candidates if the current closer loses the role.'
+                '</p>'
+                '<table><thead><tr>'
+                '<th>Team</th><th>Current closer</th><th>If falters →</th>'
+                '<th>Next-in-line gmLI</th><th>tier</th><th>Notes</th>'
+                '</tr></thead><tbody>'
+            )
+            for r in watch_rows:
+                gmli_disp = f'{r["gmli"]:.2f}' if r['gmli'] is not None else '—'
+                out.append(
+                    f'<tr><td>{h(r["team"])}</td>'
+                    f'<td>{h(r["closer"])}</td>'
+                    f'<td><b>{h(r["next"])}</b></td>'
+                    f'<td>{gmli_disp}</td>'
+                    f'<td>{_tier_html(r["tier"])}</td>'
+                    f'<td><small>{h(r["notes"])}</small></td>'
+                    f'</tr>'
+                )
+            out.append('</tbody></table>')
+
+        return '\n'.join(out)
+    except Exception as e:
+        # Any unexpected failure → fall back to the original simple table.
+        fallback = _render_closer_tracker_simple()
+        return (fallback
+                + f'\n<p class="notes muted">leverage enrichment error: '
+                f'{h(str(e))}</p>')
 
 
 def render_snapshot_diff():

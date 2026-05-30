@@ -1,0 +1,13 @@
+subdomain,inputs,n_pairs,r,verdict
+Z_CONTACT,z_z_contact_pct,1141,0.8725,KEEP
+O_CONTACT,z_o_contact_pct,1141,0.8312,KEEP
+K_AVOIDANCE,z_k_pct,1141,0.82,KEEP
+CONTACT_QUALITY,z_xwoba_on_contact,1141,0.7549,KEEP
+SPRAY_PROFILE,z_spray_entropy,1141,0.6153,KEEP
+RAW_POWER,z_hard_hit_pct+z_barrel_pct+z_ev90,1141,0.8652,KEEP
+LAUNCH_OPTIM,z_sweet_spot_pct+z_pull_fb_pct,1141,0.5358,KEEP
+DAMAGE_PROD,z_iso+z_hr_per_pa,1141,0.6172,KEEP
+PATIENCE,z_bb_pct+z_chase_pct+z_hbp_pct,1141,0.764,KEEP
+AGGRESSION,z_z_swing_pct,1141,0.8162,KEEP
+SPEED_TOOL,z_sprint_speed_filled,1141,0.9471,KEEP
+SB_CONVERSION,z_sb_per_opp,1141,0.7678,KEEP
