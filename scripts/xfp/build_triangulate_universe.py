@@ -78,17 +78,26 @@ def main():
         pd.DataFrame(columns=['player_name','espn_id','bucket','source_team','source_action']).to_csv(f'{OUT_DIR}/my_drops.csv', index=False)
         pd.DataFrame(columns=['player_name','espn_id','bucket','source_team','source_action']).to_csv(f'{OUT_DIR}/opp_churn.csv', index=False)
     else:
+        # Sort by date DESCENDING so drop_duplicates(keep='first') retains the LATEST action per player
+        txns_sorted = txns.sort_values('date', ascending=False)
+
         # --- 2a. My drops ---
-        my_drops = txns[(txns['team']==my_team_name) & (txns['action'].str.contains('DROP', case=False, na=False))]
-        my_drops_uniq = my_drops.drop_duplicates(subset=['player_name'])
+        # Take ALL of my actions, dedupe to latest per player, then filter to those whose latest action is a DROP
+        my_actions = txns_sorted[txns_sorted['team']==my_team_name]
+        my_latest = my_actions.drop_duplicates(subset=['player_name'], keep='first').copy()
+        my_latest['latest_action'] = my_latest['action']
+        my_latest['latest_action_date'] = my_latest['date']
+        my_drops_uniq = my_latest[my_latest['latest_action'].str.contains('DROP', case=False, na=False)]
         my_drops_uniq.to_csv(f'{OUT_DIR}/my_drops.csv', index=False)
-        print(f"my_drops.csv: {len(my_drops_uniq)} unique players I've dropped")
+        print(f"my_drops.csv: {len(my_drops_uniq)} unique players I've dropped (and not since re-added)")
 
         # --- 2b. Opp churn (any DROP or ADD by other teams) ---
-        opp = txns[txns['team']!=my_team_name]
-        opp_uniq = opp.drop_duplicates(subset=['player_name'])
+        opp = txns_sorted[txns_sorted['team']!=my_team_name]
+        opp_uniq = opp.drop_duplicates(subset=['player_name'], keep='first').copy()
+        opp_uniq['latest_action'] = opp_uniq['action']
+        opp_uniq['latest_action_date'] = opp_uniq['date']
         opp_uniq.to_csv(f'{OUT_DIR}/opp_churn.csv', index=False)
-        print(f"opp_churn.csv: {len(opp_uniq)} unique players churned by opponents")
+        print(f"opp_churn.csv: {len(opp_uniq)} unique players churned by opponents (latest action per player)")
 
     # --- 3. FAs above 50 FP (use model files since ESPN API doesn't expose applied totals reliably) ---
     fas = league.free_agents(size=2000)
@@ -138,9 +147,16 @@ def main():
         if all(c in d.columns for c in cols):
             parts.append(d[cols].assign(category='FA_TOP'))
     master = pd.concat(parts, ignore_index=True)
+    # Build also_in map: for each player, collect ALL categories they appear in
+    cat_lookup = master.groupby('player_name')['category'].apply(lambda s: sorted(set(s))).to_dict()
     # Dedupe keeping first category in priority order (ROSTER > MY_DROP > OPP_CHURN > FA_TOP)
     master['cat_pri'] = master['category'].map({'ROSTER':0,'MY_DROP':1,'OPP_CHURN':2,'FA_TOP':3})
     master = master.sort_values('cat_pri').drop_duplicates(subset=['player_name'], keep='first').drop(columns=['cat_pri'])
+    # also_in = other categories the player appears in, comma-separated (empty string if only one)
+    master['also_in'] = master.apply(
+        lambda r: ','.join([c for c in cat_lookup.get(r['player_name'], []) if c != r['category']]),
+        axis=1,
+    )
     master.to_csv(f'{OUT_DIR}/master_universe.csv', index=False)
     print(f"\nmaster_universe.csv: {len(master)} unique players")
     print(master['category'].value_counts().to_string())

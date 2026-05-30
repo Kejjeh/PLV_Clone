@@ -14,7 +14,8 @@ Outputs a markdown card per player + a comparison table if multiple players.
 """
 
 from __future__ import annotations
-import argparse, json, os, sys, unicodedata, glob, io
+import argparse, json, os, sys, unicodedata, glob, io, functools
+from datetime import datetime, date
 import pandas as pd
 
 # Force UTF-8 for stdout on Windows so arrows / accents don't crash
@@ -39,6 +40,11 @@ PL_CACHE_FILES = {
     'RP':        'pl_closers.json',
 }
 
+# Article-universe sizes — used to distinguish "snubbed" (UR) from "out-of-scope" (—).
+# The closers article only covers ~50 names; RP model ranks 250+, so anyone past #50
+# is OUT OF SCOPE not "unranked".
+PL_UNIVERSE_SIZE = {'H': 150, 'SP': 100, 'RP': 50}
+
 # ---------- helpers ----------
 
 def _norm(s: str) -> str:
@@ -50,6 +56,99 @@ def _flip_lastfirst(s: str) -> str:
         return f"{b.strip()} {a.strip()}"
     return str(s)
 
+# ---------- cached loaders (module-level, one read per process) ----------
+
+@functools.lru_cache(maxsize=None)
+def _load_projection(bucket: str) -> pd.DataFrame:
+    """Load + cache a projection CSV. Adds a normalized '_key' column."""
+    df = pd.read_csv(PROJECTIONS[bucket])
+    if bucket == 'H':
+        df['_key'] = df['player_name'].apply(_norm)
+    elif bucket == 'SP':
+        df['_key'] = df['player_name'].apply(_flip_lastfirst).apply(_norm)
+    else:  # RP
+        df['_key'] = df['name_api'].apply(_norm)
+    return df
+
+@functools.lru_cache(maxsize=None)
+def _load_archetype(bucket: str) -> pd.DataFrame | None:
+    """Load + cache an archetype panel parquet."""
+    panel_path = ARCHETYPE_PANELS[bucket]
+    if not os.path.exists(panel_path):
+        return None
+    p = pd.read_parquet(panel_path)
+    name_col = 'player_name' if 'player_name' in p.columns else 'name'
+    p['_key'] = p[name_col].apply(_norm)
+    return p
+
+@functools.lru_cache(maxsize=None)
+def _load_pl_cache(filename: str) -> dict:
+    path = os.path.join(PL_CACHE_DIR, filename)
+    if not os.path.exists(path):
+        return {'fetched': None, 'source_url': None, 'ranks': {}}
+    with open(path, 'r', encoding='utf-8') as f:
+        return json.load(f)
+
+@functools.lru_cache(maxsize=None)
+def _load_pl_streamer_cache() -> tuple[dict, str]:
+    """Find newest pl_sp_streamers_*.json by filename date; fall back to latest."""
+    # Glob date-keyed streamer files (pl_sp_streamers_YYYY-MM-DD.json)
+    pattern = os.path.join(PL_CACHE_DIR, 'pl_sp_streamers_*.json')
+    candidates = []
+    for path in glob.glob(pattern):
+        base = os.path.basename(path)
+        # skip the 'latest' alias for first-pass; we want date-keyed
+        if base == 'pl_sp_streamers_latest.json':
+            continue
+        # extract date portion between 'pl_sp_streamers_' and '.json'
+        stem = base[len('pl_sp_streamers_'):-len('.json')]
+        try:
+            datetime.strptime(stem, '%Y-%m-%d')
+            candidates.append((stem, path))
+        except ValueError:
+            continue
+    if candidates:
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        date_str, path = candidates[0]
+        with open(path, 'r', encoding='utf-8') as f:
+            return json.load(f), date_str
+    # Fallback to legacy 'latest' file
+    cache = _load_pl_cache('pl_sp_streamers_latest.json')
+    return cache, cache.get('fetched', '') or ''
+
+# ---------- staleness warning ----------
+
+def _warn_stale_caches():
+    """Walk the 4 PL cache files; warn on stale entries. Print to stderr."""
+    today = date.today()
+    # (filename, threshold_days)
+    items = [
+        ('pl_hitters_top150.json', 7),
+        ('pl_sps_top100.json',     7),
+        ('pl_closers.json',        7),
+        ('pl_sp_streamers_latest.json', 2),
+    ]
+    for fname, thresh in items:
+        path = os.path.join(PL_CACHE_DIR, fname)
+        if not os.path.exists(path):
+            print(f"WARN {fname} is MISSING", file=sys.stderr)
+            continue
+        try:
+            with open(path, 'r', encoding='utf-8') as f:
+                cache = json.load(f)
+        except Exception:
+            continue
+        fetched = cache.get('fetched')
+        if not fetched:
+            continue
+        try:
+            fdate = datetime.strptime(fetched[:10], '%Y-%m-%d').date()
+        except ValueError:
+            continue
+        age = (today - fdate).days
+        if age > thresh:
+            print(f"WARN {fname} is {age}d stale (fetched {fetched})", file=sys.stderr)
+
 # ---------- name resolution ----------
 
 def resolve_player(name: str, hint: str | None = None) -> dict | None:
@@ -59,18 +158,20 @@ def resolve_player(name: str, hint: str | None = None) -> dict | None:
     order = [hint] + [b for b in ('H','SP','RP') if b != hint] if hint else ['H','SP','RP']
     for bucket in order:
         if bucket is None: continue
-        df = pd.read_csv(PROJECTIONS[bucket])
+        df = _load_projection(bucket)
         if bucket == 'H':
-            df['_key'] = df['player_name'].apply(_norm)
             id_col, name_col = 'batter', 'player_name'
         elif bucket == 'SP':
-            df['_key'] = df['player_name'].apply(_flip_lastfirst).apply(_norm)
             id_col, name_col = 'pitcher', 'player_name'
-        else:  # RP — rprs2 uses 'name_api' (already in First Last form)
-            df['_key'] = df['name_api'].apply(_norm)
+        else:  # RP — rprs2 uses 'name_api'
             id_col, name_col = 'pitcher', 'name_api'
         m = df[df['_key'] == key]
         if not m.empty:
+            if len(m) > 1:
+                first = m.iloc[0]
+                ft = first.get('team', '?')
+                fp = first.get('primary_position', bucket) if bucket == 'H' else bucket
+                print(f"WARN MULTI-MATCH for \"{name}\" — took {ft} {fp}; ignored {len(m)-1} other(s)", file=sys.stderr)
             r = m.iloc[0]
             disp = r[name_col]
             if bucket == 'SP':
@@ -83,13 +184,16 @@ def resolve_player(name: str, hint: str | None = None) -> dict | None:
                 'position': r.get('primary_position', '') if bucket == 'H' else bucket,
             }
     # Fallback: try archetype panels (for rookies not in projections yet)
-    for bucket, panel in ARCHETYPE_PANELS.items():
-        if not os.path.exists(panel): continue
-        p = pd.read_parquet(panel)
+    for bucket in ('H', 'SP', 'RP'):
+        p = _load_archetype(bucket)
+        if p is None:
+            continue
         name_col = 'player_name' if 'player_name' in p.columns else 'name'
-        p['_key'] = p[name_col].apply(_norm)
         m = p[p['_key'] == key]
         if not m.empty:
+            if m[name_col].nunique() > 1:
+                first = m.iloc[0]
+                print(f"WARN MULTI-MATCH for \"{name}\" in archetype panel — took first; ignored {m[name_col].nunique()-1} other(s)", file=sys.stderr)
             r = m.sort_values('year').iloc[-1]
             id_col = 'batter' if bucket == 'H' else 'pitcher'
             return {
@@ -103,15 +207,12 @@ def resolve_player(name: str, hint: str | None = None) -> dict | None:
 
 # ---------- PL rank ----------
 
-def _load_pl_cache(filename: str) -> dict:
-    path = os.path.join(PL_CACHE_DIR, filename)
-    if not os.path.exists(path):
-        return {'fetched': None, 'source_url': None, 'ranks': {}}
-    with open(path, 'r', encoding='utf-8') as f:
-        return json.load(f)
+def pl_rank(name: str, bucket: str, model_rank=None) -> tuple[int | str, str | None]:
+    """Return (rank|'UR'|'—', cache_date).
 
-def pl_rank(name: str, bucket: str) -> tuple[int | str, str | None]:
-    """Return (rank|'UR'|'—', cache_date)."""
+    'UR' = in PL universe scope but missing (snubbed).
+    '—'  = out of PL universe scope (model rank past article universe size).
+    """
     cache_key = bucket  # H / SP / RP
     cache = _load_pl_cache(PL_CACHE_FILES[cache_key])
     ranks = cache.get('ranks', {})
@@ -121,16 +222,19 @@ def pl_rank(name: str, bucket: str) -> tuple[int | str, str | None]:
     for pl_name, rk in ranks.items():
         if _norm(pl_name) == nk:
             return rk, fetched
-    # If hitter or SP in the rankable universe but not found → UR (unranked)
-    if ranks:
-        return 'UR', fetched
-    return '—', None
+    # No match — distinguish in-scope (UR) vs out-of-scope (—).
+    if not ranks:
+        return '—', None
+    universe = PL_UNIVERSE_SIZE.get(bucket, 150)
+    if isinstance(model_rank, int) and model_rank > universe:
+        return '—', fetched
+    return 'UR', fetched
 
 def pl_streamer_rank(name: str) -> tuple[str, str | None, str | None]:
-    """For SPs only: return (rank+tier string, opp, cache_date) from streamer cache if present."""
-    cache = _load_pl_cache(PL_CACHE_FILES['SP_STREAM'])
+    """For SPs only: return (rank+tier string, opp, cache_date) from newest streamer cache."""
+    cache, date_str = _load_pl_streamer_cache()
     ranks = cache.get('ranks', {})  # name -> {rank, tier, opp}
-    fetched = cache.get('fetched')
+    fetched = cache.get('fetched') or date_str
     nk = _norm(name)
     for pl_name, info in ranks.items():
         if _norm(pl_name) == nk:
@@ -141,7 +245,7 @@ def pl_streamer_rank(name: str) -> tuple[str, str | None, str | None]:
 
 def model_row(player: dict) -> dict:
     bucket = player['bucket']
-    df = pd.read_csv(PROJECTIONS[bucket])
+    df = _load_projection(bucket)
     if bucket == 'H':
         m = df[df['batter'] == player['id']]
     else:
@@ -182,12 +286,25 @@ def model_row(player: dict) -> dict:
 
 # ---------- archetype row ----------
 
+def _is_truthy_flag(v) -> bool:
+    """RP role-tag fields are floats (0.0/1.0/NaN); plain truthy check treats NaN as True."""
+    if v is None:
+        return False
+    try:
+        if pd.isna(v):
+            return False
+    except (TypeError, ValueError):
+        return False
+    try:
+        return float(v) > 0
+    except (TypeError, ValueError):
+        return bool(v)
+
 def archetype_row(player: dict) -> dict:
     bucket = player['bucket']
-    panel_path = ARCHETYPE_PANELS[bucket]
-    if not os.path.exists(panel_path):
+    p = _load_archetype(bucket)
+    if p is None:
         return {'have': False, 'reason': 'panel missing'}
-    p = pd.read_parquet(panel_path)
     id_col = 'batter' if bucket == 'H' else 'pitcher'
     rows = p[p[id_col] == player['id']].sort_values('year')
     if rows.empty:
@@ -221,11 +338,11 @@ def archetype_row(player: dict) -> dict:
     elif bucket == 'RP':
         out['ratings'] = {'STUFF': int(r['STUFF']), 'CONTROL': int(r['CONTROL']), 'BATTED_BALL': int(r['BATTED_BALL'])}
         out['leverage_tier'] = r.get('leverage_tier')
-        out['closer'] = r.get('CLOSER')
-        out['fireman'] = r.get('FIREMAN')
-        out['high_lev'] = r.get('HIGH_LEVERAGE')
+        # Role tags are floats (0.0/1.0/NaN) — normalize to booleans
+        out['closer']   = _is_truthy_flag(r.get('CLOSER'))
+        out['fireman']  = _is_truthy_flag(r.get('FIREMAN'))
+        out['high_lev'] = _is_truthy_flag(r.get('HIGH_LEVERAGE'))
     else:  # H
-        # hitter ratings are typically C/P/D in the panel
         for k in ('C','P','D','SB'):
             if k in p.columns:
                 out.setdefault('ratings', {})[k] = int(r[k]) if pd.notna(r.get(k)) else None
@@ -240,27 +357,28 @@ def synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, 
     """Return a verdict tag + 1-2 sentence rationale."""
     bucket = player['bucket']
     notes = []
-    # Pull comparable numbers
     pl_r = pl_main
     m_r = model.get('rank')
     a_t1 = arche.get('t1_fp') if arche.get('have') else None
     a_traj = arche.get('traj_flag') if arche.get('have') else None
     a_cell = arche.get('cell') if arche.get('have') else None
     a_archetype = arche.get('archetype') if arche.get('have') else None
+    overall = arche.get('overall', 50) if arche.get('have') else 50
+    label = a_archetype
 
     # Archetype trajectory + cell-based reads
     if arche.get('have'):
         if a_traj == 'TRENDING_UP' and isinstance(pl_r, int) and isinstance(m_r, int) and (m_r - pl_r) > 50:
             return 'BUY — archetype breakout', f"Archetype TRENDING_UP to {a_archetype} ({a_cell}); PL has caught it (#{pl_r}); model lagging (#{m_r}). Buy before model catches up."
         if a_traj == 'TRENDING_DOWN' and isinstance(pl_r, int) and pl_r <= 50:
-            notes.append(f"⚠ Archetype TRENDING_DOWN (slope {arche['slope_3yr']:+.1f}) while PL still has him #{pl_r} — sell-high candidate.")
+            notes.append(f"WARN Archetype TRENDING_DOWN (slope {arche['slope_3yr']:+.1f}) while PL still has him #{pl_r} — sell-high candidate.")
         if a_archetype in ('GENERIC_HR_PRONE','FILLER','WILD_MID','PIT_CHF'):
-            notes.append(f"⚠ Archetype flag: {a_archetype} — bottom-tier process profile.")
+            notes.append(f"WARN Archetype flag: {a_archetype} — bottom-tier process profile.")
         if a_traj in ('CAREER_LOW',) and arche.get('career_pct',0) == 0:
-            notes.append(f"⚠ Career-low season ({arche['career_pct']*100:.0f}% career-percentile).")
+            notes.append(f"WARN Career-low season ({arche['career_pct']*100:.0f}% career-percentile).")
         velo_tier = arche.get('velo_tier')
         if velo_tier == 'FINESSE' and a_traj == 'TRENDING_DOWN':
-            notes.append("⚠ FINESSE velo tier + declining = drop tier.")
+            notes.append("WARN FINESSE velo tier + declining = drop tier.")
 
     # PL high, model high, archetype OVERALL high → strong hold
     if isinstance(pl_r, int) and isinstance(m_r, int) and arche.get('have'):
@@ -275,6 +393,29 @@ def synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, 
             return 'FADE — PL chasing outcomes', f"PL #{pl_r} but model #{m_r} and archetype OVERALL {arche['overall']} ({a_archetype}) — process doesn't support PL rank."
         if gap < -50 and arche.get('have') and arche.get('overall',50) >= 55:
             return 'BUY — model anchored on prior', f"Model #{m_r} but PL #{pl_r} and archetype OVERALL {arche['overall']} ({a_archetype}) — model lagging."
+
+    # New tier (a): process upgrade — strong archetype trending up, ranked top-80 by at least one outcome lens
+    if arche.get('have') and overall >= 60 and a_traj == 'TRENDING_UP' and \
+       ((isinstance(pl_r, int) and pl_r <= 80) or (isinstance(m_r, int) and m_r <= 80)):
+        return 'BUY — process upgrade', (
+            f"Archetype {label} OVERALL {overall} TRENDING_UP; ranked top-80 by at least one outcome lens. "
+            f"Process leads the outcomes."
+        )
+
+    # New tier (b): under-the-radar — PL hasn't ranked but model + archetype both endorse
+    if (pl_r in ('UR','—')) and isinstance(m_r, int) and m_r <= 80 \
+       and arche.get('have') and overall >= 60:
+        return 'BUY — under-the-radar', (
+            f"PL hasn't ranked him but model #{m_r} and archetype OVERALL {overall} ({label}) both endorse."
+        )
+
+    # New tier (c): outcomes only (no archetype) — rookies/short-sample with strong model
+    if (not arche.get('have')) and isinstance(m_r, int) and m_r <= 60 \
+       and (model.get('rep_delta') or 0) > 0:
+        rd = model.get('rep_delta') or 0.0
+        return 'BUY — outcomes only (no archetype)', (
+            f"Model #{m_r} with rep_d {rd:+.2f}; insufficient IP/PA for archetype profile yet."
+        )
 
     if not notes:
         return 'MIXED — see profile', "Signals don't converge to a single verdict; weigh the rate metrics against the trajectory before acting."
@@ -300,11 +441,14 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     if model['rank'] != '—':
         proj = model['proj']
         proj_s = f"{proj:.2f} {model['proj_label']}" if proj is not None else '—'
-        sig = f"signal={model['signal']}"
+        # The rp3 'signal=il' is a known-defective column (213/264 SPs). Only render
+        # signal for RPs (rprs2's signal IS validated). Keep it in CSV for debug.
+        sig = f"signal={model['signal']}" if bucket == 'RP' else ''
         rep = f"rep_d={model['rep_delta']:+.2f}" if model['rep_delta'] is not None else ''
         recf = f"recform={model['recform']:+.3f}" if model.get('recform') is not None else ''
         extra = f" | {model.get('extra','')}"
-        lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {sig} {rep} {recf}{extra} |")
+        detail = ' '.join(s for s in (sig, rep, recf) if s) + extra
+        lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {detail} |")
     else:
         lines.append(f"| **{model_label}** | — | not in projection file | — |")
     if arche.get('have'):
@@ -325,9 +469,9 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         # Role/leverage for RPs
         if bucket == 'RP':
             roles = []
-            if arche.get('closer'): roles.append('CLOSER')
+            if arche.get('closer'):   roles.append('CLOSER')
             if arche.get('high_lev'): roles.append('HIGH_LEVERAGE')
-            if arche.get('fireman'): roles.append('FIREMAN')
+            if arche.get('fireman'):  roles.append('FIREMAN')
             lev = arche.get('leverage_tier')
             tagstr = ', '.join(roles) if roles else 'non-role'
             lines.append(f"\n**Role tags:** {tagstr} | leverage_tier={lev}")
@@ -357,6 +501,12 @@ def compare_table(rows):
         out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} | {t1} | {tr} | {r['verdict']} |")
     return '\n'.join(out)
 
+def _verdict_matches(verdict: str, filters: list[str]) -> bool:
+    if not filters:
+        return True
+    v = verdict.lower()
+    return any(tok in v for tok in filters)
+
 # ---------- main ----------
 
 def main():
@@ -366,42 +516,75 @@ def main():
                     help='Force a position bucket (otherwise auto-detected)')
     ap.add_argument('--names-file', default=None, help='CSV with a player_name column (batch mode)')
     ap.add_argument('--csv-out', default=None, help='Write batch results to this CSV (instead of per-player cards)')
+    ap.add_argument('--filter', default=None,
+                    help='Comma-separated verdict substrings (case-insensitive). Only emit matching rows/cards.')
+    ap.add_argument('--summary-only', action='store_true',
+                    help='Interactive mode: suppress per-player cards, print only comparison table.')
     args = ap.parse_args()
 
+    _warn_stale_caches()
+
+    # Parse filter
+    filters = []
+    if args.filter:
+        filters = [t.strip().lower() for t in args.filter.split(',') if t.strip()]
+
+    # Load batch input (preserve all columns for category propagation)
+    input_df = None
     if args.names_file:
-        nf = pd.read_csv(args.names_file)
-        name_list = nf['player_name'].dropna().astype(str).tolist()
+        input_df = pd.read_csv(args.names_file)
+        name_list = input_df['player_name'].dropna().astype(str).tolist()
     else:
         name_list = args.names
+
+    # Build name → category map if present (case-sensitive name match by raw input)
+    category_map = {}
+    if input_df is not None and 'category' in input_df.columns:
+        for _, row in input_df.iterrows():
+            nm = row.get('player_name')
+            if pd.notna(nm):
+                category_map[str(nm)] = row.get('category')
 
     rows = []
     csv_rows = []
     for name in name_list:
         player = resolve_player(name, args.bucket)
         if not player:
-            csv_rows.append({'player_name': name, 'bucket': '?', 'resolved': False})
-            if not args.csv_out:
+            if args.csv_out:
+                rec = {'player_name': name, 'bucket': '?', 'resolved': False}
+                if category_map:
+                    rec['category'] = category_map.get(name)
+                csv_rows.append(rec)
+            else:
                 print(f"\n### {name} — NOT FOUND in projections or archetype panels.\n")
             continue
         bucket = player['bucket']
-        pl_main, pl_main_date = pl_rank(player['display_name'], bucket)
-        pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name']) if bucket == 'SP' else ('—', None, None)
         model = model_row(player)
+        # pl_rank needs model_rank to distinguish UR vs out-of-scope
+        m_rank_int = model.get('rank') if isinstance(model.get('rank'), int) else None
+        pl_main, pl_main_date = pl_rank(player['display_name'], bucket, model_rank=m_rank_int)
+        pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name']) if bucket == 'SP' else ('—', None, None)
         arche = archetype_row(player)
         verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
+
+        # Verdict filter — skip non-matching rows entirely
+        if not _verdict_matches(verdict, filters):
+            continue
+
         rows.append({
             'player': player, 'pl_main': pl_main, 'pl_main_date': pl_main_date,
             'pl_stream': pl_stream, 'pl_stream_date': pl_stream_date,
             'model': model, 'arche': arche, 'verdict': verdict, 'rationale': rationale,
         })
         if args.csv_out:
-            csv_rows.append({
+            rec = {
                 'player_name': player['display_name'],
                 'bucket': bucket,
                 'pl_rank': pl_main if isinstance(pl_main, int) else None,
                 'pl_rank_raw': pl_main,
                 'model_rank': model.get('rank') if model.get('rank') != '—' else None,
                 'model_proj': model.get('proj'),
+                'model_signal': model.get('signal'),   # keep raw signal in CSV for debug
                 'model_rep_delta': model.get('rep_delta'),
                 'model_recform': model.get('recform'),
                 'arche_have': arche.get('have', False),
@@ -418,9 +601,13 @@ def main():
                 'arche_velo_tier': arche.get('velo_tier') if arche.get('have') else None,
                 'verdict': verdict,
                 'rationale': rationale,
-            })
+            }
+            if category_map:
+                rec['category'] = category_map.get(name)
+            csv_rows.append(rec)
         else:
-            print(format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale))
+            if not args.summary_only:
+                print(format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale))
 
     if args.csv_out:
         pd.DataFrame(csv_rows).to_csv(args.csv_out, index=False)

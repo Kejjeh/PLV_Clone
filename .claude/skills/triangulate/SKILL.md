@@ -21,6 +21,33 @@ Every player gets analyzed through **three independent lenses** that have differ
 
 ---
 
+## Common one-liners
+
+```bash
+# Single deep-dive
+python scripts/xfp/run_triangulate.py "Player Name"
+
+# Compare 2-6 players
+python scripts/xfp/run_triangulate.py "Player A" "Player B" "Player C"
+
+# Show only the comparison table, skip per-player cards
+python scripts/xfp/run_triangulate.py "A" "B" "C" --summary-only
+
+# Filter to verdicts containing any of these tokens (case-insensitive substring)
+python scripts/xfp/run_triangulate.py "A" "B" "C" --filter "BUY,FADE,CAUTION"
+
+# Batch mode — CSV in, CSV out (preserves category column if present)
+python scripts/xfp/run_triangulate.py --names-file roster.csv --csv-out results.csv
+
+# League-wide research (roster + drops + opp churn + FAs above 50 FP)
+python scripts/xfp/build_triangulate_universe.py
+python scripts/xfp/run_triangulate.py \
+    --names-file data/research/triangulate_universe/master_universe.csv \
+    --csv-out data/research/triangulate_universe/triangulate_results.csv
+```
+
+---
+
 ## Inputs
 
 - **1 to ~6 player names** (positional args)
@@ -50,7 +77,7 @@ Cache files live in `data/research/pl_cache/`:
 
 For the streamer cache, key the `ranks` dict to `{rank, tier, opp}` objects (see the existing `pl_sp_streamers_latest.json` for the schema).
 
-A stale cache (>7d for weekly, >2d for streamer) should be refreshed before quoting PL ranks as current.
+A stale cache (>7d for weekly, >2d for streamer) should be refreshed before quoting PL ranks as current. **The engine prints a `⚠ <filename> is Nd stale` warning to stderr at startup** whenever any consulted cache is past TTL — heed it. The streamer cache is now date-keyed (`pl_sp_streamers_YYYY-MM-DD.json`) so old streamer ranks won't be silently quoted as today's; the engine picks the newest-dated file.
 
 ### Step 2 — Run the triangulate engine
 
@@ -90,6 +117,49 @@ The verdict tag is one of:
 When the verdict is BUY or FADE, suggest the natural follow-up skill:
 - BUY breakout → `/pitcher-sustainability` or `/hitter-sustainability` for process confirmation
 - FADE → `/slump-or-decline` (hitters) or `/sp-breakout-signal` (SPs) for outcome-vs-process triangulation at the rate level
+
+---
+
+## Verdict decision tree (synthesize order)
+
+```
+# Rules fire in this priority order; first match wins.
+
+1. BUY — archetype breakout
+   archetype.have AND archetype.traj == TRENDING_UP
+   AND PL_rank is int AND model_rank is int AND (model_rank - PL_rank) > 50
+
+2. STRONG HOLD/BUY
+   PL_rank is int AND model_rank is int AND archetype.have
+   AND PL_rank <= 30 AND model_rank <= 50 AND archetype.overall >= 55
+
+3. FADE — PL chasing outcomes
+   PL_rank and model_rank are both int AND (model_rank - PL_rank) > 60
+   AND archetype.have AND archetype.overall < 50 AND traj != TRENDING_UP
+
+4. BUY — model anchored on prior
+   (model_rank - PL_rank) < -50
+   AND archetype.have AND archetype.overall >= 55
+
+5. BUY — process upgrade  (NEW)
+   archetype.have AND archetype.overall >= 60 AND traj == TRENDING_UP
+   AND (PL_rank int and <= 80  OR  model_rank int and <= 80)
+
+6. BUY — under-the-radar  (NEW)
+   PL_rank in ('UR','—') AND model_rank int and <= 80
+   AND archetype.have AND archetype.overall >= 60
+
+7. BUY — outcomes only (no archetype)  (NEW)
+   NOT archetype.have AND model_rank int and <= 60 AND model.rep_delta > 0
+
+8. CAUTION  (note-accumulator — any one fires)
+   - archetype.traj == TRENDING_DOWN AND PL_rank <= 50
+   - archetype label in {GENERIC_HR_PRONE, FILLER, WILD_MID, PIT_CHF, BUST, BACKUP_BAT}
+   - archetype.career_pct == 0 (CAREER_LOW)
+   - velo_tier == FINESSE AND TRENDING_DOWN
+
+9. MIXED — see profile  (fallback when no rule fires)
+```
 
 ---
 
@@ -149,7 +219,7 @@ The universe builder handles the four standard categories (`ROSTER`, `MY_DROP`, 
 
 - **Don't quote PL ranks from a stale cache** as "current" — check the `fetched` date and refresh if >7d old (or >2d for streamer ranks)
 - **Don't treat rookies' missing archetype rows as "no signal"** — explicitly note "insufficient innings/PA for archetype profile" and rely on the Statcast process layer instead
-- **Don't downgrade a player based on `signal=il` alone** — the rp3 signal column has known defects in the current production file (2026-05-28 build flags 213/264 SPs as "il"); use rank + replacement_delta + recency_form_gap to read the model instead
+- **`signal` column behavior is per-bucket** — rprs2's `signal` (add/hold/drop) is validated and reliable; engine renders it for RPs. The rp3 file currently has a defect (2026-05-28 build flags 213/264 SPs as "il") so the engine NO LONGER renders the signal token for SPs or H — use rank + replacement_delta + recency_form_gap to read the SP/H model. The rprs2 signal IS surfaced in the RP card output.
 - **Don't synthesize a verdict from just rank gaps** — always weigh the archetype trajectory and T+1 because those are the leading indicators when PL and model disagree
 - **Don't add a fourth data source ad-hoc** — if you find yourself reaching for Statcast L21d or bat tracking, hand off to `/fa-pickup-deep-dive` rather than expanding the triangulate output
 - **Don't print per-player markdown cards for >10 players** — switch to batch mode (`--csv-out`) and dispatch parallel agents per category for synthesis. A 400-player run in interactive mode would dump 30k+ lines and blow context
