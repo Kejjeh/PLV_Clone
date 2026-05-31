@@ -1342,8 +1342,48 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         return f'<h2>💎 Streamer Targets</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def render_cap_status(my_proj):
-    """Show SP-start cap utilization for the week, split confirmed vs predicted."""
+def _count_past_sp_starts(my_lineup, week_start, today):
+    """Count SP starts already pitched in [week_start, today) by rostered SPs.
+
+    Critical for accurate cap math — render_cap_status was only counting
+    forward-looking (today + future) starts, missing days 1-N already played.
+    On the last day of a scoring week with 5+ prior starts, this caused a
+    massive undercount (reported 2/10 when actual was 9/10).
+    """
+    import requests
+    if today <= week_start:
+        return 0
+    past = 0
+    for p in my_lineup:
+        if (p.position or '') != 'SP':
+            continue
+        inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
+        if inj in ('SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+            # Long-IL pitchers definitely didn't start this week
+            continue
+        pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+        if not pid:
+            continue
+        try:
+            url = (f"https://statsapi.mlb.com/api/v1/people/{pid}/stats"
+                   f"?stats=gameLog&group=pitching&season={week_start.year}")
+            r = requests.get(url, timeout=10).json()
+            splits = r.get('stats', [{}])[0].get('splits', [])
+            for s in splits:
+                game_date_s = s.get('date')
+                if not game_date_s:
+                    continue
+                game_date = datetime.strptime(game_date_s, '%Y-%m-%d').date()
+                if week_start <= game_date < today:
+                    if int(s.get('stat', {}).get('gamesStarted', 0)) > 0:
+                        past += 1
+        except Exception:
+            continue
+    return past
+
+
+def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None):
+    """Show SP-start cap utilization for the week: past + today/future."""
     n_confirmed = 0
     n_predicted = 0
     for proj in my_proj.values():
@@ -1353,20 +1393,34 @@ def render_cap_status(my_proj):
                     n_confirmed += 1
                 else:
                     n_predicted += 1
-    n_starts = n_confirmed + n_predicted
+    n_forward = n_confirmed + n_predicted
+
+    n_past = 0
+    if my_lineup is not None and week_start is not None and today is not None:
+        try:
+            n_past = _count_past_sp_starts(my_lineup, week_start, today)
+        except Exception as e:
+            print(f'  ⚠ past-starts count failed: {e}')
+
+    n_starts = n_past + n_forward
+    past_note = (f'<b>{n_past} already pitched</b> + ' if n_past else '')
     pred_note = (f' <span class="muted">(+{n_predicted} rotation-gap predicted)</span>'
                  if n_predicted else '')
+    forward_note = (f'<b>{n_forward} today/upcoming</b>{pred_note}'
+                    if n_forward else '0 today/upcoming')
+    breakdown = f'{past_note}{forward_note}'
+
     if n_starts >= 10:
-        msg = (f'<p class="notes"><b>⚠ SP cap at maximum:</b> {n_confirmed} confirmed'
-               f'{pred_note} · {n_starts}/10 starts this week. '
+        msg = (f'<p class="notes"><b>⚠ SP cap at maximum:</b> {breakdown} · '
+               f'{n_starts}/10 starts this week. '
                f'Excess starts past 10 are zeroed in scoring.</p>')
     elif n_starts < 8:
-        msg = (f'<p class="notes"><b>📉 Under SP cap:</b> {n_confirmed} confirmed'
-               f'{pred_note} · only {n_starts}/10 starts. '
+        msg = (f'<p class="notes"><b>📉 Under SP cap:</b> {breakdown} · '
+               f'only {n_starts}/10 starts. '
                f'Add a streamer to claim more of the 10-start/week cap.</p>')
     else:
-        msg = (f'<p class="notes">✓ SP cap: <b>{n_confirmed} confirmed</b>'
-               f'{pred_note} · <b>{n_starts}/10</b> total projected starts.</p>')
+        msg = (f'<p class="notes">✓ SP cap: {breakdown} · '
+               f'<b>{n_starts}/10</b> total starts this week.</p>')
     return msg
 
 
@@ -2166,7 +2220,7 @@ def main():
     power_block = render_power_rankings()
     drop_pickup_block = render_drop_pickup_suggestions(mu['my_lineup'], rh3_map)
     streamer_block = render_2start_gems(schedules_by_team, today, week_end)
-    cap_block = render_cap_status(my_proj)
+    cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today)
     closer_block = render_closer_tracker()
     diff_block = render_snapshot_diff()
     ci_block = render_ci_bands(my_total, my_sigma2, opp_total, opp_sigma2)

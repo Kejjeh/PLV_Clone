@@ -170,8 +170,27 @@ just for *ordering* the bench candidates, not a precise projection.
 
 ## Step 6 — Cap math + bench recommendation
 
+**CRITICAL — count PAST + FUTURE, not just future.** Cap math is
+*week-to-date already pitched* + *today's confirmed/predicted* +
+*remaining days' confirmed/predicted*. A common bug was the matchup
+dashboard's cap counter only summing forward-looking starts, missing
+days 1-N already played. On the last day of a scoring week with 5+
+prior starts, this caused a massive undercount (reported 2/10 when
+actual was 9/10 — 5 prior + 2 Sat + 2 Sun). Fixed 2026-05-31 in
+`render_cap_status` via a new `_count_past_sp_starts` helper that hits
+MLB Stats API gameLog for each healthy SP in `my_lineup`.
+
+When you build the week's cap math:
+1. **Past starts** — for each rostered SP, fetch their MLB gameLog and
+   count starts with date in `[week_start, today)`.
+2. **Today's starts** — confirmed probables for date == today + predicted
+   from rotation gap.
+3. **Future starts** — confirmed probables + rotation-gap predictions
+   for dates > today within the window.
+4. Total = past + today + future. THAT is what hits the 10-cap.
+
 ```python
-total_starts = sum(start_counts)
+total_starts = past_starts + sum(start_counts)
 if total_starts <= cap:
     bench_recommendation = "No bench needed."
 elif total_starts > cap:
