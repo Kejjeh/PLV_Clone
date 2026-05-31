@@ -1342,28 +1342,67 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         return f'<h2>💎 Streamer Targets</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def _count_past_sp_starts(my_lineup, week_start, today):
-    """Count SP starts already pitched in [week_start, today) by rostered SPs.
+def _get_player_add_dates(league, team_name, since_date):
+    """Build {player_name: add_date} of when each currently-rostered player
+    was most-recently ADDED to the user's team. Walks recent_activity back
+    to `since_date`. Players added pre-window or via DRAFT are absent —
+    callers should treat absence as "on roster the entire window."
+    """
+    add_dates = {}
+    try:
+        acts = league.recent_activity(size=500)
+        for a in acts:
+            try:
+                ts_ms = getattr(a, 'date', None)
+                if ts_ms is None:
+                    continue
+                act_date = datetime.fromtimestamp(ts_ms / 1000).date()
+                if act_date < since_date:
+                    break  # acts come newest→oldest; older than window
+                for action in (a.actions or []):
+                    team, action_str, player_name = action
+                    if not team or getattr(team, 'team_name', None) != team_name:
+                        continue
+                    action_norm = (action_str or '').upper()
+                    if 'ADDED' in action_norm or 'TRADED' in action_norm:
+                        if player_name not in add_dates:
+                            add_dates[player_name] = act_date
+            except Exception:
+                continue
+    except Exception as e:
+        print(f'  ⚠ recent_activity fetch failed: {e}')
+    return add_dates
+
+
+def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
+    """Count SP starts already pitched in [window_start, today) by rostered SPs.
+
+    Per-player window_start = max(week_start, add_date_for_player). Prevents
+    counting starts that occurred before a player joined the user's roster
+    (the Kelly 5/25 bug 2026-05-31 — Kelly was FA-added 5/31 but his pre-add
+    5/25 start was being counted as one of the user's past pitched starts).
 
     Critical for accurate cap math — render_cap_status was only counting
-    forward-looking (today + future) starts, missing days 1-N already played.
-    On the last day of a scoring week with 5+ prior starts, this caused a
-    massive undercount (reported 2/10 when actual was 9/10).
+    forward-looking (today + future) starts before the prior fix.
     """
     import requests
     if today <= week_start:
         return 0
+    add_dates = add_dates or {}
     past = 0
     for p in my_lineup:
         if (p.position or '') != 'SP':
             continue
         inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
         if inj in ('SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
-            # Long-IL pitchers definitely didn't start this week
             continue
         pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
         if not pid:
             continue
+        per_player_start = week_start
+        added_on = add_dates.get(p.name)
+        if added_on and added_on > week_start:
+            per_player_start = added_on
         try:
             url = (f"https://statsapi.mlb.com/api/v1/people/{pid}/stats"
                    f"?stats=gameLog&group=pitching&season={week_start.year}")
@@ -1374,7 +1413,7 @@ def _count_past_sp_starts(my_lineup, week_start, today):
                 if not game_date_s:
                     continue
                 game_date = datetime.strptime(game_date_s, '%Y-%m-%d').date()
-                if week_start <= game_date < today:
+                if per_player_start <= game_date < today:
                     if int(s.get('stat', {}).get('gamesStarted', 0)) > 0:
                         past += 1
         except Exception:
@@ -1382,8 +1421,13 @@ def _count_past_sp_starts(my_lineup, week_start, today):
     return past
 
 
-def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None):
-    """Show SP-start cap utilization for the week: past + today/future."""
+def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None,
+                       league=None, my_team_name=None):
+    """Show SP-start cap utilization for the week: past + today/future.
+
+    Pass `league` + `my_team_name` to enable add-date-aware past-start
+    counting (filters out starts pitched before a player joined this roster).
+    """
     n_confirmed = 0
     n_predicted = 0
     for proj in my_proj.values():
@@ -1398,7 +1442,10 @@ def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None):
     n_past = 0
     if my_lineup is not None and week_start is not None and today is not None:
         try:
-            n_past = _count_past_sp_starts(my_lineup, week_start, today)
+            add_dates = {}
+            if league is not None and my_team_name is not None:
+                add_dates = _get_player_add_dates(league, my_team_name, week_start)
+            n_past = _count_past_sp_starts(my_lineup, week_start, today, add_dates)
         except Exception as e:
             print(f'  ⚠ past-starts count failed: {e}')
 
@@ -2220,7 +2267,9 @@ def main():
     power_block = render_power_rankings()
     drop_pickup_block = render_drop_pickup_suggestions(mu['my_lineup'], rh3_map)
     streamer_block = render_2start_gems(schedules_by_team, today, week_end)
-    cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today)
+    cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today,
+                                    league=mu['league_obj'],
+                                    my_team_name=mu['mine'].team_name)
     closer_block = render_closer_tracker()
     diff_block = render_snapshot_diff()
     ci_block = render_ci_bands(my_total, my_sigma2, opp_total, opp_sigma2)
