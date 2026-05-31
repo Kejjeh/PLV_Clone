@@ -9,8 +9,11 @@ Runs the full Monday decision workflow in one pass:
 
 1. **roster-verify** — confirm live roster membership before anything else
 2. **roster-audit** — slot occupancy, IL returns, SP cap math, drop candidates, FA adds
-3. **sp-week-plan** — project this week's starts against the 10-cap, rank, bench recommendation
-4. **fa-monitor** — pull HIGH-priority alerts from all 6 signals
+3. **roster-health** — signal-driven alerts (TRENDING_DOWN, ARCHETYPE_DOWNGRADE, COLD_BABIP, etc.) layered on top of the slot/cap view from step 2
+4. **sp-week-plan** — project this week's starts against the 10-cap, rank, bench recommendation
+5. **fa-monitor** — pull HIGH-priority alerts from all 6 signals
+
+For any specific player flagged in steps 2-5, optionally run `/triangulate <name>` to get the full 3-lens verdict + confidence + watch-list before making the move.
 
 The skill exists because these four are always run together on Mondays but
 were previously 4 separate invocations with manual data handoff between them

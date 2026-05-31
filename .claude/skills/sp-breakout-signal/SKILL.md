@@ -1,4 +1,9 @@
-# Skill: sp-breakout-signal
+---
+name: sp-breakout-signal
+description: Evaluate whether a starting pitcher's recent hot stretch represents persistent skill or outcome noise, using an empirically validated rolling-window good-start methodology (33k SP starts, 2018-2025 calibration). Threshold fp_proxy_per_bf ≥ −0.0476 separates "good start" from noise. Outputs NOISE/WATCH/ACTIONABLE/STRONG/LOCK tiers. Use whenever the user asks "is X on a hot streak", "should I trust X's recent starts", or any FA SP whose last 3-5 starts are cited as evidence.
+---
+
+# sp-breakout-signal
 
 Evaluate whether a starting pitcher's recent hot stretch represents persistent skill
 or outcome noise, using an empirically validated rolling-window good-start methodology

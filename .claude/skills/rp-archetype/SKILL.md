@@ -76,7 +76,7 @@ A reliever can carry multiple tags. Role tags are **display only** — they desc
 
 ### Leverage tier (NEW 2026-05-29 — continuous replacement for binary HIGH_LEVERAGE)
 
-Derived from FanGraphs **gmLI** (game-entry Leverage Index, average over the reliever's appearances). Join coverage on the qualifying cohort: **2,086 / 2,087 (99.95%)** RP-years 2018-2026 (no 2020).
+Derived from FanGraphs **gmLI** (game-entry Leverage Index, average over the reliever's appearances). Join coverage on the qualifying cohort: ~**2,353 / 2,354 (99.95%)** RP-years 2017-2026 (no 2020).
 
 | Tier | gmLI band | Meaning |
 |---|---|---|
@@ -122,7 +122,7 @@ Stickiness JSON breaks down retention by `by_age_tier` per archetype — consult
 All built by `scripts/xfp/build_rp_archetypes.py`:
 
 ```
-data/research/rp_ratings_master.csv               — 2,087 RP-years 2018-2026 (no 2020), 20-80 ratings + tags
+data/research/rp_ratings_master.csv               — 2,354 RP-years 2017-2026 (no 2020), 20-80 ratings + tags
 data/research/rp_archetype_career_panel.parquet   — same + T+1/T+2 outcomes (next_fp, next_arch, t2_fp)
 data/research/rp_archetype_definitions.json       — 27 cell labels with descriptions
 data/research/rp_archetype_stickiness.json        — retention rates per archetype, by age tier
@@ -379,8 +379,8 @@ Mason Miller 2026 (age 27, PEAK) — role: closer
 - **20-80 ratings + archetype + role tags + comps**: 2018-2026 (no 2020 — COVID year excluded)
 - **2026 is in-progress** — RPs with TBF < 80 will have noisy ratings; flag in output
 - **Stickiness JSON `by_age_tier` may be sparse** for rare archetypes (e.g., ELITE_CLOSER_STUFF n=8 total). Fall back to overall retention when a tier sample is < 5.
-- **gmLI / leverage_tier**: 2018-2026 ex-2020 at 99.95% join coverage. Sourced from FanGraphs relief leaderboard via `pull_fg_rp_leverage.py` → `data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv`. The scrape is browser-driven (undetected-chromedriver) and must be refreshed manually — it is NOT wired into the daily `refresh_dashboards.py` chain. Re-run when usage patterns shift (e.g. mid-season closer changes).
-- **IR / inherited_stranded_pct / FIREMAN**: 2018-2026 ex-2020 at 99.7% join coverage. Sourced from Baseball-Reference reliever leaderboard via `pull_bref_rp_ir.py` → `data/research/xfp_cache/rp_ir_is_2018_2026.csv`. Plain `requests` + BS4 (no browser needed), ~1 min for all years. Like the FG leverage scrape, this is **manual** — not wired into `refresh_dashboards.py`. Re-run weekly during active season.
+- **gmLI / leverage_tier**: 2017-2026 ex-2020 at 99.95% join coverage. Sourced from FanGraphs relief leaderboard via `pull_fg_rp_leverage.py` → `data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv`. The scrape is browser-driven (undetected-chromedriver) and must be refreshed manually — it is NOT wired into the daily `refresh_dashboards.py` chain. Re-run when usage patterns shift (e.g. mid-season closer changes).
+- **IR / inherited_stranded_pct / FIREMAN**: 2017-2026 ex-2020 at 99.7% join coverage. Sourced from Baseball-Reference reliever leaderboard via `pull_bref_rp_ir.py` → `data/research/xfp_cache/rp_ir_is_2018_2026.csv`. Plain `requests` + BS4 (no browser needed), ~1 min for all years. Like the FG leverage scrape, this is **manual** — not wired into `refresh_dashboards.py`. Re-run weekly during active season.
 
 ## v2 unlocks (what's still missing)
 

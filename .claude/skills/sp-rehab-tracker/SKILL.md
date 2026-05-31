@@ -1,3 +1,8 @@
+---
+name: sp-rehab-tracker
+description: Track MiLB rehab outings of IL'd SPs via Baseball Savant minors filter. Per-pitcher FB velo/K%/BB%/SwStr% deltas vs pre-injury MLB baseline → AHEAD/ON-TRACK/BEHIND/WORKLOAD-ONLY/NO-DATA verdict. Surfaces buy-low windows before MLB-only model catches up. Script `scripts/xfp/build_sp_rehab_tracker.py`. Note "NO DATA" is the most common verdict (no rehab outings yet); re-run weekly during active rehabs. Built to catch the Jared Jones / post-TJ pattern.
+---
+
 # sp-rehab-tracker
 
 You are tracking the **MiLB rehab outings** of every injured SP across the

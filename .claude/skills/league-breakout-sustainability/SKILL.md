@@ -1,3 +1,8 @@
+---
+name: league-breakout-sustainability
+description: League-wide breakout-sustainability ranking across all 8 teams' rosters + FA pool. 5-axis scorecard (Bayesian shrinkage, process metrics, power markers, CI, career-best xwOBACON) → SUSTAINABLE/NARROW/POWER-ONLY/MIXED/HOT-STREAK/DECLINE tiers. Sweep alternative to single-player `/breakout-sustainability`. Use weekly to surface trade-target heat-map across the league. For multi-lens deep-dive on any individual flagged candidate, hand off to `/triangulate` or `/breakout-sustainability`.
+---
+
 # league-breakout-sustainability
 
 You are producing a league-wide breakout-sustainability ranking for **every

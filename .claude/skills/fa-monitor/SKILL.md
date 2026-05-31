@@ -1,4 +1,9 @@
-# Skill: fa-monitor
+---
+name: fa-monitor
+description: Proactive weekly scan of the FA pool across 6 signal types (SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
+---
+
+# fa-monitor
 
 Proactive weekly scan of the FA pool across three signal types — SP early-start
 performance, RP closer opportunity, and hitter sustained xwOBA — to surface
