@@ -374,3 +374,18 @@ Sample caveat: only 7 GS in 2026.
 - **Velo tier**: 2015-2026 (avg_velo from `sp_multiyr_2015_2025.csv`)
 - **Pitch arsenal / pitch_archetype**: **2021-2026 ONLY** (pitch_features parquets start in 2021)
 - Pre-2021 pitcher-years will have `pitch_archetype` = NaN. The skill should not infer a pitch archetype for those years; report it as "(no arsenal data)" when applicable.
+
+---
+
+## Integration with `/triangulate`
+
+Archetype is one of `/triangulate`'s three lenses (PL rank + projection model
++ archetype). For the full 3-source picture on an SP in one shot, use
+`/triangulate <name>` instead of running this skill in isolation. The archetype
+label, cell, sub-ratings, traj_flag, T+1 fp projection, and career arc
+surfaced here are all exposed by triangulate's `triangulate_player()` API.
+
+Use THIS skill directly when you want:
+- Mode `comps` (top-K historical comparable SP-seasons with T+1/T+2 outcomes)
+- Mode `scan` (league-wide archetype trajectory shifts)
+- A profile-only deep dive without PL or model lens overlay

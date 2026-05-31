@@ -96,6 +96,55 @@ Same block copy-pasted across `hitter-sustainability`, `hitter-compare`, `breako
 
 ---
 
+## 2026-05-31 Pass 2 — agent-driven application
+
+Spawned 4 parallel `claude` subagents (each owning 8 skills end-to-end). Edit
+tool was denied for 3 of 4 agents (Edit and Write both blocked at the subagent
+permission layer); only Agent 2 (FA + comparison) succeeded, and only on
+fa-monitor among its 8 files. Net result from agents: 1 file extensively
+updated (fa-monitor with Pattern A lens table, Common one-liners, Known
+limitations, name-collision pointer to /player-id-resolve).
+
+### Inline pass-2 additions (parent session, where agents were blocked)
+
+- **validate-feature** — added a full "Worked example: SPEED_PROFILE override
+  rejection (2026-05-30)" subsection with N=321 cohort details, 2.4pp
+  underperformance, registry rejection rationale, and what it teaches about
+  Rule 9 baselines. Cross-links to `docs/triangulate_calibration_2026.md`
+  and `scripts/xfp/calibrate_overrides.py`.
+- **pl-cross-reference** — added a top-of-file "When `/triangulate` is the
+  better choice" callout clarifying superseded use cases vs the residual
+  niche (PL-only sanity check on 1-6 named players with bias-context narrative).
+- **forced-drop-planner** — added the Glasnow + Fried + Greene canonical case
+  for 2026-05-31 (the live pattern this skill exists to handle), with
+  pre-computed cut candidates and a note on the cascade-counter fix needed.
+- **sp-week-plan** — added "/triangulate integration" section noting how to
+  use `arche_t1_fp` as alternative ceiling estimate when rp3 disagrees with
+  archetype.
+- **sp-archetype** + **hitter-archetype** — added matching "/triangulate
+  integration" sections clarifying that archetype is one of triangulate's
+  3 lenses; pointing users to triangulate for full 3-source pictures.
+- **scouting-report** — added "/triangulate integration" with the deep-dive
+  handoff pattern + mega-research workflow pointer.
+- **sp-rehab-tracker** — lifted the prose Step 5 verdict rules into a
+  Pattern H decision-tree pseudo-code block (NO DATA / WORKLOAD-ONLY /
+  AHEAD / BEHIND / ON TRACK priority order).
+
+### Still outstanding (next pass)
+
+The audit identified ~80 recommendations across 32 skills. Pass 2 applied ~8
+of them (the highest-leverage). The remaining ~70 are catalogued above and
+require either:
+1. Re-spawning agents with explicit Edit/Write grants for `.claude/skills/**`
+2. Continuing inline application in future sessions
+3. Bulk pattern-application via a sed/awk script for repetitive additions
+   (e.g., "Known limitations" stubs across 30 files)
+
+The most cost-effective next move is option 1 — the agent briefs above are
+self-contained and well-scoped; they just need write access.
+
+---
+
 ## Suggested next pass
 
 If time allows, the next audit pass should:

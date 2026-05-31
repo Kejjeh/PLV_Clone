@@ -5,6 +5,31 @@ description: Cross-reference our model picks against current Pitcher List rankin
 
 # pl-cross-reference
 
+## ⚠ When `/triangulate` is the better choice (2026-05-30)
+
+Most original use cases for this skill are now superseded by `/triangulate`,
+which provides PL + model + archetype as a single 3-lens analysis with cached
+PL ranks (`data/research/pl_cache/`), batch mode (`--names-file` + `--csv-out`),
+and 11 named verdict tiers.
+
+**Use `/triangulate <player>` when:**
+- You want the full 3-lens picture (PL + our model + archetype)
+- You're triangulating 2+ players or a whole roster
+- You want a verdict tag + confidence score + counterfactual watch-list
+
+**Use `/pl-cross-reference` only when:**
+- You explicitly want a PL-only deep dive on 1-6 named players with bias-context
+  narrative (PL is rate-stat / 12-team mindset; we're points / 8-team)
+- The PL article you care about isn't yet in the `pl_cache/` schema (e.g.,
+  category-specific articles like "Top 20 SP Streamers" by author)
+- The user explicitly asks "what does PL think" without wanting our model layer
+
+The PL cache schema (`{source_url, fetched, ranks}`) is documented in
+`/triangulate` Step 1 — populate that cache rather than re-WebFetching here
+when possible.
+
+---
+
 You are doing an external-source sanity check on a set of players,
 using Pitcher List as the comparison authority. The skill exists
 because today's exercise (cross-checking Steer / Muncy / Montgomery /

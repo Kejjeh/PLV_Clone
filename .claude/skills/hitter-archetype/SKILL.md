@@ -458,3 +458,18 @@ upgrades toward GOAT_TIER. PRE_PEAK age + HI_SB overlay = exceptional fantasy pr
 - **Spray archetype**: **2021-2026 ONLY** (batted-ball direction parquets start in 2021)
 - Pre-2021 batter-years will have `spray_archetype` = NaN. The skill should not infer a spray archetype for those years; report it as "(no spray data)" when applicable.
 - Daily refresh via `scripts/xfp/build_hitter_archetypes.py` (step 2.7 of `refresh_dashboards.py`).
+
+---
+
+## Integration with `/triangulate`
+
+Archetype is one of `/triangulate`'s three lenses (PL rank + projection model
++ archetype). For the full 3-source picture on a hitter, use `/triangulate <name>`
+instead of running this skill in isolation. Archetype label, cell, ratings,
+SPEED_TOOL, traj_flag, T+1 fp/PA, and career arc are all surfaced by
+triangulate's `triangulate_player()` API.
+
+Use THIS skill directly for:
+- Mode `comps` — top-K historical comparable batter-seasons with T+1/T+2 outcomes
+- Mode `scan` — league-wide archetype trajectory shifts
+- Profile-only deep dive without PL or model lens overlay

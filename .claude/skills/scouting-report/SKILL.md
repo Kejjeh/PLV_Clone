@@ -258,3 +258,26 @@ Limit each section as specified; total 10-20 players. Write the final markdown t
 User: "Run my Monday scouting report."
 
 Expected: a markdown brief headed `# League Scouting Brief — Week N (YYYY-MM-DD)` with the 6 sections, 10-20 total players across all 8 teams, each row including raw 20-80 ratings, owner team, reasoning, and action. Action priorities at the bottom give the user 5 concrete moves to consider this week.
+
+---
+
+## Integration with `/triangulate`
+
+This skill flags PLAYERS; `/triangulate` deep-dives THEM. For any candidate
+that lands in the "Action priorities" footer, the natural follow-up is:
+
+```bash
+python scripts/xfp/run_triangulate.py "Player Name"
+```
+
+…which returns PL rank + projection model rank + archetype OVERALL + verdict
++ confidence + watch-list in a single card. For trade-target evaluation across
+multiple candidates, batch them through triangulate:
+
+```bash
+python scripts/xfp/run_triangulate.py "A" "B" "C" "D" --summary-only
+```
+
+The Pattern E mega-research workflow (build universe → split by category →
+parallel agents → synthesize) documented in `/triangulate` is also a natural
+fit for league-wide scans — see `docs/lessons-from-triangulate.md`.

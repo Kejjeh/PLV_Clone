@@ -366,3 +366,18 @@ Tier 3: <hold>
   for future)
 - Multi-week forward planning (which IL SP to keep through July) →
   use `/roster-audit` for the long-term view
+
+---
+
+## Integration with `/triangulate`
+
+For any borderline bench-or-start call, weight the EV score by the
+per-SP triangulate output:
+
+- `/triangulate <SP_name>` returns `verdict_top`, `confidence`, and `arche_t1_fp`.
+  Use `arche_t1_fp` as an alternative ceiling estimate when rp3 disagrees with
+  archetype (e.g., Bryan Woo's rp3 #17 vs archetype TRENDING_DOWN, or Reid Detmers
+  rp3 #185 vs MT_RUSHMORE archetype TRENDING_UP). The triangulate verdict tag
+  (BUY / HOLD / CAUTION / FADE) often resolves the rp3-vs-recent-form dissonance.
+- For SPs where two start options are within 1pp of each other in EV, hand off
+  to `/sp-bench-mc` for the MC simulator with bootstrap CIs.

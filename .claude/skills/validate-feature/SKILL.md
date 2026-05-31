@@ -362,6 +362,50 @@ same dead end (Rule 6).
 
 ---
 
+## Worked example: SPEED_PROFILE override rejection (2026-05-30)
+
+The cleanest live demonstration of Rule 9 (baseline must include all existing
+production features) saving us from shipping a bad signal. Full report:
+[docs/triangulate_calibration_2026.md](../../docs/triangulate_calibration_2026.md).
+
+**Candidate:** `/triangulate` 4th-lens override A — when a hitter has SB/SPEED ≥ 60
+AND archetype trajectory is TRENDING_DOWN, override the FADE verdict to
+"HOLD — speed profile" (intuition: archetype label undervalues speed-anchored
+fantasy floor). Built off the Trea Turner case study where bat-speed was stable
+but archetype was downgrading.
+
+**Backtest setup:**
+- Trigger set: 321 historical hitter-years matching SPEED ≥ 60 + TRENDING_DOWN
+- Comparison set: similar trajectory hitters failing the SPEED ≥ 60 condition
+- Outcome metric: `next_fp > t1_fp_projection` (beat the bearish T+1 projection)
+
+**Result:** trigger bounce rate **46.7%** vs comparison **49.1%** — the override
+**UNDERPERFORMED by 2.4pp**. The case-study intuition did not generalize across
+the full population. Threshold sensitivity sweep (SPEED ≥ 50/55/60/65) showed
+the best alternative threshold (≥50) only netted +2.5pp — still no meaningful lift.
+
+**Verdict: REJECTED.** Override A was removed from production
+(`scripts/xfp/lib/triangulate_core.py`) on 2026-05-30. The decision was driven
+purely by data; the engineering intuition lost to the empirical backtest.
+
+**What this teaches:**
+- Case-study evidence is not population evidence. Two cherry-picked players
+  (Turner, Tatis) felt like a pattern; 321 historical instances said otherwise.
+- The override would have shipped without this protocol. The cost would have
+  been silently wrong HOLD verdicts on ~5% of hitters in every league-wide scan.
+- Rule 9's "include all existing production features in baseline" is what
+  forced the comparison set — without it, the override might have looked
+  positive in isolation (any HOLD verdict at all > MIXED for these players).
+
+**The remaining two overrides** (POST_TJ_RAMP, PROCESS_INTACT) were ALSO tested
+in the same backtest. POST_TJ_RAMP was kept on case-study merit but flagged
+as unvalidated (n=13 too small). PROCESS_INTACT was TIGHTENED from rank ≤ 50
+to rank ≤ 25 because the marginal lift at top-25 was cleaner.
+
+Reproducible: `python scripts/xfp/calibrate_overrides.py`
+
+---
+
 ## Recently closed dead ends (do not re-investigate without new data)
 
 All from 2026-05-25 sweep. Full results in `reference_validated_signals_registry.md`.

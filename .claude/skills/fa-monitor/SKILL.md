@@ -18,6 +18,55 @@ Monday-morning routine alongside `/roster-audit`.
 
 ---
 
+## Common one-liners
+
+```bash
+# Full Monday-morning scan (all 14 signals, A-N)
+python scripts/xfp/run_fa_monitor.py
+
+# HIGH alerts only, JSON output for downstream consumers
+python scripts/xfp/run_fa_monitor.py --priority HIGH --json
+
+# Focus on a single signal type
+python scripts/xfp/run_fa_monitor.py --signal A   # SP first-start
+python scripts/xfp/run_fa_monitor.py --signal I   # hitter upgrades
+```
+
+For multi-lens deep-dive on any flagged alert, hand off to `/triangulate <name>`
+(canonical 3-lens layer: PL rank + projection model + archetype) or
+`/fa-pickup-deep-dive <name>` (single-player verdict card). For ≤3 HIGH alerts
+into final adds, use `/fa-signal-to-decision`.
+
+---
+
+## Lens framing (Pattern A — independent signals with named failure modes)
+
+The 14 signals are **independent lenses** with different anchors and different
+blind spots. The diagnostic value is in *which* lens fired (and which didn't).
+
+| Signal | Anchor | Failure mode |
+|---|---|---|
+| A — SP first-start fp_proxy | Statcast early-season K/BB/H/HR per BF | Soft-contact pitchers fire on fpp alone (suppressed by whiff% gate) |
+| B — RP closer/setup (rprs2) | Validated RP model + xfp_ros | Misses pure setup men with sv=0 (Signal G covers) |
+| C — Hitter sustained xwOBA | Statcast season/L21d xwOBA + rh3 | xwOBA-without-xwOBACON = walk/K mirage (Signal I has xwOBACON gate) |
+| D — Drafted-then-dropped comeback | League draft history × current model rank | Same-name collisions (rely on `/player-id-resolve`) |
+| E — IL return timing | ESPN injury_status + days_until_return | Prior-year rank can be stale for rookies/role-changers |
+| F — Role-change RP | rprs2 role_lag1 vs current SV accumulation | Closer-of-record fluidity (cross-ref save_handcuffs.csv) |
+| G — Holds-only elite RP | Raw fp_proxy from Statcast (bypasses rprs2) | inning>1 filter is imperfect SP/RP split |
+| H — SP roster upgrade | User's 3rd-weakest active SP fpp as floor | Fewer than 3 active SPs → floor unreliable |
+| I — Hitter roster upgrade | User's 3rd-weakest active hitter xwOBA + xwOBACON gate | Batter ID resolution required (Statcast player_name = pitcher) |
+| J — LEVERAGE_RISE_FA | rp_ratings_master gmLI 2025→2026 | Small-sample 2026 gmLI early in season |
+| K — NEW_CLOSER_FA | 2026 SV count vs 2025 CLOSER tag | sv=3 threshold can fire on garbage-time saves |
+| L — FIREMAN_BREAKOUT | rp_archetype FIREMAN tag 2025→2026 | IS%/IR% thresholds calibrated on 2017-2025; 2026 in-flight |
+| M — VELO_SPIKE_RP | 20-80 VELO rating Δ + swstr% Δ | Velo measurement noise early in season |
+| N — MULTI_INNING_BULK_VALUE | rp_archetype MIB tag + rprs2 rank | Bulk role ≠ closer value (different scoring profile) |
+
+When two lenses disagree (e.g., Signal A HIGH but Signal H doesn't fire because
+the user's floor is already strong), the disagreement is the insight: a real
+breakout that wouldn't materially upgrade your roster.
+
+---
+
 ## Signal Registry
 
 All signals live here. Add new signals to this table when validated.
@@ -850,20 +899,12 @@ Secondary run: after any waiver wire news (closer change, IL activation).
 4. **Skipping /fa-pickup-deep-dive before adding** — this skill surfaces candidates;
    it does not replace full evaluation. Always confirm with deep dive for HIGH alerts.
 5. **Using rp3 for RPs or rh3 for pitchers** — Signal B uses rprs2 exclusively for RPs.
-6. **Same-name collision** — build rh3 lookup keyed on `(norm_name, pro_team)` tuple,
-   never bare name. Canonical: Max Muncy LAD (0.578, hold) vs ATH (0.379, drop).
-   Mandatory pattern:
-   ```python
-   rh3_idx = {}
-   dup_keys = set()
-   for _, row in rh3.iterrows():
-       key = (_norm(row['player_name']), str(row.get('team','')).upper())
-       if key in rh3_idx: dup_keys.add(key)
-       rh3_idx[key] = row
-   if dup_keys: print(f"WARNING: dup rh3 keys {dup_keys}")
-   def rh3_row(name, team): return rh3_idx.get((_norm(name), str(team).upper()))
-   ```
-   When `pro_team` is available from ESPN (it always is), use it as the second key.
+6. **Same-name collision** — never key rh3/rp3/rprs2 dicts on bare normalized
+   name. Canonical: Max Muncy LAD (0.578, hold) vs ATH (0.379, drop). Use
+   `(norm_name, pro_team)` tuple keys or call
+   `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`.
+   See `/player-id-resolve` for the canonical resolution helper and
+   `KNOWN_COLLISIONS` dict (single source of truth).
 
 ---
 
@@ -900,3 +941,28 @@ Signals calibrated from 2026 retroactive analysis (2026-05-25):
   Webb +5/+3.7pp), N=3 alerts (1 HIGH: Sam Bachman, new MIB role). Designed
   signals — not yet calibrated against forward outcomes; treat MED/LOW tiers
   as watchlist until 2026 season completes.
+
+---
+
+## Known limitations
+
+- **Signals D-F unvalidated.** Designed from pattern analysis; never run
+  through `/validate-feature`. Treat outputs as MONITOR-tier even if they
+  print HIGH.
+- **Signals J-N calibration in-progress.** Built 2026-05-30 from a 108-RP
+  2025↔2026 join. Forward-outcome validation not yet complete; MED/LOW tiers
+  are watchlist only.
+- **Signal A whiff threshold (26%) calibrated on 2025 holdout.** 2026 swing
+  decisions may drift; re-validate via `/validate-feature` annually.
+- **Signal I batter-ID resolution** depends on `lookup_batter_id_cached`;
+  Statcast `player_name` field is the pitcher's name, not the batter's.
+  Skipping this resolution will silently match the wrong player.
+- **rp_ratings_master.csv refresh dependency.** Signals J-N require the
+  daily build via `refresh_dashboards.py` step 2.8. Stale master (>48h)
+  will silently use outdated leverage_tier / CLOSER tags.
+- **8-team-league coupling.** Upgrade-floor logic (Signals H, I) assumes
+  the user's roster size. Won't behave correctly in 10/12-team leagues
+  without recalibrating the "3rd-weakest" anchor.
+- **Same-name collisions.** All rh3/rp3/rprs2 joins must use
+  `(norm_name, pro_team)` tuple keys or `resolve_batter_id`. See
+  `/player-id-resolve`.

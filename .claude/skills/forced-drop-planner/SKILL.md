@@ -9,6 +9,38 @@ Fills the gap between "player returning from IL" and "roster is suddenly over
 the SP cap with no plan." Computes the forced-drop deadline and pre-identifies
 the cut so there's no surprise on activation day.
 
+**Trigger phrases:** "forced drop", "when do I have to cut", "cap breach date",
+"Glasnow/Fried plan", "IL cascade", "who do I drop when X returns".
+
+---
+
+## Canonical case — New York Ligers 2026-05-31 (Glasnow + Fried + Greene)
+
+The classic pattern this skill exists to handle:
+
+| Player | IL type | Return date | IL slot freed |
+|---|---|---|---|
+| Tyler Glasnow (SP) | IL15 | 2026-06-15 | +1 |
+| Max Fried (SP) | IL15 | 2026-06-16 | +1 |
+| Hunter Greene (SP) | IL60 (elbow SURGERY) | 2026-07-03 | +1 |
+
+**On 6/15 the cascade begins.** Glasnow activates → 1 IL slot freed AND 1 active
+SP slot must be cleared. The next day Fried does the same. **Two forced drops
+needed in 24 hours** unless planning starts ~10 days ahead.
+
+**Pre-computed cut candidates** (lowest active SP rp3 ranks on the roster as of
+2026-05-30): Will Warren (#175, BUY archetype breakout — preserve if possible),
+Parker Messick (rookie, no rp3 yet — cleanest drop).
+
+**Then on 7/3, Greene's IL60 expires** — a third forced drop unless another
+SP is meanwhile dropped voluntarily. Plan all three cuts together, not three
+separate scrambles.
+
+The Greene case also illustrates why **forced-drop-planner should propagate
+the running active-SP count across cascading returns** — Step 2 below currently
+recomputes the gap independently per return; a single drop "absorbs" one
+return but the next return resets the counter. Fix in TODO list.
+
 ---
 
 ## Inputs

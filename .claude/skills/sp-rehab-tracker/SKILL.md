@@ -133,6 +133,39 @@ swstr_delta = milb_swstr - prior['swstr_pct']
 - **NO DATA** — 0 MiLB pitches. Either bullpen-only or hasn't started
   rehab assignment yet. Flag the days-since-IL for context.
 
+### Verdict decision tree (pseudo-code; Pattern H)
+
+```
+# Rules fire in priority order; first match wins.
+
+1. NO DATA
+   n_pitches == 0
+   # Surface days_since_IL for context
+
+2. WORKLOAD-ONLY
+   n_pitches < 80
+   # Surface pitch-count progression; defer stuff verdict
+
+3. AHEAD
+   velo_delta >= +1.0
+   AND swstr_delta >= +0.01
+   AND k_delta >= 0
+   # Buy-low — process exceeds pre-injury baseline
+
+4. BEHIND
+   velo_delta < -1.0
+   OR swstr_delta < -0.02
+   # Don't expect immediate MLB impact
+
+5. ON TRACK   # fallback when no other rule fires
+   # |velo_delta| <= 1.0 AND |swstr_delta| <= 0.015
+   # Same pitcher; BB% lag is normal post-injury
+```
+
+**Setback overlay:** if workload curve shows >12d gap or pitch-count drop
+outing-over-outing, append `(POSSIBLE SETBACK)` to the verdict and confirm
+via news. This applies regardless of the underlying tier.
+
 ---
 
 ## Step 6 — Workload build curve
