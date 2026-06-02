@@ -128,6 +128,29 @@ def main():
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 
+    # Incremental backfill of closed-week actuals into predictions_history.csv.
+    # Safe to run every day — idempotent (no-op if nothing new closed).
+    # Must run BEFORE build_matchup_dashboard so any new actuals can flow
+    # into matchup-page accuracy widgets if/when they're added.
+    # Fail-soft: a backfill error must not stop the dashboard build.
+    ok_backfill = run(
+        '3.5. Backfill closed-week actuals (idempotent)',
+        'python -X utf8 scripts/xfp/fetch_closed_matchup_actuals.py',
+        timeout=180,
+    )
+    if not ok_backfill:
+        print('  ⚠ actuals backfill failed — continuing (matchup build unaffected)')
+
+    # Regenerate the calibration report from whatever's currently backfilled.
+    # No-op safe: if no rows are backfilled, the report flags INSUFFICIENT.
+    ok_calib = run(
+        '3.6. Regenerate calibration report',
+        'python -X utf8 scripts/xfp/report_calibration.py',
+        timeout=120,
+    )
+    if not ok_calib:
+        print('  ⚠ calibration report failed — continuing')
+
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 

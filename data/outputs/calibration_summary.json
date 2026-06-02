@@ -1,0 +1,187 @@
+{
+  "generated_at": "2026-06-02",
+  "n_backfilled_rows": 83,
+  "periods_covered": [
+    7,
+    8,
+    9
+  ],
+  "min_n_per_bucket": 5,
+  "any_bucket_sufficient": true,
+  "models": {
+    "MA_v1": {
+      "error_metrics": {
+        "my": {
+          "n": 29,
+          "mae": 28.64275862068965,
+          "rmse": 36.66388658217163,
+          "bias": 23.334482758620677
+        },
+        "opp": {
+          "n": 29,
+          "mae": 47.62551724137932,
+          "rmse": 60.919713133565075,
+          "bias": 45.45793103448272
+        }
+      },
+      "win_prob_calibration": [
+        {
+          "bucket": "0.00-0.25",
+          "lo": 0.0,
+          "hi": 0.25,
+          "n": 0,
+          "mean_predicted": null,
+          "actual_win_rate": null,
+          "abs_gap": null,
+          "sufficient": false
+        },
+        {
+          "bucket": "0.25-0.50",
+          "lo": 0.25,
+          "hi": 0.5,
+          "n": 3,
+          "mean_predicted": 0.4586666666666666,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.5413333333333334,
+          "sufficient": false
+        },
+        {
+          "bucket": "0.50-0.75",
+          "lo": 0.5,
+          "hi": 0.75,
+          "n": 7,
+          "mean_predicted": 0.5912428571428573,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.4087571428571427,
+          "sufficient": true
+        },
+        {
+          "bucket": "0.75-1.00",
+          "lo": 0.75,
+          "hi": 1.0,
+          "n": 19,
+          "mean_predicted": 0.8495105263157894,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.15048947368421062,
+          "sufficient": true
+        }
+      ]
+    },
+    "baseline": {
+      "error_metrics": {
+        "my": {
+          "n": 29,
+          "mae": 19.844827586206897,
+          "rmse": 25.15741941702563,
+          "bias": 2.590344827586199
+        },
+        "opp": {
+          "n": 29,
+          "mae": 33.17655172413793,
+          "rmse": 45.95660937044405,
+          "bias": 25.014482758620673
+        }
+      },
+      "win_prob_calibration": [
+        {
+          "bucket": "0.00-0.25",
+          "lo": 0.0,
+          "hi": 0.25,
+          "n": 0,
+          "mean_predicted": null,
+          "actual_win_rate": null,
+          "abs_gap": null,
+          "sufficient": false
+        },
+        {
+          "bucket": "0.25-0.50",
+          "lo": 0.25,
+          "hi": 0.5,
+          "n": 0,
+          "mean_predicted": null,
+          "actual_win_rate": null,
+          "abs_gap": null,
+          "sufficient": false
+        },
+        {
+          "bucket": "0.50-0.75",
+          "lo": 0.5,
+          "hi": 0.75,
+          "n": 12,
+          "mean_predicted": 0.5853583333333333,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.4146416666666667,
+          "sufficient": true
+        },
+        {
+          "bucket": "0.75-1.00",
+          "lo": 0.75,
+          "hi": 1.0,
+          "n": 17,
+          "mean_predicted": 0.8324882352941176,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.16751176470588236,
+          "sufficient": true
+        }
+      ]
+    },
+    "baseline_pre_versioning": {
+      "error_metrics": {
+        "my": {
+          "n": 25,
+          "mae": 37.1368,
+          "rmse": 44.2894339543869,
+          "bias": -33.03439999999999
+        },
+        "opp": {
+          "n": 25,
+          "mae": 39.231599999999986,
+          "rmse": 44.58841118497047,
+          "bias": 12.3572
+        }
+      },
+      "win_prob_calibration": [
+        {
+          "bucket": "0.00-0.25",
+          "lo": 0.0,
+          "hi": 0.25,
+          "n": 0,
+          "mean_predicted": null,
+          "actual_win_rate": null,
+          "abs_gap": null,
+          "sufficient": false
+        },
+        {
+          "bucket": "0.25-0.50",
+          "lo": 0.25,
+          "hi": 0.5,
+          "n": 6,
+          "mean_predicted": 0.447,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.5529999999999999,
+          "sufficient": true
+        },
+        {
+          "bucket": "0.50-0.75",
+          "lo": 0.5,
+          "hi": 0.75,
+          "n": 11,
+          "mean_predicted": 0.5939545454545454,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.4060454545454546,
+          "sufficient": true
+        },
+        {
+          "bucket": "0.75-1.00",
+          "lo": 0.75,
+          "hi": 1.0,
+          "n": 8,
+          "mean_predicted": 0.888825,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.11117500000000002,
+          "sufficient": true
+        }
+      ]
+    }
+  }
+}

@@ -1,16 +1,20 @@
 """Fetch closed matchup final scores from ESPN and backfill
 `actual_my_final` / `actual_opp_final` columns in predictions_history.csv.
 
-For each unique period in predictions_history that has no actuals populated,
+For each unique period in predictions_history that has any NaN actuals,
 checks whether the period is fully closed (today > period_end) and if so,
 pulls final scores via `league.box_scores(matchup_period=N)` and writes them
-back to ALL rows of that period.
+back ONLY to rows where the actuals are missing.
 
-Run periodically (e.g., Mon morning) or on demand.
+Idempotent: safe to re-run anytime. Only fills NaN rows; never overwrites.
+
+Emits a one-line summary suitable for log scraping:
+  Backfilled M new rows; total backfilled now N/T.
+
+Run periodically (e.g., as part of refresh_dashboards.py) or on demand.
 """
 from __future__ import annotations
 import sys
-from datetime import datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -34,14 +38,14 @@ def _period_closed(period_first_snapshot_date: pd.Timestamp, today: pd.Timestamp
     return today > period_end
 
 
-def _fetch_period_finals(period: int, ligers_team_id: int | None = None):
+def _fetch_period_finals(period: int):
     """Return (my_final, opp_final) for the given period, or (None, None)."""
-    from plv_clone.league_state import LeagueState
-    league = LeagueState()._get_league()
     try:
+        from plv_clone.league_state import LeagueState
+        league = LeagueState()._get_league()
         box_scores = league.box_scores(matchup_period=period)
     except Exception as e:
-        print(f'  Period {period}: box_scores fetch failed: {e}')
+        print(f'  Period {period}: ESPN fetch failed: {e}')
         return None, None
     for bs in box_scores:
         if bs.home_team and 'Ligers' in bs.home_team.team_name:
@@ -51,39 +55,54 @@ def _fetch_period_finals(period: int, ligers_team_id: int | None = None):
     return None, None
 
 
-def main():
+def run_backfill(verbose: bool = True) -> tuple[int, int, int]:
+    """Run the incremental backfill.
+
+    Returns (new_rows_filled, total_backfilled_now, total_rows).
+    """
     if not HISTORY.exists():
-        print(f'No predictions_history at {HISTORY}'); return
+        if verbose:
+            print(f'No predictions_history at {HISTORY}')
+        return 0, 0, 0
     df = pd.read_csv(HISTORY)
     df = _ensure_actual_cols(df)
     df['date'] = pd.to_datetime(df['date'])
     today = pd.Timestamp.today().normalize()
 
-    updates = 0
+    new_filled = 0
     for period, sub in df.groupby('period'):
-        sub = sub.sort_values('date')
+        missing_mask = (df['period'] == period) & df['actual_my_final'].isna()
+        n_missing = int(missing_mask.sum())
+        if n_missing == 0:
+            continue  # fully backfilled; skip
         first_snap = sub['date'].min()
-        already_populated = sub['actual_my_final'].notna().all()
-        if already_populated:
-            continue
         if not _period_closed(first_snap, today):
-            print(f'  Period {int(period)}: not yet closed (first snap {first_snap.date()}, today {today.date()}). Skipping.')
+            if verbose:
+                print(f'  Period {int(period)}: not yet closed (first snap {first_snap.date()}, today {today.date()}). Skipping.')
             continue
         my_final, opp_final = _fetch_period_finals(int(period))
         if my_final is None:
-            print(f'  Period {int(period)}: ESPN returned no scores')
+            if verbose:
+                print(f'  Period {int(period)}: ESPN returned no scores')
             continue
-        idx = df['period'] == period
-        df.loc[idx, 'actual_my_final'] = my_final
-        df.loc[idx, 'actual_opp_final'] = opp_final
-        updates += int(idx.sum())
-        print(f'  Period {int(period)}: backfilled actuals my={my_final:.1f}, opp={opp_final:.1f} ({int(idx.sum())} rows)')
+        # Only fill the missing rows — never overwrite existing actuals.
+        df.loc[missing_mask, 'actual_my_final'] = my_final
+        df.loc[missing_mask, 'actual_opp_final'] = opp_final
+        new_filled += n_missing
+        if verbose:
+            print(f'  Period {int(period)}: filled {n_missing} missing rows with my={my_final:.1f}, opp={opp_final:.1f}')
 
-    if updates:
+    if new_filled:
         df.to_csv(HISTORY, index=False)
-        print(f'\nWrote {updates} updated rows → {HISTORY}')
-    else:
-        print('\nNothing to update.')
+
+    total_backfilled = int(df['actual_my_final'].notna().sum())
+    total = int(len(df))
+    print(f'Backfilled {new_filled} new rows; total backfilled now {total_backfilled}/{total}.')
+    return new_filled, total_backfilled, total
+
+
+def main():
+    run_backfill(verbose=True)
 
 
 if __name__ == '__main__':
