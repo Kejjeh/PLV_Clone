@@ -79,7 +79,7 @@ Determine position bucket from:
 | Bucket | File | Projection col | Key context cols |
 |---|---|---|---|
 | Hitter | `data/outputs/xfp_rh3_projections.csv` | `xfp_rh3_per_pa` | `prior_fp_per_pa`, `pa_to`, `recency_form_gap`, `signal`, `rank` |
-| SP | `data/outputs/xfp_rp3_projections.csv` | `xfp_rp3_per_start` | `prior_fp_per_start`, `gs_to`, `gs_last21`, `fp_per_start_last21`, `recency_form_gap`, `signal`, `rank` |
+| SP | `data/outputs/xfp_rp3_projections.csv` | `xfp_rp3_per_start` | `xfp_rp3_p25`, `xfp_rp3_p75`, `data_quality_tag`, `marcel_baseline`, `data_driven_estimate`, `prior_fp_per_start`, `gs_to`, `gs_last21`, `fp_per_start_last21`, `recency_form_gap`, `signal`, `rank` |
 | RP | `data/outputs/xfp_rprs2_projections.csv` | `xfp_ros` | `role_lag1`, `sv_lag1`, `hld_lag1`, `gf_pct_to`, `replacement_delta`, `signal`, `rank` |
 
 Surface BOTH the recent rolling projection AND the prior/historical
@@ -87,6 +87,31 @@ projection. The gap between them is the story:
 - Recent ≪ prior → injury or temporary slump; possible buy
 - Recent ≈ prior → stable performer
 - Recent ≫ prior → hot start; likely regression candidate (sell-high?)
+
+### SP-specific: variance band + data quality tag (MANDATORY)
+
+For SP candidates, the model-projection block must include **all three**
+of the following alongside the headline `xfp_rp3_per_start`:
+
+1. **Floor/ceiling band** — `xfp_rp3_p25` to `xfp_rp3_p75`. Format
+   inline as `8.21 (5.75-10.66) FP/start`. A wide band signals that
+   the headline is a midpoint with real variance, not a forecast.
+2. **`data_quality_tag`** — one of:
+   - `data_driven_full` — anchored on enough 2026 starts; treat the headline as the most trustworthy form.
+   - `data_driven_thin` — too few starts; the headline is mostly Marcel with a small data nudge. Expect movement as more starts come in.
+   - `marcel_il` — pure Marcel prior (player on IL). Do not quote as if it were a real projection.
+   - `marcel_no_data` — pure Marcel prior (no 2026 data). Same caveat.
+3. **Marcel vs data divergence flag** — when
+   `|marcel_baseline − data_driven_estimate| >= 2 FP`, explicitly say
+   "model and Marcel disagree by X FP (marcel=A, data-driven=B)". This is
+   the canonical signal that the headline is in an unstable transition
+   zone. The Grayson Rodriguez 2026-06-02 incident is the load-bearing
+   example: writeup said "rp3 10.33" with no flag; the underlying tag was
+   `marcel_thin`; a regeneration with 2 fresh starts dropped it to 8.21.
+
+The user should never see a bare `rp3 = X.XX` for an SP. They should see
+`rp3 = X.XX (P25-P75) FP/start | data_quality_tag` and, when applicable,
+the divergence flag.
 
 Apply Rule: don't quote any feature whose validation lift has
 degraded (see `reference_validated_signals_registry.md`). For example,
@@ -320,6 +345,8 @@ Format:
 
 ### Model says (<bucket>):
 - Recent rolling proj: **<X.XX> <FP/PA or FP/start>** (rank #<N>)
+- (SP only) Floor/ceiling band: <P25>-<P75> | data_quality: <data_driven_full|data_driven_thin|marcel_il|marcel_no_data>
+- (SP only, when |marcel − data| >= 2 FP) **Marcel vs data divergence: model and Marcel disagree by X FP (marcel=A, data-driven=B)** — headline is in an unstable transition zone
 - Historical/prior:    <Y.YY>  (recency_form_gap: <±Z>)
 - Signal: <hold / strong add / pass>
 - Read: <one sentence interpretation of the gap>

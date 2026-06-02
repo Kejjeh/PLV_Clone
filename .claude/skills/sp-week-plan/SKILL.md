@@ -163,9 +163,16 @@ For each start, build an EV score (rough heuristic — exact formula
 not critical):
 
 1. **Base:** SP's `xfp_rp3_per_start` from
-   `data/outputs/xfp_rp3_projections.csv`. Skip the join if the SP isn't
+   `data/outputs/xfp_rp3_projections.csv`. **Always surface the
+   floor/ceiling band (`xfp_rp3_p25`-`xfp_rp3_p75`) and
+   `data_quality_tag` alongside the point estimate** — see "How to read
+   the projection fields" below. Skip the join if the SP isn't
    in rp3 (rookie/recent callup — note "no model row" and use last-3-
    start ERA/K as proxy).
+
+   When `|marcel_baseline − data_driven_estimate| >= 2 FP`, surface a
+   one-line "model and Marcel disagree by X FP" note next to that SP
+   so the user can tell which side of the blend dominates.
 2. **Matchup adjustment (use sparingly):** scale by opponent
    `bat_index_recent` but **cap the effect at ±10%** to reflect the
    empirically weak signal (r ≈ -0.06 → opp explains <0.4% of variance).
@@ -313,9 +320,10 @@ multiple weeks running suggests too many SPs on roster).
 ```markdown
 ## Projected starts this week (<window>)
 
-| Pitcher | Confirmed | 2nd (inferred) | n | Last 3 form (IP/ER/K) | Opp xwOBA |
-|---|---|---|---|---|---|
+| Pitcher | rp3 (p25-p75) | data_quality | Confirmed | 2nd (inferred) | n | Last 3 form (IP/ER/K) | Opp xwOBA |
+|---|---|---|---|---|---|---|---|
 ... rows sorted by start day ...
+... (e.g.) Grayson Rodriguez | 8.21 (5.75-10.66) | data_driven_thin | 2026-06-04 | 2026-06-09 | 2 | ... | ... |
 
 **TOTAL projected starts: N** (cap = 10)
 
@@ -341,6 +349,37 @@ Tier 3: <hold>
 - Drop <one line if applicable>
 - N starts projected vs 10 cap
 ```
+
+### How to read the projection fields
+
+Every SP row shows three numbers, not one. The headline `xfp_rp3_per_start`
+is a blend; the band and the tag tell you how much to trust it.
+
+- **`rp3 (p25-p75)`** — point estimate + central 50% floor/ceiling band
+  from `xfp_rp3_p25` / `xfp_rp3_p75`. A wide band (e.g., 5.75-10.66 on
+  a headline 8.21) means the variance is real; treat the point as a
+  midpoint, not a forecast.
+- **`data_quality_tag`** — how the projection was built. Treat the
+  headline differently depending on tag:
+  - `data_driven_full` — enough 2026 starts to anchor on this season.
+    Headline is the most trustworthy form.
+  - `data_driven_thin` — too few starts to anchor cleanly; the headline
+    is mostly Marcel with a small data nudge. Expect the number to
+    move 2-4 FP as more starts come in.
+  - `marcel_il` — pitcher on IL; headline is a pure Marcel regression-
+    to-mean prior. Do NOT quote as if it were a real projection.
+  - `marcel_no_data` — no 2026 data at all. Same caveat as `marcel_il`.
+- **Marcel vs data divergence flag** — when
+  `|marcel_baseline − data_driven_estimate| >= 2 FP`, the skill prints
+  "model and Marcel disagree by X FP." That is the canonical signal
+  that the headline is in an unstable transition zone (e.g., Grayson
+  Rodriguez 2026-06-02: marcel ~12.8 vs data-driven ~8.2 → headline
+  dropped from 10.33 to 8.21 after 2 fresh starts). When you see this
+  flag, surface it; don't bury the number.
+
+The headline is still the single best point estimate for bench-vs-start
+ordering, but the band + tag determine the confidence you should
+communicate to the user.
 
 ---
 

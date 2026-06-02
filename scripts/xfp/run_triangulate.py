@@ -59,13 +59,31 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         lines.append(f"| **PL Streamer ({pl_stream_date})** | {pl_stream} | vs {pl_stream_date or '?'} | — |")
     if model['rank'] != '—':
         proj = model['proj']
-        proj_s = f"{proj:.2f} {model['proj_label']}" if proj is not None else '—'
+        # SP: append floor/ceiling band to the headline when available.
+        if bucket == 'SP' and proj is not None and model.get('p25') is not None and model.get('p75') is not None:
+            proj_s = f"{proj:.2f} ({model['p25']:.2f}-{model['p75']:.2f}) {model['proj_label']}"
+        else:
+            proj_s = f"{proj:.2f} {model['proj_label']}" if proj is not None else '—'
         sig = f"signal={model['signal']}" if bucket == 'RP' else ''
         rep = f"rep_d={model['rep_delta']:+.2f}" if model['rep_delta'] is not None else ''
         recf = f"recform={model['recform']:+.3f}" if model.get('recform') is not None else ''
+        # SP: surface data quality tag alongside other detail tokens.
+        dq = ''
+        if bucket == 'SP' and model.get('data_quality_tag'):
+            dq = f"dq={model['data_quality_tag']}"
         extra = f" | {model.get('extra','')}"
-        detail = ' '.join(s for s in (sig, rep, recf) if s) + extra
+        detail = ' '.join(s for s in (sig, rep, recf, dq) if s) + extra
         lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {detail} |")
+        # SP: when marcel and data-driven estimates disagree by >= 2 FP, flag it explicitly.
+        if bucket == 'SP' and model.get('marcel_data_divergence') is not None:
+            m_b = model.get('marcel_baseline')
+            d_d = model.get('data_driven_estimate')
+            div = model.get('marcel_data_divergence')
+            lines.append(
+                f"\n**Marcel vs data divergence:** model and Marcel disagree by {div:.2f} FP "
+                f"(marcel={m_b:.2f}, data-driven={d_d:.2f}) — treat the headline as a blend; "
+                f"weight Marcel side more when data_quality_tag indicates thin data."
+            )
     else:
         lines.append(f"| **{model_label}** | — | not in projection file | — |")
     if arche.get('have'):

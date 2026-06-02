@@ -34,6 +34,32 @@ def model_row(player: dict) -> dict:
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
+        # Variance band + data-quality tag + marcel-vs-data divergence flag.
+        # These are additive; existing callers ignoring them keep working.
+        def _f(col):
+            v = r.get(col) if col in r.index else None
+            try:
+                return float(v) if v is not None and pd.notna(v) else None
+            except (TypeError, ValueError):
+                return None
+        p25 = _f('xfp_rp3_p25')
+        p75 = _f('xfp_rp3_p75')
+        sigma = _f('xfp_rp3_sigma')
+        marcel = _f('marcel_baseline')
+        data_driven = _f('data_driven_estimate')
+        dq_tag = r.get('data_quality_tag') if 'data_quality_tag' in r.index else None
+        if dq_tag is not None:
+            try:
+                if pd.isna(dq_tag):
+                    dq_tag = None
+            except (TypeError, ValueError):
+                pass
+        # Divergence flag: only when both estimates exist and differ by >= 2 FP
+        marcel_data_div = None
+        if marcel is not None and data_driven is not None:
+            diff = abs(marcel - data_driven)
+            if diff >= 2.0:
+                marcel_data_div = diff
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -43,6 +69,13 @@ def model_row(player: dict) -> dict:
             'recform': float(r['recency_form_gap']),
             'extra': f"gs_to={int(r['gs_to'])}",
             'schedule_idx': sched,
+            'p25': p25,
+            'p75': p75,
+            'sigma': sigma,
+            'data_quality_tag': dq_tag,
+            'marcel_baseline': marcel,
+            'data_driven_estimate': data_driven,
+            'marcel_data_divergence': marcel_data_div,
         }
     return {
         'rank': int(r['rank']),

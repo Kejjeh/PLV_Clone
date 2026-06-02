@@ -262,6 +262,34 @@ Each player card has four blocks:
 3. **Career arc** showing last 4 archetype + OVERALL transitions
 4. **T+1 projection + velo + role tags** (RPs get CLOSER/FIREMAN/HIGH_LEVERAGE + leverage_tier)
 
+### SP card additions — variance band + data quality tag
+
+For SPs, the rp3 row in the 3-source table now renders as:
+
+```
+| **rp3** | #28 | 12.13 (9.68-14.59) fp/start | rep_d=+0.74 recform=-2.617 dq=data_driven_full | gs_to=12 |
+```
+
+- The `(P25-P75)` band comes from `xfp_rp3_p25` / `xfp_rp3_p75` in the
+  rp3 CSV — central 50% floor/ceiling.
+- The `dq=...` token surfaces `data_quality_tag`:
+  - `data_driven_full` — anchored on enough 2026 starts.
+  - `data_driven_thin` — too few starts; headline mostly Marcel.
+  - `marcel_il` / `marcel_no_data` — pure Marcel regression-to-mean prior.
+
+When `|marcel_baseline − data_driven_estimate| >= 2 FP`, a one-line
+**Marcel vs data divergence** flag prints below the table:
+
+```
+**Marcel vs data divergence:** model and Marcel disagree by 4.39 FP
+(marcel=12.77, data-driven=8.38) — treat the headline as a blend;
+weight Marcel side more when data_quality_tag indicates thin data.
+```
+
+This is the canonical signal that the headline is in an unstable
+transition zone (Grayson Rodriguez 2026-06-02 incident — see
+`feedback_show_variance_and_data_quality.md`).
+
 For multi-player queries, the script appends a **comparison table** sorted in input order with the seven key columns (Player, Bucket, PL, Model, Archetype OVERALL, T+1, Traj, Verdict).
 
 ---

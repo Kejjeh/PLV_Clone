@@ -429,6 +429,48 @@ def main():
     # Replacement-level
     valid = compute_replacement_delta(valid)
 
+    # Data-quality transparency columns (added 2026-06-02).
+    # Downstream consumers (dashboards, audits) need to distinguish a
+    # projection backed by real 2026 form from one that is a Marcel
+    # regression-to-mean fallback for an IL'd or zero-start pitcher.
+    # No model semantics change: xfp_rp3_per_start remains the headline blend.
+    #
+    # data_quality_tag — bucket the signal-quality regime:
+    #   data_driven_full : gs_to >= 8 — Ridge has solid 2026 input
+    #   data_driven_thin : gs_to in 3..7 — Ridge has limited 2026 input
+    #   marcel_no_data   : gs_to == 0 and not IL — should be rare/empty
+    #   marcel_il        : prior_source == 'marcel_il' OR is_on_il_at_split == 1
+    #                      (Marcel prior * IL_PRIOR_DISCOUNT, no 2026 form)
+    def _quality_tag(row):
+        gs = float(row.get('gs_to', 0) or 0)
+        src = row.get('prior_source', '')
+        is_il = int(row.get('is_on_il_at_split', 0) or 0)
+        if src == 'marcel_il' or is_il == 1:
+            return 'marcel_il'
+        if gs == 0:
+            return 'marcel_no_data'
+        if gs >= 8:
+            return 'data_driven_full'
+        return 'data_driven_thin'
+    valid['data_quality_tag'] = valid.apply(_quality_tag, axis=1)
+
+    # marcel_baseline — the pure Marcel prior (undiscounted), surfaced
+    # explicitly so consumers can show "Marcel says X, 2026 data says Y,
+    # blend says Z" for transparency on IL-return pitchers.
+    valid['marcel_baseline'] = valid['prior_fp_per_start'].round(3)
+
+    # data_driven_estimate — the model's 2026-informed estimate, exposed
+    # only when there is real 2026 signal (gs_to >= 3). For marcel_il /
+    # marcel_no_data / minimal-data rows this is NaN by design — the
+    # consumer should fall back to marcel_baseline and treat the projection
+    # as high-uncertainty. For gs_to >= 3 rows this equals xfp_rp3_per_start
+    # (the Ridge prediction, which already blends prior + 2026 features).
+    valid['data_driven_estimate'] = np.where(
+        valid['gs_to'].fillna(0) >= 3,
+        valid['xfp_rp3_per_start'],
+        np.nan,
+    )
+
     valid['signal'] = valid.apply(_signal, axis=1)
     valid = valid.sort_values('xfp_rp3_per_start', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
@@ -481,6 +523,7 @@ def main():
         'gs_to', 'gs_last21', 'fp_per_start_to', 'fp_per_start_last21',
         'recency_form_gap',
         'prior_fp_per_start', 'prior_source',
+        'data_quality_tag', 'marcel_baseline', 'data_driven_estimate',
         'is_on_il_at_split',
         'xfp_rp3_per_start', 'xfp_rp3_sigma', 'xfp_rp3_p25', 'xfp_rp3_p75',
         'next_opp_team', 'next_opp_bat_index',
