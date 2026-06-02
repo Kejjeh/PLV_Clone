@@ -84,3 +84,7 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-05-31T11:51:41.583364,2026-05-31,9,New York Ligers,Treasure Island Mashers,238.6,308.12,181.4,288.78,0.8203,,,MA_v1
 2026-06-02T16:14:56.187449,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,272.14,20.6,284.71,0.3958,,,baseline
 2026-06-02T16:14:57.121507,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,305.99,20.6,322.55,0.3561,,,MA_v1
+2026-06-02T18:02:33.801074,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,272.14,20.6,284.71,0.3958,,,baseline
+2026-06-02T18:02:34.890794,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,305.99,20.6,322.55,0.3561,,,MA_v1
+2026-06-02T18:06:01.824132,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,268.98,20.6,280.75,0.4023,,,baseline
+2026-06-02T18:06:02.755929,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,302.83,20.6,318.59,0.363,,,MA_v1
