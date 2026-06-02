@@ -46,9 +46,14 @@ def main(year: int = 2026):
     bip_with = sc['is_pa'] & ~ev.isin({'strikeout','walk','hit_by_pitch'}) & xwoba.notna()
     sc.loc[bip_with, 'woba_v_eff'] = xwoba[bip_with]
 
-    # Recent (last 21 days) window for short-term form
+    # Recent (last 35 days) window for short-term form
+    # Empirically validated 2026-06-02: across 2023-2025 SP starts (n=3000/yr),
+    # L35d xwOBA has the highest |r| with SP fp_proxy (avg r=-0.061) vs
+    # L28d (-0.057), L21d (-0.055), L14d (-0.056), L7d (-0.039 — too noisy).
+    # All windows are weak signals (opp_xwoba explains <0.4% of SP-FP variance),
+    # but L35d is the most consistent best-or-near-best across years.
     cutoff = sc['game_date'].max()
-    recent = sc[sc['game_date'] > cutoff - pd.Timedelta(days=21)]
+    recent = sc[sc['game_date'] > cutoff - pd.Timedelta(days=35)]
 
     def agg(df: pd.DataFrame, group_col: str, label: str) -> pd.DataFrame:
         g = df[df['is_pa']].groupby(group_col).agg(

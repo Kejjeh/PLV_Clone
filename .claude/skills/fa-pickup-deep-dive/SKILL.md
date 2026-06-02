@@ -390,6 +390,81 @@ downgraded to SKIP because 4/5 comps declined at T+1").
 
 ---
 
+## Step 7.6 — Anti-overhype guardrail (MANDATORY before any "TOP ADD" / "model lagging" / "hidden gem" / "buy before model catches up" claim)
+
+Triggered whenever the writeup would assert ANY of:
+- "model hasn't caught up to him"
+- "the model is anchored to an old prior"
+- "near-elite hot bat"
+- "hidden gem" / "TOP ADD"
+- recent HR streak (≥3 HR in L7d) framed as evidence of skill change
+
+Before stating any of those, you MUST run the four checks below and SURFACE THEIR RESULTS in the writeup. If any check fails, downgrade the label.
+
+### 7.6.1 — Bayesian shrinkage on season + L21d xwOBA
+
+```python
+k = 150  # xwOBA stabilization
+baseline = xwoba_2025          # or career mean if 2025 thin
+shrunk_szn = (n_szn * obs_szn + k * baseline) / (n_szn + k)
+shrunk_l21 = (n_l21 * obs_l21 + k * baseline) / (n_l21 + k)
+```
+
+**Decision rule:** anchor the verdict to the shrunk gap, not the raw gap.
+- Shrunk gap ≥ +.040 → real improvement
+- Shrunk gap +.015 to +.040 → modest, soft "consider"
+- Shrunk gap < +.015 → **NOT a breakout. The model is right at his prior.**
+
+### 7.6.2 — 95% CI overlap check
+
+```python
+se = 0.39 / sqrt(n);  ci = (obs - 1.96*se, obs + 1.96*se)
+```
+
+If 2025 baseline xwOBA is INSIDE the season-level CI → the "breakout" cannot be statistically distinguished from his baseline. Use phrasing like "consistent with prior baseline" — never "the model is lagging."
+
+### 7.6.3 — L21d xwOBACON vs season xwOBACON (HR-streak sanity)
+
+If recent HR rate is loud (L7d/L21d HR pace ≥ 2× season pace) but L21d xwOBACON is FLAT or BELOW season xwOBACON → the HR cluster is outcome-driven, NOT a contact-quality skill change. **Do not cite HR cluster as evidence of breakout.** Say "recent HR cluster is outcome-driven; contact quality (L21d xwOBACON) flat-to-below season."
+
+### 7.6.4 — Historical comp T+1 regression
+
+Pull 5-10 prior-year batter-seasons matching the candidate's current K%/BB%/xwOBACON/EV90 profile (±2 pp K, ±1.5 pp BB, ±.020 xwOBACON, ±2 mph EV90, PA ≥ 250). Compute mean T+1 xwOBA.
+
+- If comp class T+1 mean is ≥ candidate's current → archetype sustains
+- If comp class T+1 mean is < candidate's current by .020+ → **expect regression. Say so.**
+
+### 7.6.5 — Output requirement
+
+When the user asks "is X good" or "deep dive X" and you intend to recommend, the writeup MUST include a "Sustainability Check" section with:
+- Shrunk gap (raw vs Bayes)
+- 95% CI vs baseline
+- L21d xwOBACON vs season xwOBACON
+- Comp T+1 mean xwOBA vs current
+
+If any of these fail and you still recommend, explicitly state "I'm recommending despite [failed check] because [reason]." Never silently omit a failed check.
+
+### 7.6.6 — Verdict downgrade ladder
+
+| Failed checks | Verdict cap |
+|---|---|
+| 0 failed | full CONSIDER allowed |
+| 1 failed (typically comp T+1) | CONSIDER but flag as "narrow breakout" |
+| 2 failed | SOFT_CONSIDER — match to drop target only |
+| 3+ failed | **PASS or SKIP**, regardless of recent HR/xwOBA narrative |
+
+**Canonical failure case (do not repeat):** Casey Schmitt 2026-05-31. Recommended as "near-elite hot bat the model hasn't caught up to" based on PL #50 vs rh3 #76 (26-rank gap) + 4 HR L7d. Subsequent rigorous check showed:
+- L21d xwOBA EXACTLY = 2025 baseline (.328) — no actual breakout L21d
+- Bayes shrunk season gap +.033 → **+.019**
+- 2025 baseline INSIDE both season and L21d CIs
+- L21d xwOBACON .388 BELOW 2025 .396 — power streak outcome-driven
+- 8 comps regressed −.050 xwOBA at T+1 (Bichette, Perez)
+- True verdict: NARROW BREAKOUT on K% only, not "hidden gem"
+
+K% improvement WAS real (multi-axis), but the recommendation should have been "fair add at his rh3 #76 tier," not "model lagging."
+
+---
+
 ## Anti-patterns this skill exists to prevent
 
 - Quoting projection numbers without their prior/recent gap context
@@ -409,6 +484,19 @@ downgraded to SKIP because 4/5 comps declined at T+1").
 - Resolving a named player to the wrong rh3/rp3 row because of a
   same-name collision. Always check for duplicate `_norm()` keys when
   Step 1 matches a player. See `/player-id-resolve`.
+- **Citing a small PL/model rank gap (≤30 ranks) as "the model is lagging."**
+  Schmitt 2026-05-31: PL #50 vs rh3 #76 is a 26-rank gap — well inside
+  normal between-source noise. A "model anchored on prior" claim requires
+  a ≥50-rank gap AND a Bayes-shrunk season xwOBA improvement of ≥+.040,
+  not just a directional disagreement. Run Step 7.6 before any "model
+  lagging" framing.
+- **Selling a recent HR cluster as a breakout without checking L21d xwOBACON.**
+  If L21d HR rate is ≥2× season pace but L21d xwOBACON is flat-to-below
+  season xwOBACON, the HR streak is outcome-driven and will regress.
+  Step 7.6.3.
+- **Quoting raw observed gap instead of Bayes-shrunk gap.** A 75-PA L21d
+  observation gets pulled hard toward baseline by k=150 shrinkage; the
+  raw gap overstates the breakout by ~2-3×. Always report shrunk.
 
 ---
 

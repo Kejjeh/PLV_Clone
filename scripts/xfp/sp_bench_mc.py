@@ -385,7 +385,7 @@ def main():
                         help='Max recent starts per pitcher (default 30)')
     parser.add_argument('--trials', type=int, default=10000)
     parser.add_argument('--opp-window', choices=['season', 'recent'], default='recent',
-                        help="bat_index window for opp_factor ('recent' = last 21d)")
+                        help="bat_index window for opp_factor ('recent' = last 35d as of 2026-06-02)")
     parser.add_argument('--seed', type=int, default=7)
     parser.add_argument('--k-prior', type=int, default=20,
                         help='Bayesian blend prior weight (higher = trust rp3 more)')

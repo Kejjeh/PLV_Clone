@@ -135,8 +135,18 @@ ts = pd.read_csv('data/research/xfp_cache/team_strength_2026.csv')
 ```
 
 Annotate each start with `bat_index_recent` of opponent. Use
-`bat_index_recent` not `bat_index_to` — recent 21d signal is
-what matters for streaming decisions.
+`bat_index_recent` not `bat_index_to`. The recent window is **L35d**
+(updated 2026-06-02 from L21d after empirical validation across
+2023-2025 SP starts: L35d had highest |r| with SP fp_proxy at
+avg r=-0.061 vs L28d -0.057, L21d -0.055, L14d -0.056, L7d -0.039
+too noisy). See `build_team_strength.py`.
+
+**Important caveat on matchup signal strength:** the opp-matchup
+correlation is WEAK regardless of window. r values of -0.04 to -0.06
+mean opp xwOBA explains <0.4% of variance in SP FP per start.
+**Pitcher quality (rp3 + archetype) dwarfs opp matchup quality as
+a predictor.** Weight matchup adjustments modestly — never let a
+matchup tier alone flip a verdict.
 
 Translate to plain-English tier:
 - ≥ 1.05 → **brutal** (TOP-5 offense)
@@ -156,8 +166,11 @@ not critical):
    `data/outputs/xfp_rp3_projections.csv`. Skip the join if the SP isn't
    in rp3 (rookie/recent callup — note "no model row" and use last-3-
    start ERA/K as proxy).
-2. **Matchup adjustment:** scale down by opponent `bat_index_recent`
-   (1.10 = subtract ~15% from base; 0.90 = add ~10%).
+2. **Matchup adjustment (use sparingly):** scale by opponent
+   `bat_index_recent` but **cap the effect at ±10%** to reflect the
+   empirically weak signal (r ≈ -0.06 → opp explains <0.4% of variance).
+   Earlier guidance suggested ±15% which was overweighted. Specifically:
+   1.10 bat_index = subtract ~7% from base; 0.90 = add ~5%.
 3. **Recent form penalty:** if last 2 starts had IP < 5.0 OR ER > 4,
    apply additional 20-30% penalty (short outings are FP poison
    regardless of K rate).
