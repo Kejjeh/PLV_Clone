@@ -19,6 +19,7 @@ ADR-0001: this module owns its own fit_and_project orchestration. The shared
 from __future__ import annotations
 from datetime import date
 from pathlib import Path
+import json
 import warnings
 import numpy as np
 import pandas as pd
@@ -42,6 +43,13 @@ SCHEDULE_CSV  = ROOT / 'data' / 'research' / 'xfp_cache' / 'pitcher_schedule_202
 MILB_PRIORS_CSV = ROOT / 'data' / 'outputs' / 'xfp_milb_pitcher_priors_2026.csv'
 MODEL_PKL  = ROOT / 'data' / 'models' / 'xfp_rp3_pipeline.pkl'
 PROJ_CSV   = ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'
+# Sigma calibration config (added 2026-06-03). The raw LOO-residual sigma from
+# fit_residual_ci() is ~2.3-2.4x too tight when read against the per-start
+# panel — only 21.6% of actual FPs fell in p25-p75 vs the 50% Gaussian target.
+# Apply a single empirical scaling factor (alpha_global ~ 2.41) post-lookup so
+# xfp_rp3_p25 / xfp_rp3_p75 honestly bracket ~50% of historical outcomes.
+# Derived in data/research/validation_runs/sigma_recalibration.md.
+SIGMA_CALIB_JSON = ROOT / 'data' / 'research' / 'validation_runs' / 'sigma_calibration.json'
 
 TARGET = 'ros_fp_per_start'
 EVAL_GS_MIN = 2
@@ -101,6 +109,19 @@ from plv_clone.models.xfp.validated_signals import check_feats_validated as _che
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
     _check_feats_validated(RP3_FEATS, target="rp3", strict=True)
+
+
+def _load_sigma_calibration() -> dict:
+    """Return calibration config (method + alpha). Falls back to {alpha:1.0,
+    method:'uncalibrated_v0'} if the JSON is missing so the pipeline still runs.
+    """
+    if SIGMA_CALIB_JSON.exists():
+        cfg = json.loads(SIGMA_CALIB_JSON.read_text())
+        cfg.setdefault('alpha_global', 1.0)
+        cfg.setdefault('method', 'global_alpha_v1')
+        return cfg
+    return {'method': 'uncalibrated_v0', 'alpha_global': 1.0,
+            'description': 'No sigma_calibration.json found; bands raw (under-confident).'}
 
 
 def _ensure_derived_denoms(df: pd.DataFrame) -> pd.DataFrame:
@@ -401,9 +422,18 @@ def main():
     for _, row in valid.iterrows():
         sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
                                    row['xfp_rp3_per_start'], pred_buckets))
-    valid['xfp_rp3_sigma'] = sigmas
+    valid['xfp_rp3_sigma_raw'] = sigmas
+    # Empirical sigma recalibration (added 2026-06-03). Raw LOO residual sigma
+    # under-covers the per-start panel by ~2.3x. Multiply by alpha_global so
+    # xfp_rp3_p25 / xfp_rp3_p75 honestly bracket ~50% of historical outcomes.
+    calib = _load_sigma_calibration()
+    alpha = float(calib.get('alpha_global', 1.0))
+    valid['xfp_rp3_sigma'] = np.array(sigmas) * alpha
+    valid['sigma_calibration_method'] = calib.get('method', 'uncalibrated_v0')
     valid['xfp_rp3_p25'] = (valid['xfp_rp3_per_start'] - Z25 * valid['xfp_rp3_sigma']).clip(lower=0)
     valid['xfp_rp3_p75'] = valid['xfp_rp3_per_start'] + Z25 * valid['xfp_rp3_sigma']
+    print(f'  sigma calibration: method={calib.get("method")} alpha={alpha:.3f} '
+          f'(mean sigma raw={float(np.mean(sigmas)):.3f} -> calibrated={float(np.mean(sigmas))*alpha:.3f})')
 
     # Recency form gap
     valid['recency_form_gap'] = (valid['fp_per_start_last21'] -
@@ -525,7 +555,9 @@ def main():
         'prior_fp_per_start', 'prior_source',
         'data_quality_tag', 'marcel_baseline', 'data_driven_estimate',
         'is_on_il_at_split',
-        'xfp_rp3_per_start', 'xfp_rp3_sigma', 'xfp_rp3_p25', 'xfp_rp3_p75',
+        'xfp_rp3_per_start', 'xfp_rp3_sigma', 'xfp_rp3_sigma_raw',
+        'sigma_calibration_method',
+        'xfp_rp3_p25', 'xfp_rp3_p75',
         'next_opp_team', 'next_opp_bat_index',
         'next2_avg_bat_index', 'schedule_factor',
         'xfp_rp3_per_start_sched',

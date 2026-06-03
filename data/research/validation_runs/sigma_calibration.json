@@ -1,0 +1,16 @@
+{
+  "method": "global_alpha_v1",
+  "alpha_global": 2.41,
+  "description": "Empirical scaling factor applied to xfp_rp3_sigma to reach ~50% coverage on the per-start backtest panel (3,229 starts, 2021-2025). Without it, p25-p75 covers only 21.6% of actual outcomes (~2.3x too tight). Derived in sigma_recalibration.md (2026-06-03).",
+  "derived_from": "data/research/validation_runs/multi_year_sp_backtest_starts.csv",
+  "backtest_coverage_pre": 0.216,
+  "backtest_coverage_post_global": 0.517,
+  "tier_alphas": {
+    "ace_1_10": 2.47,
+    "sp2_3_11_30": 2.55,
+    "back_end_31_60": 2.41,
+    "streamer_61plus": 2.36
+  },
+  "rationale_for_global": "Tier-specific alphas span 2.36-2.55 (~8% range). Tier-specific coverage 51-53% per tier vs 49-54% with global rescale \u2014 no meaningful improvement. Global is the simpler choice that passes the 45-55% coverage gate in every tier.",
+  "asymmetry_note": "Residuals are slightly asymmetric (mean +0.32, q25=-4.6, q75=+6.5 pooled). Approach A keeps Gaussian symmetric bands for simplicity; consumers should know upside tails are slightly fatter."
+}
