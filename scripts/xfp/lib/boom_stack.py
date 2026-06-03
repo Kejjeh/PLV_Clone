@@ -4,7 +4,7 @@ Validated via `scripts/xfp/validate_streamer_boom_stack.py` — Mode B PASS
 (SHIP_AS_TAG). See `data/research/validation_runs/streamer_boom_stack_v1_2026-06-03.md`.
 
 Three components per SP at "now":
-  1. skill_spike: last-3-starts K% - season K% >= +3pp AND last-3-starts
+  1. skill_spike: last-5-starts K% - season K% >= +3pp AND last-5-starts
      BB% - season BB% <= -1pp. Requires >=3 prior starts; else 0.
   2. recform_hot: recency_form_gap >= +3.0 from the rp3 projection row.
   3. opp_soft: today's next_opp_team has bat_index_recent in the soft (bottom)
@@ -174,26 +174,33 @@ def _load_soft_tertile() -> tuple[float, pd.DataFrame]:
 # Component computations
 # ---------------------------------------------------------------------------
 def _component_skill_spike(pitcher_id: int) -> tuple[int, dict]:
-    """Component 1: last-3-starts K% - season K% >= +3pp AND
-    last-3-starts BB% - season BB% <= -1pp. <3 starts => 0."""
+    """Component 1: last-5-starts K% - season K% >= +3pp AND
+    last-5-starts BB% - season BB% <= -1pp. <5 starts => 0.
+
+    Window switched 3g -> 5g 2026-06-03 after dual-agent validation
+    (skill_spike_5g_validation.md + skill_spike_tier_aware_validation.md):
+    flat_5g cleans up anti-predictive sign at backend/SP2/3 tiers AND
+    is non-inferior at streamer tier; pooled weighted boom edge +2.68 pp
+    vs +1.16 pp for 3g; cross-year 7/7 vs 6/7; stack=3 boom rate 26.1% vs 22.8%.
+    """
     starts = _load_starts_2026()
     my = starts[starts['pitcher'] == int(pitcher_id)]
     detail = {'n_starts_2026': int(len(my)), 'reason': None}
-    if len(my) < 3:
+    if len(my) < 5:
         detail['reason'] = 'insufficient_starts'
         return 0, detail
     season_pa = int(my['pa'].sum())
     season_k_pct = float(my['k'].sum() / max(season_pa, 1))
     season_bb_pct = float(my['bb'].sum() / max(season_pa, 1))
-    last3 = my.tail(3)
-    l3_pa = int(last3['pa'].sum())
-    l3_k_pct = float(last3['k'].sum() / max(l3_pa, 1))
-    l3_bb_pct = float(last3['bb'].sum() / max(l3_pa, 1))
-    dK_pp = (l3_k_pct - season_k_pct) * 100.0
-    dBB_pp = (l3_bb_pct - season_bb_pct) * 100.0
+    last5 = my.tail(5)
+    l5_pa = int(last5['pa'].sum())
+    l5_k_pct = float(last5['k'].sum() / max(l5_pa, 1))
+    l5_bb_pct = float(last5['bb'].sum() / max(l5_pa, 1))
+    dK_pp = (l5_k_pct - season_k_pct) * 100.0
+    dBB_pp = (l5_bb_pct - season_bb_pct) * 100.0
     detail.update({
         'season_k_pct': season_k_pct, 'season_bb_pct': season_bb_pct,
-        'last3_k_pct': l3_k_pct, 'last3_bb_pct': l3_bb_pct,
+        'last5_k_pct': l5_k_pct, 'last5_bb_pct': l5_bb_pct,
         'delta_k_pp': dK_pp, 'delta_bb_pp': dBB_pp,
     })
     fired = int((dK_pp >= 3.0) and (dBB_pp <= -1.0))
