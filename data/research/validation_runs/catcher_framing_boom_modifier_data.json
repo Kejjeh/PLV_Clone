@@ -1,0 +1,413 @@
+{
+  "n_total_starts_panel": 31713,
+  "n_matched": 28392,
+  "match_rate": 0.8952795383596632,
+  "by_quintile": [
+    {
+      "framing_quintile": 1,
+      "n_starts": 5234,
+      "boom_rate": 0.12781811234237678,
+      "median_fp": 10.4,
+      "mean_fp": 9.572697745510125,
+      "p10_fp": -3.4000000000000017,
+      "p90_fp": 21.7
+    },
+    {
+      "framing_quintile": 2,
+      "n_starts": 5667,
+      "boom_rate": 0.1536968413622728,
+      "median_fp": 10.599999999999998,
+      "mean_fp": 10.145314981471676,
+      "p10_fp": -2.7399999999999998,
+      "p90_fp": 22.1
+    },
+    {
+      "framing_quintile": 3,
+      "n_starts": 5780,
+      "boom_rate": 0.15570934256055363,
+      "median_fp": 11.2,
+      "mean_fp": 10.410951557093425,
+      "p10_fp": -2.700000000000003,
+      "p90_fp": 22.1
+    },
+    {
+      "framing_quintile": 4,
+      "n_starts": 5649,
+      "boom_rate": 0.17082669499026376,
+      "median_fp": 11.599999999999998,
+      "mean_fp": 10.872915560276153,
+      "p10_fp": -2.200000000000003,
+      "p90_fp": 22.8
+    },
+    {
+      "framing_quintile": 5,
+      "n_starts": 6062,
+      "boom_rate": 0.17354008578027053,
+      "median_fp": 11.7,
+      "mean_fp": 11.19129000329924,
+      "p10_fp": -1.7000000000000028,
+      "p90_fp": 23.0
+    }
+  ],
+  "by_quintile_x_boom_stack": [
+    {
+      "boom_stack": 0,
+      "framing_quintile": 1,
+      "n": 2715,
+      "boom_rate": 0.1141804788213628
+    },
+    {
+      "boom_stack": 0,
+      "framing_quintile": 2,
+      "n": 3058,
+      "boom_rate": 0.12720732504905166
+    },
+    {
+      "boom_stack": 0,
+      "framing_quintile": 3,
+      "n": 2968,
+      "boom_rate": 0.13106469002695417
+    },
+    {
+      "boom_stack": 0,
+      "framing_quintile": 4,
+      "n": 2902,
+      "boom_rate": 0.14955203308063406
+    },
+    {
+      "boom_stack": 0,
+      "framing_quintile": 5,
+      "n": 3245,
+      "boom_rate": 0.14884437596302003
+    },
+    {
+      "boom_stack": 1,
+      "framing_quintile": 1,
+      "n": 2004,
+      "boom_rate": 0.13273453093812376
+    },
+    {
+      "boom_stack": 1,
+      "framing_quintile": 2,
+      "n": 2025,
+      "boom_rate": 0.17530864197530865
+    },
+    {
+      "boom_stack": 1,
+      "framing_quintile": 3,
+      "n": 2180,
+      "boom_rate": 0.17844036697247706
+    },
+    {
+      "boom_stack": 1,
+      "framing_quintile": 4,
+      "n": 2154,
+      "boom_rate": 0.1926648096564531
+    },
+    {
+      "boom_stack": 1,
+      "framing_quintile": 5,
+      "n": 2164,
+      "boom_rate": 0.20748613678373382
+    },
+    {
+      "boom_stack": 2,
+      "framing_quintile": 1,
+      "n": 449,
+      "boom_rate": 0.1759465478841871
+    },
+    {
+      "boom_stack": 2,
+      "framing_quintile": 2,
+      "n": 502,
+      "boom_rate": 0.21314741035856574
+    },
+    {
+      "boom_stack": 2,
+      "framing_quintile": 3,
+      "n": 530,
+      "boom_rate": 0.17547169811320754
+    },
+    {
+      "boom_stack": 2,
+      "framing_quintile": 4,
+      "n": 500,
+      "boom_rate": 0.198
+    },
+    {
+      "boom_stack": 2,
+      "framing_quintile": 5,
+      "n": 546,
+      "boom_rate": 0.1813186813186813
+    },
+    {
+      "boom_stack": 3,
+      "framing_quintile": 1,
+      "n": 66,
+      "boom_rate": 0.21212121212121213
+    },
+    {
+      "boom_stack": 3,
+      "framing_quintile": 2,
+      "n": 82,
+      "boom_rate": 0.24390243902439024
+    },
+    {
+      "boom_stack": 3,
+      "framing_quintile": 3,
+      "n": 102,
+      "boom_rate": 0.28431372549019607
+    },
+    {
+      "boom_stack": 3,
+      "framing_quintile": 4,
+      "n": 93,
+      "boom_rate": 0.1827956989247312
+    },
+    {
+      "boom_stack": 3,
+      "framing_quintile": 5,
+      "n": 107,
+      "boom_rate": 0.19626168224299065
+    }
+  ],
+  "yearly_q5_minus_q1": [
+    {
+      "year": 2018,
+      "q1_n": 675,
+      "q1_boom": 0.1437037037037037,
+      "q5_n": 800,
+      "q5_boom": 0.205,
+      "gap_q5_minus_q1": 0.06129629629629629
+    },
+    {
+      "year": 2019,
+      "q1_n": 782,
+      "q1_boom": 0.1445012787723785,
+      "q5_n": 876,
+      "q5_boom": 0.1267123287671233,
+      "gap_q5_minus_q1": -0.01778895000525521
+    },
+    {
+      "year": 2021,
+      "q1_n": 774,
+      "q1_boom": 0.11886304909560723,
+      "q5_n": 747,
+      "q5_boom": 0.1686746987951807,
+      "gap_q5_minus_q1": 0.04981164969957348
+    },
+    {
+      "year": 2022,
+      "q1_n": 691,
+      "q1_boom": 0.11287988422575977,
+      "q5_n": 935,
+      "q5_boom": 0.17754010695187167,
+      "gap_q5_minus_q1": 0.0646602227261119
+    },
+    {
+      "year": 2023,
+      "q1_n": 749,
+      "q1_boom": 0.09078771695594126,
+      "q5_n": 857,
+      "q5_boom": 0.16802800466744458,
+      "gap_q5_minus_q1": 0.07724028771150332
+    },
+    {
+      "year": 2024,
+      "q1_n": 826,
+      "q1_boom": 0.13075060532687652,
+      "q5_n": 910,
+      "q5_boom": 0.1934065934065934,
+      "gap_q5_minus_q1": 0.0626559880797169
+    },
+    {
+      "year": 2025,
+      "q1_n": 737,
+      "q1_boom": 0.15332428765264586,
+      "q5_n": 937,
+      "q5_boom": 0.17609391675560299,
+      "gap_q5_minus_q1": 0.02276962910295713
+    }
+  ],
+  "within_pitcher_residual": [
+    {
+      "framing_quintile": 1,
+      "n": 4858,
+      "boom_resid": -0.016552505197284725
+    },
+    {
+      "framing_quintile": 2,
+      "n": 5551,
+      "boom_resid": 0.0046287524735732066
+    },
+    {
+      "framing_quintile": 3,
+      "n": 5527,
+      "boom_resid": -0.003591177704061215
+    },
+    {
+      "framing_quintile": 4,
+      "n": 5528,
+      "boom_resid": 0.007618871802158921
+    },
+    {
+      "framing_quintile": 5,
+      "n": 5817,
+      "boom_resid": 0.0055783361037676045
+    }
+  ],
+  "within_pitcher_paired": {
+    "n_pitchers": 208,
+    "mean_q5_boom": 0.13973642572742348,
+    "mean_q1_boom": 0.10914759874448306,
+    "mean_gap_q5_minus_q1": 0.030588826982940416,
+    "t_stat": 2.403112042549293,
+    "p_value": 0.01713835838640544
+  },
+  "framing_2026_top5": [
+    {
+      "mlbam": 693307,
+      "name": "Dillon Dingler",
+      "r_per_100": 0.6653344159763455,
+      "shadow_n": 417
+    },
+    {
+      "mlbam": 686452,
+      "name": "Drew Millas",
+      "r_per_100": 0.629013957779796,
+      "shadow_n": 309
+    },
+    {
+      "mlbam": 669224,
+      "name": "Austin Wells",
+      "r_per_100": 0.593099520965525,
+      "shadow_n": 369
+    },
+    {
+      "mlbam": 592663,
+      "name": "J. T. Realmuto",
+      "r_per_100": 0.5798881388517035,
+      "shadow_n": 328
+    },
+    {
+      "mlbam": 686780,
+      "name": "Pedro Pag\u00e9s",
+      "r_per_100": 0.5517144685607837,
+      "shadow_n": 332
+    }
+  ],
+  "framing_2026_bot5": [
+    {
+      "mlbam": 668939,
+      "name": "Adley Rutschman",
+      "r_per_100": -0.23141806155969785,
+      "shadow_n": 332
+    },
+    {
+      "mlbam": 696100,
+      "name": "Hunter Goodman",
+      "r_per_100": -0.44712298652270827,
+      "shadow_n": 342
+    },
+    {
+      "mlbam": 663886,
+      "name": "Tyler Stephenson",
+      "r_per_100": -0.4853306190059783,
+      "shadow_n": 388
+    },
+    {
+      "mlbam": 669127,
+      "name": "Shea Langeliers",
+      "r_per_100": -0.6437921957777297,
+      "shadow_n": 414
+    },
+    {
+      "mlbam": 681351,
+      "name": "Logan O'Hoppe",
+      "r_per_100": -0.9714894582576005,
+      "shadow_n": 351
+    }
+  ],
+  "roster_snapshot": [
+    {
+      "sp": "Carlos Rod\u00f3n",
+      "mlbam": 607074,
+      "catcher": 641555,
+      "framing_r100": 0.1558570663491975,
+      "quintile": null,
+      "catcher_name": "J. C. Escarra"
+    },
+    {
+      "sp": "Clay Holmes",
+      "mlbam": 605280,
+      "catcher": 682626,
+      "framing_r100": 0.32613485928703584,
+      "quintile": null,
+      "catcher_name": "Francisco \u00c1lvarez"
+    },
+    {
+      "sp": "Quinn Mathews",
+      "mlbam": 696133,
+      "catcher": null,
+      "framing_r100": null,
+      "quintile": null,
+      "catcher_name": null
+    },
+    {
+      "sp": "Jose Soriano",
+      "mlbam": 667755,
+      "catcher": 681351,
+      "framing_r100": -0.9714894582576005,
+      "quintile": 1,
+      "catcher_name": "Logan O'Hoppe"
+    },
+    {
+      "sp": "Freddy Peralta",
+      "mlbam": 642547,
+      "catcher": 682626,
+      "framing_r100": 0.32613485928703584,
+      "quintile": null,
+      "catcher_name": "Francisco \u00c1lvarez"
+    },
+    {
+      "sp": "Kyle Bradish",
+      "mlbam": 680694,
+      "catcher": 668939,
+      "framing_r100": -0.23141806155969785,
+      "quintile": 2,
+      "catcher_name": "Adley Rutschman"
+    },
+    {
+      "sp": "Will Warren",
+      "mlbam": 701542,
+      "catcher": 669224,
+      "framing_r100": 0.593099520965525,
+      "quintile": 5,
+      "catcher_name": "Austin Wells"
+    },
+    {
+      "sp": "Framber Valdez",
+      "mlbam": 664285,
+      "catcher": 693307,
+      "framing_r100": 0.6653344159763455,
+      "quintile": 5,
+      "catcher_name": "Dillon Dingler"
+    },
+    {
+      "sp": "Merrill Kelly",
+      "mlbam": 518876,
+      "catcher": 672515,
+      "framing_r100": 0.3096553228871807,
+      "quintile": null,
+      "catcher_name": "Gabriel Moreno"
+    },
+    {
+      "sp": "Slade Cecconi",
+      "mlbam": 677944,
+      "catcher": 666310,
+      "framing_r100": -0.3974153841835265,
+      "quintile": null,
+      "catcher_name": "Bo Naylor"
+    }
+  ]
+}
