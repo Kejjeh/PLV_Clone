@@ -88,3 +88,7 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-06-02T18:02:34.890794,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,305.99,20.6,322.55,0.3561,,,MA_v1
 2026-06-02T18:06:01.824132,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,268.98,20.6,280.75,0.4023,,,baseline
 2026-06-02T18:06:02.755929,2026-06-02,10,New York Ligers,Late Night Bettsing,7.7,302.83,20.6,318.59,0.363,,,MA_v1
+2026-06-03T01:00:07.384621,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,289.71,46.6,272.89,0.6486,,,baseline
+2026-06-03T01:00:08.526233,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,317.44,46.6,302.55,0.6149,,,MA_v1
+2026-06-03T01:01:30.983909,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,289.71,46.6,272.89,0.6486,,,baseline
+2026-06-03T01:01:31.958617,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,317.44,46.6,302.55,0.6149,,,MA_v1
