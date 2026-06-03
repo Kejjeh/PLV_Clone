@@ -2253,7 +2253,7 @@ function renderBoomPanel(role, id, cur) {
   if (role === 'hitter') {
     const recH = BOOM_HITTER[String(id)];
     if (!recH) {
-      let html = '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">';
+      let html = '<div style="color:var(--dim);font-family:\'IBM Plex Mono\',monospace;font-size:.88em;line-height:1.5;">';
       html += '<p><b>No upcoming game in the current hitter boom_stack window</b>';
       if (BOOM_HITTER_META && BOOM_HITTER_META.window_start) {
         html += ` (${BOOM_HITTER_META.window_start} → ${BOOM_HITTER_META.window_end})`;
@@ -2281,7 +2281,7 @@ function renderBoomPanel(role, id, cur) {
            + subStr + `</div>`;
     }
 
-    let html = '<div style="font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;">';
+    let html = '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:.88em;">';
     html += `<div class="modal-hero" style="margin-bottom:.8em;">`;
     html += `<div><div style="color:var(--dim);font-size:.75em;text-transform:uppercase;">boom_stack</div>`;
     html += `<div style="font-size:1.8em;font-weight:700;color:var(--accent);">${stackH} / ${maxH}</div>`;
@@ -2350,7 +2350,7 @@ function renderBoomPanel(role, id, cur) {
   // SP / RP
   const rec = BOOM_PITCHER[String(id)];
   if (!rec) {
-    let html = '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">';
+    let html = '<div style="color:var(--dim);font-family:\'IBM Plex Mono\',monospace;font-size:.88em;line-height:1.5;">';
     html += '<p><b>No upcoming start in the current boom_stack window</b>';
     if (BOOM_PITCHER_META && BOOM_PITCHER_META.window_start) {
       html += ` (${BOOM_PITCHER_META.window_start} → ${BOOM_PITCHER_META.window_end})`;
@@ -2381,7 +2381,7 @@ function renderBoomPanel(role, id, cur) {
   }
 
   // Header
-  let html = '<div style="font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;">';
+  let html = '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:.88em;">';
   html += `<div class="modal-hero" style="margin-bottom:.8em;">`;
   html += `<div><div style="color:var(--dim);font-size:.75em;text-transform:uppercase;">boom_stack</div>`;
   html += `<div style="font-size:1.8em;font-weight:700;color:var(--accent);">${stack} / ${maxStack}</div>`;
