@@ -1,0 +1,387 @@
+{
+  "streamer_pool_n": 12713,
+  "stack3_cohort_n": 224,
+  "candidates": [
+    {
+      "candidate": "cand_velo_spike",
+      "flag_rate": 0.1401714780146307,
+      "n_flag1": 1782,
+      "n_flag0": 10931,
+      "boom_rate_flag1": 0.13524130190796857,
+      "boom_rate_flag0": 0.10749245265757937,
+      "chi2": 11.641370588468057,
+      "p_value": 0.0006450105997302578,
+      "stack3_n": 224,
+      "stack3_baseline_boom": 0.17410714285714285,
+      "stack3_cand1_n": 53,
+      "stack3_cand0_n": 171,
+      "stack3_cand1_boom": 0.22641509433962265,
+      "stack3_cand0_boom": 0.15789473684210525,
+      "stack3_marginal_lift_pp": 6.852035749751739,
+      "corr_with_v1_flags": {
+        "flag_skill_spike": 0.07572866175519782,
+        "flag_recform_hot": 0.09388665347028893,
+        "flag_opp_soft": 0.014195116038978666
+      },
+      "max_abs_corr_v1": 0.09388665347028893,
+      "year_by_year": {
+        "2018": {
+          "n_flag1": 332,
+          "n_flag0": 1493,
+          "boom_rate_flag1": 0.13253012048192772,
+          "boom_rate_flag0": 0.1346282652377763,
+          "edge_pp": -0.20981447558485744
+        },
+        "2019": {
+          "n_flag1": 272,
+          "n_flag0": 1517,
+          "boom_rate_flag1": 0.125,
+          "boom_rate_flag0": 0.1074489123269611,
+          "edge_pp": 1.7551087673038896
+        },
+        "2021": {
+          "n_flag1": 222,
+          "n_flag0": 1520,
+          "boom_rate_flag1": 0.14414414414414414,
+          "boom_rate_flag0": 0.09078947368421053,
+          "edge_pp": 5.3354670459933615
+        },
+        "2022": {
+          "n_flag1": 244,
+          "n_flag0": 1581,
+          "boom_rate_flag1": 0.16393442622950818,
+          "boom_rate_flag0": 0.09424414927261227,
+          "edge_pp": 6.969027695689592
+        },
+        "2023": {
+          "n_flag1": 230,
+          "n_flag0": 1585,
+          "boom_rate_flag1": 0.1,
+          "boom_rate_flag0": 0.1028391167192429,
+          "edge_pp": -0.283911671924289
+        },
+        "2024": {
+          "n_flag1": 201,
+          "n_flag0": 1635,
+          "boom_rate_flag1": 0.1691542288557214,
+          "boom_rate_flag0": 0.1217125382262997,
+          "edge_pp": 4.74416906294217
+        },
+        "2025": {
+          "n_flag1": 281,
+          "n_flag0": 1600,
+          "boom_rate_flag1": 0.12099644128113879,
+          "boom_rate_flag0": 0.10125,
+          "edge_pp": 1.9746441281138782
+        }
+      },
+      "n_years_positive": 5,
+      "n_years_evaluated": 7
+    },
+    {
+      "candidate": "cand_csw_spike",
+      "flag_rate": 0.06819790765358294,
+      "n_flag1": 867,
+      "n_flag0": 11846,
+      "boom_rate_flag1": 0.13610149942329874,
+      "boom_rate_flag0": 0.10957285159547527,
+      "chi2": 5.479469839698805,
+      "p_value": 0.019241093825366675,
+      "stack3_n": 224,
+      "stack3_baseline_boom": 0.17410714285714285,
+      "stack3_cand1_n": 70,
+      "stack3_cand0_n": 154,
+      "stack3_cand1_boom": 0.22857142857142856,
+      "stack3_cand0_boom": 0.14935064935064934,
+      "stack3_marginal_lift_pp": 7.922077922077922,
+      "corr_with_v1_flags": {
+        "flag_skill_spike": 0.27912610144243005,
+        "flag_recform_hot": 0.23104261879168275,
+        "flag_opp_soft": 0.005487548638100615
+      },
+      "max_abs_corr_v1": 0.27912610144243005,
+      "year_by_year": {
+        "2018": {
+          "n_flag1": 150,
+          "n_flag0": 1675,
+          "boom_rate_flag1": 0.17333333333333334,
+          "boom_rate_flag0": 0.13074626865671643,
+          "edge_pp": 4.258706467661691
+        },
+        "2019": {
+          "n_flag1": 94,
+          "n_flag0": 1695,
+          "boom_rate_flag1": 0.07446808510638298,
+          "boom_rate_flag0": 0.11209439528023599,
+          "edge_pp": -3.762631017385301
+        },
+        "2021": {
+          "n_flag1": 101,
+          "n_flag0": 1641,
+          "boom_rate_flag1": 0.10891089108910891,
+          "boom_rate_flag0": 0.09689213893967093,
+          "edge_pp": 1.2018752149437983
+        },
+        "2022": {
+          "n_flag1": 115,
+          "n_flag0": 1710,
+          "boom_rate_flag1": 0.14782608695652175,
+          "boom_rate_flag0": 0.10058479532163743,
+          "edge_pp": 4.724129163488431
+        },
+        "2023": {
+          "n_flag1": 135,
+          "n_flag0": 1680,
+          "boom_rate_flag1": 0.1111111111111111,
+          "boom_rate_flag0": 0.10178571428571428,
+          "edge_pp": 0.932539682539682
+        },
+        "2024": {
+          "n_flag1": 136,
+          "n_flag0": 1700,
+          "boom_rate_flag1": 0.14705882352941177,
+          "boom_rate_flag0": 0.12529411764705883,
+          "edge_pp": 2.1764705882352935
+        },
+        "2025": {
+          "n_flag1": 136,
+          "n_flag0": 1745,
+          "boom_rate_flag1": 0.16176470588235295,
+          "boom_rate_flag0": 0.0997134670487106,
+          "edge_pp": 6.205123883364235
+        }
+      },
+      "n_years_positive": 6,
+      "n_years_evaluated": 7
+    },
+    {
+      "candidate": "cand_mix_change",
+      "flag_rate": 0.0202941870526233,
+      "n_flag1": 258,
+      "n_flag0": 12455,
+      "boom_rate_flag1": 0.12403100775193798,
+      "boom_rate_flag0": 0.11112003211561622,
+      "chi2": 0.30524714688312354,
+      "p_value": 0.580611477110286,
+      "stack3_n": 224,
+      "stack3_baseline_boom": 0.17410714285714285,
+      "stack3_cand1_n": 6,
+      "stack3_cand0_n": 218,
+      "stack3_cand1_boom": 0.16666666666666666,
+      "stack3_cand0_boom": 0.1743119266055046,
+      "stack3_marginal_lift_pp": -0.7645259938837939,
+      "corr_with_v1_flags": {
+        "flag_skill_spike": 0.021021472537679962,
+        "flag_recform_hot": 0.03769790294217664,
+        "flag_opp_soft": 0.012761268505927114
+      },
+      "max_abs_corr_v1": 0.03769790294217664,
+      "year_by_year": {
+        "2018": {
+          "n_flag1": 41,
+          "n_flag0": 1784,
+          "boom_rate_flag1": 0.07317073170731707,
+          "boom_rate_flag0": 0.13565022421524664,
+          "edge_pp": -6.247949250792957
+        },
+        "2019": {
+          "n_flag1": 39,
+          "n_flag0": 1750,
+          "boom_rate_flag1": 0.1282051282051282,
+          "boom_rate_flag0": 0.10971428571428571,
+          "edge_pp": 1.8490842490842485
+        },
+        "2021": {
+          "n_flag1": 32,
+          "n_flag0": 1710,
+          "boom_rate_flag1": 0.125,
+          "boom_rate_flag0": 0.09707602339181287,
+          "edge_pp": 2.792397660818713
+        },
+        "2022": {
+          "n_flag1": 51,
+          "n_flag0": 1774,
+          "boom_rate_flag1": 0.13725490196078433,
+          "boom_rate_flag0": 0.10259301014656144,
+          "edge_pp": 3.4661891814222883
+        },
+        "2023": {
+          "skipped": true,
+          "n1": 23,
+          "n0": 1792
+        },
+        "2024": {
+          "skipped": true,
+          "n1": 28,
+          "n0": 1808
+        },
+        "2025": {
+          "n_flag1": 44,
+          "n_flag0": 1837,
+          "boom_rate_flag1": 0.13636363636363635,
+          "boom_rate_flag0": 0.10342950462710941,
+          "edge_pp": 3.293413173652694
+        }
+      },
+      "n_years_positive": 4,
+      "n_years_evaluated": 5
+    },
+    {
+      "candidate": "cand_park_friendly",
+      "flag_rate": 0.27019586250294975,
+      "n_flag1": 3435,
+      "n_flag0": 9278,
+      "boom_rate_flag1": 0.12459970887918487,
+      "boom_rate_flag0": 0.10648846734209959,
+      "chi2": 8.126073798694657,
+      "p_value": 0.004363313346681222,
+      "stack3_n": 224,
+      "stack3_baseline_boom": 0.17410714285714285,
+      "stack3_cand1_n": 56,
+      "stack3_cand0_n": 168,
+      "stack3_cand1_boom": 0.19642857142857142,
+      "stack3_cand0_boom": 0.16666666666666666,
+      "stack3_marginal_lift_pp": 2.9761904761904767,
+      "corr_with_v1_flags": {
+        "flag_skill_spike": -0.01492062068980425,
+        "flag_recform_hot": -0.008538009579164561,
+        "flag_opp_soft": 0.04889780286934906
+      },
+      "max_abs_corr_v1": 0.04889780286934906,
+      "year_by_year": {
+        "2018": {
+          "n_flag1": 466,
+          "n_flag0": 1359,
+          "boom_rate_flag1": 0.17167381974248927,
+          "boom_rate_flag0": 0.12141280353200883,
+          "edge_pp": 5.026101621048045
+        },
+        "2019": {
+          "n_flag1": 492,
+          "n_flag0": 1297,
+          "boom_rate_flag1": 0.11178861788617886,
+          "boom_rate_flag0": 0.1094834232845027,
+          "edge_pp": 0.23051946016761637
+        },
+        "2021": {
+          "n_flag1": 493,
+          "n_flag0": 1249,
+          "boom_rate_flag1": 0.11156186612576065,
+          "boom_rate_flag0": 0.09207365892714171,
+          "edge_pp": 1.9488207198618934
+        },
+        "2022": {
+          "n_flag1": 530,
+          "n_flag0": 1295,
+          "boom_rate_flag1": 0.11132075471698114,
+          "boom_rate_flag0": 0.10038610038610038,
+          "edge_pp": 1.0934654330880755
+        },
+        "2023": {
+          "n_flag1": 450,
+          "n_flag0": 1365,
+          "boom_rate_flag1": 0.10222222222222223,
+          "boom_rate_flag0": 0.10256410256410256,
+          "edge_pp": -0.034188034188033234
+        },
+        "2024": {
+          "n_flag1": 495,
+          "n_flag0": 1341,
+          "boom_rate_flag1": 0.15353535353535352,
+          "boom_rate_flag0": 0.11707680835197613,
+          "edge_pp": 3.6458545183377393
+        },
+        "2025": {
+          "n_flag1": 509,
+          "n_flag0": 1372,
+          "boom_rate_flag1": 0.11198428290766209,
+          "boom_rate_flag0": 0.10131195335276968,
+          "edge_pp": 1.0672329554892404
+        }
+      },
+      "n_years_positive": 6,
+      "n_years_evaluated": 7
+    },
+    {
+      "candidate": "cand_high_k_pitcher",
+      "flag_rate": 0.08172736568866515,
+      "n_flag1": 1039,
+      "n_flag0": 11674,
+      "boom_rate_flag1": 0.17420596727622714,
+      "boom_rate_flag0": 0.10579064587973273,
+      "chi2": 44.43085076016756,
+      "p_value": 2.6350180163941942e-11,
+      "stack3_n": 224,
+      "stack3_baseline_boom": 0.17410714285714285,
+      "stack3_cand1_n": 12,
+      "stack3_cand0_n": 212,
+      "stack3_cand1_boom": 0.3333333333333333,
+      "stack3_cand0_boom": 0.1650943396226415,
+      "stack3_marginal_lift_pp": 16.82389937106918,
+      "corr_with_v1_flags": {
+        "flag_skill_spike": 0.017563221236667547,
+        "flag_recform_hot": 0.0005680844349030395,
+        "flag_opp_soft": -0.004978102153993445
+      },
+      "max_abs_corr_v1": 0.017563221236667547,
+      "year_by_year": {
+        "2018": {
+          "n_flag1": 117,
+          "n_flag0": 1708,
+          "boom_rate_flag1": 0.1794871794871795,
+          "boom_rate_flag0": 0.13114754098360656,
+          "edge_pp": 4.833963850357293
+        },
+        "2019": {
+          "n_flag1": 111,
+          "n_flag0": 1678,
+          "boom_rate_flag1": 0.1891891891891892,
+          "boom_rate_flag0": 0.10488676996424315,
+          "edge_pp": 8.430241922494606
+        },
+        "2021": {
+          "n_flag1": 175,
+          "n_flag0": 1567,
+          "boom_rate_flag1": 0.17142857142857143,
+          "boom_rate_flag0": 0.08934269304403318,
+          "edge_pp": 8.208587838453825
+        },
+        "2022": {
+          "n_flag1": 131,
+          "n_flag0": 1694,
+          "boom_rate_flag1": 0.16793893129770993,
+          "boom_rate_flag0": 0.09858323494687131,
+          "edge_pp": 6.935569635083862
+        },
+        "2023": {
+          "n_flag1": 186,
+          "n_flag0": 1629,
+          "boom_rate_flag1": 0.16129032258064516,
+          "boom_rate_flag0": 0.09576427255985268,
+          "edge_pp": 6.552605002079249
+        },
+        "2024": {
+          "n_flag1": 180,
+          "n_flag0": 1656,
+          "boom_rate_flag1": 0.2,
+          "boom_rate_flag0": 0.11896135265700483,
+          "edge_pp": 8.103864734299519
+        },
+        "2025": {
+          "n_flag1": 139,
+          "n_flag0": 1742,
+          "boom_rate_flag1": 0.1510791366906475,
+          "boom_rate_flag0": 0.10045924225028703,
+          "edge_pp": 5.061989444036046
+        }
+      },
+      "n_years_positive": 7,
+      "n_years_evaluated": 7
+    }
+  ],
+  "winners": [
+    "cand_high_k_pitcher",
+    "cand_csw_spike",
+    "cand_velo_spike"
+  ]
+}
