@@ -169,6 +169,18 @@ def main():
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
+    # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
+    # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
+    # probables window covered by stream_the_stack (~15-25). Lets the profiles
+    # dashboard's Boom/Bust tab populate for any rostered SP. Fail-soft.
+    ok_full_pool = run(
+        '4.45. Build sp_boom_stack_full_pool (entire SP universe)',
+        'python -X utf8 scripts/xfp/build_sp_boom_stack_full_pool.py',
+        timeout=300,
+    )
+    if not ok_full_pool:
+        print('  ⚠ sp_boom_stack_full_pool failed — continuing (non-gating)')
+
     # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
     ok_profiles = run('4.5. Build player_profiles.html (archetype browser)',
                       'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',

@@ -798,41 +798,88 @@ def load_hitter_boom_stack_payload() -> dict:
 
 
 def load_boom_stack_payload() -> dict:
-    """Load the most recent stream_the_stack JSON and reshape into a
-    per-pitcher_id map for the Boom / Bust / Variance modal tab.
+    """Load boom_stack records for the Boom / Bust / Variance modal tab.
 
-    Falls back gracefully if no stream file is found — the tab still renders
-    but with a friendly "no upcoming start in window" placeholder.
+    Merges two sources, with window-active records winning on conflict:
+      1. sp_boom_stack_full_pool_<date>.json — full ~300-SP universe with
+         season-only tags (HIGH-K, catcher framing, IL return). Lower
+         precedence; populates the modal for any SP not in the live window.
+      2. stream_the_stack_<date>.json — rolling 3-day window of confirmed
+         probable starters. Higher precedence — these are the
+         highest-confidence per-start projections.
+
+    Falls back gracefully when neither file exists.
     """
     OUT = REPO / 'data/outputs'
-    files = sorted(OUT.glob('stream_the_stack_*.json'))
-    if not files:
-        return {'meta': {'available': False, 'reason': 'no stream_the_stack JSON found'},
-                'by_pitcher': {}}
-    latest = files[-1]
-    try:
-        with open(latest, encoding='utf-8') as f:
-            data = json.load(f)
-    except Exception as e:
-        return {'meta': {'available': False, 'reason': f'parse error: {e}'},
-                'by_pitcher': {}}
 
     by_pid: dict[str, dict] = {}
-    for c in data.get('candidates', []):
-        pid = c.get('pitcher_id')
-        if pid is None:
-            continue
-        by_pid[str(int(pid))] = c
+    full_pool_meta: dict = {}
+
+    # 1) Full-pool layer (lower precedence).
+    fp_files = sorted(OUT.glob('sp_boom_stack_full_pool_*.json'))
+    if fp_files:
+        latest_fp = fp_files[-1]
+        try:
+            with open(latest_fp, encoding='utf-8') as f:
+                fp_data = json.load(f)
+            for c in fp_data.get('candidates', []):
+                pid = c.get('pitcher_id')
+                if pid is None:
+                    continue
+                by_pid[str(int(pid))] = c
+            full_pool_meta = {
+                'full_pool_source_file': latest_fp.name,
+                'full_pool_n_candidates': len(fp_data.get('candidates', [])),
+                'full_pool_n_with_upcoming_start':
+                    fp_data.get('summary', {}).get('n_with_upcoming_start'),
+                'full_pool_n_season_only':
+                    fp_data.get('summary', {}).get('n_season_only'),
+            }
+        except Exception as e:
+            full_pool_meta = {'full_pool_error': f'parse error: {e}'}
+
+    # 2) Stream_the_stack overlay (higher precedence — overwrites full-pool rows).
+    stream_meta: dict = {}
+    files = sorted(OUT.glob('stream_the_stack_*.json'))
+    if files:
+        latest = files[-1]
+        try:
+            with open(latest, encoding='utf-8') as f:
+                data = json.load(f)
+            for c in data.get('candidates', []):
+                pid = c.get('pitcher_id')
+                if pid is None:
+                    continue
+                c = dict(c)
+                # Window-active rows are inherently "has upcoming start" —
+                # set the flag so the renderer doesn't show a season-only
+                # placeholder for an SP that IS pitching this window.
+                c.setdefault('has_upcoming_start', True)
+                by_pid[str(int(pid))] = c
+            stream_meta = {
+                'source_file': latest.name,
+                'window_start': data.get('summary', {}).get('window_start'),
+                'window_end': data.get('summary', {}).get('window_end'),
+                'n_stream_candidates': len(data.get('candidates', [])),
+            }
+        except Exception as e:
+            stream_meta = {'stream_error': f'parse error: {e}'}
+
+    if not by_pid:
+        return {
+            'meta': {'available': False,
+                     'reason': 'no stream_the_stack or full_pool JSON found'},
+            'by_pitcher': {},
+        }
 
     meta = {
         'available': True,
-        'source_file': latest.name,
-        'window_start': data.get('summary', {}).get('window_start'),
-        'window_end': data.get('summary', {}).get('window_end'),
         'n_candidates': len(by_pid),
         # Calibrated 50% interval global alpha for SPs — see
         # data/research/validation_runs/calibration_summary*.md
         'sp_interval_alpha': 2.41,
+        **stream_meta,
+        **full_pool_meta,
     }
     return {'meta': meta, 'by_pitcher': by_pid}
 
