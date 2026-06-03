@@ -174,6 +174,18 @@ def main():
                       'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',
                       timeout=120)
 
+    # 4.6. Daily boom-stack streamer scan. Fail-soft: API errors or zero
+    # candidates must not abort the pipeline — outputs land at
+    # data/outputs/stream_the_stack_<date>.{md,json}. Depends on rp3
+    # projections (step 2) + team_strength cache.
+    ok_stream = run(
+        '4.6. Build stream_the_stack daily streamer ranks',
+        'python -X utf8 scripts/xfp/stream_the_stack.py',
+        timeout=180,
+    )
+    if not ok_stream:
+        print('  ⚠ stream_the_stack failed — continuing (non-gating)')
+
     if not args.no_push:
         if not ok_profiles:
             print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')

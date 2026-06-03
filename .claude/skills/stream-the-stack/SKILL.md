@@ -43,6 +43,13 @@ remains `xfp_rp3_per_start`. boom_stack is the right-tail confidence layer.
 
 ## Workflow
 
+This script runs **automatically** as step 4.6 of `refresh_dashboards.py`
+(daily refresh). The latest report is always at
+`data/outputs/stream_the_stack_<today>.md` after the morning refresh.
+
+For ad-hoc reruns (e.g., probables updated mid-morning, or you want a
+different window):
+
 ```bash
 python -X utf8 scripts/xfp/stream_the_stack.py
 ```
@@ -99,9 +106,8 @@ If no stack=2+ candidates exist today, the report notes this is expected
 - After a roster move that frees an SP slot — confirm there's a boom shot
   worth burning the slot on TODAY before committing.
 - When the user asks "best streamer today" / "any boom shots" / "stack=2+ today".
-- As a daily morning cron candidate (proposed wiring in
-  `refresh_dashboards.py` — see the script's report; not yet applied
-  to avoid in-flight conflicts).
+- The script is wired into `refresh_dashboards.py` as step 4.6 (fail-soft),
+  so the latest report is regenerated every daily refresh.
 
 ---
 
