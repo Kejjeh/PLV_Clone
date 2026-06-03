@@ -97,6 +97,12 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 parts.append("🧊ELITE FRAMER")
             elif model.get('is_framing_tax'):
                 parts.append("⚠FRAMING TAX")
+            # IL_RETURN salvage tag (validated 2026-06-03, +2.93 pp bust lift).
+            # Standalone display tag — never overrides verdict.
+            if model.get('is_first_back_long_il'):
+                ild = model.get('il_return_days_since_last_start')
+                ild_s = f" ({ild}d)" if isinstance(ild, int) else ''
+                parts.append(f"🏥IL RETURN{ild_s}")
             bs_tok = ' '.join(parts)
         # Hitter boom-stack advisory tag (validated 2026-06-03, SHIP-CAUTIOUS).
         hbs_tok = ''
@@ -188,6 +194,28 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                     f"\n⚠ **FRAMING TAX:** {cn} ({csaa_s}, Q1, bottom-tier framer). "
                     f"Historical −3 pp boom rate within-pitcher (p=0.017). "
                     f"Soriano-O'Hoppe is the canonical case."
+                )
+
+            # IL_RETURN salvage tag callout (validated 2026-06-03).
+            # Salvaged from rejected bust_stack_v2 research program — the only
+            # component with independently-significant bust lift. Display tag
+            # only — does NOT override verdict.
+            if model.get('is_first_back_long_il'):
+                ild = model.get('il_return_days_since_last_start')
+                last = model.get('il_return_last_start_date')
+                ref_src = model.get('il_return_reference_source')
+                ref_str = (
+                    "next scheduled start" if ref_src == 'next_scheduled'
+                    else "today" if ref_src == 'today' else "reference date"
+                )
+                last_s = f" (last MLB start {last})" if last else ''
+                lines.append(
+                    f"\n🏥 **IL RETURN start** — pitcher's previous MLB outing was "
+                    f"{ild}d ago{last_s}; gap to {ref_str} >= 30d. "
+                    f"Historical bust rate +2.93 pp at first-back-from-long-IL "
+                    f"starts (n=640, p=0.044; salvaged from bust_stack_v2 research). "
+                    f"Cross-reference `/sp-rehab-tracker` for MiLB rehab quality if applicable. "
+                    f"Display tag only, not a verdict override."
                 )
         # Hitter boom-stack callout block — fires at boom_stack >= 2.
         # Display tag only, advisory; not a verdict override.

@@ -415,6 +415,43 @@ Implementation: `compute_catcher_framing()` in
 and the validation report at
 `data/research/validation_runs/catcher_framing_boom_modifier.md`.
 
+### SP card additions — IL_RETURN salvage tag
+
+**Shipped 2026-06-03 as standalone display tag — salvaged from the
+otherwise-rejected bust_stack_v2_context research program.** Independent
+of boom_stack, HIGH-K ARM, and catcher framing. Fires when the
+pitcher's previous MLB start was >= 30 calendar days before the next
+scheduled start (proxy for "first start back from a 30+ day IL stint").
+
+Computed on the fly from `statcast_2026.parquet` (last MLB start: latest
+`game_date` with >= 5 PA) and `pitcher_schedule_2026.csv` (next scheduled
+start; falls back to `date.today()` when the pitcher isn't in the probables
+feed).
+
+When `is_first_back_long_il == True`, the inline detail row adds
+`🏥IL RETURN (Nd)` and a callout below the table fires:
+
+> 🏥 **IL RETURN start** — pitcher's previous MLB outing was Nd ago
+> (last MLB start YYYY-MM-DD); gap to next scheduled start >= 30d.
+> Historical bust rate +2.93 pp at first-back-from-long-IL starts
+> (n=640, p=0.044; salvaged from bust_stack_v2 research). Cross-reference
+> `/sp-rehab-tracker` for MiLB rehab quality if applicable. Display tag
+> only, not a verdict override.
+
+**Why standalone, not a bust_stack component:** the parent
+bust_stack_v2_context program was rejected (DON'T_SHIP) — H1 stack=3
+magnitude failed (16.73% vs >=25% target), H2 components failed
+Bonferroni (0/5 passed alpha=0.01), H3 year-stability failed (4/7
+years sign-positive). But `flag_first_back_long_IL` was the one signal
+with both real lift AND intuitive mechanism (rust + rehab quality
+uncertainty). Salvaged as a TYPE-style standalone tag — same pattern
+as HIGH-K ARM and catcher framing.
+
+Implementation: `compute_il_return_flag()` in
+`scripts/xfp/lib/il_return_flag.py`. See `reference_il_return_tag.md`
+and the validation report at
+`data/research/validation_runs/bust_stack_v2_context_validation.md`.
+
 ### Hitter card additions — hitter boom-stack advisory tag
 
 **Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag (3-component); 4th

@@ -10,6 +10,7 @@ from .pl_cache import pl_rank, pl_streamer_rank
 from .schedule_strength import schedule_idx_for
 from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR, compute_high_k_pitcher
 from .catcher_framing import compute_catcher_framing
+from .il_return_flag import compute_il_return_flag, IL_RETURN_DAYS_THRESHOLD, IL_RETURN_BUST_LIFT_PP
 from .hitter_boom_stack import (
     compute_hitter_boom_stack,
     resolve_opp_sp_id_for_today,
@@ -232,6 +233,26 @@ def model_row(player: dict) -> dict:
         except Exception:
             # Defensive: never break SP cards on catcher-framing compute failure.
             pass
+        # IL_RETURN salvage tag (validated 2026-06-03, +2.93 pp bust lift,
+        # n=640, p=0.044). Standalone display tag — NOT a boom_stack/bust
+        # component. Fires when previous MLB start was >= 30 days before the
+        # next scheduled start. See
+        # data/research/validation_runs/bust_stack_v2_context_validation.md.
+        is_first_back_long_il = None
+        il_return_days = None
+        il_return_last_start = None
+        il_return_ref_date = None
+        il_return_ref_source = None
+        try:
+            il = compute_il_return_flag(int(player['id']))
+            is_first_back_long_il = bool(il.get('is_first_back_long_il'))
+            il_return_days = il.get('days_since_last_start')
+            il_return_last_start = il.get('last_start_date')
+            il_return_ref_date = il.get('reference_date')
+            il_return_ref_source = il.get('reference_source')
+        except Exception:
+            # Defensive: never break SP cards on IL-return compute failure.
+            is_first_back_long_il = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -264,6 +285,13 @@ def model_row(player: dict) -> dict:
             'catcher_quintile': catcher_quintile,
             'is_elite_framer': is_elite_framer,
             'is_framing_tax': is_framing_tax,
+            'is_first_back_long_il': is_first_back_long_il,
+            'il_return_days_since_last_start': il_return_days,
+            'il_return_last_start_date': il_return_last_start,
+            'il_return_reference_date': il_return_ref_date,
+            'il_return_reference_source': il_return_ref_source,
+            'il_return_threshold_days': IL_RETURN_DAYS_THRESHOLD,
+            'il_return_bust_lift_pp': IL_RETURN_BUST_LIFT_PP,
         }
     return {
         'rank': int(r['rank']),
