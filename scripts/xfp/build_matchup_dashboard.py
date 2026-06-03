@@ -44,10 +44,32 @@ MAX_SP_STARTS_PER_WEEK = 10
 LEAGUE_AVG_SP_FP_PER_START = 11.5
 LEAGUE_AVG_HITTER_PER_GAME = 2.8
 
-# Per-event variance estimates (for win probability calculation)
+# Per-event variance estimates (for win probability calculation).
+# These are now FALLBACKS — when a per-player σ is available in
+# xfp_rh3_projections.csv (hitters) or xfp_rp3_projections.csv (SPs),
+# the per-player σ is used at the team-aggregate variance step. RPs still
+# use the fixed value (no per-RP σ calibrated yet). See
+# `reference_team_variance_aggregation.md`.
 SIGMA_PER_HITTER_GAME = 3.5  # std dev of hitter daily FP
 SIGMA_PER_SP_START = 5.5      # std dev of SP per-start FP
 SIGMA_PER_RP_GAME = 2.5       # std dev of RP per-game FP
+
+# Set MATCHUP_LEGACY_SIGMA=1 in env to force old fixed-σ aggregation (for
+# before/after comparison). Default: use per-player σ where available.
+import os as _os
+LEGACY_SIGMA = _os.environ.get('MATCHUP_LEGACY_SIGMA', '0') == '1'
+# Typical PA/game when a hitter's lineup_map entry is missing (mirrors
+# rh3 build constant). Used to convert per-PA σ → per-game variance.
+LEAGUE_PA_PER_GAME = 3.5
+
+# Empirical per-PA FP outcome σ from the hitter boom-bust panel (245k
+# batter-games 2018-2025). This is the GLOBAL pooled per-PA outcome σ,
+# distinct from the rh3 model's per-PA CI σ (xfp_rh3_sigma_raw ≈ 0.108)
+# which is a rate-prediction interval. Per-game variance ≈ PA_per_game *
+# σ_pa² ⇒ ≈ 3.5 * 0.517² ≈ 0.94 FP² (σ ≈ 0.97 FP/g) for a baseline batter.
+# The legacy SIGMA_PER_HITTER_GAME = 3.5 absorbed a lot of unrelated
+# noise; the hetero path scales this with batter_sigma_factor ∈ [0.7, 1.5].
+GLOBAL_SIGMA_PA_FP = 0.517
 
 # Reliever appearance rates by role
 RP_APP_RATE = {
@@ -142,7 +164,12 @@ def load_projections():
                           'per_pa': r.get('xfp_rh3_per_pa') or 0,
                           'prior_fp_per_pa': r.get('prior_fp_per_pa'),
                           'recency_form_gap': r.get('recency_form_gap'),
-                          'sigma': r.get('xfp_rh3_sigma')}
+                          'sigma': r.get('xfp_rh3_sigma'),
+                          # Hetero σ work (2026-06-03): per-PA xwOBA-scale σ with
+                          # per-batter dispersion. Falls back to global if missing.
+                          'sigma_hetero_pa': r.get('xfp_rh3_sigma_hetero'),
+                          'sigma_global_pa': r.get('xfp_rh3_sigma_global'),
+                          'sigma_factor': r.get('batter_sigma_factor')}
                 for _, r in rh3.iterrows()}
 
     rp3_path = _select_rp3_path()
@@ -748,8 +775,14 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                                        'confirmed': s.get('confirmed', True)})
         out['fp'] = total
         out['units'] = len(starts)
-        # MA1: per-player sigma (gated)
-        sp_sigma = (rp_info.get('sigma') or SIGMA_PER_SP_START) if _ADJUSTERS_ON else SIGMA_PER_SP_START
+        # Per-player σ from xfp_rp3 (per-start FP units). Globally calibrated
+        # — currently identical across SPs but still beats the legacy 5.5 FP.
+        # Falls back to fixed SIGMA_PER_SP_START if the SP isn't in the projection
+        # file (rare — e.g., minor-league call-up not yet in xfp_rp3).
+        if LEGACY_SIGMA:
+            sp_sigma = SIGMA_PER_SP_START
+        else:
+            sp_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
         out['sigma2'] = len(starts) * sp_sigma ** 2
         return out
 
@@ -852,9 +885,20 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
             })
         out['fp'] = total
         out['units'] = len(rem)
-        # MA1: hitter sigma — rh3's xfp_rh3_sigma is xwOBA-scale, not FP/g.
-        # Keep static FP/g sigma until we have proper game-level σ.
-        out['sigma2'] = len(rem) * SIGMA_PER_HITTER_GAME ** 2
+        # Hetero σ aggregation (2026-06-03). Empirical per-PA outcome σ
+        # (GLOBAL_SIGMA_PA_FP, 0.517 FP/PA) scaled by batter_sigma_factor (the
+        # ridge-derived per-batter multiplier ∈ [0.7, 1.5]). Per-game variance
+        # = PA_per_game * σ_pa² (sum of iid PAs); team variance sums across
+        # players + games. Falls back to legacy fixed σ per game when the
+        # hitter is missing from xfp_rh3 (e.g., new call-up not yet keyed).
+        factor = rh.get('sigma_factor')
+        if LEGACY_SIGMA or factor is None or pd.isna(factor):
+            out['sigma2'] = len(rem) * SIGMA_PER_HITTER_GAME ** 2
+        else:
+            pa_per_g = (lineup_info.get('pa_per_g') if lineup_info else None) or LEAGUE_PA_PER_GAME
+            sigma_pa = GLOBAL_SIGMA_PA_FP * float(factor)
+            var_per_game = (sigma_pa ** 2) * pa_per_g
+            out['sigma2'] = len(rem) * var_per_game
         return out
 
 
@@ -2230,6 +2274,29 @@ def main():
     print(f'  Opp:    WTD {mu["opp_score"]:.1f} + rest {opp_rest:.1f} = {opp_total:.1f} '
           f'(σ²={opp_sigma2:.0f})')
     print(f'  Win probability ({wp_method}): {win_prob*100:.1f}%')
+
+    # Hetero σ before/after instrumentation (2026-06-03). Recompute σ² as if
+    # legacy fixed-σ-per-position were in force, to surface the delta the
+    # per-player σ aggregation introduced. This is print-only — doesn't
+    # affect logged predictions or the dashboard's published win probability.
+    def _legacy_sigma2(proj_dict):
+        s2 = 0.0
+        for p in proj_dict.values():
+            n_starts = sum(1 for b in p.get('breakdown', []) if b.get('type') == 'start')
+            n_games = sum(1 for b in p.get('breakdown', []) if b.get('type') == 'game')
+            n_rp = sum(b.get('expected_apps', 0)
+                       for b in p.get('breakdown', []) if 'role' in b)
+            s2 += (n_starts * SIGMA_PER_SP_START ** 2
+                   + n_games * SIGMA_PER_HITTER_GAME ** 2
+                   + n_rp * SIGMA_PER_RP_GAME ** 2)
+        return s2
+    legacy_my_s2 = _legacy_sigma2(my_proj)
+    legacy_opp_s2 = _legacy_sigma2(opp_proj)
+    legacy_wp = win_probability(my_total, opp_total, legacy_my_s2, legacy_opp_s2)
+    print(f'  [hetero-σ delta] legacy σ²: Ligers {legacy_my_s2:.0f} → new {my_sigma2:.0f}; '
+          f'Opp {legacy_opp_s2:.0f} → new {opp_sigma2:.0f}')
+    print(f'  [hetero-σ delta] legacy WP: {legacy_wp*100:.1f}% → new {win_prob*100:.1f}% '
+          f'(Δ {(win_prob - legacy_wp)*100:+.1f} pp)')
 
     my_block, _, _ = render_team_table(mu['mine'].team_name, mu['my_lineup'],
                                           mu['my_score'], my_proj, my_capped)
