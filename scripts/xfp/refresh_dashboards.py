@@ -77,6 +77,21 @@ def main():
                   timeout=1800)
         if not ok: print('  → continuing despite model rebuild issue')
 
+    # 2a. Patch stale is_on_il_at_split from live ESPN injury status.
+    # The rp3 pipeline's is_on_il_at_split (and the data_quality_tag='marcel_il'
+    # bucket derived from it) come from historical IL transactions that can be
+    # days/weeks stale. This shim overrides the flag with live ESPN data and
+    # writes xfp_rp3_projections_il_fixed.csv, which is the file the matchup
+    # dashboard prefers (with a freshness guard — see build_matchup_dashboard
+    # load_projections). Must run AFTER rp3 regen, BEFORE matchup build.
+    # Fail-soft: if ESPN is down, the dashboard's freshness guard will raise.
+    ok_ilfix = run('2a. Patch is_on_il_at_split from live ESPN status',
+                   'python -X utf8 scripts/xfp/fix_il_flag_from_espn.py',
+                   timeout=180)
+    if not ok_ilfix:
+        print('  ⚠ ESPN IL-flag patch failed — il_fixed CSV may be stale; '
+              'matchup build will assert freshness and fall back to canonical')
+
     run('2b. Build name-resolution cache',
         'python -X utf8 scripts/xfp/build_name_resolution_cache.py',
         timeout=120)
