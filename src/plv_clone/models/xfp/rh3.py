@@ -29,6 +29,10 @@ import joblib
 from plv_clone.models.xfp import engine as _engine
 from plv_clone.models.xfp.engine import lookup_sigma  # re-export
 from plv_clone.league_config import HITTER_REPLACEMENT_RANK as REPLACEMENT_RANK
+from plv_clone.models.xfp.hitter_sigma_hetero import (
+    load_calibration as _load_hetero_calib,
+    compute_batter_sigma_factors as _compute_hetero_factors,
+)
 
 warnings.filterwarnings('ignore')
 
@@ -41,6 +45,7 @@ H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
 ROS_OPP_SP_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_opp_sp_xwoba_per_hitter.csv'
 MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
+HITTER_RATINGS_MASTER = ROOT / 'data' / 'research' / 'hitter_ratings_master.csv'
 MODEL_PKL   = ROOT / 'data' / 'models' / 'xfp_rh3_pipeline.pkl'
 PROJ_CSV    = ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'
 
@@ -430,7 +435,46 @@ def main():
     for _, row in valid.iterrows():
         sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
                                    row['xfp_rh3_per_pa'], pred_buckets))
-    valid['xfp_rh3_sigma'] = sigmas
+    valid['xfp_rh3_sigma_raw'] = sigmas
+    # Hetero sigma (validated 2026-06-03, SHIP_HETERO_FOR_HITTERS): per-batter
+    # multiplicative factor from a ridge over hitter_ratings_master features
+    # (POWER, ev90, contact_pct, iso, ...). CV r2=0.5744; pooled coverage
+    # preserved (25.10% -> 25.16%); per-batter coverage spread narrows
+    # (8.13pp -> 7.57pp). Factor clamped [0.7, 1.5] and mean-re-centered to
+    # 1.0 across active rh3 batters so global calibration is preserved.
+    # See data/research/validation_runs/hitter_sigma_heteroskedastic_search.md.
+    try:
+        _hetero_calib = _load_hetero_calib()
+        if HITTER_RATINGS_MASTER.exists():
+            _ratings_for_sigma = pd.read_csv(HITTER_RATINGS_MASTER, low_memory=False)
+            _active_batters = set(valid['batter'].astype(int).tolist())
+            _factor_map = _compute_hetero_factors(
+                _ratings_for_sigma, _hetero_calib, batter_subset=_active_batters,
+            )
+            valid['batter_sigma_factor'] = (
+                valid['batter'].astype(int).map(_factor_map).fillna(1.0)
+            )
+            valid['sigma_calibration_method'] = 'hetero_v1'
+        else:
+            print(f'  WARNING: {HITTER_RATINGS_MASTER} missing — falling back to global sigma')
+            valid['batter_sigma_factor'] = 1.0
+            valid['sigma_calibration_method'] = 'global_fallback'
+    except FileNotFoundError as _e:
+        print(f'  WARNING: hetero sigma calibration unavailable ({_e}) — using global sigma')
+        valid['batter_sigma_factor'] = 1.0
+        valid['sigma_calibration_method'] = 'global_fallback'
+    # Audit the re-centering: mean factor across active batters should be ~1.0
+    _mean_factor_active = float(valid['batter_sigma_factor'].mean())
+    print(f'  hetero sigma: mean batter_sigma_factor across {len(valid)} active '
+          f'batters = {_mean_factor_active:.4f} (target 1.000 ± 0.02)')
+    if abs(_mean_factor_active - 1.0) > 0.02:
+        print(f'  NOTE: factor mean drift {_mean_factor_active - 1.0:+.4f} '
+              f'exceeds ±0.02 — global pooled coverage may shift slightly')
+    # Carry the raw global sigma for transparency and apply hetero
+    valid['xfp_rh3_sigma_global'] = valid['xfp_rh3_sigma_raw']
+    valid['xfp_rh3_sigma_hetero'] = valid['xfp_rh3_sigma_raw'] * valid['batter_sigma_factor']
+    # Headline sigma column (back-compat) now reflects hetero band
+    valid['xfp_rh3_sigma'] = valid['xfp_rh3_sigma_hetero']
     valid['xfp_rh3_p25'] = (valid['xfp_rh3_per_pa'] - Z25 * valid['xfp_rh3_sigma']).clip(lower=0)
     valid['xfp_rh3_p75'] = valid['xfp_rh3_per_pa'] + Z25 * valid['xfp_rh3_sigma']
 
@@ -529,6 +573,8 @@ def main():
         'pa_to', 'pa_last21',
         'prior_fp_per_pa', 'recency_form_gap',
         'xfp_rh3_per_pa', 'xfp_rh3_per_game', 'xfp_rh3_sigma',
+        'xfp_rh3_sigma_raw', 'xfp_rh3_sigma_global', 'xfp_rh3_sigma_hetero',
+        'batter_sigma_factor', 'sigma_calibration_method',
         'xfp_rh3_p25', 'xfp_rh3_p75',
         'expected_pa_remaining', 'expected_total_fp_remaining',
         'replacement_xfp_per_pa', 'replacement_delta',
