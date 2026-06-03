@@ -339,6 +339,44 @@ amplification confirmed in `boom_stack_by_tier.md`. See
 `data/research/validation_runs/streamer_boom_stack_v1_2026-06-03.md` and
 `data/research/validation_runs/boom_stack_by_tier.md`.
 
+### SP card additions — HIGH-K ARM standalone tag
+
+**Shipped 2026-06-03 as PASS_AS_DISPLAY_TAG.** Independent of boom_stack —
+a TYPE signal (talent), not a DELTA signal (process change). The flag fires
+when this pitcher's cumulative season K% z-scored within the (year, current
+month) SP cohort is **≥ +0.5**, requiring **≥3 prior starts** in 2026.
+
+The rp3 detail row appends a `🔥HIGH-K z=+X.XX` token next to the boom_stack
+token. A standalone callout always fires when the flag is on:
+
+> 🔥 **HIGH-K ARM:** season K% z=+X.XX within YYYY-MM cohort. Standalone boom
+> edge +6.84 pp (p=2.6e-11, n=1,039 historical, validated 2026-06-03).
+> Independent of boom_stack — compounds on top.
+
+When **HIGH-K ARM == True AND boom_stack ≥ 2**, an extra compound callout
+fires (the actionable case):
+
+> 🔥🎯 **HIGH-K ARM + boom_stack≥2** — tier-amplified boom EV. Expect
+> ~+X.X pp on top of base stack signal (stack=2: +9.48 pp / stack=3: +16.82
+> pp historical, monotonic amplification).
+
+Per-tier amplification table (HIGH-K=1 vs HIGH-K=0 boom edge within each v1
+boom_stack tier, source `boom_stack_v2_validation.md`):
+
+| v1 boom_stack | HIGH-K lift |
+|---:|---:|
+| 0 | +6.51 pp |
+| 1 | +6.18 pp |
+| 2 | +9.48 pp |
+| 3 | +16.82 pp |
+
+**The tag does NOT override the verdict and is NOT a 4th boom_stack
+component.** The v2-as-stack version was NEEDS_MORE_DATA (stack=4 cell n=12
+failed Bonferroni-adjusted chi²). The standalone signal is what shipped.
+Implementation: `compute_high_k_pitcher()` in `scripts/xfp/lib/boom_stack.py`.
+See `reference_high_k_arm_tag.md` and the validation report at
+`data/research/validation_runs/boom_stack_v2_validation.md`.
+
 ### Hitter card additions — hitter boom-stack advisory tag
 
 **Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag.** The hitter analog of

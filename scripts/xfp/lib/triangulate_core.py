@@ -8,7 +8,7 @@ from .bucket_dispatch import resolve_player
 from .cached_data import _load_projection, _load_archetype
 from .pl_cache import pl_rank, pl_streamer_rank
 from .schedule_strength import schedule_idx_for
-from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR
+from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR, compute_high_k_pitcher
 from .hitter_boom_stack import (
     compute_hitter_boom_stack,
     resolve_opp_sp_id_for_today,
@@ -124,6 +124,29 @@ def model_row(player: dict) -> dict:
         except Exception:
             # Defensive: don't break SP cards if boom_stack errors out.
             boom_stack = None
+        # HIGH-K ARM standalone display tag (validated 2026-06-03,
+        # PASS_AS_DISPLAY_TAG). NOT a 4th component of boom_stack — this is
+        # an INDEPENDENT TYPE signal that compounds with whatever boom_stack
+        # is present. See data/research/validation_runs/boom_stack_v2_validation.md.
+        is_high_k_arm = None
+        high_k_z_score = None
+        high_k_cohort_label = None
+        high_k_lift_pp_expected = None
+        try:
+            hk = compute_high_k_pitcher(int(player['id']))
+            is_high_k_arm = bool(hk['is_high_k'])
+            high_k_z_score = hk['z_score']
+            high_k_cohort_label = hk['cohort_label']
+            # If the flag fires, surface the tier-appropriate amplified lift
+            # given the current boom_stack value; else fall back to standalone.
+            if is_high_k_arm:
+                if isinstance(boom_stack, int) and boom_stack in hk['tier_amp_lift_pp_by_v1_stack']:
+                    high_k_lift_pp_expected = hk['tier_amp_lift_pp_by_v1_stack'][boom_stack]
+                else:
+                    high_k_lift_pp_expected = hk['standalone_lift_pp']
+        except Exception:
+            # Defensive: never break SP cards on high-k compute failure.
+            is_high_k_arm = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -147,6 +170,10 @@ def model_row(player: dict) -> dict:
             'boom_bust_rate_expected': boom_bust_rate_expected,
             'boom_mean_fp_expected': boom_mean_fp_expected,
             'boom_skill_spike_anti_predictive': boom_skill_spike_anti_predictive,
+            'is_high_k_arm': is_high_k_arm,
+            'high_k_z_score': high_k_z_score,
+            'high_k_cohort_label': high_k_cohort_label,
+            'high_k_boom_lift_expected': high_k_lift_pp_expected,
         }
     return {
         'rank': int(r['rank']),

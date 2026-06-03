@@ -85,6 +85,12 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 parts.append(f"(boom%~{br*100:.1f}%, bust%~{bu*100:.1f}%)")
             elif br is not None:
                 parts.append(f"(boom%~{br*100:.1f}%)")
+            # HIGH-K ARM badge — INDEPENDENT standalone tag (validated 2026-06-03).
+            # Compounds with boom_stack rather than replacing a component.
+            if model.get('is_high_k_arm'):
+                z = model.get('high_k_z_score')
+                z_s = f" z={z:+.2f}" if isinstance(z, (int, float)) else ''
+                parts.append(f"🔥HIGH-K{z_s}")
             bs_tok = ' '.join(parts)
         # Hitter boom-stack advisory tag (validated 2026-06-03, SHIP-CAUTIOUS).
         hbs_tok = ''
@@ -132,6 +138,28 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                     f"(not boom-predictive). At {tier} tier, recent K%-spike + BB%-drop "
                     f"has negative per-component lift (Backend −4.1 pp / SP2_SP3 −3.4 pp). "
                     f"Treat as mean-reversion risk, not continuation signal."
+                )
+
+            # HIGH-K ARM standalone callout (always fires when flag=True).
+            if model.get('is_high_k_arm'):
+                z = model.get('high_k_z_score')
+                cohort = model.get('high_k_cohort_label')
+                z_s = f"z={z:+.2f}" if isinstance(z, (int, float)) else 'z>=+0.5'
+                cohort_s = f" within {cohort} cohort" if cohort else ''
+                lines.append(
+                    f"\n🔥 **HIGH-K ARM:** season K% {z_s}{cohort_s}. "
+                    f"Standalone boom edge +6.84 pp (p=2.6e-11, n=1,039 historical, "
+                    f"validated 2026-06-03). Independent of boom_stack — compounds on top."
+                )
+
+            # Compound HIGH-K + boom_stack >= 2 callout (the actionable case).
+            if model.get('is_high_k_arm') and bs_val >= 2:
+                amp = model.get('high_k_boom_lift_expected')
+                amp_s = f"~+{amp:.1f} pp" if isinstance(amp, (int, float)) else "~+9-17 pp"
+                lines.append(
+                    f"\n🔥🎯 **HIGH-K ARM + boom_stack≥2** — tier-amplified boom EV. "
+                    f"Expect {amp_s} on top of base stack signal "
+                    f"(stack=2: +9.48 pp / stack=3: +16.82 pp historical, monotonic amplification)."
                 )
         # Hitter boom-stack callout block — fires at boom_stack >= 2.
         # Display tag only, advisory; not a verdict override.

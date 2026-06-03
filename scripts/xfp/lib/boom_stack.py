@@ -84,6 +84,30 @@ MEAN_FP_BY_TIER_STACK: dict[str, dict[int, float]] = {
 # BB%-drop is regression-predictive, not continuation-predictive).
 SKILL_SPIKE_ANTIPREDICTIVE_TIERS = frozenset({'sp2_sp3', 'backend'})
 
+# ---------------------------------------------------------------------------
+# HIGH-K ARM tag (validated 2026-06-03, PASS_AS_DISPLAY_TAG)
+# ---------------------------------------------------------------------------
+# Standalone TYPE signal — pitcher's cumulative season K% z-scored within
+# (year, month) cohort >= +0.5 fires the flag. NOT a 4th component of
+# boom_stack (the boom_stack_v2 stack=4 cell was n=12 and failed Bonferroni-
+# adjusted chi²). Instead it's an INDEPENDENT signal that compounds with
+# whatever boom_stack value is present.
+#
+# Validation: data/research/validation_runs/boom_stack_v2_validation.md
+#   - Standalone boom edge: +6.84 pp (p=2.6e-11, n=1,039)
+#   - 7/7 years positive (+1.24 to +16.86 pp)
+#   - Pooled max |corr| with v1 components: 0.018 (fully orthogonal)
+#   - Tier amplification: +6.51 / +6.18 / +9.48 / +16.82 pp at v1 stack=0/1/2/3
+HIGH_K_Z_THRESHOLD = 0.5
+HIGH_K_MIN_PRIOR_STARTS = 3
+HIGH_K_STANDALONE_LIFT_PP = 6.84  # Standalone boom-edge pp from validation.
+HIGH_K_TIER_AMP_LIFT_PP = {
+    0: 6.51,
+    1: 6.18,
+    2: 9.48,
+    3: 16.82,
+}
+
 # Streamer-class threshold (rp3 rank floor). DEPRECATED 2026-06-03 — kept as an
 # importable constant for backwards-compat (legacy callers + memory docs) but
 # the engine no longer gates on it. The tag now fires for any SP with rp3 row.
@@ -275,3 +299,106 @@ def compute_boom_stack(
         'mean_fp_expected': mean_fp,
         'skill_spike_anti_predictive': anti_pred,
     }
+
+
+# ---------------------------------------------------------------------------
+# HIGH-K ARM compute (standalone display tag — INDEPENDENT of boom_stack)
+# ---------------------------------------------------------------------------
+@lru_cache(maxsize=1)
+def _load_high_k_baseline() -> tuple[float, float, dict, str]:
+    """Compute the (year, current-month) cohort mean + std of season K%.
+
+    Returns (mean_k_pct, std_k_pct, k_pct_by_pitcher, cohort_label).
+
+    - Pools every SP with >= HIGH_K_MIN_PRIOR_STARTS 2026 starts in the
+      latest game-month seen in the statcast_2026 cache.
+    - season K% = cumulative-season K / cumulative-season PA, computed as of
+      that pitcher's MOST RECENT start in the cohort month. This matches
+      the validation framing (cumulative-prior season K% per pitcher).
+    - Latest game date in the cache defines the "current month" cohort.
+    """
+    starts = _load_starts_2026()
+    if starts.empty:
+        return (float('nan'), float('nan'), {}, '')
+    starts = starts.copy()
+    starts['game_date'] = pd.to_datetime(starts['game_date'])
+    latest = starts['game_date'].max()
+    cohort_label = latest.strftime('%Y-%m')
+    # Per-pitcher season K% YTD (full season through latest start).
+    agg = (
+        starts.groupby('pitcher')
+              .agg(pa=('pa', 'sum'), k=('k', 'sum'),
+                   n_starts=('game_pk', 'count'))
+              .reset_index()
+    )
+    # Cohort restricted to pitchers with >= MIN_PRIOR_STARTS season starts so
+    # the baseline isn't polluted by spot-start small samples.
+    agg = agg[agg['n_starts'] >= HIGH_K_MIN_PRIOR_STARTS].copy()
+    agg['k_pct'] = agg['k'] / agg['pa'].replace(0, np.nan)
+    agg = agg.dropna(subset=['k_pct'])
+    if agg.empty:
+        return (float('nan'), float('nan'), {}, cohort_label)
+    mn = float(agg['k_pct'].mean())
+    sd = float(agg['k_pct'].std(ddof=0))
+    k_by = dict(zip(agg['pitcher'].astype(int), agg['k_pct'].astype(float)))
+    n_by = dict(zip(agg['pitcher'].astype(int), agg['n_starts'].astype(int)))
+    # Return n_starts alongside k_pct in a single dict for downstream use.
+    by_pitcher = {pid: {'k_pct': k_by[pid], 'n_starts': n_by[pid]} for pid in k_by}
+    return (mn, sd, by_pitcher, cohort_label)
+
+
+def compute_high_k_pitcher(pitcher_id: int) -> dict:
+    """Compute the HIGH-K ARM standalone display tag for one SP.
+
+    The z-score baseline is the (year, current-month) cohort of all SPs with
+    >= HIGH_K_MIN_PRIOR_STARTS 2026 starts. Flag fires when this pitcher's
+    season K% z-score >= +HIGH_K_Z_THRESHOLD AND he himself has
+    >= HIGH_K_MIN_PRIOR_STARTS starts.
+
+    Returns:
+        {
+          'is_high_k': bool,
+          'k_pct': float | None,      # season K% YTD for this pitcher
+          'z_score': float | None,    # z within (year, month) cohort
+          'cohort_mean': float,       # cohort mean K%
+          'cohort_std': float,        # cohort std K%
+          'cohort_label': str,        # 'YYYY-MM' for the cohort month
+          'n_starts': int | None,
+          'standalone_lift_pp': float,           # +6.84 from validation
+          'tier_amp_lift_pp_by_v1_stack': dict,  # per-tier amp lifts
+          'reason': str | None,       # populated when is_high_k=False
+        }
+    """
+    mn, sd, by_pitcher, cohort_label = _load_high_k_baseline()
+    out: dict = {
+        'is_high_k': False,
+        'k_pct': None,
+        'z_score': None,
+        'cohort_mean': mn,
+        'cohort_std': sd,
+        'cohort_label': cohort_label,
+        'n_starts': None,
+        'standalone_lift_pp': HIGH_K_STANDALONE_LIFT_PP,
+        'tier_amp_lift_pp_by_v1_stack': dict(HIGH_K_TIER_AMP_LIFT_PP),
+        'reason': None,
+    }
+    if not np.isfinite(mn) or not np.isfinite(sd) or sd == 0:
+        out['reason'] = 'no_cohort_baseline'
+        return out
+    rec = by_pitcher.get(int(pitcher_id))
+    if rec is None:
+        out['reason'] = 'pitcher_below_min_starts_or_missing'
+        return out
+    k = float(rec['k_pct'])
+    n_starts = int(rec['n_starts'])
+    z = (k - mn) / sd
+    out['k_pct'] = k
+    out['z_score'] = float(z)
+    out['n_starts'] = n_starts
+    if n_starts < HIGH_K_MIN_PRIOR_STARTS:
+        out['reason'] = 'insufficient_starts'
+        return out
+    out['is_high_k'] = bool(z >= HIGH_K_Z_THRESHOLD)
+    if not out['is_high_k']:
+        out['reason'] = f'z={z:.2f}_below_threshold'
+    return out
