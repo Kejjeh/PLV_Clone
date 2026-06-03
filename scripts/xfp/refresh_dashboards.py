@@ -140,6 +140,22 @@ def main():
         'python -X utf8 scripts/xfp/build_rp_archetypes.py',
         timeout=120)
 
+    # 2.9. Refresh pitcher probable-starts schedule (next 14 days via MLB Stats
+    # API). Consumed by build_matchup_dashboard.py and
+    # build_sp_boom_stack_full_pool.py (via lib/boom_stack.py
+    # _component_park_friendly). Must run BEFORE step 4 (matchup) and 4.45
+    # (full-pool boom_stack). Fail-soft: consumers have inline-API fallbacks
+    # and the existing CSV remains if this fails (no partial write — atomic
+    # temp+rename in the builder).
+    ok_sched = run(
+        '2.9. Refresh pitcher_schedule_2026.csv (next 14d probables)',
+        'python -X utf8 scripts/xfp/build_pitcher_schedule.py',
+        timeout=180,
+    )
+    if not ok_sched:
+        print('  ⚠ pitcher_schedule refresh failed — downstream consumers will '
+              'use stale cache + inline-API fallbacks')
+
     run('3. Build live_dashboard.html (snapshot)',
         'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
 

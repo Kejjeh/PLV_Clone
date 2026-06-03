@@ -176,8 +176,16 @@ def main():
     df = df.sort_values(['pitcher', 'game_date']).reset_index(drop=True)
     df['start_idx'] = df.groupby('pitcher').cumcount() + 1
     df = df[df['start_idx'] <= MAX_STARTS_PER_PITCHER]
-    df.to_csv(OUT, index=False)
-    print(f'Wrote {OUT}: {len(df)} probable starts ({df["pitcher"].nunique()} pitchers)')
+    # Atomic write — temp file then rename so concurrent readers (boom_stack
+    # consumers) never see a half-written CSV.
+    tmp = OUT.with_suffix('.csv.tmp')
+    df.to_csv(tmp, index=False)
+    import os
+    os.replace(tmp, OUT)
+    date_min = pd.to_datetime(df['game_date']).min().date()
+    date_max = pd.to_datetime(df['game_date']).max().date()
+    print(f'Wrote {OUT}: {len(df)} probable starts ({df["pitcher"].nunique()} pitchers), '
+          f'dates {date_min} → {date_max}')
     print('Sample:')
     sample_cols = ['pitcher', 'pitcher_name', 'team', 'opp_team', 'game_date', 'start_idx']
     print(df[sample_cols].head(10).to_string(index=False))
