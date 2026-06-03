@@ -8,6 +8,11 @@ from .bucket_dispatch import resolve_player
 from .cached_data import _load_projection, _load_archetype
 from .pl_cache import pl_rank, pl_streamer_rank
 from .schedule_strength import schedule_idx_for
+from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR
+from .hitter_boom_stack import (
+    compute_hitter_boom_stack,
+    resolve_opp_sp_id_for_today,
+)
 
 
 # ---------- model row ----------
@@ -23,6 +28,30 @@ def model_row(player: dict) -> dict:
         return {'rank': '—', 'proj': None, 'signal': '—', 'rep_delta': None, 'recform': None, 'schedule_idx': None}
     r = m.iloc[0]
     if bucket == 'H':
+        # Hitter boom_stack tag (display only; advisory).
+        # Validated 2026-06-03 (SHIP-CAUTIOUS as ADVISORY TAG). Stack=3 vs
+        # stack=0 edge is +6.7 pp boom rate, year-stable 2018-2025.
+        # NOT a feature in RH3_FEATS, NOT a verdict override.
+        hboom_stack = None
+        hboom_components = None
+        hboom_rate_expected = None
+        hboom_bust_expected = None
+        try:
+            team_str = r.get('team') if 'team' in r.index else None
+            if isinstance(team_str, float) and pd.isna(team_str):
+                team_str = None
+            opp_sp_id = resolve_opp_sp_id_for_today(team_str if isinstance(team_str, str) else None)
+            hbs = compute_hitter_boom_stack(
+                batter_id=int(player['id']),
+                opp_sp_id=opp_sp_id,
+            )
+            hboom_stack = hbs['boom_stack']
+            hboom_components = hbs['components']
+            hboom_rate_expected = hbs['boom_rate_expected']
+            hboom_bust_expected = hbs['bust_rate_expected']
+        except Exception:
+            # Defensive: never break hitter cards on boom_stack failure.
+            hboom_stack = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
@@ -31,6 +60,10 @@ def model_row(player: dict) -> dict:
             'rep_delta': float(r['replacement_delta']),
             'recform': float(r['recency_form_gap']),
             'extra': f"pa_to={int(r['pa_to'])}",
+            'hitter_boom_stack': hboom_stack,
+            'hitter_boom_components': hboom_components,
+            'hitter_boom_rate_expected': hboom_rate_expected,
+            'hitter_boom_bust_expected': hboom_bust_expected,
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -60,6 +93,37 @@ def model_row(player: dict) -> dict:
             diff = abs(marcel - data_driven)
             if diff >= 2.0:
                 marcel_data_div = diff
+        # Boom-stack tag (display only, ALL SP tiers as of 2026-06-03 — rank floor dropped).
+        # Validated 2026-06-03 (Mode B PASS / SHIP_AS_TAG). NOT a verdict override.
+        # Per-tier rates from `data/research/validation_runs/boom_stack_by_tier.md`.
+        boom_stack = None
+        boom_components = None
+        boom_tier = None
+        boom_rate_expected = None
+        boom_bust_rate_expected = None
+        boom_mean_fp_expected = None
+        boom_skill_spike_anti_predictive = None
+        sp_rank_int = int(r['rank'])
+        next_opp = r.get('next_opp_team') if 'next_opp_team' in r.index else None
+        if isinstance(next_opp, float) and pd.isna(next_opp):
+            next_opp = None
+        try:
+            bs = compute_boom_stack(
+                pitcher_id=int(player['id']),
+                recency_form_gap=float(r['recency_form_gap']) if pd.notna(r['recency_form_gap']) else None,
+                next_opp_team=next_opp if isinstance(next_opp, str) else None,
+                rp3_rank=sp_rank_int,
+            )
+            boom_stack = bs['boom_stack']
+            boom_components = bs['components']
+            boom_tier = bs['tier']
+            boom_rate_expected = bs['boom_rate_expected']
+            boom_bust_rate_expected = bs['bust_rate_expected']
+            boom_mean_fp_expected = bs['mean_fp_expected']
+            boom_skill_spike_anti_predictive = bs['skill_spike_anti_predictive']
+        except Exception:
+            # Defensive: don't break SP cards if boom_stack errors out.
+            boom_stack = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -76,6 +140,13 @@ def model_row(player: dict) -> dict:
             'marcel_baseline': marcel,
             'data_driven_estimate': data_driven,
             'marcel_data_divergence': marcel_data_div,
+            'boom_stack': boom_stack,
+            'boom_components': boom_components,
+            'boom_tier': boom_tier,
+            'boom_rate_expected': boom_rate_expected,
+            'boom_bust_rate_expected': boom_bust_rate_expected,
+            'boom_mean_fp_expected': boom_mean_fp_expected,
+            'boom_skill_spike_anti_predictive': boom_skill_spike_anti_predictive,
         }
     return {
         'rank': int(r['rank']),

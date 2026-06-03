@@ -71,9 +71,85 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         dq = ''
         if bucket == 'SP' and model.get('data_quality_tag'):
             dq = f"dq={model['data_quality_tag']}"
+        # SP boom-stack tag (validated 2026-06-03, SHIP_AS_TAG, tier-aware all SPs).
+        bs_tok = ''
+        if bucket == 'SP' and model.get('boom_stack') is not None:
+            bs_val = model['boom_stack']
+            br = model.get('boom_rate_expected')
+            bu = model.get('boom_bust_rate_expected')
+            tier = model.get('boom_tier')
+            parts = [f"boom_stack={bs_val}/3"]
+            if tier:
+                parts.append(f"[tier={tier}]")
+            if br is not None and bu is not None:
+                parts.append(f"(boom%~{br*100:.1f}%, bust%~{bu*100:.1f}%)")
+            elif br is not None:
+                parts.append(f"(boom%~{br*100:.1f}%)")
+            bs_tok = ' '.join(parts)
+        # Hitter boom-stack advisory tag (validated 2026-06-03, SHIP-CAUTIOUS).
+        hbs_tok = ''
+        if bucket == 'H' and model.get('hitter_boom_stack') is not None:
+            hbs_val = model['hitter_boom_stack']
+            hbr = model.get('hitter_boom_rate_expected')
+            if hbr is not None:
+                hbs_tok = f"boom_stack={hbs_val}/3 (boom%~{hbr*100:.1f}%)"
+            else:
+                hbs_tok = f"boom_stack={hbs_val}/3"
         extra = f" | {model.get('extra','')}"
-        detail = ' '.join(s for s in (sig, rep, recf, dq) if s) + extra
+        detail = ' '.join(s for s in (sig, rep, recf, dq, bs_tok, hbs_tok) if s) + extra
         lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {detail} |")
+        # SP: boom-stack tier-aware callout block (display tag only; not a verdict override).
+        if bucket == 'SP' and isinstance(model.get('boom_stack'), int):
+            bs_val = model['boom_stack']
+            tier = model.get('boom_tier')
+            comps = model.get('boom_components') or {}
+            lit = [k for k, v in comps.items() if v]
+            br = model.get('boom_rate_expected')
+            bu = model.get('boom_bust_rate_expected')
+
+            # Boom flag callout — print at stack >= 2 (any tier).
+            if bs_val >= 2:
+                br_s = f"~{br*100:.1f}% boom rate" if br is not None else ''
+                bu_s = f", ~{bu*100:.1f}% bust" if bu is not None else ''
+                tier_s = f" [tier={tier}]" if tier else ''
+                lines.append(
+                    f"\n**Boom-stack flag{tier_s}:** boom_stack={bs_val}/3 "
+                    f"({', '.join(lit) if lit else 'no components lit'}) — {br_s}{bu_s}. "
+                    f"Display tag only, not a verdict override."
+                )
+
+            # Ace + boom_stack >= 2 high-conviction callout.
+            if tier == 'ace' and bs_val >= 2:
+                lines.append(
+                    f"\n🎯 **Ace + boom_stack≥2** = high-conviction boom shot "
+                    f"(historical 35-57% boom rate at ace tier)."
+                )
+
+            # Anti-predictive skill_spike at sp2_sp3 / backend tiers.
+            if model.get('boom_skill_spike_anti_predictive'):
+                lines.append(
+                    f"\n⚠ **skill_spike at this tier is historically regression-predictive** "
+                    f"(not boom-predictive). At {tier} tier, recent K%-spike + BB%-drop "
+                    f"has negative per-component lift (Backend −4.1 pp / SP2_SP3 −3.4 pp). "
+                    f"Treat as mean-reversion risk, not continuation signal."
+                )
+        # Hitter boom-stack callout block — fires at boom_stack >= 2.
+        # Display tag only, advisory; not a verdict override.
+        if bucket == 'H' and isinstance(model.get('hitter_boom_stack'), int) \
+                and model['hitter_boom_stack'] >= 2:
+            hbs_val = model['hitter_boom_stack']
+            hcomps = model.get('hitter_boom_components') or {}
+            hlit = [k for k, v in hcomps.items() if v]
+            hbr = model.get('hitter_boom_rate_expected')
+            hbu = model.get('hitter_boom_bust_expected')
+            hbr_s = f"~{hbr*100:.1f}% boom rate" if hbr is not None else ''
+            hbu_s = f", ~{hbu*100:.1f}% bust" if hbu is not None else ''
+            lines.append(
+                f"\n🎯 **Hitter boom flag:** boom_stack={hbs_val}/3 "
+                f"({', '.join(hlit) if hlit else 'no components lit'}) — "
+                f"historically 27-31% chance of >=10 FP game ({hbr_s}{hbu_s} vs "
+                f"23.9% baseline). Advisory tag only; stack=3 still busts 37.5%."
+            )
         # SP: when marcel and data-driven estimates disagree by >= 2 FP, flag it explicitly.
         if bucket == 'SP' and model.get('marcel_data_divergence') is not None:
             m_b = model.get('marcel_baseline')

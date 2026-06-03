@@ -290,6 +290,96 @@ This is the canonical signal that the headline is in an unstable
 transition zone (Grayson Rodriguez 2026-06-02 incident — see
 `feedback_show_variance_and_data_quality.md`).
 
+### SP card additions — tier-aware boom-stack tag
+
+**Rank-floor dropped 2026-06-03.** boom_stack now fires for **every SP** with
+an rp3 row, not just rank ≥ 50. The rp3 detail row appends a
+`boom_stack=N/3 [tier=X] (boom%~Y.Y%, bust%~Z.Z%)` token. boom_stack is the
+sum of three pre-game binary signals (skill_spike, recform_hot, opp_soft)
+and ranges 0-3. Tier is derived from current rp3 rank:
+
+| Tier | Rank range | Stack=3 boom% | Stack=3 mean FP |
+|---|---|---|---|
+| `ace` | 1-10 | **56.7%** | 20.9 |
+| `sp2_sp3` | 11-30 | 31.2% | 15.9 |
+| `backend` | 31-50 | 21.5% | 13.6 |
+| `streamer` | 51+ | 17.4% | 10.6 |
+
+The per-tier `boom_rate_expected` / `bust_rate_expected` / `mean_fp_expected`
+in the model dict are pulled from `BOOM_RATE_BY_TIER_STACK` /
+`BUST_RATE_BY_TIER_STACK` / `MEAN_FP_BY_TIER_STACK` in `scripts/xfp/lib/boom_stack.py`,
+which encode the per-tier × per-stack table from
+`data/research/validation_runs/boom_stack_by_tier.md`.
+
+#### Callout lines (display only — not verdict overrides)
+
+When `boom_stack >= 2`, a **Boom-stack flag** callout prints listing which
+components are lit and the tier-specific boom% + bust%.
+
+When **`tier == 'ace' AND boom_stack >= 2`**, an extra line prints:
+`🎯 Ace + boom_stack≥2 = high-conviction boom shot (historical 35-57% boom rate at ace tier).`
+
+When **`tier in {sp2_sp3, backend} AND skill_spike == 1 AND boom_stack >= 1`**,
+the engine sets `model['boom_skill_spike_anti_predictive'] = True` and prints:
+
+> ⚠ skill_spike at this tier is historically regression-predictive (not boom-predictive).
+> At {tier} tier, recent K%-spike + BB%-drop has negative per-component lift
+> (Backend −4.1 pp / SP2_SP3 −3.4 pp). Treat as mean-reversion risk, not continuation signal.
+
+The anti-predictive logic comes from the per-tier component breakdown in
+section 3 of the validation report: `flag_skill_spike` had **negative** lift at
+SP2/3 (−3.4 pp) and Backend (−4.1 pp), positive at Ace (+3.1 pp) and Streamer
+(+2.7 pp). Interpretation: a backend SP with a sudden K%-spike is mean-reverting;
+an ace with the same signal is sustaining a real skill jump.
+
+**The tag is informational only — it does NOT override the verdict or the rp3
+point projection.** Validated 2026-06-03 (SHIP_AS_TAG, Mode B PASS) + tier-
+amplification confirmed in `boom_stack_by_tier.md`. See
+`reference_boom_stack_tag.md` and the validation reports at
+`data/research/validation_runs/streamer_boom_stack_v1_2026-06-03.md` and
+`data/research/validation_runs/boom_stack_by_tier.md`.
+
+### Hitter card additions — hitter boom-stack advisory tag
+
+**Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag.** The hitter analog of
+the SP boom_stack: a sum of three pre-game binary signals computed live
+from the 2026 statcast panel + today's confirmed probable SP. Range 0-3.
+
+The rh3 detail row appends a `boom_stack=N/3 (boom%~X.X%)` token. When
+`boom_stack >= 2`, a callout line prints below the rh3 row:
+
+> 🎯 **Hitter boom flag:** boom_stack=N/3 (lit components) — historically
+> 27-31% chance of >=10 FP game (~X.X% boom rate, ~Y.Y% bust vs 23.9%
+> baseline). Advisory tag only; stack=3 still busts 37.5%.
+
+| # | Component | Threshold |
+|---|---|---|
+| 1 | `skill_spike_hitter` | last-10g xwOBA - season xwOBA ≥ +0.040 AND last-10g K% - season K% ≤ -3 pp (needs ≥20 prior games) |
+| 2 | `recform_hot_hitter` | last-10g fp_proxy/g - season fp_proxy/g ≥ +1.5 (fp_proxy = TB + BB + HBP - K, the validation unit) |
+| 3 | `opp_soft_hitter` | today's opposing SP `xfp_rp3_per_start` ≤ 33rd-pct (weak SP = soft opp). If no confirmed probable yet, component is 0 with reason `no_opp_sp` |
+
+Per-stack outcomes (n=245,712 starter-games, 2018-2025, PA≥4, boom = fp_proxy
+≥ 80th pct):
+
+| boom_stack | n | boom rate | bust rate | mean fp_proxy |
+|---|---|---|---|---|
+| 0 | 161,766 | 23.9% | 43.4% | 1.12 |
+| 1 | 75,234 | 25.6% | 40.7% | 1.27 |
+| 2 | 7,971 | 27.5% | 40.2% | 1.35 |
+| 3 | 741 | 30.6% | 37.5% | 1.58 |
+
+Edge stack=3 vs stack=0 is +6.7 pp boom rate, year-stable 2018-2025
+(+2.3 to +5.3 pp on stack≥2 vs 0 every year). **Strongest single component
+is `recform_hot_hitter` (+3.7 pp).** Smaller than the SP analog (+9.4 pp)
+because daily-hitter outcomes are noisier than per-start SP outcomes; the
+spec is SHIP-CAUTIOUS advisory only and does NOT override rh3 or the verdict.
+
+Implementation: `scripts/xfp/lib/hitter_boom_stack.py` (live compute +
+MLB Stats API today-probable resolver), wired into `triangulate_core.model_row()`
+HITTER branch, rendered by `run_triangulate.format_card()`. See
+`reference_hitter_boom_stack.md` and the validation report at
+`data/research/validation_runs/hitter_boom_bust_deep_dive.md`.
+
 For multi-player queries, the script appends a **comparison table** sorted in input order with the seven key columns (Player, Bucket, PL, Model, Archetype OVERALL, T+1, Traj, Verdict).
 
 ---
