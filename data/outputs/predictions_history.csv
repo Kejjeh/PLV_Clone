@@ -247,3 +247,7 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-06-03T03:59:05.810064,2024-W22,22,U Just Lost To Yainer Diaz,New York Ligers,0.0,345.02,0.0,364.2,0.4479,294.2,375.7,backfill_2024_bayes_shrink,True,2024.0
 2026-06-03T03:59:05.811148,2024-W22,22,Big Scoops for All,WAR what is it good for? ,0.0,334.12,0.0,324.93,0.525,219.9,433.3,backfill_2024_bayes_shrink,True,2024.0
 2026-06-03T03:59:05.812253,2024-W22,22,Team Solomon,Big Dumpers,0.0,359.04,0.0,322.85,0.5975,379.2,400.3,backfill_2024_bayes_shrink,True,2024.0
+2026-06-03T13:21:15.257644,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,261.32,51.9,262.16,0.489,,,baseline,,
+2026-06-03T13:21:16.192617,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,289.27,51.9,292.22,0.462,,,MA_v1,,
+2026-06-03T13:22:25.957688,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,261.32,52.9,263.16,0.4759,,,baseline,,
+2026-06-03T13:22:26.881647,2026-06-03,10,New York Ligers,Late Night Bettsing,57.6,289.27,52.9,293.22,0.4491,,,MA_v1,,

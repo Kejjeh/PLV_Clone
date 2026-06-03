@@ -66,6 +66,42 @@ IL_INJURY_STATES = frozenset({
 })
 IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
 
+# Slot-aware FP projection (validated 2026-06-03; ΔMAE +19.5 FP/team-period,
+# n=80, paired t=4.91). Bench/IL/IR slots accrue ~0 actual FP in the BrownU
+# active-only scoring; including them inflates team-total projection by ~20 FP
+# and biases gauges/win-prob. See
+# `data/research/validation_runs/slot_aware_fp_test_actual.md` and
+# `reference_team_variance_aggregation.md` for full evidence.
+INACTIVE_LINEUP_SLOTS = frozenset({
+    'BE', 'BENCH', 'BN',
+    'IL', 'IL10', 'IL15', 'IL60',
+    'IR',
+})
+
+
+def _player_slot(player) -> str:
+    slot = getattr(player, 'lineup_slot', None) or getattr(player, 'lineupSlot', None) or ''
+    try:
+        return str(slot).upper().strip()
+    except Exception:
+        return ''
+
+
+def _is_active_slot(player) -> bool:
+    """True if the player's lineup_slot is a SCORING (active) slot.
+
+    Active = anything NOT in {BE, IL*, IR}. Defensive: case-insensitive,
+    handles IL10/IL15/IL60 variants, BE/BENCH/BN aliases. Note: a player
+    can be `injured == True` while still being in an active slot (Langford
+    OF, Helsley BE pattern) — that's intentionally OK here. We filter by
+    SLOT for the team-total projection (where the player is rostered),
+    not by injury status (which is handled separately in project_player
+    via IL_STATES → return-date pro-rate).
+    """
+    if player is None:
+        return False
+    return _player_slot(player) not in INACTIVE_LINEUP_SLOTS
+
 
 def is_il_player(player) -> bool:
     """Paranoid IL check — TRUE if a player should be excluded from any
@@ -2181,8 +2217,10 @@ def render_accuracy_history():
                 f'{len(df)} snapshot{"s" if len(df) != 1 else ""} logged. '
                 f'Accuracy chart populates as matchup periods complete.</p>')
     # Keep only one entry per (period, date)
-    df['date'] = pd.to_datetime(df['date'])
-    df = df.sort_values('date')
+    # Some legacy rows used ISO-week strings (e.g. "2025-W02") for the date
+    # column; coerce and drop those so a single bad row can't kill the build.
+    df['date'] = pd.to_datetime(df['date'], errors='coerce')
+    df = df.dropna(subset=['date']).sort_values('date')
     out = ['<h2>📈 Prediction Accuracy History</h2>',
            '<table><thead><tr><th>Period</th><th>Date</th><th>My WTD</th>'
            '<th>My Projected</th><th>Opp WTD</th><th>Opp Projected</th>'
@@ -2671,15 +2709,32 @@ def main():
     pred_note = f' + {my_pred} rotation-gap predicted' if my_pred else ''
     print(f'  SP starts: {my_conf} confirmed{pred_note} = {my_total_starts}/10 cap')
 
-    # Team totals + variance
-    my_rest = sum(p['fp'] for p in my_proj.values())
-    opp_rest = sum(p['fp'] for p in opp_proj.values())
+    # Team totals + variance — SLOT-AWARE (2026-06-03).
+    # Project from ACTIVE slots only (exclude BE/IL/IR). Validation showed
+    # all-rostered projection over-projects by ~20 FP/team-period because
+    # bench/IL contribute ~0 actual FP. Keep `my_proj` / `opp_proj` intact
+    # for downstream consumers that legitimately need bench rows (render
+    # tables, action-item IL warnings, days-of-fire scan, lineup optimizer).
+    my_active = {p.name: my_proj[p.name] for p in mu['my_lineup']
+                 if _is_active_slot(p) and p.name in my_proj}
+    opp_active = {p.name: opp_proj[p.name] for p in mu['opp_lineup']
+                  if _is_active_slot(p) and p.name in opp_proj}
+
+    my_rest_all = sum(p['fp'] for p in my_proj.values())
+    opp_rest_all = sum(p['fp'] for p in opp_proj.values())
+    my_rest = sum(p['fp'] for p in my_active.values())
+    opp_rest = sum(p['fp'] for p in opp_active.values())
+    print(f'  [slot-aware] my_total: {mu["my_score"] + my_rest_all:.1f} '
+          f'(all-rostered) -> {mu["my_score"] + my_rest:.1f} (active-only)')
+    print(f'  [slot-aware] opp_total: {mu["opp_score"] + opp_rest_all:.1f} '
+          f'(all-rostered) -> {mu["opp_score"] + opp_rest:.1f} (active-only)')
+
     my_total = mu['my_score'] + my_rest
     opp_total = mu['opp_score'] + opp_rest
-    my_sigma2 = sum(p['sigma2'] for p in my_proj.values())
-    opp_sigma2 = sum(p['sigma2'] for p in opp_proj.values())
+    my_sigma2 = sum(p['sigma2'] for p in my_active.values())
+    opp_sigma2 = sum(p['sigma2'] for p in opp_active.values())
     if _USE_BOOTSTRAP:
-        win_prob = win_probability_bootstrap(my_proj, opp_proj,
+        win_prob = win_probability_bootstrap(my_active, opp_active,
                                               mu['my_score'], mu['opp_score'])
         wp_method = 'bootstrap'
     else:
@@ -2707,8 +2762,8 @@ def main():
                    + n_games * SIGMA_PER_HITTER_GAME ** 2
                    + n_rp * SIGMA_PER_RP_GAME ** 2)
         return s2
-    legacy_my_s2 = _legacy_sigma2(my_proj)
-    legacy_opp_s2 = _legacy_sigma2(opp_proj)
+    legacy_my_s2 = _legacy_sigma2(my_active)
+    legacy_opp_s2 = _legacy_sigma2(opp_active)
     legacy_wp = win_probability(my_total, opp_total, legacy_my_s2, legacy_opp_s2)
     print(f'  [hetero-σ delta] legacy σ²: Ligers {legacy_my_s2:.0f} → new {my_sigma2:.0f}; '
           f'Opp {legacy_opp_s2:.0f} → new {opp_sigma2:.0f}')
@@ -2757,12 +2812,17 @@ def main():
                                                 rprs2_map, ts_map, today, week_end)
                       for p in mu['opp_lineup']}
         apply_sp_cap(my_proj_s); apply_sp_cap(opp_proj_s)
-        my_total_s = mu['my_score'] + sum(p['fp'] for p in my_proj_s.values())
-        opp_total_s = mu['opp_score'] + sum(p['fp'] for p in opp_proj_s.values())
-        my_sig2_s = sum(p['sigma2'] for p in my_proj_s.values())
-        opp_sig2_s = sum(p['sigma2'] for p in opp_proj_s.values())
+        # Slot-aware filter for shadow log (mirrors live aggregation 2026-06-03)
+        my_active_s = {p.name: my_proj_s[p.name] for p in mu['my_lineup']
+                       if _is_active_slot(p) and p.name in my_proj_s}
+        opp_active_s = {p.name: opp_proj_s[p.name] for p in mu['opp_lineup']
+                        if _is_active_slot(p) and p.name in opp_proj_s}
+        my_total_s = mu['my_score'] + sum(p['fp'] for p in my_active_s.values())
+        opp_total_s = mu['opp_score'] + sum(p['fp'] for p in opp_active_s.values())
+        my_sig2_s = sum(p['sigma2'] for p in my_active_s.values())
+        opp_sig2_s = sum(p['sigma2'] for p in opp_active_s.values())
         if _USE_BOOTSTRAP:
-            wp_s = win_probability_bootstrap(my_proj_s, opp_proj_s,
+            wp_s = win_probability_bootstrap(my_active_s, opp_active_s,
                                               mu['my_score'], mu['opp_score'])
         else:
             wp_s = win_probability(my_total_s, opp_total_s, my_sig2_s, opp_sig2_s)
