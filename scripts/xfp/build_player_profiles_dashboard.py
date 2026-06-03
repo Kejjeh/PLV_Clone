@@ -753,6 +753,46 @@ def annotate_current_year_rows(records: list[dict], current_year: int,
           f'(current_year={current_year})', flush=True)
 
 
+def load_boom_stack_payload() -> dict:
+    """Load the most recent stream_the_stack JSON and reshape into a
+    per-pitcher_id map for the Boom / Bust / Variance modal tab.
+
+    Falls back gracefully if no stream file is found — the tab still renders
+    but with a friendly "no upcoming start in window" placeholder.
+    """
+    OUT = REPO / 'data/outputs'
+    files = sorted(OUT.glob('stream_the_stack_*.json'))
+    if not files:
+        return {'meta': {'available': False, 'reason': 'no stream_the_stack JSON found'},
+                'by_pitcher': {}}
+    latest = files[-1]
+    try:
+        with open(latest, encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        return {'meta': {'available': False, 'reason': f'parse error: {e}'},
+                'by_pitcher': {}}
+
+    by_pid: dict[str, dict] = {}
+    for c in data.get('candidates', []):
+        pid = c.get('pitcher_id')
+        if pid is None:
+            continue
+        by_pid[str(int(pid))] = c
+
+    meta = {
+        'available': True,
+        'source_file': latest.name,
+        'window_start': data.get('summary', {}).get('window_start'),
+        'window_end': data.get('summary', {}).get('window_end'),
+        'n_candidates': len(by_pid),
+        # Calibrated 50% interval global alpha for SPs — see
+        # data/research/validation_runs/calibration_summary*.md
+        'sp_interval_alpha': 2.41,
+    }
+    return {'meta': meta, 'by_pitcher': by_pid}
+
+
 def build_payload():
     h, s, rp = assert_schema()
 
@@ -789,6 +829,13 @@ def build_payload():
     annotate_current_year_rows(sp_records,     current_year, roster_map, 'sp')
     annotate_current_year_rows(rp_records,     current_year, roster_map, 'rp')
 
+    print('Loading boom/bust/variance payload (stream_the_stack)...', flush=True)
+    boom_payload = load_boom_stack_payload()
+    bm = boom_payload['meta']
+    print(f'  boom_stack: available={bm.get("available")} '
+          f'n_pitchers={len(boom_payload["by_pitcher"])} '
+          f'source={bm.get("source_file")}', flush=True)
+
     rp_count = sum(1 for r in rp_records if r.get('year') == current_year)
     rp_available = rp_count >= 25
     print(f'  RP-archetype current-year records: {rp_count} '
@@ -813,6 +860,11 @@ def build_payload():
         'rp_snapshots': rp_snapshots,
         'rp_available': bool(rp_available),
         'my_team_name': MY_TEAM_NAME,
+        # Per-pitcher boom/bust/variance — keyed by str(pitcher_id). Hitter
+        # boom_stack is not yet pre-computed for the full pool (the engine
+        # in lib/hitter_boom_stack.py runs on demand). When that batch file
+        # lands, mirror under 'boom_hitter'.
+        'boom_pitcher': boom_payload,
     }
 
 

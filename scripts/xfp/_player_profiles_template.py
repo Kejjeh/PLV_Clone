@@ -1012,6 +1012,11 @@ const SARCH_DESC = {}; Object.values(SDEFS).forEach(v => SARCH_DESC[v.label] = v
 const H_BY_ID = {}; HITTERS.forEach(r => { (H_BY_ID[r.batter] = H_BY_ID[r.batter] || []).push(r); });
 const S_BY_ID = {}; SPS.forEach(r => { (S_BY_ID[r.pitcher] = S_BY_ID[r.pitcher] || []).push(r); });
 
+// Boom / Bust / Variance payload — pre-computed by stream_the_stack pipeline.
+// Pitcher-side only for now (hitter boom_stack is on-demand). Keyed by str(pitcher_id).
+const BOOM_PITCHER     = (D.boom_pitcher && D.boom_pitcher.by_pitcher) || {};
+const BOOM_PITCHER_META = (D.boom_pitcher && D.boom_pitcher.meta) || { available: false };
+
 // Snapshots — indexed by (id, year) for per-player trajectories, and by (year, date) for movers.
 // RP snapshots are merged into the SP-side index so the SP-shaped JS code path
 // (snapshot-mover tables, In-season trajectory chart, YoY overlay) works for
@@ -2027,6 +2032,10 @@ function openModal(role, id) {
   tabs += '<button data-mtab="comp">Composition</button>';
   tabs += '<button data-mtab="comps">Comps</button>';
   if (hasSnap) tabs += '<button data-mtab="snap">In-season</button>';
+  // Boom / Bust / Variance — SPs (pre-computed), hitters (placeholder).
+  // Always shown for pitchers so deep-links (?player=ID&tab=boom) land reliably.
+  const _boomEligible = (role === 'sp') || (role === 'hitter');
+  if (_boomEligible) tabs += '<button data-mtab="boom">Boom / Bust / Variance</button>';
   tabs += '</div>';
 
   // ── Year table header + rows (shared by years panel) ──
@@ -2186,6 +2195,13 @@ function openModal(role, id) {
     panels += '</div>';
   }
 
+  // ── Boom / Bust / Variance panel ──────────────────────────────────────
+  if (_boomEligible) {
+    panels += '<div class="modal-mtab-panel" data-mtab="boom">'
+            + renderBoomPanel(role, id, cur)
+            + '</div>';
+  }
+
   document.getElementById('modal-content').innerHTML = hero + tabs + panels;
   document.getElementById('modal-bg').classList.add('open');
   renderModalComps(cur, role);
@@ -2222,6 +2238,128 @@ function openModal(role, id) {
       });
     }
   }
+}
+
+// ── Boom / Bust / Variance renderer ───────────────────────────────────
+// Renders a compact card showing the live boom_stack output for SPs
+// (4-component, tier-aware boom%/bust% + skill_spike/recform_hot/opp_soft
+// /park_friendly detail, HIGH-K ARM, catcher framing, IL_RETURN, calibrated
+// p25-p75 interval). For hitters, shows a placeholder explaining that the
+// hitter 4-component boom_stack is on-demand. Fails gracefully when no
+// upcoming start data exists for the player.
+function renderBoomPanel(role, id, cur) {
+  if (role === 'hitter') {
+    return '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">'
+         + '<p><b>Hitter boom_stack</b> (4 components: skill_spike, recform_hot, '
+         + 'opp_soft, lineup_amp) and the per-batter heteroscedastic σ factor '
+         + 'are computed on demand via <code>scripts/xfp/lib/hitter_boom_stack.py</code>.</p>'
+         + '<p>Not yet pre-batched for the full hitter pool. Run '
+         + '<code>/breakout-sustainability ' + (cur.player_name || '') + '</code> or '
+         + '<code>/triangulate ' + (cur.player_name || '') + '</code> for the full layered output.</p>'
+         + '</div>';
+  }
+  // SP / RP
+  const rec = BOOM_PITCHER[String(id)];
+  if (!rec) {
+    let html = '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">';
+    html += '<p><b>No upcoming start in the current boom_stack window</b>';
+    if (BOOM_PITCHER_META && BOOM_PITCHER_META.window_start) {
+      html += ` (${BOOM_PITCHER_META.window_start} → ${BOOM_PITCHER_META.window_end})`;
+    }
+    html += '.</p>';
+    html += '<p>The boom/bust layered output (4-component stack, HIGH-K ARM, '
+         + 'catcher framing, IL_RETURN, calibrated 50% interval) is computed '
+         + 'live per probable SP in <code>data/outputs/stream_the_stack_*.json</code>. '
+         + 'Re-run after this player is named probable for the next window.</p>';
+    html += '</div>';
+    return html;
+  }
+
+  const cmp = rec.boom_components || {};
+  const det = rec.boom_detail_summary || {};
+  const stack = rec.boom_stack;
+  const maxStack = Object.keys(cmp).length || 3;
+
+  // Component chip helper
+  function chip(name, val, sub) {
+    const cls = val ? 'plus' : 'dim';
+    const label = name + (val ? ' ✓' : ' ·');
+    const subStr = sub ? `<div style="color:var(--dim);font-size:.78em;margin-top:.2em;">${sub}</div>` : '';
+    return `<div class="hero-overall" style="padding:.5em .7em;min-width:140px;">`
+         + `<div class="label">${name}</div>`
+         + `<div style="color:var(--${cls});font-weight:700;font-size:1.05em;">${val ? 'FIRE' : '—'}</div>`
+         + subStr + `</div>`;
+  }
+
+  // Header
+  let html = '<div style="font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;">';
+  html += `<div class="modal-hero" style="margin-bottom:.8em;">`;
+  html += `<div><div style="color:var(--dim);font-size:.75em;text-transform:uppercase;">boom_stack</div>`;
+  html += `<div style="font-size:1.8em;font-weight:700;color:var(--accent);">${stack} / ${maxStack}</div>`;
+  if (rec.matchup_tier) html += `<div style="color:var(--dim);font-size:.8em;">tier: ${rec.matchup_tier} · ${rec.opp_team || ''} ${rec.is_home ? '(home)' : '(away)'}</div>`;
+  html += `</div>`;
+  html += `<div class="hero-stats">`;
+  if (rec.boom_rate_expected != null) {
+    html += `<div class="hero-overall"><div class="label">P(boom)</div>`
+          + `<div class="val" style="font-size:1.4em;color:var(--pos);">${(rec.boom_rate_expected*100).toFixed(1)}%</div></div>`;
+  }
+  if (rec.boom_mean_fp_expected != null) {
+    html += `<div class="hero-overall"><div class="label">E[FP | boom]</div>`
+          + `<div class="val" style="font-size:1.4em;">${rec.boom_mean_fp_expected.toFixed(2)}</div></div>`;
+  }
+  if (rec.rp3_p25 != null && rec.rp3_p75 != null) {
+    const alpha = (BOOM_PITCHER_META.sp_interval_alpha) || 2.41;
+    html += `<div class="hero-overall" style="border-left:3px solid var(--accent);padding-left:.6em;">`
+          + `<div class="label">Calibrated 50% interval</div>`
+          + `<div style="font-size:1.05em;"><b>${rec.rp3_p25.toFixed(1)}</b> → <b>${rec.rp3_p75.toFixed(1)}</b> FP</div>`
+          + `<div style="color:var(--dim);font-size:.75em;">α=${alpha} global · rp3 ${rec.rp3_per_start != null ? rec.rp3_per_start.toFixed(2) : '—'} (rank ${rec.rp3_rank ?? '—'})</div>`
+          + `</div>`;
+  }
+  html += `</div></div>`;
+
+  // Component chips
+  html += '<div style="display:flex;flex-wrap:wrap;gap:.5em;margin-bottom:1em;">';
+  const ss = det.skill_spike || {};
+  const ssSub = (ss.delta_k_pp != null) ? `K%Δ ${ss.delta_k_pp>0?'+':''}${ss.delta_k_pp} · BB%Δ ${ss.delta_bb_pp>0?'+':''}${ss.delta_bb_pp} (n=${ss.n_starts_2026 ?? '—'})` : null;
+  html += chip('skill_spike', cmp.skill_spike, ssSub);
+  const rf = det.recform_hot || {};
+  html += chip('recform_hot', cmp.recform_hot, rf.recency_form_gap != null ? `gap +${rf.recency_form_gap.toFixed(2)} FP` : null);
+  const os = det.opp_soft || {};
+  html += chip('opp_soft', cmp.opp_soft, os.opp_bat_index_recent != null ? `bat_idx ${os.opp_bat_index_recent.toFixed(3)} vs p33 ${(os.soft_p33_threshold ?? 0).toFixed(3)}` : null);
+  if ('park_friendly' in cmp) {
+    const pf = det.park_friendly || {};
+    html += chip('park_friendly', cmp.park_friendly, pf.venue ? `${pf.venue} · pf_wOBA ${pf.pf_wOBA != null ? pf.pf_wOBA.toFixed(3) : '—'}` : null);
+  }
+  html += '</div>';
+
+  // Side tags — HIGH-K ARM / catcher framing / IL_RETURN / skill_spike anti-pred warning
+  const tagsRow = [];
+  if (rec.high_k_arm) {
+    tagsRow.push(`<span class="badge plus">HIGH-K ARM</span> <span style="color:var(--dim);">${rec.high_k_arm.z != null ? 'z=' + rec.high_k_arm.z.toFixed(2) : ''}</span>`);
+  }
+  if (rec.catcher_framing) {
+    const cf = rec.catcher_framing;
+    tagsRow.push(`<span class="badge avg">CATCHER ${cf.quintile || ''}</span> <span style="color:var(--dim);">${cf.modal_catcher || ''} · CSAA ${cf.csaa != null ? cf.csaa.toFixed(1) : '—'}</span>`);
+  }
+  if (rec.il_return) {
+    tagsRow.push(`<span class="badge warn">IL_RETURN</span> <span style="color:var(--dim);">${rec.il_return.days_since_last_start || '?'}d since last start</span>`);
+  }
+  if (rec.skill_spike_warning) {
+    tagsRow.push(`<span class="badge warn">ANTI-PRED skill_spike</span> <span style="color:var(--dim);">${rec.skill_spike_warning.reason || ''}</span>`);
+  }
+  if (tagsRow.length) {
+    html += '<div style="margin-bottom:1em;display:flex;flex-direction:column;gap:.3em;">' + tagsRow.map(t => `<div>${t}</div>`).join('') + '</div>';
+  }
+
+  // Footer — data quality + source file
+  html += `<div style="color:var(--dim);font-size:.75em;border-top:1px solid var(--border);padding-top:.5em;">`;
+  if (rec.data_quality_tag) html += `data_quality: ${rec.data_quality_tag} · `;
+  if (rec.game_date) html += `game_date: ${rec.game_date} · `;
+  if (BOOM_PITCHER_META.source_file) html += `source: ${BOOM_PITCHER_META.source_file}`;
+  html += '</div>';
+
+  html += '</div>';
+  return html;
 }
 
 // Convert an ISO date (YYYY-MM-DD) to its day-of-year (1-366). Used for the
@@ -3767,6 +3905,36 @@ function init() {
   renderHomeArchDist();
   updateChipAvailability();
   renderAll();
+
+  // ── Deep-link support: ?player=<id>&tab=boom ─────────────────────────
+  // Used by the matchup dashboard to link a click on a player straight
+  // into the Boom / Bust / Variance modal tab. Fails gracefully — if
+  // <id> is unknown, the user lands on the normal Home view.
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const pidStr = params.get('player');
+    const wantTab = params.get('tab') || 'boom';  // default to boom for deep-links
+    if (pidStr) {
+      const pid = parseInt(pidStr, 10);
+      if (!isNaN(pid)) {
+        let role = null;
+        if (S_BY_ID[pid]) role = 'sp';
+        else if (H_BY_ID[pid]) role = 'hitter';
+        if (role) {
+          openModal(role, pid);
+          // Activate the requested modal tab after openModal has built it
+          setTimeout(() => {
+            const btn = document.querySelector(`.modal-tabs button[data-mtab="${wantTab}"]`);
+            if (btn) btn.click();
+          }, 30);
+        } else {
+          console.warn(`Deep-link player=${pid} not found in any role index — staying on Home.`);
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Deep-link parse failed:', e);
+  }
 
   // After initial paint, resize again to ensure off-tab plots size correctly when first shown
   window.addEventListener('resize', resizeCurrentTabPlots);
