@@ -53,8 +53,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1362,
-      "boom_mean_fp_expected": 9.92,
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
       "percent_owned": 13.1,
       "pro_team": "Atl",
       "injury_status": "ACTIVE"
@@ -97,8 +97,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1362,
-      "boom_mean_fp_expected": 9.92,
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
       "percent_owned": 1.64,
       "pro_team": "Cle",
       "injury_status": "ACTIVE"
@@ -141,8 +141,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 12.13,
       "pro_team": "Ari",
       "injury_status": "ACTIVE"
@@ -185,8 +185,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 11.15,
       "pro_team": "LAA",
       "injury_status": "ACTIVE"
@@ -229,8 +229,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 4.39,
       "pro_team": "StL",
       "injury_status": "ACTIVE"
@@ -273,8 +273,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 4.95,
       "pro_team": "Bal",
       "injury_status": "ACTIVE"
@@ -317,8 +317,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 2.75,
       "pro_team": "SD",
       "injury_status": "ACTIVE"
@@ -361,8 +361,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 0.92,
       "pro_team": "SF",
       "injury_status": "ACTIVE"
@@ -405,8 +405,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.1208,
-      "boom_mean_fp_expected": 9.62,
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
       "percent_owned": 0.78,
       "pro_team": "ChW",
       "injury_status": "ACTIVE"
@@ -449,8 +449,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 29.51,
       "pro_team": "Bal",
       "injury_status": "ACTIVE"
@@ -493,8 +493,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 18.47,
       "pro_team": "Oak",
       "injury_status": "ACTIVE"
@@ -537,8 +537,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 16.63,
       "pro_team": "KC",
       "injury_status": "ACTIVE"
@@ -581,8 +581,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 63.1,
       "pro_team": "Hou",
       "injury_status": "ACTIVE"
@@ -625,8 +625,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 6.65,
       "pro_team": "ChC",
       "injury_status": "ACTIVE"
@@ -669,8 +669,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 0.44,
       "pro_team": "Col",
       "injury_status": "ACTIVE"
@@ -713,8 +713,8 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 5.28,
       "pro_team": "SD",
       "injury_status": "ACTIVE"
@@ -757,12 +757,12 @@
           "reason": null
         }
       },
-      "boom_rate_expected": 0.097,
-      "boom_mean_fp_expected": 8.44,
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
       "percent_owned": 2.3,
       "pro_team": "Tor",
       "injury_status": "ACTIVE"
     }
   ],
-  "generated_at": "2026-06-03T01:17:53.139699"
+  "generated_at": "2026-06-03T01:30:46.212946"
 }
