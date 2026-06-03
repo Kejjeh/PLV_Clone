@@ -91,6 +91,12 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 z = model.get('high_k_z_score')
                 z_s = f" z={z:+.2f}" if isinstance(z, (int, float)) else ''
                 parts.append(f"🔥HIGH-K{z_s}")
+            # CATCHER FRAMING badge (validated 2026-06-03, SHIP_AS_DISPLAY_TAG).
+            # Independent of boom_stack + HIGH-K — pure context layer.
+            if model.get('is_elite_framer'):
+                parts.append("🧊ELITE FRAMER")
+            elif model.get('is_framing_tax'):
+                parts.append("⚠FRAMING TAX")
             bs_tok = ' '.join(parts)
         # Hitter boom-stack advisory tag (validated 2026-06-03, SHIP-CAUTIOUS).
         hbs_tok = ''
@@ -98,9 +104,9 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             hbs_val = model['hitter_boom_stack']
             hbr = model.get('hitter_boom_rate_expected')
             if hbr is not None:
-                hbs_tok = f"boom_stack={hbs_val}/3 (boom%~{hbr*100:.1f}%)"
+                hbs_tok = f"boom_stack={hbs_val}/4 (boom%~{hbr*100:.1f}%)"
             else:
-                hbs_tok = f"boom_stack={hbs_val}/3"
+                hbs_tok = f"boom_stack={hbs_val}/4"
         extra = f" | {model.get('extra','')}"
         detail = ' '.join(s for s in (sig, rep, recf, dq, bs_tok, hbs_tok) if s) + extra
         lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {detail} |")
@@ -161,6 +167,28 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                     f"Expect {amp_s} on top of base stack signal "
                     f"(stack=2: +9.48 pp / stack=3: +16.82 pp historical, monotonic amplification)."
                 )
+
+            # CATCHER FRAMING callouts (independent display tag — validated 2026-06-03).
+            # SHIP_AS_DISPLAY_TAG (NOT a 5th boom_stack component). Within-pitcher
+            # paired test t=2.40, p=0.017 (n=208), +3.06 pp boom-rate gap Q5-Q1.
+            if model.get('is_elite_framer'):
+                cn = model.get('catcher_modal_name') or 'modal catcher'
+                csaa = model.get('catcher_csaa')
+                csaa_s = f"CSAA {csaa:+.2f}" if isinstance(csaa, (int, float)) else "Q5"
+                lines.append(
+                    f"\n🧊 **ELITE FRAMER:** {cn} ({csaa_s}, Q5). "
+                    f"Within-pitcher paired test p=0.017; historical +3-7 pp boom rate "
+                    f"at boom_stack 0/1 (where existing tags don't already fire)."
+                )
+            elif model.get('is_framing_tax'):
+                cn = model.get('catcher_modal_name') or 'modal catcher'
+                csaa = model.get('catcher_csaa')
+                csaa_s = f"CSAA {csaa:+.2f}" if isinstance(csaa, (int, float)) else "Q1"
+                lines.append(
+                    f"\n⚠ **FRAMING TAX:** {cn} ({csaa_s}, Q1, bottom-tier framer). "
+                    f"Historical −3 pp boom rate within-pitcher (p=0.017). "
+                    f"Soriano-O'Hoppe is the canonical case."
+                )
         # Hitter boom-stack callout block — fires at boom_stack >= 2.
         # Display tag only, advisory; not a verdict override.
         if bucket == 'H' and isinstance(model.get('hitter_boom_stack'), int) \
@@ -173,11 +201,20 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             hbr_s = f"~{hbr*100:.1f}% boom rate" if hbr is not None else ''
             hbu_s = f", ~{hbu*100:.1f}% bust" if hbu is not None else ''
             lines.append(
-                f"\n🎯 **Hitter boom flag:** boom_stack={hbs_val}/3 "
+                f"\n🎯 **Hitter boom flag:** boom_stack={hbs_val}/4 "
                 f"({', '.join(hlit) if hlit else 'no components lit'}) — "
-                f"historically 27-31% chance of >=10 FP game ({hbr_s}{hbu_s} vs "
+                f"historically 27-34% chance of >=10 FP game ({hbr_s}{hbu_s} vs "
                 f"23.9% baseline). Advisory tag only; stack=3 still busts 37.5%."
             )
+            # Lineup-amp specific callout when component 4 fires.
+            if hcomps.get('lineup_amp_hitter'):
+                d4 = (model.get('hitter_boom_detail') or {}).get('lineup_amp_hitter') or {}
+                n_lit = d4.get('n_teammates_lit')
+                n_lit_s = f"{n_lit} teammates" if isinstance(n_lit, int) else "≥2 teammates"
+                lines.append(
+                    f"\n🌊 **LINEUP STACK** — {n_lit_s} also in boom-eligible form "
+                    f"(team boom rate ~34% historical at lineup_stack=3+, validated 2026-06-03)."
+                )
         # SP: when marcel and data-driven estimates disagree by >= 2 FP, flag it explicitly.
         if bucket == 'SP' and model.get('marcel_data_divergence') is not None:
             m_b = model.get('marcel_baseline')

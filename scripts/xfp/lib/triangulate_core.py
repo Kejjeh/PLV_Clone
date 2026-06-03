@@ -9,10 +9,69 @@ from .cached_data import _load_projection, _load_archetype
 from .pl_cache import pl_rank, pl_streamer_rank
 from .schedule_strength import schedule_idx_for
 from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR, compute_high_k_pitcher
+from .catcher_framing import compute_catcher_framing
 from .hitter_boom_stack import (
     compute_hitter_boom_stack,
     resolve_opp_sp_id_for_today,
 )
+
+import os as _os
+from functools import lru_cache as _lru_cache
+
+_PITCHER_SCHEDULE_PATH = _os.path.join(
+    _os.path.dirname(__file__), '..', '..', '..',
+    'data', 'research', 'xfp_cache', 'pitcher_schedule_2026.csv',
+)
+
+
+_STATCAST_2026_PATH = _os.path.join(
+    _os.path.dirname(__file__), '..', '..', '..',
+    'data', 'research', 'xfp_cache', 'statcast_2026.parquet',
+)
+
+
+@_lru_cache(maxsize=1)
+def _load_pitcher_team_map() -> dict:
+    """Pitcher MLBAM -> team_abbrev. Tries pitcher_schedule_2026.csv first
+    (live probables feed), falls back to statcast_2026 most-recent-team.
+    The fallback catches IL'd / non-scheduled pitchers that the probables
+    feed omits (e.g. Soriano on 2026-06-03)."""
+    out: dict = {}
+    path = _os.path.abspath(_PITCHER_SCHEDULE_PATH)
+    if _os.path.exists(path):
+        df = pd.read_csv(path)
+        if 'pitcher' in df.columns and 'team_abbrev' in df.columns:
+            df = df.dropna(subset=['pitcher', 'team_abbrev']).copy()
+            if 'game_date' in df.columns:
+                df = df.sort_values('game_date')
+            df = df.drop_duplicates('pitcher', keep='last')
+            out = {int(p): str(t) for p, t in zip(df['pitcher'], df['team_abbrev'])}
+    # Statcast fallback for pitchers missing from the schedule feed.
+    sc_path = _os.path.abspath(_STATCAST_2026_PATH)
+    if _os.path.exists(sc_path):
+        try:
+            sc = pd.read_parquet(
+                sc_path,
+                columns=['pitcher', 'home_team', 'away_team', 'inning_topbot', 'game_date'],
+            )
+            sc = sc.dropna(subset=['pitcher']).copy()
+            sc['ptm'] = sc['home_team'].where(sc['inning_topbot'] == 'Top', sc['away_team'])
+            sc = sc.dropna(subset=['ptm'])
+            sc = sc.sort_values('game_date').drop_duplicates('pitcher', keep='last')
+            for p, t in zip(sc['pitcher'], sc['ptm']):
+                pid = int(p)
+                if pid not in out:
+                    out[pid] = str(t)
+        except Exception:
+            pass
+    return out
+
+
+def _pitcher_team_for(pitcher_id) -> str | None:
+    try:
+        return _load_pitcher_team_map().get(int(pitcher_id))
+    except Exception:
+        return None
 
 
 # ---------- model row ----------
@@ -36,6 +95,7 @@ def model_row(player: dict) -> dict:
         hboom_components = None
         hboom_rate_expected = None
         hboom_bust_expected = None
+        hboom_detail = None
         try:
             team_str = r.get('team') if 'team' in r.index else None
             if isinstance(team_str, float) and pd.isna(team_str):
@@ -44,14 +104,17 @@ def model_row(player: dict) -> dict:
             hbs = compute_hitter_boom_stack(
                 batter_id=int(player['id']),
                 opp_sp_id=opp_sp_id,
+                team=team_str if isinstance(team_str, str) else None,
             )
             hboom_stack = hbs['boom_stack']
             hboom_components = hbs['components']
             hboom_rate_expected = hbs['boom_rate_expected']
             hboom_bust_expected = hbs['bust_rate_expected']
+            hboom_detail = hbs.get('detail')
         except Exception:
             # Defensive: never break hitter cards on boom_stack failure.
             hboom_stack = None
+            hboom_detail = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
@@ -64,6 +127,7 @@ def model_row(player: dict) -> dict:
             'hitter_boom_components': hboom_components,
             'hitter_boom_rate_expected': hboom_rate_expected,
             'hitter_boom_bust_expected': hboom_bust_expected,
+            'hitter_boom_detail': hboom_detail,
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -147,6 +211,27 @@ def model_row(player: dict) -> dict:
         except Exception:
             # Defensive: never break SP cards on high-k compute failure.
             is_high_k_arm = None
+        # CATCHER FRAMING standalone display tag (validated 2026-06-03).
+        # SHIP_AS_DISPLAY_TAG — within-pitcher paired test t=2.40 p=0.017,
+        # +3.06 pp boom-rate edge on the same SP between Q1 and Q5 framers.
+        # Independent of boom_stack — pure visual context, layered like HIGH-K ARM.
+        # See data/research/validation_runs/catcher_framing_boom_modifier.md.
+        catcher_modal_name = None
+        catcher_csaa = None
+        catcher_quintile = None
+        is_elite_framer = False
+        is_framing_tax = False
+        try:
+            pteam = _pitcher_team_for(player['id'])
+            cf = compute_catcher_framing(pteam)
+            catcher_modal_name = cf.get('modal_catcher_name')
+            catcher_csaa = cf.get('csaa_runs')
+            catcher_quintile = cf.get('framing_quintile')
+            is_elite_framer = bool(cf.get('is_elite_framer'))
+            is_framing_tax = bool(cf.get('is_framing_tax'))
+        except Exception:
+            # Defensive: never break SP cards on catcher-framing compute failure.
+            pass
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -174,6 +259,11 @@ def model_row(player: dict) -> dict:
             'high_k_z_score': high_k_z_score,
             'high_k_cohort_label': high_k_cohort_label,
             'high_k_boom_lift_expected': high_k_lift_pp_expected,
+            'catcher_modal_name': catcher_modal_name,
+            'catcher_csaa': catcher_csaa,
+            'catcher_quintile': catcher_quintile,
+            'is_elite_framer': is_elite_framer,
+            'is_framing_tax': is_framing_tax,
         }
     return {
         'rank': int(r['rank']),

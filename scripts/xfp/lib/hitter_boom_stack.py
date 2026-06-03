@@ -20,7 +20,19 @@ Three components per hitter at "now":
      the hitter. If `opp_sp_id` is None (no confirmed probable for today),
      component is 0 and `reason='no_opp_sp'`.
 
-`boom_stack = c1 + c2 + c3 ∈ {0, 1, 2, 3}`.
+  4. lineup_amp_hitter: own boom_stack(1+2+3) >= 1 AND >= 2 OTHER
+     starters on the hitter's team today also have boom_stack(1+2+3) >= 1.
+     "Other starters" is determined by today's confirmed MLB lineup (via
+     MLB Stats API). If the lineup isn't posted yet, fall back to the
+     hitter's team's TOP 9 BY rh3 in `xfp_rh3_projections.csv` as the
+     expected starting nine. Validated 2026-06-03 via
+     `analyze_hitter_lineup_correlation.py`: +2.1 pp within-stratum
+     boom-rate lift on own_stack >= 1 (year-stable 7/7 years +1.4 to
+     +3.0 pp). Recursive guard — when computing teammates' stacks we
+     pass `skip_lineup_amp=True` so component 4 never recurses on
+     itself. See `data/research/validation_runs/hitter_lineup_correlation.md`.
+
+`boom_stack = c1 + c2 + c3 + c4 ∈ {0, 1, 2, 3, 4}`.
 
 DISPLAY TAG ONLY. Not a feature in RH3_FEATS. Not a verdict override.
 
@@ -54,11 +66,22 @@ import pandas as pd
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 _STATCAST_2026 = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'statcast_2026.parquet')
 _RP3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rp3_projections.csv')
+_RH3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rh3_projections.csv')
 
-# Expected boom/bust by stack (from hitter validation report, 2026-06-03)
-BOOM_RATE_BY_STACK = {0: 0.239, 1: 0.256, 2: 0.275, 3: 0.306}
-BUST_RATE_BY_STACK = {0: 0.434, 1: 0.407, 2: 0.402, 3: 0.375}
-MEAN_FP_PROXY_BY_STACK = {0: 1.12, 1: 1.27, 2: 1.35, 3: 1.58}
+# Expected boom/bust by stack (from hitter validation report, 2026-06-03).
+# stack=4 is EXTRAPOLATED — no direct cell exists in the validation panel
+# because lineup_amp was not part of the original 3-component stack. We
+# anchor stack=4 to two sources from `hitter_lineup_correlation.md`:
+#   (a) the heatmap cell own_stack=2 + 3+ teammates_stack2 = 32.5% boom rate
+#       (n=268) — the closest analog to "own stack lit + lineup amp"
+#   (b) team-level lineup_stack2=3+ team-day boom rate = 33.8% (n=396)
+# We adopt 34.0% (≈mean of 32.5 and 33.8 rounded) as the extrapolated boom
+# rate for stack=4 and 35.0% for bust (interpolating the stack 0→3 trend
+# of ~−2 pp per step, from 37.5% at stack=3 → 35.0% at stack=4). mean_fp
+# extrapolated linearly from the 0→3 slope (+0.15/step).
+BOOM_RATE_BY_STACK = {0: 0.239, 1: 0.256, 2: 0.275, 3: 0.306, 4: 0.340}
+BUST_RATE_BY_STACK = {0: 0.434, 1: 0.407, 2: 0.402, 3: 0.375, 4: 0.350}
+MEAN_FP_PROXY_BY_STACK = {0: 1.12, 1: 1.27, 2: 1.35, 3: 1.58, 4: 1.73}
 
 # Event sets (mirror analyze_hitter_boom_bust.py)
 K_EVENTS = {'strikeout', 'strikeout_double_play', 'strikeout_triple_play'}
@@ -242,12 +265,164 @@ def _component_opp_soft_hitter(opp_sp_id: Optional[int]) -> tuple[int, dict]:
 
 
 # ---------------------------------------------------------------------------
+# Component 4 — lineup_amp_hitter
+# ---------------------------------------------------------------------------
+@lru_cache(maxsize=1)
+def _load_rh3_team_map() -> pd.DataFrame:
+    """Load batter→team→rh3_per_game from the rh3 projections CSV.
+
+    Used to (a) look up a hitter's team and (b) enumerate the team's TOP
+    9 BY rh3 as the fallback expected-starters set when the MLB Stats
+    API lineup isn't posted yet.
+    """
+    cols = ['batter', 'team', 'xfp_rh3_per_game', 'primary_position']
+    df = pd.read_csv(_RH3_PROJ, usecols=cols)
+    df = df.dropna(subset=['batter', 'team'])
+    df['batter'] = df['batter'].astype('int64')
+    return df
+
+
+@lru_cache(maxsize=1)
+def _todays_team_to_lineup(today_iso: str) -> dict[str, list[int]]:
+    """Map MLB team abbrev -> list of confirmed-lineup batter MLBAM ids.
+
+    Single MLB Stats API call per script invocation. Returns empty dict
+    on failure or when no lineups are posted yet — caller will fall back
+    to top-9-by-rh3.
+    """
+    try:
+        import json
+        import urllib.request
+        url = (f'https://statsapi.mlb.com/api/v1/schedule?sportId=1'
+               f'&startDate={today_iso}&endDate={today_iso}'
+               f'&hydrate=lineups,team')
+        with urllib.request.urlopen(url, timeout=10) as resp:
+            data = json.loads(resp.read())
+    except Exception:
+        return {}
+    out: dict[str, list[int]] = {}
+    for d_block in data.get('dates', []):
+        for g in d_block.get('games', []):
+            lineups = g.get('lineups') or {}
+            for side, team_key in (('homePlayers', 'home'), ('awayPlayers', 'away')):
+                players = lineups.get(side) or []
+                if not players:
+                    continue
+                team_block = g.get('teams', {}).get(team_key, {}).get('team', {}) or {}
+                abbr = (team_block.get('abbreviation') or '').upper()
+                if not abbr:
+                    continue
+                ids = []
+                for p in players:
+                    pid = p.get('id')
+                    if pid is not None:
+                        try:
+                            ids.append(int(pid))
+                        except (TypeError, ValueError):
+                            continue
+                if ids:
+                    out[abbr] = ids
+    return out
+
+
+def _resolve_team_expected_lineup(team: Optional[str],
+                                   today: date) -> list[int]:
+    """Return list of MLBAM batter ids expected to start for `team` today.
+
+    Strategy: prefer confirmed MLB Stats API lineup; fall back to TOP 9
+    BY rh3 in xfp_rh3_projections.csv. Returns [] on failure.
+    """
+    if not team or not isinstance(team, str):
+        return []
+    sched = _todays_team_to_lineup(today.isoformat())
+    norm = _TEAM_ABBR_MAP.get(team.upper(), team.upper())
+    confirmed = sched.get(norm) or sched.get(team.upper())
+    if confirmed:
+        return list(confirmed)
+    # Fallback: top 9 by rh3 for the team
+    try:
+        rh3 = _load_rh3_team_map()
+        candidates = rh3[rh3['team'].str.upper() == team.upper()]
+        if len(candidates) == 0 and norm != team.upper():
+            candidates = rh3[rh3['team'].str.upper() == norm]
+        if len(candidates) == 0:
+            return []
+        top9 = candidates.nlargest(9, 'xfp_rh3_per_game')
+        return [int(x) for x in top9['batter'].tolist()]
+    except Exception:
+        return []
+
+
+def _lookup_team_for_batter(batter_id: int) -> Optional[str]:
+    """Quick reverse-lookup: batter MLBAM id → team abbrev from rh3 csv."""
+    try:
+        rh3 = _load_rh3_team_map()
+        row = rh3[rh3['batter'] == int(batter_id)]
+        if len(row) == 0:
+            return None
+        t = row.iloc[0]['team']
+        return str(t) if isinstance(t, str) else None
+    except Exception:
+        return None
+
+
+def _component_lineup_amp_hitter(
+    batter_id: int,
+    own_components_total: int,
+    team: Optional[str],
+    today: date,
+) -> tuple[int, dict]:
+    """Component 4: own boom_stack(c1+c2+c3) >= 1 AND >= 2 OTHER teammates
+    in today's expected lineup ALSO have boom_stack(c1+c2+c3) >= 1.
+
+    Recursive guard: teammate stacks are computed with skip_lineup_amp=True
+    so this component never recurses on itself.
+    """
+    detail = {'team': team, 'own_components_total': own_components_total}
+    if own_components_total < 1:
+        detail['reason'] = 'own_stack_lt_1'
+        return 0, detail
+    lineup = _resolve_team_expected_lineup(team, today)
+    if not lineup:
+        detail['reason'] = 'no_lineup_or_team'
+        return 0, detail
+    # Resolve today's opp_sp once for this team (same for whole lineup)
+    opp_sp_id_team = resolve_opp_sp_id_for_today(team, today)
+    n_teammates_lit = 0
+    teammates_checked = 0
+    for tid in lineup:
+        if int(tid) == int(batter_id):
+            continue
+        teammates_checked += 1
+        try:
+            sub = compute_hitter_boom_stack(
+                batter_id=int(tid),
+                opp_sp_id=opp_sp_id_team,
+                today=today,
+                skip_lineup_amp=True,
+            )
+            if sub.get('boom_stack', 0) >= 1:
+                n_teammates_lit += 1
+        except Exception:
+            continue
+    detail.update({
+        'teammates_checked': teammates_checked,
+        'n_teammates_lit': n_teammates_lit,
+        'lineup_source': 'confirmed_or_top9',
+    })
+    fired = int(n_teammates_lit >= 2)
+    return fired, detail
+
+
+# ---------------------------------------------------------------------------
 # Public API
 # ---------------------------------------------------------------------------
 def compute_hitter_boom_stack(
     batter_id: int,
     opp_sp_id: Optional[int],
     today: Optional[date] = None,
+    skip_lineup_amp: bool = False,
+    team: Optional[str] = None,
 ) -> dict:
     """Compute hitter boom_stack for a single batter at `today`.
 
@@ -273,18 +448,50 @@ def compute_hitter_boom_stack(
     c1, d1 = _component_skill_spike_hitter(batter_id, today)
     c2, d2 = _component_recform_hot_hitter(batter_id, today)
     c3, d3 = _component_opp_soft_hitter(opp_sp_id)
-    total = int(c1 + c2 + c3)
+    own_3comp = int(c1 + c2 + c3)
+    if skip_lineup_amp:
+        # Recursive guard path: teammates' contributions for component 4
+        # use ONLY components 1-3. Return a 3-component stack capped at 3.
+        return {
+            'boom_stack': own_3comp,
+            'components': {
+                'skill_spike_hitter': c1,
+                'recform_hot_hitter': c2,
+                'opp_soft_hitter': c3,
+                'lineup_amp_hitter': 0,
+            },
+            'detail': {
+                'skill_spike_hitter': d1,
+                'recform_hot_hitter': d2,
+                'opp_soft_hitter': d3,
+                'lineup_amp_hitter': {'reason': 'skipped_for_recursion_guard'},
+            },
+            'boom_rate_expected': BOOM_RATE_BY_STACK[own_3comp],
+            'bust_rate_expected': BUST_RATE_BY_STACK[own_3comp],
+            'mean_fp_proxy_expected': MEAN_FP_PROXY_BY_STACK[own_3comp],
+        }
+    # Top-level (non-recursive) path: compute component 4 from teammates.
+    team_used = team or _lookup_team_for_batter(batter_id)
+    c4, d4 = _component_lineup_amp_hitter(
+        batter_id=int(batter_id),
+        own_components_total=own_3comp,
+        team=team_used,
+        today=today,
+    )
+    total = int(c1 + c2 + c3 + c4)
     return {
         'boom_stack': total,
         'components': {
             'skill_spike_hitter': c1,
             'recform_hot_hitter': c2,
             'opp_soft_hitter': c3,
+            'lineup_amp_hitter': c4,
         },
         'detail': {
             'skill_spike_hitter': d1,
             'recform_hot_hitter': d2,
             'opp_soft_hitter': d3,
+            'lineup_amp_hitter': d4,
         },
         'boom_rate_expected': BOOM_RATE_BY_STACK[total],
         'bust_rate_expected': BUST_RATE_BY_STACK[total],

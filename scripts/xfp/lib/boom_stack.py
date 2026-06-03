@@ -99,6 +99,63 @@ MEAN_FP_BY_TIER_STACK: dict[str, dict[int, float]] = {
 # Used as a reference / fallback. n at stack=4 = 104.
 COMPOSITE_BOOM_RATE_BY_STACK_V2 = {0: 0.1234, 1: 0.1498, 2: 0.1941, 3: 0.2093, 4: 0.2212}
 
+# Week-boom rate (>= 30 FP combined across both starts) for 2-start week SPs.
+# Keyed by tier and boom_stack at start_1. From
+# `data/research/validation_runs/2start_week_amplification.md` (n=4,905
+# 2-start weeks 2018-2025, 4,650 with tier assignment).
+#
+# Per-tier amplification at stack_s1>=2 vs stack_s1=0:
+#   ace      +5.1 pp  (n=36 at stack_s1=2)
+#   sp2_sp3  +10.7 pp (n=63 at stack_s1=2)  — biggest week-level amp
+#   backend  +0.4 pp  (n=62 at stack_s1=2)  — NO actionable edge
+#   streamer -0.7 pp  (n=290 at stack_s1=2) — NO actionable edge
+#
+# Operational note: backend + streamer rows are included for completeness
+# but the per-start signal does NOT compound to a week-boom edge there.
+# Display should be GATED to ace + sp2_sp3 tiers only (see
+# `lookup_week_boom_rate` / sp-week-plan Step 5.5).
+WEEK_BOOM_RATE_BY_TIER_STACK_S1: dict[str, dict[int, float]] = {
+    'ace':      {0: 67.1, 1: 69.4, 2: 72.2, 3: 83.3},
+    'sp2_sp3':  {0: 44.9, 1: 52.6, 2: 55.6, 3: 53.3},
+    'backend':  {0: 41.5, 1: 42.9, 2: 41.9, 3: 50.0},
+    'streamer': {0: 20.0, 1: 20.4, 2: 19.3, 3: 23.1},
+}
+
+# Tiers where the week-boom callout is actionable (validated +ve edge at
+# stack_s1>=2). Backend / streamer are excluded — no week-level amp.
+WEEK_BOOM_LOCK_TIERS = frozenset({'ace', 'sp2_sp3'})
+
+# Component sticky rates — P(flag_s2=1 | flag_s1=1) pooled across tiers.
+# Source: 2start_week_amplification.md section 2.
+COMPONENT_STICKY_RATE: dict[str, float] = {
+    'flag_skill_spike': 0.443,  # 5.2x base; recent K%+BB% reflects real arm state
+    'flag_recform_hot': 0.586,  # 2.9x base; L3 window overlaps across starts
+    'flag_opp_soft':    0.344,  # ~base (0.998x); independent across starts
+}
+
+
+def lookup_week_boom_rate(tier: str, stack_s1: int) -> float:
+    """Historical week-boom rate (%) for a 2-start week SP given tier
+    and stack at start 1.
+
+    Args:
+        tier:      One of 'ace' / 'sp2_sp3' / 'backend' / 'streamer'.
+        stack_s1:  boom_stack value at start 1, integer in [0, 3].
+                   Values >=3 are clamped to 3; values <0 to 0.
+
+    Returns 0.0 when tier is unrecognized (defensive; do not silently
+    substitute a wrong tier's rate).
+    """
+    table = WEEK_BOOM_RATE_BY_TIER_STACK_S1.get(tier)
+    if table is None:
+        return 0.0
+    try:
+        s = int(stack_s1)
+    except (TypeError, ValueError):
+        return 0.0
+    s = max(0, min(3, s))
+    return float(table.get(s, 0.0))
+
 # Tiers where flag_skill_spike has NEGATIVE per-tier lift (recent K%-spike +
 # BB%-drop is regression-predictive, not continuation-predictive).
 SKILL_SPIKE_ANTIPREDICTIVE_TIERS = frozenset({'sp2_sp3', 'backend'})

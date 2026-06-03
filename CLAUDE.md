@@ -196,6 +196,15 @@ python scripts/xfp/run_roster_audit.py
   position auto-detect. PL ranks cached in `data/research/pl_cache/`
   (refresh weekly for Top150/Top100/Closers, daily for streamers).
   Engine: `scripts/xfp/run_triangulate.py`.
+- `/stream-the-stack` — daily ranked FA SP streamer recommender filtered
+  by boom_stack tier (≥2/4). Confirmed probables in next 3 days,
+  Connelly-Early-verified FA pool, tier-aware thresholds, σ-rescaled
+  rp3 variance bands.
+- `/boom-stack-explain` — decompose a single player's current
+  boom_stack tag (SP or hitter) into components with status, value,
+  threshold, tier outcome lookup, and verdict. Use when asked "why is
+  X's boom_stack 2/4" or "decompose this tag". Explanatory only —
+  headline number is still rp3/rh3.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,

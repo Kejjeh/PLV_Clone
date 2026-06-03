@@ -377,24 +377,70 @@ Implementation: `compute_high_k_pitcher()` in `scripts/xfp/lib/boom_stack.py`.
 See `reference_high_k_arm_tag.md` and the validation report at
 `data/research/validation_runs/boom_stack_v2_validation.md`.
 
+### SP card additions — CATCHER FRAMING standalone tag
+
+**Shipped 2026-06-03 as SHIP_AS_DISPLAY_TAG.** Independent of boom_stack
+AND of HIGH-K ARM — pure visual context layer. Fires only on the tails of
+the 2026 framing distribution (quintile 1 or 5); Q2/Q3/Q4 catchers produce
+no badge.
+
+The pitcher's team's modal 2026 catcher (most pitches received on defense)
+is looked up via `pitcher_schedule_2026.csv` → fallback statcast modal.
+That catcher's `framing_runs_per_100` (shadow-zone CS% vs league mean ×
+0.13) and 2026 in-season quintile (≥200 shadow-pitches floor) determine
+whether the tag fires.
+
+When `is_elite_framer == True` (modal catcher in Q5), the inline detail
+row adds `🧊ELITE FRAMER` and a callout below the table fires:
+
+> 🧊 **ELITE FRAMER:** <Catcher> (CSAA +X.XX, Q5). Within-pitcher paired
+> test p=0.017; historical +3-7 pp boom rate at boom_stack 0/1
+> (where existing tags don't already fire).
+
+When `is_framing_tax == True` (modal catcher in Q1):
+
+> ⚠ **FRAMING TAX:** <Catcher> (CSAA −X.XX, Q1, bottom-tier framer).
+> Historical −3 pp boom rate within-pitcher (p=0.017). Soriano-O'Hoppe
+> is the canonical case.
+
+**The tag does NOT override the verdict and is NOT a 5th boom_stack
+component.** The 5th-component variant was rejected to avoid double-
+counting downstream catcher-receiving effects already absorbed by
+drift_swstr / c_plus_swstr in the rp3 v2 baseline. Within-pitcher paired
+test (n=208 SPs with starts vs BOTH Q1 and Q5 catchers): t=2.40,
+p=0.017, +3.06 pp boom-rate gap. 6/7 years positive (2018-2025, ex-2020).
+
+Implementation: `compute_catcher_framing()` in
+`scripts/xfp/lib/catcher_framing.py`. See `reference_catcher_framing_tag.md`
+and the validation report at
+`data/research/validation_runs/catcher_framing_boom_modifier.md`.
+
 ### Hitter card additions — hitter boom-stack advisory tag
 
-**Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag.** The hitter analog of
-the SP boom_stack: a sum of three pre-game binary signals computed live
-from the 2026 statcast panel + today's confirmed probable SP. Range 0-3.
+**Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag (3-component); 4th
+component `lineup_amp_hitter` added 2026-06-03.** The hitter analog of
+the SP boom_stack: a sum of FOUR pre-game binary signals computed live
+from the 2026 statcast panel + today's confirmed probable SP + today's
+expected lineup. Range 0-4.
 
-The rh3 detail row appends a `boom_stack=N/3 (boom%~X.X%)` token. When
+The rh3 detail row appends a `boom_stack=N/4 (boom%~X.X%)` token. When
 `boom_stack >= 2`, a callout line prints below the rh3 row:
 
-> 🎯 **Hitter boom flag:** boom_stack=N/3 (lit components) — historically
-> 27-31% chance of >=10 FP game (~X.X% boom rate, ~Y.Y% bust vs 23.9%
+> 🎯 **Hitter boom flag:** boom_stack=N/4 (lit components) — historically
+> 27-34% chance of >=10 FP game (~X.X% boom rate, ~Y.Y% bust vs 23.9%
 > baseline). Advisory tag only; stack=3 still busts 37.5%.
+
+When component 4 `lineup_amp_hitter` is lit, an additional callout follows:
+
+> 🌊 **LINEUP STACK** — N teammates also in boom-eligible form (team boom
+> rate ~34% historical at lineup_stack=3+, validated 2026-06-03).
 
 | # | Component | Threshold |
 |---|---|---|
 | 1 | `skill_spike_hitter` | last-10g xwOBA - season xwOBA ≥ +0.040 AND last-10g K% - season K% ≤ -3 pp (needs ≥20 prior games) |
 | 2 | `recform_hot_hitter` | last-10g fp_proxy/g - season fp_proxy/g ≥ +1.5 (fp_proxy = TB + BB + HBP - K, the validation unit) |
 | 3 | `opp_soft_hitter` | today's opposing SP `xfp_rp3_per_start` ≤ 33rd-pct (weak SP = soft opp). If no confirmed probable yet, component is 0 with reason `no_opp_sp` |
+| 4 | `lineup_amp_hitter` | own components 1+2+3 ≥ 1 AND ≥ 2 OTHER starters on today's expected lineup also have components 1+2+3 ≥ 1. Lineup resolved via MLB Stats API confirmed lineup; falls back to top-9-by-rh3 for the team. Recursive guard: teammate stacks computed with `skip_lineup_amp=True` so component 4 never recurses. |
 
 Per-stack outcomes (n=245,712 starter-games, 2018-2025, PA≥4, boom = fp_proxy
 ≥ 80th pct):
@@ -405,6 +451,12 @@ Per-stack outcomes (n=245,712 starter-games, 2018-2025, PA≥4, boom = fp_proxy
 | 1 | 75,234 | 25.6% | 40.7% | 1.27 |
 | 2 | 7,971 | 27.5% | 40.2% | 1.35 |
 | 3 | 741 | 30.6% | 37.5% | 1.58 |
+| 4 | *(extrapolated)* | ~34.0% | ~35.0% | ~1.73 |
+
+Stack=4 is extrapolated — anchored to the validation heatmap cell
+(own_stack=2 + 3+ teammates_stack2 = 32.5% boom rate, n=268) and the
+team-day lineup_stack2=3+ boom rate (33.8%, n=396). See
+`reference_lineup_amp_component.md`.
 
 Edge stack=3 vs stack=0 is +6.7 pp boom rate, year-stable 2018-2025
 (+2.3 to +5.3 pp on stack≥2 vs 0 every year). **Strongest single component

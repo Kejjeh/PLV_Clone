@@ -188,6 +188,58 @@ just for *ordering* the bench candidates, not a precise projection.
 
 ---
 
+## Step 5.5 — Week-boom locks for 2-start aces/SP2-3
+
+**ADVISORY layer only — not a verdict override.** This step surfaces an
+HIGH-PROBABILITY-WEEK-BOOM callout for any 2-start week SP whose
+boom_stack at start 1 is >= 2 AND whose tier is `ace` or `sp2_sp3`.
+
+Validated 2026-06-03 (`data/research/validation_runs/2start_week_amplification.md`,
+n=4,905 two-start weeks 2018-2025):
+
+- P(stack_s2 >= 2 | stack_s1 >= 2) = **36.0%** vs 11.2% base (4.4x lift)
+- Persistence is driven by **skill_spike** (sticky 44.3%) and
+  **recform_hot** (sticky 58.6%). `opp_soft` is **independent** across
+  starts (~base rate 34.4%) — different opponent at start 2.
+- **Tier-gated week-boom edge at stack_s1=2 vs 0:** ace +5.1 pp,
+  sp2_sp3 +10.7 pp, backend +0.4 pp (no edge), streamer -0.7 pp (no edge).
+
+Backend and streamer 2-start SPs should NOT trigger this callout even
+when stack_s1 >= 2 — the per-start signal does not compound to a
+week-boom edge there.
+
+```python
+from scripts.xfp.lib.boom_stack import (
+    compute_boom_stack, lookup_week_boom_rate, WEEK_BOOM_LOCK_TIERS,
+)
+
+week_boom_locks = []
+for sp in two_start_sps:           # SPs with n_starts_in_window == 2
+    bs = compute_boom_stack(
+        pitcher_id=sp.mlbam,
+        recency_form_gap=sp.recency_form_gap,
+        next_opp_team=sp.start_1_opp,
+        rp3_rank=sp.rp3_rank,
+    )
+    stack_s1 = bs['boom_stack']
+    tier = bs['tier']
+    if tier in WEEK_BOOM_LOCK_TIERS and stack_s1 >= 2:
+        rate = lookup_week_boom_rate(tier, stack_s1)
+        week_boom_locks.append({
+            'name': sp.name, 'rank': sp.rp3_rank, 'tier': tier,
+            'stack_s1': stack_s1, 'week_boom_rate': rate,
+            'components': bs['components'],
+        })
+```
+
+The callout is surfaced in Step 8 between the projected-starts table and
+the bench-recommendation section. The header only renders when at least
+one SP qualifies. Even when this fires, cap math (Step 6) still binds —
+"week-boom lock" means "don't bench either of these two starts when
+choosing the cut," not "exempt from the 10-start cap."
+
+---
+
 ## Step 6 — Cap math + bench recommendation
 
 **CRITICAL — count PAST + FUTURE, not just future.** Cap math is
@@ -326,6 +378,17 @@ multiple weeks running suggests too many SPs on roster).
 ... (e.g.) Grayson Rodriguez | 8.21 (5.75-10.66) | data_driven_thin | 2026-06-04 | 2026-06-09 | 2 | ... | ... |
 
 **TOTAL projected starts: N** (cap = 10)
+
+## Week-boom locks
+
+(only renders when at least one 2-start SP has tier in {ace, sp2_sp3}
+AND boom_stack at start 1 >= 2)
+
+🎯 **<SP name>** (rank #N, <tier>) — 2 starts this week, boom_stack=K/4 at start 1.
+   Historical week-boom rate (≥30 FP combined): **XX.X%**.
+   Persistence driver: <skill_spike|recform_hot|both> (skill flags persist start→start;
+   opp_soft does not — recompute matchup for start 2).
+   ⇒ Lock both starts; do NOT bench either when choosing the weekly cut.
 
 ## Bench recommendation
 
