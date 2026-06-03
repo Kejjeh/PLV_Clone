@@ -23,6 +23,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.request import urlopen, Request
 from html import escape as h
+from typing import Optional
 
 import pandas as pd
 
@@ -30,9 +31,91 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
+
+# Layered display-tag library (validated 2026-06-03). All defensive — every
+# compute_* call returns sentinel-tagged dicts on failure so the dashboard
+# can never break on a tag compute error.
+try:
+    from scripts.xfp.lib.boom_stack import (  # noqa: E402
+        compute_boom_stack, compute_high_k_pitcher,
+    )
+    from scripts.xfp.lib.hitter_boom_stack import compute_hitter_boom_stack  # noqa: E402
+    from scripts.xfp.lib.catcher_framing import compute_catcher_framing  # noqa: E402
+    from scripts.xfp.lib.il_return_flag import compute_il_return_flag  # noqa: E402
+    _LAYERED_TAGS_AVAILABLE = True
+except Exception as _e:  # pragma: no cover
+    print(f'  ⚠ layered-tag library unavailable: {_e}')
+    _LAYERED_TAGS_AVAILABLE = False
+    def compute_boom_stack(*a, **kw): return {}
+    def compute_high_k_pitcher(*a, **kw): return {}
+    def compute_hitter_boom_stack(*a, **kw): return {}
+    def compute_catcher_framing(*a, **kw): return {}
+    def compute_il_return_flag(*a, **kw): return {}
+
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 XFP_DOCS = ROOT / 'xfp-model' / 'docs'
+
+# Canonical IL statuses across ESPN. Any of these = IL'd; must be excluded
+# from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
+# per the user's spec — when in doubt, exclude.
+IL_INJURY_STATES = frozenset({
+    'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
+    'INJURY_RESERVE', 'OUT', 'DAY_TO_DAY',
+    'IL10', 'IL15', 'IL60',
+})
+IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
+
+
+def is_il_player(player) -> bool:
+    """Paranoid IL check — TRUE if a player should be excluded from any
+    'add this player' / streamer / pickup suggestion.
+
+    Checks both ESPN `injuryStatus` (the canonical health state) AND the
+    `lineup_slot` (a roster might park an IL'd player in BE without
+    flipping their injury status). Either signal trips this filter.
+    """
+    if player is None:
+        return False
+    inj = (getattr(player, 'injuryStatus', None) or 'ACTIVE')
+    try:
+        inj = str(inj).upper()
+    except Exception:
+        inj = 'ACTIVE'
+    if inj in IL_INJURY_STATES:
+        return True
+    slot = getattr(player, 'lineup_slot', None) or getattr(player, 'lineupSlot', None) or ''
+    try:
+        slot = str(slot).upper()
+    except Exception:
+        slot = ''
+    if slot in IL_LINEUP_SLOTS:
+        return True
+    return False
+
+
+def player_link(name: str, *, mlbam: Optional[int] = None) -> str:
+    """Return HTML for a clickable player name that drills into profiles.
+
+    Profiles dashboard uses an internal #-hash router; it doesn't currently
+    accept ?player= query params (TODO upstream). We pass BOTH a query
+    hint and a hash — the page loads cleanly with the current hash routes,
+    and a future profiles-side handler can read the query hint to auto-
+    open the player modal. Until then this functions as a graceful nav
+    link straight to the profiles dashboard.
+    """
+    nm = h(name or '')
+    if not nm:
+        return ''
+    href = 'player_profiles.html'
+    if mlbam:
+        href += f'?player={int(mlbam)}#player={int(mlbam)}'
+    else:
+        # URL-encode minimal — strip any quote chars.
+        nm_q = (name or '').replace('"', '').replace("'", '')
+        from urllib.parse import quote
+        href += f'?name={quote(nm_q)}'
+    return f'<a class="player-link" href="{href}" target="_blank" rel="noopener" title="Open in Profiles">{nm}</a>'
 
 USER_AGENT = 'Mozilla/5.0 (matchup-dashboard)'
 SEASON_END = date(2026, 9, 28)
@@ -1216,6 +1299,9 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
         for fa in fas:
             nk = _norm(fa.name)
             if nk in rostered: continue
+            # IL filter — never recommend adding an injured player.
+            if is_il_player(fa):
+                continue
             slots = set(getattr(fa, 'eligibleSlots', []) or [])
             if not (slots & {'C','1B','2B','3B','SS','OF','DH','UTIL'}): continue
             info = rh3_lkup.get(nk, {})
@@ -1243,9 +1329,9 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
         out = ['<h2>🔄 Drop / Pickup Suggestions <small class="muted">(positions match, gain ≥ 20 RoS)</small></h2>',
                '<table><thead><tr><th>Drop</th><th>RoS</th><th>→ Add</th><th>%Own</th><th>RoS</th><th>Gain</th></tr></thead><tbody>']
         for s in suggestions:
-            out.append(f'<tr><td class="neg">{h(s["drop"]["name"])}</td>'
+            out.append(f'<tr><td class="neg">{player_link(s["drop"]["name"])}</td>'
                        f'<td>{s["drop"]["ros"]:.0f}</td>'
-                       f'<td class="pos">{h(s["add"]["name"])}</td>'
+                       f'<td class="pos">{player_link(s["add"]["name"])}</td>'
                        f'<td>{s["add"]["pct_owned"]:.0f}%</td>'
                        f'<td>{s["add"]["ros"]:.0f}</td>'
                        f'<td><b class="pos">+{s["gain"]:.0f}</b></td></tr>')
@@ -1256,18 +1342,28 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
 
 
 def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
-    """Streamer targets ranked by next-start expected FP.
+    """Streamer targets ranked by next-start expected FP, augmented with
+    the layered display-tag stack (boom_stack, HIGH-K ARM, catcher framing,
+    IL_RETURN, anti-predictive).
 
-    Ranking:  baseline_per_start  ×  park_adj  ×  opp_adj
-      - baseline:  rp3 per-start projection (validated model)
-      - park_adj:  1 − 0.5 × (pf_wOBA − 1)  for the venue of the next start
-      - opp_adj:   1 − 0.7 × (bat_index_recent − 1)  for the opposing offense
-    Multiplier clipped to [0.6, 1.4]. Coefficients are heuristic (matched to
-    SP-FP elasticity vs opp xwOBA ≈ −0.7 from the formula structure) — direction
-    is validated, magnitude is conservative. Pitcher L/R splits intentionally
-    excluded: YoY stability of pitcher split xwOBA = 0.05–0.09 (test B1, this
-    session) — would add noise, not signal. Team-level offensive index and park
-    factors ARE stable across years.
+    Rebuilt 2026-06-03 to wire today's engine work into the matchup page:
+      * boom_stack 4/4 (skill_spike + recform_hot + opp_soft + park_friendly)
+        with tier-aware boom%/bust% rates surfaced as a tooltip.
+      * HIGH-K ARM badge when z-score >= +1.0 in current month cohort.
+      * Catcher framing tag (🧊 elite Q5 / ⚠ Q1 tax).
+      * IL_RETURN flag when >= 30d since last MLB start.
+      * Anti-predictive warning when tier in {SP2/3, backend} AND
+        skill_spike fires (recent K%↑ + BB%↓ = regression risk at those tiers).
+
+    Ranking composite:
+      composite_ev = rp3_per_start  ×  park_adj  ×  opp_adj
+      tie-break = boom_stack DESC → matchup tier DESC → pct_owned ASC
+
+    IL FILTER (PARANOID): any FA SP with injuryStatus in IL_INJURY_STATES
+    OR with no in-window confirmed/predicted start is excluded outright.
+    The earlier streamer block silently dropped pitchers via the "no
+    in-window start" gate; this version layers an explicit `is_il_player`
+    check FIRST so the audit trail is unambiguous.
     """
     try:
         from plv_clone.league_state import LeagueState
@@ -1298,6 +1394,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
 
         # Collect candidate FAs with baseline projection
         candidates = []
+        n_il_excluded = 0
         fas = league.free_agents(size=2000)  # full pool — avoid silent truncation
         for fa in fas:
             if getattr(fa, 'position', '') != 'SP':
@@ -1305,19 +1402,43 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             nk = _norm(fa.name)
             if nk in rostered:
                 continue
+            # PARANOID IL FILTER — never recommend an injured pitcher.
+            if is_il_player(fa):
+                n_il_excluded += 1
+                continue
             info = rp3[rp3['nk'] == nk]
             if info.empty:
                 continue
-            per_start = (info.iloc[0].get('xfp_rp3_per_start_sched')
-                         or info.iloc[0].get('xfp_rp3_per_start') or 0)
+            row0 = info.iloc[0]
+            per_start = (row0.get('xfp_rp3_per_start_sched')
+                         or row0.get('xfp_rp3_per_start') or 0)
             if per_start < 9:
                 continue
+            # rp3 row diagnostics used downstream by boom_stack
+            try:
+                rp3_rank = int(row0.get('rank')) if pd.notna(row0.get('rank')) else None
+            except Exception:
+                rp3_rank = None
+            try:
+                rec_form = float(row0.get('recency_form_gap')) if pd.notna(row0.get('recency_form_gap')) else None
+            except Exception:
+                rec_form = None
+            try:
+                p25 = float(row0.get('xfp_rp3_p25')) if pd.notna(row0.get('xfp_rp3_p25')) else None
+                p75 = float(row0.get('xfp_rp3_p75')) if pd.notna(row0.get('xfp_rp3_p75')) else None
+            except Exception:
+                p25, p75 = None, None
             candidates.append({
                 'name': fa.name,
                 'team': (getattr(fa, 'proTeam', '?') or '?').upper(),
                 'per_start': float(per_start),
                 'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0),
+                'rp3_rank': rp3_rank,
+                'rec_form': rec_form,
+                'p25': p25, 'p75': p75,
             })
+        if n_il_excluded:
+            print(f'  [streamers] IL filter excluded {n_il_excluded} FA SPs')
 
         if not candidates:
             return '<h2>💎 Streamer Targets</h2><p class="muted">No FA SPs above baseline.</p>'
@@ -1353,7 +1474,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             return ('<h2>💎 Streamer Targets</h2>'
                     '<p class="muted">No FA SPs with starts this week.</p>')
 
-        # Rank by adjusted expected FP
+        # Rank by adjusted expected FP + augment with layered tags
         for c in candidates:
             ns = next_start_by_name[c['name']]
             opp = (ns.get('opp_team') or '').upper()
@@ -1372,24 +1493,65 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             c['date'] = ns.get('date', '')
             c['confirmed'] = ns.get('confirmed', False)
 
-        candidates.sort(key=lambda x: -x['exp_fp'])
+            # Layered display tags — all defensive (returns {} on failure).
+            mlbam = _resolve_mlbam_via_api(c['name'])
+            c['mlbam'] = int(mlbam) if mlbam else None
+            bs = compute_boom_stack(c['mlbam'], c['rec_form'], opp,
+                                    rp3_rank=c['rp3_rank']) if c['mlbam'] else {}
+            c['boom_stack'] = bs.get('boom_stack')
+            c['boom_components'] = bs.get('components') or {}
+            c['boom_tier'] = bs.get('tier')
+            c['boom_rate'] = bs.get('boom_rate_expected')
+            c['bust_rate'] = bs.get('bust_rate_expected')
+            c['anti_pred'] = bool(bs.get('skill_spike_anti_predictive'))
+
+            hk = compute_high_k_pitcher(c['mlbam']) if c['mlbam'] else {}
+            c['is_high_k'] = bool(hk.get('is_high_k'))
+
+            cf = compute_catcher_framing(c['team'])
+            c['is_elite_framer'] = bool(cf.get('is_elite_framer'))
+            c['is_framing_tax'] = bool(cf.get('is_framing_tax'))
+
+            il = compute_il_return_flag(c['mlbam']) if c['mlbam'] else {}
+            c['is_il_return'] = bool(il.get('is_first_back_long_il'))
+
+            # Matchup-tier from opp_idx (mirrors stream_the_stack soft/avg/tough).
+            if opp_idx <= 0.97: c['matchup_tier'] = 'soft'
+            elif opp_idx >= 1.03: c['matchup_tier'] = 'tough'
+            else: c['matchup_tier'] = 'avg'
+
+        # Composite ranking: exp_fp DESC, then boom_stack DESC, then
+        # matchup_tier (soft > avg > tough), then pct_owned ASC.
+        _tier_rank = {'soft': 0, 'avg': 1, 'tough': 2}
+        candidates.sort(key=lambda x: (
+            -x['exp_fp'],
+            -(x['boom_stack'] or 0),
+            _tier_rank.get(x['matchup_tier'], 1),
+            x['pct_owned'],
+        ))
 
         out = [
             '<h2>💎 Top Streamer Targets <small class="muted">'
-            '(next-start expected FP — baseline × park × opponent)</small></h2>',
+            '(rp3 × park × opp · tags layered)</small></h2>',
             '<p class="notes">'
-            'Ranking = rp3 baseline × park factor × opponent batting index. '
-            'Pitcher L/R splits excluded (failed YoY stability validation, B1). '
-            'Coefficients heuristic; direction validated.'
+            'Composite EV = rp3 baseline × park × opp batting index, ranked desc; '
+            'ties broken by boom_stack desc → matchup tier desc → %owned asc. '
+            'Tags layer on top — boom_stack (✦ N/4), 🎯 HIGH-K ARM, 🧊 elite framer, '
+            '⚠ framing tax, 🏥 first-back-from-IL, ⛔ anti-predictive skill-spike. '
+            'IL filter (paranoid): excluded ' + str(n_il_excluded) + ' FA SPs with '
+            'injury status. Pitcher L/R splits excluded (failed YoY stability B1).'
             '</p>',
             '<table><thead><tr>'
-            '<th>Pitcher</th><th>Team</th><th>%Own</th>'
-            '<th>Next vs</th><th>Date</th>'
-            '<th>Park</th><th>Opp idx</th>'
-            '<th>Baseline</th><th>Exp FP</th>'
+            '<th>Pitcher</th><th>Tm</th><th>%Own</th>'
+            '<th>Next</th><th>Date</th>'
+            '<th>Tier</th>'
+            '<th>rp3 (p25–p75)</th>'
+            '<th>boom_stack</th>'
+            '<th>Tags</th>'
+            '<th>Exp FP</th>'
             '</tr></thead><tbody>',
         ]
-        for g in candidates[:12]:
+        for g in candidates[:10]:
             opp_disp = g['opp']
             if g['opp'] != '—':
                 arrow = 'vs' if g.get('is_home') else '@'
@@ -1398,16 +1560,56 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
                     opp_disp += ' <small class="muted">(pred)</small>'
             adj_pct = (g['adj_mult'] - 1) * 100
             adj_class = 'pos' if adj_pct >= 1 else ('neg' if adj_pct <= -1 else 'muted')
+
+            # rp3 + band
+            if g['p25'] is not None and g['p75'] is not None:
+                band = f'{g["per_start"]:.1f} <small class="muted">({g["p25"]:.1f}–{g["p75"]:.1f})</small>'
+            else:
+                band = f'{g["per_start"]:.2f}'
+
+            # boom_stack render with tooltip
+            bs_val = g['boom_stack']
+            if bs_val is None:
+                bs_cell = '<span class="muted">—</span>'
+            else:
+                comps = g['boom_components']
+                tip_parts = [f"{k}={v}" for k, v in comps.items()]
+                tip = ' '.join(tip_parts)
+                if g['boom_rate'] is not None:
+                    tip += f' · boom%≈{g["boom_rate"]*100:.0f} bust%≈{g["bust_rate"]*100:.0f} (tier={g["boom_tier"]})'
+                stars = '✦' * bs_val + '·' * (4 - bs_val)
+                cls = 'pos' if bs_val >= 2 else ('muted' if bs_val == 0 else '')
+                bs_cell = f'<span class="{cls}" title="{h(tip)}">{stars} <small>{bs_val}/4</small></span>'
+
+            # Tag chips
+            chips = []
+            if g['is_high_k']:
+                chips.append('<span class="chip chip-k" title="HIGH-K ARM (z>=+1.0)">🎯K</span>')
+            if g['is_elite_framer']:
+                chips.append('<span class="chip chip-frame" title="Elite framer (Q5)">🧊F</span>')
+            elif g['is_framing_tax']:
+                chips.append('<span class="chip chip-bad" title="Framing tax (Q1)">⚠F</span>')
+            if g['is_il_return']:
+                chips.append('<span class="chip chip-il" title="First start back from >=30d gap">🏥IL</span>')
+            if g['anti_pred']:
+                chips.append('<span class="chip chip-bad" title="Anti-predictive skill-spike (regression risk at this tier)">⛔AP</span>')
+            chips_html = ' '.join(chips) if chips else '<span class="muted">·</span>'
+
+            # Matchup tier color
+            tier_cls = {'soft': 'pos', 'tough': 'neg', 'avg': 'muted'}.get(g['matchup_tier'], 'muted')
+
             out.append(
-                f'<tr><td>{h(g["name"])}</td>'
+                f'<tr>'
+                f'<td>{player_link(g["name"], mlbam=g.get("mlbam"))}</td>'
                 f'<td>{h(g["team"])}</td>'
                 f'<td>{g["pct_owned"]:.0f}%</td>'
                 f'<td>{opp_disp}</td>'
                 f'<td>{h(g["date"])}</td>'
-                f'<td>{g["pf_wOBA"]:.3f}</td>'
-                f'<td>{g["opp_idx"]:.3f}</td>'
-                f'<td>{g["per_start"]:.2f}</td>'
-                f'<td><b>{g["exp_fp"]:.2f}</b> '
+                f'<td class="{tier_cls}">{g["matchup_tier"]}</td>'
+                f'<td>{band}</td>'
+                f'<td>{bs_cell}</td>'
+                f'<td>{chips_html}</td>'
+                f'<td><b>{g["exp_fp"]:.1f}</b> '
                 f'<small class="{adj_class}">({adj_pct:+.0f}%)</small></td>'
                 f'</tr>'
             )
@@ -2073,6 +2275,221 @@ def win_probability_bootstrap(my_proj, opp_proj, my_wtd, opp_wtd, n_trials=5000)
     return float((my_trials > opp_trials).mean())
 
 
+def render_boom_bust_scan(my_lineup, opp_lineup):
+    """🎯 Boom / Bust Scan — week-ahead layered-tag bird's-eye view.
+
+    Iterates every rostered SP + hitter on BOTH sides (Ligers + opponent)
+    and computes the layered display tags. Surfaces:
+
+      * 🎯 High-conviction lines  — SP boom_stack >= 2, or hitter stack >= 2,
+        or HIGH-K ARM + elite framer pairing.
+      * ⚠ Downside-risk lines    — anti_predictive_skill_spike, framing tax,
+        IL_RETURN, or boom_stack=0 in a tough matchup.
+
+    Intentionally additive — does NOT alter projections or cap math. Pure
+    visualization of today's layered-tag library output applied to the
+    matchup snapshot.
+    """
+    if not _LAYERED_TAGS_AVAILABLE:
+        return ('<h2>🎯 Boom / Bust Scan</h2>'
+                '<p class="muted">Layered tags unavailable (lib import failed).</p>')
+    try:
+        # Resolve all relevant pitchers' mlbam + team once.
+        sps = []
+        for side, lineup in (('mine', my_lineup), ('opp', opp_lineup)):
+            for p in lineup:
+                if (p.position or '') != 'SP':
+                    continue
+                if is_il_player(p):
+                    # IL'd SPs are not pitching this week — skip.
+                    continue
+                pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+                if not pid:
+                    continue
+                team_abbr = (p.proTeam or '').upper()
+                sps.append({'side': side, 'name': p.name, 'team': team_abbr,
+                            'mlbam': int(pid)})
+
+        hitters = []
+        for side, lineup in (('mine', my_lineup), ('opp', opp_lineup)):
+            for p in lineup:
+                if (p.position or '') in ('SP', 'RP', 'P'):
+                    continue
+                if is_il_player(p):
+                    continue
+                pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+                if not pid:
+                    continue
+                team_abbr = (p.proTeam or '').upper()
+                hitters.append({'side': side, 'name': p.name, 'team': team_abbr,
+                                'mlbam': int(pid), 'pos': p.position or '?'})
+
+        # rp3 row lookup for rank + recform + opp
+        rp3 = pd.read_csv(_select_rp3_path()).drop_duplicates('player_name')
+        rp3['nk'] = rp3['player_name'].map(_norm)
+        rp3_idx = rp3.set_index('nk').to_dict('index')
+
+        sp_rows = []
+        for sp in sps:
+            r = rp3_idx.get(_norm(sp['name']), {})
+            try:
+                rec_form = float(r.get('recency_form_gap')) if pd.notna(r.get('recency_form_gap')) else None
+            except Exception:
+                rec_form = None
+            try:
+                rank = int(r.get('rank')) if r.get('rank') is not None and pd.notna(r.get('rank')) else None
+            except Exception:
+                rank = None
+            next_opp = r.get('next_opp_team')
+            if isinstance(next_opp, float) and pd.isna(next_opp):
+                next_opp = None
+            bs = compute_boom_stack(sp['mlbam'], rec_form,
+                                    next_opp if isinstance(next_opp, str) else None,
+                                    rp3_rank=rank) or {}
+            hk = compute_high_k_pitcher(sp['mlbam']) or {}
+            cf = compute_catcher_framing(sp['team']) or {}
+            il = compute_il_return_flag(sp['mlbam']) or {}
+            sp_rows.append({**sp,
+                'boom_stack': bs.get('boom_stack'),
+                'tier': bs.get('tier'),
+                'boom_rate': bs.get('boom_rate_expected'),
+                'bust_rate': bs.get('bust_rate_expected'),
+                'anti_pred': bool(bs.get('skill_spike_anti_predictive')),
+                'is_high_k': bool(hk.get('is_high_k')),
+                'is_elite_framer': bool(cf.get('is_elite_framer')),
+                'is_framing_tax': bool(cf.get('is_framing_tax')),
+                'is_il_return': bool(il.get('is_first_back_long_il')),
+            })
+
+        h_rows = []
+        for ht in hitters:
+            try:
+                hbs = compute_hitter_boom_stack(
+                    batter_id=ht['mlbam'], opp_sp_id=None,
+                    team=ht['team']) or {}
+            except Exception:
+                hbs = {}
+            h_rows.append({**ht,
+                'boom_stack': hbs.get('boom_stack'),
+                'boom_rate': hbs.get('boom_rate_expected'),
+                'bust_rate': hbs.get('bust_rate_expected'),
+                'components': hbs.get('components') or {},
+            })
+
+        def _verdict_sp(r):
+            tags = []
+            if (r['boom_stack'] or 0) >= 2: tags.append('🎯 HIGH-CONVICTION')
+            if r['is_high_k']:               tags.append('🎯K')
+            if r['is_elite_framer']:         tags.append('🧊 elite-framer')
+            if r['anti_pred']:               tags.append('⛔ anti-predictive')
+            if r['is_framing_tax']:          tags.append('⚠ framing-tax')
+            if r['is_il_return']:            tags.append('🏥 IL-return')
+            return tags
+
+        def _verdict_hit(r):
+            tags = []
+            comps = r['components']
+            if (r['boom_stack'] or 0) >= 3:  tags.append('🎯 HIGH-CONVICTION')
+            elif (r['boom_stack'] or 0) >= 2: tags.append('✨ stack 2+')
+            if comps.get('lineup_amp_hitter'): tags.append('🔥 lineup-amp')
+            if comps.get('skill_spike_hitter'): tags.append('🎯 skill-spike')
+            return tags
+
+        # Conviction list (combined SP + hitter), downside list.
+        conv_sp = [r for r in sp_rows
+                   if (r['boom_stack'] or 0) >= 2 or r['is_high_k']]
+        conv_sp.sort(key=lambda r: (-(r['boom_stack'] or 0), -int(r['is_high_k'])))
+        risk_sp = [r for r in sp_rows
+                   if r['anti_pred'] or r['is_framing_tax'] or r['is_il_return']]
+
+        conv_h = [r for r in h_rows if (r['boom_stack'] or 0) >= 2]
+        conv_h.sort(key=lambda r: -(r['boom_stack'] or 0))
+
+        # Render
+        out = ['<h2>🎯 Boom / Bust Scan <small class="muted">(layered tags · week ahead)</small></h2>']
+        out.append('<p class="notes">Bird\'s-eye view of today\'s layered-tag library applied to '
+                   'both rosters. Additive — does not alter projections.</p>')
+
+        # ----- High-conviction SP -----
+        out.append('<h3 style="margin-top:.6em">🎯 High-conviction SPs</h3>')
+        if conv_sp:
+            out.append('<table><thead><tr>'
+                       '<th>Side</th><th>Pitcher</th><th>Team</th>'
+                       '<th>boom_stack</th><th>tier</th><th>boom%</th><th>Flags</th>'
+                       '</tr></thead><tbody>')
+            for r in conv_sp[:12]:
+                stars = ('✦' * (r['boom_stack'] or 0)) + ('·' * (4 - (r['boom_stack'] or 0)))
+                br = f"{r['boom_rate']*100:.0f}%" if r['boom_rate'] is not None else '—'
+                tags = ' '.join(_verdict_sp(r))
+                side_cls = 'pos' if r['side'] == 'mine' else 'muted'
+                out.append(
+                    f'<tr><td class="{side_cls}">{("YOURS" if r["side"]=="mine" else "OPP")}</td>'
+                    f'<td>{player_link(r["name"], mlbam=r.get("mlbam"))}</td>'
+                    f'<td>{h(r["team"])}</td>'
+                    f'<td>{stars} <small>{r["boom_stack"] or 0}/4</small></td>'
+                    f'<td>{h(str(r["tier"] or "—"))}</td>'
+                    f'<td>{br}</td>'
+                    f'<td>{h(tags)}</td></tr>'
+                )
+            out.append('</tbody></table>')
+        else:
+            out.append('<p class="muted">No SPs at boom_stack&gt;=2 or HIGH-K this week.</p>')
+
+        # ----- Downside-risk SP -----
+        out.append('<h3 style="margin-top:.6em">⚠ Downside-risk SPs</h3>')
+        if risk_sp:
+            out.append('<table><thead><tr>'
+                       '<th>Side</th><th>Pitcher</th><th>Team</th>'
+                       '<th>bust%</th><th>Flags</th>'
+                       '</tr></thead><tbody>')
+            for r in risk_sp[:12]:
+                bu = f"{r['bust_rate']*100:.0f}%" if r['bust_rate'] is not None else '—'
+                flags = []
+                if r['anti_pred']: flags.append('⛔ anti-predictive')
+                if r['is_framing_tax']: flags.append('⚠ framing-tax')
+                if r['is_il_return']: flags.append('🏥 IL-return')
+                side_cls = 'neg' if r['side'] == 'mine' else 'muted'
+                out.append(
+                    f'<tr><td class="{side_cls}">{("YOURS" if r["side"]=="mine" else "OPP")}</td>'
+                    f'<td>{player_link(r["name"], mlbam=r.get("mlbam"))}</td>'
+                    f'<td>{h(r["team"])}</td>'
+                    f'<td>{bu}</td>'
+                    f'<td>{" · ".join(flags)}</td></tr>'
+                )
+            out.append('</tbody></table>')
+        else:
+            out.append('<p class="muted">No SP downside flags this week.</p>')
+
+        # ----- Conviction hitters -----
+        out.append('<h3 style="margin-top:.6em">✨ High-conviction Hitters</h3>')
+        if conv_h:
+            out.append('<table><thead><tr>'
+                       '<th>Side</th><th>Hitter</th><th>Pos</th><th>Team</th>'
+                       '<th>boom_stack</th><th>boom%</th><th>Flags</th>'
+                       '</tr></thead><tbody>')
+            for r in conv_h[:14]:
+                stars = ('✦' * (r['boom_stack'] or 0)) + ('·' * (4 - (r['boom_stack'] or 0)))
+                br = f"{r['boom_rate']*100:.0f}%" if r['boom_rate'] is not None else '—'
+                tags = ' '.join(_verdict_hit(r))
+                side_cls = 'pos' if r['side'] == 'mine' else 'muted'
+                out.append(
+                    f'<tr><td class="{side_cls}">{("YOURS" if r["side"]=="mine" else "OPP")}</td>'
+                    f'<td>{player_link(r["name"], mlbam=r.get("mlbam"))}</td>'
+                    f'<td>{h(r["pos"])}</td>'
+                    f'<td>{h(r["team"])}</td>'
+                    f'<td>{stars} <small>{r["boom_stack"] or 0}/4</small></td>'
+                    f'<td>{br}</td>'
+                    f'<td>{h(tags)}</td></tr>'
+                )
+            out.append('</tbody></table>')
+        else:
+            out.append('<p class="muted">No hitters at boom_stack&gt;=2 today (lineup amp / skill spike all quiet).</p>')
+
+        return '\n'.join(out)
+    except Exception as e:
+        return f'<h2>🎯 Boom / Bust Scan</h2><p class="muted">error: {h(str(e))}</p>'
+
+
 def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
     rows = []
     for p in lineup:
@@ -2109,7 +2526,7 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
         if r['units'] == 0:
             unit_label = '—'
         badges = ' '.join(f'<span class="badge">{h(b)}</span>' for b in r['badges'])
-        out.append(f'<tr><td data-label="Player">{h(r["name"])}{(" " + badges) if badges else ""}</td>'
+        out.append(f'<tr><td data-label="Player">{player_link(r["name"])}{(" " + badges) if badges else ""}</td>'
                    f'<td data-label="Pos">{h(r["pos"])}</td>'
                    f'<td data-label="WTD" class="{wtd_cls}">{r["wtd"]:+.1f}</td>'
                    f'<td data-label="Units" class="muted">{unit_label}</td>'
@@ -2365,6 +2782,7 @@ def main():
     power_block = render_power_rankings()
     drop_pickup_block = render_drop_pickup_suggestions(mu['my_lineup'], rh3_map)
     streamer_block = render_2start_gems(schedules_by_team, today, week_end)
+    boom_bust_block = render_boom_bust_scan(mu['my_lineup'], mu['opp_lineup'])
     cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today,
                                     league=mu['league_obj'],
                                     my_team_name=mu['mine'].team_name)
@@ -2506,6 +2924,19 @@ tbody tr:hover td {{ background: var(--panel); }}
           font-size: .7em; font-family: 'IBM Plex Mono', monospace;
           background: rgba(193,102,107,0.22); color: var(--neg);
           letter-spacing: .08em; font-weight: 600; }}
+/* Clickable player names — drill into player_profiles.html */
+a.player-link {{ color: inherit; text-decoration: none;
+                  border-bottom: 1px dotted var(--faint); }}
+a.player-link:hover {{ color: var(--accent); border-bottom-color: var(--accent); }}
+/* Boom/bust chips on streamer + scan tables */
+.chip {{ display: inline-block; padding: 0 5px; border-radius: 2px;
+         font-size: .7em; font-family: 'IBM Plex Mono', monospace;
+         background: var(--faint); color: var(--text);
+         letter-spacing: .06em; font-weight: 600; margin-right: 2px; }}
+.chip-k     {{ background: rgba(127,176,105,0.22); color: var(--pos); }}
+.chip-frame {{ background: rgba(140,180,220,0.18); color: #8cb4dc; }}
+.chip-il    {{ background: rgba(212,169,69,0.22);  color: var(--warn); }}
+.chip-bad   {{ background: rgba(193,102,107,0.22); color: var(--neg); }}
 .meta {{ color: var(--dim); font-size: .78em; margin-top: 2em; text-align: center;
          border-top: 1px solid var(--faint); padding-top: 1em;
          font-family: 'IBM Plex Mono', monospace; letter-spacing: .08em; }}
@@ -2715,6 +3146,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
   <a href="#fire">🔥 Days of Fire</a>
   <a href="#drops">🔄 Drops/Pickups</a>
   <a href="#streamers">💎 Streamers</a>
+  <a href="#boombust">🎯 Boom/Bust</a>
   <a href="#myteam">My Roster</a>
   <a href="#opp">Opponent</a>
   <a href="#closers">🔒 Closers</a>
@@ -2758,6 +3190,11 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 <section id="streamers"><details open>
 <summary>💎 Streamer Targets</summary>
 {streamer_block}
+</details></section>
+
+<section id="boombust"><details open>
+<summary>🎯 Boom / Bust Scan</summary>
+{boom_bust_block}
 </details></section>
 
 <section id="myteam"><details open>
