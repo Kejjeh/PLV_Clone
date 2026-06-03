@@ -226,6 +226,20 @@ def main():
     if not ok_hboom:
         print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
 
+    # 4.8. Append today's SP + hitter boom_stack snapshots to the growing
+    # history panel at data/research/boom_stack_history_panel.parquet.
+    # Idempotent — only adds dates not already present. Required so that in
+    # ~12-16 weeks we have enough archived panel data to test whether
+    # boom_stack predicts team residual scoring (see
+    # boom_stack_residual_test.md). Fail-soft.
+    ok_panel = run(
+        '4.8. Append boom_stack snapshots to history panel',
+        'python -X utf8 scripts/xfp/build_boom_stack_history_panel.py',
+        timeout=120,
+    )
+    if not ok_panel:
+        print('  ⚠ boom_stack history panel append failed — continuing (non-gating)')
+
     if not args.no_push:
         if not ok_profiles:
             print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
