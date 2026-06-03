@@ -225,3 +225,16 @@ Run `/roster-audit` next for slot/cap math; `/monday-morning` if you want all fo
 4. **Surfacing `n_pos_flags` or "rolling trend" composite as a signal.** Validated noise (CLAUDE.md rule #3, feedback_rolling_trend_short_horizon_only.md). Ignore those columns even if they appear in the master files.
 5. **Recommending `/slump-or-decline` for an IL'd player.** Playing-hurt mimics decline (Suárez 2026-05-27). Check IL gaps in the parquet game-log before issuing any drop verdict — that's why DROP_RISK is suppressed for IL'd players here.
 6. **Issuing more than 5 HIGH alerts.** If everything is HIGH, nothing is. Re-tier or collapse to MED.
+
+
+---
+
+## Note (2026-06-03): new alert candidates
+
+Once tier-aware thresholds settle, consider adding:
+- `BOOM_STACK_HIGH` (SP at ace/sp2_sp3 tier, stack ≥ 2 today) — confirms a strong start
+- `BOOM_STACK_LOW` (SP at backend/streamer tier with sustained stack=0) — drop signal
+- `HIGH-K_ARM` (rostered SP with HIGH-K z ≥ +0.5, indicates real K-talent floor)
+
+Currently these surface via `/triangulate` per-player and `/stream-the-stack`
+daily; promote into this skill once a per-stack alert threshold is calibrated.

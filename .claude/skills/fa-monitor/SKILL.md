@@ -966,3 +966,14 @@ Signals calibrated from 2026 retroactive analysis (2026-05-25):
 - **Same-name collisions.** All rh3/rp3/rprs2 joins must use
   `(norm_name, pro_team)` tuple keys or `resolve_batter_id`. See
   `/player-id-resolve`.
+
+
+---
+
+## Note (2026-06-03): boom_stack coverage
+
+SP boom-shot signals (stack=2+ on confirmed probables) are now surfaced
+by `/stream-the-stack` daily — this skill does NOT duplicate that pipeline.
+When a `/stream-the-stack` HIGH lands and the SP is a true FA, treat it as
+an implicit 7th fa-monitor signal type and hand off to `/fa-pickup-deep-dive`
+for verdict.

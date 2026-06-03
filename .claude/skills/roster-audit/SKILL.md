@@ -471,3 +471,15 @@ If at any point you find yourself:
 
 Each run is independent — no state to carry forward. The output IS the
 artifact.
+
+
+---
+
+## Note (2026-06-03): boom_stack inputs to drop logic
+
+When considering an SP drop candidate, a sustained low `boom_stack` (0-1 over
+the last 2-3 starts) at backend/streamer tier strengthens the drop case —
+the SP is at-or-below the 9.7% baseline boom rate AND has no near-term
+boom catalyst. Conversely a stack=2+ at ace/sp2_sp3 tier weakens any
+drop case. boom_stack does NOT override rp3 rank but is a useful tiebreaker.
+See `reference_boom_stack_tag.md`.

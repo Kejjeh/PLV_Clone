@@ -9,6 +9,18 @@ You are identifying which starting pitchers are ACTUALLY available
 in the user's ESPN league and ranking them by quality with Pitcher
 List as the external authority.
 
+**For TODAY's streamer view, prefer `/stream-the-stack`** — that skill
+runs the same Connelly-Early-verified FA SP pool intersected with
+confirmed next-3-day probables, ranked by boom_stack tier. This skill
+is the broader season-rosterable scan; stream-the-stack is the daily
+boom-shot filter.
+
+**Secondary rank within this pool:** after rp3 + PL Top 100, use
+boom_stack tier as a tiebreaker. A `boom_stack >= 2` at ace/sp2_sp3
+tier is a stronger add than a stack=0 equivalent-rp3 candidate.
+At backend/streamer tiers, treat skill_spike as ANTI-predictive
+(see `reference_boom_stack_tag.md`).
+
 The skill exists because of the **Connelly Early bug** (2026-05-18):
 PL ranked Early at #42 T6 with a "discount Max Fried" comp, but he
 was already rostered on another team in the user's league — not

@@ -88,6 +88,19 @@ projection. The gap between them is the story:
 - Recent ≈ prior → stable performer
 - Recent ≫ prior → hot start; likely regression candidate (sell-high?)
 
+### Hitter-specific: hetero σ + boom_stack advisory (2026-06-03)
+
+- The rh3 file now carries a per-batter `batter_sigma_factor`
+  (clamped [0.7, 1.5], POWER widen / CONTACT tighten). When discussing
+  range/CIs for a hitter, note "σ factor X.XX" rather than assuming a
+  pooled σ. See `reference_hitter_sigma_hetero.md`.
+- For hitters who will play today, surface the live hitter boom_stack
+  via `/triangulate <name>` — sums 4 components (skill_spike_hitter,
+  recform_hot_hitter, opp_soft_hitter, **lineup_amp_hitter**) and
+  displays `boom_stack=N/4` with per-stack boom rates. Advisory only;
+  rh3 remains the headline point estimate. See
+  `reference_hitter_boom_stack.md`.
+
 ### SP-specific: variance band + data quality tag (MANDATORY)
 
 For SP candidates, the model-projection block must include **all three**
@@ -112,6 +125,36 @@ of the following alongside the headline `xfp_rp3_per_start`:
 The user should never see a bare `rp3 = X.XX` for an SP. They should see
 `rp3 = X.XX (P25-P75) FP/start | data_quality_tag` and, when applicable,
 the divergence flag.
+
+**Note on σ:** as of 2026-06-03 the p25/p75 band has been rescaled ×2.41
+to produce calibrated 50% intervals. Wider bands are the new baseline,
+not a model regression. See `reference_show_variance_and_data_quality.md`.
+
+### SP-specific: boom_stack tier + advisory tags (2026-06-03)
+
+For every FA SP candidate, also surface the tier-aware boom_stack token
+and any standalone advisory flags. Run `/triangulate <name>` or call
+`compute_boom_stack()` directly — both emit the same fields. Display:
+
+- `boom_stack=N/4 [tier=ace|sp2_sp3|backend|streamer]` with per-tier
+  boom%/bust% and mean-FP context. Components are skill_spike,
+  recform_hot, opp_soft, **park_friendly** (4th component, validated
+  2026-06-03 — soft hitter park = boom-rate lift across all tiers).
+- `🔥 HIGH-K ARM z=+X.XX` when the SP's within-cohort season K% z-score
+  is ≥ +0.5 (independent, standalone +6.84 pp boom edge).
+- `🧊 ELITE FRAMER` / `⚠ FRAMING TAX` when the SP's team modal 2026
+  catcher is in the Q5 / Q1 of framing-runs/100. Display-only.
+- **Anti-predictive skill_spike warning** — if tier is `backend` or
+  `sp2_sp3` AND skill_spike is lit, surface the regression-risk callout
+  (skill_spike has negative per-component lift in those tiers). At
+  ace/streamer tiers it's still boom-predictive.
+
+These tags inform the verdict rationale but do NOT replace it. A
+`boom_stack=3/4` streamer with rp3=6.0 is a high-variance lottery
+ticket, not "expected 17 FP" — point estimate is still rp3.
+
+See `reference_boom_stack_tag.md`, `reference_high_k_arm_tag.md`,
+`reference_catcher_framing_tag.md`, `reference_park_friendly_component.md`.
 
 Apply Rule: don't quote any feature whose validation lift has
 degraded (see `reference_validated_signals_registry.md`). For example,

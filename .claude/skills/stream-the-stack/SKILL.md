@@ -17,12 +17,27 @@ one `/triangulate` call per name. This skill does it in bulk.
 
 ## What boom_stack means
 
-**boom_stack ∈ {0, 1, 2, 3}** — three independent components, each 0 or 1:
+**boom_stack ∈ {0, 1, 2, 3, 4}** — four independent components, each 0 or 1
+(park_friendly added as 4th component 2026-06-03):
 
 1. **skill_spike** — last-3-starts K% − season K% ≥ +3pp AND last-3-starts
    BB% − season BB% ≤ −1pp (requires ≥3 prior starts).
 2. **recform_hot** — `recency_form_gap ≥ +3.0` from the rp3 row.
 3. **opp_soft** — today's opponent `bat_index_recent` ≤ 33rd-percentile (soft slate).
+4. **park_friendly** — today's venue is in the pitcher-friendly tier of the
+   2026 park-factor table. Validated 2026-06-03 across tiers.
+
+**Tier-aware thresholds** — boom rates compound differently by rp3 rank:
+ace (rank 1-10) at stack=3 hits 56.7% boom; sp2_sp3 (11-30) 31.2%;
+backend (31-50) 21.5%; streamer (51+) 17.4%. Tier-specific tables are
+encoded in `BOOM_RATE_BY_TIER_STACK` in `scripts/xfp/lib/boom_stack.py`.
+
+**Anti-predictive caveat:** at backend / sp2_sp3 tiers, `skill_spike` has
+NEGATIVE per-component lift (regression-predictive, not boom-predictive).
+The script flags this when the report renders.
+
+For component-level decomposition on a single SP, hand off to
+`/boom-stack-explain <name>`.
 
 Validated 2026-06-03 (n=12,713 streamer starts, 2018-2025). Boom rate (FP≥20):
 
@@ -127,6 +142,9 @@ If no stack=2+ candidates exist today, the report notes this is expected
 
 ## Complementary skills
 
+- `/boom-stack-explain <name>` — decomposes WHY a specific SP's stack
+  value is what it is (component-by-component, tier context, anti-
+  predictive flags). Use whenever the user asks "why is X's stack 2/4".
 - `/triangulate <name>` — after this skill flags a stack=2+, run triangulate
   to get the full archetype + PL rank + verdict synthesis context.
 - `/fa-sp-pool` — broader FA SP scan ranked by PL Top 100 (not by boom_stack).

@@ -298,3 +298,16 @@ the data-driven verdict first.
 - Trade analysis (their hitter for your hitter) → similar pattern but
   needs roster-construction implications; consider /trade-compare
   (not yet built)
+
+
+---
+
+## Note (2026-06-03): hitter boom_stack + hetero σ
+
+The rh3 file now carries `batter_sigma_factor` (per-batter heteroskedastic
+σ; POWER widen / CONTACT tighten). When two compared hitters have very
+different σ_factors (Stanton 1.24 vs Arraez 0.76), their rh3 ranges are
+not directly comparable as risk bands — note σ_factor alongside the point.
+For today-game decisions, also surface live hitter `boom_stack=N/4` via
+`/triangulate <name>` (advisory; rh3 stays the headline). See
+`reference_hitter_boom_stack.md` and `reference_hitter_sigma_hetero.md`.

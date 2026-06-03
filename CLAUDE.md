@@ -284,6 +284,21 @@ All in `~/.claude/projects/c--Users-Joshua-plv-clone/memory/`:
 - `feedback_validate_before_ship.md` — anti-promotion-without-validation rule
 - `feedback_save_handcuffs_needs_closer_context.md` — closer ranking nuance
 
+## Recent shipping (2026-06-03)
+
+Today's batch added a tag layer on top of the existing rh3/rp3 numbers
+(headline projections unchanged). New display-only tags surfaced via
+`/triangulate`, `/stream-the-stack`, matchup.html: **tier-aware
+boom_stack** (SP 4 components incl. park_friendly, range 0-4, per-tier
+boom% lookup), **hitter boom_stack** (4 components incl. lineup_amp,
+range 0-4), **HIGH-K ARM** standalone z-score tag, **catcher framing**
+🧊 ELITE / ⚠ TAX, **anti-predictive skill_spike warning** at backend/
+sp2_sp3 tiers, **skill_spike 3g → 5g window**, **σ rescale ×2.41**
+calibrating SP p25/p75 bands, **per-batter hetero σ** for hitters,
+**week_boom rate** in `/sp-week-plan` Step 5.5. New skills:
+`/stream-the-stack`, `/boom-stack-explain`. Lessons + validation index:
+`docs/architectural_lessons_2026-06-03.md`.
+
 ## Agent skills
 
 ### Issue tracker

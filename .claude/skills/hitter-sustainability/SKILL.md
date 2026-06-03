@@ -166,3 +166,15 @@ Use `pro_team` from the ESPN row as the second key. If unavailable, call
 - **Comparing to `/breakout-sustainability` for sweep work.** That
   skill is single-player narrative-rich. Use THIS one for the wide
   scan, then drill into specific names with breakout-sustainability.
+
+
+---
+
+## Note (2026-06-03): complementary hitter boom_stack tag
+
+For today-game right-tail context, layer in the live hitter `boom_stack=N/4`
+from `/triangulate` (4 components: skill_spike_hitter / recform_hot_hitter /
+opp_soft_hitter / lineup_amp_hitter). Sustainability is a RoS skill-decomp
+layer; boom_stack is a per-game boom-rate tag. They answer different
+questions and should be reported together for a hot hitter. See
+`reference_hitter_boom_stack.md`.

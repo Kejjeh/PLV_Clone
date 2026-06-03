@@ -443,3 +443,15 @@ Format:
 
   Always pass `pro_team` from the ESPN row as the second key. See
   `/player-id-resolve` for the full protocol.
+
+
+---
+
+## Note (2026-06-03): optional 12th layer — boom_stack tier distribution
+
+Consider adding a per-team SP boom_stack tier distribution as an optional
+12th layer. Teams stacked with ace/sp2_sp3 boom_stack≥2 SPs have a higher
+right-tail week ceiling than teams whose top-5 SPs are mostly backend
+tier. Cross-references cleanly with the per-team SP velo/k-form layer
+already in v4. See `reference_boom_stack_tag.md` and
+`reference_week_boom_2start.md`.

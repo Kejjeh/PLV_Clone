@@ -83,6 +83,13 @@ python scripts/xfp/pitcher_sustainability.py --scope my-roster --brief
 After computing both rp3 (validated) and sustainability E[ROS] (descriptive),
 the tool flags pitchers where they disagree by ≥1.5 FP:
 
+> ⚠ **Threshold under review (2026-06-03):** the rp3 σ rescale ×2.41 widened
+> the p25/p75 band on every SP. The 1.5-FP divergence threshold was calibrated
+> against the pre-rescale band and may now over-fire BUY-LOW / SELL-HIGH at
+> the margin. Treat divergences in the 1.5-2.5 FP range as soft signals
+> until recalibrated; ≥3 FP divergences still hold.
+
+
 | Signal | When | Action |
 |---|---|---|
 | **BUY-LOW** | Sustainability bullish, rp3 conservative | Add before rp3 refresh catches up |

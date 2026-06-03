@@ -126,6 +126,24 @@ For EACH mismatch, identify the likely bug pattern:
 - Cause: Same `today_s <` strict filter, OR opponent factor zeroing
 - Verify: count team games in MLB API window
 
+### Bug pattern G: Boom_stack / advisory tags missing on SP cells (2026-06-03+)
+- Symptom: SP cells don't show `boom_stack=N/4`, HIGH-K ARM, or framing tag
+  even though `xfp_rp3_projections.csv` has the columns
+- Cause: stale matchup.html rendered pre-tag-shipping; or the renderer
+  function in `build_matchup_dashboard.py` not updated to read the new
+  columns (`park_friendly` 4th boom_stack component, HIGH-K z-score,
+  catcher framing quintile)
+- Verify: open xfp_rp3_projections.csv, confirm columns exist; re-run
+  `python scripts/xfp/build_matchup_dashboard.py` and recheck the SP cell
+
+### Bug pattern H: Hetero σ not applied to hitter rows (2026-06-03+)
+- Symptom: pooled σ used in hitter variance even though
+  `batter_sigma_factor` is in `xfp_rh3_projections.csv`
+- Cause: matchup variance aggregator not reading the per-batter factor
+- Verify: spot-check a high-POWER hitter (Stanton-class, σ_factor ~1.24)
+  — their per-game variance contribution should be wider than a
+  contact hitter (Arraez-class, σ_factor ~0.76)
+
 ### Bug pattern F: Win probability extreme (>97% or <3%)
 - Symptom: Unrealistic confidence
 - Cause: Variance underestimated (sigma2 too low) — sometimes due to

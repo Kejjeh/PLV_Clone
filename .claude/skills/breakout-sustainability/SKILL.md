@@ -402,3 +402,15 @@ Use `pro_team` from the ESPN row as the second key. If unavailable, call
   changes); could be built as `/pitcher-breakout-sustainability` later
 - Quick FA scan — use `/fa-replacement-pool` first to narrow candidates
   then apply this skill to the shortlist
+
+
+---
+
+## Note (2026-06-03): complementary hitter boom_stack tag
+
+After a SUSTAINABLE / NARROW verdict, layer in today-game `boom_stack=N/4`
+from `/triangulate` for right-tail context on the specific upcoming game.
+Sustainability is a RoS skill question; boom_stack is a per-game flag.
+A SUSTAINABLE hitter with boom_stack=3 today is a top-of-lineup play;
+SUSTAINABLE with boom_stack=0 is a normal hold. See
+`reference_hitter_boom_stack.md`.
