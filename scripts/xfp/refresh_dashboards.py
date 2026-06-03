@@ -199,6 +199,18 @@ def main():
     if not ok_calib:
         print('  ⚠ calibration report failed — continuing')
 
+    # 3.7. Per-player backfill panel (slot-aware). Historical 2024+2025 ESPN
+    # box-score data — one-time-ish; only re-runs if the output parquet is
+    # missing. Pass --force to rebuild. Used for slot-aware projection tests
+    # and per-player residual decomposition.
+    ok_pp = run(
+        '3.7. Per-player calibration backfill panel (one-time)',
+        'python -X utf8 scripts/xfp/build_synthetic_calibration_with_slots.py',
+        timeout=900,
+    )
+    if not ok_pp:
+        print('  ⚠ per-player backfill panel failed — continuing (research-only)')
+
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
