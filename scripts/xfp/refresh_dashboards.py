@@ -51,6 +51,23 @@ def main():
 
     print(f'REFRESH DASHBOARDS — {datetime.now().strftime("%Y-%m-%d %H:%M")}')
 
+    # 0.5/0.6: Persist daily roster snapshot + transactions log. Both fail-soft —
+    # archival only, no downstream consumer in the current refresh chain.
+    # Combined they let us reconstruct roster state at any point in any future
+    # closed period (ESPN's recent_activity is rolling ~7-14 days, so daily
+    # runs are required to capture transactions before they fall off).
+    ok_rost = run('0.5. Persist daily roster snapshot (matchup_rosters_history)',
+                  'python -X utf8 scripts/xfp/persist_matchup_rosters.py',
+                  timeout=180)
+    if not ok_rost:
+        print('  ⚠ roster snapshot failed — continuing (archival only)')
+
+    ok_tx = run('0.6. Persist daily transactions log (transactions_history)',
+                'python -X utf8 scripts/xfp/persist_transactions.py',
+                timeout=180)
+    if not ok_tx:
+        print('  ⚠ transactions persist failed — continuing (archival only)')
+
     if not args.skip_statcast:
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
