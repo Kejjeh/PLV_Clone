@@ -88,6 +88,26 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
     ],
 }
 
+# Pitcher-side equivalent. Same shape as KNOWN_COLLISIONS:
+# name -> [(team_abbr, role_hint, mlbam_id), ...]. role_hint is 'SP'/'RP'/'P'
+# when the two players have distinct roles; team is the primary disambiguator.
+# Keep in sync with `memory/feedback_player_name_collisions.md`.
+KNOWN_PITCHER_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
+    # Two Logan Allens, both LHP — team is the only reliable disambiguator.
+    #   663531: SD/CLE veteran, last MLB innings 2021
+    #   671106: CLE current rotation LHP (2023+)
+    "Logan Allen": [
+        ("CLE", "SP", 671106),
+        ("SD", "SP", 663531),
+    ],
+    # Also surface the cache's "Last, First" spelling so callers using that
+    # form (Statcast multiyr cache) hit the same disambiguation gate.
+    "Allen, Logan": [
+        ("CLE", "SP", 671106),
+        ("SD", "SP", 663531),
+    ],
+}
+
 
 def resolve_batter_id(
     name: str,
@@ -147,6 +167,118 @@ def resolve_batter_id(
     if "year" in sub.columns:
         sub = sub.sort_values("year", ascending=False)
     return int(sub.iloc[0]["batter"])
+
+
+def resolve_pitcher_id(
+    name: str,
+    *,
+    team: Optional[str] = None,
+    role: Optional[str] = None,
+    sp_multiyr: Optional[pd.DataFrame] = None,
+    rp_multiyr: Optional[pd.DataFrame] = None,
+    sp_path: str = "data/research/xfp_cache/sp_multiyr_2015_2025.csv",
+    rp_path: str = "data/research/xfp_cache/relievers_multiyr_2018_2026.csv",
+) -> Optional[int]:
+    """Resolve a pitcher name to their MLBAM pitcher ID, disambiguating
+    known collisions using ``team`` / ``role`` hints.
+
+    Mirrors :func:`resolve_batter_id`. The pitcher caches use two distinct
+    name spellings:
+
+      - ``sp_multiyr_2015_2025.csv`` column ``player_name`` is "Last, First"
+      - ``relievers_multiyr_2018_2026.csv`` column ``name`` is "First Last"
+
+    Both spellings are checked. ``KNOWN_PITCHER_COLLISIONS`` is consulted
+    first; if the name collides and no ``team`` hint is provided, returns
+    None rather than silently picking the wrong player.
+
+    Args:
+        name: Pitcher name (either "Last, First" or "First Last" works).
+        team: MLB team abbreviation — required for known collisions.
+        role: 'SP' or 'RP' — restricts which cache is checked first and
+            used as a second-line tie-breaker.
+        sp_multiyr / rp_multiyr: Pre-loaded caches to avoid CSV re-reads.
+        sp_path / rp_path: Cache paths.
+
+    Returns:
+        MLBAM pitcher ID (int), or None if unresolved.
+    """
+    # Collision gate first — for both spellings.
+    if name in KNOWN_PITCHER_COLLISIONS:
+        candidates = KNOWN_PITCHER_COLLISIONS[name]
+        if team is not None:
+            for cand_team, cand_role, mlbam in candidates:
+                if cand_team.upper() == team.upper():
+                    return mlbam
+        if role is not None:
+            for cand_team, cand_role, mlbam in candidates:
+                if cand_role.upper() == role.upper():
+                    return mlbam
+        return None
+
+    # "First Last" -> "Last, First" alternate form for the SP cache.
+    alt_name = None
+    if "," not in name and " " in name:
+        parts = name.rsplit(" ", 1)
+        if len(parts) == 2:
+            alt_name = f"{parts[1]}, {parts[0]}"
+    elif "," in name:
+        parts = [p.strip() for p in name.split(",", 1)]
+        if len(parts) == 2 and parts[0] and parts[1]:
+            alt_name = f"{parts[1]} {parts[0]}"
+
+    def _try_sp() -> Optional[int]:
+        nonlocal sp_multiyr
+        if sp_multiyr is None:
+            try:
+                sp_multiyr = pd.read_csv(sp_path)
+            except FileNotFoundError:
+                return None
+        for n in (name, alt_name):
+            if n is None:
+                continue
+            sub = sp_multiyr[sp_multiyr["player_name"] == n]
+            if not sub.empty:
+                if "year" in sub.columns:
+                    sub = sub.sort_values("year", ascending=False)
+                # Multiple distinct IDs for the same name = unresolved
+                # collision the caller should have hit via KNOWN_PITCHER_COLLISIONS.
+                ids = sub["pitcher"].unique()
+                if len(ids) > 1:
+                    return None
+                return int(sub.iloc[0]["pitcher"])
+        return None
+
+    def _try_rp() -> Optional[int]:
+        nonlocal rp_multiyr
+        if rp_multiyr is None:
+            try:
+                rp_multiyr = pd.read_csv(rp_path)
+            except FileNotFoundError:
+                return None
+        for n in (name, alt_name):
+            if n is None:
+                continue
+            sub = rp_multiyr[rp_multiyr["name"] == n]
+            if not sub.empty:
+                if team is not None and "team_abbr" in sub.columns:
+                    team_sub = sub[sub["team_abbr"].astype(str).str.upper() == team.upper()]
+                    if not team_sub.empty:
+                        sub = team_sub
+                if "year" in sub.columns:
+                    sub = sub.sort_values("year", ascending=False)
+                ids = sub["pitcher"].unique()
+                if len(ids) > 1:
+                    return None
+                return int(sub.iloc[0]["pitcher"])
+        return None
+
+    # Role hint orders which cache we check first.
+    if role and role.upper() == "RP":
+        return _try_rp() or _try_sp()
+    if role and role.upper() == "SP":
+        return _try_sp() or _try_rp()
+    return _try_sp() or _try_rp()
 
 
 # ── Pre-resolved name → batter-ID cache lookup ──────────────────────────
@@ -242,6 +374,8 @@ __all__ = [
     "fuzzy_match_name",
     "merge_with_model",
     "resolve_batter_id",
+    "resolve_pitcher_id",
     "lookup_batter_id_cached",
     "KNOWN_COLLISIONS",
+    "KNOWN_PITCHER_COLLISIONS",
 ]

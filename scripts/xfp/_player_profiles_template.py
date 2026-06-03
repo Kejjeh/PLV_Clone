@@ -1013,9 +1013,11 @@ const H_BY_ID = {}; HITTERS.forEach(r => { (H_BY_ID[r.batter] = H_BY_ID[r.batter
 const S_BY_ID = {}; SPS.forEach(r => { (S_BY_ID[r.pitcher] = S_BY_ID[r.pitcher] || []).push(r); });
 
 // Boom / Bust / Variance payload — pre-computed by stream_the_stack pipeline.
-// Pitcher-side only for now (hitter boom_stack is on-demand). Keyed by str(pitcher_id).
+// Pitcher-side: keyed by str(pitcher_id). Hitter-side: keyed by str(batter_id).
 const BOOM_PITCHER     = (D.boom_pitcher && D.boom_pitcher.by_pitcher) || {};
 const BOOM_PITCHER_META = (D.boom_pitcher && D.boom_pitcher.meta) || { available: false };
+const BOOM_HITTER      = (D.boom_hitter && D.boom_hitter.by_batter) || {};
+const BOOM_HITTER_META = (D.boom_hitter && D.boom_hitter.meta) || { available: false };
 
 // Snapshots — indexed by (id, year) for per-player trajectories, and by (year, date) for movers.
 // RP snapshots are merged into the SP-side index so the SP-shaped JS code path
@@ -2249,14 +2251,101 @@ function openModal(role, id) {
 // upcoming start data exists for the player.
 function renderBoomPanel(role, id, cur) {
   if (role === 'hitter') {
-    return '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">'
-         + '<p><b>Hitter boom_stack</b> (4 components: skill_spike, recform_hot, '
-         + 'opp_soft, lineup_amp) and the per-batter heteroscedastic σ factor '
-         + 'are computed on demand via <code>scripts/xfp/lib/hitter_boom_stack.py</code>.</p>'
-         + '<p>Not yet pre-batched for the full hitter pool. Run '
-         + '<code>/breakout-sustainability ' + (cur.player_name || '') + '</code> or '
-         + '<code>/triangulate ' + (cur.player_name || '') + '</code> for the full layered output.</p>'
-         + '</div>';
+    const recH = BOOM_HITTER[String(id)];
+    if (!recH) {
+      let html = '<div style="color:var(--dim);font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;line-height:1.5;">';
+      html += '<p><b>No upcoming game in the current hitter boom_stack window</b>';
+      if (BOOM_HITTER_META && BOOM_HITTER_META.window_start) {
+        html += ` (${BOOM_HITTER_META.window_start} → ${BOOM_HITTER_META.window_end})`;
+      }
+      html += '.</p>';
+      html += '<p>4-component hitter stack (skill_spike_hitter, recform_hot_hitter, '
+           + 'opp_soft_hitter, lineup_amp_hitter) is pre-batched daily via '
+           + '<code>scripts/xfp/build_hitter_boom_stack_daily.py</code>. '
+           + 'This batter is not on a roster in the next 2-day window — '
+           + 'check back tomorrow or run <code>/triangulate ' + (cur.player_name || '') + '</code>.</p>';
+      html += '</div>';
+      return html;
+    }
+    const cmpH = recH.boom_components || {};
+    const detH = recH.boom_detail_summary || {};
+    const stackH = recH.boom_stack;
+    const maxH = Object.keys(cmpH).length || 4;
+
+    function chipH(name, val, sub) {
+      const cls = val ? 'plus' : 'dim';
+      const subStr = sub ? `<div style="color:var(--dim);font-size:.78em;margin-top:.2em;">${sub}</div>` : '';
+      return `<div class="hero-overall" style="padding:.5em .7em;min-width:160px;">`
+           + `<div class="label">${name}</div>`
+           + `<div style="color:var(--${cls});font-weight:700;font-size:1.05em;">${val ? 'FIRE' : '—'}</div>`
+           + subStr + `</div>`;
+    }
+
+    let html = '<div style="font-family:\\'IBM Plex Mono\\',monospace;font-size:.88em;">';
+    html += `<div class="modal-hero" style="margin-bottom:.8em;">`;
+    html += `<div><div style="color:var(--dim);font-size:.75em;text-transform:uppercase;">boom_stack</div>`;
+    html += `<div style="font-size:1.8em;font-weight:700;color:var(--accent);">${stackH} / ${maxH}</div>`;
+    if (recH.matchup_tier) {
+      const ha = recH.is_home ? '(home)' : '(away)';
+      html += `<div style="color:var(--dim);font-size:.8em;">tier: ${recH.matchup_tier} · ${recH.opp_team || ''} ${ha}</div>`;
+    }
+    html += `</div>`;
+    html += `<div class="hero-stats">`;
+    if (recH.boom_rate_expected != null) {
+      html += `<div class="hero-overall"><div class="label">P(boom)</div>`
+            + `<div class="val" style="font-size:1.4em;color:var(--pos);">${(recH.boom_rate_expected*100).toFixed(1)}%</div></div>`;
+    }
+    if (recH.bust_rate_expected != null) {
+      html += `<div class="hero-overall"><div class="label">P(bust)</div>`
+            + `<div class="val" style="font-size:1.4em;color:var(--neg);">${(recH.bust_rate_expected*100).toFixed(1)}%</div></div>`;
+    }
+    if (recH.boom_mean_fp_expected != null) {
+      html += `<div class="hero-overall"><div class="label">E[fp_proxy | boom]</div>`
+            + `<div class="val" style="font-size:1.4em;">${recH.boom_mean_fp_expected.toFixed(2)}</div></div>`;
+    }
+    if (recH.rh3_per_game != null) {
+      html += `<div class="hero-overall" style="border-left:3px solid var(--accent);padding-left:.6em;">`
+            + `<div class="label">rh3 / game</div>`
+            + `<div style="font-size:1.05em;"><b>${recH.rh3_per_game.toFixed(2)}</b>`
+            + (recH.rh3_p25 != null && recH.rh3_p75 != null ? ` (${recH.rh3_p25.toFixed(2)}–${recH.rh3_p75.toFixed(2)})` : '')
+            + `</div>`
+            + `<div style="color:var(--dim);font-size:.75em;">rank ${recH.rh3_rank ?? '—'}</div>`
+            + `</div>`;
+    }
+    html += `</div></div>`;
+
+    // Component chips
+    html += '<div style="display:flex;flex-wrap:wrap;gap:.5em;margin-bottom:1em;">';
+    const ss = detH.skill_spike_hitter || {};
+    const ssSub = (ss.delta_xwoba != null)
+      ? `xwOBAΔ ${ss.delta_xwoba>=0?'+':''}${ss.delta_xwoba.toFixed(3)} · K%Δ ${ss.delta_k_pp>=0?'+':''}${(ss.delta_k_pp ?? 0).toFixed(1)} pp (n=${ss.n_games_2026 ?? '—'})`
+      : (ss.reason || null);
+    html += chipH('skill_spike', cmpH.skill_spike_hitter, ssSub);
+    const rf = detH.recform_hot_hitter || {};
+    const rfSub = (rf.delta != null)
+      ? `Δ fp_proxy ${rf.delta>=0?'+':''}${rf.delta.toFixed(2)}/g (L10 ${rf.last10_fp_proxy_per_g != null ? rf.last10_fp_proxy_per_g.toFixed(2) : '—'} vs season ${rf.season_fp_proxy_per_g != null ? rf.season_fp_proxy_per_g.toFixed(2) : '—'})`
+      : (rf.reason || null);
+    html += chipH('recform_hot', cmpH.recform_hot_hitter, rfSub);
+    const os = detH.opp_soft_hitter || {};
+    const osSub = (os.opp_sp_rp3_per_start != null)
+      ? `opp SP rp3 ${os.opp_sp_rp3_per_start.toFixed(2)} vs p33 ${os.soft_p33_threshold != null ? os.soft_p33_threshold.toFixed(2) : '—'}`
+      : (os.reason || null);
+    html += chipH('opp_soft', cmpH.opp_soft_hitter, osSub);
+    const la = detH.lineup_amp_hitter || {};
+    const laSub = (la.n_teammates_lit != null)
+      ? `${la.n_teammates_lit} teammates lit (of ${la.teammates_checked ?? '—'} checked)`
+      : (la.reason || null);
+    html += chipH('lineup_amp', cmpH.lineup_amp_hitter, laSub);
+    html += '</div>';
+
+    // Footer
+    html += `<div style="color:var(--dim);font-size:.75em;border-top:1px solid var(--border);padding-top:.5em;">`;
+    if (recH.game_date) html += `game_date: ${recH.game_date} · `;
+    if (BOOM_HITTER_META.source_file) html += `source: ${BOOM_HITTER_META.source_file}`;
+    html += '</div>';
+
+    html += '</div>';
+    return html;
   }
   // SP / RP
   const rec = BOOM_PITCHER[String(id)];

@@ -293,35 +293,101 @@ def detect_highlights(name: str, role: str, stats_b: dict, stats_p: dict) -> lis
 
 
 def build_team_id_map(team):
-    """Map roster names → MLBAM IDs and roles."""
+    """Map roster names → MLBAM IDs and roles, collision-safe.
+
+    Resolution path (per player):
+      1. Hitters → `resolve_batter_id(name, team=proTeam, position=primary_slot)`
+      2. Pitchers → `resolve_pitcher_id(name, team=proTeam, role=role_guess)`
+
+    The naive `_norm(name) → id` map is retained ONLY as a fast prefilter
+    for non-colliding names; any name in KNOWN_COLLISIONS /
+    KNOWN_PITCHER_COLLISIONS is force-routed through the resolver so the
+    Max Muncy LAD-vs-ATH and Logan Allen CLE-vs-SD cases can't sneak
+    through. Players that don't resolve are logged + skipped, not crashed.
+    See `memory/feedback_player_name_collisions.md`.
+    """
+    from plv_clone.utils.name_match import (
+        resolve_batter_id, resolve_pitcher_id,
+        KNOWN_COLLISIONS, KNOWN_PITCHER_COLLISIONS,
+    )
+
     hitters = pd.read_csv(CACHE / 'hitters_multiyr_2015_2026.csv',
                             usecols=['batter', 'player_name'])
     sps = pd.read_csv(CACHE / 'sp_multiyr_2015_2025.csv',
                        usecols=['pitcher', 'player_name'])
     rps = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv',
                        usecols=['pitcher', 'name'])
-    rps = rps.rename(columns={'name': 'player_name'})
-    hitters['nk'] = hitters['player_name'].map(_norm)
-    sps['nk'] = sps['player_name'].map(_norm)
-    rps['nk'] = rps['player_name'].map(_norm)
-    h_lookup = dict(zip(hitters['nk'], hitters['batter']))
-    sp_lookup = dict(zip(sps['nk'], sps['pitcher']))
-    rp_lookup = dict(zip(rps['nk'], rps['pitcher']))
+    # Fast-path lookup tables built from the same caches the resolvers consult.
+    # Only used for non-colliding names; colliding names ALWAYS go through
+    # the resolver so team/position disambiguation actually runs.
+    hitters_nk = hitters.assign(nk=hitters['player_name'].map(_norm))
+    sps_nk = sps.assign(nk=sps['player_name'].map(_norm))
+    rps_nk = rps.assign(nk=rps['name'].map(_norm))
+    # Drop names that map to >1 mlbam id from the fast-path entirely — those
+    # are collisions that MUST disambiguate via team/position.
+    h_lookup = (hitters_nk.groupby('nk')['batter'].nunique()
+                .pipe(lambda s: hitters_nk[hitters_nk['nk'].isin(s[s == 1].index)])
+                .set_index('nk')['batter'].to_dict())
+    sp_lookup = (sps_nk.groupby('nk')['pitcher'].nunique()
+                 .pipe(lambda s: sps_nk[sps_nk['nk'].isin(s[s == 1].index)])
+                 .set_index('nk')['pitcher'].to_dict())
+    rp_lookup = (rps_nk.groupby('nk')['pitcher'].nunique()
+                 .pipe(lambda s: rps_nk[rps_nk['nk'].isin(s[s == 1].index)])
+                 .set_index('nk')['pitcher'].to_dict())
+
+    # Names known to collide — must always force resolver path.
+    collide_batter = set(KNOWN_COLLISIONS.keys())
+    collide_pitcher = set(KNOWN_PITCHER_COLLISIONS.keys())
 
     roster = []
     for p in team.roster:
-        nk = _norm(p.name)
+        name = p.name
+        nk = _norm(name)
+        proTeam = (getattr(p, 'proTeam', '?') or '').upper()
         slots = list(getattr(p, 'eligibleSlots', []) or [])
-        is_hitter = bool(set(slots) & {'C','1B','2B','3B','SS','OF','LF','CF','RF','DH','UTIL'})
-        if is_hitter:
-            pid = h_lookup.get(nk); role = 'H'
-        else:
-            pid = sp_lookup.get(nk) or rp_lookup.get(nk)
-            role = 'SP' if nk in sp_lookup else 'RP'
-        if pid is None: continue
+        hit_slots = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH', 'UTIL'}
+        is_hitter = bool(set(slots) & hit_slots)
+        # Primary position hint for hitter disambiguation: first matching slot.
+        position_hint = next((s for s in slots if s in hit_slots and s != 'UTIL'), None)
+        pid = None
+        role = None
+        try:
+            if is_hitter:
+                role = 'H'
+                if name in collide_batter:
+                    pid = resolve_batter_id(name, team=proTeam, position=position_hint)
+                else:
+                    pid = h_lookup.get(nk)
+                    if pid is None:
+                        pid = resolve_batter_id(name, team=proTeam, position=position_hint)
+            else:
+                # Pitcher. Role guess: if eligible only for RP-ish slots prefer RP cache.
+                role_hint = 'RP' if ('RP' in slots and 'SP' not in slots) else (
+                    'SP' if 'SP' in slots else None)
+                if name in collide_pitcher:
+                    pid = resolve_pitcher_id(name, team=proTeam, role=role_hint)
+                else:
+                    pid = sp_lookup.get(nk) or rp_lookup.get(nk)
+                    if pid is None:
+                        pid = resolve_pitcher_id(name, team=proTeam, role=role_hint)
+                # Role label: based on which cache holds this id.
+                if pid is not None:
+                    if pid in sp_lookup.values() or nk in sp_lookup:
+                        role = 'SP'
+                    elif pid in rp_lookup.values() or nk in rp_lookup:
+                        role = 'RP'
+                    else:
+                        # Fell through resolver — infer from role_hint or default SP.
+                        role = role_hint or 'SP'
+        except Exception as e:
+            print(f'  WARN: resolver error for {name} ({proTeam}): {e}; skipping')
+            continue
+        if pid is None:
+            print(f'  WARN: could not resolve {name} ({proTeam}, slots={slots}); skipping')
+            continue
         roster.append({
-            'name': p.name, 'mlbam': int(pid), 'role': role,
-            'team': (getattr(p, 'proTeam', '?') or '').upper(),
+            'name': name, 'mlbam': int(pid), 'role': role,
+            'team': proTeam,
             'injury': getattr(p, 'injuryStatus', 'ACTIVE'),
         })
     return roster

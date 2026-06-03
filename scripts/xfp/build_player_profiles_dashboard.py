@@ -753,6 +753,50 @@ def annotate_current_year_rows(records: list[dict], current_year: int,
           f'(current_year={current_year})', flush=True)
 
 
+def load_hitter_boom_stack_payload() -> dict:
+    """Load the most recent hitter_boom_stack JSON and reshape into a
+    per-batter_id map for the Boom/Bust/Variance modal tab (hitter side).
+
+    Mirrors `load_boom_stack_payload` (SP). Falls back gracefully when no
+    batch file is found — the tab still renders with the prior placeholder.
+    """
+    OUT = REPO / 'data/outputs'
+    files = sorted(OUT.glob('hitter_boom_stack_*.json'))
+    if not files:
+        return {'meta': {'available': False, 'reason': 'no hitter_boom_stack JSON found'},
+                'by_batter': {}}
+    latest = files[-1]
+    try:
+        with open(latest, encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        return {'meta': {'available': False, 'reason': f'parse error: {e}'},
+                'by_batter': {}}
+
+    by_bid: dict[str, dict] = {}
+    for c in data.get('candidates', []):
+        bid = c.get('batter_id')
+        if bid is None:
+            continue
+        # If a batter appears across multiple games (today + tomorrow), keep
+        # the earlier-date entry — that's "today's" view for the profile.
+        key = str(int(bid))
+        if key in by_bid:
+            if c.get('game_date', '') < by_bid[key].get('game_date', ''):
+                by_bid[key] = c
+        else:
+            by_bid[key] = c
+
+    meta = {
+        'available': True,
+        'source_file': latest.name,
+        'window_start': data.get('summary', {}).get('window_start'),
+        'window_end': data.get('summary', {}).get('window_end'),
+        'n_candidates': len(by_bid),
+    }
+    return {'meta': meta, 'by_batter': by_bid}
+
+
 def load_boom_stack_payload() -> dict:
     """Load the most recent stream_the_stack JSON and reshape into a
     per-pitcher_id map for the Boom / Bust / Variance modal tab.
@@ -836,6 +880,13 @@ def build_payload():
           f'n_pitchers={len(boom_payload["by_pitcher"])} '
           f'source={bm.get("source_file")}', flush=True)
 
+    print('Loading hitter boom/bust/variance payload (hitter_boom_stack)...', flush=True)
+    boom_hitter_payload = load_hitter_boom_stack_payload()
+    bhm = boom_hitter_payload['meta']
+    print(f'  hitter boom_stack: available={bhm.get("available")} '
+          f'n_batters={len(boom_hitter_payload["by_batter"])} '
+          f'source={bhm.get("source_file")}', flush=True)
+
     rp_count = sum(1 for r in rp_records if r.get('year') == current_year)
     rp_available = rp_count >= 25
     print(f'  RP-archetype current-year records: {rp_count} '
@@ -860,11 +911,12 @@ def build_payload():
         'rp_snapshots': rp_snapshots,
         'rp_available': bool(rp_available),
         'my_team_name': MY_TEAM_NAME,
-        # Per-pitcher boom/bust/variance — keyed by str(pitcher_id). Hitter
-        # boom_stack is not yet pre-computed for the full pool (the engine
-        # in lib/hitter_boom_stack.py runs on demand). When that batch file
-        # lands, mirror under 'boom_hitter'.
+        # Per-pitcher boom/bust/variance — keyed by str(pitcher_id).
         'boom_pitcher': boom_payload,
+        # Per-batter boom/bust/variance — keyed by str(batter_id). Populated
+        # by `scripts/xfp/build_hitter_boom_stack_daily.py` (step 4.7 of
+        # refresh_dashboards.py). Falls back to placeholder when missing.
+        'boom_hitter': boom_hitter_payload,
     }
 
 

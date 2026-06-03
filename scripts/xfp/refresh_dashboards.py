@@ -186,6 +186,18 @@ def main():
     if not ok_stream:
         print('  ⚠ stream_the_stack failed — continuing (non-gating)')
 
+    # 4.7. Daily hitter boom_stack batch. Fail-soft mirror of 4.6 but for
+    # batters in today+tomorrow's scheduled games. Outputs at
+    # data/outputs/hitter_boom_stack_<date>.{md,json}. Consumed by the
+    # profiles dashboard Boom/Bust/Variance tab on the next build.
+    ok_hboom = run(
+        '4.7. Build hitter_boom_stack daily batch',
+        'python -X utf8 scripts/xfp/build_hitter_boom_stack_daily.py',
+        timeout=300,
+    )
+    if not ok_hboom:
+        print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
+
     if not args.no_push:
         if not ok_profiles:
             print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
