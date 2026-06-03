@@ -795,6 +795,13 @@ tbody tr:hover td {{ background: var(--panel); }}
 
 
 def main():
+    # Force UTF-8 stdout so box-drawing chars / emoji badges don't crash on Windows cp1252.
+    if sys.stdout.encoding and sys.stdout.encoding.lower() != 'utf-8':
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except Exception:
+            pass  # fallback: some environments don't support reconfigure
+
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', default=str(date_cls.today()))
     ap.add_argument('--watch', type=int, default=0)
