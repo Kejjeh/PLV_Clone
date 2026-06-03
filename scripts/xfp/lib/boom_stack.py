@@ -50,6 +50,13 @@ import pandas as pd
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 _STATCAST_2026 = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'statcast_2026.parquet')
 _TEAM_STRENGTH = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'team_strength_2026.csv')
+_PITCHER_SCHEDULE = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'pitcher_schedule_2026.csv')
+_PARK_FACTORS = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'park_factors_2018_2026.csv')
+
+# park_friendly uses PRIOR-year park factor (strict pre-cutoff per validation
+# spec: 2026 in-season starts use 2025 pf_wOBA). See
+# data/research/validation_runs/park_factor_boom_modifier.md.
+_PARK_PF_YEAR = 2025
 
 # Expected boom rate / mean FP by bucket (legacy, streamer-pool calibration
 # from `streamer_boom_stack_v1_2026-06-03.md`). Kept for backwards-compat with
@@ -61,24 +68,36 @@ MEAN_FP_BY_STACK = {0: 8.44, 1: 9.62, 2: 9.92, 3: 10.14}
 # Per-tier historical boom% / bust% / mean FP by stack bucket.
 # Source: `data/research/validation_runs/boom_stack_by_tier.md` (n=31,713 SP
 # starts, 2018-2025). boom% = P(FP >= 20). bust% = P(FP < 0).
+# NOTE on stack=4 (park_friendly 5th-component rollout, 2026-06-03):
+# The validation report (park_factor_boom_modifier.md) reports a COMPOSITE
+# stack=4 boom rate of 22.1% (n=104) across all tiers — per-tier stack=4
+# numbers were NOT derived because the cell is too thin. The values below
+# at stack=4 are an EXTRAPOLATION: each tier's stack=3 value scaled by the
+# composite uplift ratio stack=3→stack=4 (≈ 22.1/20.9 = 1.057×) for boom
+# rate, and the stack=3 value held flat for bust/mean (no signal to update).
+# Mark as extrapolated; revisit when per-tier-stack=4 numbers exist.
 BOOM_RATE_BY_TIER_STACK: dict[str, dict[int, float]] = {
-    'ace':      {0: 0.419, 1: 0.446, 2: 0.487, 3: 0.567},
-    'sp2_sp3':  {0: 0.270, 1: 0.334, 2: 0.280, 3: 0.312},
-    'backend':  {0: 0.203, 1: 0.251, 2: 0.207, 3: 0.215},
-    'streamer': {0: 0.094, 1: 0.122, 2: 0.132, 3: 0.174},
+    'ace':      {0: 0.419, 1: 0.446, 2: 0.487, 3: 0.567, 4: 0.599},  # 4: extrapolated (0.567×1.057)
+    'sp2_sp3':  {0: 0.270, 1: 0.334, 2: 0.280, 3: 0.312, 4: 0.330},  # 4: extrapolated
+    'backend':  {0: 0.203, 1: 0.251, 2: 0.207, 3: 0.215, 4: 0.227},  # 4: extrapolated
+    'streamer': {0: 0.094, 1: 0.122, 2: 0.132, 3: 0.174, 4: 0.184},  # 4: extrapolated
 }
 BUST_RATE_BY_TIER_STACK: dict[str, dict[int, float]] = {
-    'ace':      {0: 0.050, 1: 0.037, 2: 0.047, 3: 0.000},
-    'sp2_sp3':  {0: 0.060, 1: 0.047, 2: 0.053, 3: 0.043},
-    'backend':  {0: 0.096, 1: 0.078, 2: 0.106, 3: 0.046},
-    'streamer': {0: 0.185, 1: 0.156, 2: 0.152, 3: 0.152},
+    'ace':      {0: 0.050, 1: 0.037, 2: 0.047, 3: 0.000, 4: 0.000},  # 4: held = stack=3
+    'sp2_sp3':  {0: 0.060, 1: 0.047, 2: 0.053, 3: 0.043, 4: 0.043},  # 4: held
+    'backend':  {0: 0.096, 1: 0.078, 2: 0.106, 3: 0.046, 4: 0.046},  # 4: held
+    'streamer': {0: 0.185, 1: 0.156, 2: 0.152, 3: 0.152, 4: 0.152},  # 4: held
 }
 MEAN_FP_BY_TIER_STACK: dict[str, dict[int, float]] = {
-    'ace':      {0: 17.33, 1: 17.93, 2: 18.91, 3: 20.93},
-    'sp2_sp3':  {0: 14.51, 1: 15.69, 2: 15.16, 3: 15.89},
-    'backend':  {0: 12.59, 1: 13.65, 2: 12.91, 3: 13.63},
-    'streamer': {0:  8.36, 1:  9.64, 2:  9.75, 3: 10.60},
+    'ace':      {0: 17.33, 1: 17.93, 2: 18.91, 3: 20.93, 4: 20.93},  # 4: held
+    'sp2_sp3':  {0: 14.51, 1: 15.69, 2: 15.16, 3: 15.89, 4: 15.89},  # 4: held
+    'backend':  {0: 12.59, 1: 13.65, 2: 12.91, 3: 13.63, 4: 13.63},  # 4: held
+    'streamer': {0:  8.36, 1:  9.64, 2:  9.75, 3: 10.60, 4: 10.60},  # 4: held
 }
+
+# Composite stack→boom rate (all tiers pooled) from park_factor_boom_modifier.md
+# Used as a reference / fallback. n at stack=4 = 104.
+COMPOSITE_BOOM_RATE_BY_STACK_V2 = {0: 0.1234, 1: 0.1498, 2: 0.1941, 3: 0.2093, 4: 0.2212}
 
 # Tiers where flag_skill_spike has NEGATIVE per-tier lift (recent K%-spike +
 # BB%-drop is regression-predictive, not continuation-predictive).
@@ -173,6 +192,88 @@ def _load_soft_tertile() -> tuple[float, pd.DataFrame]:
 # ---------------------------------------------------------------------------
 # Component computations
 # ---------------------------------------------------------------------------
+@lru_cache(maxsize=1)
+def _load_park_friendly_set() -> tuple[frozenset, float, int]:
+    """Return (set of pitcher-friendly park_team codes, p33 threshold, ref_year).
+
+    "Pitcher-friendly" = pf_wOBA in bottom (lowest) tertile of MLB parks in the
+    PRIOR year (_PARK_PF_YEAR). Matches the validation framing exactly.
+    """
+    pf = pd.read_csv(_PARK_FACTORS)
+    pf = pf[pf['year'] == _PARK_PF_YEAR].copy()
+    if pf.empty:
+        return frozenset(), float('nan'), _PARK_PF_YEAR
+    p33 = float(np.percentile(pf['pf_wOBA'].values, 100.0 / 3.0))
+    friendly = frozenset(pf.loc[pf['pf_wOBA'] <= p33, 'team_abbr'].astype(str).tolist())
+    return friendly, p33, _PARK_PF_YEAR
+
+
+@lru_cache(maxsize=1)
+def _load_pitcher_schedule() -> Optional[pd.DataFrame]:
+    """Load the MLB Stats API probable-pitchers schedule (built by
+    build_pitcher_schedule.py). Returns None if the file is missing.
+
+    Cols of interest: pitcher (mlb_id, int), park_team, start_idx.
+    """
+    if not os.path.exists(_PITCHER_SCHEDULE):
+        return None
+    df = pd.read_csv(_PITCHER_SCHEDULE)
+    if 'pitcher' not in df.columns or 'park_team' not in df.columns:
+        return None
+    df['pitcher'] = df['pitcher'].astype('int64', errors='ignore')
+    return df
+
+
+def _component_park_friendly(pitcher_id: int) -> tuple[int, dict]:
+    """Component 4 (NEW 2026-06-03): SP pitching at a park whose PRIOR-year
+    pf_wOBA is in the bottom (most-pitcher-friendly) tertile of MLB parks.
+
+    Looked up via pitcher_schedule_2026.csv (the probable-pitchers feed with
+    is_home + park_team already resolved). When the pitcher has no confirmed
+    next start in the schedule, the flag is 0 (we do NOT fabricate a venue).
+
+    Validation: data/research/validation_runs/park_factor_boom_modifier.md
+      - Standalone edge +2.69 pp (z=5.73, 95% CI [+1.80, +3.58])
+      - Composite stack 0→4 boom rate: 12.3/15.0/19.4/20.9/22.1%
+      - 5/6 years positive; lone -0.27 pp in 2021 (COVID)
+    """
+    sched = _load_pitcher_schedule()
+    detail: dict = {'park_team': None, 'pf_wOBA': None,
+                    'pf_year': _PARK_PF_YEAR, 'reason': None}
+    if sched is None or sched.empty:
+        detail['reason'] = 'no_schedule_file'
+        return 0, detail
+    try:
+        pid = int(pitcher_id)
+    except (TypeError, ValueError):
+        detail['reason'] = 'bad_pitcher_id'
+        return 0, detail
+    my = sched[sched['pitcher'] == pid]
+    if 'start_idx' in my.columns:
+        my = my[my['start_idx'] == 1]
+    if my.empty:
+        detail['reason'] = 'no_scheduled_start'
+        return 0, detail
+    park_team = my.iloc[0].get('park_team')
+    if park_team is None or (isinstance(park_team, float) and pd.isna(park_team)):
+        detail['reason'] = 'no_park_team'
+        return 0, detail
+    park_team = str(park_team)
+    friendly, p33, ref_year = _load_park_friendly_set()
+    detail['park_team'] = park_team
+    detail['p33_threshold'] = p33
+    detail['pf_year'] = ref_year
+    # Pull this park's actual pf_wOBA for transparency.
+    pf = pd.read_csv(_PARK_FACTORS)
+    row = pf[(pf['year'] == ref_year) & (pf['team_abbr'] == park_team)]
+    if not row.empty:
+        detail['pf_wOBA'] = float(row.iloc[0]['pf_wOBA'])
+    fired = int(park_team in friendly)
+    if not fired:
+        detail['reason'] = 'park_not_in_friendly_tertile'
+    return fired, detail
+
+
 def _component_skill_spike(pitcher_id: int) -> tuple[int, dict]:
     """Component 1: last-5-starts K% - season K% >= +3pp AND
     last-5-starts BB% - season BB% <= -1pp. <5 starts => 0.
@@ -271,16 +372,19 @@ def compute_boom_stack(
     c1, d1 = _component_skill_spike(pitcher_id)
     c2, d2 = _component_recform_hot(recency_form_gap)
     c3, d3 = _component_opp_soft(next_opp_team)
-    total = int(c1 + c2 + c3)
+    c4, d4 = _component_park_friendly(pitcher_id)
+    total = int(c1 + c2 + c3 + c4)
 
     if rp3_rank is None:
         tier = 'streamer'
     else:
         tier = tier_for_rank(int(rp3_rank))
 
-    boom_rate = BOOM_RATE_BY_TIER_STACK[tier][total]
-    bust_rate = BUST_RATE_BY_TIER_STACK[tier][total]
-    mean_fp = MEAN_FP_BY_TIER_STACK[tier][total]
+    # Tier table goes 0..4 since park_friendly addition; clamp defensively.
+    total_clamped = max(0, min(4, total))
+    boom_rate = BOOM_RATE_BY_TIER_STACK[tier][total_clamped]
+    bust_rate = BUST_RATE_BY_TIER_STACK[tier][total_clamped]
+    mean_fp = MEAN_FP_BY_TIER_STACK[tier][total_clamped]
 
     anti_pred = bool(
         tier in SKILL_SPIKE_ANTIPREDICTIVE_TIERS
@@ -294,11 +398,13 @@ def compute_boom_stack(
             'skill_spike': c1,
             'recform_hot': c2,
             'opp_soft': c3,
+            'park_friendly': c4,
         },
         'detail': {
             'skill_spike': d1,
             'recform_hot': d2,
             'opp_soft': d3,
+            'park_friendly': d4,
         },
         'tier': tier,
         'boom_rate_expected': boom_rate,

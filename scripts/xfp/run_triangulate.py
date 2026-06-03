@@ -78,7 +78,7 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             br = model.get('boom_rate_expected')
             bu = model.get('boom_bust_rate_expected')
             tier = model.get('boom_tier')
-            parts = [f"boom_stack={bs_val}/3"]
+            parts = [f"boom_stack={bs_val}/4"]
             if tier:
                 parts.append(f"[tier={tier}]")
             if br is not None and bu is not None:
@@ -119,7 +119,7 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 bu_s = f", ~{bu*100:.1f}% bust" if bu is not None else ''
                 tier_s = f" [tier={tier}]" if tier else ''
                 lines.append(
-                    f"\n**Boom-stack flag{tier_s}:** boom_stack={bs_val}/3 "
+                    f"\n**Boom-stack flag{tier_s}:** boom_stack={bs_val}/4 "
                     f"({', '.join(lit) if lit else 'no components lit'}) — {br_s}{bu_s}. "
                     f"Display tag only, not a verdict override."
                 )
