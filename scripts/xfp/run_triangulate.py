@@ -58,11 +58,41 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         if blend.get('blended_xfp') is not None:
             unit = blend.get('display_unit') or ''
             ct = blend.get('confidence_tier') or 'unknown'
-            lines.append(
-                f"**Blended xFP:** {blend['blended_xfp']:.2f} {unit} "
-                f"(95% CI [{blend['ci_lower_95']:.2f}, {blend['ci_upper_95']:.2f}]) "
-                f"  ← confidence: {ct}\n"
-            )
+            # Phase 1 RP card display (2026-06-05): multi-component headline
+            # surfacing ROS / per-G / rep_delta / role characterization.
+            # H and SP cards remain UNCHANGED.
+            if bucket == 'RP':
+                ros = blend.get('ros_estimate')
+                rep_d = blend.get('replacement_delta')
+                role_char = blend.get('role_characterization') or 'Mixed role'
+                vtier = blend.get('value_tier') or 'UNAVAILABLE'
+                if ros is not None and rep_d is not None:
+                    lines.append(
+                        f"**RP Production:** ROS {ros:.0f} · "
+                        f"{blend['blended_xfp']:.2f} FP/G · "
+                        f"rep_delta {rep_d:+.1f} → {vtier} · "
+                        f"{role_char}   ← confidence: {ct}\n"
+                    )
+                    # Honesty note for setup/holds-driven ADD/HOLD value.
+                    if vtier in ('ADD', 'HOLD') and role_char == 'Setup / HLDS':
+                        lines.append(
+                            "*Value driven by holds (HLD×2 in BrownU). Per-G blend is "
+                            "unit-comparable but narrow-range for RPs; ROS + rep_delta "
+                            "carry the role/volume signal.*\n"
+                        )
+                else:
+                    # Fallback: rprs2 ROS unavailable.
+                    lines.append(
+                        f"**Blended xFP (per-G only):** {blend['blended_xfp']:.2f} FP/G "
+                        f"[95% CI {blend['ci_lower_95']:.2f}-{blend['ci_upper_95']:.2f}] "
+                        f"← confidence: {ct} · *rprs2 ROS unavailable*\n"
+                    )
+            else:
+                lines.append(
+                    f"**Blended xFP:** {blend['blended_xfp']:.2f} {unit} "
+                    f"(95% CI [{blend['ci_lower_95']:.2f}, {blend['ci_upper_95']:.2f}]) "
+                    f"  ← confidence: {ct}\n"
+                )
             for n in blend.get('notes') or []:
                 lines.append(f"*{n}*\n")
     except Exception as _be:

@@ -745,4 +745,11 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
             if blend.get('ci_lower_95') is not None else None
         ),
         'blend': blend,
+        # Phase 1 RP card additive fields (2026-06-05). Display-only.
+        # Present on RP cards; None for H/SP to keep dict shape predictable.
+        'ros_estimate': blend.get('ros_estimate') if b == 'RP' else None,
+        'replacement_delta': blend.get('replacement_delta') if b == 'RP' else None,
+        'role': blend.get('role') if b == 'RP' else None,
+        'role_characterization': blend.get('role_characterization') if b == 'RP' else None,
+        'value_tier': blend.get('value_tier') if b == 'RP' else None,
     }

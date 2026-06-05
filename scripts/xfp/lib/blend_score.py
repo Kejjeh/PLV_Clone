@@ -677,7 +677,7 @@ def compute_blended_xfp(
     else:
         confidence_tier = 'low'
 
-    return {
+    result = {
         'blended_xfp': float(blended_xfp),
         'ci_lower_95': float(ci_low_disp),
         'ci_upper_95': float(ci_high_disp),
@@ -692,6 +692,98 @@ def compute_blended_xfp(
         'n_train': model['n_train'],
         'notes': notes,
     }
+
+    # Phase 1 RP card additive fields (2026-06-05). Display-only; no model
+    # retraining, no coefficient changes. H and SP cards UNCHANGED.
+    #
+    # All 5 caveats preserved:
+    #   1. PL rank missing -> no-pl coefficients (unchanged above)
+    #   2. slope_3yr fallback to 0 (unchanged above)
+    #   3. archetype missing -> confidence_tier='low' (unchanged above)
+    #   4. Rookie no prior_year_fp -> confidence_tier='low' (unchanged above)
+    #   5. 2020 COVID excluded from refit (no refit performed here)
+    # NaN fallback: if xfp_ros missing, set ros_estimate=None + note
+    # 'rprs2_unavailable'. R^2 != decision quality -> confidence_tier kept,
+    # new value_tier surfaces honestly from rep_delta cuts (display tier,
+    # not a validated model).
+    if ptype == 'RP':
+        rp_df = _load_projection_csv('RP')
+        ros_estimate = None
+        replacement_delta = None
+        role = None
+        sv_lag1 = None
+        hld_lag1 = None
+        if rp_df is not None and not rp_df.empty and 'pitcher' in rp_df.columns:
+            prow = rp_df[rp_df['pitcher'] == mlbam_id]
+            if not prow.empty:
+                row = prow.iloc[0]
+                ros_v = row.get('xfp_ros')
+                rd_v = row.get('replacement_delta')
+                role_v = row.get('role_lag1')
+                sv_v = row.get('sv_lag1')
+                hld_v = row.get('hld_lag1')
+                try:
+                    if ros_v is not None and not pd.isna(ros_v):
+                        ros_estimate = float(ros_v)
+                except (TypeError, ValueError):
+                    pass
+                try:
+                    if rd_v is not None and not pd.isna(rd_v):
+                        replacement_delta = float(rd_v)
+                except (TypeError, ValueError):
+                    pass
+                if role_v is not None:
+                    try:
+                        if not pd.isna(role_v):
+                            role = str(role_v)
+                    except (TypeError, ValueError):
+                        role = str(role_v)
+                try:
+                    sv_lag1 = float(sv_v) if sv_v is not None and not pd.isna(sv_v) else 0.0
+                except (TypeError, ValueError):
+                    sv_lag1 = 0.0
+                try:
+                    hld_lag1 = float(hld_v) if hld_v is not None and not pd.isna(hld_v) else 0.0
+                except (TypeError, ValueError):
+                    hld_lag1 = 0.0
+        if ros_estimate is None:
+            notes.append('rprs2_unavailable: xfp_ros missing from projection CSV')
+
+        # Role characterization mapping.
+        sv = sv_lag1 or 0.0
+        hld = hld_lag1 or 0.0
+        if role == 'closer' and sv >= 15 and hld <= sv:
+            role_characterization = 'Closer / SVS'
+        elif role == 'setup' or (role == 'closer' and hld > sv):
+            role_characterization = 'Setup / HLDS'
+        elif role == 'middle':
+            role_characterization = 'Middle / low-leverage'
+        elif role == 'il':
+            role_characterization = 'IL / unranked'
+        else:
+            role_characterization = 'Mixed role'
+
+        # Value tier cuts from rep_delta (display-only, NOT a new model).
+        if replacement_delta is None:
+            value_tier = 'UNAVAILABLE'
+        elif replacement_delta >= 50:
+            value_tier = 'ELITE_VALUE'
+        elif replacement_delta >= 10:
+            value_tier = 'ADD'
+        elif replacement_delta >= -10:
+            value_tier = 'HOLD'
+        elif replacement_delta >= -40:
+            value_tier = 'DROP'
+        else:
+            value_tier = 'CRITICAL_DROP'
+
+        result['ros_estimate'] = ros_estimate
+        result['replacement_delta'] = replacement_delta
+        result['role'] = role
+        result['role_characterization'] = role_characterization
+        result['value_tier'] = value_tier
+
+    return result
 
 
 def _empty_result(reason: str) -> dict:
