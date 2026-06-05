@@ -327,6 +327,35 @@ def load_projections():
     return rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map
 
 
+def load_live_blend_map():
+    """Phase 3 Agent 3: optional live within-season blend projection.
+
+    Returns dict[mlbam_id] -> {'value': float, 'lo': float, 'hi': float, 'ptype': str}.
+    Empty dict if the file is missing — surfacing is purely additive, callers
+    must tolerate a missing key.
+    """
+    path = OUT / 'live_blend_xfp_latest.csv'
+    if not path.exists():
+        return {}
+    try:
+        df = pd.read_csv(path)
+    except Exception:
+        return {}
+    out = {}
+    for _, r in df.iterrows():
+        try:
+            mid = int(r['mlbam_id'])
+        except Exception:
+            continue
+        out[mid] = {
+            'value': float(r['live_blend_xfp']) if pd.notna(r['live_blend_xfp']) else None,
+            'lo': float(r['ci_lower']) if pd.notna(r['ci_lower']) else None,
+            'hi': float(r['ci_upper']) if pd.notna(r['ci_upper']) else None,
+            'ptype': r.get('player_type'),
+        }
+    return out
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # MA2-MA6 adjuster data loaders + helpers
 # ─────────────────────────────────────────────────────────────────────────────
@@ -1411,6 +1440,9 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         rp3_path = _select_rp3_path()
         rp3 = pd.read_csv(rp3_path).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
+        # Phase 3 Agent 3: optional live within-season blend projection.
+        # Display-only suffix appended to each streamer's projection band.
+        live_blend = load_live_blend_map()
 
         # Validated multipliers
         pf_path = CACHE / 'park_factors_2018_2026.csv'
@@ -1602,6 +1634,13 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
                 band = f'{g["per_start"]:.1f} <small class="muted">({g["p25"]:.1f}–{g["p75"]:.1f})</small>'
             else:
                 band = f'{g["per_start"]:.2f}'
+            # Phase 3 Agent 3: additive within-season-blend suffix.
+            # Format: "8.4 fp/start (blended 9.2 [7.8-10.5])". Does NOT replace
+            # the headline rp3 number or alter win-prob; purely informational.
+            lb = live_blend.get(g.get('mlbam')) if live_blend else None
+            if lb and lb.get('value') is not None:
+                band += (f' <small class="muted">(blended {lb["value"]:.1f} '
+                         f'[{lb["lo"]:.1f}-{lb["hi"]:.1f}])</small>')
 
             # boom_stack render with tooltip
             bs_val = g['boom_stack']
