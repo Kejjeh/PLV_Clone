@@ -200,6 +200,31 @@ python scripts/xfp/run_roster_audit.py
   by boom_stack tier (≥2/4). Confirmed probables in next 3 days,
   Connelly-Early-verified FA pool, tier-aware thresholds, σ-rescaled
   rp3 variance bands.
+- `/sp-stash-finder` — find IL'd SPs available in the FA pool whose ESPN
+  return date arrives before playoffs end, ranked by playoff xFP and IL-slot
+  cost. Combines PL Top 100 + PL injury table + ESPN return dates + rp3 +
+  archetype + (when needed) shadow-scout. Canonical discovery 2026-06-04:
+  Blake Snell IL60 elbow / return 7/17 / per_start 13.02 / 0.1% owned. Also
+  surfaced Pivetta, Boyd, Henderson, Eury Pérez. Engine: WebFetch PL article
+  + `app.espn_connector.get_injury_details`.
+- `/shadow-scout` — process-grade scouting card for SPs with no rp3 + no
+  archetype (rookies / small-sample post-callup). Pulls 2026 MLB Statcast,
+  percentile-ranks FB velo / K% / BB% / whiff% / CSW% vs the live 432-SP
+  population, outputs 20-80 grades + PLUS_PROCESS / AVG_PROCESS / BELOW_AVG /
+  NO_MLB_DATA verdict. Built 2026-06-04 to triangulate Henderson-class FAs
+  the engine missed; canonical disagreement Ben Brown: archetype CAREER_LOW
+  vs shadow PLUS_PROCESS (g61 at 759 pitches) — shadow wins when archetype is
+  stale. Module: `scripts/xfp/lib/shadow_scout.py`.
+- `/opp-watch` — predict an opponent's next roster move (transact / add /
+  drop) before they make it. Per-team behavioral profiles derived from the
+  manager-rating audit (PL-weighted, outcome-chaser, save-chaser, etc.).
+  Backtest-validated: under Late Night Bettsing's profile their actual
+  archetype_breakout adds (Max Meyer, Weathers, Ashcraft) surface in the
+  predictor's top-12. v1 uses hardcoded profile weights; once the new
+  player_projection_history.parquet + date-keyed pl_cache snapshots have
+  accumulated ~4 weeks, refit from panel data. Engine:
+  `scripts/xfp/opponent_action_predictor.py`. See plan
+  `~/.claude/plans/hidden-percolating-harp.md`.
 - `/boom-stack-explain` — decompose a single player's current
   boom_stack tag (SP or hitter) into components with status, value,
   threshold, tier outcome lookup, and verdict. Use when asked "why is
