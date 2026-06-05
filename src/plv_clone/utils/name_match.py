@@ -86,6 +86,38 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
         ("LAD", "3B", 571970),  # established veteran
         ("ATH", "SS", 691777),  # 2024+ Oakland callup
     ],
+    # Added 2026-06-05 from PL-archive name-resolution audit.
+    # Will Smith: LAD catcher (669257) vs SF/ATL LHP-turned-position-classified
+    # 519293 in batter cache (legacy rows). All PL hitter-article references
+    # 2020-2025 are the LAD catcher; default to LAD.
+    "Will Smith": [
+        ("LAD", "C", 669257),
+        ("SF", "P", 519293),
+    ],
+    # Jacob Wilson: HOU 2021 cup-of-coffee (607111) vs ATH 2024+ rookie SS (805779).
+    # PL article references are the ATH shortstop.
+    "Jacob Wilson": [
+        ("ATH", "SS", 805779),
+        ("HOU", "IF", 607111),
+    ],
+    # Luis García family: PHI legacy IF 472610, HOU 2021 fringe 677651,
+    # WSH 2B (Jr.) 671277. PL hitter-article references 2022+ are
+    # consistently the Washington 2B regardless of "Jr." suffix presence.
+    "Luis Garcia": [
+        ("WSH", "2B", 671277),
+        ("HOU", "IF", 677651),
+        ("PHI", "IF", 472610),
+    ],
+    "Luis García": [
+        ("WSH", "2B", 671277),
+        ("HOU", "IF", 677651),
+        ("PHI", "IF", 472610),
+    ],
+    "Luis García Jr.": [
+        ("WSH", "2B", 671277),
+        ("HOU", "IF", 677651),
+        ("PHI", "IF", 472610),
+    ],
 }
 
 # Pitcher-side equivalent. Same shape as KNOWN_COLLISIONS:

@@ -100,12 +100,26 @@ def main():
         print(f"opp_churn.csv: {len(opp_uniq)} unique players churned by opponents (latest action per player)")
 
     # --- 3. FAs above 50 FP (use model files since ESPN API doesn't expose applied totals reliably) ---
-    fas = league.free_agents(size=2000)
+    # CRITICAL: league.free_agents() leaks rostered players (Julio Rodriguez 2026-06-04
+    # showed as FA owned=0.1% while actually on Frendy's roster). Source of truth for
+    # "rostered" is league.teams roster scan; subtract that set from the FA pool.
+    rostered_ids = set()
+    rostered_names = set()
+    for t in league.teams:
+        for p in t.roster:
+            rostered_ids.add(p.playerId)
+            rostered_names.add(_norm(p.name))
+    print(f"  rostered set: {len(rostered_ids)} ids across {len(league.teams)} teams")
+    fas_raw = league.free_agents(size=2000)
+    fas = [p for p in fas_raw if p.playerId not in rostered_ids and _norm(p.name) not in rostered_names]
+    leaked = len(fas_raw) - len(fas)
+    if leaked:
+        print(f"  [warn] filtered {leaked} rostered players that leaked into free_agents() enumeration")
     fa_df = pd.DataFrame([{
         'player_name': p.name, 'player_id': p.playerId, 'position': p.position,
         'bucket': classify_bucket(p.position), 'pct_owned': p.percent_owned,
     } for p in fas])
-    print(f"  raw FA pool: {len(fa_df)}")
+    print(f"  verified FA pool: {len(fa_df)}")
     # Compute season-to-date FP from model files
     rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
     rh3['fp_to'] = rh3['prior_fp_per_pa'] * rh3['pa_to']
