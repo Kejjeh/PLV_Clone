@@ -263,7 +263,7 @@ def main():
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
     cnt_df['fp_actual_2026'] = (
         cnt_df['strikeOuts'] + cnt_df['ip']*3.3 + cnt_df['saves']*5
-        + cnt_df['holds']*3 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
+        + cnt_df['holds']*2 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
         - cnt_df['hits'] - cnt_df['hitByPitch']
     ).round(1)
     cnt_df = cnt_df[['pitcher','name','saves','holds','fp_actual_2026']].rename(

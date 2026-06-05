@@ -27,10 +27,10 @@ def main():
     rel = rel.dropna(subset=['team_abbr', 'year'])
     rel = rel[rel['ip_to'] >= 5]
 
-    # Compute RP FP from raw stats (formula: K + IP*3.3 + SV*5 + HLD*3 - BB - 2*ER - H - HBP)
+    # Compute RP FP from raw stats (formula: K + IP*3.3 + SV*5 + HLD*2 - BB - 2*ER - H - HBP)
     rel['rp_fp_full'] = (
         rel['k_to'].fillna(0) + rel['ip_to'].fillna(0) * 3.3
-        + rel['sv_to'].fillna(0) * 5 + rel['hld_to'].fillna(0) * 3
+        + rel['sv_to'].fillna(0) * 5 + rel['hld_to'].fillna(0) * 2
         - rel['bb_to'].fillna(0) - 2 * rel['er_to'].fillna(0)
         - rel['h_to'].fillna(0) - rel['hbp_to'].fillna(0)
     )

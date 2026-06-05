@@ -173,7 +173,7 @@ def check_rprs2(report_lines):
         return float(v)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
     cnt_df['fp_actual'] = (cnt_df['strikeOuts'] + cnt_df['ip']*3.3 + cnt_df['saves']*5
-                           + cnt_df['holds']*3 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
+                           + cnt_df['holds']*2 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
                            - cnt_df['hits'] - cnt_df['hitByPitch'])
     # We compare projected FULL-YEAR FP vs PROJECTED-OUT actual (linear extrapolation).
     # Today is ~22% into season; simple extrapolation: full = actual / 0.22

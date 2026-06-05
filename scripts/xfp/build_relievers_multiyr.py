@@ -14,7 +14,7 @@ Role classification (saves-focused per user spec):
   - 'long_low' : G < 30 (low-leverage / spot)
 
 Fantasy points formula (user's ESPN scoring):
-  FP = K + IP*3.3 + SV*5 + HLD*3 - BB - 2*ER - H - HBP
+  FP = K + IP*3.3 + SV*5 + HLD*2 - BB - 2*ER - H - HBP
 
 Output: data/research/xfp_cache/relievers_multiyr_2018_2026.csv
 """
@@ -43,7 +43,7 @@ MAX_GS = 5
 
 # Scoring (user's ESPN)
 def fp_from(k, ip, sv, hld, bb, er, h, hbp):
-    return k + ip*3.3 + sv*5 + hld*3 - bb - 2*er - h - hbp
+    return k + ip*3.3 + sv*5 + hld*2 - bb - 2*er - h - hbp
 
 
 def classify_role(g, gs, sv, svo, hld) -> str:
@@ -190,7 +190,7 @@ def build_year(year: int) -> pd.DataFrame:
     print(f'  RP-eligible (G≥{MIN_G}, GS≤{MAX_GS}): {len(rp)}')
 
     # Compute FP from counting stats
-    rp['fp'] = (rp['k'] + rp['ip']*3.3 + rp['sv']*5 + rp['hld']*3
+    rp['fp'] = (rp['k'] + rp['ip']*3.3 + rp['sv']*5 + rp['hld']*2
                 - rp['bb'] - 2*rp['er'] - rp['h'] - rp['hbp']).round(2)
     rp['fp_per_g'] = (rp['fp'] / rp['g'].replace(0, np.nan)).round(3)
     rp['fp_per_ip'] = (rp['fp'] / rp['ip'].replace(0, np.nan)).round(3)

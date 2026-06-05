@@ -276,13 +276,13 @@ def build_year(year: int) -> pd.DataFrame:
         merged['sv_plus_hld_to'] = merged['sv_to'] + merged['hld_to']
 
         # FP-to-date NOW including SV/HLD/BS bonuses derived from statcast
-        # (full ESPN scoring: K + IP×3.3 + SV×5 + HLD×3 − BB − 2×ER − H − HBP)
+        # (full BrownU scoring: K + IP×3.3 + SV×5 + HLD×2 − BB − 2×ER − H − HBP)
         merged['fp_skill_to'] = (
             merged['k_to'] + merged['ip_to']*3.3 - merged['bb_to']
             - 2*merged['er_to'] - merged['h_to'] - merged['hbp_to']
         ).round(1)
         merged['fp_with_role_to'] = (
-            merged['fp_skill_to'] + 5*merged['sv_to'] + 3*merged['hld_to']
+            merged['fp_skill_to'] + 5*merged['sv_to'] + 2*merged['hld_to']
         ).round(1)
 
         merged['year'] = year

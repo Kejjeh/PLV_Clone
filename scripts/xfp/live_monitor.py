@@ -258,7 +258,7 @@ def compute_rp_fp(stats: dict) -> float:
     if not stats: return 0.0
     ip = _ip_to_float(stats.get('inningsPitched', '0.0'))
     return (stats.get('strikeOuts', 0) + ip*3.3
-              + stats.get('saves', 0)*5 + stats.get('holds', 0)*3
+              + stats.get('saves', 0)*5 + stats.get('holds', 0)*2
               + stats.get('wins', 0)*2 - stats.get('losses', 0)*2
               - stats.get('baseOnBalls', 0) - stats.get('hitBatsmen', 0)
               - 2*stats.get('earnedRuns', 0) - stats.get('hits', 0))
