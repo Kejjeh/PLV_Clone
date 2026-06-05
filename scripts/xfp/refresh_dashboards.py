@@ -211,6 +211,21 @@ def main():
     if not ok_pp:
         print('  ⚠ per-player backfill panel failed — continuing (research-only)')
 
+    # 2.95. Enrich projection CSVs (rh3/rp3/rprs2) with validated prior-season
+    # features: slope_3yr_prior, arche_overall_prior, traj_career_low_prior
+    # (all three CSVs) + high_k_z_year_prior, shadow_velo_pct_prior,
+    # shadow_bb_pct_prior (rp3 only). Joined on mlbam ID, atomic write, NaN
+    # propagation (no silent mean-fill). Consumed by the blend scorer.
+    # Fail-soft: scorer falls back to NaN handling if enrichment skips.
+    ok_enrich = run(
+        '2.95. Enrich projection CSVs with prior-season features',
+        'python -X utf8 scripts/xfp/enrich_projection_csvs.py',
+        timeout=300,
+    )
+    if not ok_enrich:
+        print('  ⚠ projection enrichment failed — blend scorer will see legacy '
+              'columns only (rh3/rp3/rprs2 still valid as headline projections)')
+
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
@@ -268,6 +283,44 @@ def main():
     )
     if not ok_panel:
         print('  ⚠ boom_stack history panel append failed — continuing (non-gating)')
+
+    # 4.9. Archive today's PL rank cache snapshots (date-keyed). Feeds the
+    # opponent-action predictor's Δ-PL-rank feature. Idempotent — skips
+    # snapshots already present. Fail-soft.
+    ok_plhist = run(
+        '4.9. Archive PL rank cache snapshots',
+        'python -X utf8 scripts/xfp/build_pl_rank_history.py',
+        timeout=60,
+    )
+    if not ok_plhist:
+        print('  ⚠ PL rank history archive failed — continuing (non-gating)')
+
+    # 4.11. Build the within-season weight-blend live projection
+    # (live_blend_xfp_<date>.csv + live_blend_xfp_latest.csv). Phase 3 Agent 3,
+    # validated 2026-06-04: within-season R^2 doubles vs preseason at split_day=90
+    # (H 0.642, SP 0.584, RP 0.398). Display-additive — does NOT replace rh3/rp3/
+    # rprs2 headline numbers; surfaced by build_matchup_dashboard as a "blended X.X
+    # [lo-hi]" suffix on each player projection cell. Fail-soft: matchup build
+    # tolerates a missing latest CSV and silently skips the suffix.
+    ok_blend = run(
+        '4.11. Build live_blend_xfp (within-season blend ROS projection)',
+        'python -X utf8 scripts/xfp/build_live_blend_xfp.py',
+        timeout=300,
+    )
+    if not ok_blend:
+        print('  ⚠ live_blend_xfp build failed — continuing (display-only)')
+
+    # 4.10. Append today's per-player projection snapshot to the growing
+    # panel at data/research/player_projection_history.parquet. Feeds the
+    # opponent-action predictor's Δ-rank feature and any future per-player
+    # residual analysis. Fail-soft.
+    ok_pphist = run(
+        '4.10. Append player projection history',
+        'python -X utf8 scripts/xfp/build_player_projection_history.py',
+        timeout=60,
+    )
+    if not ok_pphist:
+        print('  ⚠ player projection history append failed — continuing (non-gating)')
 
     if not args.no_push:
         if not ok_profiles:
