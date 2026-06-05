@@ -234,8 +234,15 @@ the pool and will miss the player you're looking for.** See
 ```python
 from app.espn_connector import _get_league
 league = _get_league()
-fas = league.free_agents(size=2000)   # one unfiltered call
-# Then find your target by name (normalize accents — see Step 1)
+# CRITICAL: free_agents() LEAKS rostered players. Confirmed 2026-06-04: Julio
+# Rodriguez was returned in free_agents() with percent_owned=0.1% while ALSO
+# on Frendy's roster. ALWAYS build a rostered set first and subtract.
+rostered_ids = {p.playerId for t in league.teams for p in t.roster}
+rostered_names = {_norm(p.name) for t in league.teams for p in t.roster}
+fas_raw = league.free_agents(size=2000)
+fas = [p for p in fas_raw
+       if p.playerId not in rostered_ids and _norm(p.name) not in rostered_names]
+# Now `fas` is a verified-FA list. Find your target by name.
 ```
 
 Find the player's `percent_owned`. **NEVER conclude a player is rostered

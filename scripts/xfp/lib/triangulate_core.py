@@ -11,10 +11,12 @@ from .schedule_strength import schedule_idx_for
 from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR, compute_high_k_pitcher
 from .catcher_framing import compute_catcher_framing
 from .il_return_flag import compute_il_return_flag, IL_RETURN_DAYS_THRESHOLD, IL_RETURN_BUST_LIFT_PP
+from .recform_hot import compute_recform
 from .hitter_boom_stack import (
     compute_hitter_boom_stack,
     resolve_opp_sp_id_for_today,
 )
+from .blend_score import compute_blended_xfp
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -253,6 +255,28 @@ def model_row(player: dict) -> dict:
         except Exception:
             # Defensive: never break SP cards on IL-return compute failure.
             is_first_back_long_il = None
+        # RECFORM HOT display tag (Phase 3 Agent C, 2026-06-05).
+        # Trailing-5-start fp_proxy_per_bf z-score within same-month SP cohort.
+        # DISPLAY ONLY — recform_hot's R² is absorbed by `fp_per_start_to`
+        # (Agent 5 finding) so this is not a verdict modifier. Surfaced as
+        # explanatory context: per-stack gradient is real (ROS FP climbs
+        # 8.66 -> 11.25 across recform buckets) but it doesn't add headline
+        # predictive value beyond what the blend already encodes.
+        recform_tag_val = None
+        recform_z = None
+        recform_trail_starts = None
+        recform_mean_per_start_fp = None
+        recform_cohort_label = None
+        try:
+            rf = compute_recform(int(player['id']))
+            recform_tag_val = rf.get('tag')
+            recform_z = rf.get('z')
+            recform_trail_starts = rf.get('trail_starts')
+            recform_mean_per_start_fp = rf.get('mean_per_start_fp')
+            recform_cohort_label = rf.get('cohort_label')
+        except Exception:
+            # Defensive: never break SP cards on recform compute failure.
+            recform_tag_val = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -292,6 +316,11 @@ def model_row(player: dict) -> dict:
             'il_return_reference_source': il_return_ref_source,
             'il_return_threshold_days': IL_RETURN_DAYS_THRESHOLD,
             'il_return_bust_lift_pp': IL_RETURN_BUST_LIFT_PP,
+            'recform_tag': recform_tag_val,
+            'recform_z': recform_z,
+            'recform_trail_starts': recform_trail_starts,
+            'recform_mean_per_start_fp': recform_mean_per_start_fp,
+            'recform_cohort_label': recform_cohort_label,
         }
     return {
         'rank': int(r['rank']),
@@ -670,6 +699,16 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
     verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
     verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
+    # Phase 3 blended xFP (additive — does NOT alter verdict synthesis).
+    try:
+        blend = compute_blended_xfp(
+            player_name=player['display_name'],
+            player_type=b,
+            mlbam_id=int(player['id']),
+        )
+    except Exception as _e:
+        blend = {'blended_xfp': None, 'notes': [f'blend_error: {type(_e).__name__}']}
+
     verdict_top, reason_tag = consolidate_verdict(verdict)
     m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
     confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
@@ -700,4 +739,10 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
         'watch_list': watch_list,
         'rationale': rationale,
         'override_tag': override_tag,
+        'blended_xfp': blend.get('blended_xfp'),
+        'blended_ci': (
+            (blend.get('ci_lower_95'), blend.get('ci_upper_95'))
+            if blend.get('ci_lower_95') is not None else None
+        ),
+        'blend': blend,
     }

@@ -46,6 +46,27 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     lines.append(f"*{rationale}*\n")
     if confidence is not None and n_aligned is not None and n_available is not None:
         lines.append(f"**Confidence:** {confidence:.2f} ({n_aligned} of {n_available} signals agree) | verdict_top={verdict_top} | reason_tag={reason_tag}\n")
+
+    # Blended xFP (Phase 3, additive — does NOT override verdict).
+    try:
+        from scripts.xfp.lib.blend_score import compute_blended_xfp
+        blend = compute_blended_xfp(
+            player_name=player['display_name'],
+            player_type=bucket,
+            mlbam_id=int(player['id']),
+        )
+        if blend.get('blended_xfp') is not None:
+            unit = blend.get('display_unit') or ''
+            ct = blend.get('confidence_tier') or 'unknown'
+            lines.append(
+                f"**Blended xFP:** {blend['blended_xfp']:.2f} {unit} "
+                f"(95% CI [{blend['ci_lower_95']:.2f}, {blend['ci_upper_95']:.2f}]) "
+                f"  ← confidence: {ct}\n"
+            )
+            for n in blend.get('notes') or []:
+                lines.append(f"*{n}*\n")
+    except Exception as _be:
+        lines.append(f"*blend unavailable: {type(_be).__name__}*\n")
     if watch_list:
         lines.append(f"**Watch list:** " + "; ".join(watch_list) + "\n")
 
@@ -91,6 +112,15 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 z = model.get('high_k_z_score')
                 z_s = f" z={z:+.2f}" if isinstance(z, (int, float)) else ''
                 parts.append(f"🔥HIGH-K{z_s}")
+            # RECFORM HOT/COLD badge (Phase 3 Agent C, 2026-06-05).
+            # DISPLAY ONLY — trailing-5-start fp_proxy z; absorbed by the
+            # blend (r=+0.69 with fp_per_start_to), so this is context only.
+            rf_tag = model.get('recform_tag')
+            if rf_tag in ('HOT', 'COLD'):
+                rfz = model.get('recform_z')
+                rfz_s = f" z={rfz:+.2f}" if isinstance(rfz, (int, float)) else ''
+                rf_icon = '🔥' if rf_tag == 'HOT' else '🧊'
+                parts.append(f"{rf_icon}RECFORM {rf_tag}{rfz_s}")
             # CATCHER FRAMING badge (validated 2026-06-03, SHIP_AS_DISPLAY_TAG).
             # Independent of boom_stack + HIGH-K — pure context layer.
             if model.get('is_elite_framer'):
@@ -162,6 +192,26 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                     f"\n🔥 **HIGH-K ARM:** season K% {z_s}{cohort_s}. "
                     f"Standalone boom edge +6.84 pp (p=2.6e-11, n=1,039 historical, "
                     f"validated 2026-06-03). Independent of boom_stack — compounds on top."
+                )
+
+            # RECFORM HOT/COLD verbal explanation (Phase 3 Agent C, 2026-06-05).
+            # Honesty: Agent 5 found recform_hot's R² is absorbed by
+            # `fp_per_start_to` (r=+0.69) so this is NOT a verdict modifier
+            # nor a headline-blend contributor — just explanatory color.
+            rf_tag2 = model.get('recform_tag')
+            if rf_tag2 in ('HOT', 'COLD'):
+                rfz2 = model.get('recform_z')
+                rfz2_s = f"z={rfz2:+.2f}" if isinstance(rfz2, (int, float)) else ''
+                rf_ts = model.get('recform_trail_starts')
+                rf_mfp = model.get('recform_mean_per_start_fp')
+                rf_ts_s = f", trailing {rf_ts} starts" if isinstance(rf_ts, int) else ''
+                rf_mfp_s = f", ~{rf_mfp:.1f} fp/start" if isinstance(rf_mfp, (int, float)) else ''
+                icon = '🔥' if rf_tag2 == 'HOT' else '🧊'
+                lines.append(
+                    f"\n{icon} *RECFORM {rf_tag2} ({rfz2_s}){rf_ts_s}{rf_mfp_s}:* "
+                    f"trailing-5-start fp_proxy z-score; correlated with "
+                    f"`fp_per_start_to` and absorbed by the blended xFP — "
+                    f"surfaced here as explanatory color, not as a verdict modifier."
                 )
 
             # Compound HIGH-K + boom_stack >= 2 callout (the actionable case).

@@ -87,9 +87,11 @@ Cache files live in `data/research/pl_cache/`:
 | File | Source article | Refresh cadence |
 |---|---|---|
 | `pl_hitters_top150.json` | PL Top 150 Hitters weekly | Weekly (Sundays) |
-| `pl_sps_top100.json` | PL Top 100 Starting Pitchers weekly | Weekly (Mondays) |
+| `pl_sps_top100.json` | PL Top 100 Starting Pitchers weekly **(main list only)** | Weekly (Mondays) |
 | `pl_sp_streamers_latest.json` | PL SP Streamer Ranks daily | Daily |
 | `pl_closers.json` | PL Closers and Saves weekly | Weekly |
+
+> **PL IL list gap.** `pl_sps_top100.json` does NOT contain the separate "Injured Pitchers" table from the same article. That table ranks 30-40 IL'd SPs as they would rank if healthy (Snell at IL-#9, Pivetta IL-#13, Eury Pérez IL-#27, Logan Henderson IL-#16, etc.). Until a dated `pl_sps_injury_list.json` is added, IL stash candidates will show `pl_rank=nan` in triangulate even though they ARE PL-ranked. For IL stash workflows, use `/sp-stash-finder` which pulls both lists via WebFetch directly. Known queue item — see `~/.claude/plans/hidden-percolating-harp.md`.
 
 **Each cache file has `fetched` (date) + `source_url` + `ranks` (dict of name → rank).** Before any RP triangulation make sure `pl_closers.json` has been seeded (it ships empty by default — the article URL pattern is `https://pitcherlist.com/closers-and-saves-...`).
 
@@ -553,7 +555,7 @@ The universe builder handles the four standard categories (`ROSTER`, `MY_DROP`, 
 ## Anti-patterns
 
 - **Don't quote PL ranks from a stale cache** as "current" — check the `fetched` date and refresh if >7d old (or >2d for streamer ranks)
-- **Don't treat rookies' missing archetype rows as "no signal"** — explicitly note "insufficient innings/PA for archetype profile" and rely on the Statcast process layer instead
+- **Don't treat rookies' missing archetype rows as "no signal"** — explicitly note "insufficient innings/PA for archetype profile" and rely on the Statcast process layer instead. For SPs specifically, run `/shadow-scout` — it pulls 2026 MLB Statcast and grades FB velo / K% / BB% / whiff% / CSW% against the live 432-SP population (>=200 pitches). Canonical use: Henderson, Sasaki, Ben Brown 2026-06-04. When the shadow grade is PLUS_PROCESS (>=60) and the archetype panel says CAREER_LOW, **trust the shadow** — the archetype panel is annual-aggregated and trails by ~6 weeks.
 - **`signal` column behavior is per-bucket** — rprs2's `signal` (add/hold/drop) is validated and reliable; engine renders it for RPs. The rp3 file currently has a defect (2026-05-28 build flags 213/264 SPs as "il") so the engine NO LONGER renders the signal token for SPs or H — use rank + replacement_delta + recency_form_gap to read the SP/H model. The rprs2 signal IS surfaced in the RP card output.
 - **Don't synthesize a verdict from just rank gaps** — always weigh the archetype trajectory and T+1 because those are the leading indicators when PL and model disagree
 - **Don't add a fourth data source ad-hoc** — if you find yourself reaching for Statcast L21d or bat tracking, hand off to `/fa-pickup-deep-dive` rather than expanding the triangulate output
