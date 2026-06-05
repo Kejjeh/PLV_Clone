@@ -1,0 +1,527 @@
+{
+  "baseline_phase2": {
+    "label": "baseline_phase2",
+    "n": 1178,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.2946,
+    "pooled_r2_anchor": 0.2056,
+    "pooled_lift": 0.089,
+    "convergence": "9/9",
+    "fold_lifts": [
+      [
+        "2016",
+        0.0818
+      ],
+      [
+        "2017",
+        0.0414
+      ],
+      [
+        "2018",
+        0.05
+      ],
+      [
+        "2019",
+        0.1324
+      ],
+      [
+        "2021",
+        0.1905
+      ],
+      [
+        "2022",
+        0.0337
+      ],
+      [
+        "2023",
+        0.1266
+      ],
+      [
+        "2024",
+        0.1246
+      ],
+      [
+        "2025",
+        0.0894
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00926,
+      "arche_overall_prior": 0.0847,
+      "arche_career_pct_prior": 0.00015,
+      "traj_up_prior": 0.00011,
+      "traj_down_prior": 0.00309,
+      "traj_career_low_prior": 0.00016,
+      "age_normalized": 0.00779
+    },
+    "full_in_sample_r2": 0.3041
+  },
+  "baseline_hk_subset": {
+    "label": "baseline_hk_subset",
+    "n": 754,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.3045,
+    "pooled_r2_anchor": 0.1948,
+    "pooled_lift": 0.1097,
+    "convergence": "6/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.1339
+      ],
+      [
+        "2021",
+        0.1889
+      ],
+      [
+        "2022",
+        0.0537
+      ],
+      [
+        "2023",
+        0.1129
+      ],
+      [
+        "2024",
+        0.1296
+      ],
+      [
+        "2025",
+        0.0912
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00739,
+      "arche_overall_prior": 0.10434,
+      "arche_career_pct_prior": 0.00078,
+      "traj_up_prior": 1e-05,
+      "traj_down_prior": 0.00501,
+      "traj_career_low_prior": 0.00123,
+      "age_normalized": 0.00946
+    },
+    "full_in_sample_r2": 0.3202
+  },
+  "baseline_shadow_subset": {
+    "label": "baseline_shadow_subset",
+    "n": 735,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.3072,
+    "pooled_r2_anchor": 0.1952,
+    "pooled_lift": 0.1119,
+    "convergence": "6/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.1401
+      ],
+      [
+        "2021",
+        0.1813
+      ],
+      [
+        "2022",
+        0.0572
+      ],
+      [
+        "2023",
+        0.1111
+      ],
+      [
+        "2024",
+        0.1297
+      ],
+      [
+        "2025",
+        0.1033
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00691,
+      "arche_overall_prior": 0.10875,
+      "arche_career_pct_prior": 0.00056,
+      "traj_up_prior": 5e-05,
+      "traj_down_prior": 0.00533,
+      "traj_career_low_prior": 0.00128,
+      "age_normalized": 0.00966
+    },
+    "full_in_sample_r2": 0.325
+  },
+  "plus_high_k": {
+    "label": "plus_high_k",
+    "n": 754,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized",
+      "high_k_z_year_prior"
+    ],
+    "pooled_r2_blend": 0.3444,
+    "pooled_r2_anchor": 0.1948,
+    "pooled_lift": 0.1496,
+    "convergence": "6/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.1778
+      ],
+      [
+        "2021",
+        0.2064
+      ],
+      [
+        "2022",
+        0.1167
+      ],
+      [
+        "2023",
+        0.1323
+      ],
+      [
+        "2024",
+        0.2167
+      ],
+      [
+        "2025",
+        0.1082
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00065,
+      "arche_overall_prior": 0.03755,
+      "arche_career_pct_prior": 0.00047,
+      "traj_up_prior": 0.0,
+      "traj_down_prior": 0.00388,
+      "traj_career_low_prior": 0.00085,
+      "age_normalized": 0.00524,
+      "high_k_z_year_prior": 0.03872
+    },
+    "full_in_sample_r2": 0.3589
+  },
+  "plus_shadow": {
+    "label": "plus_shadow",
+    "n": 735,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized",
+      "shadow_velo_pct_prior",
+      "shadow_k_pct_prior",
+      "shadow_bb_pct_prior",
+      "shadow_whiff_pct_prior",
+      "shadow_csw_pct_prior"
+    ],
+    "pooled_r2_blend": 0.3532,
+    "pooled_r2_anchor": 0.1952,
+    "pooled_lift": 0.158,
+    "convergence": "6/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.1909
+      ],
+      [
+        "2021",
+        0.2238
+      ],
+      [
+        "2022",
+        0.1263
+      ],
+      [
+        "2023",
+        0.1012
+      ],
+      [
+        "2024",
+        0.2557
+      ],
+      [
+        "2025",
+        0.1108
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00025,
+      "arche_overall_prior": 0.02627,
+      "arche_career_pct_prior": 0.00028,
+      "traj_up_prior": 0.0,
+      "traj_down_prior": 0.00557,
+      "traj_career_low_prior": 0.00104,
+      "age_normalized": 0.00119,
+      "shadow_velo_pct_prior": 0.01056,
+      "shadow_k_pct_prior": 0.02189,
+      "shadow_bb_pct_prior": 0.00319,
+      "shadow_whiff_pct_prior": 3e-05,
+      "shadow_csw_pct_prior": 0.00036
+    },
+    "full_in_sample_r2": 0.3777
+  },
+  "plus_combined": {
+    "label": "plus_combined",
+    "n": 735,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized",
+      "high_k_z_year_prior",
+      "shadow_velo_pct_prior",
+      "shadow_k_pct_prior",
+      "shadow_bb_pct_prior",
+      "shadow_whiff_pct_prior",
+      "shadow_csw_pct_prior"
+    ],
+    "pooled_r2_blend": 0.3618,
+    "pooled_r2_anchor": 0.1952,
+    "pooled_lift": 0.1666,
+    "convergence": "6/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.1913
+      ],
+      [
+        "2021",
+        0.2408
+      ],
+      [
+        "2022",
+        0.1344
+      ],
+      [
+        "2023",
+        0.0865
+      ],
+      [
+        "2024",
+        0.2758
+      ],
+      [
+        "2025",
+        0.1348
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 3e-05,
+      "arche_overall_prior": 0.02375,
+      "arche_career_pct_prior": 0.00014,
+      "traj_up_prior": 0.0,
+      "traj_down_prior": 0.00433,
+      "traj_career_low_prior": 0.00067,
+      "age_normalized": 0.00161,
+      "high_k_z_year_prior": 0.00975,
+      "shadow_velo_pct_prior": 0.00827,
+      "shadow_k_pct_prior": 0.00036,
+      "shadow_bb_pct_prior": 0.00386,
+      "shadow_whiff_pct_prior": 0.0002,
+      "shadow_csw_pct_prior": 0.00042
+    },
+    "full_in_sample_r2": 0.3874
+  },
+  "rookie_baseline": {
+    "label": "rookie_baseline",
+    "n": 341,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.2634,
+    "pooled_r2_anchor": 0.1435,
+    "pooled_lift": 0.1199,
+    "convergence": "5/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.3056
+      ],
+      [
+        "2021",
+        0.135
+      ],
+      [
+        "2022",
+        0.0155
+      ],
+      [
+        "2023",
+        -0.0335
+      ],
+      [
+        "2024",
+        0.2361
+      ],
+      [
+        "2025",
+        0.1047
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00986,
+      "arche_overall_prior": 0.12413,
+      "arche_career_pct_prior": 0.00049,
+      "traj_up_prior": 0.0016,
+      "traj_down_prior": 0.00404,
+      "traj_career_low_prior": 0.00094,
+      "age_normalized": 0.01185
+    },
+    "full_in_sample_r2": 0.3045
+  },
+  "rookie_plus_shadow": {
+    "label": "rookie_plus_shadow",
+    "n": 341,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized",
+      "shadow_velo_pct_prior",
+      "shadow_k_pct_prior",
+      "shadow_bb_pct_prior",
+      "shadow_whiff_pct_prior",
+      "shadow_csw_pct_prior"
+    ],
+    "pooled_r2_blend": 0.3055,
+    "pooled_r2_anchor": 0.1435,
+    "pooled_lift": 0.1619,
+    "convergence": "5/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.4365
+      ],
+      [
+        "2021",
+        0.1721
+      ],
+      [
+        "2022",
+        0.0705
+      ],
+      [
+        "2023",
+        -0.2065
+      ],
+      [
+        "2024",
+        0.3744
+      ],
+      [
+        "2025",
+        0.1603
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.00025,
+      "arche_overall_prior": 0.02905,
+      "arche_career_pct_prior": 0.0007,
+      "traj_up_prior": 0.0033,
+      "traj_down_prior": 0.00486,
+      "traj_career_low_prior": 0.0008,
+      "age_normalized": 0.00213,
+      "shadow_velo_pct_prior": 0.0125,
+      "shadow_k_pct_prior": 0.02313,
+      "shadow_bb_pct_prior": 0.00416,
+      "shadow_whiff_pct_prior": 0.00021,
+      "shadow_csw_pct_prior": 0.00047
+    },
+    "full_in_sample_r2": 0.3685
+  },
+  "rookie_plus_high_k": {
+    "label": "rookie_plus_high_k",
+    "n": 341,
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized",
+      "high_k_z_year_prior"
+    ],
+    "pooled_r2_blend": 0.3324,
+    "pooled_r2_anchor": 0.1435,
+    "pooled_lift": 0.1889,
+    "convergence": "5/6",
+    "fold_lifts": [
+      [
+        "2019",
+        0.4193
+      ],
+      [
+        "2021",
+        0.191
+      ],
+      [
+        "2022",
+        0.1185
+      ],
+      [
+        "2023",
+        -0.1277
+      ],
+      [
+        "2024",
+        0.3889
+      ],
+      [
+        "2025",
+        0.201
+      ]
+    ],
+    "drop_contrib": {
+      "prior_year_fp_per_start": 0.0,
+      "arche_overall_prior": 0.04081,
+      "arche_career_pct_prior": 0.00013,
+      "traj_up_prior": 0.00351,
+      "traj_down_prior": 0.00297,
+      "traj_career_low_prior": 0.00056,
+      "age_normalized": 0.00651,
+      "high_k_z_year_prior": 0.06363
+    },
+    "full_in_sample_r2": 0.3682
+  }
+}

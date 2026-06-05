@@ -1,0 +1,287 @@
+{
+  "60": {
+    "n_matched": 582,
+    "baseline_pooled_r2": 0.6132,
+    "baseline_pooled_lift": 0.4678,
+    "baseline_convergence": "5/5",
+    "plus_recform_pooled_r2": 0.613,
+    "plus_recform_pooled_lift": 0.4676,
+    "plus_recform_convergence": "5/5",
+    "delta_r2": -0.00019999999999997797,
+    "recform_partial_r2": 0.0,
+    "top_correlations": {
+      "fp_per_start_to": 0.789,
+      "xwoba_per_pa_to": -0.598,
+      "k_pct_to": 0.577,
+      "fp_per_start_last21": 0.534,
+      "arche_ovr": 0.508,
+      "swstr_pct_to": 0.465,
+      "k_pct_last21": 0.428,
+      "xwoba_per_pa_last21": -0.393
+    },
+    "fold_lifts_baseline": [
+      {
+        "held_year": 2019,
+        "n_test": 117,
+        "r2_blend": 0.6624,
+        "r2_anchor": 0.1588,
+        "lift": 0.5035
+      },
+      {
+        "held_year": 2022,
+        "n_test": 115,
+        "r2_blend": 0.6206,
+        "r2_anchor": 0.2225,
+        "lift": 0.3981
+      },
+      {
+        "held_year": 2023,
+        "n_test": 112,
+        "r2_blend": 0.6093,
+        "r2_anchor": 0.1161,
+        "lift": 0.4932
+      },
+      {
+        "held_year": 2024,
+        "n_test": 117,
+        "r2_blend": 0.59,
+        "r2_anchor": 0.0651,
+        "lift": 0.5249
+      },
+      {
+        "held_year": 2025,
+        "n_test": 121,
+        "r2_blend": 0.573,
+        "r2_anchor": 0.1215,
+        "lift": 0.4515
+      }
+    ],
+    "fold_lifts_plus_recform": [
+      {
+        "held_year": 2019,
+        "n_test": 117,
+        "r2_blend": 0.6617,
+        "r2_anchor": 0.1588,
+        "lift": 0.5028
+      },
+      {
+        "held_year": 2022,
+        "n_test": 115,
+        "r2_blend": 0.6207,
+        "r2_anchor": 0.2225,
+        "lift": 0.3982
+      },
+      {
+        "held_year": 2023,
+        "n_test": 112,
+        "r2_blend": 0.609,
+        "r2_anchor": 0.1161,
+        "lift": 0.4929
+      },
+      {
+        "held_year": 2024,
+        "n_test": 117,
+        "r2_blend": 0.5901,
+        "r2_anchor": 0.0651,
+        "lift": 0.525
+      },
+      {
+        "held_year": 2025,
+        "n_test": 121,
+        "r2_blend": 0.5728,
+        "r2_anchor": 0.1215,
+        "lift": 0.4513
+      }
+    ]
+  },
+  "90": {
+    "n_matched": 571,
+    "baseline_pooled_r2": 0.5755,
+    "baseline_pooled_lift": 0.4443,
+    "baseline_convergence": "5/5",
+    "plus_recform_pooled_r2": 0.5789,
+    "plus_recform_pooled_lift": 0.4477,
+    "plus_recform_convergence": "5/5",
+    "delta_r2": 0.0033999999999999586,
+    "recform_partial_r2": 0.0029,
+    "top_correlations": {
+      "fp_per_start_to": 0.688,
+      "xwoba_per_pa_to": -0.562,
+      "arche_ovr": 0.508,
+      "k_pct_to": 0.499,
+      "swstr_pct_to": 0.398,
+      "xwoba_on_contact_to": -0.331,
+      "hard_hit_pct_to": -0.262,
+      "fp_per_start_last21": 0.249
+    },
+    "fold_lifts_baseline": [
+      {
+        "held_year": 2019,
+        "n_test": 118,
+        "r2_blend": 0.6275,
+        "r2_anchor": 0.1826,
+        "lift": 0.4448
+      },
+      {
+        "held_year": 2022,
+        "n_test": 118,
+        "r2_blend": 0.622,
+        "r2_anchor": 0.214,
+        "lift": 0.408
+      },
+      {
+        "held_year": 2023,
+        "n_test": 115,
+        "r2_blend": 0.494,
+        "r2_anchor": 0.0391,
+        "lift": 0.4549
+      },
+      {
+        "held_year": 2024,
+        "n_test": 109,
+        "r2_blend": 0.5892,
+        "r2_anchor": 0.1114,
+        "lift": 0.4778
+      },
+      {
+        "held_year": 2025,
+        "n_test": 111,
+        "r2_blend": 0.5175,
+        "r2_anchor": 0.0503,
+        "lift": 0.4672
+      }
+    ],
+    "fold_lifts_plus_recform": [
+      {
+        "held_year": 2019,
+        "n_test": 118,
+        "r2_blend": 0.6266,
+        "r2_anchor": 0.1826,
+        "lift": 0.4439
+      },
+      {
+        "held_year": 2022,
+        "n_test": 118,
+        "r2_blend": 0.6277,
+        "r2_anchor": 0.214,
+        "lift": 0.4137
+      },
+      {
+        "held_year": 2023,
+        "n_test": 115,
+        "r2_blend": 0.5003,
+        "r2_anchor": 0.0391,
+        "lift": 0.4612
+      },
+      {
+        "held_year": 2024,
+        "n_test": 109,
+        "r2_blend": 0.5966,
+        "r2_anchor": 0.1114,
+        "lift": 0.4851
+      },
+      {
+        "held_year": 2025,
+        "n_test": 111,
+        "r2_blend": 0.5156,
+        "r2_anchor": 0.0503,
+        "lift": 0.4652
+      }
+    ]
+  },
+  "120": {
+    "n_matched": 558,
+    "baseline_pooled_r2": 0.5015,
+    "baseline_pooled_lift": 0.4012,
+    "baseline_convergence": "5/5",
+    "plus_recform_pooled_r2": 0.503,
+    "plus_recform_pooled_lift": 0.4026,
+    "plus_recform_convergence": "5/5",
+    "delta_r2": 0.0015000000000000568,
+    "recform_partial_r2": 0.0016,
+    "top_correlations": {
+      "fp_per_start_to": 0.697,
+      "xwoba_per_pa_to": -0.604,
+      "arche_ovr": 0.592,
+      "k_pct_to": 0.563,
+      "swstr_pct_to": 0.485,
+      "fp_per_start_last21": 0.407,
+      "k_pct_last21": 0.365,
+      "arche_career_pct": 0.329
+    },
+    "fold_lifts_baseline": [
+      {
+        "held_year": 2019,
+        "n_test": 112,
+        "r2_blend": 0.5528,
+        "r2_anchor": 0.1835,
+        "lift": 0.3693
+      },
+      {
+        "held_year": 2022,
+        "n_test": 126,
+        "r2_blend": 0.4774,
+        "r2_anchor": 0.1619,
+        "lift": 0.3155
+      },
+      {
+        "held_year": 2023,
+        "n_test": 102,
+        "r2_blend": 0.3441,
+        "r2_anchor": -0.047,
+        "lift": 0.3912
+      },
+      {
+        "held_year": 2024,
+        "n_test": 107,
+        "r2_blend": 0.4182,
+        "r2_anchor": 0.103,
+        "lift": 0.3152
+      },
+      {
+        "held_year": 2025,
+        "n_test": 111,
+        "r2_blend": 0.6518,
+        "r2_anchor": 0.0128,
+        "lift": 0.639
+      }
+    ],
+    "fold_lifts_plus_recform": [
+      {
+        "held_year": 2019,
+        "n_test": 112,
+        "r2_blend": 0.55,
+        "r2_anchor": 0.1835,
+        "lift": 0.3665
+      },
+      {
+        "held_year": 2022,
+        "n_test": 126,
+        "r2_blend": 0.4828,
+        "r2_anchor": 0.1619,
+        "lift": 0.3209
+      },
+      {
+        "held_year": 2023,
+        "n_test": 102,
+        "r2_blend": 0.343,
+        "r2_anchor": -0.047,
+        "lift": 0.3901
+      },
+      {
+        "held_year": 2024,
+        "n_test": 107,
+        "r2_blend": 0.4228,
+        "r2_anchor": 0.103,
+        "lift": 0.3199
+      },
+      {
+        "held_year": 2025,
+        "n_test": 111,
+        "r2_blend": 0.6531,
+        "r2_anchor": 0.0128,
+        "lift": 0.6403
+      }
+    ]
+  }
+}

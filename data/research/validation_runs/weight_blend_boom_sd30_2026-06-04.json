@@ -1,0 +1,39 @@
+{
+  "split_day": 30,
+  "year": 2024,
+  "n_train": 568,
+  "n_test_2024": 113,
+  "r2_baseline_2024": 0.6770255293230248,
+  "r2_plus_boom_stack_2024": 0.6770255293230247,
+  "delta_r2": -1.1102230246251565e-16,
+  "delta_r2_ci95": [
+    -2.220446049250313e-16,
+    2.220446049250313e-16
+  ],
+  "boom_stack_coef_std": 0.0,
+  "bs_dist": {
+    "0": 534,
+    "1": 259,
+    "2": 18
+  },
+  "per_stack_2024_holdout": [
+    {
+      "boom_stack_sd30": 0.0,
+      "n": 63,
+      "mean_ros": 9.861,
+      "std_ros": 3.249
+    },
+    {
+      "boom_stack_sd30": 1.0,
+      "n": 36,
+      "mean_ros": 11.705,
+      "std_ros": 4.053
+    },
+    {
+      "boom_stack_sd30": 2.0,
+      "n": 14,
+      "mean_ros": 12.822,
+      "std_ros": 2.773
+    }
+  ]
+}

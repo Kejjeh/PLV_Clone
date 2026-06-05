@@ -1,0 +1,76 @@
+{
+  "H": {
+    "ptype": "H",
+    "n_total": 3270,
+    "correlations": {
+      "arche_overall_prior": {
+        "arche_overall_prior": 1.0,
+        "traj_up": 0.277,
+        "traj_down": -0.229,
+        "traj_career_low": -0.194,
+        "slope_3yr_prior": 0.413
+      },
+      "traj_up": {
+        "arche_overall_prior": 0.277,
+        "traj_up": 1.0,
+        "traj_down": -0.23,
+        "traj_career_low": -0.381,
+        "slope_3yr_prior": 0.69
+      },
+      "traj_down": {
+        "arche_overall_prior": -0.229,
+        "traj_up": -0.23,
+        "traj_down": 1.0,
+        "traj_career_low": -0.368,
+        "slope_3yr_prior": -0.681
+      },
+      "traj_career_low": {
+        "arche_overall_prior": -0.194,
+        "traj_up": -0.381,
+        "traj_down": -0.368,
+        "traj_career_low": 1.0,
+        "slope_3yr_prior": -0.094
+      },
+      "slope_3yr_prior": {
+        "arche_overall_prior": 0.413,
+        "traj_up": 0.69,
+        "traj_down": -0.681,
+        "traj_career_low": -0.094,
+        "slope_3yr_prior": 1.0
+      }
+    },
+    "r2_in_sample": {
+      "anchor_only": {
+        "r2": 0.1818,
+        "n": 3270
+      },
+      "no_traj": {
+        "r2": 0.2441,
+        "n": 3270
+      },
+      "binary_traj": {
+        "r2": 0.2517,
+        "n": 3270
+      },
+      "continuous_slope": {
+        "r2": 0.3383,
+        "n": 1999
+      },
+      "both": {
+        "r2": 0.3384,
+        "n": 1999
+      },
+      "binary_plus_interactions": {
+        "r2": 0.2559,
+        "n": 3270
+      }
+    },
+    "interaction_contributions": {
+      "traj_up": 0.00017,
+      "traj_down": 0.00065,
+      "traj_career_low": 0.00132,
+      "traj_up_x_ovr": 0.00038,
+      "traj_down_x_ovr": 0.00043,
+      "traj_cl_x_ovr": 0.0037
+    },
+    "per_year_lift_binary_over_no_traj": {

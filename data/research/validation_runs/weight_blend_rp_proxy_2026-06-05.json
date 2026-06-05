@@ -1,0 +1,86 @@
+{
+  "n_union": 894,
+  "n_real_pl_only": 186,
+  "coverage_gain": 708,
+  "n_proxy_used": 753,
+  "years": [
+    2018,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "r2_A_baseline_on_union": 0.2907,
+  "r2_B_real_PL_on_union": 0.301,
+  "r2_C_PL_or_proxy_on_union": 0.4147,
+  "lift_C_minus_A": 0.1239,
+  "lift_C_minus_B": 0.1136,
+  "lift_C_minus_A_CI95": [
+    0.0754,
+    0.1722
+  ],
+  "convergence_ex2020_C_vs_A": "5/7",
+  "fold_lifts": [
+    {
+      "year": 2018,
+      "n": 155,
+      "r2_A": 0.2675,
+      "r2_C": 0.2281,
+      "lift_C_minus_A": -0.0394
+    },
+    {
+      "year": 2019,
+      "n": 137,
+      "r2_A": 0.2829,
+      "r2_C": 0.2213,
+      "lift_C_minus_A": -0.0616
+    },
+    {
+      "year": 2021,
+      "n": 21,
+      "r2_A": -1.0472,
+      "r2_C": 0.1978,
+      "lift_C_minus_A": 1.245
+    },
+    {
+      "year": 2022,
+      "n": 147,
+      "r2_A": 0.2394,
+      "r2_C": 0.4643,
+      "lift_C_minus_A": 0.2248
+    },
+    {
+      "year": 2023,
+      "n": 153,
+      "r2_A": 0.3509,
+      "r2_C": 0.5572,
+      "lift_C_minus_A": 0.2062
+    },
+    {
+      "year": 2024,
+      "n": 139,
+      "r2_A": 0.3206,
+      "r2_C": 0.5195,
+      "lift_C_minus_A": 0.1989
+    },
+    {
+      "year": 2025,
+      "n": 142,
+      "r2_A": 0.2481,
+      "r2_C": 0.4821,
+      "lift_C_minus_A": 0.2339
+    }
+  ],
+  "drop_test_within_C": {
+    "pl_rank_mid_inv_combined": 0.0222,
+    "is_proxy_int": 0.053,
+    "anchor_fp": 0.0154
+  },
+  "intersection_test": {
+    "r2_B_PL_only_on_intersect": 0.0445,
+    "r2_B_plus_proxy_on_intersect": 0.0138,
+    "lift": -0.0307
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "n": 189,
+  "pooled_r2": 0.5729998304273176,
+  "loyo_r2_baseline": 0.09843981581231853,
+  "loyo_r2_with_pl": 0.43117348540561085,
+  "loyo_lift": 0.3327336695932923,
+  "coefficients": {
+    "prior_year_fp_per_g_rp": 0.1573,
+    "arche_overall_prior": 0.0827,
+    "arche_career_pct_prior": -0.0946,
+    "traj_up_prior": 0.1964,
+    "traj_down_prior": 0.1099,
+    "traj_career_low_prior": 0.0449,
+    "age_normalized": 0.143,
+    "pl_rank_mid_inv": 0.8514
+  }
+}

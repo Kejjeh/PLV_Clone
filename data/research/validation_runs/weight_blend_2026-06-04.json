@@ -1,0 +1,244 @@
+[
+  {
+    "ptype": "H",
+    "n_obs": 3270,
+    "years": [
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "features": [
+      "prior_year_fp_per_pa",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.2395,
+    "pooled_r2_anchor": 0.1818,
+    "pooled_lift_r2": 0.0577,
+    "per_feature_contribution": {
+      "prior_year_fp_per_pa": 0.0222,
+      "arche_overall_prior": 0.0606,
+      "arche_career_pct_prior": 0.0024,
+      "traj_up_prior": 0.0004,
+      "traj_down_prior": 0.0006,
+      "traj_career_low_prior": 0.0009,
+      "age_normalized": 0.0125
+    },
+    "final_weights_z_standardized": {
+      "prior_year_fp_per_pa": 0.0292,
+      "arche_overall_prior": 0.0513,
+      "arche_career_pct_prior": -0.0156,
+      "traj_up_prior": -0.0036,
+      "traj_down_prior": 0.0061,
+      "traj_career_low_prior": -0.0096,
+      "age_normalized": -0.0165
+    },
+    "convergence_pass_folds": "8/9",
+    "fold_lifts": [
+      [
+        "2016",
+        -0.0211
+      ],
+      [
+        "2017",
+        0.1125
+      ],
+      [
+        "2018",
+        0.0431
+      ],
+      [
+        "2019",
+        0.068
+      ],
+      [
+        "2021",
+        0.1621
+      ],
+      [
+        "2022",
+        0.0765
+      ],
+      [
+        "2023",
+        0.1013
+      ],
+      [
+        "2024",
+        0.0263
+      ],
+      [
+        "2025",
+        0.0386
+      ]
+    ]
+  },
+  {
+    "ptype": "SP",
+    "n_obs": 1178,
+    "years": [
+      "2016",
+      "2017",
+      "2018",
+      "2019",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "features": [
+      "prior_year_fp_per_start",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.2946,
+    "pooled_r2_anchor": 0.2056,
+    "pooled_lift_r2": 0.089,
+    "per_feature_contribution": {
+      "prior_year_fp_per_start": 0.0093,
+      "arche_overall_prior": 0.0847,
+      "arche_career_pct_prior": 0.0002,
+      "traj_up_prior": 0.0001,
+      "traj_down_prior": 0.0031,
+      "traj_career_low_prior": 0.0002,
+      "age_normalized": 0.0078
+    },
+    "final_weights_z_standardized": {
+      "prior_year_fp_per_start": 0.507,
+      "arche_overall_prior": 1.6179,
+      "arche_career_pct_prior": 0.1019,
+      "traj_up_prior": -0.0479,
+      "traj_down_prior": 0.3795,
+      "traj_career_low_prior": 0.1038,
+      "age_normalized": -0.3309
+    },
+    "convergence_pass_folds": "9/9",
+    "fold_lifts": [
+      [
+        "2016",
+        0.0818
+      ],
+      [
+        "2017",
+        0.0414
+      ],
+      [
+        "2018",
+        0.05
+      ],
+      [
+        "2019",
+        0.1324
+      ],
+      [
+        "2021",
+        0.1905
+      ],
+      [
+        "2022",
+        0.0337
+      ],
+      [
+        "2023",
+        0.1266
+      ],
+      [
+        "2024",
+        0.1246
+      ],
+      [
+        "2025",
+        0.0894
+      ]
+    ]
+  },
+  {
+    "ptype": "RP",
+    "n_obs": 1107,
+    "years": [
+      "2018",
+      "2019",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "features": [
+      "prior_year_fp_per_g_rp",
+      "arche_overall_prior",
+      "arche_career_pct_prior",
+      "traj_up_prior",
+      "traj_down_prior",
+      "traj_career_low_prior",
+      "age_normalized"
+    ],
+    "pooled_r2_blend": 0.2163,
+    "pooled_r2_anchor": 0.1626,
+    "pooled_lift_r2": 0.0537,
+    "per_feature_contribution": {
+      "prior_year_fp_per_g_rp": 0.0665,
+      "arche_overall_prior": 0.0456,
+      "arche_career_pct_prior": 0.0013,
+      "traj_up_prior": 0.0025,
+      "traj_down_prior": 0.0013,
+      "traj_career_low_prior": 0.0007,
+      "age_normalized": 0.0033
+    },
+    "final_weights_z_standardized": {
+      "prior_year_fp_per_g_rp": 0.3381,
+      "arche_overall_prior": 0.311,
+      "arche_career_pct_prior": -0.1148,
+      "traj_up_prior": 0.083,
+      "traj_down_prior": 0.0927,
+      "traj_career_low_prior": -0.0896,
+      "age_normalized": -0.0706
+    },
+    "convergence_pass_folds": "7/7",
+    "fold_lifts": [
+      [
+        "2018",
+        0.0325
+      ],
+      [
+        "2019",
+        0.0546
+      ],
+      [
+        "2021",
+        0.0941
+      ],
+      [
+        "2022",
+        0.0991
+      ],
+      [
+        "2023",
+        0.0967
+      ],
+      [
+        "2024",
+        0.0128
+      ],
+      [
+        "2025",
+        0.1063
+      ]
+    ]
+  }
+]

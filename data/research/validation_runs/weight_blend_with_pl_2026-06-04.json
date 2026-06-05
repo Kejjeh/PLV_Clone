@@ -1,0 +1,199 @@
+[
+  {
+    "ptype": "H",
+    "n_joined": 721,
+    "n_baseline_panel": 3270,
+    "join_rate": 0.22,
+    "years": [
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "pooled_r2_baseline": 0.1083,
+    "pooled_r2_with_pl": 0.1705,
+    "pooled_lift": 0.0623,
+    "lift_ci_95": [
+      0.0204,
+      0.1021
+    ],
+    "fold_lifts": [
+      {
+        "year": "2022",
+        "n": 175,
+        "r2_baseline": 0.109,
+        "r2_with_pl": 0.1824,
+        "lift": 0.0734
+      },
+      {
+        "year": "2023",
+        "n": 150,
+        "r2_baseline": -0.1203,
+        "r2_with_pl": 0.0037,
+        "lift": 0.124
+      },
+      {
+        "year": "2024",
+        "n": 188,
+        "r2_baseline": 0.0992,
+        "r2_with_pl": 0.1164,
+        "lift": 0.0172
+      },
+      {
+        "year": "2025",
+        "n": 207,
+        "r2_baseline": 0.1244,
+        "r2_with_pl": 0.1999,
+        "lift": 0.0755
+      }
+    ],
+    "convergence_ex2020": "4/4",
+    "drop_test": {
+      "pl_rank_early_inv": 0.0091,
+      "pl_rank_mid_inv": 0.0194,
+      "pl_rank_late_inv": 0.0026,
+      "anchor_fp": 0.0024,
+      "arche_overall_prior": 0.0046
+    }
+  },
+  {
+    "ptype": "SP",
+    "n_joined": 604,
+    "n_baseline_panel": 1178,
+    "join_rate": 0.513,
+    "years": [
+      "2019",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "pooled_r2_baseline": 0.1756,
+    "pooled_r2_with_pl": 0.2752,
+    "pooled_lift": 0.0997,
+    "lift_ci_95": [
+      0.0419,
+      0.1567
+    ],
+    "fold_lifts": [
+      {
+        "year": "2019",
+        "n": 72,
+        "r2_baseline": 0.2518,
+        "r2_with_pl": 0.1694,
+        "lift": -0.0824
+      },
+      {
+        "year": "2021",
+        "n": 94,
+        "r2_baseline": 0.1935,
+        "r2_with_pl": 0.3522,
+        "lift": 0.1587
+      },
+      {
+        "year": "2022",
+        "n": 109,
+        "r2_baseline": 0.1857,
+        "r2_with_pl": 0.3468,
+        "lift": 0.1611
+      },
+      {
+        "year": "2023",
+        "n": 111,
+        "r2_baseline": 0.102,
+        "r2_with_pl": 0.2095,
+        "lift": 0.1075
+      },
+      {
+        "year": "2024",
+        "n": 105,
+        "r2_baseline": 0.0805,
+        "r2_with_pl": 0.2543,
+        "lift": 0.1738
+      },
+      {
+        "year": "2025",
+        "n": 113,
+        "r2_baseline": 0.1671,
+        "r2_with_pl": 0.213,
+        "lift": 0.0459
+      }
+    ],
+    "convergence_ex2020": "5/6",
+    "drop_test": {
+      "pl_rank_early_inv": 0.0141,
+      "pl_rank_mid_inv": 0.0098,
+      "pl_rank_late_inv": 0.0151,
+      "anchor_fp": 0.0004,
+      "arche_overall_prior": 0.0074
+    }
+  },
+  {
+    "ptype": "RP",
+    "n_joined": 189,
+    "n_baseline_panel": 1107,
+    "join_rate": 0.171,
+    "years": [
+      "2019",
+      "2021",
+      "2022",
+      "2023",
+      "2024",
+      "2025"
+    ],
+    "pooled_r2_baseline": 0.0984,
+    "pooled_r2_with_pl": 0.0804,
+    "pooled_lift": -0.018,
+    "lift_ci_95": [
+      -0.1369,
+      0.0986
+    ],
+    "fold_lifts": [
+      {
+        "year": "2021",
+        "n": 21,
+        "r2_baseline": -0.4734,
+        "r2_with_pl": 0.1069,
+        "lift": 0.5803
+      },
+      {
+        "year": "2022",
+        "n": 28,
+        "r2_baseline": 0.0766,
+        "r2_with_pl": 0.2445,
+        "lift": 0.1679
+      },
+      {
+        "year": "2023",
+        "n": 28,
+        "r2_baseline": -0.0406,
+        "r2_with_pl": 0.2054,
+        "lift": 0.2459
+      },
+      {
+        "year": "2024",
+        "n": 73,
+        "r2_baseline": -0.139,
+        "r2_with_pl": -0.5972,
+        "lift": -0.4582
+      },
+      {
+        "year": "2025",
+        "n": 38,
+        "r2_baseline": 0.1031,
+        "r2_with_pl": 0.39,
+        "lift": 0.2869
+      }
+    ],
+    "convergence_ex2020": "4/5",
+    "drop_test": {
+      "pl_rank_early_inv": 0.0222,
+      "pl_rank_mid_inv": 0.1003,
+      "pl_rank_late_inv": 0.0,
+      "anchor_fp": 0.029,
+      "arche_overall_prior": 0.0011
+    }
+  }
+]
