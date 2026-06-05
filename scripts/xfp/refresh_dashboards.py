@@ -68,6 +68,15 @@ def main():
     if not ok_tx:
         print('  ⚠ transactions persist failed — continuing (archival only)')
 
+    # 0.7: Build FA-pool snapshot (RP-only, Phase 2). Powers the live_marginal
+    # line on RP triangulate cards. Fail-soft — if snapshot is stale/missing,
+    # blend_score.py emits live_marginal=None with a note.
+    ok_fa = run('0.7. Build FA-pool snapshot (RP)',
+                'python -X utf8 scripts/xfp/build_fa_snapshot.py',
+                timeout=180)
+    if not ok_fa:
+        print('  ⚠ FA snapshot failed — RP cards will show live_marginal=unavailable')
+
     if not args.skip_statcast:
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')

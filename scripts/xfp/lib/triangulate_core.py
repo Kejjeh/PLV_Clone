@@ -752,4 +752,11 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
         'role': blend.get('role') if b == 'RP' else None,
         'role_characterization': blend.get('role_characterization') if b == 'RP' else None,
         'value_tier': blend.get('value_tier') if b == 'RP' else None,
+        # Phase 2 — Live FA-pool marginal value (RP only, display-only).
+        'live_marginal': blend.get('live_marginal') if b == 'RP' else None,
+        'best_fa_at_role': blend.get('best_fa_at_role') if b == 'RP' else None,
+        'best_fa_ros': blend.get('best_fa_ros') if b == 'RP' else None,
+        'live_value_tier': blend.get('live_value_tier') if b == 'RP' else None,
+        'snapshot_label': blend.get('snapshot_label') if b == 'RP' else None,
+        'snapshot_age_hours': blend.get('snapshot_age_hours') if b == 'RP' else None,
     }

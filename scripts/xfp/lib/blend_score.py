@@ -783,7 +783,120 @@ def compute_blended_xfp(
         result['role_characterization'] = role_characterization
         result['value_tier'] = value_tier
 
+        # Phase 2 (2026-06-05): live marginal vs same-role best FA today.
+        # All caveats preserved from Phase 1:
+        #   1. PL rank missing                -> handled above (no_pl coefs)
+        #   2. slope_3yr_prior missing        -> handled above
+        #   3. archetype missing              -> handled above
+        #   4. Rookie no prior_year_fp        -> handled above
+        #   5. 2020 COVID excluded            -> irrelevant for live snapshot
+        # NaN-safe: missing snapshot / missing role / missing target ROS each
+        # produces live_marginal=None with an explanatory note. live_value_tier
+        # is a heuristic display cut (R² ≠ decision quality), not a model.
+        lm = _compute_live_marginal_rp(mlbam_id, role, ros_estimate)
+        result.update(lm)
+
     return result
+
+
+# Phase 2 — Live FA-pool marginal value -------------------------------
+
+_FA_SNAPSHOT_LATEST = os.path.join(
+    _REPO_ROOT, 'data', 'research', 'fa_snapshots', 'fa_pool_RP_latest.parquet'
+)
+_LIVE_MARGINAL_FRESH_HOURS = 24.0   # warn if older
+_LIVE_MARGINAL_STALE_HOURS = 36.0   # null out if older
+
+
+@lru_cache(maxsize=1)
+def _load_fa_snapshot_rp() -> Optional[pd.DataFrame]:
+    if not os.path.exists(_FA_SNAPSHOT_LATEST):
+        return None
+    try:
+        return pd.read_parquet(_FA_SNAPSHOT_LATEST)
+    except Exception:
+        return None
+
+
+def _live_value_tier(live_marginal: Optional[float]) -> Optional[str]:
+    if live_marginal is None:
+        return None
+    if live_marginal >= 30:
+        return 'OWN_THE_ROLE'
+    if live_marginal >= 10:
+        return 'COMFORTABLE_HOLD'
+    if live_marginal >= -10:
+        return 'REPLACEABLE'
+    if live_marginal >= -30:
+        return 'DOWNGRADE'
+    return 'ACTIVE_LOSS'
+
+
+def _compute_live_marginal_rp(
+    mlbam_id: int,
+    role: Optional[str],
+    target_ros: Optional[float],
+) -> dict:
+    """Compute live marginal = target.ros - best_FA_at_same_role.ros.
+
+    Returns a dict with live_marginal, best_fa_at_role, best_fa_ros,
+    snapshot_label, snapshot_age_hours, live_value_tier, live_marginal_note.
+    Any failure path returns live_marginal=None with a note (NaN-safe).
+    """
+    out: dict = {
+        'live_marginal': None,
+        'best_fa_at_role': None,
+        'best_fa_ros': None,
+        'snapshot_label': None,
+        'snapshot_age_hours': None,
+        'live_value_tier': None,
+        'live_marginal_note': None,
+    }
+
+    snap = _load_fa_snapshot_rp()
+    if snap is None or snap.empty:
+        out['live_marginal_note'] = 'fa_snapshot_stale_or_missing'
+        return out
+
+    # Snapshot age.
+    try:
+        ts = pd.to_datetime(snap['snapshot_ts'].iloc[0])
+        age_hours = (pd.Timestamp.now() - ts).total_seconds() / 3600.0
+        out['snapshot_age_hours'] = float(age_hours)
+        out['snapshot_label'] = str(snap['snapshot_label'].iloc[0])
+    except Exception:
+        out['live_marginal_note'] = 'fa_snapshot_stale_or_missing'
+        return out
+
+    if age_hours > _LIVE_MARGINAL_STALE_HOURS:
+        out['live_marginal_note'] = 'fa_snapshot_stale_or_missing'
+        return out
+
+    if target_ros is None or role is None or str(role) in ('', 'nan', 'None'):
+        out['live_marginal_note'] = 'no_fa_at_role'
+        return out
+
+    # Same-role subset. Exclude the target himself in case he's somehow in
+    # the snapshot (he shouldn't be — rostered guard — but be defensive).
+    bucket = snap[snap['role_lag1'] == role].copy()
+    if 'mlbam_id' in bucket.columns:
+        bucket = bucket[bucket['mlbam_id'] != mlbam_id]
+    bucket = bucket.dropna(subset=['ros'])
+
+    if bucket.empty:
+        out['live_marginal_note'] = 'no_fa_at_role'
+        return out
+
+    idx = bucket['ros'].idxmax()
+    best = bucket.loc[idx]
+    best_ros = float(best['ros'])
+    out['best_fa_at_role'] = str(best['player_name'])
+    out['best_fa_ros'] = best_ros
+    out['live_marginal'] = float(target_ros) - best_ros
+    out['live_value_tier'] = _live_value_tier(out['live_marginal'])
+    if age_hours > _LIVE_MARGINAL_FRESH_HOURS:
+        out['live_marginal_note'] = f'snapshot_age_{age_hours:.1f}h_gt_24h_warn'
+    return out
 
 
 def _empty_result(reason: str) -> dict:
