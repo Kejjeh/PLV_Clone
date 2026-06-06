@@ -10,10 +10,14 @@ Statcast aggregation pattern is borrowed from
 `scripts/xfp/validate_buylow_signal.py` (canonical hitter-FP formula
 shipped 2026-06-06 at 1065df0).
 
-For now only the H bucket is implemented for opportunistic settlement —
-SP/RP settlement requires per-start / per-appearance aggregation that
-isn't a one-liner from the same Statcast parquet, so SP/RP decisions
-land in the panel as `pending` until a future driver fills them in.
+H/SP/RP all settle opportunistically:
+  - H actuals from `statcast_{yr}.parquet` (per-PA aggregation; canonical
+    BrownU hitter formula).
+  - SP / RP actuals from the MLB Stats API gameLog endpoint, scored via
+    `LeagueScoring.score_pitcher_start` / `score_pitcher_relief` (the
+    canonical BrownU scorer shipped at 93409d0). The gameLog has ER,
+    SV, and HLD natively which Statcast does not, so this is closer to
+    BrownU truth than a Statcast-derived approximation would be.
 
 Hard 2020 exclusion: any decision dated in 2020 is dropped (consistent
 with the rest of the repo's training-data hygiene).
@@ -28,6 +32,7 @@ import argparse
 import dataclasses
 import json
 import sys
+import urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -48,6 +53,10 @@ from plv_clone.decisions import (  # noqa: E402
     log_decision,
     settle_decision,
 )
+from plv_clone.fantasy.scoring import LeagueScoring  # noqa: E402
+
+# Single instance — BrownU defaults match the canonical formula.
+_SCORING = LeagueScoring()
 
 CACHE = ROOT / "data" / "research" / "xfp_cache"
 OUT_CSV = ROOT / "data" / "outputs" / "decisions_panel.csv"
@@ -153,35 +162,167 @@ def _hitter_actuals_for_window(
 
 
 # ---------------------------------------------------------------------------
+# Pitcher actuals — MLB Stats API gameLog
+# ---------------------------------------------------------------------------
+
+
+def _fetch_pitcher_gamelog(mlbam_id: int, season: int) -> list[dict]:
+    """Pull season pitcher gameLog from the MLB Stats API.
+
+    Returns a list of {date, gamesStarted, inningsPitched, strikeOuts,
+    hits, earnedRuns, baseOnBalls, hitByPitch, saves, holds} dicts —
+    one per game.
+
+    Network/JSON failures return []. Caller treats empty as "no data".
+    """
+    url = (
+        f"https://statsapi.mlb.com/api/v1/people/{mlbam_id}"
+        f"/stats?stats=gameLog&season={season}&group=pitching&sportId=1"
+    )
+    try:
+        req = urllib.request.Request(
+            url, headers={"User-Agent": "Mozilla/5.0"}
+        )
+        with urllib.request.urlopen(req, timeout=15) as r:
+            payload = json.loads(r.read())
+    except Exception as exc:
+        print(f"  ⚠ gameLog fetch failed for {mlbam_id} ({season}): {exc}")
+        return []
+    stats_list = payload.get("stats", [])
+    if not stats_list:
+        return []
+    splits = stats_list[0].get("splits", []) or []
+    out = []
+    for s in splits:
+        stat = s.get("stat", {}) or {}
+        out.append({
+            "date": s.get("date"),
+            "gamesStarted": int(stat.get("gamesStarted", 0) or 0),
+            "inningsPitched": stat.get("inningsPitched", "0.0"),
+            "strikeOuts": int(stat.get("strikeOuts", 0) or 0),
+            "hits": int(stat.get("hits", 0) or 0),
+            "earnedRuns": int(stat.get("earnedRuns", 0) or 0),
+            "baseOnBalls": int(stat.get("baseOnBalls", 0) or 0),
+            "hitByPitch": int(stat.get("hitByPitch", 0) or 0),
+            "saves": int(stat.get("saves", 0) or 0),
+            "holds": int(stat.get("holds", 0) or 0),
+        })
+    return out
+
+
+def _filter_games_in_window(
+    games: list[dict], window_start: date, window_end: date,
+) -> list[dict]:
+    """Keep only games whose date falls in [window_start, window_end]."""
+    out = []
+    for g in games:
+        d = g.get("date")
+        if not d:
+            continue
+        try:
+            gd = date.fromisoformat(d)
+        except ValueError:
+            continue
+        if window_start <= gd <= window_end:
+            out.append(g)
+    return out
+
+
+def _sp_actuals_for_window(
+    mlbam_id: int, window_start: date, window_end: date,
+) -> Optional[tuple[int, float]]:
+    """Return (n_starts, fp_per_start) for the SP over the window.
+
+    Uses LeagueScoring.score_pitcher_start (canonical BrownU scorer).
+    Returns None if no starts found (caller leaves record pending).
+    Filters to gamesStarted==1.
+    """
+    season = window_start.year
+    if season == 2020:
+        return None  # hard 2020 exclusion
+    games = _fetch_pitcher_gamelog(int(mlbam_id), season)
+    if not games:
+        return None
+    games = _filter_games_in_window(games, window_start, window_end)
+    starts = [g for g in games if g.get("gamesStarted", 0) == 1]
+    if not starts:
+        return None
+    total_fp = sum(_SCORING.score_pitcher_start(g) for g in starts)
+    n = len(starts)
+    return n, total_fp / n
+
+
+def _rp_actuals_for_window(
+    mlbam_id: int, window_start: date, window_end: date,
+) -> Optional[tuple[int, float]]:
+    """Return (n_appearances, fp_per_g) for the RP over the window.
+
+    Uses LeagueScoring.score_pitcher_relief (canonical BrownU scorer,
+    includes 5*SV + 2*HLD). Filters to gamesStarted==0.
+    """
+    season = window_start.year
+    if season == 2020:
+        return None
+    games = _fetch_pitcher_gamelog(int(mlbam_id), season)
+    if not games:
+        return None
+    games = _filter_games_in_window(games, window_start, window_end)
+    apps = [g for g in games if g.get("gamesStarted", 0) == 0]
+    if not apps:
+        return None
+    total_fp = sum(_SCORING.score_pitcher_relief(g) for g in apps)
+    n = len(apps)
+    return n, total_fp / n
+
+
+# ---------------------------------------------------------------------------
 # Settle + persist back
 # ---------------------------------------------------------------------------
 
 
 def _try_settle(record: DecisionRecord, today: date) -> DecisionRecord:
-    """Opportunistically settle a hitter decision if window-end has passed."""
+    """Opportunistically settle H / SP / RP decisions when ready.
+
+    "Ready" = today past per-bucket window-end AND we can pull actuals.
+    """
     if record.settled_at is not None:
         return record  # already settled
-    if record.bucket != "H":
-        return record  # SP/RP settlement not implemented at this layer yet
+    if record.bucket not in SETTLEMENT_WINDOWS:
+        return record  # unknown bucket — nothing to do
     if record.mlbam_id is None:
         return record
 
     snap = date.fromisoformat(record.snapshot_date)
     if snap.year == 2020:
         return record  # hard exclusion
-    window = SETTLEMENT_WINDOWS["H"]
+    window = SETTLEMENT_WINDOWS[record.bucket]
     window_end = snap + timedelta(days=window["days"])
     if today < window_end:
         return record
-    year = snap.year
-    actuals = _hitter_actuals_for_window(
-        year, {int(record.mlbam_id)}, snap, window_end
-    )
-    if int(record.mlbam_id) not in actuals:
+
+    n_events: Optional[int] = None
+    actual: Optional[float] = None
+
+    if record.bucket == "H":
+        actuals = _hitter_actuals_for_window(
+            snap.year, {int(record.mlbam_id)}, snap, window_end,
+        )
+        if int(record.mlbam_id) in actuals:
+            n_events, actual = actuals[int(record.mlbam_id)]
+    elif record.bucket == "SP":
+        sp = _sp_actuals_for_window(int(record.mlbam_id), snap, window_end)
+        if sp is not None:
+            n_events, actual = sp
+    elif record.bucket == "RP":
+        rp = _rp_actuals_for_window(int(record.mlbam_id), snap, window_end)
+        if rp is not None:
+            n_events, actual = rp
+
+    if n_events is None or actual is None:
         return record
-    n_pa, fp_per_pa = actuals[int(record.mlbam_id)]
+
     settled = settle_decision(
-        record, today=today, actual_fp_per_unit=fp_per_pa, n_events=n_pa
+        record, today=today, actual_fp_per_unit=actual, n_events=n_events,
     )
     if settled.settled_at is not None and settled.settled_at != record.settled_at:
         # Persist the settlement back to disk so we don't recompute next run.
