@@ -273,11 +273,31 @@ slots they also cover. Direct positional matches matter — e.g., if
 the drop target was a 2B/SS/IF guy and the candidate is also SS/2B/IF,
 they slot in cleanly. If the candidate is OF-only, slot mismatch.
 
-Annotate with one of:
+**Use the centralized helper** (PR 4, 2026-06-06):
+
+```python
+from plv_clone.fa_eligibility import filter_eligible_fa, positional_slots
+
+# Filter the FA pool to only positionally-eligible rows BEFORE ranking.
+# Strips BE/IL/UTIL/DH from the drop target's slot list — see
+# NON_POSITIONAL_SLOTS in plv_clone/fa_eligibility.py.
+fa_eligible = filter_eligible_fa(fa_df, drop_target['eligible_slots'])
+```
+
+The helper handles the BE/IL/UTIL/DH carve-out automatically. A drop
+target with only UTIL/BE eligibility returns the full bucket pool
+(caller wanted a bucket-wide scan), so you don't need to special-case
+DH-only or pure-UTIL targets in the skill body.
+
+Annotate the surviving candidates with one of:
 - ✓ direct match (covers all drop target's IF/OF slots)
 - ~ partial match (covers some)
 - × mismatch (no overlap on drop target's slots — would need to bench
   someone else)
+
+`filter_eligible_fa` returns only `~` and `✓` rows; `×` are dropped
+upstream. If you need to surface `×` candidates (e.g. opportunity-cost
+analysis on a bench reshuffle), bypass the filter and annotate manually.
 
 ---
 
