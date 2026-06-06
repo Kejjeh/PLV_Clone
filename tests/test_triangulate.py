@@ -43,11 +43,17 @@ from scripts.xfp.lib.cached_data import _load_projection
 # we don't have to care whether the running shell is cp1252 or utf-8.
 CANONICAL_CASES = [
     ("Aaron Judge",     "STRONG HOLD",            "H",  "BUY",     None),
-    ("Reid Detmers",    "BUY — archetype breakout", "SP", "BUY",     None),
-    ("Ryan Weathers",   "BUY — archetype breakout", "SP", "BUY",     None),
+    # Detmers + Schmitt + Weathers updated 2026-06-06 per user
+    # adjudication of the PR 1a triangulate canonical halt memo at
+    # data/research/validation_runs/triangulate_canonical_review_2026-06-06.md.
+    # All three shifts are consistent with the documented decision tree
+    # and reflect data drift in rh3/rp3, PL ranks, and archetype OVERALL
+    # since the original fixture snapshot.
+    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
+    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
     ("Eugenio Suárez",   "FADE",             "H",  "FADE",    None),
-    ("Casey Schmitt",   "BUY — process upgrade",   "H",  "BUY",     None),
+    ("Casey Schmitt",   "BUY — archetype breakout", "H",  "BUY",     None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
