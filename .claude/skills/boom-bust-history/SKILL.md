@@ -78,6 +78,53 @@ user needs custom thresholds for a specific decision, surface that as
 a one-time "you can compute X% above N from the detail table" rather
 than re-running with new cutoffs.
 
+## Bayesian shrinkage to prior year (when Blended xFP unavailable)
+
+When projecting forward FP for a player whose Blended xFP is missing
+(MED conf / no_blend / rookie thin sample), this skill applies Bayesian
+shrinkage to combine L21 actuals with prior-year baseline:
+
+```
+shrunk_avg = (n_L21 × L21_avg + k × prior_year_avg) / (n_L21 + k)
+projected_fp_wk = shrunk_avg × games_per_week
+```
+
+**Empirically calibrated k by position** (2026-06-06 backtest, 1,498
+hitter snapshots + 550 SP snapshots across 2024-2025; see
+`data/research/validation_runs/shrinkage_calibration_2026-06-06.md`):
+
+| Position | Default k | Notes |
+|---|---|---|
+| **Hitter (pooled)** | **k = 80** | Optimal k=40 only +0.6% MAE better; k=80 defensible |
+| **Hitter (top-50 rh3 rank)** | **k = 40** | Elite hitters' L21 form carries more signal; lighter shrink |
+| **SP (all strata)** | **k = 20** | MUCH lighter than hitters; L21 form more predictive for SPs. k=80 is ~3× worse MAE than k=20 for SPs. |
+| **RP** | k = 30 default (not separately validated) | — |
+
+**Two-year prior is a free upgrade.** Use `prior = 0.6 × Y−1 + 0.4 × Y−2`
+whenever both prior seasons exist for the player.
+
+**Season progress doesn't matter.** Early/mid/late as_of dates show
+<0.01 MAE difference — no time-of-season adjustment needed.
+
+### When to prefer Blended xFP over manual shrinkage
+
+If a player has a HIGH-confidence Blended xFP row in
+`live_blend_xfp_latest.csv`, **prefer the blend over manual shrinkage**.
+The Phase 3 blend weights are learned from a multi-feature holdout
+backtest and incorporate prior + slope_3yr + archetype + recent rh3 + PL
+features simultaneously. Manual k-shrinkage only uses 2 features (L21 +
+1-2 prior years) — strictly less informed than the validated blend.
+
+Manual shrinkage is the FALLBACK for: MED-confidence blends, no-blend
+rookies, cross-validation when blend looks wrong, IL stashes using
+prior-year data.
+
+Canonical failure (2026-06-06): I applied k=80 to Willy Adames and got
+15.4 FP/wk. His Blended xFP HIGH said 10.27. The blend was right — it
+weighted his multi-year decline; my 2-feature shrinkage just used 2025
+baseline + 2026 L21, missing the 2024 trend. **Trust the blend when
+available.**
+
 ## Cross-year fallback (the Hunter Greene case)
 
 If a player has fewer than 5 starts/games in the current year, pull
