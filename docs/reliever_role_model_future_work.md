@@ -68,11 +68,13 @@ when or why they appear.
 Manually add SV/HD to fp_per_app from your league platform's role assignments:
 
 ```
-adjusted_fp_per_app = fp_per_app + (sv_rate × 5) + (hd_rate × 3)
+adjusted_fp_per_app = fp_per_app + (sv_rate × 5) + (hd_rate × 2)
 ```
+(Coefficients reference `LeagueScoring.sv` and `LeagueScoring.hd` in
+`src/plv_clone/fantasy/scoring.py`; canonical BrownU values are SV×5 and HLD×2.)
 
-Closer example: `2.5 + (0.15 × 5) + (0 × 3) = 3.25/app`
-Setup example:  `2.2 + (0 × 5) + (0.25 × 3) = 2.95/app`
+Closer example: `2.5 + (0.15 × 5) + (0 × 2) = 3.25/app`
+Setup example:  `2.2 + (0 × 5) + (0.25 × 2) = 2.70/app`
 
 Use `est_k_per_ip` and `fp_per_ip` as the quality signal, and overlay role context
 from your league platform.
