@@ -1,0 +1,132 @@
+{
+  "prereg": "buylow_panel_prereg_2026-06-06.md",
+  "verdict": "FAIL",
+  "failures": [
+    "mean_residual=-0.06883613565330789 < +0.015 FP/PA",
+    "CI lower bound=-0.1142068463016126 <= 0"
+  ],
+  "pass_criteria": {
+    "composite_pct_cut": 0.75,
+    "rh3_pct_cut": 0.25,
+    "min_forward_pa": 30,
+    "min_pooled_n": 30,
+    "min_pooled_mean": 0.015,
+    "window_start_offset_d": 30,
+    "window_end_offset_d": 60
+  },
+  "summary": {
+    "pooled": {
+      "n": 71,
+      "mean": -0.06883613565330789,
+      "sd": 0.19505122614186887,
+      "ci_lo": -0.1142068463016126,
+      "ci_hi": -0.023465425005003177
+    },
+    "by_year": {
+      "2024": {
+        "n": 34,
+        "mean": -0.07817766947313678,
+        "sd": 0.21693871625682612,
+        "ci_lo": -0.1510988479584654,
+        "ci_hi": -0.005256490987808171
+      },
+      "2025": {
+        "n": 37,
+        "mean": -0.060252023494546204,
+        "sd": 0.17515039856552472,
+        "ci_lo": -0.11668933786913807,
+        "ci_hi": -0.0038147091199543445
+      }
+    }
+  },
+  "points": [
+    {
+      "year": 2024,
+      "anchor": "2024-04-27",
+      "snapshot_date": "2024-04-27",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 7,
+      "n_with_forward": 5,
+      "mean_residual": -0.05897856504771137,
+      "sd_residual": 0.19248569627137552
+    },
+    {
+      "year": 2024,
+      "anchor": "2024-05-27",
+      "snapshot_date": "2024-05-27",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 12,
+      "n_with_forward": 8,
+      "mean_residual": -0.05037744033948506,
+      "sd_residual": 0.3095225877348442
+    },
+    {
+      "year": 2024,
+      "anchor": "2024-06-26",
+      "snapshot_date": "2024-06-26",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 19,
+      "n_with_forward": 12,
+      "mean_residual": -0.10303943306130205,
+      "sd_residual": 0.20225339290423708
+    },
+    {
+      "year": 2024,
+      "anchor": "2024-07-26",
+      "snapshot_date": "2024-07-26",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 14,
+      "n_with_forward": 9,
+      "mean_residual": -0.08040613526628762,
+      "sd_residual": 0.18329218564083885
+    },
+    {
+      "year": 2025,
+      "anchor": "2025-04-26",
+      "snapshot_date": "2025-04-26",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 9,
+      "n_with_forward": 7,
+      "mean_residual": -0.017244016060537493,
+      "sd_residual": 0.19156745217809318
+    },
+    {
+      "year": 2025,
+      "anchor": "2025-05-26",
+      "snapshot_date": "2025-05-26",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 12,
+      "n_with_forward": 9,
+      "mean_residual": -0.13315994519546448,
+      "sd_residual": 0.12419986583604693
+    },
+    {
+      "year": 2025,
+      "anchor": "2025-06-25",
+      "snapshot_date": "2025-06-25",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 17,
+      "n_with_forward": 10,
+      "mean_residual": 0.03327950354823348,
+      "sd_residual": 0.1483448910150973
+    },
+    {
+      "year": 2025,
+      "anchor": "2025-07-25",
+      "snapshot_date": "2025-07-25",
+      "snapshot_gap_days": 0,
+      "status": "ok",
+      "n_candidates": 15,
+      "n_with_forward": 11,
+      "mean_residual": -0.11299748050887284,
+      "sd_residual": 0.19592710450144726
+    }
+  ]
+}
