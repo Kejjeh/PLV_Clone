@@ -118,7 +118,7 @@ Steps:
    - Middle reliever: est_sv = 0, est_hd = 8
    - SP: est_sv = 0, est_hd = 0
 2. Add `est_sv_per_162` and `est_hd_per_162` as numeric output columns
-3. Add `sv_hd_fp_per_162` = (est_sv × 5) + (est_hd × 3) as a combined FP contribution from saves/holds
+3. Add `sv_hd_fp_per_162` = (est_sv × 5) + (est_hd × 2) as a combined FP contribution from saves/holds
 4. Do NOT bake sv/hd into the base fp_per_ip — keep it as a separate additive column so the pure stuff ranking (PLV) remains clean
 
 ---

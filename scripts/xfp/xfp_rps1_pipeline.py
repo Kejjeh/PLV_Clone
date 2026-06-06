@@ -189,8 +189,8 @@ def main():
         'n_train': n_train,
         'version': 'rps1',
         'note': 'Cross-year RP skill model. Predicts year T+1 reliever FP total '
-                'from year-T rate + role + workload features. Uses ESPN scoring '
-                '(IP×3.3 + K + SV×5 + HLD×3 − BB − 2×ER − H − HBP).',
+                'from year-T rate + role + workload features. Uses BrownU scoring '
+                '(IP×3.3 + K + SV×5 + HLD×2 − BB − 2×ER − H − HBP).',
     }
     MODEL_PKL.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump(bundle, MODEL_PKL)
