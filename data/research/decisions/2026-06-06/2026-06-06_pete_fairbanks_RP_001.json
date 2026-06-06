@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-06_pete_fairbanks_RP_001",
+  "inputs": {
+    "archetype_label": "GENERIC_MIDDLE",
+    "archetype_overall": 56,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.9517175004812417,
+    "live_marginal": 24.599999999999994,
+    "model_rank": 21,
+    "override_tag": null,
+    "pl_rank": 16,
+    "proj_per": 158.7,
+    "replacement_delta": 15.4
+  },
+  "mlbam_id": 664126,
+  "player_name": "Pete Fairbanks",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-06",
+  "verdict_top": "BUY"
+}

@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-06_ryan_helsley_RP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF_RP",
+    "archetype_overall": 58,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.9076440924123785,
+    "live_marginal": 39.70000000000002,
+    "model_rank": 17,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 173.8,
+    "replacement_delta": 28.8
+  },
+  "mlbam_id": 664854,
+  "player_name": "Ryan Helsley",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-06",
+  "verdict_top": "MIXED"
+}

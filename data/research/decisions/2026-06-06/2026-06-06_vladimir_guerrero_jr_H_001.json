@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-06_vladimir_guerrero_jr_H_001",
+  "inputs": {
+    "archetype_label": "PURE_HITTER",
+    "archetype_overall": 60,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.0383854169002977,
+    "live_marginal": 15.300000000000011,
+    "model_rank": 31,
+    "override_tag": null,
+    "pl_rank": 23,
+    "proj_per": 2.08,
+    "replacement_delta": null
+  },
+  "mlbam_id": 665489,
+  "player_name": "Vladimir Guerrero Jr.",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-06",
+  "verdict_top": "BUY"
+}

@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-06_aaron_judge_H_001",
+  "inputs": {
+    "archetype_label": "GOAT_TIER",
+    "archetype_overall": 73,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.4152001570968697,
+    "live_marginal": null,
+    "model_rank": 2,
+    "override_tag": null,
+    "pl_rank": 1,
+    "proj_per": 2.48,
+    "replacement_delta": null
+  },
+  "mlbam_id": 592450,
+  "player_name": "Aaron Judge",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-06",
+  "verdict_top": "BUY"
+}

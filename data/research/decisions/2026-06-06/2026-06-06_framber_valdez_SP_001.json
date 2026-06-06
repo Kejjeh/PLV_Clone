@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.5,
+  "decision_id": "2026-06-06_framber_valdez_SP_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_4_5",
+    "archetype_overall": 52,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 12.693048704521285,
+    "live_marginal": -102.37175090853037,
+    "model_rank": 76,
+    "override_tag": null,
+    "pl_rank": 42,
+    "proj_per": 10.391414939451312,
+    "replacement_delta": null
+  },
+  "mlbam_id": 664285,
+  "player_name": "Framber Valdez",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-06",
+  "verdict_top": "CAUTION"
+}
