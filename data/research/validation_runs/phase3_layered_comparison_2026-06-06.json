@@ -1,0 +1,58 @@
+{
+  "per_g_r2": 0.128,
+  "per_g_mae": 0.88,
+  "per_g_n": 1753,
+  "rprs2_r2": 0.6383,
+  "rprs2_mae": 39.05,
+  "rprs2_n": 1753,
+  "eg_n": 1753,
+  "merged_n": 1753,
+  "rprs2_pred_r2": 0.6383,
+  "rprs2_pred_mae": 39.05,
+  "layered_r2": 0.209,
+  "layered_mae": 58.78,
+  "delta_r2": -0.4293,
+  "delta_mae": 19.73,
+  "bootstrap_mae_diff_rprs2_minus_layered": {
+    "mean": 19.626,
+    "ci95_lo": 17.372,
+    "ci95_hi": 21.298
+  },
+  "bootstrap_r2_diff_layered_minus_rprs2": {
+    "mean": -0.4282,
+    "ci95_lo": -0.4619,
+    "ci95_hi": -0.3929
+  },
+  "role_bias": {
+    "n": {
+      "closer": 214,
+      "long_low": 158,
+      "middle": 408,
+      "setup": 184
+    },
+    "rprs2_resid": {
+      "closer": -0.47,
+      "long_low": -2.6,
+      "middle": 0.02,
+      "setup": -0.43
+    },
+    "layered_resid": {
+      "closer": -9.51,
+      "long_low": -15.92,
+      "middle": -0.27,
+      "setup": -1.47
+    },
+    "rprs2_mae": {
+      "closer": 46.8,
+      "long_low": 36.99,
+      "middle": 38.57,
+      "setup": 39.35
+    },
+    "layered_mae": {
+      "closer": 80.31,
+      "long_low": 60.52,
+      "middle": 51.77,
+      "setup": 57.79
+    }
+  }
+}
