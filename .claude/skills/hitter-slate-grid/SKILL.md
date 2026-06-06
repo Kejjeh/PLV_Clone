@@ -35,7 +35,7 @@ and the FA pool depth"**, not "who fills my cap." Specific differences:
 "pickup deep scan for hitters", "hitter slate grid",
 "FA hitter decision board", "compare FA hitters across all lenses".
 
-## What this skill produces (14 layers, ranked by empirical importance below)
+## What this skill produces (15 layers (14 model + recent actuals), ranked by empirical importance below)
 
 For each above-threshold FA hitter (plus your roster's hitters for the
 drop-target comparison):
@@ -58,6 +58,7 @@ drop-target comparison):
 | **PL Top 150** | Pitcher List weekly hitter rank | `data/research/pl_cache/pl_hitters_top150.json` | file |
 | **Lineup spot + park + vs LHP/RHP** | Today's batting-order spot (if confirmed) + park factor (run wOBA) + opposing-SP handedness with the batter's career split | MLB API hydrate + cached park factors + Statcast splits | net |
 | **Same-name collision check** | KNOWN_COLLISIONS gate via `plv_clone.utils.name_match.resolve_batter_id(name, team=…, position=…)` — REQUIRED before any dict-keyed lookup | `src/plv_clone/utils/name_match.py::KNOWN_COLLISIONS` (Max Muncy LAD 3B vs ATH C; Luis García Jr. WSH/HOU/PHI; Logan Allen LHP-twins for pitchers) | file |
+| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥20 / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
 
 **Performance budget:** ~9 file joins (cheap, <2s for ~500 FAs). On-demand
 compute layers (Triangulate / Sustainability / xwOBA-L21d / xwOBACON-YoY)
@@ -262,7 +263,7 @@ sort by Blended xFP descending.
 
 Primary grid columns (cheap layers, every row):
 
-`Pos | Player | Team | Own | xFP [CI] | conf | rh3 # | per_pa / per_game | Arche (C/P/D/SB) | OVERALL | ProcZ | level_pct | BoomStk | Boom%/Bust% | E[FP] | PL | Lineup`
+`Pos | Player | Team | Own | xFP [CI] | conf | rh3 # | per_pa / per_game | Arche (C/P/D/SB) | OVERALL | ProcZ | level_pct | BoomStk | Boom%/Bust% | E[FP] | L5 | Boom% | Bust% | PL | Lineup`
 
 FA shortlist deep-dive table (top 15 FAs by Blended xFP):
 
@@ -441,6 +442,11 @@ empirical citations exist they're listed; where they don't, `[qual]`.
   headline, then verify against the underlying lenses.
 - **Tier 6 (PL) is the 4th-lens agreement check** — PL alone never
   drives an add.
+- **Model vs actuals divergence**: When boom-bust L5 differs from
+  Blended xFP × games/wk equivalent by more than ~5 FP/wk, surface the
+  divergence explicitly. Canonical case: Bradish blend 5.98 (model
+  says streamer-tier) vs L5 17.88 + 37% boom = actuals say BUY. The
+  divergence is the signal.
 
 ---
 

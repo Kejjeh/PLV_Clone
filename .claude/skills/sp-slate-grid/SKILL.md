@@ -17,7 +17,7 @@ multiple sequential queries — first FA-only, then "highlight FA in every
 start," then "include archetype + boom_stack + fresh streamer ranks." Doing
 it in one pass is materially better.
 
-## What this skill produces (all 14 layers, ranked by empirical importance below)
+## What this skill produces (all 15 layers (14 model + recent actuals), ranked by empirical importance below)
 
 For each scheduled SP start in the window:
 
@@ -37,6 +37,7 @@ For each scheduled SP start in the window:
 | **Process panel composite** | PR 8 L30/STD/PriorYr SP marker decomposition (swstr / c_plus_swstr / o_swing / k_pct / bb_pct / hard_hit / barrel / xwoba_contact) with direction-adjusted z-score + level_pct | `data/outputs/sp_process_panel.csv` keyed on `pitcher` (MLBAM). Show as one composite score; full breakdown deferred to deep-dive | file |
 | **PL Top 100** | Pitcher List weekly SP rank | `data/research/pl_cache/pl_sps_top100.json` | file |
 | **PL streamer** | Daily streamer rank + tier (Auto / Probably / Questionable / DNS) + opp | `data/research/pl_cache/pl_sp_streamers_<DATE>.json` — **auto-refetch via WebSearch + WebFetch when cache is >2d stale**, with paywall-fallback to nearest cached date | file or WebFetch |
+| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥20 / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
 
 **Performance budget**: ~10 file joins (cheap, <1s) + triangulate calls capped at top-10 FAs by Blended xFP + shadow_scout only for rows with no rp3. Total skill runtime ~30-60s.
 
@@ -322,7 +323,7 @@ def fmt_boomrate(r):
 
 **Primary grid** (cheap layers, every start) — 14 columns:
 
-`Time(ET) | Pitcher | Match | Own | xFP [CI] | rp3 #/per_start [p25-p75] | OppBat | RecForm | Arche/Traj | T+1 | BoomStk + Tags | Boom%/Bust% | E[FP] | ProcZ | PL | Streamer`
+`Time(ET) | Pitcher | Match | Own | xFP [CI] | rp3 #/per_start [p25-p75] | OppBat | RecForm | Arche/Traj | T+1 | BoomStk + Tags | Boom%/Bust% | E[FP] | L5 | Boom% | Bust% | ProcZ | PL | Streamer`
 
 Where `BoomStk + Tags` packs the score `***.` with inline emoji for
 secondary tags: `***. 🔥` = boom_stack 3/4 + HIGH-K; `**.. 🧊` = boom 2/4 +
@@ -540,6 +541,11 @@ When Tier 3 anti-predictive fires (`⚠ AP` on a SP2/3 with K-spike) →
 downgrade despite hot recent line.
 Tier 5 (PL ranks) alone is NEVER reason to add. PL agreement amplifies
 a model BUY; PL disagreement alone doesn't beat the model.
+- **Model vs actuals divergence**: When boom-bust L5 differs from
+  Blended xFP × games/wk equivalent by more than ~5 FP/wk, surface the
+  divergence explicitly. Canonical case: Bradish blend 5.98 (model
+  says streamer-tier) vs L5 17.88 + 37% boom = actuals say BUY. The
+  divergence is the signal.
 
 ### CRITICAL — Decision-horizon-aware reweighting (added 2026-06-06 after Cameron mis-call)
 

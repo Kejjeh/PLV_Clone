@@ -316,6 +316,74 @@ Auto-tag each player based on the boom/bust + trend pattern:
 
 Multi-tag is allowed (a player can be both VOLATILE and HOT STREAK).
 
+## Step 6.5 — Mandatory Tier 3 process gate (REQUIRED before any drop/add recommendation)
+
+**The rule**: When the analysis output includes a drop/add recommendation
+(either explicitly recommending a swap, or implicitly via CAP FODDER /
+DECLINING / HOT STREAK tags that the user is acting on), the synthesis
+MUST surface the Tier 3 process check for the affected players BEFORE
+issuing the recommendation. The boom-bust skill produces variance-aware
+**actuals**, but actuals can be luck-driven (BABIP-fuelled hot streaks,
+playing-hurt slumps). The process gate is the load-bearing check that
+distinguishes signal from noise.
+
+This is mandatory per
+`~/.claude/projects/c--Users-Joshua-plv-clone/memory/reference_xwoba_l21d_vs_2025_diagnostic.md`
+and feedback memory `feedback_check_il_before_decline_call.md`.
+
+### Per-position gate specification
+
+**Hitters** — pull `xwOBA L21d` from `data/research/xfp_cache/statcast_2026.parquet`
+filtered to the last 21 days, compare to `xwOBA 2025` baseline:
+
+| Gap (L21d − 2025) | Verdict | Recommendation reading |
+|---|---|---|
+| `±0.020` | **SKILL_HOLDING** | recommendation is luck-aligned with skill |
+| `< −0.060` | **REAL_DECLINE** | drop recommendation justified by process; add recommendation suspect |
+| Intermediate (between −0.060 and −0.020, or between +0.020 and any positive) | **MIXED** | demand secondary confirmation (bat speed, EV90, K%) |
+
+Also pull `xwOBACON YoY trajectory` 2022 → 2023 → 2024 → 2025 → 2026
+(RISING / STABLE / DECLINING). DECLINING means recovery ceiling is lower
+than prior troughs — prior slump/recovery templates DON'T apply (the
+Turner pattern). STABLE means prior recoveries predict this one.
+
+**Pitchers (SP)** — pull recent **velo + SwStr% + CSW%** from
+`statcast_2026.parquet` (last 30 days) vs season baseline:
+
+- velo down >1 mph AND SwStr% down >2 pp → **REAL_DECLINE** (process supports drop)
+- velo flat/up AND SwStr% flat/up → **PROCESS_HOLDING** (drop suspect; bounce coming)
+- mixed → **MIXED**
+
+**RPs** — pull `leverage_tier` from `xfp_rprs2_projections.csv` + recent
+usage trend from the last 15 appearances. If demoted from HIGH_LEVERAGE
+to MID/LOW or save-share collapsing → **PROCESS_DOWNGRADE** (drop
+justified). If leverage_tier intact → drop recommendation is
+outcome-driven and should be downgraded to HOLD/CAUTION.
+
+### Output template (mandatory render when recommending drop/add)
+
+```
+Tier 3 process gate:
+   <Player>: <metric> L21d/L30d = X.XXX vs 2025 baseline Y.YYY → gap +/-Z → SKILL_HOLDING | REAL_DECLINE | MIXED
+   xwOBACON YoY: 2022=A → 2023=B → 2024=C → 2025=D → 2026=E → RISING | STABLE | DECLINING
+   Recommendation: SUPPORTED | CAUTION | OVERRIDE
+```
+
+Where:
+- **SUPPORTED** — process agrees with actuals-driven recommendation; ship it
+- **CAUTION** — process is mixed or partially disagrees; soften the recommendation (HOLD, monitor 1 week)
+- **OVERRIDE** — process directly contradicts the actuals (bounce coming on a "drop" / BABIP-driven hot streak on an "add"); reverse or shelve the recommendation
+
+### Cross-reference
+
+For deeper single-player work on whether a hot streak is sustainable,
+hand off to:
+- `/breakout-sustainability` — single-player deep dive on bat tracking +
+  discipline + contact quality decomposition
+- `/hitter-sustainability` — sweep-mode equivalent across roster / FA pool
+- `/pitcher-sustainability` — SP analog with 9-marker Statcast decomp
+  (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact)
+
 ## Step 7 — Render the table
 
 Group by position, sort by L5 avg descending within group.
@@ -451,6 +519,16 @@ is comparing across positions.
   marginal slot's expected FP (the slot the ADD fills) vs the marginal
   slot's current cost (the DROP's slot, if any) — never conflate them
   with same-position swaps.
+
+- **Shipping drop/add recommendations without the Tier 3 process gate.**
+  The boom-bust skill produces variance-aware actuals, but actuals can be
+  luck-driven (BABIP-fuelled hot streaks, playing-hurt slumps that mimic
+  decline). The Tier 3 gate (xwOBA L21d vs 2025 baseline for hitters;
+  velo/SwStr/CSW trend for SPs; usage/leverage for RPs) is mandatory per
+  `reference_xwoba_l21d_vs_2025_diagnostic.md` before any drop/add ships.
+  Without it, the skill could ship a drop for a player whose underlying
+  contact quality is intact (bounce coming) or an add for a hot streak
+  that's BABIP-driven. See Step 6.5 for the gate spec and render template.
 
 ## When NOT to use this skill
 

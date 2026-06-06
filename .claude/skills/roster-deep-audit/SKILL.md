@@ -1,6 +1,6 @@
 ---
 name: roster-deep-audit
-description: Cross-skill roster + FA audit for YOUR team only. Orchestrates career-form-rank, hitter-sustainability, pitcher-sustainability, and slump-or-decline sweeps; produces a single synthesis report with an agreement matrix (where skills disagree is where the insight lives) + cross-validated swap recommendations. For a league-wide audit across all 8 teams with MC/Bayesian/historical-comps statistical deepening, use /league-deep-audit instead. Use this skill when the question is only about your roster + FA alternatives.
+description: Cross-skill roster + FA audit for YOUR team only. Orchestrates career-form-rank, hitter-sustainability, pitcher-sustainability, and slump-or-decline sweeps; produces a single synthesis report with an agreement matrix (where skills disagree is where the insight lives) + cross-validated swap recommendations. v2 chains the newer slate-grids, boom-bust-history, and Tier 3 gate alongside the legacy sustainability sweep, producing an agreement matrix per swap candidate. For a league-wide audit across all 8 teams with MC/Bayesian/historical-comps statistical deepening, use /league-deep-audit instead. Use this skill when the question is only about your roster + FA alternatives.
 ---
 
 # roster-deep-audit
@@ -112,6 +112,99 @@ protocol, which NOW includes (as of v3 upgrade 2026-05-25):
 These three tests replace the single-step MC bounce in the original
 Step 14. Report all three alongside the existing shrinkage/CI/xwOBACON
 signals. A HOLD verdict requires at least 2 of 3 tests to support bounce.
+
+---
+
+## V2 orchestration (chains newer skills, 2026-06-06)
+
+The legacy chain (Steps 2-6 above) covers career-form / sustainability /
+slump-or-decline. v2 augments it with the slate-grids, boom-bust variance
+lens, and the mandatory Tier 3 xwOBA gate shipped on 2026-06-06.
+
+### The v2 chain in order
+
+1. **Step 1 — `/sp-slate-grid`** — full SP picture across the next 1-2
+   slate days. 14 layers including rp3 + per_start band, archetype OVERALL
+   / traj / T+1, live boom_stack with boom%/bust%/E[FP], PL Top 100, PL
+   streamers, ownership tag (MINE / opp / FA), HIGH-K ARM, catcher framing,
+   IL_RETURN. Surfaces both YOUR-staff weak links and FA SP upgrades.
+2. **Step 2 — `/hitter-slate-grid`** — full hitter FA picture. 14 layers:
+   Blended xFP + 95% CI, rh3, live_marginal + value_tier (same-position
+   pool delta), Triangulate verdict, Sustainability bucket (with BUY-LOW
+   REJECTED caveat — display only), xwOBA L21d vs 2025 diagnostic,
+   xwOBACON YoY trajectory, archetype master + T+1 + 5 comps, hitter
+   boom_stack with lineup_amp, process panel composite, PL Top 150,
+   lineup spot, park + vs LHP/RHP, eligibility. KNOWN_COLLISIONS check
+   is mandatory (Max Muncy LAD-vs-ATH).
+3. **Step 3 — `/boom-bust-history`** — variance + actuals lens across the
+   full roster + the top FA candidates surfaced by Steps 1-2. Empirically
+   calibrated thresholds: SP boom ≥20 / bust <5, hitter boom ≥5 / bust <0,
+   RP boom ≥6 / bust <0. Catches the Bradish-pattern (model 12 FP behind
+   live actuals) and Valdez-pattern (high projection, 0% boom 25% bust).
+4. **Step 4 — Tier 3 gate (mandatory, per `reference_xwoba_l21d_vs_2025_diagnostic.md`)** —
+   for every borderline hitter swap candidate:
+   - **xwOBA L21d vs 2025 baseline**: gap ±0.020 = skill holding,
+     < −0.060 = real decline.
+   - **xwOBACON YoY trajectory**: RISING / STABLE / DECLINING. Distinguishes
+     valid prior-trough recovery templates from structural decline where
+     the recovery ceiling is lower (Turner pattern).
+   - A drop recommendation that fails this gate is dropped from the final list.
+5. **Step 5 — `/breakout-sustainability`** — deep-dive on any hot-streak
+   FA the slate-grids surface as a buy candidate. SUSTAINABLE / NARROW /
+   HOT-STREAK verdict. Prevents the Schmitt-pattern overhype.
+6. **Step 6 — `/pitcher-sustainability` + `/hitter-sustainability` sweep** —
+   legacy chain (Steps 3-4 above) still useful as the confidence layer on
+   rh3/rp3 for any candidate still in contention after the slate-grid +
+   boom-bust pass.
+7. **Step 7 — Synthesize the agreement matrix** — see template below.
+   The actually-useful insight is WHERE the new skills disagree with the
+   legacy chain.
+
+### Agreement matrix template (v2)
+
+One row per candidate (roster member being considered for drop OR FA being
+considered for add):
+
+```
+| Player | rh3 signal | Blended xFP | boom-bust | sustainability | xwOBA L21d | xwOBACON YoY | breakout | Triangulate | Final |
+|--------|------------|-------------|-----------|----------------|------------|--------------|----------|-------------|-------|
+```
+
+Cell values:
+- **rh3 signal** — rh3 rank tier (TOP25 / TOP50 / TOP100 / streamer / fodder)
+- **Blended xFP** — point estimate + 95% CI band from blend_score.py
+- **boom-bust** — boom% / bust% from `/boom-bust-history` actuals window
+- **sustainability** — LEGIT / IMPROVING / STABLE / MIXED / NOISE / BAD_LUCK / REGRESS
+- **xwOBA L21d** — gap vs 2025 baseline (signed FP-equivalent)
+- **xwOBACON YoY** — RISING / STABLE / DECLINING
+- **breakout** — SUSTAINABLE / NARROW / HOT_STREAK / n/a (only run if hot)
+- **Triangulate** — BUY / HOLD / CAUTION / FADE / MIXED
+- **Final** — agreement count out of 8 + HIGH_CONFIDENCE / CAUTION / DROP_REC
+
+### Cross-validation rule
+
+For each swap candidate, count the number of lenses agreeing with the
+direction (positive = ADD, negative = DROP):
+
+- **≥4 of 8 agree → HIGH_CONFIDENCE.** Surface in final recommendation list.
+- **2-3 of 8 agree → CAUTION.** Surface with explicit caveat naming the
+  disagreeing lenses.
+- **<2 of 8 agree → DROP the recommendation.** Not enough convergence.
+
+The Tier 3 gate (Step 4) is a HARD veto independent of the count: a
+drop candidate with xwOBACON RISING + xwOBA L21d gap ≥ −0.020 cannot
+be recommended for drop regardless of other lenses.
+
+### Output: unified roster + FA board
+
+The v2 final report has TWO joined tables, not the four legacy tables:
+
+1. **Unified roster + FA board** — one row per player (your roster + every
+   meaningful FA), all 8 v2 lenses as columns, sorted by Blended xFP
+   within position group.
+2. **Top 5 swap recommendations** — ranked by `agreement_count × FP/wk delta`,
+   each row showing drop target, add target, agreement count, FP/wk delta,
+   and the disagreeing lenses (if CAUTION).
 
 ---
 
