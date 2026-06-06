@@ -115,6 +115,36 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                     f"(95% CI [{blend['ci_lower_95']:.2f}, {blend['ci_upper_95']:.2f}]) "
                     f"  ← confidence: {ct}\n"
                 )
+                # Phase 2.5 (2026-06-06): live marginal for H and SP.
+                lm = blend.get('live_marginal')
+                lm_tier = blend.get('live_value_tier')
+                snap_label = blend.get('snapshot_label')
+                age_h = blend.get('snapshot_age_hours')
+                if lm is not None:
+                    best_nm = (blend.get('best_fa_at_position')
+                               or blend.get('best_fa_at_role') or '?')
+                    best_ros = blend.get('best_fa_ros')
+                    bros_s = f"{best_ros:.0f}" if best_ros is not None else "?"
+                    age_s = f"{age_h:.1f}h" if age_h is not None else "?"
+                    if bucket == 'H':
+                        pos_lbl = blend.get('position') or 'pos?'
+                        lines.append(
+                            f"**Live marginal:** {lm:+.1f} FP vs best FA "
+                            f"{pos_lbl} ({best_nm}, ROS {bros_s}) → {lm_tier} · "
+                            f"snapshot {snap_label} (age {age_s})\n"
+                        )
+                    else:  # SP
+                        lines.append(
+                            f"**Live marginal:** {lm:+.1f} FP vs best FA SP "
+                            f"({best_nm}, ROS {bros_s}) → {lm_tier} · "
+                            f"snapshot {snap_label} (age {age_s})\n"
+                        )
+                else:
+                    reason = blend.get('live_marginal_note') or 'unknown'
+                    lines.append(
+                        f"**Live marginal:** unavailable ({reason}, "
+                        f"snapshot {snap_label or 'none'})\n"
+                    )
             for n in blend.get('notes') or []:
                 lines.append(f"*{n}*\n")
     except Exception as _be:

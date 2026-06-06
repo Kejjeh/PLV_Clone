@@ -796,6 +796,21 @@ def compute_blended_xfp(
         lm = _compute_live_marginal_rp(mlbam_id, role, ros_estimate)
         result.update(lm)
 
+    # Phase 2.5 (2026-06-06) — Hitter live marginal vs same-position best FA.
+    if ptype == 'H':
+        ros_h, primary_pos = _ros_h_for_mlbam(mlbam_id)
+        result['ros_estimate'] = ros_h
+        result['position'] = primary_pos
+        lm = _compute_live_marginal_h(mlbam_id, primary_pos, ros_h)
+        result.update(lm)
+
+    # Phase 2.5 (2026-06-06) — SP live marginal vs best FA SP (single bucket).
+    if ptype == 'SP':
+        ros_sp = _ros_sp_for_mlbam(mlbam_id)
+        result['ros_estimate'] = ros_sp
+        lm = _compute_live_marginal_sp(mlbam_id, ros_sp)
+        result.update(lm)
+
     return result
 
 
@@ -803,6 +818,12 @@ def compute_blended_xfp(
 
 _FA_SNAPSHOT_LATEST = os.path.join(
     _REPO_ROOT, 'data', 'research', 'fa_snapshots', 'fa_pool_RP_latest.parquet'
+)
+_FA_SNAPSHOT_H_LATEST = os.path.join(
+    _REPO_ROOT, 'data', 'research', 'fa_snapshots', 'fa_pool_H_latest.parquet'
+)
+_FA_SNAPSHOT_SP_LATEST = os.path.join(
+    _REPO_ROOT, 'data', 'research', 'fa_snapshots', 'fa_pool_SP_latest.parquet'
 )
 _LIVE_MARGINAL_FRESH_HOURS = 24.0   # warn if older
 _LIVE_MARGINAL_STALE_HOURS = 36.0   # null out if older
@@ -814,6 +835,26 @@ def _load_fa_snapshot_rp() -> Optional[pd.DataFrame]:
         return None
     try:
         return pd.read_parquet(_FA_SNAPSHOT_LATEST)
+    except Exception:
+        return None
+
+
+@lru_cache(maxsize=1)
+def _load_fa_snapshot_h() -> Optional[pd.DataFrame]:
+    if not os.path.exists(_FA_SNAPSHOT_H_LATEST):
+        return None
+    try:
+        return pd.read_parquet(_FA_SNAPSHOT_H_LATEST)
+    except Exception:
+        return None
+
+
+@lru_cache(maxsize=1)
+def _load_fa_snapshot_sp() -> Optional[pd.DataFrame]:
+    if not os.path.exists(_FA_SNAPSHOT_SP_LATEST):
+        return None
+    try:
+        return pd.read_parquet(_FA_SNAPSHOT_SP_LATEST)
     except Exception:
         return None
 
@@ -897,6 +938,200 @@ def _compute_live_marginal_rp(
     if age_hours > _LIVE_MARGINAL_FRESH_HOURS:
         out['live_marginal_note'] = f'snapshot_age_{age_hours:.1f}h_gt_24h_warn'
     return out
+
+
+# Phase 2.5 — H + SP live marginal --------------------------------------
+#
+# ROS scales differ by bucket. Cuts calibrated proportional to bucket spread:
+#   RP ROS  ~100-200 range -> ±30 / ±10 thresholds (Phase 2)
+#   SP ROS  ~150-450 range -> ±40 / ±15 thresholds (per-start * remaining)
+#   H  ROS  ~150-700 range -> ±100 / ±40 thresholds (per-pa * remaining_PA)
+# These are heuristic display cuts, not validated decision rules.
+
+def _live_value_tier_h(live_marginal: Optional[float]) -> Optional[str]:
+    if live_marginal is None:
+        return None
+    if live_marginal >= 100:
+        return 'OWN_THE_SLOT'
+    if live_marginal >= 40:
+        return 'COMFORTABLE_HOLD'
+    if live_marginal >= -40:
+        return 'REPLACEABLE'
+    if live_marginal >= -100:
+        return 'DOWNGRADE'
+    return 'ACTIVE_LOSS'
+
+
+def _live_value_tier_sp(live_marginal: Optional[float]) -> Optional[str]:
+    if live_marginal is None:
+        return None
+    if live_marginal >= 40:
+        return 'OWN_THE_SLOT'
+    if live_marginal >= 15:
+        return 'COMFORTABLE_HOLD'
+    if live_marginal >= -15:
+        return 'REPLACEABLE'
+    if live_marginal >= -40:
+        return 'DOWNGRADE'
+    return 'ACTIVE_LOSS'
+
+
+def _compute_live_marginal_h(
+    mlbam_id: int,
+    position: Optional[str],
+    target_ros: Optional[float],
+) -> dict:
+    """live_marginal = target.ros_h - best_FA_at_same_position.ros_h.
+    NaN-safe; honest about proxy assumptions in the ROS estimate."""
+    out: dict = {
+        'live_marginal': None,
+        'best_fa_at_position': None,
+        'best_fa_at_role': None,   # alias for symmetry with RP
+        'best_fa_ros': None,
+        'snapshot_label': None,
+        'snapshot_age_hours': None,
+        'live_value_tier': None,
+        'live_marginal_note': None,
+    }
+    snap = _load_fa_snapshot_h()
+    if snap is None or snap.empty:
+        out['live_marginal_note'] = 'fa_snapshot_h_unavailable'
+        return out
+    try:
+        ts = pd.to_datetime(snap['snapshot_ts'].iloc[0])
+        age_hours = (pd.Timestamp.now() - ts).total_seconds() / 3600.0
+        out['snapshot_age_hours'] = float(age_hours)
+        out['snapshot_label'] = str(snap['snapshot_label'].iloc[0])
+    except Exception:
+        out['live_marginal_note'] = 'fa_snapshot_h_unavailable'
+        return out
+    if age_hours > _LIVE_MARGINAL_STALE_HOURS:
+        out['live_marginal_note'] = 'fa_snapshot_h_stale'
+        return out
+    if target_ros is None or position is None or str(position) in ('', 'nan', 'None'):
+        out['live_marginal_note'] = 'no_fa_at_position'
+        return out
+    bucket = snap[snap['position'] == position].copy()
+    if 'mlbam_id' in bucket.columns:
+        bucket = bucket[bucket['mlbam_id'] != mlbam_id]
+    bucket = bucket.dropna(subset=['ros'])
+    if bucket.empty:
+        out['live_marginal_note'] = 'no_fa_at_position'
+        return out
+    idx = bucket['ros'].idxmax()
+    best = bucket.loc[idx]
+    best_ros = float(best['ros'])
+    out['best_fa_at_position'] = str(best['player_name'])
+    out['best_fa_at_role'] = str(best['player_name'])
+    out['best_fa_ros'] = best_ros
+    out['live_marginal'] = float(target_ros) - best_ros
+    out['live_value_tier'] = _live_value_tier_h(out['live_marginal'])
+    if age_hours > _LIVE_MARGINAL_FRESH_HOURS:
+        out['live_marginal_note'] = f'snapshot_age_{age_hours:.1f}h_gt_24h_warn'
+    return out
+
+
+def _compute_live_marginal_sp(
+    mlbam_id: int,
+    target_ros: Optional[float],
+) -> dict:
+    """live_marginal = target.ros_sp - best_FA_SP.ros_sp. Single bucket."""
+    out: dict = {
+        'live_marginal': None,
+        'best_fa_at_position': None,
+        'best_fa_at_role': None,
+        'best_fa_ros': None,
+        'snapshot_label': None,
+        'snapshot_age_hours': None,
+        'live_value_tier': None,
+        'live_marginal_note': None,
+    }
+    snap = _load_fa_snapshot_sp()
+    if snap is None or snap.empty:
+        out['live_marginal_note'] = 'fa_snapshot_sp_unavailable'
+        return out
+    try:
+        ts = pd.to_datetime(snap['snapshot_ts'].iloc[0])
+        age_hours = (pd.Timestamp.now() - ts).total_seconds() / 3600.0
+        out['snapshot_age_hours'] = float(age_hours)
+        out['snapshot_label'] = str(snap['snapshot_label'].iloc[0])
+    except Exception:
+        out['live_marginal_note'] = 'fa_snapshot_sp_unavailable'
+        return out
+    if age_hours > _LIVE_MARGINAL_STALE_HOURS:
+        out['live_marginal_note'] = 'fa_snapshot_sp_stale'
+        return out
+    if target_ros is None:
+        out['live_marginal_note'] = 'target_ros_unavailable'
+        return out
+    bucket = snap.copy()
+    if 'mlbam_id' in bucket.columns:
+        bucket = bucket[bucket['mlbam_id'] != mlbam_id]
+    bucket = bucket.dropna(subset=['ros'])
+    if bucket.empty:
+        out['live_marginal_note'] = 'no_fa_sp_available'
+        return out
+    idx = bucket['ros'].idxmax()
+    best = bucket.loc[idx]
+    best_ros = float(best['ros'])
+    out['best_fa_at_position'] = str(best['player_name'])
+    out['best_fa_at_role'] = str(best['player_name'])
+    out['best_fa_ros'] = best_ros
+    out['live_marginal'] = float(target_ros) - best_ros
+    out['live_value_tier'] = _live_value_tier_sp(out['live_marginal'])
+    if age_hours > _LIVE_MARGINAL_FRESH_HOURS:
+        out['live_marginal_note'] = f'snapshot_age_{age_hours:.1f}h_gt_24h_warn'
+    return out
+
+
+def _ros_h_for_mlbam(mlbam_id: int) -> tuple[Optional[float], Optional[str]]:
+    """Return (ros_h_estimate, primary_position) from the rh3 CSV. Same
+    proxy logic the snapshot builder uses, kept consistent so the
+    target and FA are on the same scale."""
+    df = _load_projection_csv('H')
+    if df is None or df.empty or 'batter' not in df.columns:
+        return None, None
+    rows = df[df['batter'] == mlbam_id]
+    if rows.empty:
+        return None, None
+    r = rows.iloc[0]
+    ros = None
+    try:
+        if pd.notna(r.get('expected_total_fp_remaining')):
+            ros = float(r['expected_total_fp_remaining'])
+        elif pd.notna(r.get('xfp_rh3_per_pa')) and pd.notna(r.get('expected_pa_remaining')):
+            ros = float(r['xfp_rh3_per_pa']) * float(r['expected_pa_remaining'])
+        elif pd.notna(r.get('xfp_rh3_per_game')):
+            ros = float(r['xfp_rh3_per_game']) * 80.0
+    except (TypeError, ValueError):
+        ros = None
+    pos = r.get('primary_position') if 'primary_position' in r.index else None
+    try:
+        if pos is not None and pd.isna(pos):
+            pos = None
+    except (TypeError, ValueError):
+        pass
+    return ros, (str(pos) if pos else None)
+
+
+def _ros_sp_for_mlbam(mlbam_id: int) -> Optional[float]:
+    """Return ros_sp_estimate from rp3 CSV — per_start * E[remaining_starts]."""
+    df = _load_projection_csv('SP')
+    if df is None or df.empty or 'pitcher' not in df.columns:
+        return None
+    rows = df[df['pitcher'] == mlbam_id]
+    if rows.empty:
+        return None
+    r = rows.iloc[0]
+    try:
+        per_start = float(r.get('xfp_rp3_per_start')) if pd.notna(r.get('xfp_rp3_per_start')) else None
+        gs_to = int(r.get('gs_to')) if pd.notna(r.get('gs_to')) else 0
+    except (TypeError, ValueError):
+        return None
+    if per_start is None:
+        return None
+    remaining = max(0, min(28, 32 - gs_to))
+    return per_start * remaining
 
 
 def _empty_result(reason: str) -> dict:
