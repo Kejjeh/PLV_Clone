@@ -51,3 +51,48 @@ added to the production process-panel CSV. The BUY-LOW conjecture as
 pre-registered (composite_pct >= 0.75 AND rh3_pct <= 0.25) does not
 predict positive T+30 to T+60 residual vs the model at the bar required
 by the 9-rule multi-testing protocol.
+
+## Final verdict — REJECTED
+
+**Status:** REJECTED. The BUY-LOW signal as pre-registered is permanently
+archived. The headline finding goes the opposite direction of the conjecture:
+the pooled point estimate is **−0.069 FP/PA** (95% CI fully below zero), and
+all four pre-reg pass criteria fail except the "no sign flip" check (both
+years agree negative — which strengthens, rather than rescues, the rejection).
+
+**Why this fired the wrong way:** "high process composite + low rh3" is not a
+hidden-skill flag — it's most often a hitter whose 9-marker composite is
+inflated by recent-window K%/whiff or contact-volume that the rh3 model has
+already correctly de-rated through its career-stage and prior-FP-per-PA
+features. The model wins this fight; the composite is the noisy signal.
+
+**Shipping decision:**
+- NO `buylow_flag` column added to `xfp_rh3_projections.csv` or any other
+  production CSV in this PR.
+- NO `buylow_flag` column added to `hitter_process_panel.csv`. The PR 8
+  process-panel build code already asserts `buylow_flag not in panel` per
+  plan v11 Decision 12 — that guard stays in place.
+- The `composite` and `level_pct` columns continue to ship as research
+  outputs in the panel, available for downstream `/triangulate`-style
+  diagnostic use, but not as a verdict-driving flag.
+
+**What a future BUY-LOW signal would need to clear:**
+1. A different cut (e.g., narrower percentile bounds, gating on K%-controlled
+   composite, longer T+ window, or a position-specific stratification) — but
+   any new cut requires a fresh pre-registration, fresh dates, no peeking at
+   this dataset's results.
+2. Bonferroni penalty for the multiple-hypothesis search across cuts must be
+   applied honestly — this single rejected hypothesis already burns one
+   degree of freedom against any future re-test.
+3. Convergence-curve test (see `feedback_convergence_curve_leakage_detector.md`):
+   identical lifts across split_day 30/42/56 = leakage smoking gun. Any future
+   BUY-LOW candidate must show DIFFERENT lifts at different forward windows
+   to avoid the H1-class leakage that contaminated PL-feature signals 2026-05-27.
+
+**Parallel finding worth recording:** the 8/8 as-of dates produced 71 eligible
+candidates (≥30 forward PA each) across both years — sample size was NOT the
+bottleneck. The signal is genuinely null-to-negative, not under-powered.
+
+This rejection joins the pattern of healthy null results — e.g., the closer-IL
+bundle REJECTED at 2026-06-06 — that keep the production signal registry
+clean.
