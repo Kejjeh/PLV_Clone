@@ -11,6 +11,38 @@ from __future__ import annotations
 import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from typing import Literal
+
+
+def _parse_ip(raw) -> float:
+    """MLB gameLog inningsPitched parser.
+
+    MLB API returns inningsPitched as a string with .0/.1/.2 partial-inning
+    notation: '5.0' = 5.000, '5.1' = 5 + 1/3, '5.2' = 5 + 2/3.
+
+    Accepts:  '5.2', '5.0', '0.0', '1.0', 5.0 (float), 0 (int), None, ''.
+    Raises:   ValueError on unparseable string with malformed decimal.
+    Returns:  float innings (e.g. '5.2' -> 5.6667).
+    """
+    if raw is None or raw == '':
+        return 0.0
+    if isinstance(raw, (int, float)):
+        return float(raw)
+    s = str(raw).strip()
+    if '.' not in s:
+        return float(s)
+    whole, frac = s.split('.', 1)
+    whole_i = int(whole)
+    frac_i = int(frac)
+    if frac_i == 0:
+        return float(whole_i)
+    if frac_i == 1:
+        return whole_i + 1 / 3
+    if frac_i == 2:
+        return whole_i + 2 / 3
+    raise ValueError(
+        f"_parse_ip: unexpected partial-inning notation {raw!r} (frac={frac_i})"
+    )
 
 
 @dataclass
@@ -44,6 +76,75 @@ class LeagueScoring:
     def save(self, path: str | Path) -> None:
         Path(path).parent.mkdir(parents=True, exist_ok=True)
         Path(path).write_text(json.dumps(asdict(self), indent=2))
+
+    # ── Game-level scoring API (PR 5 sub-action 1) ────────────────────────
+    def score_hitter_game(self, stats: dict) -> float:
+        """MLB gameLog -> BrownU FP for a hitter game.
+
+        Keys: runs, totalBases, rbi, baseOnBalls, hitByPitch, stolenBases,
+        strikeOuts.
+        """
+        return (
+            self.r        * stats['runs']
+            + self.tb     * stats['totalBases']
+            + self.rbi    * stats['rbi']
+            + self.bb_bat * stats['baseOnBalls']
+            + self.hbp_bat * stats['hitByPitch']
+            + self.sb     * stats['stolenBases']
+            + self.k_bat  * stats['strikeOuts']
+        )
+
+    def _score_pitcher_base_game(self, stats: dict) -> float:
+        """PRIVATE. Shared K/IP/H/ER/BB/HBP scoring used by starts and relief.
+
+        Does NOT add SV/HLD. Called by both score_pitcher_start and
+        score_pitcher_relief. Naming intentionally avoids 'start' so relief
+        callers aren't semantically coupled to a starting-pitcher abstraction.
+        """
+        ip = _parse_ip(stats['inningsPitched'])
+        return (
+            self.k_pit    * stats['strikeOuts']
+            + self.ip     * ip
+            + self.h_pit  * stats['hits']
+            + self.er     * stats['earnedRuns']
+            + self.bb_pit * stats['baseOnBalls']
+            + self.hb_pit * stats['hitByPitch']
+        )
+
+    def score_pitcher_start(self, stats: dict) -> float:
+        """MLB gameLog -> BrownU FP for a start.
+
+        Filter caller: stats['gamesStarted']==1. SV/HLD are not added
+        (starters do not accumulate these in BrownU scoring).
+        """
+        return self._score_pitcher_base_game(stats)
+
+    def score_pitcher_relief(self, stats: dict) -> float:
+        """MLB gameLog -> BrownU FP for a relief appearance.
+
+        Filter caller: stats['gamesStarted']==0. Adds self.sv*saves +
+        self.hd*holds on top of shared base scoring. Does NOT call
+        score_pitcher_start.
+        """
+        base = self._score_pitcher_base_game(stats)
+        return base + self.sv * stats['saves'] + self.hd * stats['holds']
+
+    def score_player_game(
+        self,
+        player_type: Literal['H', 'SP', 'RP'],
+        stats: dict,
+    ) -> float:
+        """Dispatcher: 'H' -> hitter, 'SP' -> start, 'RP' -> relief."""
+        if player_type == 'H':
+            return self.score_hitter_game(stats)
+        if player_type == 'SP':
+            return self.score_pitcher_start(stats)
+        if player_type == 'RP':
+            return self.score_pitcher_relief(stats)
+        raise ValueError(
+            f"score_player_game: unknown player_type {player_type!r} "
+            "(expected 'H', 'SP', or 'RP')"
+        )
 
 
 def hitter_fp_per_pa(
