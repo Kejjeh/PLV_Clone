@@ -92,6 +92,22 @@ python scripts/xfp/run_roster_audit.py
   table, rh3 row, lineup spot, ESPN counting stats per player, plus
   a comparative verdict. Fills the gap that `/fa-pickup-deep-dive`
   explicitly flags.
+- `/hitter-slate-grid` — multi-day FA-hitter decision board (parallel
+  of `/sp-slate-grid`). Joins all 14 hitter model layers: Blended xFP
+  + CI, rh3, live_marginal + value_tier (same-position bucket
+  C/1B/2B/3B/SS/OF/DH with H-scaled cuts ±100/±40), Triangulate
+  verdict, Sustainability bucket (with **BUY-LOW REJECTED** caveat at
+  −0.069 FP/PA per `705defc` — display for diagnosis only, not
+  additive lift), **xwOBA L21d vs 2025 baseline diagnostic** (required
+  pre-check per memory), **xwOBACON YoY trajectory**, hitter archetype
+  master + T+1 + 5 comps, hitter boom_stack with 4 components
+  including lineup_amp_hitter, process panel composite (PR 8), PL Top
+  150, lineup confirmation, park + vs LHP/RHP, positional eligibility.
+  **Mandatory KNOWN_COLLISIONS check** via `resolve_batter_id(name,
+  team=..., position=...)` to prevent Max Muncy LAD-vs-ATH style bugs.
+  All joins by MLBAM batter_id, never name. Drop-target rule
+  (parallel of SP version): rank user's full hitter staff by Blended
+  xFP before naming any drop.
 - `/pl-cross-reference` — fetches current week's Pitcher List rankings
   via WebFetch and cross-references against our model picks, surfacing
   divergence with bias context (PL is rate-stat / 12-team mindset).
