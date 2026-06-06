@@ -26,16 +26,17 @@ LOADERS_AND_KINDS = [
     ("rp_master", "df"),
     ("pl_top150", "dict"),
     ("pl_top100", "dict"),
+    ("pl_closers", "dict"),
     ("fa_snapshot_rp", "df"),
 ]
 
 
-def test_session_context_has_nine_named_loaders() -> None:
-    """The 9-loader contract is checked at the API surface."""
+def test_session_context_has_ten_named_loaders() -> None:
+    """The 10-loader contract is checked at the API surface."""
     ctx = SessionContext()
     for name, _kind in LOADERS_AND_KINDS:
         assert callable(getattr(ctx, name)), f"{name!r} loader missing"
-    assert len(LOADERS_AND_KINDS) == 9
+    assert len(LOADERS_AND_KINDS) == 10
 
 
 def test_session_context_smoke_returns_expected_kinds() -> None:

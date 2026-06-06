@@ -41,6 +41,7 @@ DEFAULT_PATHS: dict[str, str] = {
     "rp_master":              "data/research/rp_ratings_master.csv",
     "pl_top150":              "data/research/pl_cache/pl_hitters_top150.json",
     "pl_top100":              "data/research/pl_cache/pl_sps_top100.json",
+    "pl_closers":             "data/research/pl_cache/pl_closers.json",
     "fa_snapshot_rp":         "data/research/fa_snapshots/fa_pool_RP_latest.parquet",
 }
 
@@ -57,7 +58,7 @@ class SessionContext:
         ctx.invalidate()             # force re-read on next call
 
     Loader methods: rh3, rp3, rprs2, hitter_master, sp_master, rp_master,
-    pl_top150, pl_top100, fa_snapshot_rp. Nine total.
+    pl_top150, pl_top100, pl_closers, fa_snapshot_rp. Ten total.
     """
 
     paths: dict[str, str] = field(default_factory=lambda: dict(DEFAULT_PATHS))
@@ -87,7 +88,7 @@ class SessionContext:
         else:
             self._cache.pop(name, None)
 
-    # ── Public loaders (9) ───────────────────────────────────────────────
+    # ── Public loaders (10) ──────────────────────────────────────────────
     def rh3(self) -> Optional[pd.DataFrame]:
         return self._read_through("rh3", pd.read_csv)
 
@@ -111,6 +112,9 @@ class SessionContext:
 
     def pl_top100(self) -> Optional[dict]:
         return self._read_through("pl_top100", _load_json)
+
+    def pl_closers(self) -> Optional[dict]:
+        return self._read_through("pl_closers", _load_json)
 
     def fa_snapshot_rp(self) -> Optional[pd.DataFrame]:
         return self._read_through("fa_snapshot_rp", pd.read_parquet)
