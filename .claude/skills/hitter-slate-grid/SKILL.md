@@ -506,6 +506,16 @@ Synthesis output requirement:
 - **Filtering to FA only before the synthesis pass.** Opp-rostered
   hitters tell you who to fade in trade scenarios (same as the SP
   "fade my opponent's pitcher" lens).
+- **Dropping a same-eligible player to "fill" an empty same-position
+  slot.** Lineup slots at the same position are FUNGIBLE — dropping a
+  hitter at position P does NOT fill an empty P-slot, it just opens a
+  different P-slot of the same kind. To fill an empty slot you must ADD
+  a player eligible for that slot. Canonical failure (2026-06-06):
+  recommended "drop Wyatt Langford OF to fill empty OF5." Wrong —
+  dropping Langford opens OF4, leaves OF5 empty. The fix is to ADD an
+  OF-eligible FA. See `/boom-bust-history` for the slot-fungibility
+  framework and the marginal-FP-per-slot math that governs cross-
+  position vs same-position decisions.
 
 ## When NOT to use this skill
 

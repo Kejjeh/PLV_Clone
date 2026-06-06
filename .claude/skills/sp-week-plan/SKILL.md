@@ -468,6 +468,15 @@ communicate to the user.
   (`/fa-replacement-pool` with bucket=SP).
 - **Mixing the weekly bench decision with long-term drop decisions.**
   Benching for one week ≠ dropping. Surface as separate sections.
+- **Computing cap math without confirming slot-fungibility for non-SP
+  moves.** When the user is doing combo moves (e.g., drop an SP, add a
+  hitter), the SP cap math and the hitter slot fill are INDEPENDENT
+  decisions — fine. But if the combo is "drop hitter A, add hitter B"
+  at the same position, confirm whether the slot actually becomes
+  available: same-position swaps don't fill empty slots, they just
+  rearrange filled ones. Canonical failure (2026-06-06): recommended
+  dropping an OF "to fill empty OF5" — the drop opened OF4, not OF5.
+  See `/boom-bust-history` for the slot-fungibility framework.
 
 ---
 

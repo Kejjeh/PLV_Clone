@@ -1,6 +1,6 @@
 ---
 name: boom-bust-history
-description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 2*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥20 / bust <5; hitter — boom ≥10 / bust <2; RP — boom ≥5 / bust <0) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, Blended xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (Blended xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
+description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 2*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥20 / bust <5; hitter — boom ≥5 / bust <0; RP — boom ≥6 / bust <0; empirically calibrated against 2025 league-wide p80/p20 quintiles) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, Blended xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (Blended xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
 ---
 
 # boom-bust-history
@@ -47,11 +47,30 @@ For each player in scope:
 
 ## Position-aware thresholds (the calibration that makes this skill work)
 
-| Position | Window | **Boom threshold** | **Bust threshold** | Rationale |
+**Empirically validated against 2025 league-wide distributions** (top-250-by-rank
+samples, n=3,765 SP starts / 27,672 hitter games / 9,256 RP appearances). Cuts
+target the actual p80 (boom) and p20 (bust) quintiles.
+
+| Position | Window | **Boom threshold** | **Bust threshold** | Empirical anchor |
 |---|---|---|---|---|
-| SP | L8 starts | **≥20 FP** | **<5 FP** | BrownU SP scoring: ~14 FP avg per start league-wide. 20+ = top-quintile start. <5 = bottom-quintile / disaster |
-| Hitter | L21 games | **≥10 FP** | **<2 FP** | Hitter scoring: ~5 FP avg per game. 10+ = top quintile (HR + multi-hit). <2 = 0-for-4 dud |
-| RP | L15 appearances | **≥5 FP** (incl. SV/HLD) | **<0 FP** | RP scoring: ~1.5 FP avg per appearance. 5+ = clean inning with K + save/hold. <0 = blown opp |
+| SP | L8 starts | **≥20 FP** | **<5 FP** | 2025: p80=19.8, p20=3.5. Boom rate 18.2%, bust rate 23.7% ✓ |
+| Hitter | L21 games | **≥5 FP** | **<0 FP** | 2025: p80=5.0, p20=0.0. Median hitter game is 1 FP — the old 10/2 cuts marked the median as "bust" |
+| RP | L15 appearances | **≥6 FP** (incl. SV/HLD) | **<0 FP** | 2025: p80=6.3, p20=0.4. Old ≥5 cut tagged 1-in-3 outings as "boom" — too loose |
+
+**Threshold history**: original v1 cuts were SP 20/5, Hitter 10/2, RP 5/0,
+calibrated by intuition. The 2026-06-06 empirical validation confirmed SP
+is correct but hitter and RP were badly miscalibrated:
+
+- **Hitter 10/2** → boom rate only 3.7% (median day tagged "bust" because
+  a R + single + RBI day is 4 FP). Recalibrated to **5/0**.
+- **RP 5/0** → boom rate 33.3% (any clean inning with a K + save = boom).
+  Recalibrated to **6/0**.
+- **SP 20/5** kept — boom rate 18.2% / bust rate 23.7% is the cleanest quintile
+  split of the three. The canonical "good start" intuition (6 IP / 7 K / 2 ER ≈ 20 FP)
+  is actually correct at the league-wide p80.
+
+Validation report archived at `C:/tmp/boom_bust_threshold_validation.md`,
+sampler at `scripts/_oneoff/boom_bust_sampler.py`.
 
 **Thresholds are display-fixed.** Don't let the user override them per
 invocation — calibration matters more than personalization here. If a
@@ -108,6 +127,50 @@ def pull_last_n(pid, n, current_year, fallback_year):
 
 5. **Optional `--show-detail`**: per-game breakdown rendered below the
    summary table.
+
+## Step 0.5 — Mandatory KNOWN_COLLISIONS stop-check rendering (REQUIRED)
+
+When any input name appears in
+`plv_clone.utils.name_match.KNOWN_COLLISIONS` (hitters) or
+`KNOWN_PITCHER_COLLISIONS` (pitchers), the output MUST include a
+visible "Stop check" block BEFORE the analysis table. Code-side
+disambiguation via `resolve_batter_id` is not enough — the user needs
+to SEE which MLBAM was selected and why, so silent mis-pulls can be
+caught at the point of decision.
+
+Render template:
+
+```
+Stop check confirmed - Max Muncy:
+   KNOWN_COLLISIONS hit. Two candidates:
+     - MLBAM 571970 - LAD, 3B, veteran (active 2015+)
+     - MLBAM 691777 - ATH, SS, 2024 callup
+   Selected: 571970 (LAD 3B vet) based on team='LAD' from roster.
+   NOT pulling MLBAM 691777 (ATH SS young).
+```
+
+Required fields per stop-check block:
+- Both candidate MLBAM IDs (or all N for >2-way collisions like Luis Garcia)
+- Each candidate's team / position / age-or-tenure hint
+- The selected MLBAM
+- The disambiguator used (team / position / role)
+- Explicit "NOT pulling X" line for the rejected candidate(s)
+
+Trigger this block when:
+- `name in KNOWN_COLLISIONS` (hitters)
+- `name in KNOWN_PITCHER_COLLISIONS` (SP/RP)
+- `resolve_batter_id` / `resolve_pitcher_id` returns None on first
+  call because no team/position was passed — re-prompt the caller and
+  render the block once a team is supplied.
+
+Canonical case (2026-06-06): user asked "stop check, are you pulling
+the right Muncy" mid-session. The skill body didn't require a visible
+stop-check, so the answer was buried in code rather than rendered.
+This step forces the trust signal into the output.
+
+This block is REQUIRED, not optional. Do not skip even when "obvious
+from context" — the user explicitly asked for this signal to be
+rendered every time a collision name is in scope.
 
 ## Step 1 — Resolve names to MLBAM with KNOWN_COLLISIONS gate
 
@@ -292,6 +355,57 @@ If `--show-detail` is set, render below each player's row:
 
 For hitters, include lineup spot if available (1st, 2nd, ... 9th).
 
+## Marginal FP per slot — SP vs Hitter decision math
+
+When the boom-bust analysis is feeding a **cross-position drop/add
+decision** (drop an SP to add a hitter, or vice versa), the right
+synthesis lens is **marginal FP per slot per week**, not raw FP/game.
+
+A hitter starts ~6 games per scoring week. An SP starts ~1.19 games
+per scoring week (BrownU empirical rate). Per-slot weekly value:
+
+```
+hitter_slot_weekly_FP = hitter_FP_per_game * 6
+SP_slot_weekly_FP     = SP_FP_per_start   * 1.19
+```
+
+For a hitter slot to beat an SP slot:
+
+```
+hitter_FP_per_game > SP_FP_per_start * (1.19 / 6)
+hitter_FP_per_game > SP_FP_per_start * 0.198
+```
+
+Threshold table (use L5 actuals on the SP side — or per_start projection
+— and L5 actuals or per_game projection on the hitter side):
+
+| SP tier | SP FP/start | Hitter must clear (FP/game) |
+|---|---|---|
+| Elite | 18+ | **3.6+** |
+| Strong | 14 | **2.8+** |
+| Mid | 12 | **2.4+** |
+| Below avg | 10-11 | **2.0+** |
+| Cap fodder | <10 | **<2.0** — almost any hitter wins |
+
+**When to use this framework:**
+- Cross-position drop/add (drop SP -> add hitter, or drop hitter -> add SP)
+- Evaluating whether an empty hitter slot is worth more than holding a
+  marginal SP on the bench
+- Marginal-slot-value questions where the question is "is this player's
+  slot earning its weekly cost"
+
+**When NOT to use it (use direct L5 comparison instead):**
+- Same-position swaps (drop SP A, add SP B; drop OF X, add OF Y) —
+  these are direct head-to-head, no slot-rate conversion needed
+- Lineup setting within a confirmed roster (no drop involved)
+- Boom/bust variance audits where the question is consistency, not
+  marginal slot value
+
+This was the implicit synthesis lens of the 2026-06-06 cross-position
+conversation (mid-tier SP at 14 FP/start needed to be beaten by 2.8+
+FP/game hitter to justify the swap). Make it explicit whenever the user
+is comparing across positions.
+
 ## Anti-patterns this skill exists to prevent
 
 - **Trusting model projections (Blended xFP, rp3) without checking
@@ -316,9 +430,27 @@ For hitters, include lineup spot if available (1st, 2nd, ... 9th).
   (Roki) even at the same std.
 - **Hiding small samples.** If N < 5, surface "small sample (N=3)"
   warning. Don't render boom%/bust% as if they're stable.
-- **Forgetting position-specific thresholds.** Hitter boom is ≥10 FP
-  per GAME (not 20). RP boom is ≥5 FP per appearance. Using SP
-  thresholds across positions produces nonsense.
+- **Forgetting position-specific thresholds.** Hitter boom is ≥5 FP
+  per GAME (not 20 — that's the SP cut). RP boom is ≥6 FP per
+  appearance. Using SP thresholds across positions produces nonsense.
+  Empirically calibrated 2026-06-06 — see "Position-aware thresholds"
+  section above.
+- **Using old v1 thresholds (Hitter 10/2, RP 5/0).** Those were
+  calibrated by intuition and rejected by 2025 league-wide data. Hitter
+  10/2 marked 52% of games "bust" (median game is 1 FP, not 5);
+  RP 5/0 marked 33% of outings "boom". Always use the empirical cuts.
+- **Slot fungibility error: dropping a same-eligible player to "fill"
+  an empty same-position slot.** Lineup slots at the same position are
+  FUNGIBLE — dropping a player at position P does NOT fill an empty
+  P-slot, it just opens a different P-slot. To fill an empty slot you
+  must ADD a player eligible for that slot. Canonical failure
+  (2026-06-06): recommended "drop Wyatt Langford OF to fill empty OF5."
+  Wrong — dropping Langford opens OF4 (his current slot); OF5 stays
+  empty. The fix is to ADD an OF-eligible FA. When applying the
+  marginal-FP-per-slot framework above, the comparison is between the
+  marginal slot's expected FP (the slot the ADD fills) vs the marginal
+  slot's current cost (the DROP's slot, if any) — never conflate them
+  with same-position swaps.
 
 ## When NOT to use this skill
 
