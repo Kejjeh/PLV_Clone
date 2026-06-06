@@ -85,6 +85,9 @@ data/research/_archive/
 scripts/_*.py
 data/outputs/_*
 
+# CodeGraph index (generated, regenerable via `codegraph init`)
+.codegraph/
+
 # IDE / OS
 .idea/
 .vscode/
