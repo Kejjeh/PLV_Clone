@@ -102,6 +102,19 @@ python scripts/xfp/run_roster_audit.py
   SP pool, cross-references with PL Top 100 (and streamer ranks for
   the current week), compares against user's rostered SPs, includes
   mandatory `get_all_teams()` verification (Connelly Early bug).
+- `/sp-slate-grid` — full-slate SP scan over a date window
+  (default today+tomorrow). Pulls EVERY scheduled SP start from MLB
+  Stats API, joins six model layers (rp3 + per_start band, SP
+  archetype OVERALL/traj/T+1, live boom_stack + boom%/bust%/E[FP],
+  PL Top 100, PL daily streamers with auto-fresh WebFetch when stale),
+  tags ownership (MINE / opp team name / FA), renders a time-sorted
+  grid with FA highlighted and decision-deadline header, then
+  synthesizes a boom-layer-aware recommendation that can DOWNGRADE
+  high-rp3 picks when live boom disagrees (canonical: Sheehan
+  6/7/26 rp3 #55 but boom 9/18 said skip). Distinct from
+  `/fa-sp-pool` (FA-only flat list), `/sp-week-plan` (my-roster cap
+  math), `/stream-the-stack` (my-eligible-pool only). All joins by
+  MLBAM pitcher_id — never name.
 - `/slump-or-decline` — diagnose a hitter slump: career/2025/2026/L21d
   decomposition + xwOBACON/shrinkage/anchor-in-CI + process metrics +
   **year-over-year xwOBACON trajectory** (distinguishes valid prior-trough
