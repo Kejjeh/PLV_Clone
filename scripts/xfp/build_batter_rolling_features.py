@@ -4,7 +4,7 @@ Produces ONE row per batter (career PA >= 300 across 2015-2026 statcast
 parquets) with everything the sustainability / career-form / slump skills
 need to avoid re-walking 12 years of statcast on every invocation.
 
-Columns:
+Columns (default / live mode):
   batter, player_name, team_recent, total_career_pa,
   current_l150_xwoba,
   career_l150_median, career_l150_min, career_l150_max, career_l150_mean,
@@ -21,18 +21,40 @@ Columns:
 Writes:
   data/research/xfp_cache/batter_rolling_features.csv
 
+When ``--as-of YYYY-MM-DD`` is passed (PR 8 Gate 0d extension), behavior
+changes to a panel mode used by the process-panel build:
+
+  - All pitch-level filtering uses ``game_date <= as_of``.
+  - Three marker blocks are emitted per batter, each over the same 9
+    markers (avg_ev, ev90, hard_hit_pct, barrel_pct, xwoba_on_contact,
+    k_pct, bb_pct, chase_pct, sweet_spot_pct):
+      * ``*_last30``  - window [as_of - 30d, as_of]
+      * ``*_std``     - window [season_start(as_of.year), as_of]
+      * ``*_prioryr`` - full prior season (game_year = as_of.year - 1)
+  - Output CSV path:
+      ``data/research/xfp_cache/batter_rolling_features_<as_of>.csv``
+
 Single DuckDB connection, single output CSV, no per-batter Python loops.
 
 Usage:
   python -X utf8 scripts/xfp/build_batter_rolling_features.py
+  python -X utf8 scripts/xfp/build_batter_rolling_features.py --as-of 2026-06-06
 """
 from __future__ import annotations
+import argparse
+import sys
 import time
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import duckdb
 import pandas as pd
+
+# Make project root importable for the canonical season_start helper.
+_ROOT = Path(__file__).resolve().parents[2]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
+from scripts.xfp.lib.season_dates import season_start  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -358,5 +380,206 @@ def main():
           f'{size_kb:,.0f} KB  in {elapsed:.1f}s  → {OUT_CSV}')
 
 
+def _marker_select(suffix: str, where: str) -> str:
+    """Build the marker SELECT block for one window.
+
+    Mirrors the live-mode L150/L21d marker definitions:
+      avg_ev, ev90, hard_hit_pct, barrel_pct (lsa = 6), xwoba_on_contact,
+      k_pct, bb_pct, chase_pct (OOZ swings / OOZ pitches), sweet_spot_pct
+      (launch_angle in [8, 32]).
+    """
+    return f"""
+        SELECT
+          batter,
+          SUM(CASE WHEN is_pa THEN 1 ELSE 0 END) AS n_pa{suffix},
+          AVG(launch_speed) FILTER (WHERE launch_speed IS NOT NULL
+              AND events IS NOT NULL AND events != ''
+              AND NOT is_k AND NOT is_bb AND NOT is_hbp) AS avg_ev{suffix},
+          QUANTILE_CONT(launch_speed, 0.9) FILTER (WHERE launch_speed IS NOT NULL
+              AND events IS NOT NULL AND events != ''
+              AND NOT is_k AND NOT is_bb AND NOT is_hbp) AS ev90{suffix},
+          SUM(CASE WHEN launch_speed >= 95
+                    AND events IS NOT NULL AND events != ''
+                    AND NOT is_k AND NOT is_bb AND NOT is_hbp THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN events IS NOT NULL AND events != ''
+                                 AND NOT is_k AND NOT is_bb AND NOT is_hbp
+                                 AND launch_speed IS NOT NULL
+                                THEN 1 ELSE 0 END), 0) AS hard_hit_pct{suffix},
+          SUM(CASE WHEN lsa = 6
+                    AND events IS NOT NULL AND events != ''
+                    AND NOT is_k AND NOT is_bb AND NOT is_hbp THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN events IS NOT NULL AND events != ''
+                                 AND NOT is_k AND NOT is_bb AND NOT is_hbp
+                                 AND launch_speed IS NOT NULL
+                                THEN 1 ELSE 0 END), 0) AS barrel_pct{suffix},
+          AVG(xwoba_pa) FILTER (WHERE xwoba_pa IS NOT NULL
+              AND events IS NOT NULL AND events != ''
+              AND NOT is_k AND NOT is_bb AND NOT is_hbp) AS xwoba_on_contact{suffix},
+          SUM(CASE WHEN is_k  THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN is_pa THEN 1 ELSE 0 END), 0) AS k_pct{suffix},
+          SUM(CASE WHEN is_bb THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN is_pa THEN 1 ELSE 0 END), 0) AS bb_pct{suffix},
+          SUM(CASE WHEN is_swing AND NOT in_zone THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN NOT in_zone THEN 1 ELSE 0 END), 0) AS chase_pct{suffix},
+          SUM(CASE WHEN launch_angle BETWEEN 8 AND 32
+                    AND events IS NOT NULL AND events != ''
+                    AND NOT is_k AND NOT is_bb AND NOT is_hbp THEN 1 ELSE 0 END) * 1.0
+              / NULLIF(SUM(CASE WHEN events IS NOT NULL AND events != ''
+                                 AND NOT is_k AND NOT is_bb AND NOT is_hbp
+                                 AND launch_angle IS NOT NULL
+                                THEN 1 ELSE 0 END), 0) AS sweet_spot_pct{suffix}
+        FROM pitches
+        WHERE {where}
+        GROUP BY batter
+    """
+
+
+def build_as_of(as_of: date) -> Path:
+    """PR 8 Gate 0d extension: per-batter L30 / season-to-date / prior-year marker panel.
+
+    All pitch rows are filtered with ``game_date <= as_of`` end-cap, then
+    bucketed into three windows and aggregated. Output CSV has the
+    standard live-mode identity columns plus three marker blocks suffixed
+    ``_last30`` / ``_std`` / ``_prioryr``.
+    """
+    yr = as_of.year
+    ss = season_start(yr)
+    l30_start = as_of - pd.Timedelta(days=30).to_pytimedelta()
+    prior_yr = yr - 1
+
+    out_csv = CACHE / f'batter_rolling_features_{as_of.isoformat()}.csv'
+    print(f'[build_batter_rolling_features] AS-OF MODE  as_of={as_of}  out={out_csv}')
+    print(f'  L30 window:        {l30_start} -> {as_of}')
+    print(f'  Season-to-date:    {ss} -> {as_of}')
+    print(f'  Prior-year:        full {prior_yr} season')
+
+    t0 = time.time()
+    con = duckdb.connect()
+    con.execute("PRAGMA threads=8")
+    sc = _statcast_union_sql()
+    k_events = _quote_list(K_EVENTS)
+    bb_events = _quote_list(BB_EVENTS)
+    non_pa = _quote_list(NON_PA)
+
+    con.execute(f"""
+        CREATE OR REPLACE TEMP VIEW pitches AS
+        SELECT
+          batter,
+          CAST(game_date AS DATE) AS game_date,
+          game_year,
+          events,
+          description,
+          zone,
+          TRY_CAST(launch_speed AS DOUBLE)         AS launch_speed,
+          TRY_CAST(launch_angle AS DOUBLE)         AS launch_angle,
+          TRY_CAST(launch_speed_angle AS DOUBLE)   AS lsa,
+          TRY_CAST(estimated_woba_using_speedangle AS DOUBLE) AS xwoba_pa,
+          (events IS NOT NULL AND events != '' AND events NOT IN ({non_pa})) AS is_pa,
+          (events IN ({k_events}))  AS is_k,
+          (events IN ({bb_events})) AS is_bb,
+          (events = '{HBP_EVENT}')  AS is_hbp,
+          (description IN ('swinging_strike','swinging_strike_blocked','foul','foul_tip',
+                           'hit_into_play','foul_bunt','missed_bunt')) AS is_swing,
+          (description IN ('swinging_strike','swinging_strike_blocked','foul_tip','missed_bunt')) AS is_swstr,
+          (zone BETWEEN 1 AND 9) AS in_zone
+        FROM {sc}
+        WHERE batter IS NOT NULL
+          AND CAST(game_date AS DATE) <= DATE '{as_of.isoformat()}'
+    """)
+
+    print('[build_batter_rolling_features] enumerating universe ...')
+    universe = con.execute(f"""
+        SELECT batter, SUM(CASE WHEN is_pa THEN 1 ELSE 0 END) AS total_career_pa
+        FROM pitches
+        GROUP BY batter
+        HAVING total_career_pa >= {MIN_CAREER_PA}
+    """).df()
+    print(f'  universe size: {len(universe)} batters (career_pa >= {MIN_CAREER_PA})')
+
+    con.register('universe_df', universe[['batter']])
+    con.execute("CREATE OR REPLACE TEMP VIEW universe AS SELECT batter FROM universe_df")
+
+    where_last30 = (
+        f"batter IN (SELECT batter FROM universe) "
+        f"AND game_date >= DATE '{l30_start.isoformat()}' "
+        f"AND game_date <= DATE '{as_of.isoformat()}'"
+    )
+    where_std = (
+        f"batter IN (SELECT batter FROM universe) "
+        f"AND game_date >= DATE '{ss.isoformat()}' "
+        f"AND game_date <= DATE '{as_of.isoformat()}'"
+    )
+    where_prioryr = (
+        f"batter IN (SELECT batter FROM universe) "
+        f"AND game_year = {prior_yr}"
+    )
+
+    print('[build_batter_rolling_features] computing L30 markers ...')
+    markers_l30 = con.execute(_marker_select('_last30', where_last30)).df()
+    print(f'  L30 rows: {len(markers_l30)}')
+
+    print('[build_batter_rolling_features] computing season-to-date markers ...')
+    markers_std = con.execute(_marker_select('_std', where_std)).df()
+    print(f'  STD rows: {len(markers_std)}')
+
+    print('[build_batter_rolling_features] computing prior-year markers ...')
+    markers_prioryr = con.execute(_marker_select('_prioryr', where_prioryr)).df()
+    print(f'  prior-year rows: {len(markers_prioryr)}')
+
+    multiyr_path = CACHE / 'hitters_multiyr_2015_2026.csv'
+    if multiyr_path.exists():
+        my = pd.read_csv(multiyr_path, usecols=['batter', 'player_name', 'team', 'year'])
+        my = my[my['year'] <= as_of.year]
+        my = my.sort_values(['batter', 'year']).groupby('batter', as_index=False).tail(1)
+        my = my.rename(columns={'team': 'team_recent'})[['batter', 'player_name', 'team_recent']]
+    else:
+        print('  WARN: hitters_multiyr csv missing; player_name/team_recent will be blank')
+        my = pd.DataFrame(columns=['batter', 'player_name', 'team_recent'])
+
+    out = universe.merge(markers_l30, on='batter', how='left')
+    out = out.merge(markers_std, on='batter', how='left')
+    out = out.merge(markers_prioryr, on='batter', how='left')
+    out = out.merge(my, on='batter', how='left')
+    out['as_of'] = as_of.isoformat()
+    out['built_at'] = datetime.now(timezone.utc).isoformat()
+
+    marker_cols = ['avg_ev', 'ev90', 'hard_hit_pct', 'barrel_pct', 'xwoba_on_contact',
+                   'k_pct', 'bb_pct', 'chase_pct', 'sweet_spot_pct']
+    cols = ['batter', 'player_name', 'team_recent', 'total_career_pa', 'as_of']
+    for sfx in ('_last30', '_std', '_prioryr'):
+        cols.append(f'n_pa{sfx}')
+        for m in marker_cols:
+            cols.append(f'{m}{sfx}')
+    cols.append('built_at')
+
+    for c in cols:
+        if c not in out.columns:
+            out[c] = pd.NA
+    out = out[cols].sort_values('total_career_pa', ascending=False)
+
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(out_csv, index=False)
+    elapsed = time.time() - t0
+    print(f'[build_batter_rolling_features] wrote {len(out)} rows in {elapsed:.1f}s -> {out_csv}')
+    return out_csv
+
+
+def _parse_args(argv=None):
+    p = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    p.add_argument(
+        '--as-of',
+        type=lambda s: datetime.strptime(s, '%Y-%m-%d').date(),
+        default=None,
+        help='When provided, emit L30/STD/prior-year marker panel as of this date '
+             '(filters pitches with game_date <= as_of). Default: live mode '
+             '(latest L150 + L21d cache).',
+    )
+    return p.parse_args(argv)
+
+
 if __name__ == '__main__':
-    main()
+    args = _parse_args()
+    if args.as_of is not None:
+        build_as_of(args.as_of)
+    else:
+        main()
