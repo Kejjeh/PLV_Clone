@@ -80,16 +80,11 @@ def build_name_maps():
         p_map.pop(_normalize(cn), None)
 
     # PL-article name-spelling aliases that don't match the Statcast cache's
-    # formal first-name spelling. Added 2026-06-05 from name-resolution audit.
-    # Resolves to the formal-name mlbam_id via the existing maps.
-    PL_NAME_ALIASES = {
-        # PL form  -> Statcast cache form
-        'Mike Soroka': 'Michael Soroka',
-        'Hyun-Jin Ryu': 'Hyun Jin Ryu',
-        'Matt Boyd': 'Matthew Boyd',
-        'Louie Varland': 'Louis Varland',
-    }
-    for pl_name, formal in PL_NAME_ALIASES.items():
+    # formal first-name spelling. Centralized in
+    # src/plv_clone/utils/name_match.py:KNOWN_PITCHER_ALIASES (2026-06-06).
+    # Add entries there, not here, so other consumers stay in sync.
+    from plv_clone.utils.name_match import KNOWN_PITCHER_ALIASES
+    for pl_name, formal in KNOWN_PITCHER_ALIASES.items():
         mid = p_map.get(_normalize(formal))
         if mid is not None:
             p_map[_normalize(pl_name)] = mid

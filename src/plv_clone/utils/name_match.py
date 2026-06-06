@@ -141,6 +141,103 @@ KNOWN_PITCHER_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
 }
 
 
+# Pitcher-side ALIASES (NOT collisions). One canonical pitcher with
+# multiple spellings across data sources: PL articles use a nickname or
+# different transliteration than the Statcast / cache "formal" spelling.
+# Resolves alias_spelling -> canonical_spelling. Callers look up the
+# canonical spelling in their existing name -> mlbam map.
+#
+# Centralized 2026-06-06 from local dict in
+# scripts/xfp/build_pl_rank_panel.py:85 so other consumers (live_monitor,
+# audit_pl_name_resolution, future PL ingest scripts) read one source.
+#
+# Add entries here when a name-resolution audit surfaces a new mismatch.
+# Keep in sync with `memory/feedback_player_name_collisions.md` (collisions
+# only) — this map is for canonical-spelling drift, not ambiguous IDs.
+KNOWN_PITCHER_ALIASES: dict[str, str] = {
+    "Mike Soroka": "Michael Soroka",
+    "Hyun-Jin Ryu": "Hyun Jin Ryu",
+    "Matt Boyd": "Matthew Boyd",
+    "Louie Varland": "Louis Varland",
+}
+
+
+def canonical_pitcher_spelling(name: str) -> str:
+    """Return the canonical (Statcast cache) spelling for a pitcher name.
+
+    Looks up the input in ``KNOWN_PITCHER_ALIASES``. If the name is not an
+    alias, returns it unchanged. Callers then look up the result in their
+    existing name -> mlbam map.
+
+    Example:
+        >>> canonical_pitcher_spelling("Mike Soroka")
+        'Michael Soroka'
+        >>> canonical_pitcher_spelling("Tarik Skubal")
+        'Tarik Skubal'
+    """
+    return KNOWN_PITCHER_ALIASES.get(name, name)
+
+
+def classify_pitcher_bucket(
+    mlbam_id: int,
+    *,
+    rp3_path: str = "data/outputs/xfp_rp3_projections.csv",
+    rprs2_path: str = "data/outputs/xfp_rprs2_projections.csv",
+) -> Optional[str]:
+    """Classify a pitcher_id as 'SP' or 'RP' by consulting the production
+    projection CSVs.
+
+    Lookup order:
+      1. If mlbam_id appears in xfp_rp3_projections.csv (SP model output),
+         return 'SP'.
+      2. Else if in xfp_rprs2_projections.csv (RP model output), return 'RP'.
+      3. Else return None.
+
+    A pitcher rostered in BOTH cohorts (rare: mid-season SP-to-RP move) is
+    classified as 'SP' since the rp3 entry is the source of truth for any
+    pitcher who has started recent games.
+
+    Notes:
+      - This is the CANONICAL classifier for downstream consumers that need
+        to route a pitcher to the correct projection model.
+      - Reads only the rank/pitcher columns (cheap; cached at module level).
+      - Returns None for unrostered or unprojected pitchers — caller must
+        decide the fallback.
+    """
+    import pandas as _pd
+    import os as _os
+
+    cache_key = (rp3_path, rprs2_path)
+    cache = classify_pitcher_bucket.__dict__.setdefault("_cache", {})
+    sig = (
+        _os.path.getmtime(rp3_path) if _os.path.exists(rp3_path) else None,
+        _os.path.getmtime(rprs2_path) if _os.path.exists(rprs2_path) else None,
+    )
+    cached = cache.get(cache_key)
+    if cached is not None and cached["sig"] == sig:
+        rp3_ids = cached["rp3_ids"]
+        rprs2_ids = cached["rprs2_ids"]
+    else:
+        rp3_ids = (
+            set(_pd.read_csv(rp3_path, usecols=["pitcher"])["pitcher"].astype(int))
+            if _os.path.exists(rp3_path)
+            else set()
+        )
+        rprs2_ids = (
+            set(_pd.read_csv(rprs2_path, usecols=["pitcher"])["pitcher"].astype(int))
+            if _os.path.exists(rprs2_path)
+            else set()
+        )
+        cache[cache_key] = {"sig": sig, "rp3_ids": rp3_ids, "rprs2_ids": rprs2_ids}
+
+    mid = int(mlbam_id)
+    if mid in rp3_ids:
+        return "SP"
+    if mid in rprs2_ids:
+        return "RP"
+    return None
+
+
 def resolve_batter_id(
     name: str,
     *,
@@ -410,4 +507,7 @@ __all__ = [
     "lookup_batter_id_cached",
     "KNOWN_COLLISIONS",
     "KNOWN_PITCHER_COLLISIONS",
+    "KNOWN_PITCHER_ALIASES",
+    "canonical_pitcher_spelling",
+    "classify_pitcher_bucket",
 ]
