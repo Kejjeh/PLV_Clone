@@ -749,6 +749,14 @@ without rebuilding). Save the joined CSV to
 
 ## Related
 
+- `/boom-bust-history` — **variance lens companion**. When the model
+  layer (rp3 + Blended xFP + archetype) gives a verdict but you want
+  hard evidence of recent form, invoke `/boom-bust-history --names
+  "X,Y"` for the L8-starts decomposition (boom% ≥20 FP, bust% <5 FP,
+  std, trend arrow). Canonical case: Bradish blend 5.98 vs L5 actuals
+  17.88 — boom-bust history reveals the model is 12 FP behind reality.
+  Especially useful before drop/keep decisions and when surveying
+  IL'd returners (auto-fallback to prior year — Hunter Greene 2025).
 - `/fa-sp-pool` — flat FA-only ranked list (no grid, no synthesis)
 - `/sp-week-plan` — my-roster weekly cap math
 - `/stream-the-stack` — my-eligible-pool filtered by boom tier

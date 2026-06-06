@@ -92,6 +92,18 @@ python scripts/xfp/run_roster_audit.py
   table, rh3 row, lineup spot, ESPN counting stats per player, plus
   a comparative verdict. Fills the gap that `/fa-pickup-deep-dive`
   explicitly flags.
+- `/boom-bust-history` — variance-aware historical actuals across last
+  N games per player. SP L8 / hitter L21 / RP L15 windows; pulls MLB
+  Stats API gameLogs and computes BrownU FP per game. Surfaces
+  L8/L5/L3 averages + trend arrow + std + **boom% (SP ≥20 / H ≥10 /
+  RP ≥5) + bust% (SP <5 / H <2 / RP <0)** with auto-fallback to prior
+  year for IL60+ stashes (Hunter Greene 2025 surfaces automatically).
+  Status tags: HOT STREAK / CAP FODDER / DECLINING / RAMP / VOLATILE
+  / FLOOR / STASH. Default scope = full roster (split by position);
+  optional `--names "A,B,C"` for any list. The lens that catches
+  Bradish blend 5.98 vs L5 actuals 17.88 = model 12 FP behind reality.
+  Canonical companion to `/sp-slate-grid`, `/hitter-slate-grid`,
+  `/triangulate`, `/sp-week-plan`.
 - `/hitter-slate-grid` — multi-day FA-hitter decision board (parallel
   of `/sp-slate-grid`). Joins all 14 hitter model layers: Blended xFP
   + CI, rh3, live_marginal + value_tier (same-position bucket
