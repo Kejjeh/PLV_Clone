@@ -236,7 +236,12 @@ def test_single_start_gamelog_uses_default_five_day_gap():
 
 
 def test_predict_returns_multiple_starts_when_window_wide():
-    """Wide window + many team games -> emit up to n_predictions rotation slots."""
+    """Wide window + many team games -> emit up to n_predictions rotation slots.
+
+    API default is n_predictions=2; this test asks for 3 explicitly to exercise
+    the full pipeline. Production callers (sp-week-plan, matchup dashboard) keep
+    the default 2 because BrownU scoring weeks rarely contain a third start.
+    """
     result = predict_rotation_starts(
         gamelog_dates=[date(2026, 5, 17), date(2026, 5, 12)],  # gap=5
         confirmed_dates=[],
@@ -247,6 +252,7 @@ def test_predict_returns_multiple_starts_when_window_wide():
         ],
         week_start=date(2026, 5, 17),
         week_end=date(2026, 6, 5),
+        n_predictions=3,
     )
 
     # 5/17 + 5 = 5/22 BAL; +5 = 5/27 NYY; +5 = 6/1 BOS.
