@@ -144,6 +144,80 @@ def test_panel_csv_has_no_buylow_flag(tmp_path: Path, monkeypatch: pytest.Monkey
 # Test 7 (panel 6 of 6): hitter marker alias resolution.
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Cache-freshness helper (post-review tightening, 2026-06-06).
+# Validates that _hitter_cache_is_fresh respects BOTH the as-of date AND
+# the source-Statcast mtime. The "source newer than cache" case is the
+# historical-backtest failure mode flagged in the 2026-06-06 review.
+# ---------------------------------------------------------------------------
+
+def _setup_freshness_env(tmp_path, monkeypatch):
+    from scripts.xfp import build_process_panel as bpp
+    monkeypatch.setattr(bpp, 'CACHE', tmp_path)
+    return bpp
+
+
+def test_hitter_cache_fresh_when_cache_newer_than_source(tmp_path, monkeypatch):
+    """Cache mtime AFTER source-Statcast mtime AND >= as-of => fresh."""
+    import os
+    bpp = _setup_freshness_env(tmp_path, monkeypatch)
+
+    src = tmp_path / 'statcast_2026.parquet'
+    src.write_bytes(b'stub')
+    src_mtime = src.stat().st_mtime
+
+    csv = tmp_path / 'batter_rolling_features_2026-06-06.csv'
+    csv.write_text('stub')
+    later = src_mtime + 5
+    os.utime(csv, (later, later))
+
+    assert bpp._hitter_cache_is_fresh(csv, date(2026, 6, 6)) is True
+
+
+def test_hitter_cache_stale_when_source_newer_than_cache(tmp_path, monkeypatch):
+    """Source Statcast mtime AFTER cache mtime => stale even though
+    the cache covers the as-of date. This is the historical-backtest
+    failure mode flagged in the 2026-06-06 review.
+    """
+    import os
+    bpp = _setup_freshness_env(tmp_path, monkeypatch)
+
+    csv = tmp_path / 'batter_rolling_features_2024-08-01.csv'
+    csv.write_text('stub')
+    csv_mtime = csv.stat().st_mtime
+
+    src = tmp_path / 'statcast_2024.parquet'
+    src.write_bytes(b'stub')
+    later = csv_mtime + 5
+    os.utime(src, (later, later))
+
+    assert bpp._hitter_cache_is_fresh(csv, date(2024, 8, 1)) is False
+
+
+def test_hitter_cache_stale_when_cache_date_before_as_of(tmp_path, monkeypatch):
+    """Cache mtime predates the as-of date => stale regardless of source."""
+    import os
+    from datetime import datetime as _dt
+
+    bpp = _setup_freshness_env(tmp_path, monkeypatch)
+    csv = tmp_path / 'batter_rolling_features_2026-06-06.csv'
+    csv.write_text('stub')
+    ts = _dt(2024, 1, 1).timestamp()
+    os.utime(csv, (ts, ts))
+
+    assert bpp._hitter_cache_is_fresh(csv, date(2026, 6, 6)) is False
+
+
+def test_hitter_cache_missing_file_is_stale(tmp_path, monkeypatch):
+    bpp = _setup_freshness_env(tmp_path, monkeypatch)
+    csv = tmp_path / 'does_not_exist.csv'
+    assert bpp._hitter_cache_is_fresh(csv, date(2026, 6, 6)) is False
+
+
+# ---------------------------------------------------------------------------
+# Test 7 (panel 6 of 6): hitter marker alias resolution.
+# ---------------------------------------------------------------------------
+
 def test_panel_hitter_marker_alias():
     """Per v11 Gate 0d: canonical `o_swing_pct` resolves to the rolling-
     features column name `chase_pct`. All other markers are identity.

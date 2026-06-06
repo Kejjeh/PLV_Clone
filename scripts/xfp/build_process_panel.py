@@ -273,22 +273,49 @@ def _join_sp_names_and_rp3(panel: pd.DataFrame, cur_pq: Path) -> pd.DataFrame:
     return panel
 
 
-def build_hitter_panel(as_of: date) -> pd.DataFrame:
+def _hitter_cache_is_fresh(csv_path: Path, as_of: date) -> bool:
+    """The hitter rolling-features cache is fresh when it satisfies BOTH:
+
+      1. cache mtime >= as_of  (the cache covers the requested date), AND
+      2. cache mtime >= every relevant source-Statcast parquet's mtime.
+
+    Condition 2 catches the historical-as-of case the 2026-06-06 review
+    flagged: if you rebuild a backtest panel for as-of=2024-08-01 and the
+    cache was written earlier today (so the date check passes), but the
+    underlying 2024 Statcast parquet was refreshed since the cache build,
+    the cache is silently stale. Source-mtime forces the rebuild.
+
+    Source parquets considered: statcast_{as_of.year}.parquet and (if it
+    exists) statcast_{as_of.year - 1}.parquet for the prior-year backfill.
+    """
+    if not csv_path.exists():
+        return False
+    cache_ts = csv_path.stat().st_mtime
+    cache_date = datetime.fromtimestamp(cache_ts).date()
+    if cache_date < as_of:
+        return False
+    for yr in (as_of.year, as_of.year - 1):
+        src = CACHE / f'statcast_{yr}.parquet'
+        if src.exists() and src.stat().st_mtime > cache_ts:
+            return False
+    return True
+
+
+def build_hitter_panel(as_of: date, *, force_rebuild: bool = False) -> pd.DataFrame:
     """Build the hitter process panel via build_batter_rolling_features.py --as-of.
 
     Triggers the batter-features builder in as-of mode (writing a per-date
     CSV with L30/STD/PriorYr suffixes), then composes direction-adjusted
     z-scores + composite + level percentile.
+
+    Args:
+        as_of: as-of date for the panel window.
+        force_rebuild: if True, ignore the cache and always re-invoke the
+            rolling-features builder. Use for historical backtests where
+            cache freshness is hard to reason about.
     """
     csv_path = CACHE / f'batter_rolling_features_{as_of.isoformat()}.csv'
-    # Cache freshness: rebuild if cache is older than the as-of date OR
-    # if the cache file is older than today. Same-day reuse is still fine
-    # for incremental panel runs within one session.
-    needs_build = True
-    if csv_path.exists():
-        cache_mtime = datetime.fromtimestamp(csv_path.stat().st_mtime).date()
-        if cache_mtime >= as_of:
-            needs_build = False
+    needs_build = force_rebuild or not _hitter_cache_is_fresh(csv_path, as_of)
     if needs_build:
         builder = ROOT / 'scripts' / 'xfp' / 'build_batter_rolling_features.py'
         print(f'[build_process_panel] invoking hitter builder --as-of {as_of}', flush=True)
@@ -393,10 +420,18 @@ def main(argv=None) -> Tuple[Path, Path]:
     )
     p.add_argument('--sp-out', type=Path, default=OUT / 'sp_process_panel.csv')
     p.add_argument('--hitter-out', type=Path, default=OUT / 'hitter_process_panel.csv')
+    p.add_argument(
+        '--force-rebuild',
+        action='store_true',
+        help='Ignore the hitter rolling-features cache and always re-invoke '
+             'build_batter_rolling_features.py. Use for historical backtests '
+             'where cache freshness vs the underlying Statcast parquet is '
+             'hard to reason about by mtime alone.',
+    )
     args = p.parse_args(argv)
 
     t0 = time.time()
-    print(f'[build_process_panel] as_of={args.as_of}')
+    print(f'[build_process_panel] as_of={args.as_of} force_rebuild={args.force_rebuild}')
 
     sp_panel = build_sp_panel(args.as_of)
     _assert_no_buylow(sp_panel, 'sp_process_panel')
@@ -404,7 +439,7 @@ def main(argv=None) -> Tuple[Path, Path]:
     sp_panel.to_csv(args.sp_out, index=False)
     print(f'[build_process_panel] SP panel: {len(sp_panel)} rows -> {args.sp_out}')
 
-    hitter_panel = build_hitter_panel(args.as_of)
+    hitter_panel = build_hitter_panel(args.as_of, force_rebuild=args.force_rebuild)
     _assert_no_buylow(hitter_panel, 'hitter_process_panel')
     args.hitter_out.parent.mkdir(parents=True, exist_ok=True)
     hitter_panel.to_csv(args.hitter_out, index=False)
