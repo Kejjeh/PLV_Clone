@@ -384,6 +384,65 @@ hand off to:
 - `/pitcher-sustainability` — SP analog with 9-marker Statcast decomp
   (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact)
 
+## Synthesis output template (REQUIRED — uses lens merge protocol)
+
+<!-- LENS_MERGE_PROTOCOL_BLOCK_START -->
+Every drop/add/hold recommendation issued from this skill MUST be
+rendered using the confidence-weighted output block defined in
+`~/.claude/projects/c--Users-Joshua-plv-clone/memory/reference_lens_merge_protocol.md`.
+The template merges all 8 lenses (model, process gate, variance,
+context) into a single block with explicit Tier B veto status and
+conflict-rule provenance:
+
+```
+RECOMMENDATION: <action> <player>
+   Confidence: HIGH | MEDIUM | LOW (per 8-lens agreement count)
+   Tier A (model): rh3=<v> | Blended xFP=<v>
+   Tier B (process gate): xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
+   Tier C (variance): boom-bust=<v> | boom_stack=<v>
+   Tier D (context): archetype=<v> | PL=<v>
+   Tier B veto: PASSED | DOWNGRADED
+   Conflict rule applied: #N | none
+```
+
+Render the block VERBATIM. Do not collapse, summarize, or drop tiers —
+when a lens is unavailable, write `n/a` and proceed; never silently
+omit a row. The decision-type → lens priority mapping lives in
+`reference_decision_type_lens_registry.md`; consult it when the
+recommendation type (SP drop vs hitter add vs RP hold etc.) is in
+question.
+<!-- LENS_MERGE_PROTOCOL_BLOCK_END -->
+
+## Where boom-bust sits in the merge protocol
+
+<!-- TIER_C_POSITIONING_BLOCK_START -->
+Boom-bust-history is a **Tier C (variance check)** lens. It does NOT
+override Tier A (primary model — rh3/rp3/rprs2 + Blended xFP) and it
+does NOT override Tier B (process gate — xwOBA L21d, xwOBACON YoY,
+sustainability decomp, velo/SwStr/CSW for SPs, leverage_tier for RPs).
+
+When boom-bust disagrees with Tier B, apply the conflict resolution
+rules from `reference_lens_merge_protocol.md`:
+
+- **Conflict Rule 1** — Model FADE + actuals BUY → check
+  sustainability; if Tier B says SUSTAINABLE/IMPROVING the actuals win
+  (model lagging); if Tier B says NOISE/HOT_STREAK the model wins.
+- **Conflict Rule 2** — CAP_FODDER variance verdict + xwOBA L21d gap
+  within ±0.020 → HOLD; Tier B's "skill holding" overrides Tier C's
+  "outcome cold."
+
+The CAP_FODDER / HOT_STREAK / DECLINING / RAMP / VOLATILE / FLOOR /
+STASH tags this skill emits are **synthesis inputs, not standalone
+verdicts**. They feed the merge block above; they do not ship as
+recommendations on their own.
+
+Canonical case (2026-06-06): José Soriano's 37% bust rate read as a
+DECLINING drop signal in isolation. Tier B sustainability said
+IMPROVING (velo intact, SwStr% trending up). Per Conflict Rule 2 the
+boom-bust verdict was downgraded to HOLD. Shipping the Tier C verdict
+alone would have produced a wrong drop.
+<!-- TIER_C_POSITIONING_BLOCK_END -->
+
 ## Step 7 — Render the table
 
 Group by position, sort by L5 avg descending within group.
@@ -529,6 +588,16 @@ is comparing across positions.
   Without it, the skill could ship a drop for a player whose underlying
   contact quality is intact (bounce coming) or an add for a hot streak
   that's BABIP-driven. See Step 6.5 for the gate spec and render template.
+
+
+<!-- TIER_C_ANTIPATTERN_START -->
+- **Treating boom-bust verdicts as standalone drop/add signals.**
+  They're Tier C inputs that feed the merge protocol. A 37% bust rate
+  (Soriano) or 37% boom rate (Bradish) can both be misleading if Tier B
+  (sustainability + Tier 3 process gate) says otherwise. Always
+  synthesize via `reference_lens_merge_protocol.md`, never ship a
+  recommendation from boom-bust alone.
+<!-- TIER_C_ANTIPATTERN_END -->
 
 ## When NOT to use this skill
 

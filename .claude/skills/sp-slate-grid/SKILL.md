@@ -381,6 +381,69 @@ so the user gets the decision baked, not just data dumped.
 
 ---
 
+<!-- BEGIN: confidence-weighted-synthesis -->
+
+## Confidence-weighted synthesis output (REQUIRED)
+
+Every per-player recommendation in the slate-grid synthesis output MUST
+end with a confidence-weighted block following the 8-lens agreement
+protocol defined in
+`~/.claude/projects/c--Users-Joshua-plv-clone/memory/reference_lens_merge_protocol.md`.
+
+The block is mandatory — eyeballing the 15 displayed layers and writing
+a free-text verdict is not allowed. Use this template verbatim:
+
+```
+RECOMMENDATION: <action> <player>
+   Confidence: HIGH | MEDIUM | LOW (per 8-lens agreement count from reference_lens_merge_protocol.md)
+   Lens votes:
+     Tier A: rh3=<v> | Blended xFP=<v> [conf] | rp3/rprs2 if SP=<v>
+     Tier B: xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
+     Tier C: boom-bust L5/L21=<v> | boom_stack=<v>
+     Tier D: archetype=<v> | PL Top 100/150=<v>
+   Agreement: N of 8 → CONFIDENCE = HIGH/MED/LOW
+   Tier B veto: PASSED | DOWNGRADED (cite which Tier B lens flagged)
+   Conflict resolution rule applied: #N (per reference_lens_merge_protocol.md) | none
+```
+
+Confidence labels come from the 8-lens agreement count:
+
+- HIGH — ≥6 of 8 lenses agree on direction
+- MEDIUM — 4-5 of 8 agree
+- LOW — ≤3 of 8 agree (and synthesis must surface the disagreement)
+
+See `reference_lens_merge_protocol.md` for the full Tier A/B/C/D taxonomy
+and the 5 conflict resolution rules.
+
+<!-- END: confidence-weighted-synthesis -->
+
+<!-- BEGIN: tier-b-hard-veto -->
+
+## Tier B hard veto enforcement
+
+Per `~/.claude/projects/c--Users-Joshua-plv-clone/memory/reference_lens_merge_protocol.md`:
+if ANY of the Tier B lenses (xwOBA L21d, xwOBACON YoY, sustainability
+bucket) returns **REAL_DECLINE / DECLINING / REGRESS with HIGH
+confidence**, the slate-grid synthesis MUST downgrade the verdict by
+exactly one step (BUY → HOLD → SELL/FADE → DROP).
+
+This is a hard veto, not a soft input. Tier A + Tier C agreement does
+NOT override Tier B — the merge protocol treats Tier B as the
+sustainability gate.
+
+**Canonical case (SP)**: Bradish hot streak L5 17.88 + 37% boom would
+normally read BUY from Tier A (rp3 + Blended xFP catching up) + Tier C
+(boom-bust history strong, boom_stack ≥2). But pitcher-sustainability
+returns **NOISE** with K% −12.3 pp vs season baseline. That is a Tier B
+REGRESS signal with HIGH confidence → synthesis downgrades to
+**HOLD / SELL-HIGH** rather than BUY. Conflict Resolution Rule applies
+(see `reference_lens_merge_protocol.md` for the rule number).
+
+Surface the Tier B veto explicitly in the `Tier B veto:` row of the
+confidence-weighted block — never silently apply the downgrade.
+
+<!-- END: tier-b-hard-veto -->
+
 ## Empirical importance ranking (read this when synthesizing the recommendation)
 
 Below is the ranked importance of each layer for the **specific decision
@@ -734,6 +797,16 @@ acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
 - **Filtering to FAs only before the synthesis pass.** The opp-rostered
   pitchers tell you who you can FADE this week; that's decision-relevant
   even though you can't add them.
+
+<!-- BEGIN: anti-pattern-confidence-weighted -->
+- **Shipping a synthesis verdict without the confidence-weighted block
+  and Tier B veto check.** The slate-grid displays 15 layers; synthesis
+  MUST use the merge protocol in
+  `~/.claude/projects/c--Users-Joshua-plv-clone/memory/reference_lens_merge_protocol.md`,
+  not eyeball it. Canonical violation: any drop/add recommendation that
+  doesn't enumerate the 8 lens votes (Tier A/B/C/D) and explicitly state
+  whether the Tier B veto passed or downgraded.
+<!-- END: anti-pattern-confidence-weighted -->
 
 ## When NOT to use this skill
 

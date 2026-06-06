@@ -208,6 +208,40 @@ The v2 final report has TWO joined tables, not the four legacy tables:
 
 ---
 
+<!-- BEGIN: conflict-resolution-algorithm -->
+## Conflict resolution algorithm (v2 synthesis)
+
+Synthesis MUST follow the canonical rules in
+`reference_lens_merge_protocol.md` (Tier A/B/C/D lens classification + 5
+conflict resolution rules + Tier B hard veto + confidence labels HIGH/MED/LOW
+based on 8-lens agreement). When two lenses disagree on a candidate, apply
+the rule below by name — do not freelance the synthesis.
+
+- **Rule 1 — Model FADE + actuals BUY → check sustainability.** If rh3/Blended
+  xFP says FADE but boom-bust history shows a hot run, defer to sustainability.
+  Canonical 2026-06-06 case: **Bradish** (model fade, L5 actuals 17.88,
+  sustainability NOISE → fade the hot streak).
+- **Rule 2 — CAP_FODDER + xwOBA L21d gap within ±0.020 → HOLD.** Process
+  trumps boom-bust when the contact-quality gap is inside the skill-holding
+  band. Boom-bust variance does not override an intact process signal.
+- **Rule 3 — REAL_DECLINE L21d + RISING xwOBACON → HOLD with sell-high
+  optionality.** YoY trajectory veto on a stale L21d slump. Canonical case:
+  **Muncy** (L21d decline, xwOBACON RISING → hold, optionally market as sell-high).
+- **Rule 4 — Sustainability REGRESS + CAP_FODDER + replacement-level
+  Blended xFP → HIGH_CONFIDENCE DROP.** Three Tier A/B lenses agreeing on
+  decline + no FP floor = drop. Canonical case: **Valdez** (REGRESS +
+  0% boom 25% bust + Blended xFP at replacement level).
+- **Rule 5 — Hot streak + discipline capped + xwOBACON RISING → NARROW
+  BREAKOUT, expect revert.** Surface the hot streak but tag it as narrow;
+  do not promote to HIGH_CONFIDENCE add. Canonical case: **Goodman**
+  (hot streak, chase% capped, xwOBACON RISING → narrow breakout).
+
+Tier B veto: any Tier B lens (per `reference_lens_merge_protocol.md`) that
+fires against the recommendation downgrades confidence by one level
+(HIGH→MED, MED→LOW) regardless of the agreement count.
+<!-- END: conflict-resolution-algorithm -->
+
+
 ## Step 7 — Build the agreement matrix
 
 For each YOUR-ROSTER name:
@@ -255,6 +289,51 @@ manager if any rival roster player has SELL_HIGH_WARNING cross_verdict
 
 Cap at 3 recommended swaps.
 
+<!-- BEGIN: confidence-weighted-verdict -->
+## Confidence-weighted verdict output (REQUIRED)
+
+Every recommendation in the v2 audit output MUST end with the block below.
+Recommendations missing this block are invalid and must be regenerated.
+
+```
+RECOMMENDATION: <action> <player>
+   Confidence: HIGH | MEDIUM | LOW
+   Lens votes: rh3=<v> | Blended xFP=<v> | boom-bust=<v> | sustainability=<v> | xwOBA L21d=<v> | xwOBACON YoY=<v> | Triangulate=<v> | PL=<v>
+   Agreement: N of 8
+   Tier B veto: PASSED | DOWNGRADED (cite which Tier B lens triggered)
+   Conflict rule applied: Rule #N (per reference_lens_merge_protocol.md) | none
+   Decision type: <type> (per reference_decision_type_lens_registry.md)
+```
+
+Confidence is set by the agreement count combined with Tier B veto status:
+- HIGH = ≥4 of 8 agree AND Tier B veto PASSED
+- MEDIUM = ≥4 of 8 agree AND Tier B veto DOWNGRADED, OR 2-3 of 8 agree AND Tier B PASSED
+- LOW = 2-3 of 8 agree AND Tier B veto DOWNGRADED
+
+Anything below 2 of 8 is dropped from the recommendation list entirely
+(per the existing cross-validation rule), never surfaced as LOW.
+<!-- END: confidence-weighted-verdict -->
+
+<!-- BEGIN: decision-type-lens-selection -->
+## Decision-type aware lens selection
+
+Before running the full 8-lens audit, classify the user's decision into one
+of the types in `reference_decision_type_lens_registry.md` (FA pickup,
+drop, streamer, trade, sell-high, buy-low, IL stash, same-position swap).
+Skip lenses the registry marks as `Skip` for that decision type. This
+prevents lens overload — a streamer pick doesn't need archetype T+2; a
+trade target doesn't need boom_stack.
+
+Example: For the **streamer pick** decision type, the registry says
+boom_stack tier + PL daily + L5 = primary. Skip Blended xFP (wrong horizon),
+skip archetype (RoS lens). Audit time drops from ~60s to ~10s.
+
+The decision type is then echoed verbatim in the `Decision type:` line of
+the confidence-weighted verdict block.
+<!-- END: decision-type-lens-selection -->
+
+
+
 ---
 
 ## Step 9 — Write the final report
@@ -284,6 +363,9 @@ Output `data/research/roster_deep_audit_<YYYY-MM-DD>.md`:
 
 ## Anti-patterns this skill exists to prevent
 
+- **Shipping a recommendation without the confidence-weighted block.**
+  Every action must end with the RECOMMENDATION block in the
+  `Confidence-weighted verdict output` section above.
 - **Calling CONSENSUS_DROP on a single signal.** The v3 gate requires
   ALL of: REGRESS + process DECLINING + shrunk gap < −0.030 + Bayes P <40%
   + hist bounce < 50%. One bad signal is a watch, not a drop.
