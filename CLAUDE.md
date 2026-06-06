@@ -70,6 +70,28 @@ python scripts/xfp/live_monitor.py --dashboard
 python scripts/xfp/run_roster_audit.py
 ```
 
+## Running tests / builds (token-saving summarizer)
+
+Don't run raw `pytest` — its full dump is thousands of lines. Wrap any
+test/build command in the summarizer so you see a compact ~50-150 line
+summary (final result line + verbatim FAILURES/ERRORS), with the full log
+cached to `.cache/test-logs/<ts>.log`:
+
+```bash
+# Canonical test run (config lives in pyproject.toml [tool.pytest.ini_options])
+python scripts/ci/run_summary.py -- python -m pytest
+
+# Any subset works the same way
+python scripts/ci/run_summary.py -- python -m pytest tests/test_scoring.py
+python scripts/ci/run_summary.py pytest -q          # convenience shorthand
+
+# Works for any build/command too (generic error+tail summary)
+python scripts/ci/run_summary.py -- python scripts/xfp/refresh_dashboards.py
+```
+
+Exit code passes through unchanged, so failures still register. Only read
+the printed full-log path when the summary doesn't have enough detail.
+
 ## Skills available (repo-level)
 
 - `/validate-feature` — codified 9-rule multi-testing protocol with
@@ -271,6 +293,16 @@ python scripts/xfp/run_roster_audit.py
   threshold, tier outcome lookup, and verdict. Use when asked "why is
   X's boom_stack 2/4" or "decompose this tag". Explanatory only —
   headline number is still rp3/rh3.
+- `/sp-stuff-board` — SP breakout / FA-filter board driven by the
+  VALIDATED FanGraphs **Stuff+** in-season signal (validated 2026-06-06,
+  `fg_pitch_modeling_inseason_2026-06-06.md`; partial r 0.30 predicting
+  RoS FP/start). Projects every 2026 SP's RoS FP/start, tags MINE/opp/FA
+  (live ESPN), flags breakout candidates (elite Stuff+, lagging results).
+  **Location+/command REJECTED for points scoring** — don't penalize a
+  high-Stuff+ arm for walks (Eury Pérez canonical: 98th-pct Stuff+,
+  7th-pct Loc+, still a BUY). Single-lens — feed picks into `/triangulate`.
+  Engine `scripts/xfp/sp_stuff_model.py`. Companion decline monitor:
+  `scripts/xfp/sp_stuff_alert.py` (rolling velo/whiff drop, NOT a ranker).
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
