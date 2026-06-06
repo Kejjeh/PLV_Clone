@@ -714,7 +714,7 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
     confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
     watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main)
 
-    return {
+    result = {
         'player': player,
         'bucket': b,
         'pl_main': pl_main,
@@ -766,3 +766,26 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
         # H-only position passthrough for display.
         'position_for_marginal': blend.get('position') if b == 'H' else None,
     }
+
+    # PR 5 follow-up: env-var gated decision logging.
+    # When PLV_LOG_DECISIONS=1, persist a DecisionRecord for each
+    # triangulate call so the settler/materializer can score verdicts
+    # downstream. Default OFF so existing test/CLI callers are unaffected.
+    # Safe-on-failure: a logging failure must NEVER crash triangulate.
+    if _os.environ.get("PLV_LOG_DECISIONS") == "1":
+        try:
+            from datetime import date as _date
+            from plv_clone.decisions.logger import (
+                from_triangulate_result as _from_tri,
+                log_decision as _log_dec,
+            )
+            _record = _from_tri(result, snapshot_date=_date.today())
+            _log_dec(_record)
+        except Exception as _exc:  # noqa: BLE001
+            import sys as _sys
+            print(
+                f"[triangulate_player] decision log failed: {_exc}",
+                file=_sys.stderr,
+            )
+
+    return result

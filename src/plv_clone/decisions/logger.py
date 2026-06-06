@@ -94,13 +94,22 @@ def _atomic_write_json(path: Path, payload: dict) -> None:
 
 
 def log_decision(
-    record: DecisionRecord, *, root: Path = DECISIONS_ROOT
+    record: DecisionRecord, *, root: Optional[Path] = None
 ) -> Path:
     """Persist a DecisionRecord to disk.
 
     Returns the written path:
         {root}/{snapshot_date}/{decision_id}.json
+
+    When `root` is None we look up `DECISIONS_ROOT` from the module at
+    call time. This lets tests monkeypatch the module-level
+    `DECISIONS_ROOT` to a tmp_path and have it take effect without
+    having to thread the path through every caller.
     """
+    if root is None:
+        # Re-resolve module-level attr so monkeypatching works.
+        import plv_clone.decisions.logger as _self
+        root = _self.DECISIONS_ROOT
     path = Path(root) / record.snapshot_date / f"{record.decision_id}.json"
     _atomic_write_json(path, asdict(record))
     return path

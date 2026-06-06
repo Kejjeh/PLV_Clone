@@ -16,6 +16,7 @@ Usage:
 """
 from __future__ import annotations
 import argparse
+import os
 import subprocess
 import sys
 import time
@@ -27,10 +28,17 @@ XFP_MODEL = ROOT / 'xfp-model'
 SCRIPTS = ROOT / 'scripts' / 'xfp'
 
 
-def run(label, cmd, cwd=None, timeout=900):
+def run(label, cmd, cwd=None, timeout=900, env=None):
+    """Run a subprocess. `env` is an optional dict of EXTRA env vars merged
+    on top of os.environ for THIS step only (scoped — does not leak)."""
     print(f'\n{"="*70}\n  {label}\n{"="*70}', flush=True)
     t0 = time.time()
-    result = subprocess.run(cmd, cwd=cwd or ROOT, shell=True, timeout=timeout)
+    proc_env = None
+    if env:
+        proc_env = {**os.environ, **env}
+    result = subprocess.run(
+        cmd, cwd=cwd or ROOT, shell=True, timeout=timeout, env=proc_env,
+    )
     elapsed = time.time() - t0
     if result.returncode != 0:
         print(f'  ⚠ {label} returned exit code {result.returncode} after {elapsed:.1f}s')
@@ -330,6 +338,20 @@ def main():
     )
     if not ok_pphist:
         print('  ⚠ player projection history append failed — continuing (non-gating)')
+
+    # 4.10a. Emit verdict-level decision records for the user's roster.
+    # Scoped env var `PLV_LOG_DECISIONS=1` activates the env-gated logging
+    # hook inside triangulate_player(). The var is scoped to THIS subprocess
+    # only (via run(env=...)) and does not leak to subsequent steps.
+    # Fail-soft — decision logging is observability only.
+    ok_dec_log = run(
+        '4.10a. Log roster decisions (PLV_LOG_DECISIONS=1)',
+        'python -X utf8 scripts/xfp/log_roster_decisions.py',
+        timeout=300,
+        env={'PLV_LOG_DECISIONS': '1'},
+    )
+    if not ok_dec_log:
+        print('  ⚠ roster decision logging failed — continuing (non-gating)')
 
     # 4.10b. Materialize the verdict-level decision log into a flat panel.
     # Walks data/research/decisions/ recursively, opportunistically settles
