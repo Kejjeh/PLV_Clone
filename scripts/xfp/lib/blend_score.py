@@ -1079,9 +1079,44 @@ def _compute_live_marginal_sp(
     out['best_fa_ros'] = best_ros
     out['live_marginal'] = float(target_ros) - best_ros
     out['live_value_tier'] = _live_value_tier_sp(out['live_marginal'])
+    # PR 6: SP floor — average ros of the worst 25% of FA SPs (highest
+    # implied rank, i.e. lowest ros). Surfaces the replacement-level
+    # baseline so callers can distinguish "above the best FA"
+    # (opportunity-cost lens) from "above the streamer floor"
+    # (replacement-level lens). See plan v11 Decision 8.
+    out['sp_floor_ros'] = _compute_sp_floor_ros(bucket)
+    if out['sp_floor_ros'] is not None:
+        out['sp_floor_marginal'] = float(target_ros) - float(out['sp_floor_ros'])
+    else:
+        out['sp_floor_marginal'] = None
     if age_hours > _LIVE_MARGINAL_FRESH_HOURS:
         out['live_marginal_note'] = f'snapshot_age_{age_hours:.1f}h_gt_24h_warn'
     return out
+
+
+def _compute_sp_floor_ros(bucket: 'pd.DataFrame') -> Optional[float]:
+    """Average ros of the bottom-25% of the FA SP bucket.
+
+    Plan v11 Decision 8: "SP floor field: rank column. Sort DESCENDING,
+    take TOP 25% (largest rank values = worst SPs)." The FA snapshot has
+    no rank column, so we derive equivalent ordering from `ros` ascending
+    (lowest ros = worst player = highest implied rank).
+
+    Returns None on empty/all-NaN bucket.
+    """
+    if bucket is None or bucket.empty or 'ros' not in bucket.columns:
+        return None
+    sub = bucket.dropna(subset=['ros']).copy()
+    n = len(sub)
+    if n == 0:
+        return None
+    cut = max(1, int(round(n * 0.25)))
+    # Bottom 25% = smallest ros values = "worst" / "highest rank".
+    bottom = sub.nsmallest(cut, 'ros')
+    try:
+        return float(bottom['ros'].mean())
+    except (TypeError, ValueError):
+        return None
 
 
 def _ros_h_for_mlbam(mlbam_id: int) -> tuple[Optional[float], Optional[str]]:
