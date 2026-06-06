@@ -1,0 +1,291 @@
+{
+  "date": "2026-06-06",
+  "test": "closer_il_bundle_joint",
+  "bundle_features": [
+    "is_team_prior_closer",
+    "prior_closer_returned_recently",
+    "prior_closer_days_since_return"
+  ],
+  "n_total_rows": 56305,
+  "n_eval": 34115,
+  "coverage": {
+    "is_team_prior_closer": 1.0,
+    "prior_closer_returned_recently": 1.0,
+    "prior_closer_days_since_return": 1.0
+  },
+  "baseline": {
+    "feats_n": 28,
+    "pooled_r": 0.8737,
+    "pooled_r2": 0.7634,
+    "pooled_mae": 32.12,
+    "per_year": {
+      "2019": {
+        "r": 0.8721,
+        "r2": 0.7606,
+        "mae": 33.87,
+        "n": 5913
+      },
+      "2021": {
+        "r": 0.8706,
+        "r2": 0.7579,
+        "mae": 33.18,
+        "n": 6030
+      },
+      "2022": {
+        "r": 0.8673,
+        "r2": 0.7522,
+        "mae": 31.62,
+        "n": 5705
+      },
+      "2023": {
+        "r": 0.8918,
+        "r2": 0.7953,
+        "mae": 29.58,
+        "n": 5344
+      },
+      "2024": {
+        "r": 0.8739,
+        "r2": 0.7637,
+        "mae": 30.57,
+        "n": 5526
+      },
+      "2025": {
+        "r": 0.8676,
+        "r2": 0.7527,
+        "mae": 33.6,
+        "n": 5597
+      }
+    }
+  },
+  "single_is_team_prior_closer": {
+    "feats_n": 29,
+    "pooled_r": 0.8741,
+    "pooled_r2": 0.7641,
+    "pooled_mae": 32.05,
+    "pooled_delta_r2_vs_base": 0.0007,
+    "per_year": {
+      "2019": {
+        "r": 0.8723,
+        "r2": 0.7608,
+        "mae": 33.85,
+        "n": 5913
+      },
+      "2021": {
+        "r": 0.8707,
+        "r2": 0.758,
+        "mae": 33.16,
+        "n": 6030
+      },
+      "2022": {
+        "r": 0.8689,
+        "r2": 0.7549,
+        "mae": 31.47,
+        "n": 5705
+      },
+      "2023": {
+        "r": 0.8925,
+        "r2": 0.7966,
+        "mae": 29.49,
+        "n": 5344
+      },
+      "2024": {
+        "r": 0.873,
+        "r2": 0.7622,
+        "mae": 30.61,
+        "n": 5526
+      },
+      "2025": {
+        "r": 0.8685,
+        "r2": 0.7542,
+        "mae": 33.43,
+        "n": 5597
+      }
+    }
+  },
+  "bundle": {
+    "feats_n": 31,
+    "pooled_r": 0.8741,
+    "pooled_r2": 0.764,
+    "pooled_mae": 32.07,
+    "per_year": {
+      "2019": {
+        "r": 0.8722,
+        "r2": 0.7607,
+        "mae": 33.89,
+        "n": 5913
+      },
+      "2021": {
+        "r": 0.8707,
+        "r2": 0.7581,
+        "mae": 33.14,
+        "n": 6030
+      },
+      "2022": {
+        "r": 0.869,
+        "r2": 0.7552,
+        "mae": 31.43,
+        "n": 5705
+      },
+      "2023": {
+        "r": 0.8927,
+        "r2": 0.7969,
+        "mae": 29.49,
+        "n": 5344
+      },
+      "2024": {
+        "r": 0.8723,
+        "r2": 0.761,
+        "mae": 30.74,
+        "n": 5526
+      },
+      "2025": {
+        "r": 0.8686,
+        "r2": 0.7544,
+        "mae": 33.41,
+        "n": 5597
+      }
+    }
+  },
+  "convergence": {
+    "positive_folds": 5,
+    "evaluated_folds": 6,
+    "per_year": {
+      "2019": {
+        "baseline_r": 0.8721,
+        "bundle_r": 0.8722,
+        "delta_r": 0.0001
+      },
+      "2021": {
+        "baseline_r": 0.8706,
+        "bundle_r": 0.8707,
+        "delta_r": 0.0001
+      },
+      "2022": {
+        "baseline_r": 0.8673,
+        "bundle_r": 0.869,
+        "delta_r": 0.0017
+      },
+      "2023": {
+        "baseline_r": 0.8918,
+        "bundle_r": 0.8927,
+        "delta_r": 0.0009
+      },
+      "2024": {
+        "baseline_r": 0.8739,
+        "bundle_r": 0.8723,
+        "delta_r": -0.0016
+      },
+      "2025": {
+        "baseline_r": 0.8676,
+        "bundle_r": 0.8686,
+        "delta_r": 0.001
+      }
+    }
+  },
+  "lift": {
+    "pooled_delta_r2": 0.0006,
+    "pooled_delta_mae": -0.05,
+    "bootstrap": {
+      "delta_r2_mean": 0.00061,
+      "ci_lo": 0.00019,
+      "ci_hi": 0.00102,
+      "p_two_sided": 0.0,
+      "n_boot": 200
+    }
+  },
+  "drop_tests": {
+    "is_team_prior_closer": {
+      "pooled_r2_without": 0.7634,
+      "incremental_r2": 0.0006
+    },
+    "prior_closer_returned_recently": {
+      "pooled_r2_without": 0.764,
+      "incremental_r2": 0.0
+    },
+    "prior_closer_days_since_return": {
+      "pooled_r2_without": 0.7641,
+      "incremental_r2": -0.0001
+    }
+  },
+  "gate": {
+    "pass_lift_ge_0.01": false,
+    "pass_conv_ge_5": true,
+    "pass_joint_p_lt_0.0056": true,
+    "gates_passed": 2
+  },
+  "verdict": "HOLD",
+  "canonical_rps": [
+    {
+      "name": "Tanner Scott",
+      "pitcher": 656945,
+      "team": "LAD",
+      "split_day": 72,
+      "is_team_prior_closer": 1,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 254.65,
+      "ros_bundle": 266.47,
+      "delta": 11.82
+    },
+    {
+      "name": "Jhoan Duran",
+      "pitcher": 661395,
+      "team": "PHI",
+      "split_day": 72,
+      "is_team_prior_closer": 1,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 319.38,
+      "ros_bundle": 327.74,
+      "delta": 8.35
+    },
+    {
+      "name": "Pete Fairbanks",
+      "pitcher": 664126,
+      "team": "MIA",
+      "split_day": 72,
+      "is_team_prior_closer": 0,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 213.03,
+      "ros_bundle": 205.99,
+      "delta": -7.04
+    },
+    {
+      "name": "Ryan Helsley",
+      "pitcher": 664854,
+      "team": "BAL",
+      "split_day": 72,
+      "is_team_prior_closer": 0,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 237.0,
+      "ros_bundle": 232.31,
+      "delta": -4.68
+    },
+    {
+      "name": "Adrian Morejon",
+      "pitcher": 670970,
+      "team": "SD",
+      "split_day": 72,
+      "is_team_prior_closer": 0,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 204.44,
+      "ros_bundle": 204.09,
+      "delta": -0.34
+    },
+    {
+      "name": "Daniel Palencia",
+      "pitcher": 694037,
+      "team": "CHC",
+      "split_day": 72,
+      "is_team_prior_closer": 1,
+      "prior_closer_returned_recently": 0,
+      "prior_closer_days_since_return": 999.0,
+      "ros_baseline": 161.91,
+      "ros_bundle": 174.02,
+      "delta": 12.11
+    }
+  ]
+}
