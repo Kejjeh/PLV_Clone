@@ -159,10 +159,33 @@ N healthy SPs → P starts/wk (X under/over cap)
 ### Do NOT cut
 - <any SP in top 8 by rp3> — under cap even with returns
 - Any SP with ≤2 weeks to IL return (could be activated after cut is absorbed)
+- **Any RP in a SAVE_PROMOTION_WINDOW or SETUP_CONSOLIDATION_WINDOW** (see RP-leverage cross-check below)
 
 ### FA SPs available as same-day replacements (if requested)
 (from /fa-sp-pool filtered to rp3 rank ≤ 80, not IL'd)
 ```
+
+---
+
+## RP-leverage cross-check (PR 7, Gate 0c)
+
+Before finalizing the cut list, run each candidate RP through
+`scripts/xfp/lib/rp_leverage_window.py::classify_rp_leverage_window` to
+detect role-transition signals that would make a drop catastrophic:
+
+- **SAVE_PROMOTION_WINDOW** — closer-transition signal. Recent 14d save
+  count ≥ 2 AND prior 14d had 0 saves. Dropping this RP gives away an
+  ~5 FP/g role swing. **NEVER cut a SAVE_PROMOTION_WINDOW player to
+  resolve an SP cap** unless they are clearly the worst RP and no
+  forced choice exists.
+- **SETUP_CONSOLIDATION_WINDOW** — recent 14d holds ≥ 4 with ≤ 1 save.
+  More tolerable to cut than SAVE_PROMOTION but still worth a flag —
+  preserve if any equivalent SP cut exists.
+
+The two windows are distinct on purpose (plan v11 Decision 7) — earlier
+heuristics conflated "high HLD" with "closer transition," masking the
+actual SV-event signal. The function priority is SAVE_PROMOTION wins
+ties, matching the BrownU value impact.
 
 ---
 
