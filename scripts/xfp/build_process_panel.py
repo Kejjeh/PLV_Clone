@@ -146,7 +146,19 @@ def _merge_windows_sp(
     std: pd.DataFrame,
     pyr: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Outer-join the three SP windows on pitcher with per-window suffixes."""
+    """Outer-join the three SP windows on pitcher with per-window suffixes,
+    then filter to the CURRENT-YEAR universe.
+
+    Without the filter, the outer join brings in any pitcher with a
+    prior-year row even when they have no current-year activity (retired
+    in 2025, called up but not pitched in 2026, etc.). Those rows are
+    name-less downstream (Statcast name-map is current-year-only) and
+    composite=0.0 from the fillna in _annotate_sp_composite — exactly
+    the dashboard-pollution failure mode caught in the 2026-06-06
+    review.
+
+    Current-year activity = `pitches_std > 0` OR `pitches_last30 > 0`.
+    """
     def _rename(df: pd.DataFrame, sfx: str) -> pd.DataFrame:
         return df.rename(columns={c: f'{c}{sfx}' for c in df.columns if c != 'pitcher'})
 
@@ -155,6 +167,12 @@ def _merge_windows_sp(
     pyrr = _rename(pyr, '_prioryr')
 
     out = stdr.merge(l30r, on='pitcher', how='outer').merge(pyrr, on='pitcher', how='outer')
+
+    # Drop prior-year-only rows.
+    if 'pitches_std' in out.columns or 'pitches_last30' in out.columns:
+        std_active = out.get('pitches_std', pd.Series(0, index=out.index)).fillna(0) > 0
+        l30_active = out.get('pitches_last30', pd.Series(0, index=out.index)).fillna(0) > 0
+        out = out.loc[std_active | l30_active].copy()
     return out
 
 
@@ -175,8 +193,10 @@ def _annotate_sp_composite(panel: pd.DataFrame) -> pd.DataFrame:
         if prior_col not in panel.columns:
             panel[prior_col] = np.nan
 
-        # Population spread anchored on season-to-date.
-        sd_pop = panel[std_col].std()
+        # Population SD anchored on season-to-date. ddof=0 -> divides by N,
+        # matching the "sd_pop" variable name. Prior `.std()` defaulted to
+        # ddof=1 (sample SD) which subtly inflated z-scores when N is small.
+        sd_pop = panel[std_col].std(ddof=0)
         if pd.isna(sd_pop) or sd_pop == 0:
             sd_pop = 1.0
         d_trend = panel[l30_col] - panel[std_col]
@@ -185,9 +205,16 @@ def _annotate_sp_composite(panel: pd.DataFrame) -> pd.DataFrame:
         panel[f'z_trend_{m}'] = d_trend / sd_pop * sign
         panel[f'z_base_{m}'] = d_base / sd_pop * sign
 
-    panel['TREND_z'] = panel[[f'z_trend_{m}' for m in SP_MARKERS]].sum(axis=1, skipna=True)
-    panel['BASE_z'] = panel[[f'z_base_{m}' for m in SP_MARKERS]].sum(axis=1, skipna=True)
-    panel['composite'] = 0.6 * panel['TREND_z'].fillna(0.0) + 0.4 * panel['BASE_z'].fillna(0.0)
+    # min_count=1 so a row with NO z values across markers stays NaN
+    # rather than collapsing to 0.0 (which would silently rank a
+    # data-empty pitcher next to a genuine "no change from baseline").
+    panel['TREND_z'] = panel[[f'z_trend_{m}' for m in SP_MARKERS]].sum(
+        axis=1, skipna=True, min_count=1,
+    )
+    panel['BASE_z'] = panel[[f'z_base_{m}' for m in SP_MARKERS]].sum(
+        axis=1, skipna=True, min_count=1,
+    )
+    panel['composite'] = 0.6 * panel['TREND_z'] + 0.4 * panel['BASE_z']
     return panel
 
 
@@ -254,7 +281,15 @@ def build_hitter_panel(as_of: date) -> pd.DataFrame:
     z-scores + composite + level percentile.
     """
     csv_path = CACHE / f'batter_rolling_features_{as_of.isoformat()}.csv'
-    if not csv_path.exists():
+    # Cache freshness: rebuild if cache is older than the as-of date OR
+    # if the cache file is older than today. Same-day reuse is still fine
+    # for incremental panel runs within one session.
+    needs_build = True
+    if csv_path.exists():
+        cache_mtime = datetime.fromtimestamp(csv_path.stat().st_mtime).date()
+        if cache_mtime >= as_of:
+            needs_build = False
+    if needs_build:
         builder = ROOT / 'scripts' / 'xfp' / 'build_batter_rolling_features.py'
         print(f'[build_process_panel] invoking hitter builder --as-of {as_of}', flush=True)
         r = subprocess.run(
@@ -282,7 +317,7 @@ def build_hitter_panel(as_of: date) -> pd.DataFrame:
         std_col = f'{m}_std'
         l30_col = f'{m}_last30'
         prior_col = f'{m}_prioryr'
-        sd_pop = panel[std_col].std()
+        sd_pop = panel[std_col].std(ddof=0)
         if pd.isna(sd_pop) or sd_pop == 0:
             sd_pop = 1.0
         d_trend = panel[l30_col] - panel[std_col]
@@ -291,9 +326,13 @@ def build_hitter_panel(as_of: date) -> pd.DataFrame:
         panel[f'z_trend_{m}'] = d_trend / sd_pop * sign
         panel[f'z_base_{m}'] = d_base / sd_pop * sign
 
-    panel['TREND_z'] = panel[[f'z_trend_{m}' for m in HITTER_MARKERS]].sum(axis=1, skipna=True)
-    panel['BASE_z'] = panel[[f'z_base_{m}' for m in HITTER_MARKERS]].sum(axis=1, skipna=True)
-    panel['composite'] = 0.6 * panel['TREND_z'].fillna(0.0) + 0.4 * panel['BASE_z'].fillna(0.0)
+    panel['TREND_z'] = panel[[f'z_trend_{m}' for m in HITTER_MARKERS]].sum(
+        axis=1, skipna=True, min_count=1,
+    )
+    panel['BASE_z'] = panel[[f'z_base_{m}' for m in HITTER_MARKERS]].sum(
+        axis=1, skipna=True, min_count=1,
+    )
+    panel['composite'] = 0.6 * panel['TREND_z'] + 0.4 * panel['BASE_z']
 
     for m in HITTER_MARKERS:
         col = f'{m}_last30'
@@ -327,6 +366,12 @@ def build_hitter_panel(as_of: date) -> pd.DataFrame:
             panel = panel.merge(rh3_sub, on='batter', how='left')
 
     panel['as_of'] = as_of.isoformat()
+    # Drop the rolling-features build timestamp before writing to the
+    # tracked production panel — `built_at` reflects when the cache was
+    # built, not the panel's as-of date, and would otherwise produce
+    # non-reproducible output across same-day rebuilds.
+    if 'built_at' in panel.columns:
+        panel = panel.drop(columns=['built_at'])
     return panel
 
 
