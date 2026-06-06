@@ -49,6 +49,15 @@ COUNTING_DIR = ROOT / 'data' / 'research' / 'xfp_cache'
 MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_rprs2_pipeline.pkl'
 PROJ_CSV  = ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv'
 
+# Per-rebuild coefficient dump dir. Diagnostic only — never wire into
+# downstream consumers. Supports per-feature audits (e.g., cohort-shift
+# analysis in rprs2_audit_phase0_REAUDIT_2026-06-05.md, which couldn't
+# fully reproduce read-only because fitted pipelines weren't persisted).
+COEF_DIR = ROOT / 'data' / 'research' / 'model_coefficients'
+_HLD_WEIGHT = 2  # BrownU RP scoring: SV*5 + HLD*2
+
+# 2020 COVID-shortened season is excluded from TRAIN_YEARS by construction.
+
 TARGET = 'fp_year_total'
 EVAL_G_MIN = 5
 TRAIN_YEARS = [2019, 2021, 2022, 2023, 2024, 2025]
@@ -79,7 +88,49 @@ with warnings.catch_warnings():
     _check_feats_validated(FEATS_RPRS2, target="rprs2", strict=True)
 
 
-def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None):
+def _dump_coefs(pipe, feats: list[str], fit_type: str, n_train: int,
+                is_latest: bool = False) -> None:
+    """Persist standardized ridge coefficients for diagnostic per-feature audits.
+
+    Atomic write (temp + rename). NaN-safe — skips dump if any coef is NaN.
+    Never read by downstream consumers; pure diagnostic artifact.
+    """
+    try:
+        ridge = pipe.named_steps['r']
+        coefs = np.asarray(ridge.coef_, dtype=float)
+        intercept = float(ridge.intercept_)
+        if not np.all(np.isfinite(coefs)) or not np.isfinite(intercept):
+            print(f'  [dump_coefs] skip {fit_type}: non-finite coef/intercept')
+            return
+        from datetime import datetime as _dt
+        ts = _dt.now()
+        payload = {
+            'fit_timestamp': ts.isoformat(timespec='seconds'),
+            'fit_type': fit_type,
+            'hld_weight': _HLD_WEIGHT,
+            'intercept': intercept,
+            'features': list(feats),
+            'coefficients': coefs.tolist(),
+            'n_train_rows': int(n_train),
+            'target_col': TARGET,
+        }
+        COEF_DIR.mkdir(parents=True, exist_ok=True)
+        stamp = ts.strftime('%Y-%m-%d-%H%M')
+        dated = COEF_DIR / f'rprs2_coefs_{stamp}_{fit_type}.json'
+        tmp = dated.with_suffix('.json.tmp')
+        tmp.write_text(json.dumps(payload, indent=2))
+        tmp.replace(dated)
+        if is_latest:
+            latest = COEF_DIR / 'rprs2_coefs_latest.json'
+            tmp2 = latest.with_suffix('.json.tmp')
+            tmp2.write_text(json.dumps(payload, indent=2))
+            tmp2.replace(latest)
+    except Exception as e:
+        print(f'  [dump_coefs] error {fit_type}: {e}')
+
+
+def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None,
+                    dump_coefs_tag: str | None = None):
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
     from sklearn.linear_model import RidgeCV
@@ -94,6 +145,9 @@ def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None):
         pipe = Pipeline([('sc', StandardScaler()),
                          ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
         pipe.fit(train[feats].values, train[TARGET].values)
+        if dump_coefs_tag is not None:
+            _dump_coefs(pipe, feats, fit_type=f'{dump_coefs_tag}_loo_year_{held}',
+                        n_train=len(train), is_latest=False)
         preds = pipe.predict(test[feats].values)
         r = float(np.corrcoef(preds, test[TARGET].values)[0, 1])
         mae = float(np.mean(np.abs(preds - test[TARGET].values)))
@@ -180,7 +234,7 @@ def main():
 
     # RP-RS2: BASE + NEW
     print('\n--- RP-RS2 (BASE + role-usage features) ---')
-    per_year, overall = cross_year_eval(rolling, FEATS_RPRS2)
+    per_year, overall = cross_year_eval(rolling, FEATS_RPRS2, dump_coefs_tag='rprs2')
     _per, overall_rc = cross_year_eval(rolling, FEATS_RPRS2, subset_mask=rc_mask)
     for y, m in sorted(per_year.items()):
         print(f'  {y}: r={m["r"]:.4f}  mae={m["mae"]:.2f}  n={m["n"]}')
@@ -210,6 +264,8 @@ def main():
     # Residual CI + final train
     ci_table, overall_sigma = fit_residual_ci(rolling, FEATS_RPRS2)
     pipe, n_train = train_final(rolling, FEATS_RPRS2)
+    # Persist final-fit coefficients (diagnostic; latest pointer).
+    _dump_coefs(pipe, FEATS_RPRS2, fit_type='full_fit', n_train=n_train, is_latest=True)
     coefs = pipe.named_steps['r'].coef_
     print(f'\n--- Final RP-RS2 (n={n_train}, alpha={pipe.named_steps["r"].alpha_:.1f}, '
           f'{len(FEATS_RPRS2)} features) ---')
