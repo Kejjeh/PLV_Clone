@@ -541,10 +541,171 @@ downgrade despite hot recent line.
 Tier 5 (PL ranks) alone is NEVER reason to add. PL agreement amplifies
 a model BUY; PL disagreement alone doesn't beat the model.
 
+### CRITICAL — Decision-horizon-aware reweighting (added 2026-06-06 after Cameron mis-call)
+
+**The above weights are calibrated for ROS / multi-start decisions.** For
+a one-shot single-start streamer pickup, the framework shifts:
+
+- **Blended xFP loses weight** when its conservatism is anchored on
+  `shadow_*_prior` or `traj_career_low_prior` (i.e. prior-season process
+  tail risk that compounds across many starts but doesn't bind a single
+  game). Check `marcel_baseline` vs `data_driven_estimate` — if they
+  disagree by >2 FP, the blend may be over-penalizing.
+- **boom_mean_fp_expected (from boom_stack JSON) becomes the central
+  tendency for THIS start**, not the RoS-anchored Blended xFP. Use this
+  when comparing FAs for a single-start pickup; use Blended xFP when
+  comparing for a hold-the-roster-spot decision.
+- **rp3_per_start_sched** (schedule-adjusted rp3) is the most direct
+  single-start estimate when boom_stack is unavailable.
+- **Recent inflection check**: pull last 4-6 MLB game logs via
+  `https://statsapi.mlb.com/api/v1/people/<MLBAM>/stats?stats=gameLog&group=pitching&season=2026`
+  and compute BrownU FP per start (`K + IP*3.3 - H - 2*ER - BB - HBP`).
+  If the L4 average is materially above season per_start, the boom
+  layer's `recform_hot` signal is corroborated and the prior-process
+  drag in Blended xFP should be down-weighted for the one-start
+  decision.
+
+### Single-start vs RoS framework — concrete rule
+
+| Decision type | Primary headline | Secondary | Tertiary |
+|---|---|---|---|
+| **Add for the roster (RoS)** | Blended xFP (Tier 1, 50%) | live_marginal value_tier | rp3 RoS |
+| **One-shot streamer (single start)** | rp3_per_start_sched OR boom_mean_fp_expected (whichever is more recent / corroborated) | boom_stack tier-amp lift | recent 4-start actual FP/start |
+
+Canonical case (Cameron 6/7/26): Blended xFP 6.89 (Tier 1) said skip
+because prior-season velo 10th-pct + traj_career_low_prior dragged the
+blend; boom_mean_fp_expected 10.6 + rp3 schedule-adj 10.51 + L4 actual
+18.55 said legitimate single-start play. For a one-shot streamer pickup
+the correct call was BUY despite the low Blended xFP.
+
+### CRITICAL — Tag verification rule (added 2026-06-06 after Cameron mis-call)
+
+**NEVER render an emoji tag without verifying the boolean in the
+boom_stack JSON.** I shipped a slate with `🔥 HIGH-K` on Cameron when
+his z-score was +0.28 (below the +0.5 threshold). The validated tags
+fire only on the documented thresholds:
+
+```python
+def boom_tags(candidate: dict) -> str:
+    """Build the tag string from the boom_stack JSON candidate.
+
+    Reads BOOLEAN fields, not heuristics. Never emit an emoji unless
+    the corresponding is_* flag is True.
+    """
+    sot = candidate.get('season_only_tags', {})
+    parts = []
+    if sot.get('high_k_pitcher', {}).get('is_high_k'):     # z >= +0.5
+        parts.append('🔥')
+    if sot.get('catcher_framing', {}).get('is_elite_framer'):  # Q5
+        parts.append('🧊')
+    if sot.get('catcher_framing', {}).get('is_framing_tax'):   # Q1
+        parts.append('⚠F')
+    if sot.get('il_return', {}).get('is_first_back_long_il'):  # >=30d
+        parts.append('🚩')
+    if candidate.get('skill_spike_anti_predictive'):  # SP2/3 + Backend only
+        parts.append('⚠AP')
+    return ''.join(parts)
+```
+
+**Reason check**: every JSON section has a `reason` field explaining
+why a tag does/doesn't fire (`z=0.28_below_threshold`,
+`gap_5d_below_threshold`, etc.). Surface the reason in the deep-dive
+table when the user pushes back on a recommendation.
+
+### CRITICAL — skill_spike anti-predictive is TIER-DEPENDENT
+
+The skill_spike + BB-drop pattern is NOT universally bearish:
+
+| Tier | skill_spike lift | Interpretation |
+|---|---|---|
+| ace (rank 1-10) | **+3.1 pp** | K-spike confirms ace stuff |
+| sp2_sp3 (11-30) | **−3.4 pp** | Regression incoming — the K-spike is a peak the pitcher will lose |
+| backend (31-50) | **−4.1 pp** | Same — anti-predictive |
+| **streamer (51+)** | **+2.7 pp** | Continuation more likely than regression |
+
+**`skill_spike_anti_predictive` only fires True when tier IN {sp2_sp3,
+backend}.** At streamer or ace tier, the K-spike is a legit positive
+signal. When walking through a Cameron-style "streamer with K-spike",
+do NOT treat the skill_spike as a warning.
+
 ---
+
+## Drop-target rule (added 2026-06-06 after Messick mis-call)
+
+**When recommending an FA pickup that requires a drop**, you MUST first
+rank the user's full SP staff by Blended xFP before naming a drop target.
+
+The canonical failure (2026-06-06): I recommended dropping Parker Messick
+to add Roki Sasaki, calling Messick "no rp3 row, rookie callup, no
+validated signal." Messick actually had:
+
+- rp3 **#63** per_start 10.68
+- Blended xFP **14.68 [8.49-19.74] HIGH confidence** — the HIGHEST on the
+  user's roster
+- Archetype PURE_MOVEMENT OVERALL **65**, K% **28.2%**, BB% 6.4%
+- HIGH-K verified (z=0.93)
+- 13 MLB starts (data_driven_full)
+
+The error: he wasn't on the 6/6-6/7 slate (last start 6/5), so my
+slate-grid query never joined his row. I extrapolated "not in this
+window" → "no data" without checking the underlying files directly.
+
+### Rule
+
+Before naming ANY drop target:
+
+```python
+# 1. Pull user's roster
+from app.espn_connector import get_my_roster_with_injuries
+roster = get_my_roster_with_injuries()
+my_sps = roster[roster['position']=='SP']
+
+# 2. Join rp3 + blend by MLBAM via Last,First flip on name
+rp3 = pd.read_csv('data/outputs/xfp_rp3_projections.csv')
+blend = pd.read_csv('data/outputs/live_blend_xfp_latest.csv')
+# ... build {name: blended_xfp} for each rostered SP ...
+
+# 3. Rank staff descending. Drop candidates start at the BOTTOM.
+# Never name a drop target without showing the proposed drop's
+# Blended xFP next to the FA add's Blended xFP.
+```
+
+### Synthesis output requirement
+
+Any drop/add recommendation table MUST include:
+
+```
+| What you give up (drop) | Blended xFP | What you gain (add) | Blended xFP |
+```
+
+When the drop's Blended xFP > add's Blended xFP, STOP and re-evaluate
+before recommending the swap. Either pick a different drop or
+acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
+"streamer rental for this week's 10th cap start").
 
 ## Anti-patterns this skill exists to prevent
 
+- **Calling a rostered player "no data" because they're not on the
+  slate's date window.** Slate-grid only joins data for pitchers IN the
+  target probables. A rostered SP not pitching that day is invisible to
+  the slate join but is FULLY PRESENT in rp3 + blend + sp_master +
+  process_panel + boom_stack JSON. Always query by MLBAM directly.
+- **Recommending a drop without ranking the user's full SP staff by
+  Blended xFP first.** Canonical Messick failure 2026-06-06.
+- **Pattern-matching "rookie callup" → "no validated signal".** Rookies
+  with 10+ MLB starts have data_driven_full rp3 rows. Always check.
+- **Rendering an emoji tag without verifying the boolean field in the
+  JSON.** Canonical bug 2026-06-06: I tagged Cameron `🔥 HIGH-K` while
+  his `is_high_k: false, reason: "z=0.28_below_threshold"`. Always read
+  the boolean, never infer the tag from per_start or recent K count.
+- **Applying the RoS-calibrated Tier 1 weighting to a single-start
+  decision.** Blended xFP's conservatism comes from `shadow_*_prior` +
+  `traj_career_low_prior` tail risk that compounds across N starts.
+  For one start, use `boom_mean_fp_expected` or `rp3_per_start_sched`
+  as the central tendency.
+- **Treating skill_spike as a universal regression warning.** It's
+  bearish ONLY at sp2_sp3 + backend tiers. At streamer + ace tiers it
+  CONFIRMS a real K-rate development.
 - **Joining by name** when ESPN's `playerId` is NOT MLBAM. The MLB Stats
   API hydrate returns MLBAM as `probablePitcher.id` — use THAT for all
   model joins. Name joins silently fail for "Last, First" SP master vs
