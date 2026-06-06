@@ -331,6 +331,22 @@ def main():
     if not ok_pphist:
         print('  ⚠ player projection history append failed — continuing (non-gating)')
 
+    # 4.10b. Materialize the verdict-level decision log into a flat panel.
+    # Walks data/research/decisions/ recursively, opportunistically settles
+    # hitter decisions whose 21d window has elapsed (using statcast_{yr}.parquet),
+    # and writes data/outputs/decisions_panel.csv. SP/RP settlement is not
+    # implemented in this driver yet (see scripts/xfp/materialize_decisions.py).
+    # NOTE: plan v11 called this "step 0.65 right after step 0.6"; the actual
+    # projection-history persistence runs at step 4.10 (not 0.6), so we wire
+    # immediately after 4.10 here. Fail-soft — panel is observability only.
+    ok_decisions = run(
+        '4.10b. Materialize decisions panel',
+        'python -X utf8 scripts/xfp/materialize_decisions.py',
+        timeout=120,
+    )
+    if not ok_decisions:
+        print('  ⚠ decisions panel build failed — continuing (non-gating)')
+
     if not args.no_push:
         if not ok_profiles:
             print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
