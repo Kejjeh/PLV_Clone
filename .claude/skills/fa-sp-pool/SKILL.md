@@ -269,7 +269,11 @@ top-M are clear holds.**
 - **Treating "high season FP" as "PL likes them"**. Many high-FP
   arms (Wacha, Vásquez, McGreevy at the top of the FA-by-FP list)
   are mid-T6/T8/T9 in PL — counting-stats accumulated by volume,
-  not skill. The PL cross-reference is the quality filter.
+  not skill. The PL cross-reference is the quality filter. **Also cross-ref
+  the validated FanGraphs Stuff+ board (`/sp-stuff-board`)** — it flags
+  buy-low FA SPs whose elite stuff leads their results (canonical: Eury Pérez,
+  Aaron Nola) before the box score catches up, and `/sp-floor` ranks the
+  pool by bust risk (K−BB%) for floor-aware adds.
 - **Skipping the "user's staff vs FA" comparison.** Without it,
   recommending an FA add is meaningless — you don't know if it's
   an actual upgrade vs a sidegrade.

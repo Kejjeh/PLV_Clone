@@ -430,6 +430,12 @@ hand off to:
 - `/hitter-sustainability` — sweep-mode equivalent across roster / FA pool
 - `/pitcher-sustainability` — SP analog with 9-marker Statcast decomp
   (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact)
+- `/sp-floor` — the PREDICTIVE floor companion to this skill's MEASURED
+  variance. boom-bust shows the bust% a SP HAS posted (retrospective);
+  `/sp-floor` predicts P(next start busts) from K−BB% (validated 2026-06-06).
+  When measured bust (here) ≫ predicted floor, the gap is shape/contact the
+  command model can't see (canonical: Soriano measured 38% vs predicted 22% —
+  flat-ride sinker). Use both for SP bench/drop calls.
 
 ## Synthesis output template (REQUIRED — uses lens merge protocol)
 

@@ -212,6 +212,15 @@ SP at top.
 
 ---
 
+## Companion SP skills
+
+- `/sp-stuff-board` — validated FanGraphs Stuff+ RoS-FP projection (the MEAN;
+  who to roster). Stuff+→rp3 Rule-9 PASS 2026-06-06 (+0.0095).
+- `/sp-floor` — per-start bust probability (the FLOOR; who to start under the
+  cap), driven by K−BB%. Use this skill (sustainability) to resolve the OUTLIER
+  case: when `/sp-floor` predicted bust ≪ measured bust, the 9-marker decomp
+  here shows whether it's shape/contact (HardHit/Barrel/xwOBAcon) vs command.
+
 ## When NOT to use this skill
 
 - For RPs — out of scope (cached data is SP-focused)
