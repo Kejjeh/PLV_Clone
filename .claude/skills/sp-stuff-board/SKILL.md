@@ -66,6 +66,10 @@ Re-pull weekly. Historical training snapshots live in `data/research/fg_asof/`.
 - **Single-lens by design** — Stuff+ only. It ignores rp3, archetype, injury, role,
   and the 10-SP-cap. Use it as a FILTER that feeds `/triangulate` or
   `/fa-pickup-deep-dive` for a final verdict, NOT as the verdict itself.
+- **Stuff+ is the MEAN, not the floor.** It predicts who scores most RoS (via velo),
+  NOT who avoids dud starts. For "which start do I bench / avoid bad days," use
+  `/sp-floor` (bust-risk, driven by K−BB% not stuff) — a low-Stuff+/high-command
+  arm (Messick) can be your highest-FLOOR start. Don't bench on Stuff+ for floor.
 - **Verify ownership before acting** — tagging is name-matched (minor SP collision
   risk); confirm FA availability live (`get_all_teams()`, the Connelly-Early rule).
 - **Don't penalize bad location.** If you're tempted to fade a high-Stuff+ arm for

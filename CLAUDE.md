@@ -303,6 +303,15 @@ the printed full-log path when the summary doesn't have enough detail.
   7th-pct Loc+, still a BUY). Single-lens — feed picks into `/triangulate`.
   Engine `scripts/xfp/sp_stuff_model.py`. Companion decline monitor:
   `scripts/xfp/sp_stuff_alert.py` (rolling velo/whiff drop, NOT a ranker).
+- `/sp-floor` — SP FLOOR / bust-risk board: P(start busts, <5 FP) — the
+  "avoid bad days" lens (Stuff+ = mean, this = downside). Validated
+  2026-06-06 (`sp_floor_model_2026-06-06.md`): the floor is **K−BB%**, not
+  stuff (season model: K% −6.3pp bust/SD dominant, BB% +2.5, barrel% +1.5,
+  GB%/stuff ~0). Per-start AUC 0.601 — modest/calibrated, riskiest quintile
+  busts 2.1× the safest. Tiers SAFE/MODERATE/RISKY; bench-priority tilt, NOT a
+  game predictor. ~85% command so needs no live matchup. Engine
+  `scripts/xfp/sp_floor_model.py`. Cross-check outliers (measured≫predicted
+  bust = shape/contact, e.g. Soriano) via `/pitcher-sustainability`.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
