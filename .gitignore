@@ -84,6 +84,10 @@ data/research/triangulate_universe/
 # Research archive — historical snapshots, local-only (see _archive/README.md)
 data/research/_archive/
 
+# Intermediate backtest cache dirs (e.g. _cache_il_censor/, _cache_survivorship/)
+# Created by scripts/_oneoff/ research scripts; pure noise for repo tracking.
+data/research/_cache_*/
+
 # Exploratory scratch (underscore-prefixed scripts + their outputs)
 scripts/_*.py
 data/outputs/_*

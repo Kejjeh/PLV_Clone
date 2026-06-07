@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-07_bo_bichette_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_HACKER",
+    "archetype_overall": 53,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.499041699978731,
+    "live_marginal": 32.39999999999998,
+    "model_rank": 49,
+    "override_tag": null,
+    "pl_rank": 103,
+    "proj_per": 1.99,
+    "replacement_delta": null
+  },
+  "mlbam_id": 666182,
+  "player_name": "Bo Bichette",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-07",
+  "verdict_top": "MIXED"
+}

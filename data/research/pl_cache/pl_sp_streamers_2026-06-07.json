@@ -1,0 +1,132 @@
+{
+  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-6-6-6-7-6-8/",
+  "fetched": "2026-06-06",
+  "date_covered": "2026-06-07",
+  "covers_dates": [
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-08"
+  ],
+  "ranks": {
+    "Cam Schlittler": {
+      "rank": 1,
+      "tier": "AUTO",
+      "opp": "vs BOS"
+    },
+    "Jacob deGrom": {
+      "rank": 2,
+      "tier": "AUTO",
+      "opp": "vs CLE"
+    },
+    "Kevin Gausman": {
+      "rank": 3,
+      "tier": "AUTO",
+      "opp": "vs BAL"
+    },
+    "Emmet Sheehan": {
+      "rank": 4,
+      "tier": "PROBABLY",
+      "opp": "vs LAA"
+    },
+    "Michael Soroka": {
+      "rank": 5,
+      "tier": "PROBABLY",
+      "opp": "vs WSH"
+    },
+    "Cade Cavalli": {
+      "rank": 7,
+      "tier": "PROBABLY",
+      "opp": "@ AZ"
+    },
+    "Connelly Early": {
+      "rank": 8,
+      "tier": "PROBABLY",
+      "opp": "@ NYY"
+    },
+    "Bryce Elder": {
+      "rank": 9,
+      "tier": "PROBABLY",
+      "opp": "vs PIT"
+    },
+    "Randy Vasquez": {
+      "rank": 10,
+      "tier": "QUESTIONABLE",
+      "opp": "vs NYM"
+    },
+    "Noah Cameron": {
+      "rank": 11,
+      "tier": "QUESTIONABLE",
+      "opp": "@ MIN"
+    },
+    "Gage Jump": {
+      "rank": 12,
+      "tier": "QUESTIONABLE",
+      "opp": "@ HOU"
+    },
+    "Sandy Alcantara": {
+      "rank": 13,
+      "tier": "QUESTIONABLE",
+      "opp": "vs TB"
+    },
+    "Jose Soriano": {
+      "rank": 14,
+      "tier": "QUESTIONABLE",
+      "opp": "@ LAD"
+    },
+    "Aaron Nola": {
+      "rank": 15,
+      "tier": "QUESTIONABLE",
+      "opp": "vs CWS"
+    },
+    "Shane Baz": {
+      "rank": 16,
+      "tier": "QUESTIONABLE",
+      "opp": "@ TOR"
+    },
+    "Joey Cantillo": {
+      "rank": 18,
+      "tier": "QUESTIONABLE",
+      "opp": "@ TEX"
+    },
+    "David Sandlin": {
+      "rank": 20,
+      "tier": "DO_NOT",
+      "opp": "@ PHI"
+    },
+    "Trevor McDonald": {
+      "rank": 21,
+      "tier": "DO_NOT",
+      "opp": "@ CHC"
+    },
+    "Jack Flaherty": {
+      "rank": 22,
+      "tier": "DO_NOT",
+      "opp": "vs SEA"
+    },
+    "Jameson Taillon": {
+      "rank": 23,
+      "tier": "DO_NOT",
+      "opp": "vs SF"
+    },
+    "Luis Castillo": {
+      "rank": 24,
+      "tier": "DO_NOT",
+      "opp": "@ DET"
+    },
+    "Bubba Chandler": {
+      "rank": 26,
+      "tier": "DO_NOT",
+      "opp": "@ ATL"
+    },
+    "Mike Burrows": {
+      "rank": 27,
+      "tier": "DO_NOT",
+      "opp": "vs ATH"
+    },
+    "Shane Drohan": {
+      "rank": 28,
+      "tier": "DO_NOT",
+      "opp": "@ COL"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-07_salvador_perez_H_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_HITTER",
+    "archetype_overall": 49,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 2.5684122438002355,
+    "live_marginal": -14.900000000000006,
+    "model_rank": 178,
+    "override_tag": null,
+    "pl_rank": 70,
+    "proj_per": 1.64,
+    "replacement_delta": null
+  },
+  "mlbam_id": 521692,
+  "player_name": "Salvador Perez",
+  "reason_tag": "pl_outcome_chase",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-07",
+  "verdict_top": "FADE"
+}

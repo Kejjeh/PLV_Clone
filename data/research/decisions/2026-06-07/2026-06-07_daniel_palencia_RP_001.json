@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-07_daniel_palencia_RP_001",
+  "inputs": {
+    "archetype_label": "GENERIC_MIDDLE",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 3.896426824517168,
+    "live_marginal": -26.0,
+    "model_rank": 100,
+    "override_tag": null,
+    "pl_rank": 20,
+    "proj_per": 108.1,
+    "replacement_delta": -52.5
+  },
+  "mlbam_id": 694037,
+  "player_name": "Daniel Palencia",
+  "reason_tag": "archetype_breakout",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-07",
+  "verdict_top": "BUY"
+}

@@ -1,0 +1,1100 @@
+{
+  "summary": {
+    "window_start": "2026-06-07",
+    "window_end": "2026-06-09",
+    "n_probables_total": 64,
+    "n_fa_sps_in_league": 450,
+    "n_fa_sps_resolved_mlbam": 199,
+    "n_fa_sp_starts_in_window": 24,
+    "boom_stack_distribution": {
+      "0": 11,
+      "1": 8,
+      "2": 5,
+      "3": 0,
+      "none": 0
+    }
+  },
+  "candidates": [
+    {
+      "pitcher_id": 605400,
+      "pitcher_name": "Aaron Nola",
+      "team": "PHI",
+      "opp_team": "CWS",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 64,
+      "rp3_per_start": 10.6414665517004,
+      "rp3_p25": 5.0001338747853445,
+      "rp3_p75": 16.282799228615456,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 4.842,
+      "opp_bat_index_recent": 1.0553,
+      "matchup_tier": "tough",
+      "boom_stack": 2,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -0.85,
+          "delta_bb_pp": -1.94,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 4.84
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0553,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
+      "percent_owned": 46.58,
+      "pro_team": "Phi",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 622491,
+      "pitcher_name": "Luis Castillo",
+      "team": "SEA",
+      "opp_team": "DET",
+      "is_home": false,
+      "game_date": "2026-06-07",
+      "rp3_rank": 65,
+      "rp3_per_start": 10.602172678230618,
+      "rp3_p25": 4.960840001315562,
+      "rp3_p75": 16.243505355145672,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 9.72,
+      "opp_bat_index_recent": 0.9219,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 1,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": 5.47,
+          "delta_bb_pp": 1.24,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 9.72
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9219,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
+      "percent_owned": 56.98,
+      "pro_team": "Sea",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 671096,
+      "pitcher_name": "Andrew Abbott",
+      "team": "CIN",
+      "opp_team": "SD",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 169,
+      "rp3_per_start": 8.66546792923904,
+      "rp3_p25": 3.1755210758315,
+      "rp3_p75": 14.15541478264658,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 1.982,
+      "opp_bat_index_recent": 0.9591,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 1,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 13,
+          "delta_k_pp": 0.61,
+          "delta_bb_pp": -0.06,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 1.98
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9591,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
+      "percent_owned": 45.05,
+      "pro_team": "Cin",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 677944,
+      "pitcher_name": "Slade Cecconi",
+      "team": "CLE",
+      "opp_team": "NYY",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 173,
+      "rp3_per_start": 8.56923570862426,
+      "rp3_p25": 2.4619097060920696,
+      "rp3_p75": 14.676561711156452,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 3.423,
+      "opp_bat_index_recent": 1.0136,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
+      "boom_components": {
+        "skill_spike": 1,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 13,
+          "delta_k_pp": 3.13,
+          "delta_bb_pp": -2.47,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 3.42
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0136,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
+      "percent_owned": 1.7,
+      "pro_team": "Cle",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 621111,
+      "pitcher_name": "Walker Buehler",
+      "team": "SD",
+      "opp_team": "CIN",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 219,
+      "rp3_per_start": 7.702107955609776,
+      "rp3_p25": 1.594781953077585,
+      "rp3_p75": 13.809433958141966,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 3.4,
+      "opp_bat_index_recent": 1.025,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -1.39,
+          "delta_bb_pp": -1.24,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 3.4
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.025,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.132,
+      "boom_mean_fp_expected": 9.75,
+      "percent_owned": 5.16,
+      "pro_team": "SD",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 656427,
+      "pitcher_name": "Jack Flaherty",
+      "team": "DET",
+      "opp_team": "SEA",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 98,
+      "rp3_per_start": 9.894353978207436,
+      "rp3_p25": 4.404407124799897,
+      "rp3_p75": 15.38430083161498,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 3.992,
+      "opp_bat_index_recent": 1.002,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 13,
+          "delta_k_pp": -0.14,
+          "delta_bb_pp": -6.85,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 3.99
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.002,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 37.88,
+      "pro_team": "Det",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 669160,
+      "pitcher_name": "Dustin May",
+      "team": "STL",
+      "opp_team": "NYM",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 101,
+      "rp3_per_start": 9.812661487639614,
+      "rp3_p25": 4.3227146342320735,
+      "rp3_p75": 15.302608341047154,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 7.45,
+      "opp_bat_index_recent": 1.0338,
+      "matchup_tier": "tough",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": 6.95,
+          "delta_bb_pp": 1.33,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 7.45
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0338,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 8.65,
+      "pro_team": "StL",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 592791,
+      "pitcher_name": "Jameson Taillon",
+      "team": "CHC",
+      "opp_team": "SF",
+      "is_home": true,
+      "game_date": "2026-06-08",
+      "rp3_rank": 127,
+      "rp3_per_start": 9.3778360892651,
+      "rp3_p25": 3.88788923585756,
+      "rp3_p75": 14.86778294267264,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -0.825,
+      "opp_bat_index_recent": 0.9959,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -2.18,
+          "delta_bb_pp": -1.08,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -0.82
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9959,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 10.0,
+      "pro_team": "ChC",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 687570,
+      "pitcher_name": "Connor Prielipp",
+      "team": "MIN",
+      "opp_team": "KC",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 150,
+      "rp3_per_start": 9.042119832471808,
+      "rp3_p25": 3.5521729790642675,
+      "rp3_p75": 14.53206668587935,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -6.396,
+      "opp_bat_index_recent": 0.9659,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 1,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 8,
+          "delta_k_pp": -1.26,
+          "delta_bb_pp": 0.4,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -6.4
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9659,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 4.25,
+      "pro_team": "Min",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 681347,
+      "pitcher_name": "Mike Burrows",
+      "team": "HOU",
+      "opp_team": "ATH",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 171,
+      "rp3_per_start": 8.627409942078447,
+      "rp3_p25": 3.1374630886709065,
+      "rp3_p75": 14.117356795485987,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -0.983,
+      "opp_bat_index_recent": 0.9929,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -2.97,
+          "delta_bb_pp": 1.26,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -0.98
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9929,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 4.54,
+      "pro_team": "Hou",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 680570,
+      "pitcher_name": "Grayson Rodriguez",
+      "team": "LAA",
+      "opp_team": "HOU",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 196,
+      "rp3_per_start": 8.102233850123383,
+      "rp3_p25": 1.9949078475911923,
+      "rp3_p75": 14.209559852655572,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_thin",
+      "recency_form_gap": 0.0,
+      "opp_bat_index_recent": 0.9543,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 1,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 4,
+          "delta_k_pp": null,
+          "delta_bb_pp": null,
+          "reason": "insufficient_starts"
+        },
+        "recform_hot": {
+          "recency_form_gap": 0.0
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9543,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 3.96,
+      "pro_team": "LAA",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 681190,
+      "pitcher_name": "Randy V\u00e1squez",
+      "team": "SD",
+      "opp_team": "NYM",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 229,
+      "rp3_per_start": 7.527812258010472,
+      "rp3_p25": 1.4204862554782816,
+      "rp3_p75": 13.635138260542664,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -6.3,
+      "opp_bat_index_recent": 1.0338,
+      "matchup_tier": "tough",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 1
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -5.67,
+          "delta_bb_pp": -2.63,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -6.3
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0338,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 40.28,
+      "pro_team": "SD",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 641778,
+      "pitcher_name": "Eric Lauer",
+      "team": "LAD",
+      "opp_team": "PIT",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 269,
+      "rp3_per_start": 6.837136764315517,
+      "rp3_p25": 0.7298107617833258,
+      "rp3_p75": 12.944462766847709,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 4.688,
+      "opp_bat_index_recent": 1.0169,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 1,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 10,
+          "delta_k_pp": -3.24,
+          "delta_bb_pp": -2.84,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 4.69
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0169,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.122,
+      "boom_mean_fp_expected": 9.64,
+      "percent_owned": 1.97,
+      "pro_team": "LAD",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 656550,
+      "pitcher_name": "Grant Holmes",
+      "team": "ATL",
+      "opp_team": "CWS",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 92,
+      "rp3_per_start": 9.974479974844249,
+      "rp3_p25": 4.333147297929191,
+      "rp3_p75": 15.615812651759304,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 2.367,
+      "opp_bat_index_recent": 1.0553,
+      "matchup_tier": "tough",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": 4.5,
+          "delta_bb_pp": -0.86,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 2.37
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0553,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 12.58,
+      "pro_team": "Atl",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 663568,
+      "pitcher_name": "Stephen Kolek",
+      "team": "KC",
+      "opp_team": "TEX",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 111,
+      "rp3_per_start": 9.652726731680763,
+      "rp3_p25": 4.162779878273224,
+      "rp3_p75": 15.142673585088309,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_thin",
+      "recency_form_gap": 2.892,
+      "opp_bat_index_recent": 1.0171,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 6,
+          "delta_k_pp": 0.75,
+          "delta_bb_pp": 0.92,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 2.89
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0171,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 14.83,
+      "pro_team": "KC",
+      "injury_status": "BEREAVEMENT"
+    },
+    {
+      "pitcher_id": 669432,
+      "pitcher_name": "Trevor Rogers",
+      "team": "BAL",
+      "opp_team": "SEA",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 129,
+      "rp3_per_start": 9.340952430771466,
+      "rp3_p25": 3.851005577363925,
+      "rp3_p75": 14.830899284179008,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -1.291,
+      "opp_bat_index_recent": 1.002,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 11,
+          "delta_k_pp": -4.03,
+          "delta_bb_pp": 0.44,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -1.29
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.002,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 29.5,
+      "pro_team": "Bal",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 605488,
+      "pitcher_name": "Jeffrey Springs",
+      "team": "ATH",
+      "opp_team": "MIL",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 163,
+      "rp3_per_start": 8.710550165270286,
+      "rp3_p25": 3.220603311862745,
+      "rp3_p75": 14.200497018677826,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -2.708,
+      "opp_bat_index_recent": 0.9903,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 13,
+          "delta_k_pp": -1.92,
+          "delta_bb_pp": 0.78,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -2.71
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9903,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 16.54,
+      "pro_team": "Oak",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 681293,
+      "pitcher_name": "Spencer Arrighetti",
+      "team": "HOU",
+      "opp_team": "LAA",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 203,
+      "rp3_per_start": 7.964866246552667,
+      "rp3_p25": 1.857540244020476,
+      "rp3_p75": 14.072192249084855,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -3.756,
+      "opp_bat_index_recent": 0.9926,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 9,
+          "delta_k_pp": -3.15,
+          "delta_bb_pp": -1.27,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -3.76
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9926,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 60.85,
+      "pro_team": "Hou",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 695076,
+      "pitcher_name": "Rhett Lowder",
+      "team": "CIN",
+      "opp_team": "STL",
+      "is_home": false,
+      "game_date": "2026-06-07",
+      "rp3_rank": 238,
+      "rp3_per_start": 7.353602476017448,
+      "rp3_p25": 1.2462764734852572,
+      "rp3_p75": 13.46092847854964,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 0.0,
+      "opp_bat_index_recent": 0.9961,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 8,
+          "delta_k_pp": 0.23,
+          "delta_bb_pp": 1.53,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 0.0
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9961,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 4.4,
+      "pro_team": "Cin",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 607536,
+      "pitcher_name": "Kyle Freeland",
+      "team": "COL",
+      "opp_team": "MIL",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 253,
+      "rp3_per_start": 7.108817273484899,
+      "rp3_p25": 1.001491270952708,
+      "rp3_p75": 13.216143276017087,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -2.253,
+      "opp_bat_index_recent": 0.9903,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 10,
+          "delta_k_pp": -2.78,
+          "delta_bb_pp": -0.66,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -2.25
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9903,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 0.95,
+      "pro_team": "Col",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 571945,
+      "pitcher_name": "Miles Mikolas",
+      "team": "WSH",
+      "opp_team": "SF",
+      "is_home": false,
+      "game_date": "2026-06-09",
+      "rp3_rank": 267,
+      "rp3_per_start": 6.897425606166593,
+      "rp3_p25": 0.7900996036344017,
+      "rp3_p75": 13.004751608698784,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_thin",
+      "recency_form_gap": 0.0,
+      "opp_bat_index_recent": 0.9959,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 13,
+          "delta_k_pp": -0.49,
+          "delta_bb_pp": -1.45,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 0.0
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 0.9959,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 0.63,
+      "pro_team": "Wsh",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 607200,
+      "pitcher_name": "Erick Fedde",
+      "team": "CWS",
+      "opp_team": "ATL",
+      "is_home": true,
+      "game_date": "2026-06-09",
+      "rp3_rank": 270,
+      "rp3_per_start": 6.803611844646948,
+      "rp3_p25": 0.6962858421147571,
+      "rp3_p75": 12.910937847179138,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -1.625,
+      "opp_bat_index_recent": 1.0097,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": -2.05,
+          "delta_bb_pp": 1.66,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -1.62
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0097,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 0.63,
+      "pro_team": "ChW",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 700241,
+      "pitcher_name": "Michael McGreevy",
+      "team": "STL",
+      "opp_team": "CIN",
+      "is_home": true,
+      "game_date": "2026-06-07",
+      "rp3_rank": 273,
+      "rp3_per_start": 6.7577088928272495,
+      "rp3_p25": 0.6503828902950586,
+      "rp3_p75": 12.86503489535944,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": -7.383,
+      "opp_bat_index_recent": 1.025,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 12,
+          "delta_k_pp": 0.6,
+          "delta_bb_pp": 1.34,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": -7.38
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.025,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 31.13,
+      "pro_team": "StL",
+      "injury_status": "ACTIVE"
+    },
+    {
+      "pitcher_id": 571578,
+      "pitcher_name": "Patrick Corbin",
+      "team": "TOR",
+      "opp_team": "PHI",
+      "is_home": true,
+      "game_date": "2026-06-08",
+      "rp3_rank": 288,
+      "rp3_per_start": 6.524151922315884,
+      "rp3_p25": 0.416825919783693,
+      "rp3_p75": 12.631477924848074,
+      "rp3_signal": "hold",
+      "data_quality_tag": "data_driven_full",
+      "recency_form_gap": 1.107,
+      "opp_bat_index_recent": 1.0115,
+      "matchup_tier": "neutral",
+      "boom_stack": 0,
+      "boom_components": {
+        "skill_spike": 0,
+        "recform_hot": 0,
+        "opp_soft": 0,
+        "park_friendly": 0
+      },
+      "boom_detail_summary": {
+        "skill_spike": {
+          "n_starts_2026": 11,
+          "delta_k_pp": -1.13,
+          "delta_bb_pp": -0.42,
+          "reason": null
+        },
+        "recform_hot": {
+          "recency_form_gap": 1.11
+        },
+        "opp_soft": {
+          "opp_bat_index_recent": 1.0115,
+          "soft_p33_threshold": 0.9808,
+          "reason": null
+        }
+      },
+      "boom_rate_expected": 0.094,
+      "boom_mean_fp_expected": 8.36,
+      "percent_owned": 2.08,
+      "pro_team": "Tor",
+      "injury_status": "ACTIVE"
+    }
+  ],
+  "generated_at": "2026-06-07T19:40:47.972863"
+}

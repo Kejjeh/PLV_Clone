@@ -1,0 +1,117 @@
+{
+  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-6-6-6-7-6-8/",
+  "fetched": "2026-06-06",
+  "date_covered": "2026-06-06",
+  "covers_dates": [
+    "2026-06-06",
+    "2026-06-07",
+    "2026-06-08"
+  ],
+  "ranks": {
+    "Jacob Misiorowski": {
+      "rank": 1,
+      "tier": "AUTO",
+      "opp": "@ COL"
+    },
+    "Yoshinobu Yamamoto": {
+      "rank": 2,
+      "tier": "AUTO",
+      "opp": "vs LAA"
+    },
+    "Joe Ryan": {
+      "rank": 3,
+      "tier": "AUTO",
+      "opp": "vs KC"
+    },
+    "Nolan McLean": {
+      "rank": 4,
+      "tier": "AUTO",
+      "opp": "@ SD"
+    },
+    "Shane McClanahan": {
+      "rank": 5,
+      "tier": "AUTO",
+      "opp": "@ MIA"
+    },
+    "Braxton Ashcraft": {
+      "rank": 6,
+      "tier": "AUTO",
+      "opp": "@ ATL"
+    },
+    "Nick Lodolo": {
+      "rank": 7,
+      "tier": "PROBABLY",
+      "opp": "@ STL"
+    },
+    "Will Warren": {
+      "rank": 8,
+      "tier": "PROBABLY",
+      "opp": "vs BOS"
+    },
+    "Bryce Miller": {
+      "rank": 9,
+      "tier": "PROBABLY",
+      "opp": "@ DET"
+    },
+    "Spencer Strider": {
+      "rank": 10,
+      "tier": "PROBABLY",
+      "opp": "vs PIT"
+    },
+    "Kyle Bradish": {
+      "rank": 11,
+      "tier": "PROBABLY",
+      "opp": "@ TOR"
+    },
+    "Ben Brown": {
+      "rank": 12,
+      "tier": "PROBABLY",
+      "opp": "vs SF"
+    },
+    "Landen Roupp": {
+      "rank": 13,
+      "tier": "QUESTIONABLE",
+      "opp": "@ CHC"
+    },
+    "Matthew Liberatore": {
+      "rank": 15,
+      "tier": "QUESTIONABLE",
+      "opp": "vs CIN"
+    },
+    "Jack Leiter": {
+      "rank": 17,
+      "tier": "QUESTIONABLE",
+      "opp": "vs CLE"
+    },
+    "Tatsuya Imai": {
+      "rank": 18,
+      "tier": "QUESTIONABLE",
+      "opp": "vs ATH"
+    },
+    "Griffin Canning": {
+      "rank": 21,
+      "tier": "DO_NOT",
+      "opp": "vs NYM"
+    },
+    "Keider Montero": {
+      "rank": 22,
+      "tier": "DO_NOT",
+      "opp": "vs SEA"
+    },
+    "Zack Littell": {
+      "rank": 23,
+      "tier": "DO_NOT",
+      "opp": "@ AZ"
+    },
+    "Luinder Avila": {
+      "rank": 26,
+      "tier": "DO_NOT",
+      "opp": "@ MIN"
+    },
+    "Jack Kochanowicz": {
+      "rank": 27,
+      "tier": "DO_NOT",
+      "opp": "@ LAD"
+    }
+  }
+}

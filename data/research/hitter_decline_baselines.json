@@ -1,6 +1,6 @@
 {
-  "all_t_plus_1_decline_rate": 0.341,
-  "elite_t_plus_1_decline_rate": 0.577,
+  "all_t_plus_1_decline_rate": 0.342,
+  "elite_t_plus_1_decline_rate": 0.58,
   "elite_threshold_fp_per_pa": 0.64,
   "methodology_note": "Decline = FP/PA drop of >= 0.10 OR archetype-mean drop of >= 0.10. Use elite_decline_rate as base-rate context, not actionable signal (parallel to SP finding: pre-decline process drops correlate with mean-reversion, not amplified decline)."
 }
