@@ -99,6 +99,18 @@ the printed full-log path when the summary doesn't have enough detail.
   to a ranker.
 - `/roster-audit` — weekly slot occupancy + IL/return timeline + SP
   cap math + drop/add candidates.
+- `/pregame-check` — morning-of (before lineup lock) daily decision
+  skill. For each SP starting today: START vs CAP-BENCH verdict using
+  **empirically validated v2 conservative rules** (2026-06-06 backtest
+  n=13,716 starts REJECTED the v1 aggressive bench rules — even
+  flagged starts avg 9-11 FP, well above replacement ~5 FP). Default
+  START unless cap overflow + lowest-EV start, OR blend ≤7 + opp_bat
+  ≥1.10 + Tier B NOISE/REGRESS. Always START on SOFT opp_bat (<0.95).
+  Also pre-scans opponent's confirmed SPs and flags my hitters facing
+  high boom_stack opp pitchers. Pulls live matchup state + win prob.
+  Built 2026-06-06 after Bradish/Leiter Saturday bombs that the merge
+  protocol predicted at the ROSTER level but couldn't enforce daily.
+  See `bench_rule_validation_2026-06-06.md`.
 - `/refresh-and-commit-and-push` — daily refresh ritual wrapped end-to-end.
 - `/fa-pickup-deep-dive` — single-player deep dive: model projection
   + recent Statcast + injury + ownership + recommendation.

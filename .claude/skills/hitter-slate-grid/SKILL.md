@@ -288,7 +288,7 @@ a free-text verdict is not allowed. Use this template verbatim:
 
 ```
 RECOMMENDATION: <action> <player>
-   Confidence: HIGH | MEDIUM | LOW (per 8-lens agreement count from reference_lens_merge_protocol.md)
+   Confidence: HIGH | MEDIUM | LOW (per **empirically calibrated** 8-lens count from reference_lens_merge_protocol.md — HIGH ≥5 of 8 NOT ≥6, per 2026-06-06 calibration. **Conflict Rule 4** REJECTED at HIGH_CONFIDENCE per `conflict_rule_lift_2026-06-06.md` — downgrade triple-signal drops to MODERATE with bounce-back caveat.)
    Lens votes:
      Tier A: rh3=<v> | Blended xFP=<v> [conf] | rp3/rprs2 if SP=<v>
      Tier B: xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>

@@ -443,7 +443,7 @@ conflict-rule provenance:
 
 ```
 RECOMMENDATION: <action> <player>
-   Confidence: HIGH | MEDIUM | LOW (per 8-lens agreement count)
+   Confidence: HIGH | MEDIUM | LOW (per **empirically calibrated** 8-lens count — HIGH ≥5 of 8 NOT ≥6, per 2026-06-06 calibration `confidence_label_calibration_2026-06-06.md`. **Conflict Rule 4** REJECTED at HIGH_CONFIDENCE per `conflict_rule_lift_2026-06-06.md` — triple-signal drops downgrade to MODERATE with bounce-back caveat.)
    Tier A (model): rh3=<v> | Blended xFP=<v>
    Tier B (process gate): xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
    Tier C (variance): boom-bust=<v> | boom_stack=<v>
