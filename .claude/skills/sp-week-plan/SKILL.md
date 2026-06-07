@@ -240,6 +240,34 @@ choosing the cut," not "exempt from the 10-start cap."
 
 ---
 
+## Step 5.6 — Floor / bust-risk overlay (the bench-decision tie-breaker)
+
+EV (Step 5) ranks starts by their MEAN. But the 10-start cap punishes ZEROS —
+a dud start (<5 FP) wastes a capped slot. So the bench decision also needs the
+FLOOR: which start is most likely to crater. Validated 2026-06-06
+(`sp_floor_model_2026-06-06.md`): the floor is driven by **K−BB%**, NOT Stuff+
+or EV. A low-mean/high-command arm can be your *safest* start.
+
+For each healthy SP, compute bust risk from their 2026 season-to-date K%/BB%:
+
+```python
+import sys; sys.path.insert(0, "scripts/xfp")
+from sp_floor_model import floor_for   # k_pct/bb_pct as FRACTIONS (0-1)
+# k%/bb% from data/research/fg_asof/fg_pit_2026_current.csv (or rp3 season rates)
+probs, tiers = floor_for(sp_k_pct, sp_bb_pct)   # opponent-neutral (~85% of signal)
+# tiers: SAFE <20% bust / MODERATE 20-30% / RISKY >=30%
+```
+
+Add a **`floor`** column (bust% + SAFE/MODERATE/RISKY) to the Step 5 / Step 8
+projected-starts table next to EV. Honest caveat: per-start bust is mostly
+irreducible (model AUC 0.60) — this is a RELATIVE bench-priority tilt, not a
+game predictor. Opponent shifts a given start ~±5pp (bench the RISKY arm INTO
+the tougher matchup). When a pitcher's MEASURED bust (`/boom-bust-history`) far
+exceeds his predicted floor, the gap is shape/contact — flag for
+`/pitcher-sustainability`.
+
+---
+
 ## Step 6 — Cap math + bench recommendation
 
 **CRITICAL — count PAST + FUTURE, not just future.** Cap math is
@@ -271,9 +299,19 @@ elif total_starts > cap:
     # RULE: never bench a 2-start pitcher unless catastrophic — 1 good
     #       start almost always beats 1 elite start in cap math
     bench_candidates = [s for s in starts if pitcher_is_1_start(s.pitcher)]
-    bench_candidates.sort(key=lambda s: s.ev_score)
+    # Primary sort by EV; break NEAR-ties (within ~1.5 FP) by FLOOR — bench the
+    # RISKY-tier (highest bust prob), since a dud wastes a capped slot. Do NOT
+    # bench a SAFE high-floor arm whose EV is only marginally lower.
+    bench_candidates.sort(key=lambda s: (round(s.ev_score / 1.5), -s.bust_prob))
     bench = bench_candidates[:over_by]
 ```
+
+**Bench tie-break RULE (floor):** when two 1-start candidates are within ~1.5 FP
+of EV, bench the higher-bust-prob (RISKY) one. The canonical trap: Stuff+/EV can
+flag a low-stuff arm as "weakest," but if it has elite K−BB% (e.g. Messick, 0%
+measured bust, SAFE) it's actually your highest floor — bench the RISKY arm
+(e.g. Valdez, K 18.6%) instead. EV picks who scores most; floor picks who you
+can least afford to start. Surface both columns so the user sees the trade-off.
 
 Format the bench recommendation:
 ```

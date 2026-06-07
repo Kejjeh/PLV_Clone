@@ -89,21 +89,36 @@ def floor_tier(prob):
     if prob < 0.30: return "MODERATE"
     return "RISKY"
 
+_PROD = None
+def floor_for(k_pct, bb_pct, lineup_xfp=None, days_rest=5, n_prior=12):
+    """Public API for other skills (e.g. /sp-week-plan). Given season-to-date
+    K%/BB% as FRACTIONS (0-1), return (bust_prob ndarray, tier list). Opponent
+    (lineup_xfp) optional — command is ~85% of the signal, so omit for an
+    opponent-neutral floor; pass it to shift a specific matchup (~±5pp).
+    Vectorized: k_pct/bb_pct may be scalars or array-likes."""
+    global _PROD
+    if _PROD is None:
+        _PROD = _production_fit()
+    sc, m, means = _PROD
+    k = np.atleast_1d(np.asarray(k_pct, dtype=float))
+    b = np.atleast_1d(np.asarray(bb_pct, dtype=float))
+    lx = means["lineup_xfp"] if lineup_xfp is None else lineup_xfp
+    X = pd.DataFrame({"prior_k_pct": k, "prior_bb_pct": b, "lineup_xfp": lx,
+                      "days_rest": days_rest, "n_prior_starts": n_prior})[FEATS]
+    probs = m.predict_proba(sc.transform(X))[:, 1]
+    return probs, [floor_tier(p) for p in probs]
+
 def staff_board():
     """Rank the user's SP staff by command-based bust probability (opponent-neutral).
     prior_k/bb come from each SP's 2026 season-to-date; opponent/rest set neutral."""
     import sys as _s
     _s.path.insert(0, str(Path(__file__).resolve().parent))
     from sp_stuff_model import build
-    sc, m, means = _production_fit()
     d,_ = build(); mine = d[d.own=="MINE"][["mlb_id","player_name_fg","stuff_plus"]].copy()
     cur = pd.read_csv(ROOT/"data/research/fg_asof/fg_pit_2026_current.csv")
     for c in ["k_pct","bb_pct"]: cur[c]=pd.to_numeric(cur[c],errors="coerce")
     mp = mine.merge(cur[["mlb_id","k_pct","bb_pct"]],on="mlb_id").dropna(subset=["k_pct","bb_pct"])
-    X = pd.DataFrame({"prior_k_pct":mp.k_pct,"prior_bb_pct":mp.bb_pct,
-        "lineup_xfp":means["lineup_xfp"],"days_rest":5,"n_prior_starts":12})[FEATS]
-    mp["bust_prob"] = m.predict_proba(sc.transform(X))[:,1]
-    mp["tier"] = mp["bust_prob"].apply(floor_tier)
+    mp["bust_prob"], mp["tier"] = floor_for(mp.k_pct.values, mp.bb_pct.values)
     mp = mp.sort_values("bust_prob",ascending=False)
     print("\n=== STAFF FLOOR BOARD (command-based bust prob, opponent-neutral) ===")
     print(f"  {'SP':<18}{'Stuff+':>7}{'K%':>6}{'BB%':>6}{'bustProb':>9}  tier")
