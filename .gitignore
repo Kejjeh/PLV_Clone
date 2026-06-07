@@ -32,6 +32,9 @@ htmlcov/
 .pytest_cache/
 .tox/
 
+# Cached full test/build logs from scripts/ci/run_summary.py
+.cache/
+
 # Jupyter
 .ipynb_checkpoints/
 notebooks/.ipynb_checkpoints/
