@@ -39,8 +39,24 @@ def _norm(name: str) -> str:
     return re.sub(r"\s+", " ", s).strip()
 
 
+def _last_init_key(norm_name: str):
+    """(last_name, first_initial) tuple for the two-pass fallback, or None."""
+    parts = norm_name.split()
+    if len(parts) >= 2 and parts[0]:
+        return (parts[-1], parts[0][0])
+    return None
+
+
 def ownership_map():
-    """norm_name -> 'MINE' / opp team_name / (absent = FA). Degrades to {} offline."""
+    """Return {'full': {norm_name: tag}, 'li': {(last, first_init): {pro_team: tag}}}.
+
+    Two-pass index so first-name spelling drift (ESPN 'Cam Schlittler' vs
+    FanGraphs 'Cameron Schlittler') resolves to the rostering team instead of
+    leaking through as a false FA. Mirrors the /roster-verify rule: full name
+    first, then (last, first-initial) — never last-name alone (keeps Logan vs
+    Gunnar Henderson distinct via the differing initial). Degrades to {}
+    offline so tags are simply omitted.
+    """
     try:
         sys.path.insert(0, str(ROOT))
         from app.espn_connector import get_all_teams
@@ -48,11 +64,40 @@ def ownership_map():
     except Exception as e:  # offline / no creds
         print(f"  [ownership] ESPN unavailable ({type(e).__name__}); tags omitted.\n")
         return {}
-    m = {}
+    full, li = {}, {}
     for _, r in teams.iterrows():
         tag = "MINE" if str(r["team_name"]).strip() == MY_TEAM else str(r["team_name"]).strip()
-        m[_norm(r["player_name"])] = tag
-    return m
+        nm = _norm(r["player_name"])
+        full[nm] = tag
+        key = _last_init_key(nm)
+        if key:
+            pro = str(r.get("pro_team", "")).strip().upper()
+            li.setdefault(key, {})[pro] = tag
+    return {"full": full, "li": li}
+
+
+def own_tag(own, fg_name, fg_team=None):
+    """Resolve a FanGraphs name to its roster tag via the two-pass index.
+
+    Returns 'MINE' / opp-team-name / 'FA'. An ambiguous (last, first-initial)
+    bucket with 2+ teams and no team match returns 'FA' rather than guessing.
+    """
+    if not own:
+        return ""
+    n = _norm(fg_name)
+    full = own.get("full", {})
+    if n in full:
+        return full[n]
+    key = _last_init_key(n)
+    bucket = own.get("li", {}).get(key) if key else None
+    if bucket:
+        if fg_team:
+            t = str(fg_team).strip().upper()
+            if t in bucket:
+                return bucket[t]
+        if len(bucket) == 1:  # unambiguous last+initial -> safe to resolve
+            return next(iter(bucket.values()))
+    return "FA"
 
 
 def brownu_fp_per_start(d):
@@ -92,7 +137,12 @@ def build():
     d["breakout_gap"] = d["stuff_pctl"] - d["curfp_pctl"]
     d["proj_vs_current"] = d["proj_ros_fp"] - d["pre_fp"]
     own = ownership_map()
-    d["own"] = d["player_name_fg"].map(lambda n: own.get(_norm(n), "FA")) if own else ""
+    team_col = next((c for c in ("team", "Team", "tm", "Tm", "team_fg") if c in d.columns), None)
+    d["own"] = (
+        d.apply(lambda r: own_tag(own, r["player_name_fg"],
+                                  r[team_col] if team_col else None), axis=1)
+        if own else ""
+    )
     return d, n_train
 
 
