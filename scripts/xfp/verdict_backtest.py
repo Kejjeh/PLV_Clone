@@ -252,6 +252,11 @@ def run_pitchers(rolling) -> pd.DataFrame:
         sub["sigma"] = sig * alpha
         sub["xfp_rp3_p25"] = (sub["proj"] - Z25 * sub["sigma"]).clip(lower=0)
         sub["xfp_rp3_p75"] = sub["proj"] + Z25 * sub["sigma"]
+        # Decision band: narrow RAW-sigma band (no x2.41), matching rp3.py bugfix
+        # 13bb4a1 so the backtest tests the FIXED add/drop signal, not the inert
+        # wide display band. _signal() reads xfp_rp3_decision_p25/p75 first.
+        sub["xfp_rp3_decision_p25"] = (sub["proj"] - Z25 * sig).clip(lower=0)
+        sub["xfp_rp3_decision_p75"] = sub["proj"] + Z25 * sig
         # replacement (global SP-45) per split
         srt = sub.sort_values("proj", ascending=False)
         n = RP3.REPLACEMENT_SP_RANK
