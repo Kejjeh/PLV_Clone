@@ -263,6 +263,20 @@ def main():
                       'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',
                       timeout=120)
 
+    # 4.55. Build merged xFP boards (SP + 5 hitter buckets) + xfp_board.html.
+    # Regenerates data/research/{sp,hitter}_merged_xfp_rank_<date>.csv and the
+    # self-contained dashboard at data/outputs/xfp_board.html (mirrored to
+    # xfp-model/docs/xfp_board.html). The dashboard builder imports the board
+    # engine, so this single step rebuilds both CSVs and the page. Fail-soft:
+    # an ESPN/MLB hiccup must not abort the pipeline (non-gating dashboard).
+    ok_xfp_board = run(
+        '4.55. Build merged xFP boards + xfp_board.html',
+        'python -X utf8 scripts/xfp/build_xfp_board_dashboard.py',
+        timeout=300,
+    )
+    if not ok_xfp_board:
+        print('  ⚠ xfp_board build failed — continuing (non-gating dashboard)')
+
     # 4.6. Daily boom-stack streamer scan. Fail-soft: API errors or zero
     # candidates must not abort the pipeline — outputs land at
     # data/outputs/stream_the_stack_<date>.{md,json}. Depends on rp3
@@ -390,7 +404,7 @@ def main():
             return
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         commit_cmd = (
-            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html && '
+            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html docs/xfp_board.html && '
             f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)
