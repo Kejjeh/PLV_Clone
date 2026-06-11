@@ -341,6 +341,31 @@ multi-repo awareness and opt-in push), `/init`, `/security-review`,
 If you commit in this repo, the safe-commit skill will auto-check the
 sibling and ask if it needs attention too.
 
+## Fast-path gotchas (don't re-derive these — they waste tool calls)
+
+Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
+
+1. **`marcel_il` artifact (SP).** Many FA-tier + IL'd-at-split SPs (Valdez,
+   Bradish, Detmers, Eury Pérez…) carry `data_quality_tag=marcel_il` in
+   `xfp_rp3_projections.csv` — their `rp3 per_start` is a SUPPRESSED Marcel
+   prior (`gs_to=0`), NOT a real read, NOT an injury flag. **Rank these by
+   `Stuff+ proj_ros_fp` (`sp_stuff_model.py`), not rp3.** Trust rp3 only where
+   `data_quality_tag` is `data_driven_*`.
+2. **Console encoding (Windows).** Prefix python INLINE with
+   `PYTHONIOENCODING=utf-8 PYTHONUTF8=1 ` (or `python -X utf8`). cp1252 chokes
+   on σ/→/emoji. The `set VAR=…&&` form does NOT persist in the Bash tool.
+3. **`get_all_teams()` shape.** Flat pandas DataFrame of ~230 rostered players
+   (`player_name, player_id, position, pro_team, team_name, lineup_slot,
+   injured, injury_status`) — NOT team objects. Match names two-pass: full
+   normalized, then `(last, first-initial)` (never last-only) — Cam/Cameron leak.
+4. **Verify "dropped/added" LIVE.** `get_all_teams()` is the only truth; BrownU
+   drops sit on ~24-48h waivers (`faab=False`). Canonical: Weathers 2026-06-11
+   reported "dropped" but the live scan still showed him rostered.
+5. **Don't fan out agents for a single-player / focused question** — do it inline
+   in one script. Reserve agent fan-out for genuine broad FA-pool scans.
+6. **`sp_bench_mc.py`** imports `fetch_schedules_by_team(team_ids, start, end)`
+   (batch) from `build_matchup_dashboard`; keep in sync if that module refactors.
+
 ## Don't do these (load-bearing feedback)
 
 1. **Don't drop a feature into rh3/rp3/rprs2 without `/validate-feature`.**

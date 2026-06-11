@@ -36,8 +36,8 @@ sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
 from build_matchup_dashboard import (
     get_matchup,
     load_projections,
-    get_team_schedule,
-    _predict_rotation_starts,
+    fetch_schedules_by_team,
+    build_sp_starts_by_pitcher,
     player_mlbam_lookup,
     _resolve_mlbam_via_api,
     _norm,
@@ -434,25 +434,35 @@ def main():
         if t:
             all_teams.add(t)
     print(f'  fetching schedules for {len(all_teams)} teams...')
-    schedules_by_team = {}
-    for t in all_teams:
-        mlb_id = ESPN_TO_MLB_TEAM.get(t)
-        if mlb_id is None:
+    mlb_ids = [ESPN_TO_MLB_TEAM[t] for t in all_teams if ESPN_TO_MLB_TEAM.get(t) is not None]
+    schedules_by_team = fetch_schedules_by_team(
+        mlb_ids, today.isoformat(), week_end.isoformat()) if mlb_ids else {}
+
+    # SP probable/predicted starts keyed by MLBAM — required by the refactored
+    # project_player signature. Only affects the SP path of project_player,
+    # which the MC discards (SPs are handled by our own sampler-driven draws via
+    # collect_remaining_sp_starts); built here so project_player runs cleanly.
+    sp_pitcher_ids = []
+    for p in mu['my_lineup'] + mu['opp_lineup']:
+        if (p.position or '?') != 'SP' or getattr(p, 'injured', False):
             continue
-        schedules_by_team[mlb_id] = get_team_schedule(
-            mlb_id, today.isoformat(), week_end.isoformat())
+        mlbam = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+        if mlbam:
+            sp_pitcher_ids.append(int(mlbam))
+    sp_starts_by_pitcher = build_sp_starts_by_pitcher(
+        sp_pitcher_ids, schedules_by_team, today, week_end)
 
     # Project all players using dashboard's logic (gives us non-SP fp+sigma2)
     print('  projecting all players via dashboard logic...')
     ts_map_for_proj = {t: {'bat_index': d['bat_index'], 'pit_index': 1.0}
                         for t, d in ts_map.items()}
-    my_proj = {p.name: project_player(p, schedules_by_team, rh3_map, rp3_map,
-                                         rp3_by_mlbam, rprs2_map, ts_map_for_proj,
-                                         today, week_end)
+    my_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
+                                         rh3_map, rp3_map, rp3_by_mlbam, rprs2_map,
+                                         ts_map_for_proj, today, week_end)
                for p in mu['my_lineup']}
-    opp_proj = {p.name: project_player(p, schedules_by_team, rh3_map, rp3_map,
-                                          rp3_by_mlbam, rprs2_map, ts_map_for_proj,
-                                          today, week_end)
+    opp_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
+                                          rh3_map, rp3_map, rp3_by_mlbam, rprs2_map,
+                                          ts_map_for_proj, today, week_end)
                 for p in mu['opp_lineup']}
 
     # Remaining SP starts (mine + opp) — these are what the cap operates on
