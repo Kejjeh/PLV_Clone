@@ -1,108 +1,107 @@
 # Career-form-rank sweep — 2026-05-24
 
-Universe: BrownU roster (13 hitters) + FA pool (963 hitters). Cache: 2015-2026. Min career PA: 300. Min current L150 PA: 100. Roster floor (P25 current_l150): 0.331.
+Universe: BrownU roster (13 hitters) + FA pool (979 hitters). Cache: 2015-2026. Min career PA: 300. Min current L150 PA: 100. Roster floor (P25 current_l150): 0.324.
 
 ## Your hitters by current L150 xwOBA + career percentile
 
 | Player | Pos | PA | Curr L150 | Career med | Career max | Pct | Read | rh3/g |
 |---|---|---|---|---|---|---|---|---|
-| Elly De La Cruz | SS | 2017 | 0.375 | 0.322 | 0.426 | 86 | Peak form | 1.89 |
-| Max Muncy | 3B | 4102 | 0.411 | 0.368 | 0.483 | 83 | Peak form | 2.02 |
-| Jordan Walker | RF | 1242 | 0.349 | 0.302 | 0.412 | 78 | Above-median | 1.83 |
-| Michael Harris II | CF | 2249 | 0.376 | 0.342 | 0.452 | 78 | Above-median | 2.19 |
-| Corbin Carroll | RF | 2262 | 0.373 | 0.349 | 0.424 | 77 | Above-median | 2.23 |
-| Pete Alonso | 1B | 4467 | 0.375 | 0.362 | 0.470 | 63 | Above-median | 2.01 |
-| Bo Bichette | SS | 3497 | 0.340 | 0.338 | 0.421 | 53 | Typical | 1.98 |
-| Wyatt Langford | LF | 1205 | 0.331 | 0.335 | 0.398 | 47 | Typical | 1.71 |
-| Aaron Judge | RF | 5097 | 0.418 | 0.436 | 0.611 | 39 | Below-median | 2.45 |
-| Luis Arraez | 1B | 3689 | 0.320 | 0.333 | 0.394 | 31 | Below-median | 1.91 |
-| Salvador Perez | C | 5438 | 0.286 | 0.341 | 0.447 | 14 | Slumping | 1.64 |
-| Trea Turner | SS | 5773 | 0.301 | 0.340 | 0.437 | 13 | Slumping | 1.79 |
-| Vladimir Guerrero Jr. | 1B | 4380 | 0.340 | 0.382 | 0.505 | 13 | Slumping | 2.05 |
+| Jordan Walker | RF | 1307 | 0.359 | 0.307 | 0.409 | 85 | Peak form | 1.87 |
+| Hunter Goodman | C | 1130 | 0.331 | 0.310 | 0.374 | 80 | Peak form | 1.88 |
+| Elly De La Cruz | SS | 2051 | 0.362 | 0.323 | 0.420 | 80 | Above-median | — |
+| Corbin Carroll | RF | 2332 | 0.371 | 0.350 | 0.424 | 74 | Above-median | 2.29 |
+| Max Muncy | 3B | 4141 | 0.389 | 0.368 | 0.482 | 67 | Above-median | 2.03 |
+| Pete Alonso | 1B | 4543 | 0.377 | 0.362 | 0.470 | 64 | Above-median | 2.07 |
+| Michael Harris II | CF | 2308 | 0.348 | 0.343 | 0.452 | 54 | Typical | 2.22 |
+| Wyatt Langford | LF | 1220 | 0.324 | 0.334 | 0.397 | 38 | Below-median | 1.73 |
+| Bo Bichette | SS | 3560 | 0.328 | 0.339 | 0.421 | 32 | Below-median | 1.99 |
+| Aaron Judge | RF | 5128 | 0.406 | 0.436 | 0.611 | 30 | Below-median | — |
+| Luis Arraez | 1B | 3765 | 0.302 | 0.332 | 0.397 | 17 | Slumping | 1.92 |
+| Trea Turner | SS | 5842 | 0.292 | 0.339 | 0.433 | 10 | Slumping | 1.79 |
+| Vladimir Guerrero Jr. | 1B | 4440 | 0.322 | 0.381 | 0.503 | 9 | Slumping | 2.06 |
 
 
 ## All FAs (>= 500 career PA) — current L150 + career percentile
 
 | Player | Pos | PA | Curr L150 | Career med | Career max | Pct | Own% | rh3/g |
 |---|---|---|---|---|---|---|---|---|
-| Spencer Steer | 1B | 2173 | 0.413 | 0.317 | 0.416 | 100 | 27 | 1.96 |
-| Michael Busch | 1B | 1446 | 0.399 | 0.340 | 0.434 | 91 | 42 | 1.83 |
-| Wander Franco | SS | 1139 | 0.393 | 0.350 | 0.404 | 98 | 0 | — |
-| Luke Raley | RF | 1351 | 0.385 | 0.323 | 0.413 | 91 | 12 | 1.67 |
-| Michael Conforto | LF | 4440 | 0.382 | 0.348 | 0.438 | 82 | 1 | 1.69 |
-| Daniel Vogelbach | DH | 1944 | 0.381 | 0.343 | 0.420 | 87 | 0 | — |
-| Andrew Vaughn | 1B | 2742 | 0.376 | 0.328 | 0.402 | 97 | 5 | — |
-| Casey Schmitt | 2B | 900 | 0.375 | 0.323 | 0.376 | 99 | 35 | 1.80 |
-| Carlos Correa | SS | 5420 | 0.370 | 0.354 | 0.441 | 66 | 14 | 1.71 |
-| Paul Goldschmidt | 1B | 6836 | 0.369 | 0.369 | 0.472 | 50 | 2 | 1.93 |
-| Dominic Smith | 1B | 2598 | 0.369 | 0.321 | 0.426 | 93 | 4 | 1.79 |
-| Max Kepler | LF | 4685 | 0.368 | 0.329 | 0.444 | 89 | 0 | — |
-| J.P. Crawford | SS | 4026 | 0.365 | 0.318 | 0.397 | 95 | 8 | 1.82 |
-| Nathaniel Lowe | 1B | 3524 | 0.360 | 0.329 | 0.439 | 89 | 2 | 1.87 |
-| Yasmani Grandal | C | 4074 | 0.358 | 0.327 | 0.466 | 70 | 0 | — |
-| Gavin Sheets | LF | 2122 | 0.358 | 0.307 | 0.386 | 91 | 26 | 1.89 |
-| Gary Sanchez | C | 3408 | 0.357 | 0.343 | 0.468 | 62 | 4 | 1.56 |
-| Dominic Canzone | RF | 755 | 0.357 | 0.342 | 0.422 | 65 | 3 | 1.60 |
-| Curtis Mead | 1B | 611 | 0.351 | 0.292 | 0.353 | 99 | 1 | 1.69 |
-| Nick Gonzales | 2B | 1098 | 0.348 | 0.301 | 0.364 | 92 | 5 | 1.50 |
-| Kyle Stowers | LF | 909 | 0.348 | 0.342 | 0.429 | 54 | 30 | 1.60 |
-| Francisco Alvarez | C | 1177 | 0.346 | 0.314 | 0.378 | 85 | 10 | 1.71 |
-| Tom Murphy | C | 1046 | 0.345 | 0.303 | 0.382 | 89 | 0 | — |
-| Brendan Donovan | 2B | 2093 | 0.344 | 0.341 | 0.426 | 54 | 49 | 1.87 |
-| Heliot Ramos | LF | 1452 | 0.344 | 0.323 | 0.402 | 74 | 13 | 1.63 |
-| Giancarlo Stanton | DH | 4562 | 0.343 | 0.359 | 0.536 | 34 | 24 | 1.49 |
-| Eric Wagaman | 1B | 586 | 0.342 | 0.308 | 0.368 | 93 | 0 | — |
-| Tommy Pham | LF | 4809 | 0.342 | 0.346 | 0.453 | 45 | 0 | — |
-| Jorge Soler | RF | 4414 | 0.339 | 0.347 | 0.489 | 43 | 15 | 1.59 |
-| Austin Martin | LF | 589 | 0.339 | 0.330 | 0.382 | 54 | 3 | 1.64 |
-| Spencer Horwitz | 1B | 998 | 0.338 | 0.327 | 0.380 | 73 | 3 | 2.01 |
-| Victor Caratini | C | 2346 | 0.338 | 0.313 | 0.380 | 78 | 1 | 1.52 |
-| Charlie Blackmon | RF | 5606 | 0.337 | 0.342 | 0.459 | 44 | 0 | — |
-| Richie Palacios | LF | 684 | 0.337 | 0.323 | 0.362 | 76 | 1 | 1.47 |
-| Jurickson Profar | LF | 4270 | 0.336 | 0.321 | 0.408 | 67 | 5 | — |
-| Randal Grichuk | RF | 4739 | 0.335 | 0.324 | 0.401 | 70 | 0 | 1.86 |
-| Dane Myers | CF | 592 | 0.334 | 0.306 | 0.366 | 67 | 0 | 1.45 |
-| Gabriel Moreno | C | 1214 | 0.334 | 0.334 | 0.384 | 51 | 30 | 1.79 |
+| Wander Franco | SS | 1139 | 0.396 | 0.350 | 0.404 | 99 | 0 | — |
+| Ryan Jeffers | C | 1992 | 0.390 | 0.321 | 0.395 | 100 | 29 | — |
+| Michael Busch | 1B | 1518 | 0.388 | 0.343 | 0.434 | 79 | 43 | 1.81 |
+| Paul Goldschmidt | 1B | 6897 | 0.386 | 0.368 | 0.474 | 65 | 8 | 1.91 |
+| Gabriel Moreno | C | 1266 | 0.385 | 0.335 | 0.386 | 100 | 35 | 1.88 |
+| Joc Pederson | DH | 4696 | 0.384 | 0.345 | 0.455 | 86 | 2 | 1.81 |
+| Daniel Vogelbach | DH | 1944 | 0.381 | 0.343 | 0.419 | 87 | 0 | — |
+| Curtis Mead | 1B | 671 | 0.375 | 0.294 | 0.382 | 96 | 9 | 1.83 |
+| Nathaniel Lowe | 1B | 3570 | 0.375 | 0.329 | 0.440 | 94 | 2 | 1.98 |
+| Carlos Correa | SS | 5420 | 0.370 | 0.354 | 0.440 | 66 | 11 | — |
+| Michael Conforto | LF | 4471 | 0.370 | 0.349 | 0.431 | 73 | 0 | 1.67 |
+| Spencer Steer | 1B | 2236 | 0.369 | 0.317 | 0.419 | 92 | 26 | 2.02 |
+| Trent Grisham | CF | 3049 | 0.367 | 0.325 | 0.418 | 89 | 36 | 1.90 |
+| Max Kepler | LF | 4685 | 0.367 | 0.329 | 0.440 | 89 | 0 | — |
+| Jeremy Pena | SS | 2495 | 0.365 | 0.316 | 0.380 | 97 | 61 | 1.78 |
+| Dane Myers | CF | 615 | 0.363 | 0.309 | 0.366 | 99 | 0 | 1.52 |
+| Dominic Canzone | RF | 798 | 0.360 | 0.345 | 0.420 | 68 | 5 | 1.80 |
+| Yasmani Grandal | C | 4074 | 0.358 | 0.326 | 0.462 | 70 | 0 | — |
+| Andrew Vaughn | 1B | 2792 | 0.357 | 0.329 | 0.403 | 88 | 6 | 1.70 |
+| Luke Raley | RF | 1403 | 0.356 | 0.328 | 0.410 | 73 | 13 | 1.67 |
+| Marcus Semien | 2B | 6946 | 0.356 | 0.320 | 0.429 | 89 | 43 | 1.85 |
+| Eric Wagaman | 1B | 590 | 0.353 | 0.310 | 0.363 | 96 | 0 | — |
+| Vaughn Grissom | 2B | 503 | 0.352 | 0.307 | 0.355 | 96 | 1 | — |
+| Dominic Smith | 1B | 2639 | 0.351 | 0.322 | 0.424 | 86 | 4 | 1.77 |
+| J.P. Crawford | SS | 4079 | 0.350 | 0.319 | 0.396 | 86 | 7 | — |
+| Francisco Alvarez | C | 1180 | 0.348 | 0.314 | 0.379 | 86 | 10 | 1.71 |
+| Luis Garcia Jr. | 2B | 2498 | 0.346 | 0.314 | 0.405 | 84 | 25 | 2.01 |
+| Tom Murphy | C | 1046 | 0.345 | 0.303 | 0.375 | 88 | 0 | — |
+| Edouard Julien | 1B | 1095 | 0.345 | 0.328 | 0.406 | 68 | 0 | 1.35 |
+| Brendan Donovan | 2B | 2093 | 0.344 | 0.341 | 0.431 | 54 | 44 | — |
+| Heliot Ramos | LF | 1452 | 0.344 | 0.324 | 0.405 | 74 | 12 | — |
+| Andrew Benintendi | LF | 4944 | 0.344 | 0.328 | 0.439 | 75 | 3 | 1.63 |
+| Jesus Sanchez | RF | 2249 | 0.343 | 0.337 | 0.393 | 61 | 4 | 1.72 |
+| Blaze Alexander | 3B | 600 | 0.343 | 0.302 | 0.345 | 99 | 4 | 1.47 |
+| Giancarlo Stanton | DH | 4562 | 0.343 | 0.359 | 0.536 | 35 | 22 | — |
+| Tommy Pham | LF | 4809 | 0.342 | 0.346 | 0.449 | 46 | 0 | — |
+| Isaac Paredes | 3B | 2476 | 0.341 | 0.310 | 0.365 | 93 | 35 | 1.92 |
+| Nick Gonzales | 2B | 1163 | 0.341 | 0.306 | 0.379 | 81 | 14 | 1.55 |
+| Spencer Horwitz | 1B | 1065 | 0.339 | 0.330 | 0.378 | 69 | 13 | 2.17 |
+| Nelson Velazquez | RF | 632 | 0.337 | 0.321 | 0.381 | 67 | 0 | — |
+| Kody Clemens | 1B | 985 | 0.336 | 0.310 | 0.381 | 86 | 11 | 1.74 |
+| Charlie Blackmon | RF | 5606 | 0.336 | 0.342 | 0.459 | 44 | 0 | — |
+| Jurickson Profar | LF | 4270 | 0.335 | 0.321 | 0.407 | 67 | 5 | — |
+| Jo Adell | CF | 1906 | 0.335 | 0.319 | 0.463 | 71 | 36 | 1.55 |
+| Isaac Collins | LF | 671 | 0.335 | 0.315 | 0.359 | 79 | 1 | 1.65 |
+| Jarred Kelenic | RF | 1538 | 0.334 | 0.308 | 0.405 | 74 | 0 | — |
 | Garrett Cooper | 1B | 1927 | 0.334 | 0.337 | 0.434 | 46 | 0 | — |
-| Teoscar Hernandez | RF | 4553 | 0.334 | 0.342 | 0.451 | 41 | 63 | 1.61 |
-| Ben Gamel | LF | 2297 | 0.333 | 0.307 | 0.383 | 83 | 0 | — |
-| J.D. Martinez | DH | 5333 | 0.333 | 0.385 | 0.502 | 12 | 0 | — |
-| Mark Vientos | 3B | 1348 | 0.333 | 0.319 | 0.415 | 67 | 6 | 1.63 |
-| Derek Hill | CF | 674 | 0.332 | 0.280 | 0.341 | 98 | 0 | 1.36 |
-| Joc Pederson | DH | 4635 | 0.332 | 0.345 | 0.455 | 39 | 0 | 1.58 |
-| Matt Vierling | CF | 1760 | 0.332 | 0.320 | 0.375 | 72 | 1 | 1.67 |
-| Trent Grisham | CF | 2986 | 0.332 | 0.325 | 0.416 | 56 | 20 | 1.87 |
-| Manny Pina | C | 1228 | 0.332 | 0.305 | 0.358 | 93 | 0 | — |
-| Jordan Westburg | 3B | 1026 | 0.331 | 0.335 | 0.395 | 42 | 11 | — |
-| Blaze Alexander | 3B | 553 | 0.331 | 0.300 | 0.331 | 100 | 0 | 1.30 |
+| Gary Sanchez | C | 3426 | 0.333 | 0.343 | 0.471 | 41 | 3 | 1.53 |
+| Matt McLain | 2B | 1217 | 0.333 | 0.311 | 0.365 | 80 | 12 | 1.59 |
+| J.D. Martinez | DH | 5333 | 0.333 | 0.385 | 0.495 | 12 | 0 | — |
 
 
 ## Slumping cluster (your roster, percentile < 30)
 
 | Player | Pct | Curr L150 | Career med | rh3/g |
 |---|---|---|---|---|
-| Vladimir Guerrero Jr. | 13 | 0.340 | 0.382 | 2.05 |
-| Trea Turner | 13 | 0.301 | 0.340 | 1.79 |
-| Salvador Perez | 14 | 0.286 | 0.341 | 1.64 |
+| Vladimir Guerrero Jr. | 9 | 0.322 | 0.381 | 2.06 |
+| Trea Turner | 10 | 0.292 | 0.339 | 1.79 |
+| Luis Arraez | 17 | 0.302 | 0.332 | 1.92 |
 
 
 ## Peak-form FAs (>= 90th percentile, current > your roster floor) — MIRAGE PILE
 
 | Player | Pct | Curr L150 | Career med | Own% |
 |---|---|---|---|---|
-| Spencer Steer | 100 | 0.413 | 0.317 | 27 |
-| Michael Busch | 91 | 0.399 | 0.340 | 42 |
-| Wander Franco | 98 | 0.393 | 0.350 | 0 |
-| Luke Raley | 91 | 0.385 | 0.323 | 12 |
-| Andrew Vaughn | 97 | 0.376 | 0.328 | 5 |
-| Casey Schmitt | 99 | 0.375 | 0.323 | 35 |
-| Dominic Smith | 93 | 0.369 | 0.321 | 4 |
-| J.P. Crawford | 95 | 0.365 | 0.318 | 8 |
-| Gavin Sheets | 91 | 0.358 | 0.307 | 26 |
-| Curtis Mead | 99 | 0.351 | 0.292 | 1 |
-| Nick Gonzales | 92 | 0.348 | 0.301 | 5 |
-| Eric Wagaman | 93 | 0.342 | 0.308 | 0 |
-| Derek Hill | 98 | 0.332 | 0.280 | 0 |
+| Wander Franco | 99 | 0.396 | 0.350 | 0 |
+| Ryan Jeffers | 100 | 0.390 | 0.321 | 29 |
+| Gabriel Moreno | 100 | 0.385 | 0.335 | 35 |
+| Curtis Mead | 96 | 0.375 | 0.294 | 9 |
+| Nathaniel Lowe | 94 | 0.375 | 0.329 | 2 |
+| Spencer Steer | 92 | 0.369 | 0.317 | 26 |
+| Jeremy Pena | 97 | 0.365 | 0.316 | 61 |
+| Dane Myers | 99 | 0.363 | 0.309 | 0 |
+| Eric Wagaman | 96 | 0.353 | 0.310 | 0 |
+| Vaughn Grissom | 96 | 0.352 | 0.307 | 1 |
+| Blaze Alexander | 99 | 0.343 | 0.302 | 4 |
+| Isaac Paredes | 93 | 0.341 | 0.310 | 35 |
 | Manny Pina | 93 | 0.332 | 0.305 | 0 |
 
 _Do NOT recommend swapping into these — they're at career-peak and likely to revert._
@@ -112,169 +111,176 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 | Player | Pct | Curr L150 | Career med | Own% | rh3/g |
 |---|---|---|---|---|---|
-| Carlos Correa | 66 | 0.370 | 0.354 | 14 | 1.71 |
-| Paul Goldschmidt | 50 | 0.369 | 0.369 | 2 | 1.93 |
-| Yasmani Grandal | 70 | 0.358 | 0.327 | 0 | — |
-| Gary Sanchez | 62 | 0.357 | 0.343 | 4 | 1.56 |
-| Dominic Canzone | 65 | 0.357 | 0.342 | 3 | 1.60 |
-| Kyle Stowers | 54 | 0.348 | 0.342 | 30 | 1.60 |
-| Brendan Donovan | 54 | 0.344 | 0.341 | 49 | 1.87 |
-| Heliot Ramos | 74 | 0.344 | 0.323 | 13 | 1.63 |
-| Austin Martin | 54 | 0.339 | 0.330 | 3 | 1.64 |
-| Spencer Horwitz | 73 | 0.338 | 0.327 | 3 | 2.01 |
-| Victor Caratini | 78 | 0.338 | 0.313 | 1 | 1.52 |
-| Richie Palacios | 76 | 0.337 | 0.323 | 1 | 1.47 |
-| Jurickson Profar | 67 | 0.336 | 0.321 | 5 | — |
-| Randal Grichuk | 70 | 0.335 | 0.324 | 0 | 1.86 |
-| Dane Myers | 67 | 0.334 | 0.306 | 0 | 1.45 |
-| Gabriel Moreno | 51 | 0.334 | 0.334 | 30 | 1.79 |
-| Mark Vientos | 67 | 0.333 | 0.319 | 6 | 1.63 |
-| Matt Vierling | 72 | 0.332 | 0.320 | 1 | 1.67 |
-| Trent Grisham | 56 | 0.332 | 0.325 | 20 | 1.87 |
+| Michael Busch | 79 | 0.388 | 0.343 | 43 | 1.81 |
+| Paul Goldschmidt | 65 | 0.386 | 0.368 | 8 | 1.91 |
+| Carlos Correa | 66 | 0.370 | 0.354 | 11 | — |
+| Michael Conforto | 73 | 0.370 | 0.349 | 0 | 1.67 |
+| Dominic Canzone | 68 | 0.360 | 0.345 | 5 | 1.80 |
+| Yasmani Grandal | 70 | 0.358 | 0.326 | 0 | — |
+| Luke Raley | 73 | 0.356 | 0.328 | 13 | 1.67 |
+| Edouard Julien | 68 | 0.345 | 0.328 | 0 | 1.35 |
+| Brendan Donovan | 54 | 0.344 | 0.341 | 44 | — |
+| Heliot Ramos | 74 | 0.344 | 0.324 | 12 | — |
+| Andrew Benintendi | 75 | 0.344 | 0.328 | 3 | 1.63 |
+| Jesus Sanchez | 61 | 0.343 | 0.337 | 4 | 1.72 |
+| Spencer Horwitz | 69 | 0.339 | 0.330 | 13 | 2.17 |
+| Nelson Velazquez | 67 | 0.337 | 0.321 | 0 | — |
+| Jurickson Profar | 67 | 0.335 | 0.321 | 5 | — |
+| Jo Adell | 71 | 0.335 | 0.319 | 36 | 1.55 |
+| Isaac Collins | 79 | 0.335 | 0.315 | 1 | 1.65 |
+| Jarred Kelenic | 74 | 0.334 | 0.308 | 0 | — |
+| Colton Cowser | 72 | 0.330 | 0.308 | 6 | 1.11 |
+| Gavin Sheets | 71 | 0.329 | 0.309 | 15 | 1.82 |
 
 
 ## Anti-mirage cross-check (bottom-3 roster slumpers → honest-pool FAs)
 
 
-### Vladimir Guerrero Jr. (1B) — pct 13, curr_l150 0.340
+### Vladimir Guerrero Jr. (1B) — pct 9, curr_l150 0.322
 
-- **Carlos Correa** (SS) — pct 66, curr 0.370, career med 0.354, rh3/g 1.71
+- **Michael Busch** (1B) — pct 79, curr 0.388, career med 0.343, rh3/g 1.81
 
-- **Paul Goldschmidt** (1B) — pct 50, curr 0.369, career med 0.369, rh3/g 1.93
-
-
-### Trea Turner (SS) — pct 13, curr_l150 0.301
-
-- **Carlos Correa** (SS) — pct 66, curr 0.370, career med 0.354, rh3/g 1.71
-
-- **Paul Goldschmidt** (1B) — pct 50, curr 0.369, career med 0.369, rh3/g 1.93
+- **Paul Goldschmidt** (1B) — pct 65, curr 0.386, career med 0.368, rh3/g 1.91
 
 
-### Salvador Perez (C) — pct 14, curr_l150 0.286
+### Trea Turner (SS) — pct 10, curr_l150 0.292
 
-- **Carlos Correa** (SS) — pct 66, curr 0.370, career med 0.354, rh3/g 1.71
+- **Michael Busch** (1B) — pct 79, curr 0.388, career med 0.343, rh3/g 1.81
 
-- **Paul Goldschmidt** (1B) — pct 50, curr 0.369, career med 0.369, rh3/g 1.93
+- **Paul Goldschmidt** (1B) — pct 65, curr 0.386, career med 0.368, rh3/g 1.91
+
+
+### Luis Arraez (1B) — pct 17, curr_l150 0.302
+
+- **Michael Busch** (1B) — pct 79, curr 0.388, career med 0.343, rh3/g 1.81
+
+- **Paul Goldschmidt** (1B) — pct 65, curr 0.386, career med 0.368, rh3/g 1.91
 
 
 ## Recommendation
 
-- **DROP Vladimir Guerrero Jr. (1B) → ADD Carlos Correa (SS).** Slumper at 13th pct (career med 0.382 vs curr 0.340); FA at 66th pct (above-median but NOT peak-form), curr 0.370. rh3/g Δ -0.34.
+- **DROP Vladimir Guerrero Jr. (1B) → ADD Michael Busch (1B).** Slumper at 9th pct (career med 0.381 vs curr 0.322); FA at 79th pct (above-median but NOT peak-form), curr 0.388. rh3/g Δ -0.25.
 
-- **DROP Trea Turner (SS) → ADD Carlos Correa (SS).** Slumper at 13th pct (career med 0.340 vs curr 0.301); FA at 66th pct (above-median but NOT peak-form), curr 0.370. rh3/g Δ -0.08.
+- **DROP Trea Turner (SS) → ADD Michael Busch (1B).** Slumper at 10th pct (career med 0.339 vs curr 0.292); FA at 79th pct (above-median but NOT peak-form), curr 0.388. rh3/g Δ +0.02.
 
-- **DROP Salvador Perez (C) → ADD Carlos Correa (SS).** Slumper at 14th pct (career med 0.341 vs curr 0.286); FA at 66th pct (above-median but NOT peak-form), curr 0.370. rh3/g Δ +0.07.
+- **DROP Luis Arraez (1B) → ADD Michael Busch (1B).** Slumper at 17th pct (career med 0.332 vs curr 0.302); FA at 79th pct (above-median but NOT peak-form), curr 0.388. rh3/g Δ -0.11.
 
 
 ## Unresolved names
 
-- A.J. Ewing (CF, NYM, src=fa)
+- Braden Montgomery (CF, ChW, src=fa)
 
 - Colt Emerson (SS, Sea, src=fa)
+
+- A.J. Ewing (CF, NYM, src=fa)
+
+- Spencer Jones (CF, NYY, src=fa)
 
 - Ryan Waldschmidt (LF, Ari, src=fa)
 
 - Henry Bolte (RF, Oak, src=fa)
 
-- Spencer Jones (CF, NYY, src=fa)
+- Jacob Gonzalez (2B, ChW, src=fa)
+
+- Cole Carrigg (CF, Col, src=fa)
+
+- Edwin Arroyo (SS, Cin, src=fa)
+
+- Jesus Made (SS, Mil, src=fa)
 
 - Max Clark (CF, Det, src=fa)
 
 - Leo De Vries (SS, Oak, src=fa)
 
-- Pedro Ramirez (3B, ChC, src=fa)
+- Tommy Troy (2B, Ari, src=fa)
 
-- Jesus Made (SS, Mil, src=fa)
-
-- Bryan Torres (RF, StL, src=fa)
+- Walker Jenkins (CF, Min, src=fa)
 
 - Charlie Condon (1B, Col, src=fa)
 
-- Walker Jenkins (CF, Min, src=fa)
+- Joshua Baez (RF, StL, src=fa)
+
+- Luis Lara (CF, Mil, src=fa)
+
+- Kaelen Culpepper (SS, Min, src=fa)
 
 - Sebastian Walcott (SS, Tex, src=fa)
 
 - Aidan Miller (SS, Phi, src=fa)
 
-- George Lombard Jr. (SS, NYY, src=fa)
-
 - Josue De Paula (LF, LAD, src=fa)
 
-- Braden Montgomery (CF, ChW, src=fa)
+- Bryan Torres (RF, StL, src=fa)
 
-- Ethan Holliday (SS, Col, src=fa)
-
-- Jett Williams (SS, Mil, src=fa)
-
-- Esmerlyn Valdez (RF, Pit, src=fa)
-
-- Tommy Troy (2B, Ari, src=fa)
-
-- Edwin Arroyo (SS, Cin, src=fa)
+- George Lombard Jr. (SS, NYY, src=fa)
 
 - James Tibbs III (RF, LAD, src=fa)
 
 - Franklin Arias (SS, Bos, src=fa)
 
-- Joshua Baez (RF, StL, src=fa)
+- Jett Williams (SS, Mil, src=fa)
+
+- Ethan Holliday (SS, Col, src=fa)
 
 - Eli Willits (SS, Wsh, src=fa)
 
-- Kaelen Culpepper (SS, Min, src=fa)
+- Pedro Ramirez (3B, ChC, src=fa)
 
 - Luis Pena (SS, Mil, src=fa)
 
-- Cole Carrigg (CF, Col, src=fa)
+- Zyhir Hope (RF, LAD, src=fa)
 
 - Edward Florentino (CF, Pit, src=fa)
 
-- Zyhir Hope (RF, LAD, src=fa)
-
-- Emmanuel Rodriguez (CF, Min, src=fa)
-
 - Lazaro Montes (RF, Sea, src=fa)
-
-- Rainiel Rodriguez (C, StL, src=fa)
 
 - Ethan Salas (C, SD, src=fa)
 
-- Eduardo Quintero (CF, LAD, src=fa)
+- Rainiel Rodriguez (C, StL, src=fa)
+
+- Emmanuel Rodriguez (CF, Min, src=fa)
 
 - Caleb Bonemer (SS, ChW, src=fa)
 
-- Bryce Rainer (SS, Det, src=fa)
+- Eduardo Quintero (CF, LAD, src=fa)
 
 - Ralphy Velazquez (1B, Cle, src=fa)
 
-- Josue Briceno (C, Det, src=fa)
+- Bryce Rainer (SS, Det, src=fa)
+
+- Rikuu Nishida (RF, ChW, src=fa)
 
 - Andrew Fischer (3B, Mil, src=fa)
+
+- Josue Briceno (C, Det, src=fa)
 
 - JoJo Parker (SS, Tor, src=fa)
 
 - Cooper Pratt (SS, Mil, src=fa)
 
+- Mike Sirota (CF, LAD, src=fa)
+
 - Alfredo Duno (C, Cin, src=fa)
-
-- Hao-Yu Lee (3B, Det, src=fa)
-
-- Luis Lara (CF, Mil, src=fa)
-
-- Nick Morabito (CF, NYM, src=fa)
 
 - Josuar Gonzalez (SS, SF, src=fa)
 
-- Ryan Clifford (1B, NYM, src=fa)
+- Charles McAdoo (3B, Tor, src=fa)
 
-- Mike Sirota (CF, LAD, src=fa)
+- LuJames Groover (3B, Ari, src=fa)
+
+- Ryan Clifford (1B, NYM, src=fa)
 
 - Aiva Arquette (SS, Mia, src=fa)
 
-- Michael Arroyo (2B, Sea, src=fa)
-
 - Cooper Ingle (C, Cle, src=fa)
 
-- Sheng-En Lin (DH, Cin, src=fa)
+- Esmerlyn Valdez (RF, Pit, src=fa)
+
+- Yohandy Morales (1B, Wsh, src=fa)
+
+- Theo Gillen (CF, TB, src=fa)
+
+- Michael Arroyo (2B, Sea, src=fa)
 
 - Ethan Conrad (RF, ChC, src=fa)
 
@@ -282,43 +288,45 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Dax Kilby (SS, NYY, src=fa)
 
-- Theo Gillen (CF, TB, src=fa)
-
-- Yohandy Morales (1B, Wsh, src=fa)
-
-- Druw Jones (CF, Ari, src=fa)
-
-- Arjun Nimmala (SS, Tor, src=fa)
-
-- Blaze Jordan (1B, StL, src=fa)
-
-- Xavier Isaac (DH, TB, src=fa)
-
-- Devin Fitz-Gerald (SS, Tex, src=fa)
-
 - Eric Hartman (CF, Atl, src=fa)
 
-- Termarr Johnson (2B, Pit, src=fa)
+- Sheng-En Lin (DH, Cin, src=fa)
+
+- Devin Fitz-Gerald (SS, Wsh, src=fa)
+
+- Jase Bowen (CF, SD, src=fa)
+
+- Hao-Yu Lee (3B, Det, src=fa)
 
 - Angel Genao (SS, Cle, src=fa)
 
-- Cam Collier (1B, Cin, src=fa)
+- Arjun Nimmala (SS, Tor, src=fa)
+
+- Xavier Isaac (DH, TB, src=fa)
+
+- Blaze Jordan (1B, StL, src=fa)
+
+- Druw Jones (CF, Ari, src=fa)
 
 - Felnin Celesten (SS, Sea, src=fa)
 
-- Gabriel Gonzalez (LF, Min, src=fa)
+- Luis Hernandez (SS, SF, src=fa)
 
-- Ike Irish (C, Bal, src=fa)
+- Termarr Johnson (2B, Pit, src=fa)
+
+- Cam Collier (1B, Cin, src=fa)
 
 - Jaison Chourio (CF, Cle, src=fa)
 
-- Luis Carpio (2B, Det, src=fa)
-
-- Luis Hernandez (SS, SF, src=fa)
-
-- Jonny Farmelo (CF, Sea, src=fa)
+- Gabriel Gonzalez (LF, Min, src=fa)
 
 - Seaver King (SS, Wsh, src=fa)
+
+- Ike Irish (C, Bal, src=fa)
+
+- Abimelec Ortiz (1B, Wsh, src=fa)
+
+- Jonny Farmelo (CF, Sea, src=fa)
 
 - Justin Gonzales (RF, Bos, src=fa)
 
@@ -326,45 +334,43 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Steele Hall (SS, Cin, src=fa)
 
-- Sterlin Thompson (LF, Col, src=fa)
-
-- Jace LaViolette (CF, Cle, src=fa)
-
-- Ronny Cruz (SS, Wsh, src=fa)
-
-- Abimelec Ortiz (1B, Wsh, src=fa)
+- Luis Carpio (2B, Det, src=fa)
 
 - Enrique Bradfield Jr. (CF, Bal, src=fa)
 
-- James Triantos (2B, ChC, src=fa)
+- Jace LaViolette (CF, Cle, src=fa)
+
+- Jonah Cox (CF, SF, src=fa)
+
+- Sterlin Thompson (LF, Col, src=fa)
 
 - Max Anderson (2B, Det, src=fa)
 
-- Jacob Gonzalez (2B, ChW, src=fa)
-
 - Blake Mitchell (C, KC, src=fa)
-
-- Tommy White (3B, Oak, src=fa)
 
 - Vance Honeycutt (CF, Bal, src=fa)
 
-- Nate George (CF, Bal, src=fa)
-
-- Elian Peña (SS, NYM, src=fa)
+- Josiah Hartshorn (RF, ChC, src=fa)
 
 - Kayson Cunningham (SS, Ari, src=fa)
 
 - Xavier Neyens (SS, Hou, src=fa)
 
-- Victor Bericoto (1B, SF, src=fa)
+- Ronny Cruz (SS, Wsh, src=fa)
 
-- Jacob Reimer (3B, NYM, src=fa)
+- Ronaldo Hernandez (C, Bos, src=fa)
+
+- Hector Rodriguez (LF, Cin, src=fa)
 
 - Jonathon Long (1B, ChC, src=fa)
 
-- Rodolfo Duran (C, SD, src=fa)
+- James Triantos (2B, ChC, src=fa)
+
+- Hendry Mendez (LF, Min, src=fa)
 
 - Anthony Vilar (2B, FA, src=fa)
+
+- Tommy White (3B, Oak, src=fa)
 
 - Jefferson Rojas (SS, ChC, src=fa)
 
@@ -374,17 +380,29 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Braylon Payne (CF, Mil, src=fa)
 
+- Nate George (CF, Bal, src=fa)
+
+- Tate Southisene (SS, Atl, src=fa)
+
+- Elian Peña (SS, NYM, src=fa)
+
+- Wehiwa Aloy (SS, Bal, src=fa)
+
 - Billy Carlson (SS, ChW, src=fa)
 
 - Gavin Fien (DH, Wsh, src=fa)
 
 - Kyler Murray (CF, Oak, src=fa)
 
-- Ronaldo Hernandez (C, Bos, src=fa)
+- Rodolfo Duran (C, SD, src=fa)
+
+- Victor Bericoto (1B, SF, src=fa)
+
+- Nick Morabito (CF, NYM, src=fa)
 
 - Nelson Rada (CF, LAA, src=fa)
 
-- Hector Rodriguez (LF, Cin, src=fa)
+- Jacob Reimer (3B, NYM, src=fa)
 
 - Brock Wilken (3B, Mil, src=fa)
 
@@ -392,17 +410,13 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Thayron Liranzo (C, Det, src=fa)
 
-- Gino Groover (3B, Ari, src=fa)
+- Brayden Taylor (3B, TB, src=fa)
 
 - Mikey Romero (3B, Bos, src=fa)
-
-- Dante Nori (CF, Phi, src=fa)
 
 - John Gil (SS, Atl, src=fa)
 
 - Blake Burke (1B, Mil, src=fa)
-
-- Shotaro Morii (SS, Oak, src=fa)
 
 - Aidan Smith (CF, TB, src=fa)
 
@@ -410,13 +424,13 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - George Wolkow (RF, ChW, src=fa)
 
-- Josiah Hartshorn (RF, ChC, src=fa)
-
 - Gavin Kilen (SS, SF, src=fa)
 
-- Wehiwa Aloy (SS, Bal, src=fa)
-
 - Josh Hammond (SS, KC, src=fa)
+
+- Roldy Brito (2B, Col, src=fa)
+
+- Luca Tresh (C, KC, src=fa)
 
 - CJ Stubbs (C, Tor, src=fa)
 
@@ -430,25 +444,29 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Payton Eeles (SS, Bal, src=fa)
 
+- Jacob Berry (2B, Mia, src=fa)
+
 - Kemp Alderman (RF, Mia, src=fa)
 
-- Jacob Berry (2B, Mia, src=fa)
+- Trei Cruz (SS, Det, src=fa)
+
+- Christian Franklin (CF, Wsh, src=fa)
 
 - James Jarvis (SS, Atl, src=fa)
 
-- Brennen Davis (LF, Sea, src=fa)
+- Leonardo Bernal (C, StL, src=fa)
 
 - Carlos Rodriguez (LF, SD, src=fa)
 
 - Aroon Escobar (2B, Phi, src=fa)
 
-- Brayden Taylor (3B, TB, src=fa)
-
-- Jose Rodriguez (2B, Phi, src=fa)
+- Collin Price (C, Hou, src=fa)
 
 - Gavin Cross (RF, KC, src=fa)
 
 - Sean Keys (3B, Tor, src=fa)
+
+- Dante Nori (CF, Phi, src=fa)
 
 - Bo Davidson (CF, SF, src=fa)
 
@@ -458,6 +476,8 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Juan Sanchez (3B, Tor, src=fa)
 
+- Joshua Adamczewski (2B, Mil, src=fa)
+
 - Tyson Lewis (SS, Cin, src=fa)
 
 - Luke Dickerson (SS, Wsh, src=fa)
@@ -466,7 +486,7 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Ethan Frey (CF, Hou, src=fa)
 
-- Darell Morel (SS, Pit, src=fa)
+- Shotaro Morii (SS, Oak, src=fa)
 
 - Miguel Bleis (RF, Bos, src=fa)
 
@@ -474,15 +494,13 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Elijah Green (CF, Wsh, src=fa)
 
-- Brailer Guerrero (RF, TB, src=fa)
-
 - Charles Davalan (CF, LAD, src=fa)
-
-- Tate Southisene (SS, Atl, src=fa)
 
 - Roderick Arias (SS, NYY, src=fa)
 
 - Starlyn Caba (SS, Mia, src=fa)
+
+- Adrian Santana (SS, TB, src=fa)
 
 - Marek Houston (SS, Min, src=fa)
 
@@ -494,43 +512,47 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Eduardo Lopez (RF, Phi, src=fa)
 
-- Roldy Brito (2B, Col, src=fa)
-
 - Taitn Gray (1B, TB, src=fa)
 
-- Luca Tresh (C, KC, src=fa)
+- Sam McMillan (C, Det, src=fa)
+
+- Ronnier Quintero (C, ChC, src=fa)
 
 - Gabriel Rincones Jr. (RF, Phi, src=fa)
 
 - Junior Perez (CF, ChW, src=fa)
 
-- Jose Ramos (RF, NYM, src=fa)
-
-- Christian Franklin (CF, Wsh, src=fa)
-
 - Christian Cairo (LF, Phi, src=fa)
 
-- Kristian Robinson (CF, Ari, src=fa)
+- RJ Schreck (RF, Tor, src=fa)
+
+- Kyler Fedko (CF, Min, src=fa)
 
 - A.J. Vukovich (LF, Ari, src=fa)
 
-- Trei Cruz (SS, Det, src=fa)
-
-- Jase Bowen (CF, SD, src=fa)
-
-- Jared Serna (SS, Mia, src=fa)
+- Brennen Davis (LF, Sea, src=fa)
 
 - Ray Delgado (2B, TB, src=fa)
 
+- Jared Serna (SS, Mia, src=fa)
+
 - Josh Kasevich (SS, Tor, src=fa)
+
+- B.J. Murray Jr. (1B, ChC, src=fa)
 
 - William Bergolla Jr. (SS, ChW, src=fa)
 
+- Eduardo Valencia (1B, Det, src=fa)
+
+- Jose Ramos (RF, NYM, src=fa)
+
+- Kristian Robinson (CF, Ari, src=fa)
+
 - Ben Cowles (SS, ChC, src=fa)
 
-- Leonardo Bernal (C, StL, src=fa)
+- Reed Trimble (RF, Bal, src=fa)
 
-- Hendry Mendez (LF, Min, src=fa)
+- Bryan Gonzalez (RF, KC, src=fa)
 
 - Matt James Kroon (LF, Phi, src=fa)
 
@@ -544,17 +566,25 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Jax Biggers (2B, Hou, src=fa)
 
+- Cayden Wallace (3B, Wsh, src=fa)
+
 - Riley Tirotta (3B, Tor, src=fa)
 
 - Jesus Bastidas (3B, Mia, src=fa)
 
+- Cooper Kinney (2B, TB, src=fa)
+
 - Nicholas Raposo (C, Sea, src=fa)
 
-- Milan Tolentino (SS, Cle, src=fa)
+- Jose Rodriguez (2B, Phi, src=fa)
+
+- Cooper Johnson (C, Tex, src=fa)
 
 - Walker Janek (C, Hou, src=fa)
 
 - Luke Stevenson (C, Sea, src=fa)
+
+- Omar Alfonzo (C, Pit, src=fa)
 
 - Connor Burns (C, Cin, src=fa)
 
@@ -570,7 +600,13 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Leonado Balcazar (SS, Cin, src=fa)
 
+- Jud Fabian (CF, Bal, src=fa)
+
 - Chase Davis (CF, StL, src=fa)
+
+- Mitch Jebb (CF, Pit, src=fa)
+
+- Josh Kuroda-Grauer (SS, Oak, src=fa)
 
 - Aron Estrada (2B, Bal, src=fa)
 
@@ -579,10 +615,6 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 - Blake Hunt (C, SD, src=fa)
 
 - Diego Cartaya (C, SF, src=fa)
-
-- Omar Martinez (C, LAA, src=fa)
-
-- Kyler Fedko (CF, Min, src=fa)
 
 - Luke Waddell (SS, Atl, src=fa)
 
@@ -593,8 +625,6 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 - Jared Thomas (LF, Col, src=fa)
 
 - Christopher Suero (C, NYM, src=fa)
-
-- B.J. Murray Jr. (1B, ChC, src=fa)
 
 - Ricardo Olivar (C, Min, src=fa)
 
@@ -632,17 +662,19 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Yoeilin Cespedes (2B, Bos, src=fa)
 
+- Aaron Sabato (1B, Min, src=fa)
+
 - Jesus Baez (SS, StL, src=fa)
 
 - Mitch Voit (2B, NYM, src=fa)
 
 - Adrian Placencia (2B, LAA, src=fa)
 
-- Joshua Adamczewski (2B, Mil, src=fa)
-
 - Kevin Ereu (1B, Mil, src=fa)
 
 - Alex De Jesus (3B, Tor, src=fa)
+
+- Wyatt Sanford (SS, Pit, src=fa)
 
 - JD Dix (2B, Ari, src=fa)
 
@@ -664,6 +696,10 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Fernando Cruz (SS, ChC, src=fa)
 
+- Darell Morel (SS, Pit, src=fa)
+
+- Dylan Dreiling (CF, Tex, src=fa)
+
 - Kane Kepley (CF, ChC, src=fa)
 
 - Austin Overn (CF, TB, src=fa)
@@ -674,11 +710,13 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Griff O'Ferrall (SS, Bal, src=fa)
 
-- Derniche Valdez (CF, ChC, src=fa)
+- Samuel Zavala (CF, ChW, src=fa)
 
 - Benny Montgomery (RF, Col, src=fa)
 
 - Juneiker Caceres (RF, Cle, src=fa)
+
+- Elorky Rodriguez (CF, Tex, src=fa)
 
 - Diego Tornes (CF, Atl, src=fa)
 
@@ -686,7 +724,7 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Ching-Hsien Ko (LF, LAD, src=fa)
 
-- Yophery Rodriguez (LF, Bos, src=fa)
+- Adolfo Sanchez (CF, Cin, src=fa)
 
 - Paulino Santana (LF, Tex, src=fa)
 
@@ -694,11 +732,15 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Cristhian Vaquero (CF, Wsh, src=fa)
 
+- Hedbert Perez (DH, Tor, src=fa)
+
 - Rayner Arias (LF, SF, src=fa)
 
 - Robert Calaz (RF, Col, src=fa)
 
 - PJ Morlando (LF, Mia, src=fa)
+
+- Brailer Guerrero (RF, TB, src=fa)
 
 - Dillon Head (CF, Mia, src=fa)
 
@@ -707,6 +749,8 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 - Sean Gamble (CF, KC, src=fa)
 
 - Slater de Brun (CF, TB, src=fa)
+
+- Cam Cannarella (CF, Mia, src=fa)
 
 - Brendan Summerhill (CF, TB, src=fa)
 
@@ -726,9 +770,9 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Welbyn Francisca (SS, Cle, src=fa)
 
-- Adrian Santana (SS, TB, src=fa)
-
 - Jose Perdomo (SS, Atl, src=fa)
+
+- Yandel Ricardo (SS, KC, src=fa)
 
 - Joswa Lugo (SS, LAA, src=fa)
 
@@ -742,6 +786,8 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Dorian Soto (SS, Bos, src=fa)
 
+- Tony Blanco Jr. (DH, Pit, src=fa)
+
 - Pablo Aliendo (C, ChC, src=fa)
 
 - Jesus David Parra (1B, Mil, src=fa)
@@ -751,6 +797,8 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 - Jeisson Rosario (RF, Oak, src=fa)
 
 - Bryce Ball (1B, Phi, src=fa)
+
+- Eduardo Diaz (LF, Ari, src=fa)
 
 - Ray-Patrick Elijah Didder (SS, SD, src=fa)
 
@@ -764,9 +812,9 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Carlos Soto (C, StL, src=fa)
 
-- Jhon Torres (LF, StL, src=fa)
-
 - Julio Carreras (2B, Col, src=fa)
+
+- Micker Adolfo (RF, ChW, src=fa)
 
 - Yonathan Mendoza (2B, Sea, src=fa)
 
@@ -780,13 +828,9 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Bayron Lora (RF, Tex, src=fa)
 
-- José Cardona (CF, ChC, src=fa)
-
 - Wander Javier (SS, Min, src=fa)
 
 - Gregory Guerrero (2B, LAA, src=fa)
-
-- Ronnier Quintero (C, ChC, src=fa)
 
 - Eliezer Alvarez (CF, Tex, src=fa)
 
@@ -816,33 +860,21 @@ _Do NOT recommend swapping into these — they're at career-peak and likely to r
 
 - Cooper Flemming (SS, TB, src=fa)
 
-- Dom Keegan (C, TB, src=fa)
-
-- Eduardo Valencia (1B, Det, src=fa)
+- Omar Martinez (C, LAA, src=fa)
 
 - Matt Koperniak (RF, StL, src=fa)
 
-- RJ Schreck (RF, Tor, src=fa)
+- Aaron Zavala (LF, Tex, src=fa)
+
+- Dom Keegan (C, TB, src=fa)
 
 - Andrew Pintar (CF, Mia, src=fa)
 
 - Shane McGuire (C, Oak, src=fa)
-
-- Reed Trimble (RF, Bal, src=fa)
-
-- Bryan Gonzalez (RF, KC, src=fa)
-
-- Clay Dungan (2B, KC, src=fa)
-
-- Max Ferguson (2B, Bos, src=fa)
-
-- Peyton Wilson (2B, KC, src=fa)
-
-- Cayden Wallace (3B, Wsh, src=fa)
 
 
 ## Insufficient sample
 
 - Roster: 0 (< 300 career PA or < 150 PA total)
 
-- FA: 204
+- FA: 194
