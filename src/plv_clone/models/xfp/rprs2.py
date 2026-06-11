@@ -23,6 +23,22 @@ If both pass, ship as production. If overall regresses, hard fail (don't trade
 overall accuracy for niche signal). If only role-change fails, document the
 negative result and revert.
 
+Unit note (rest-of-season is NOT mis-scaled — verified 2026-06-11):
+  The model TARGET is `fp_year_total` (a full-SEASON FP total), and
+  `xfp_full_year` is that full-season projection. The user-facing
+  rest-of-season figure `xfp_ros` is NOT the raw full-season number — it is
+  `xfp_full_year - fp_actual_2026`, i.e. the full-season projection MINUS the
+  FP already banked this season (computed live from the counting-stats JSON).
+  So `xfp_ros` is a genuine forward/RoS figure (mean ~82 FP vs full-year ~142
+  in the 2026-06-09 run; the subtraction is live for every row). The "RP is
+  mis-scaled mid-season" flag from `verdict_backtest_2026-06-11.md` was a
+  BACKTEST-COMPARISON ARTIFACT, not a production bug: that backtest's RANKING
+  LENS deliberately compared the full-season projection against a partial
+  (season-to-date) actual — a unit mismatch the backtest itself flagged — and
+  did so only to get a leakage-safe rank check while the season is incomplete.
+  Production already converts to RoS correctly, so NO production change is
+  warranted here. (See the comment at the `xfp_ros` assignment below.)
+
 ADR-0001: this module owns its own fit_and_project orchestration. The shared
 `engine.py` is a toolkit composed at load-bearing steps, not an orchestrator.
 """
@@ -326,6 +342,12 @@ def main():
         columns={'name':'name_api','saves':'sv_2026','holds':'hld_2026'})
     valid = valid.merge(cnt_df, on='pitcher', how='left')
     valid['fp_actual_2026'] = valid['fp_actual_2026'].fillna(0)
+    # xfp_ros is the GENUINE rest-of-season figure: the full-season projection
+    # (model target = fp_year_total) MINUS the FP already banked in 2026. This
+    # is the correct mid-season scaling — do NOT publish xfp_full_year as the
+    # forward number. The verdict_backtest_2026-06-11 "RP mis-scale" note was a
+    # backtest-comparison artifact (its ranking lens compares full-season proj
+    # vs partial actual on purpose); production is correct. See module docstring.
     valid['xfp_ros'] = (valid['xfp_full_year'] - valid['fp_actual_2026']).round(1)
     valid['xfp_ros_p25'] = (valid['xfp_p25'] - valid['fp_actual_2026']).round(1).clip(lower=0)
     valid['xfp_ros_p75'] = (valid['xfp_p75'] - valid['fp_actual_2026']).round(1)
