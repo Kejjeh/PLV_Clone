@@ -435,6 +435,21 @@ def main():
     print(f'  sigma calibration: method={calib.get("method")} alpha={alpha:.3f} '
           f'(mean sigma raw={float(np.mean(sigmas)):.3f} -> calibrated={float(np.mean(sigmas))*alpha:.3f})')
 
+    # Decision-band p25/p75 (added 2026-06-11). The displayed xfp_rp3_p25/p75
+    # use the ×2.41 coverage-recalibrated sigma so the CI honestly brackets
+    # ~50% of historical outcomes — but that wide band ALSO neutered the
+    # add/drop trigger: the 2026-06-11 verdict_backtest found the SP signal
+    # emitted 'hold' on 100% of rows because no p25 could clear (nor any p75
+    # fall below) the SP-45 replacement once the band was that wide. We keep
+    # the wide band for DISPLAY and add a SEPARATE narrower DECISION band built
+    # from the raw (pre-recalibration) LOO-residual sigma for the add/drop
+    # computation only. This restores a live add/hold/drop distribution without
+    # touching the headline projection, the displayed CI, or any model fit.
+    valid['xfp_rp3_decision_p25'] = (
+        valid['xfp_rp3_per_start'] - Z25 * valid['xfp_rp3_sigma_raw']).clip(lower=0)
+    valid['xfp_rp3_decision_p75'] = (
+        valid['xfp_rp3_per_start'] + Z25 * valid['xfp_rp3_sigma_raw'])
+
     # Recency form gap
     valid['recency_form_gap'] = (valid['fp_per_start_last21'] -
                                   valid['fp_per_start_to']).round(3)
@@ -558,6 +573,7 @@ def main():
         'xfp_rp3_per_start', 'xfp_rp3_sigma', 'xfp_rp3_sigma_raw',
         'sigma_calibration_method',
         'xfp_rp3_p25', 'xfp_rp3_p75',
+        'xfp_rp3_decision_p25', 'xfp_rp3_decision_p75',
         'next_opp_team', 'next_opp_bat_index',
         'next2_avg_bat_index', 'schedule_factor',
         'xfp_rp3_per_start_sched',
@@ -653,9 +669,14 @@ def compute_replacement_delta(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _signal(row) -> str:
+    # Use the DECISION band (narrow, raw-sigma) for the add/drop trigger if it
+    # is present, falling back to the displayed band for callers that only
+    # materialize xfp_rp3_p25/p75 (e.g. the verdict backtest). The wide ×2.41
+    # display band is a coverage-calibrated CI, not a decision band — using it
+    # for add/drop made the signal inert (100% hold, verdict_backtest 2026-06-11).
     delta = row.get('replacement_delta', 0)
-    p25 = row.get('xfp_rp3_p25', None)
-    p75 = row.get('xfp_rp3_p75', None)
+    p25 = row.get('xfp_rp3_decision_p25', row.get('xfp_rp3_p25', None))
+    p75 = row.get('xfp_rp3_decision_p75', row.get('xfp_rp3_p75', None))
     repl = row.get('replacement_xfp_per_start', None)
     is_il = bool(row.get('is_on_il_at_split', 0))
     if is_il:
