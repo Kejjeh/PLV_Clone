@@ -390,6 +390,17 @@ sibling and ask if it needs attention too.
     session memory — both were on opponent rosters. Always call
     `get_my_roster_with_injuries()` first and use `my_tag()` to annotate.
     See `/roster-verify` skill.
+12. **Don't headline a single lens or let a verdict flip across turns.**
+    The SAME player (Steer 2026-06-09) was called "cooling" one turn and
+    "BUY/rising" the next because different runs foregrounded different
+    slivers (the `decision_type_lens_registry` "Skip" columns optimize
+    brevity over consistency). For ANY user-facing player verdict: COMPUTE
+    and SHOW the full lens stack, give an explicit **actuals vs trajectory
+    vs process** reconciliation when they diverge, and keep the headline
+    **stable + lens-order-independent**. A verdict may change only on (a)
+    new data (a refresh) or (b) a corrected error — and when it changes,
+    say WHY. Never flip silently. See `reference_lens_merge_protocol.md`
+    ("ALWAYS run + SHOW the full stack").
 
 ## Memory pointers (for context-dense lookups)
 

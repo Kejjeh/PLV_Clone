@@ -5,6 +5,16 @@ description: Unified three-lens player analysis combining Pitcher List ranks, ou
 
 # triangulate — three-lens unified player analysis
 
+> **⚠ Consistency mandate (2026-06-09).** Show the FULL lens stack and keep the
+> headline STABLE across turns. Never headline a single sliver (the Steer
+> cool↔buy flip). When the actuals lens (boom-bust), the trajectory lens
+> (xwOBACON YoY / archetype traj), and the process/ranker lens (rh3·rp3·rprs2 +
+> Blended xFP) diverge, write the explicit **actuals vs trajectory vs process**
+> reconciliation rather than picking one. A verdict may change only on new data
+> or a corrected error — say WHY when it does. See
+> `reference_lens_merge_protocol.md` → "ALWAYS run + SHOW the full stack" and
+> `reference_decision_type_lens_registry.md` (subset = weighting, not hiding).
+
 Every player gets analyzed through **three independent lenses** that have different anchors and different failure modes. The diagnostic value is in *agreement vs disagreement* — when all three converge, conviction; when they diverge, the disagreement itself is the insight.
 
 | Lens | What it measures | Anchor | Failure mode |
