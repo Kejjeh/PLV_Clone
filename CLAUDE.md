@@ -426,6 +426,17 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     new data (a refresh) or (b) a corrected error — and when it changes,
     say WHY. Never flip silently. See `reference_lens_merge_protocol.md`
     ("ALWAYS run + SHOW the full stack").
+13. **Don't treat the lens stack as additive point-forecast lift.** Validated
+    2026-06-11 (`lens_value_add_2026-06-11.md`, leakage-safe player-clustered
+    OOS): the multi-lens synthesis does NOT beat the base rank at
+    point-forecasting forward FP — clean ΔR² **+0.006 H (n.s.) / −0.014 SP
+    (negative)**; the +0.033 was an L7 leakage artifact. Lenses earn their keep
+    ONLY as **conviction / conflict surfacing** (agreement count sorts realized
+    direction monotonically: LOW +0.15 → MED +0.30 → HIGH +0.47 FP/g), NOT as a
+    free R² boost. **xwOBA-L21d (hitters)** and **boom-bust + sustainability
+    (SPs)** are NON-additive / mildly negative as point terms — use them for
+    CONTEXT and as Tier-B gates, NEVER to move the projection. Headline number
+    stays rh3/rp3/rprs2 / Blended xFP. See `reference_lens_merge_protocol.md`.
 
 ## Memory pointers (for context-dense lookups)
 
