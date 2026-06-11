@@ -369,6 +369,18 @@ def main():
     if not ok_decisions:
         print('  ⚠ decisions panel build failed — continuing (non-gating)')
 
+    # 4.10c. Settle logged decisions vs realized FP + emit daily scorecard.
+    # Walks data/research/decisions/, pulls actuals from the MLB Stats API
+    # gameLog (H FP/PA, SP FP/start, RP FP/app), settles every ripe record,
+    # and writes scorecard_{date}.{csv,md}. Idempotent + fail-soft.
+    ok_settle = run(
+        '4.10c. Settle decisions + scorecard',
+        'python -X utf8 scripts/xfp/settle_decisions.py',
+        timeout=180,
+    )
+    if not ok_settle:
+        print('  ⚠ decision settlement failed — continuing (non-gating)')
+
     if not args.no_push:
         if not ok_profiles:
             print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
