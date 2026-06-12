@@ -365,6 +365,13 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
    in one script. Reserve agent fan-out for genuine broad FA-pool scans.
 6. **`sp_bench_mc.py`** imports `fetch_schedules_by_team(team_ids, start, end)`
    (batch) from `build_matchup_dashboard`; keep in sync if that module refactors.
+7. **Never embed an unquoted Windows path in a Bash-tool command.** Bash strips
+   the backslashes, so `--csv-out C:\Users\...\Temp\x.csv` becomes the
+   drive-relative `C:Users...Tempx.csv` and the file lands at the REPO ROOT
+   with a mangled name (five stray `UsersJoshuaAppDataLocalTemp*.csv` cleaned
+   up 2026-06-11). For temp output from inline python, build the path INSIDE
+   python: `Path(tempfile.gettempdir()) / "x.csv"` — never paste a literal
+   `C:\...` into the bash command line. If you must pass one, single-quote it.
 
 ## Don't do these (load-bearing feedback)
 
