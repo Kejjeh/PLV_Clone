@@ -1,0 +1,8 @@
+signal,partial_r,pr_lo,pr_hi,auc_roleloss
+sig_svshare_trend,0.0729,0.0572,0.0881,0.571
+g_per_split_to,0.06,0.0393,0.0825,0.548
+sig_gf_trend,0.0596,0.0441,0.0745,0.52
+sig_svhld_trend,0.0454,0.0319,0.0609,0.578
+sig_closer_loss,0.0427,0.0287,0.0568,0.524
+lev_to,0.0171,-0.0138,0.0481,0.688
+sig_hldshare_trend,-0.0041,-0.0166,0.0106,0.552
