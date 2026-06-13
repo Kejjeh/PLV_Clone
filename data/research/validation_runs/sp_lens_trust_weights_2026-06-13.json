@@ -1,0 +1,74 @@
+[
+  {
+    "lens":"rp3 per_start (core)",
+    "n":19471,
+    "spearman":0.498,
+    "pearson":0.502,
+    "mae":2.97,
+    "base_spearman_subpop":0.498,
+    "partial_r_over_base":0.0
+  },
+  {
+    "lens":"Stuff+ projection",
+    "n":12084,
+    "spearman":0.446,
+    "pearson":0.449,
+    "mae":2.97,
+    "base_spearman_subpop":0.505,
+    "partial_r_over_base":0.173
+  },
+  {
+    "lens":"Sustainability E[ROS]",
+    "n":19471,
+    "spearman":0.476,
+    "pearson":0.482,
+    "mae":3.02,
+    "base_spearman_subpop":0.498,
+    "partial_r_over_base":0.064
+  },
+  {
+    "lens":"Recent actuals (L5)",
+    "n":18001,
+    "spearman":0.313,
+    "pearson":0.32,
+    "mae":4.98,
+    "base_spearman_subpop":0.505,
+    "partial_r_over_base":0.051
+  },
+  {
+    "lens":"talent_prior (marcel, all)",
+    "n":19471,
+    "spearman":0.252,
+    "pearson":0.284,
+    "mae":3.36,
+    "base_spearman_subpop":0.498,
+    "partial_r_over_base":0.15
+  },
+  {
+    "lens":"talent_prior (thin gs_to<=5)",
+    "n":3802,
+    "spearman":0.13,
+    "pearson":0.238,
+    "mae":3.43,
+    "base_spearman_subpop":0.296,
+    "partial_r_over_base":0.19
+  },
+  {
+    "lens":"Blended xFP (proxy)",
+    "n":18001,
+    "spearman":0.437,
+    "pearson":0.445,
+    "mae":3.26,
+    "base_spearman_subpop":0.505,
+    "partial_r_over_base":0.079
+  },
+  {
+    "lens":"Archetype T+1 (NEXT-SEASON)",
+    "n":1334,
+    "spearman":0.511,
+    "pearson":0.55,
+    "mae":2.48,
+    "base_spearman_subpop":0.449,
+    "partial_r_over_base":0.324
+  }
+]
