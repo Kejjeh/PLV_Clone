@@ -39,6 +39,16 @@ sys.path.insert(0, str(_THIS_DIR))
 
 from lib.blend_score import compute_blended_xfp  # noqa: E402
 
+# rp-decline tier join (Tier-B CONTEXT flag only — NEVER moves rprs2/live_marginal;
+# CLAUDE.md #13). A ROLE-RISK closer is a SELL-HIGH-NOW candidate: trade him while
+# he still has saves, before velo decline -> role loss craters his value. Honestly
+# weaker/noisier than /sp-decline (velo +0.112 vs SP whiff/K +0.235; role loss
+# ~1/3 manager-driven). Degrades to {} if the rolling cache is unavailable.
+try:
+    from rp_decline_model import tier_map as _rp_decline_tier_map  # noqa: E402
+except Exception:  # pragma: no cover - graceful degrade
+    _rp_decline_tier_map = lambda: {}  # noqa: E731
+
 ROOT = Path(r'c:/Users/Joshua/plv_clone')
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 FA_SNAP_DIR = ROOT / 'data' / 'research' / 'fa_snapshots'
@@ -209,10 +219,13 @@ def my_position_gap_map(rosters: dict, my_position_filter: str | None) -> dict[s
 # ---------- Per-opponent block ------------------------------------------
 
 def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
-                   my_gap: dict[str, float]) -> str:
+                   my_gap: dict[str, float],
+                   rp_decline: dict[str, dict] | None = None) -> str:
     style = (profile or {}).get('style_label', 'UNKNOWN')
+    rp_decline = rp_decline or {}
     sell_bait: list[dict] = []
     trade_ask: list[dict] = []
+    rp_sellhigh: list[dict] = []   # ROLE-RISK closers on this roster -> sell-high NOW
 
     for p in opp_roster:
         ptype = player_type_for(p)
@@ -232,6 +245,8 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
         tier = b.get('live_value_tier') or '-'
         # IL guard: snapshots can be stale for IL'd players; mark them.
         il_flag = p.get('lineup_slot') == 'IL' or p.get('injured')
+        # rp-decline CONTEXT tier (RP only; Tier-B watch flag, never moves lm).
+        rpd = rp_decline.get(_norm(name)) if ptype == 'RP' else None
         rec = {
             'name': name,
             'pos': pos,
@@ -240,7 +255,16 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
             'il': bool(il_flag),
             'blended': b.get('blended_xfp'),
             'display_unit': b.get('display_unit') or '',
+            'rp_decline': (rpd or {}).get('tier'),
         }
+        # SELL-HIGH surface: a ROLE-RISK reliever that still HAS a role to lose is
+        # an arm whose owner should be selling while saves/holds are still landing.
+        # As a trade *ask* it's a do-not-acquire flag; as bait awareness it's their
+        # asset that's about to crater. Either way: surface it explicitly.
+        if rpd and rpd.get('tier') == 'ROLE-RISK' and rpd.get('has_role'):
+            rp_sellhigh.append({**rec, 'role': rpd.get('role', ''),
+                                'velo_yoy': rpd.get('velo_yoy'),
+                                'legs': rpd.get('legs')})
         if lm < -10:
             sell_bait.append(rec)
         if lm > 30:
@@ -253,9 +277,27 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
     sell_bait.sort(key=lambda r: r['live_marginal'])              # most negative first
     trade_ask.sort(key=lambda r: -r['live_marginal'])             # biggest plus first
 
+    rp_sellhigh.sort(key=lambda r: (r.get('velo_yoy') if r.get('velo_yoy') is not None else 0))
+
     out = []
     out.append('')
     out.append(f'=== {opp_name} — {style} ===')
+
+    # rp-decline SELL-HIGH surface (the killer app): ROLE-RISK closers/setups
+    # this opponent holds whose role is most likely to crater. Trade-ask = do NOT
+    # acquire (value about to fall); awareness = their asset is depreciating.
+    if rp_sellhigh:
+        out.append('')
+        out.append('### ⚠ ROLE-RISK relievers on this roster → sell-high candidates '
+                   '(rp-decline; Tier-B context, never moves rprs2):')
+        for r in rp_sellhigh[:5]:
+            vy = f'{r["velo_yoy"]:+.1f}' if r.get('velo_yoy') is not None else '--'
+            out.append(f'  - {r["name"]} ({r.get("role","") or "RP"}) — velo YoY {vy}, '
+                       f'{r.get("legs","?")}/3 legs converged. Their owner should sell '
+                       f'while saves/holds still land; for YOU this is a do-NOT-acquire '
+                       f'(role likely to crater). Weaker/noisier than /sp-decline '
+                       f'(role loss ~1/3 manager-driven) — verify via /triangulate + '
+                       f'/rp-decline before any move.')
 
     # Sell-bait table.
     out.append('')
@@ -263,11 +305,12 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
     if not sell_bait:
         out.append('  (none — roster has no DOWNGRADE/ACTIVE_LOSS players. Honest read: nothing to pry loose.)')
     else:
-        out.append(f'  | {"Player":<25} | {"Pos":<4} | {"live_marg":>9} | {"Tier":<14} | IL |')
-        out.append(f'  | {"-"*25} | {"-"*4} | {"-"*9} | {"-"*14} | -- |')
+        out.append(f'  | {"Player":<25} | {"Pos":<4} | {"live_marg":>9} | {"Tier":<14} | IL | rp-decline |')
+        out.append(f'  | {"-"*25} | {"-"*4} | {"-"*9} | {"-"*14} | -- | {"-"*10} |')
         for r in sell_bait[:8]:
             il = 'Y' if r['il'] else ' '
-            out.append(f'  | {r["name"][:25]:<25} | {r["pos"]:<4} | {r["live_marginal"]:>9.1f} | {r["tier"]:<14} | {il}  |')
+            rpd = r.get('rp_decline') or ''
+            out.append(f'  | {r["name"][:25]:<25} | {r["pos"]:<4} | {r["live_marginal"]:>9.1f} | {r["tier"]:<14} | {il}  | {rpd:<10} |')
 
     # Trade-ask table.
     out.append('')
@@ -316,6 +359,7 @@ def main():
     rosters = load_rosters()
     profiles = get_team_profiles()
     my_gap = my_position_gap_map(rosters, args.my_position)
+    rp_decline = _rp_decline_tier_map()   # Tier-B RP context tiers (may be {})
 
     opponents = [t for t in rosters.keys() if t != MY_TEAM]
     if args.opponent:
@@ -333,7 +377,8 @@ def main():
     print('=' * 80)
 
     for opp in opponents:
-        print(opponent_block(opp, rosters[opp], profiles.get(opp, {}), my_gap))
+        print(opponent_block(opp, rosters[opp], profiles.get(opp, {}), my_gap,
+                             rp_decline))
 
     print()
     print('=' * 80)

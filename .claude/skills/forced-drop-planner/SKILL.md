@@ -135,6 +135,30 @@ for c in cuts[:3]:
     print(f"  #{c['rank']:3d}  {c['name']:25s}  {c['xfp']:.2f}/start  slot={c['slot']}")
 ```
 
+### sp-decline cut tiebreaker (prefer cutting the eroding arm)
+
+rp3 rank picks the weakest staff SPs. When the bottom 2-3 candidates are
+**within ~1-1.5 FP/start of each other**, break the tie with the validated
+`/sp-decline` lens: prefer cutting the **DECLINE-RISK** arm — its FP is propped
+above its whiff/K stuff LEVEL and is regressing DOWN rest-of-season, so it has
+the least forward value of the cluster. Conversely, **preserve a RISING** arm
+(whiff/K level ahead of FP = buy-low-safe) even if its current rp3 rank is a hair
+lower.
+
+```python
+import sys; sys.path.insert(0, 'scripts/xfp')
+from sp_decline_model import build as build_decline
+dec, _ = build_decline()            # DataFrame keyed on mlb_id (MLBAM)
+dec_by_mlbam = dec.set_index('mlb_id')['tier'].to_dict()
+# Annotate each cut candidate with its tier (resolve name -> mlbam first), then
+# among near-tied rp3 ranks, cut DECLINE-RISK before STABLE before RISING.
+```
+
+**Validated 2026-06-13** (`sp_decline_stuff_decay_2026-06-13.md`, partial-r ~0.235
+whiff/K LEVEL). **Context/risk flag ONLY — never moves the rp3 headline** (CLAUDE.md
+#13). It breaks ties within the bottom cluster; rp3 rank still selects the cluster.
+For the decomposition behind a flag, run `/sp-decline --players "X"`.
+
 ---
 
 ## Step 4 — Output report
@@ -160,6 +184,7 @@ N healthy SPs → P starts/wk (X under/over cap)
 - <any SP in top 8 by rp3> — under cap even with returns
 - Any SP with ≤2 weeks to IL return (could be activated after cut is absorbed)
 - **Any RP in a SAVE_PROMOTION_WINDOW or SETUP_CONSOLIDATION_WINDOW** (see RP-leverage cross-check below)
+- **Any near-tied SP flagged sp-decline RISING** — whiff/K level ahead of FP = buy-low-safe; cut the DECLINE-RISK arm in the cluster instead (see sp-decline cut tiebreaker above)
 
 ### FA SPs available as same-day replacements (if requested)
 (from /fa-sp-pool filtered to rp3 rank ≤ 80, not IL'd)

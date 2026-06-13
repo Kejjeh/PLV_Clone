@@ -228,6 +228,32 @@ Do NOT recommend dropping a hitter in confirmed variance-slump (xwOBACON stable,
 
 ---
 
+### RP FADE-WATCH (rp-decline convergence — engine-wired)
+
+After the RP drop list, the engine surfaces any of the user's OWN relievers that
+the validated `/rp-decline` lens tags **ROLE-RISK** or **WATCH** — a slipping
+closer is exactly the sell-high target you want flagged early. It joins
+`rp_decline_model.tier_map()` (velo-YoY-decline + skill→role-loss convergence) by
+normalized name:
+
+```
+### RP FADE-WATCH (rp-decline — Tier-B context, never moves rprs2)
+  - Pete Fairbanks (closer) — WATCH: velo YoY +0.2, 1/3 legs. one leg firing — monitor.
+```
+
+**ROLE-RISK** = velo declining YoY AND skill/role-share slipping AND has a role to
+lose → sell-high-NOW candidate. **WATCH** = one leg firing → monitor.
+
+**Discipline:** this is a **Tier-B context/watch flag — it NEVER moves the rprs2
+RoS ranking or the drop order** (CLAUDE.md #13), and it is **honestly
+weaker/noisier than `/sp-decline`** (velo-decline partial-r +0.112 ≈ half the SP
+whiff/K signal; role loss is ~1/3 manager-driven, AUC 0.683 — it tilts the odds,
+it does not predict). Use it to PRIORITIZE a sell-high pitch (via
+`/trade-target-scan`) or to add color to a drop call, never to override the rprs2
+projection. Verify any flagged arm via `/triangulate` + `/rp-decline --players
+"X"` before acting. The section degrades cleanly (omitted) when the rolling cache
+is unavailable.
+
 ## Step 7 — FA add candidates (filter to FREE AGENTS ONLY)
 
 Critical rule (`memory/feedback_best_available_means_FA_only.md`):

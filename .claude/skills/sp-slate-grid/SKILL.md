@@ -38,6 +38,7 @@ For each scheduled SP start in the window:
 | **PL Top 100** | Pitcher List weekly SP rank | `data/research/pl_cache/pl_sps_top100.json` | file |
 | **PL streamer** | Daily streamer rank + tier (Auto / Probably / Questionable / DNS) + opp | `data/research/pl_cache/pl_sp_streamers_<DATE>.json` — **auto-refetch via WebSearch + WebFetch when cache is >2d stale**, with paywall-fallback to nearest cached date | file or WebFetch |
 | **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥20 / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
+| **sp-decline tier** | RoS DECLINE-RISK / RISING / STABLE — flags whose results are propped above their whiff/K stuff LEVEL and will regress DOWN (the ERA-trap guard). Render as a compact `decline` column: `⚠DEC` (DECLINE-RISK) / `RIS` (RISING) / blank. Risk/context flag ONLY — never moves the headline (CLAUDE.md #13). | `sp_decline_model.build()` keyed on MLBAM (`mlb_id`) | compute |
 
 **Performance budget**: ~10 file joins (cheap, <1s) + triangulate calls capped at top-10 FAs by Blended xFP + shadow_scout only for rows with no rp3. Total skill runtime ~30-60s.
 
@@ -205,6 +206,19 @@ proc_lookup = proc.set_index('pitcher')[[
 with open('data/research/pl_cache/pl_sps_top100.json') as f:
     pl_top = json.load(f).get('ranks', {})
 
+# ── Layer 5b: sp-decline tier — keyed on MLBAM (mlb_id) ─────────────────
+# Validated 2026-06-13 RoS DECLINE-RISK board (whiff/K LEVEL, partial-r ~0.235).
+# Risk/context flag ONLY — never moves Blended xFP / rp3 (CLAUDE.md #13).
+import sys as _sys; _sys.path.insert(0, 'scripts/xfp')
+try:
+    from sp_decline_model import build as _build_decline
+    _dec_df, _ = _build_decline()
+    decline_lookup = _dec_df.set_index('mlb_id')[
+        ['tier', 'stuff_level_pctl', 'decline_gap', 'velo_flag']
+    ].to_dict('index')
+except Exception:
+    decline_lookup = {}   # fail-soft: column renders blank if FG cache offline
+
 # ── Layer 7: PL daily streamer ranks — see Step 4 for freshness gating ─
 # (auto-fetch if cache >2d stale; paywall fallback to nearest cached date)
 
@@ -316,6 +330,16 @@ def fmt_boom(r):
     n = int(r['boom_stack'])
     return '*' * n + '.' * (4 - n)   # `***.` for 3/4
 
+def fmt_decline(mlbam_id):
+    d = decline_lookup.get(mlbam_id)
+    if not d: return ''
+    t = d.get('tier')
+    if t == 'DECLINE-RISK':
+        g = d.get('decline_gap')
+        return f'⚠DEC{f" {g:+.0f}" if g is not None else ""}'   # propped, will regress
+    if t == 'RISING':  return 'RIS'                              # stuff ahead of results
+    return ''                                                    # STABLE / not in pool
+
 def fmt_boomrate(r):
     if pd.isna(r.get('boom_rate')): return '—'
     return f"{r['boom_rate']*100:.0f}/{r['bust_rate']*100:.0f}"
@@ -323,7 +347,15 @@ def fmt_boomrate(r):
 
 **Primary grid** (cheap layers, every start) — 14 columns:
 
-`Time(ET) | Pitcher | Match | Own | xFP [CI] | rp3 #/per_start [p25-p75] | OppBat | RecForm | Arche/Traj | T+1 | BoomStk + Tags | Boom%/Bust% | E[FP] | L5 | Boom% | Bust% | ProcZ | PL | Streamer`
+`Time(ET) | Pitcher | Match | Own | xFP [CI] | rp3 #/per_start [p25-p75] | OppBat | RecForm | Arche/Traj | T+1 | BoomStk + Tags | Boom%/Bust% | E[FP] | Decline | L5 | Boom% | Bust% | ProcZ | PL | Streamer`
+
+The `Decline` column renders `fmt_decline(mlbam_id)`: `⚠DEC` (sp-decline
+DECLINE-RISK — results propped above whiff/K stuff, will regress) / `RIS`
+(RISING — stuff ahead of results, sustainable) / blank (STABLE or not in the
+2026 SP pool). It is a RoS risk/context flag, NOT a headline mover — in the
+synthesis it acts as a one-step **downgrade** on a high-rp3 FA whose ⚠DEC says
+the box score is propped (the ERA-trap guard, sibling of the boom%/bust%
+sign-flip downgrade). It never re-ranks by itself.
 
 Where `BoomStk + Tags` packs the score `***.` with inline emoji for
 secondary tags: `***. 🔥` = boom_stack 3/4 + HIGH-K; `**.. 🧊` = boom 2/4 +
@@ -430,6 +462,14 @@ exactly one step (BUY → HOLD → SELL/FADE → DROP).
 This is a hard veto, not a soft input. Tier A + Tier C agreement does
 NOT override Tier B — the merge protocol treats Tier B as the
 sustainability gate.
+
+**sp-decline ⚠DEC participates in the Tier B gate.** The `Decline` column's
+DECLINE-RISK tier is a Tier-B-style RoS-decline signal (validated 2026-06-13,
+whiff/K LEVEL). When a high-rp3 FA carries ⚠DEC, treat it like a sustainability
+REGRESS for the downgrade: drop the verdict one step (BUY → HOLD → SELL/FADE)
+and cite it in the `Tier B veto:` row. It is the ERA-trap guard — the box score
+is propped above the stuff. Never let it MOVE the headline number; it only gates
+the verdict.
 
 **Canonical case (SP)**: Bradish hot streak L5 17.88 + 37% boom would
 normally read BUY from Tier A (rp3 + Blended xFP catching up) + Tier C
@@ -792,6 +832,10 @@ acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
 - **Recommending the highest-rp3 FA without checking boom_stack.** When
   boom_stack = 0/4 and bust% > boom%, the live state today contradicts
   the season-anchored rp3. Canonical: Sheehan 6/7/26.
+- **Recommending a high-rp3 FA whose Decline column is ⚠DEC.** sp-decline
+  DECLINE-RISK means the results are propped above the whiff/K stuff LEVEL and
+  will regress DOWN (the ERA trap). Apply the Tier B one-step downgrade and don't
+  headline it as a BUY. It's a risk flag, not a headline mover.
 - **Forgetting opp bat-index tagging.** A pitcher facing a 1.10 opp_bat
   team needs the TGH tag prominent so the user doesn't miss the matchup.
 - **Filtering to FAs only before the synthesis pass.** The opp-rostered
@@ -838,7 +882,10 @@ without rebuilding). Save the joined CSV to
   IL'd returners (auto-fallback to prior year — Hunter Greene 2025).
 - `/fa-sp-pool` — flat FA-only ranked list (no grid, no synthesis)
 - `/sp-week-plan` — my-roster weekly cap math
-- `/stream-the-stack` — my-eligible-pool filtered by boom tier
+- `/stream-the-stack` — my-eligible-pool filtered by boom tier (also carries the
+  sp-decline ⚠ PROPPED guard on its candidates)
+- `/sp-decline` — the RoS DECLINE-RISK board behind the `Decline` column. Run
+  `/sp-decline --players "X"` for the whiff/K-LEVEL decomposition behind a ⚠DEC.
 - `/triangulate` — single/few player 3-lens deep dive
 - `/boom-stack-explain` — decompose one pitcher's current boom_stack
 - `/sp-stash-finder` — IL stash candidates with playoff timing

@@ -207,6 +207,48 @@ Step 3 recency-outlier scan. Same 10-appearance threshold caveat
 
 ---
 
+## Step 7.5 — rp-decline ROLE-RISK trap filter (do-NOT-add flag)
+
+**Trap avoidance.** The single worst FA-RP add is picking up a closer who is about
+to lose the job. The validated `/rp-decline` lens flags exactly that: a reliever
+whose **velo is declining YoY AND** whose **skill or role-share is slipping** — the
+convergence that precedes the −38% FP-crater when the manager strips the role.
+
+Join the tier and flag any ROLE-RISK FA as **"⚠ velo fading + role slipping → do
+NOT add"** BEFORE recommending it. Ready-to-run snippet (degrades to no-op if the
+rolling cache is unavailable):
+
+```python
+import sys
+sys.path.insert(0, 'scripts/xfp')
+from rp_decline_model import tier_map          # {norm_name: {tier, role, legs, velo_yoy, ...}}
+import unicodedata
+def _norm(s):
+    return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode().lower().strip()
+
+rpd = tier_map()   # Tier-B CONTEXT tiers; never moves rprs2
+for _, row in fa_rp_df.iterrows():
+    d = rpd.get(_norm(row['player_name']))
+    if d and d['tier'] == 'ROLE-RISK' and d.get('has_role'):
+        vy = f"{d['velo_yoy']:+.1f}" if d.get('velo_yoy') is not None else '--'
+        print(f"⚠ DO-NOT-ADD: {row['player_name']} ({d['role']}) — rp-decline ROLE-RISK, "
+              f"velo YoY {vy}, {d['legs']}/3 legs. Role likely to crater; chasing these "
+              f"saves is the trap. (Tier-B watch flag, weaker/noisier than /sp-decline — "
+              f"role loss ~1/3 manager-driven; verify via /triangulate + /rp-decline.)")
+    elif d and d['tier'] in ('WATCH', 'NA-VELO'):
+        print(f"  note: {row['player_name']} rp-decline={d['tier']} (one leg / no prior velo) "
+              f"— monitor, not yet a do-not-add.")
+```
+
+**Discipline:** this is a **Tier-B context/watch flag — it NEVER moves rprs2 or the
+leverage_tier ranking** (CLAUDE.md #13), and it is **honestly weaker/noisier than
+`/sp-decline`** (velo-decline partial-r +0.112 ≈ half the SP whiff/K signal; role
+loss is ~1/3 manager-driven, AUC 0.683 — it tilts the odds, it does not predict).
+Use it to DOWN-rank or veto a chase, never to override a genuine leverage upgrade.
+`NA-VELO` (no 2025 velo — rookies / post-TJ) is **not a clean bill**; treat it as
+"primary signal blind," not SECURE. Surface ROLE-RISK FAs in the Step 9 output as
+an explicit **"Do NOT add — role fading"** line in the Skip section.
+
 ## Step 8 — Compare to user's current RP staff
 
 ```python

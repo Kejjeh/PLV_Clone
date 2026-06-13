@@ -48,6 +48,38 @@ Filter: `live_marginal > +30` (OWN_THE_ROLE / OWN_THE_SLOT). These are players
 your roster would meaningfully upgrade with. Auto-gated by your positional
 gap — only shows asks at positions where you have a weaker player.
 
+### ⚠ ROLE-RISK reliever sell-high surface (rp-decline — engine-wired)
+
+**The killer app for the RP side.** For every reliever on an opponent's roster,
+the engine joins the validated `/rp-decline` convergence tier (via
+`rp_decline_model.tier_map()`). Any reliever that is **ROLE-RISK** *and still has
+a role to lose* (to-date sv+hld/app ≥ 0.12) surfaces in a dedicated block:
+
+```
+### ⚠ ROLE-RISK relievers on this roster → sell-high candidates
+  - Emilio Pagán (closer) — velo YoY -1.6, 2/3 legs converged. Their owner
+    should sell while saves/holds still land; for YOU this is a do-NOT-acquire
+    (role likely to crater). ...
+```
+
+Why it matters: a ROLE-RISK closer is a **sell-high-NOW** candidate — his velo is
+declining YoY AND his skill/role-share is slipping, the convergence that precedes
+the −38% FP-crater when the manager strips the role. **Trade him while he still
+has saves.** As a *trade-ask* target it flips to a **do-NOT-acquire** flag (you'd
+be buying a role about to vanish). The `rp-decline` tier is also appended as a
+column to the sell-bait table so you can see a leaking-value RP that's *also*
+ROLE-RISK at a glance.
+
+**Honest caveat (carry it every time):** rp-decline is **weaker/noisier than
+`/sp-decline`** — velo-decline partial-r +0.112 (≈half the SP whiff/K signal) and
+role loss is **~1/3 manager-driven** (AUC 0.683), so it **tilts the odds, it does
+not predict**. It is a **Tier-B context/watch flag — it NEVER moves rprs2 or
+live_marginal** (CLAUDE.md #13). Always confirm a flagged arm via `/triangulate`
++ `/rp-decline --players "X"` before opening a trade. The surface degrades cleanly
+(shows nothing) when the rolling cache is unavailable or no rostered RP is
+ROLE-RISK — as of the wiring date all ROLE-RISK arms were unrostered FAs, so the
+block correctly stayed empty in the live league scan.
+
 ### Behavioral pitch template
 Pulled from opponent profile:
 
@@ -84,6 +116,7 @@ Pulled from opponent profile:
 - **Don't ignore name collisions** — every join uses `resolve_pitcher_id` / `resolve_batter_id`, but verify if a recommendation surprises you.
 - **Don't pitch trades the opponent's behavioral profile says won't land.** The pitch template is data-driven; deviating wastes negotiation capital.
 - **Don't act on a single sell-bait number without context.** A Suárez at −20 could be IL'd (live_marginal stale) or could be in real decline — cross-check with `/triangulate`.
+- **Don't treat a ROLE-RISK reliever flag as a prediction.** It tilts the odds of a role-loss crater up — it does NOT foretell the closer losing the job (~1/3 manager-driven). Use it to PRIORITIZE a sell-high pitch or AVOID an acquisition, then verify via `/triangulate` + `/rp-decline`. It never moves rprs2/live_marginal.
 
 ## Workflow
 
@@ -98,4 +131,5 @@ Pulled from opponent profile:
 - `/triangulate` — per-player live_marginal + verdict, confirms any trade candidate
 - `/league-deep-audit` — full 8-team statistical landscape (heavier weekly pass)
 - `/opp-watch` — predicts opponent's next FA move (different surface — adds/drops, not trades)
+- `/rp-decline` — the engine-wired source of the ROLE-RISK sell-high surface; run `--players "X"` to confirm any flagged reliever before pitching
 - Memory: `reference_trade_target_scan.md` for the dependency map + caveats

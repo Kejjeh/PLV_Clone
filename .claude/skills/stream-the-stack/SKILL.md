@@ -56,6 +56,36 @@ remains `xfp_rp3_per_start`. boom_stack is the right-tail confidence layer.
 
 ---
 
+## The sp-decline trap filter (the ERA-trap guard)
+
+A streamer can be **tempting by results** (low ERA / good recent box score) but
+propped above his actual whiff/K stuff — the moment you add him, he regresses.
+This is the Holmes/Keller/Ober pattern. The validated `/sp-decline` lens catches
+it before the add.
+
+The script joins the **sp-decline** tier (engine: `sp_decline_model.build()`,
+keyed on MLBAM) onto every candidate as a `decline` column:
+
+- **`⚠ PROPPED`** — sp-decline **DECLINE-RISK**: below-average whiff/K stuff LEVEL
+  (`stuff_level_pctl ≤ 45`) with FP still propped above it. Validated 2026-06-13
+  (`sp_decline_stuff_decay_2026-06-13.md`, partial-r ~0.235 on the whiff/K LEVEL).
+  **When this fires, the per-candidate verdict is hard-capped at
+  "do NOT stream/add despite the line"** even if boom_stack ≥ 2 — the boom tag is
+  right-tail variance, but the central tendency is regressing DOWN.
+- **`RISING`** — whiff/K level is well ahead of FP (sustainable / buy-low-safe).
+- **`—`** — STABLE or not in the 2026 SP pool (< 5 GS).
+
+**It is a context/risk flag, NEVER a headline mover** (CLAUDE.md #13). `rp3` still
+carries the point estimate and boom_stack still carries the right-tail. sp-decline
+only vetoes the *verbal recommendation* so an ERA trap doesn't get streamed. The
+console prints an explicit `⚠ sp-decline PROPPED` line naming every propped
+candidate; the lens is fail-soft (if the FG cache is missing / offline, streamers
+still rank — the `decline` column just shows `—`).
+
+For a full decline-board read on a propped name, run `/sp-decline --players "X"`.
+
+---
+
 ## Workflow
 
 This script runs **automatically** as step 4.6 of `refresh_dashboards.py`
@@ -98,8 +128,11 @@ Console summary prints the stack=2+ list directly.
 6. For each, joins rp3 (`xfp_rp3_per_start`, p25/p75, `recency_form_gap`,
    `data_quality_tag`, rank, signal) + team_strength bat_index_recent.
 7. Computes `boom_stack` live via `scripts.xfp.lib.boom_stack.compute_boom_stack`.
-8. Ranks: boom_stack desc → rp3 desc → percent_owned asc.
-9. Renders markdown + JSON.
+8. Joins the **sp-decline** tier (`sp_decline_model.build()`, by MLBAM) → adds a
+   `decline` column + `decline_propped` flag. DECLINE-RISK candidates get a hard
+   ⚠ PROPPED verdict cap (do-not-stream) regardless of stack tier. Fail-soft.
+9. Ranks: boom_stack desc → rp3 desc → percent_owned asc.
+10. Renders markdown + JSON.
 
 ---
 
@@ -137,6 +170,11 @@ If no stack=2+ candidates exist today, the report notes this is expected
 - **Treating boom_stack as a point-estimate booster.** It isn't. boom_stack
   shifts right-tail mass. rp3 is still the headline projection. A stack=3
   with rp3=6.0 is a high-variance lottery ticket, not an "expected 17 FP".
+- **Streaming an ERA-trap arm whose stuff doesn't back the results.** A good
+  recent line can be propped above the pitcher's whiff/K LEVEL → it regresses
+  the moment you roster him (Holmes/Keller/Ober pattern). The `decline` column's
+  ⚠ PROPPED flag (sp-decline DECLINE-RISK) catches this — heed the do-not-stream
+  verdict cap even when boom_stack ≥ 2.
 
 ---
 
@@ -151,3 +189,6 @@ If no stack=2+ candidates exist today, the report notes this is expected
   Use for season-long rosterables; stream-the-stack is for THIS WEEK's adds.
 - `/sp-week-plan` — once you've added the streamer, confirm it doesn't push
   you past the 10-SP-start weekly cap.
+- `/sp-decline` — the propped-results risk board this skill's `decline` column
+  is sourced from. Run `/sp-decline --players "X"` for the full whiff/K-LEVEL
+  decomposition behind any ⚠ PROPPED flag.

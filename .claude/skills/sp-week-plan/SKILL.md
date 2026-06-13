@@ -268,6 +268,38 @@ exceeds his predicted floor, the gap is shape/contact — flag for
 
 ---
 
+## Step 5.7 — sp-decline overlay (RoS-decline bench tiebreaker)
+
+Floor (Step 5.6) answers "which start craters TONIGHT." The **sp-decline** lens
+answers a different question for the bench decision: "whose FP is propped above
+his whiff/K stuff and is REGRESSING down rest-of-season" — so among two
+otherwise-similar starts, prefer to bench the arm whose mean is already eroding.
+
+Join the sp-decline tier (by MLBAM) onto each healthy SP:
+
+```python
+import sys; sys.path.insert(0, 'scripts/xfp')
+from sp_decline_model import build as build_decline
+dec, _ = build_decline()            # DataFrame keyed on mlb_id (MLBAM)
+dec_by_mlbam = dec.set_index('mlb_id')['tier'].to_dict()
+# tier ∈ {DECLINE-RISK, RISING, STABLE}; missing => not in 2026 SP pool (<5 GS)
+```
+
+Add a **`decline`** tag (⚠ DECLINE-RISK / RISING / —) to the Step 8 projected-starts
+table next to `floor`. **Validated 2026-06-13** (`sp_decline_stuff_decay_2026-06-13.md`,
+partial-r ~0.235 whiff/K LEVEL).
+
+**Bench tiebreaker rule (decline):** when two 1-start candidates are within ~1.5 FP
+of EV AND tie on floor tier, bench the **DECLINE-RISK** arm — its mean is the one
+trending down. Order of tiebreakers when EV is near-tied: floor (RISKY first) →
+sp-decline (DECLINE-RISK first). A DECLINE-RISK + RISKY arm is the cleanest bench.
+
+**Context/risk flag ONLY — never moves the rp3 headline or the EV** (CLAUDE.md #13).
+It breaks near-ties; it does not re-rank starts. For the decomposition behind a
+flag, run `/sp-decline --players "X"`.
+
+---
+
 ## Step 6 — Cap math + bench recommendation
 
 **CRITICAL — count PAST + FUTURE, not just future.** Cap math is
@@ -300,9 +332,14 @@ elif total_starts > cap:
     #       start almost always beats 1 elite start in cap math
     bench_candidates = [s for s in starts if pitcher_is_1_start(s.pitcher)]
     # Primary sort by EV; break NEAR-ties (within ~1.5 FP) by FLOOR — bench the
-    # RISKY-tier (highest bust prob), since a dud wastes a capped slot. Do NOT
-    # bench a SAFE high-floor arm whose EV is only marginally lower.
-    bench_candidates.sort(key=lambda s: (round(s.ev_score / 1.5), -s.bust_prob))
+    # RISKY-tier (highest bust prob), since a dud wastes a capped slot. Then break
+    # any remaining tie by sp-decline tier (DECLINE-RISK first — propped mean is
+    # eroding RoS). Do NOT bench a SAFE high-floor STABLE arm whose EV is only
+    # marginally lower.
+    _decline_rank = {'DECLINE-RISK': 2, 'STABLE': 1, 'RISING': 0}
+    bench_candidates.sort(key=lambda s: (
+        round(s.ev_score / 1.5), -s.bust_prob, -_decline_rank.get(s.decline_tier, 1)
+    ))
     bench = bench_candidates[:over_by]
 ```
 
@@ -410,10 +447,10 @@ multiple weeks running suggests too many SPs on roster).
 ```markdown
 ## Projected starts this week (<window>)
 
-| Pitcher | rp3 (p25-p75) | data_quality | Confirmed | 2nd (inferred) | n | Last 3 form (IP/ER/K) | Opp xwOBA |
-|---|---|---|---|---|---|---|---|
+| Pitcher | rp3 (p25-p75) | data_quality | Confirmed | 2nd (inferred) | n | Last 3 form (IP/ER/K) | Opp xwOBA | floor | decline |
+|---|---|---|---|---|---|---|---|---|---|
 ... rows sorted by start day ...
-... (e.g.) Grayson Rodriguez | 8.21 (5.75-10.66) | data_driven_thin | 2026-06-04 | 2026-06-09 | 2 | ... | ... |
+... (e.g.) Grayson Rodriguez | 8.21 (5.75-10.66) | data_driven_thin | 2026-06-04 | 2026-06-09 | 2 | ... | ... | SAFE | — |
 
 **TOTAL projected starts: N** (cap = 10)
 

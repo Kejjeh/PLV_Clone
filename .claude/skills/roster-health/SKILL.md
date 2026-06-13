@@ -109,6 +109,40 @@ For each rostered player, determine their role bucket (hitter / SP / RP from `ro
 | `TRENDING_DOWN` | `traj_flag == 'TRENDING_DOWN'` | MED |
 | `VELO_DECLINE` | `VELO` (2026) − `VELO` (2025) ≤ −5 (5-point drop on the 20-80 scale ≈ 1+ mph) | MED |
 | `USAGE_DROP` | `rprs2.rank` (2026) − `rprs2.rank` (2025) > 50 (model has demoted them by 50+ slots) | MED |
+| `RP_FADE_WATCH` | `/rp-decline` tier == `ROLE-RISK` (velo declining YoY **AND** skill/role-share slipping, has a role to lose) → HIGH; tier == `WATCH` (one leg firing) → MED | HIGH / MED |
+
+#### RP_FADE_WATCH — the validated convergence (supersedes the coarse `VELO_DECLINE` proxy)
+
+`VELO_DECLINE` above is a coarse 20-80-scale YoY velo drop. `RP_FADE_WATCH` is the
+**validated** version: the `/rp-decline` engine's **velo-YoY-decline + skill→role-loss
+convergence** tier (`rp_decline_stuff_velo_2026-06-13.md` partial-r +0.112;
+`rp_decline_role_leverage_2026-06-13.md` role-loss −38% FP-crater mechanism). A
+slipping closer is the sell-high target you most want flagged early. Join the tier
+(light, validated — no heavy re-derivation):
+
+```python
+import sys; sys.path.insert(0, 'scripts/xfp')
+from rp_decline_model import tier_map      # {norm_name: {tier, role, legs, velo_yoy, has_role, ...}}
+import unicodedata
+def _norm(s):
+    return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode().lower().strip()
+
+rpd = tier_map()    # Tier-B CONTEXT tiers; degrades to {} if rolling cache missing
+for _, r in my_rps.iterrows():               # my_rps = roster RPs (lineup_slot != 'IL')
+    d = rpd.get(_norm(r['player_name']))
+    if d and d['tier'] == 'ROLE-RISK' and d.get('has_role'):
+        print(f"HIGH  RP_FADE_WATCH: {r['player_name']} ({d['role']}) — velo YoY "
+              f"{d['velo_yoy']:+.1f}, {d['legs']}/3 legs converged → sell-high while saves land")
+    elif d and d['tier'] == 'WATCH':
+        print(f"MED   RP_FADE_WATCH: {r['player_name']} — one leg firing, monitor")
+```
+
+**Honest caveat (always carry it):** this is **weaker/noisier than `/sp-decline`**
+(velo +0.112 vs SP whiff/K +0.235; role loss ~1/3 manager-driven, AUC 0.683 — it
+tilts the odds, it does NOT predict) and is a **Tier-B context/watch flag that
+NEVER moves the rprs2 headline** (CLAUDE.md #13). `NA-VELO` (no 2025 velo) is **not
+a clean bill** — primary signal blind, not SECURE. Don't fire `RP_FADE_WATCH` for an
+IL'd RP (filter `lineup_slot != 'IL'` first, same as `DROP_RISK`).
 
 ### Step 3 — severity rollup & deep-dive routing
 
@@ -123,6 +157,7 @@ Score each player with their highest-severity alert. If a player has 2+ alerts a
 | `ARCHETYPE_DOWNGRADE` (SP) | `/sp-archetype <name>` for comp-based forward outlook |
 | `ARCHETYPE_DOWNGRADE` (hitter) | `/hitter-archetype <name>` |
 | `LOST_CLOSER` / `LEVERAGE_SLIDE` | `/fa-pickup-deep-dive <emerging-closer-from-FA>` |
+| `RP_FADE_WATCH` | `/rp-decline --players "<name>"` for the full convergence card, then `/triangulate <name>` before any sell/drop; `/trade-target-scan` to surface the sell-high pitch |
 | `DROP_RISK` | `/fa-replacement-pool <name>` |
 | `IL_RISK` (SP) | `/sp-rehab-tracker <name>` |
 | `TRENDING_DOWN` (any) | `/sp-archetype` or `/hitter-archetype` for comp T+1/T+2 base rates |

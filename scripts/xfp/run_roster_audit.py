@@ -185,6 +185,45 @@ def main():
         print(f"  - {r['player_name']} — xfp_ros {p}, rank {rk}")
     print()
 
+    # --- RP FADE-WATCH (rp-decline convergence; Tier-B context flag) ----------
+    # Surface any of the user's OWN relievers whose velo is fading YoY AND whose
+    # skill/role-share is slipping (ROLE-RISK) or one leg firing (WATCH) — a
+    # slipping closer is exactly the sell-high target. This NEVER moves the rprs2
+    # headline (CLAUDE.md #13) and is honestly weaker/noisier than /sp-decline
+    # (velo +0.112 vs SP whiff/K +0.235; role loss ~1/3 manager-driven). Degrades
+    # to a no-op if the rolling cache / model is unavailable.
+    try:
+        sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
+        from rp_decline_model import tier_map as _rpd_tier_map  # type: ignore
+        import unicodedata as _ud
+        def _rpd_norm(s):
+            return _ud.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
+        _rpd = _rpd_tier_map()
+    except Exception:
+        _rpd = {}
+    if _rpd:
+        watch = []
+        for _, r in rps.iterrows():
+            d = _rpd.get(_rpd_norm(r['player_name']))
+            if d and d['tier'] in ('ROLE-RISK', 'WATCH'):
+                watch.append((r['player_name'], d))
+        if watch:
+            print("### RP FADE-WATCH (rp-decline — Tier-B context, never moves rprs2)")
+            # ROLE-RISK first, then WATCH; within each, worst velo first
+            order = {'ROLE-RISK': 0, 'WATCH': 1}
+            watch.sort(key=lambda t: (order.get(t[1]['tier'], 9),
+                                      t[1].get('velo_yoy') if t[1].get('velo_yoy') is not None else 0))
+            for name, d in watch:
+                vy = f"{d['velo_yoy']:+.1f}" if d.get('velo_yoy') is not None else '--'
+                tag = ('velo down AND skill/role slipping — sell-high candidate while '
+                       'saves/holds still land' if d['tier'] == 'ROLE-RISK'
+                       else 'one leg firing — monitor, not yet a role-loss setup')
+                print(f"  - {name} ({d.get('role','') or 'RP'}) — {d['tier']}: velo YoY {vy}, "
+                      f"{d['legs']}/3 legs. {tag}.")
+            print("  _Conviction/watch gate only (role loss ~1/3 manager-driven, AUC 0.683). "
+                  "Verify via /triangulate + /rp-decline before a sell/drop._")
+            print()
+
     print("## FA add candidates (FA only, <95% owned)\n")
     print("### Top SP FAs")
     for _, r in fa_sp.iterrows():

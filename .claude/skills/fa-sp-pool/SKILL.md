@@ -133,6 +133,44 @@ because he ranked below the replacement threshold (rank 45). Career form:
 PEAK/PEAK (k_pct 90th, velo 93.5th percentile). He was picked up by another
 team before surfacing. This alert exists to catch those cases.
 
+### sp-decline trap filter (catch the ERA-trap add BEFORE you make it)
+
+The recency-outlier scan above finds arms whose RESULTS lead their model. The
+**opposite** failure is just as costly: an FA whose good results are **propped
+above his whiff/K stuff LEVEL** — tempting by ERA but about to regress DOWN the
+moment you roster him. This is the **Holmes / Keller / Ober** pattern. The
+validated `/sp-decline` lens flags it.
+
+After the main sort, join the sp-decline tier (by MLBAM) onto the FA pool:
+
+```python
+import sys; sys.path.insert(0, 'scripts/xfp')
+from sp_decline_model import build as build_decline
+dec, _ = build_decline()            # DataFrame keyed on mlb_id (MLBAM)
+dec_by_mlbam = dec.set_index('mlb_id')[
+    ['tier', 'stuff_level_pctl', 'decline_gap', 'velo_flag']
+].to_dict('index')
+
+# For each FA SP resolved to an MLBAM id:
+d = dec_by_mlbam.get(mlbam_id)
+if d and d['tier'] == 'DECLINE-RISK':
+    print(f"⚠ PROPPED — {name}: results above whiff/K stuff (lvlPct "
+          f"{d['stuff_level_pctl']:.0f}, gap {d['decline_gap']:+.0f}); will regress. "
+          f"Do NOT add despite the line.")
+```
+
+**Validated 2026-06-13** (`sp_decline_stuff_decay_2026-06-13.md`, partial-r ~0.235
+on the whiff/K LEVEL). **DECLINE-RISK** = below-average stuff level
+(`stuff_level_pctl ≤ 45`) with FP still propped above it. When an FA carries this
+tier, **flag it as `⚠ PROPPED` in the output and do NOT recommend the add** even
+if season FP / PL rank look attractive — the box score is the trap.
+
+**Context/risk flag ONLY — never moves the headline** (CLAUDE.md #13). rp3 / PL
+Top 100 / Stuff+ still drive the ranking. sp-decline only vetoes the *recommendation*
+on a propped name. The mirror tier **RISING** (whiff/K level ahead of FP) marks the
+sustainable / buy-low-safe adds — surface it as a positive when present. For the
+full decomposition behind a flag, run `/sp-decline --players "X"`.
+
 ---
 
 ## Step 4 — Fetch current PL Top 100 SP article
@@ -220,6 +258,7 @@ Bucket the PL-cross-referenced FA pool:
 | **Marginal swap** | Within 5-10 PL ranks of user's worst | Hold unless specific niche |
 | **Speculative stash** | Low ownership (<10%), rising trajectory (+UR or +5 weekly) | Stash candidate if roster slot |
 | **Streamer only** | Tier 9-11 (#75-100), Probably Start tier in current week | Weekly streaming, not season hold |
+| **⚠ Propped (ERA trap)** | sp-decline **DECLINE-RISK** — results above whiff/K stuff LEVEL | Do NOT add; will regress (Holmes/Keller/Ober) |
 | **Avoid** | Falling -10+ weekly OR injury concern | Skip entirely |
 
 ---
@@ -283,6 +322,11 @@ top-M are clear holds.**
 - **Ignoring injury status in the FA pool.** A 90-FP earner on IL15
   with no return date is a worse hold than a 60-FP earner who's
   active. Surface injury status alongside the rank.
+- **Adding an ERA-trap arm whose stuff doesn't back the results.** A low ERA /
+  good recent line can be propped above the pitcher's whiff/K LEVEL → it regresses
+  the moment you roster him (Holmes/Keller/Ober). Run the **sp-decline trap filter**
+  (Step 3) and never recommend a DECLINE-RISK arm as an add even if season FP / PL
+  rank look good — flag it `⚠ PROPPED`. It's a risk flag, not a headline mover.
 - **Ignoring recency_form_gap outliers below the replacement threshold.**
   The model intentionally excludes L21d as a feature (failed +0.005r
   validation gate); below-replacement pitchers with large positive gaps
@@ -295,6 +339,7 @@ top-M are clear holds.**
 ## Complementary skills
 
 - **`/sp-archetype <name>`** — after this skill surfaces a candidate, run sp-archetype to get the 20-80 ratings + archetype label + historical comps (T+1/T+2 outcomes for 5-8 similar SP-years). Especially powerful when paired with the recency-outlier scan — a SUPER-tier SUPER tier outlier whose archetype matches MOVE_CTRL_ACE (44% historical breakout rate) is the highest-conviction add.
+- **`/sp-decline`** — the propped-results / ERA-trap risk board behind the Step 3 trap filter. Run `/sp-decline --players "X"` for the full whiff/K-LEVEL decomposition behind any ⚠ PROPPED flag before passing on a tempting-by-ERA add.
 
 ## When NOT to use this skill
 

@@ -43,6 +43,15 @@ from scripts.xfp.lib.boom_stack import (  # noqa: E402
     MEAN_FP_BY_STACK,
 )
 
+# sp-decline lens (validated 2026-06-13, partial-r ~0.235 whiff/K LEVEL). Context/risk
+# flag ONLY — flags FA streamers whose results are propped above their stuff and will
+# regress (Holmes/Keller/Ober ERA traps). NEVER moves the rp3 headline (CLAUDE.md #13).
+# Fail-soft: if the decline engine can't load (no FG cache / offline), streamers still rank.
+try:
+    from scripts.xfp.sp_decline_model import build as _build_decline  # noqa: E402
+except Exception:  # pragma: no cover - optional lens
+    _build_decline = None
+
 _STATSAPI = 'https://statsapi.mlb.com/api/v1'
 _RP3_CSV = _REPO_ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'
 _TEAM_STRENGTH_CSV = _REPO_ROOT / 'data' / 'research' / 'xfp_cache' / 'team_strength_2026.csv'
@@ -205,6 +214,35 @@ def load_team_strength() -> pd.DataFrame:
     return pd.read_csv(_TEAM_STRENGTH_CSV)
 
 
+def load_decline_by_mlbam() -> dict[int, dict]:
+    """Return {mlbam_id: {tier, stuff_level_pctl, decline_gap, velo_flag, velo_yoy}}.
+
+    Reads the validated sp-decline lens (sp_decline_model.build) keyed on MLBAM.
+    Context/risk flag only — used to warn on FA streamers whose results are propped
+    above their whiff/K stuff and will regress. Returns {} on any failure (fail-soft).
+    """
+    if _build_decline is None:
+        return {}
+    try:
+        d, _ = _build_decline()
+    except Exception as e:  # pragma: no cover - optional lens
+        print(f'  ! sp-decline lens unavailable (streamers still rank): {e}', file=sys.stderr)
+        return {}
+    out: dict[int, dict] = {}
+    for _, r in d.iterrows():
+        mid = r.get('mlb_id')
+        if pd.isna(mid):
+            continue
+        out[int(mid)] = {
+            'tier': r.get('tier'),
+            'stuff_level_pctl': float(r['stuff_level_pctl']) if pd.notna(r.get('stuff_level_pctl')) else None,
+            'decline_gap': float(r['decline_gap']) if pd.notna(r.get('decline_gap')) else None,
+            'velo_flag': r.get('velo_flag') or '',
+            'velo_yoy': float(r['velo_yoy']) if pd.notna(r.get('velo_yoy')) else None,
+        }
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Main composition
 # ---------------------------------------------------------------------------
@@ -248,6 +286,11 @@ def assemble_candidates(days: int) -> tuple[list[dict], dict]:
     ts = load_team_strength()
     ts_by_team = {row['team']: row for _, row in ts.iterrows()}
 
+    # sp-decline context flag, keyed on MLBAM (fail-soft -> {})
+    decline_by_pid = load_decline_by_mlbam()
+    if decline_by_pid:
+        print(f'  sp-decline lens loaded for {len(decline_by_pid)} SPs (propped-results flag)')
+
     candidates: list[dict] = []
     for start in fa_starts:
         pid = start['pitcher_id']
@@ -288,6 +331,11 @@ def assemble_candidates(days: int) -> tuple[list[dict], dict]:
             boom_rate_exp = None
             boom_mean_fp = None
 
+        # sp-decline context flag (propped-results / will-regress). Display only.
+        dec = decline_by_pid.get(pid) or {}
+        decline_tier = dec.get('tier')
+        decline_propped = decline_tier == 'DECLINE-RISK'
+
         # matchup tier
         if opp_bri is None:
             matchup_tier = 'unknown'
@@ -319,6 +367,11 @@ def assemble_candidates(days: int) -> tuple[list[dict], dict]:
             'boom_detail_summary': _summarize_boom_detail(boom_detail) if boom_detail else None,
             'boom_rate_expected': boom_rate_exp,
             'boom_mean_fp_expected': boom_mean_fp,
+            'decline_tier': decline_tier,
+            'decline_propped': decline_propped,
+            'decline_stuff_level_pctl': dec.get('stuff_level_pctl'),
+            'decline_gap': dec.get('decline_gap'),
+            'decline_velo_flag': dec.get('velo_flag') or '',
             'percent_owned': fa_meta.get('percent_owned', 0.0),
             'pro_team': fa_meta.get('pro_team', ''),
             'injury_status': fa_meta.get('injury_status', ''),
@@ -387,7 +440,16 @@ def rank_candidates(candidates: list[dict]) -> list[dict]:
 
 
 def verdict_for(c: dict) -> str:
-    """Verdict per candidate based on stack tier + matchup + rp3 rank."""
+    """Verdict per candidate based on stack tier + matchup + rp3 rank.
+
+    sp-decline DECLINE-RISK prepends a hard 'propped' warning: a tempting-by-results
+    streamer whose whiff/K stuff LEVEL doesn't back the box score and will regress
+    (the Holmes/Keller/Ober ERA trap). It does NOT change the rp3 headline — it caps
+    the verbal verdict at DO-NOT-STREAM so the trap is caught before the add.
+    """
+    if c.get('decline_propped'):
+        return ('⚠ PROPPED — results above stuff (sp-decline DECLINE-RISK), will '
+                'regress; do NOT stream/add despite the line')
     bs = c['boom_stack']
     if bs is None:
         return 'SKIP (no boom_stack — non-streamer or missing rp3)'
@@ -417,6 +479,21 @@ def _fmt(val, fmt='.2f', fallback='—'):
         return str(val)
 
 
+def _decline_cell(c: dict) -> str:
+    """Render the sp-decline context flag for a streamer row.
+
+    '⚠ PROPPED' for DECLINE-RISK (results above whiff/K stuff -> will regress),
+    'RISING' for whiff/K level ahead of FP (sustainable), else '—'. Display only.
+    """
+    t = c.get('decline_tier')
+    if t == 'DECLINE-RISK':
+        gap = c.get('decline_gap')
+        return f'⚠ PROPPED (gap {gap:+.0f})' if gap is not None else '⚠ PROPPED'
+    if t == 'RISING':
+        return 'RISING'
+    return '—'
+
+
 def write_markdown(candidates: list[dict], summary: dict, out_path: Path) -> None:
     """Write the human-readable markdown report."""
     stack_3 = [c for c in candidates if c['boom_stack'] == 3]
@@ -435,6 +512,10 @@ def write_markdown(candidates: list[dict], summary: dict, out_path: Path) -> Non
     lines.append('> boom_stack = skill_spike + recform_hot + opp_soft (each 0|1). '
                  'See `reference_boom_stack_tag.md`. Display tag only; rp3 carries the '
                  'point estimate.')
+    lines.append('> decline = sp-decline context flag (validated 2026-06-13). '
+                 '`⚠ PROPPED` = results above whiff/K stuff LEVEL, will regress '
+                 '(do NOT stream the ERA trap); `RISING` = stuff ahead of results. '
+                 'Risk flag only — never moves the rp3 headline.')
     lines.append('')
 
     def _section(title: str, rows: list[dict]) -> None:
@@ -445,9 +526,9 @@ def write_markdown(candidates: list[dict], summary: dict, out_path: Path) -> Non
             lines.append('')
             return
         lines.append(
-            '| pitcher | team | date | opp | rp3 (p25–p75) | dq_tag | stack | boom% exp | matchup | own% | verdict |'
+            '| pitcher | team | date | opp | rp3 (p25–p75) | dq_tag | stack | boom% exp | matchup | decline | own% | verdict |'
         )
-        lines.append('|---|---|---|---|---|---|---|---|---|---|---|')
+        lines.append('|---|---|---|---|---|---|---|---|---|---|---|---|')
         for c in rows:
             rp3_cell = (
                 f'{_fmt(c["rp3_per_start"], ".1f")} '
@@ -457,11 +538,12 @@ def write_markdown(candidates: list[dict], summary: dict, out_path: Path) -> Non
             stack_cell = f'{c["boom_stack"]}/3' if c['boom_stack'] is not None else '—'
             ha = '@' if not c.get('is_home', False) else 'vs'
             opp_cell = f'{ha}{c["opp_team"]}'
+            decline_cell = _decline_cell(c)
             lines.append(
                 f'| {c["pitcher_name"]} | {c["team"]} | {c["game_date"]} | {opp_cell} | '
                 f'{rp3_cell} | {c.get("data_quality_tag") or "—"} | {stack_cell} | '
                 f'{_fmt((c["boom_rate_expected"] or 0) * 100, ".1f")}% | '
-                f'{c["matchup_tier"]} | {_fmt(c["percent_owned"], ".0f")} | '
+                f'{c["matchup_tier"]} | {decline_cell} | {_fmt(c["percent_owned"], ".0f")} | '
                 f'{verdict_for(c)} |'
             )
         lines.append('')
@@ -519,16 +601,24 @@ def print_console_summary(candidates: list[dict], summary: dict) -> None:
         print(f'STACK=2+ candidates ({len(stack_2plus)}):')
         for c in stack_2plus:
             ha = '@' if not c.get('is_home', False) else 'vs'
+            propped = '  ⚠PROPPED(sp-decline)' if c.get('decline_propped') else ''
             print(
                 f'  [{c["boom_stack"]}/3] {c["pitcher_name"]:<25s} '
                 f'{c["team"]} {ha}{c["opp_team"]} {c["game_date"]}  '
                 f'rp3={_fmt(c["rp3_per_start"], ".1f")} '
                 f'(rank #{c["rp3_rank"] if c["rp3_rank"] is not None else "—"})  '
                 f'boom%~{_fmt((c["boom_rate_expected"] or 0)*100, ".1f")}%  '
-                f'own={_fmt(c["percent_owned"], ".0f")}%'
+                f'own={_fmt(c["percent_owned"], ".0f")}%{propped}'
             )
     else:
         print('STACK=2+ candidates: none today (expected — stack=2+ is ~10% of streamer pool).')
+
+    # sp-decline trap warning — propped streamers regardless of stack tier.
+    propped = [c for c in candidates if c.get('decline_propped')]
+    if propped:
+        print()
+        print(f'⚠ sp-decline PROPPED (results above stuff, will regress — do NOT stream): '
+              f'{", ".join(c["pitcher_name"] for c in propped)}')
     print()
 
 

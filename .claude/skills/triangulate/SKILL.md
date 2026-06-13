@@ -469,6 +469,100 @@ Implementation: `compute_il_return_flag()` in
 and the validation report at
 `data/research/validation_runs/bust_stack_v2_context_validation.md`.
 
+### SP card additions — sp-decline tier (RoS DECLINE-RISK lens)
+
+**The concrete operationalization of the §2 / consistency-mandate decline
+cross-check.** The mandate (top of this file) says a high-Stuff+ / lagging-results
+"buy-low" is a LEVEL read, blind to TRAJECTORY, and must be cross-checked against
+the decline lenses before headlining a BUY. `/sp-decline` is the validated,
+ready-made version of that cross-check — surface its tier on every SP card so the
+check is one glance, not a separate skill invocation.
+
+The lens (`sp_decline_model.build()`, validated 2026-06-13
+`sp_decline_stuff_decay_2026-06-13.md`, partial-r ~0.235 on the whiff/K LEVEL)
+classifies each 2026 SP (≥5 GS) into:
+
+- **DECLINE-RISK** — below-average whiff/K stuff LEVEL (`stuff_level_pctl ≤ 45`)
+  with FP still propped above it → RoS FP regresses DOWN. The Framber Valdez 2026
+  pattern (K% 18.6% / SwStr% 9.1%).
+- **RISING** — whiff/K level well ahead of FP → sustainable / buy-low-safe.
+- **STABLE** — level supports the FP (aces never flag).
+
+Surface it on the SP card as a `sp-decline=DECLINE-RISK (lvlPct N, gap +M)` token
+in the rp3 detail row, and when it fires DECLINE-RISK, a callout below the table:
+
+> ⚠ **sp-decline DECLINE-RISK:** whiff/K stuff LEVEL is below average (pctl N)
+> with FP propped above it (gap +M) — RoS FP regresses DOWN. If a Stuff+/PL
+> "buy-low" is on the table for this SP, this is the trajectory lens that VETOES
+> the buy headline (≥2 declining signals → headline the DECLINE, not the buy).
+> Display/context flag only — does NOT move the rp3 point estimate (CLAUDE.md #13).
+
+**How it interacts with the verdict:** it is a **context/risk flag, never a
+headline mover or an additive verdict input** (CLAUDE.md #13). It does NOT add a
+new branch to the verdict decision tree. It functions exactly like the existing
+SP-card display tags (boom_stack, HIGH-K, framing) — informational, surfaced for
+the reader's synthesis. Its specific job is to make the consistency-mandate's
+"if ≥2 decline lenses agree, headline DECLINE not BUY" check concrete: sp-decline
+DECLINE-RISK is one of those decline votes (alongside archetype STUFF YoY slope
+and sustainability K%/SwStr).
+
+**Engine wiring (TODO — documented-only for now).** Surfacing this in
+`run_triangulate.py` cleanly means joining `sp_decline_model.build()` by MLBAM in
+the SP branch of `triangulate_core.model_row()` and rendering the token/callout in
+`format_card()`. That touches the verdict-augmentation path and the multi-bucket
+card renderer, so it is left as a clear TODO rather than wired inline to avoid
+destabilizing the verdict tree. **Until wired, run `/sp-decline --players "X"`
+alongside `/triangulate "X"` for any SP where a Stuff+/PL buy-low is in play** —
+the mandate at the top of this file already requires that cross-check; this names
+the exact tool.
+
+### RP card additions — rp-decline tier (role-loss CONVERGENCE WATCH lens)
+
+**The RP-side parallel of the sp-decline SP-card addition.** RP value is
+opportunity-dominated (rprs2 r≈0.87 — saves/holds are the ROLE), so the decline
+that matters for an RP is a **role crater**, not rate regression. `/rp-decline`
+(`rp_decline_model.build()` / `tier_map()`, validated 2026-06-13:
+`rp_decline_stuff_velo_2026-06-13.md` velo-YoY-decline partial-r +0.112;
+`rp_decline_role_leverage_2026-06-13.md` role-loss −38% FP-crater mechanism)
+classifies each 2026 RP (≥8 G) into:
+
+- **ROLE-RISK** — velo declining YoY **AND** (whiff/K LEVEL weak **OR** sv+hld
+  share slipping) **AND** has a role to lose → the role is most likely to crater.
+  A sell-high-while-saves-still-land candidate. (Emilio Pagán 2026 pattern.)
+- **WATCH** — one leg firing; a fade to monitor, not yet a role-loss setup.
+- **NA-VELO** — no 2025 velo, primary signal blind — **NOT a clean bill**.
+- **SECURE** — velo stable/up and skill+role intact.
+
+Surface it on the RP card as an `rp-decline=ROLE-RISK (velo YoY −1.6, 2/3 legs)`
+token in the rprs2 detail row, and when it fires ROLE-RISK, a callout below the
+table:
+
+> ⚠ **rp-decline ROLE-RISK:** velo declining YoY AND skill/role-share slipping —
+> the convergence that precedes a role-loss FP-crater. A sell-high-NOW candidate
+> while saves/holds still land. **Honestly weaker/noisier than the sp-decline SP
+> equivalent** (velo +0.112 vs SP whiff/K +0.235; role loss ~1/3 manager-driven,
+> AUC 0.683 — it tilts the odds, it does NOT predict). Display/context flag only —
+> does NOT move the rprs2 point estimate or the verdict (CLAUDE.md #13).
+
+**How it interacts with the verdict:** exactly like the sp-decline SP token and the
+boom_stack/HIGH-K/framing display tags — it is a **context/risk flag, never a
+headline mover or an additive verdict input** (CLAUDE.md #13). It adds **no** new
+branch to the verdict decision tree. Its job is to make the RP analog of the
+"trajectory lens" concrete: a high-rprs2 closer whose role is quietly converging on
+a crater should be read as a SELL-HIGH, not a blind HOLD.
+
+**Engine wiring (TODO — documented-only for now, mirroring the sp-decline RP
+parallel).** Surfacing this in `run_triangulate.py` cleanly means joining
+`rp_decline_model.tier_map()` (the ready-made public join helper) by normalized
+name in the RP branch of `triangulate_core.model_row()` and rendering the
+token/callout in `format_card()`. That touches the verdict-augmentation path and
+the multi-bucket card renderer, so — as with sp-decline — it is left as a clear
+TODO rather than wired inline to avoid destabilizing the verdict tree. **Until
+wired, run `/rp-decline --players "X"` alongside `/triangulate "X"` for any RP
+where a sell-high / hold-the-closer call is in play.** `tier_map()` returns
+`{norm_name: {tier, role, legs, velo_yoy, velo_flag, svhld_per_g, role_slip_frac,
+has_role}}` and degrades to `{}` if the rolling cache is unavailable.
+
 ### Hitter card additions — hitter boom-stack advisory tag
 
 **Shipped 2026-06-03 as SHIP-CAUTIOUS advisory tag (3-component); 4th
