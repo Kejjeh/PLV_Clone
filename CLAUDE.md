@@ -437,6 +437,18 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     (SPs)** are NON-additive / mildly negative as point terms — use them for
     CONTEXT and as Tier-B gates, NEVER to move the projection. Headline number
     stays rh3/rp3/rprs2 / Blended xFP. See `reference_lens_merge_protocol.md`.
+14. **Don't headline a Stuff+ "buy-low" for a veteran without the decline
+    cross-check.** Stuff+ measures stuff LEVEL, not TRAJECTORY — a high-Stuff+ /
+    lagging-results SP can be a real decline, not a buy. Before headlining BUY,
+    cross-check (a) archetype STUFF-rating YoY slope
+    (`data/research/sp_archetype_career_panel.parquet`), (b) sustainability
+    K%/SwStr decomp (`scripts/xfp/pitcher_sustainability.py`), (c) archetype
+    trajectory + comp T+1. If ≥2 signal real decline → headline **"DECLINING —
+    back-end / defensible drop, not a buy,"** NOT the Stuff+ buy. Canonical:
+    **Framber Valdez 2026** (Stuff+ 103 looked buy-low, but STUFF 56→46 YoY,
+    K% −4.7pp / SwStr −2.4pp, TRENDING_DOWN slope −4.5, comps avg 10.7 FP/start
+    T+1 = real decline, not luck). See `/sp-stuff-board` mandatory cross-check +
+    `reference_lens_merge_protocol.md` SP conflict rule #6.
 
 ## Memory pointers (for context-dense lookups)
 

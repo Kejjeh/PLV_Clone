@@ -216,6 +216,15 @@ SP at top.
 
 - `/sp-stuff-board` — validated FanGraphs Stuff+ RoS-FP projection (the MEAN;
   who to roster). Stuff+→rp3 Rule-9 PASS 2026-06-06 (+0.0095).
+  **This sustainability decomp IS the decline cross-check on a Stuff+ "buy-low."**
+  Stuff+ is a LEVEL lens, blind to trajectory: a high-Stuff+ / lagging-results vet
+  can be in real decline. The K%/SwStr markers here are lens (b) of the mandatory
+  cross-check — a REGRESS bucket with K% down + SwStr down means the strikeouts
+  are actually leaving, not just unlucky. When you run this for an SP whose Stuff+
+  looks like a buy-low, show the full stack and don't let the Stuff+ "buy" headline
+  flip a REGRESS read; ≥2 of {archetype STUFF YoY slope, this K%/SwStr decomp,
+  comp T+1} declining → headline DECLINE, not buy (canonical: Framber Valdez 2026).
+  See `reference_lens_merge_protocol.md` SP conflict rule #6.
 - `/sp-floor` — per-start bust probability (the FLOOR; who to start under the
   cap), driven by K−BB%. Use this skill (sustainability) to resolve the OUTLIER
   case: when `/sp-floor` predicted bust ≪ measured bust, the 9-marker decomp

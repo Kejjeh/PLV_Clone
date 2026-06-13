@@ -61,6 +61,49 @@ Re-pull weekly. Historical training snapshots live in `data/research/fg_asof/`.
 
 ---
 
+## ⚠ MANDATORY DECLINE CROSS-CHECK (before headlining any "buy-low")
+
+**Stuff+ measures stuff LEVEL, not TRAJECTORY.** A high-Stuff+ arm whose
+results lag can be a genuine buy-low OR a veteran in real decline whose stuff
+hasn't fully cratered yet but whose K-conversion has. The board CANNOT tell
+these apart on its own — so any candidate flagged **high Stuff+ + lagging
+results = "buy-low"** MUST be cross-checked against the three decline lenses
+below BEFORE you headline a BUY:
+
+1. **Archetype STUFF-rating YoY slope** — `data/research/sp_archetype_career_panel.parquet`
+   (or `/sp-archetype profile <name>`). A STUFF rating dropping year-over-year
+   (e.g. 56→46) is real erosion the in-season Stuff+ snapshot can lag.
+2. **Sustainability K%/SwStr skill-decomp** — `python scripts/xfp/pitcher_sustainability.py --players "<name>"`.
+   A REGRESS bucket with K% down + SwStr down = the strikeouts are actually
+   leaving, not just unlucky.
+3. **Archetype trajectory + comp T+1** — `/sp-archetype profile <name>` /
+   `/triangulate`. TRENDING_DOWN with a negative slope, and age-matched comps
+   averaging low FP/start at T+1, confirm the down-trend.
+
+**Rule:** if **≥2 of those three signal real decline**, DOWNGRADE the headline
+from **"BUY-LOW"** to **"DECLINING — back-end / defensible drop, not a buy."**
+Do not lead with the Stuff+ buy. (Lens-merge protocol: a LEVEL lens loses to
+converging TRAJECTORY lenses — see `reference_lens_merge_protocol.md` SP rule.)
+
+### Worked example — Framber Valdez 2026 (the canonical trap)
+
+In-season Stuff+ **103** with lagging box-score results → the board flagged him
+as a Stuff+ "keep / buy-low." Headlined that way it was WRONG. The decline
+cross-check showed the erosion was substantially REAL, not luck:
+
+- Archetype **STUFF rating crashed 56 → 46** YoY (lens 1 — real).
+- Sustainability **K% −4.7 pp, SwStr −2.4 pp** (lens 2 — real skill erosion).
+- Archetype **TRENDING_DOWN (slope −4.5)**; nearest age-matched comps
+  (Bassitt / Sánchez / Arrieta / Miley / Quintana) averaged only **10.7 FP/start
+  at T+1** (lens 3 — real).
+
+3 of 3 signaled decline → correct headline: **"DECLINING veteran near
+replacement — defensible drop, NOT a Stuff+ buy-low."** The Stuff+ 103 only
+says the raw stuff hasn't fully collapsed yet; it is blind to the trajectory
+the other three lenses caught.
+
+---
+
 ## Guardrails
 
 - **Single-lens by design** — Stuff+ only. It ignores rp3, archetype, injury, role,
@@ -76,3 +119,7 @@ Re-pull weekly. Historical training snapshots live in `data/research/fg_asof/`.
   walks/command, re-read the Pérez finding — that instinct is a ratio-league habit
   the points scoring doesn't share.
 - Headline is the projection; the breakout gap is the discovery lens, not a verdict.
+- **Never headline a veteran "buy-low" without the DECLINE CROSS-CHECK above.**
+  Stuff+ is a LEVEL lens, blind to trajectory — a lagging-results vet can be in
+  real decline (Framber 2026). Run archetype STUFF slope + sustainability K%/SwStr
+  + comp T+1 first; ≥2 declining → headline the DECLINE, not the buy.

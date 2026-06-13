@@ -11,7 +11,12 @@ description: Unified three-lens player analysis combining Pitcher List ranks, ou
 > (xwOBACON YoY / archetype traj), and the process/ranker lens (rh3·rp3·rprs2 +
 > Blended xFP) diverge, write the explicit **actuals vs trajectory vs process**
 > reconciliation rather than picking one. A verdict may change only on new data
-> or a corrected error — say WHY when it does. See
+> or a corrected error — say WHY when it does. **(SP) This explicitly covers the
+> stuff-vs-trajectory case:** a high-Stuff+ / lagging-results "buy-low" is a LEVEL
+> read, blind to trajectory — never headline it as a BUY without cross-checking the
+> decline lenses (archetype STUFF-rating YoY slope + sustainability K%/SwStr +
+> comp T+1). If ≥2 say decline, headline the DECLINE, not the buy (canonical:
+> Framber Valdez 2026). See
 > `reference_lens_merge_protocol.md` → "ALWAYS run + SHOW the full stack" and
 > `reference_decision_type_lens_registry.md` (subset = weighting, not hiding).
 
@@ -567,7 +572,7 @@ The universe builder handles the four standard categories (`ROSTER`, `MY_DROP`, 
 - **Don't quote PL ranks from a stale cache** as "current" — check the `fetched` date and refresh if >7d old (or >2d for streamer ranks)
 - **Don't treat rookies' missing archetype rows as "no signal"** — explicitly note "insufficient innings/PA for archetype profile" and rely on the Statcast process layer instead. For SPs specifically, run `/shadow-scout` — it pulls 2026 MLB Statcast and grades FB velo / K% / BB% / whiff% / CSW% against the live 432-SP population (>=200 pitches). Canonical use: Henderson, Sasaki, Ben Brown 2026-06-04. When the shadow grade is PLUS_PROCESS (>=60) and the archetype panel says CAREER_LOW, **trust the shadow** — the archetype panel is annual-aggregated and trails by ~6 weeks.
 - **`signal` column behavior is per-bucket** — rprs2's `signal` (add/hold/drop) is validated and reliable; engine renders it for RPs. The rp3 file currently has a defect (2026-05-28 build flags 213/264 SPs as "il") so the engine NO LONGER renders the signal token for SPs or H — use rank + replacement_delta + recency_form_gap to read the SP/H model. The rprs2 signal IS surfaced in the RP card output.
-- **For SPs, two validated lenses live outside triangulate** (2026-06-06) — don't reinvent them inline: `/sp-stuff-board` (FanGraphs Stuff+ RoS-FP projection — the MEAN; velocity-driven; Stuff+→rp3 Rule-9 PASS +0.0095) and `/sp-floor` (per-start bust probability — the FLOOR; driven by K−BB%, NOT stuff). Canonical: a low-Stuff+/high-command arm (Messick) is a HIGH-floor start even when stuff/EV rank him low. When a triangulate SP verdict hinges on "is this start safe / who do I bench," hand to `/sp-floor`; when it hinges on "elite stuff the box score hasn't caught," hand to `/sp-stuff-board`. **Location+/command REJECTED as a fantasy-points signal** — never fade a high-Stuff+ SP for walks.
+- **For SPs, two validated lenses live outside triangulate** (2026-06-06) — don't reinvent them inline: `/sp-stuff-board` (FanGraphs Stuff+ RoS-FP projection — the MEAN; velocity-driven; Stuff+→rp3 Rule-9 PASS +0.0095) and `/sp-floor` (per-start bust probability — the FLOOR; driven by K−BB%, NOT stuff). Canonical: a low-Stuff+/high-command arm (Messick) is a HIGH-floor start even when stuff/EV rank him low. When a triangulate SP verdict hinges on "is this start safe / who do I bench," hand to `/sp-floor`; when it hinges on "elite stuff the box score hasn't caught," hand to `/sp-stuff-board`. **Location+/command REJECTED as a fantasy-points signal** — never fade a high-Stuff+ SP for walks. **But Stuff+ is a LEVEL lens, blind to TRAJECTORY** — never headline a high-Stuff+/lagging-results vet as a "buy-low" without the decline cross-check (archetype STUFF YoY slope + sustainability K%/SwStr + comp T+1); ≥2 declining → headline DECLINE, not buy (Framber 2026). See `/sp-stuff-board` mandatory cross-check + `reference_lens_merge_protocol.md` SP rule #6.
 - **Don't synthesize a verdict from just rank gaps** — always weigh the archetype trajectory and T+1 because those are the leading indicators when PL and model disagree
 - **Don't add a fourth data source ad-hoc** — if you find yourself reaching for Statcast L21d or bat tracking, hand off to `/fa-pickup-deep-dive` rather than expanding the triangulate output
 - **Don't print per-player markdown cards for >10 players** — switch to batch mode (`--csv-out`) and dispatch parallel agents per category for synthesis. A 400-player run in interactive mode would dump 30k+ lines and blow context
