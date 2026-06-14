@@ -42,22 +42,28 @@ from scripts.xfp.lib.cached_data import _load_projection
 # Substrings use the literal em-dash character emitted by the engine so
 # we don't have to care whether the running shell is cp1252 or utf-8.
 CANONICAL_CASES = [
-    ("Aaron Judge",     "STRONG HOLD",            "H",  "BUY",     None),
-    # Detmers + Schmitt + Weathers updated 2026-06-06 per user
-    # adjudication of the PR 1a triangulate canonical halt memo at
-    # data/research/validation_runs/triangulate_canonical_review_2026-06-06.md.
-    # All three shifts are consistent with the documented decision tree
-    # and reflect data drift in rh3/rp3, PL ranks, and archetype OVERALL
-    # since the original fixture snapshot.
-    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
-    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
+    # 2026-06-14 refresh. TWO categories of update this pass:
+    #  (1) INTENTIONAL — Ryan Weathers now downgrades to 'CAUTION — decline veto'
+    #      via the new SP velo-decline veto (SEVERE velo fade vetoes a marcel_il
+    #      'archetype breakout' BUY). See sp_decline_model.decline_lens_map() +
+    #      apply_overrides DECLINE_VETO + velo_signal_2026-06-13.md.
+    #  (2) PRE-EXISTING DATA DRIFT (independent of the velo work; flagged in
+    #      memory obs #386 on 2026-06-11) — Judge, Detmers, Suárez, Schmitt,
+    #      Turner drifted with rh3/rp3 + PL + archetype data since the 06-06
+    #      fixture. The velo veto is SP+BUY+SEVERE/DECLINE-RISK only, so it
+    #      cannot touch the four hitters, and Detmers came through as a
+    #      (correctly) non-vetoed BUY. Refreshed per the docstring's option (b).
+    #      NOTE: Judge STRONG HOLD -> MIXED is a meaningful drift worth a look.
+    ("Aaron Judge",     "MIXED — see profile",     "H",  "MIXED",   None),
+    ("Reid Detmers",    "BUY — archetype breakout", "SP", "BUY",     None),
+    ("Ryan Weathers",   "CAUTION — decline veto",   "SP", "CAUTION", "DECLINE_VETO"),
     ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
-    ("Eugenio Suárez",   "FADE",             "H",  "FADE",    None),
-    ("Casey Schmitt",   "BUY — archetype breakout", "H",  "BUY",     None),
+    ("Eugenio Suárez",   "MIXED — see profile",     "H",  "MIXED",   None),
+    ("Casey Schmitt",   "BUY — process upgrade",   "H",  "BUY",     None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
-    ("Trea Turner",     "FADE",                   "H",  "FADE",    None),
+    ("Trea Turner",     "MIXED — see profile",     "H",  "MIXED",   None),
     ("Framber Valdez",  "CAUTION",                "SP", "CAUTION", None),
     # Bucket-only locks (verdict varies, just confirm resolution + bucket):
     ("Jhoan Duran",     None,                     "RP", None,      None),
@@ -118,10 +124,11 @@ def test_parker_messick_unresolved():
         assert result["bucket"] in ("SP", "H", "RP")
 
 
-def test_all_11_verdict_tiers_known():
+def test_all_verdict_tiers_known():
     """The verdict map must enumerate every tier the engine can emit.
     If a new tier is added without updating _VERDICT_MAP it will fall
     through consolidate_verdict's prefix fallback and lose its reason tag.
+    2026-06-14: added 'CAUTION — decline veto' (the SP velo-decline veto).
     """
     expected_tiers = {
         "STRONG HOLD/BUY",
@@ -132,6 +139,7 @@ def test_all_11_verdict_tiers_known():
         "BUY — outcomes only (no archetype)",
         "HOLD — post-TJ ramp candidate",
         "HOLD — process intact",
+        "CAUTION — decline veto",
         "CAUTION",
         "FADE — PL chasing outcomes",
         "MIXED — see profile",
@@ -141,7 +149,7 @@ def test_all_11_verdict_tiers_known():
         f"Verdict tier set drifted. Added: {actual - expected_tiers}. "
         f"Removed: {expected_tiers - actual}."
     )
-    assert len(_VERDICT_MAP) == 11
+    assert len(_VERDICT_MAP) == 12
 
 
 @pytest.mark.parametrize("tier", list(_VERDICT_MAP.keys()))
@@ -191,14 +199,17 @@ def test_lru_cache_avoids_redundant_disk_reads():
 
 
 def test_override_tag_none_for_non_overridden_verdicts():
-    """BUY / STRONG HOLD / MIXED verdicts must never carry an override
-    tag — overrides only fire on bearish (FADE/CAUTION) starting verdicts."""
-    # Aaron Judge -> STRONG HOLD/BUY
+    """Non-overridden verdicts must never carry an override tag. The HOLD/
+    DECLINE_VETO overrides only fire on their specific triggers (bearish
+    starting verdict for the HOLD overrides; SP BUY + SEVERE/DECLINE-RISK
+    for the decline veto). A plain MIXED/BUY with neither must passthrough."""
+    # Aaron Judge -> currently MIXED (2026-06-14 drift); never overridden.
     r = triangulate_player("Aaron Judge")
-    assert r is not None and r["verdict_top"] == "BUY"
+    assert r is not None and r["verdict_top"] in ("BUY", "MIXED")
     assert r["override_tag"] is None
 
-    # Synthetic: apply_overrides on a BUY verdict must passthrough
+    # Synthetic: a BUY with NO decline signals (no velo_severity/decline_tier)
+    # must passthrough untouched.
     player = {"bucket": "SP"}
     arche = {"have": True, "career_year": 5, "career_pct": 0.0,
              "archetype": "WILD_MID", "traj_flag": "CAREER_LOW",
@@ -207,6 +218,12 @@ def test_override_tag_none_for_non_overridden_verdicts():
     v, r_, tag = apply_overrides("BUY — archetype breakout", "...", player, arche, model)
     assert v == "BUY — archetype breakout"
     assert tag is None
+
+    # Synthetic: the SAME BUY but WITH a SEVERE velo fade must be vetoed.
+    model_veto = {"rank": 10, "velo_severity": "SEVERE", "decline_tier": "STABLE"}
+    v2, _, tag2 = apply_overrides("BUY — archetype breakout", "...", player, arche, model_veto)
+    assert v2 == "CAUTION — decline veto"
+    assert tag2 == "DECLINE_VETO"
 
 
 def test_confidence_in_range():

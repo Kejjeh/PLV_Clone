@@ -77,6 +77,33 @@ def _pitcher_team_for(pitcher_id) -> str | None:
         return None
 
 
+# ---------- sp-decline / velo-trajectory lens (display tokens only) ----------
+# Surfaces the validated SP velo-decline trajectory flags (vYoY/vIn/v2y + the
+# SEVERE double-fade and LOW-VELO tilt) + the decline-risk tier on the SP card.
+# Joins sp_decline_model.decline_lens_map() by MLBAM id. Context/conviction layer
+# only — never moves the rp3 headline or the verdict (CLAUDE.md #13). Lazy +
+# cached so non-SP runs and offline rolling-cache states never pay for it.
+_DECLINE_LENS = None
+
+
+def _decline_lens_lookup(pid):
+    global _DECLINE_LENS
+    if _DECLINE_LENS is None:
+        try:
+            import sys as _sys
+            _xfp_dir = _os.path.abspath(_os.path.join(_os.path.dirname(__file__), '..'))
+            if _xfp_dir not in _sys.path:
+                _sys.path.insert(0, _xfp_dir)
+            from sp_decline_model import decline_lens_map
+            _DECLINE_LENS = decline_lens_map()
+        except Exception:
+            _DECLINE_LENS = {}
+    try:
+        return _DECLINE_LENS.get(int(pid))
+    except (TypeError, ValueError):
+        return None
+
+
 # ---------- model row ----------
 
 def model_row(player: dict) -> dict:
@@ -277,6 +304,9 @@ def model_row(player: dict) -> dict:
         except Exception:
             # Defensive: never break SP cards on recform compute failure.
             recform_tag_val = None
+        # sp-decline velo-trajectory lens (validated velo_signal_2026-06-13.md +
+        # sp_decline_stuff_decay_2026-06-13.md). Display/conviction tokens only.
+        dl = _decline_lens_lookup(player['id']) or {}
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -321,6 +351,18 @@ def model_row(player: dict) -> dict:
             'recform_trail_starts': recform_trail_starts,
             'recform_mean_per_start_fp': recform_mean_per_start_fp,
             'recform_cohort_label': recform_cohort_label,
+            # sp-decline velo-trajectory lens (display/conviction only, CLAUDE.md #13)
+            'decline_tier': dl.get('tier'),
+            'decline_gap': dl.get('decline_gap'),
+            'decline_level_pctl': dl.get('stuff_level_pctl'),
+            'velo_yoy': dl.get('velo_yoy'),
+            'velo_yoy_flag': dl.get('velo_flag'),
+            'velo_in': dl.get('velo_in'),
+            'velo_in_flag': dl.get('velo_in_flag'),
+            'velo_2y': dl.get('velo_2y'),
+            'velo_2y_flag': dl.get('velo_2y_flag'),
+            'velo_double': dl.get('velo_double'),
+            'velo_severity': dl.get('velo_severity'),
         }
     return {
         'rank': int(r['rank']),
@@ -487,13 +529,44 @@ def synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, 
 #   Glasnow 2025) all delivered strong T+1 bounces.
 
 def apply_overrides(verdict, rationale, player, arche, model):
+    bucket = player['bucket']
+
+    # ---- DECLINE VETO (bullish downgrade) — consistency-mandate enforcement ----
+    # A SEVERE velo fade (YoY + in-season both down) or a DECLINE-RISK whiff/K-level
+    # tier must NOT let a naive BUY headline stand (the Framber/Weathers trap: an
+    # "archetype breakout" / "model anchored" BUY that is really a marcel_il-suppressed
+    # rank gap + a fading arm). The mandate: when the decline lenses veto, headline the
+    # DECLINE, not the BUY. This changes the verdict LABEL only — the rp3 point number is
+    # untouched (CLAUDE.md #13 preserved; velo is a conviction lens, not a point term).
+    # Fires regardless of archetype presence (marcel_il BUYs often have no archetype).
+    if bucket == 'SP' and (verdict.startswith('BUY') or verdict == 'STRONG HOLD/BUY'):
+        sev = model.get('velo_severity')
+        dtier = model.get('decline_tier')
+        veto = []
+        if sev == 'SEVERE':
+            veto.append('SEVERE velo fade (YoY + in-season both down)')
+        if dtier == 'DECLINE-RISK':
+            g = model.get('decline_gap')
+            veto.append('sp-decline DECLINE-RISK (whiff/K level propped'
+                        + (f", gap {g:+.0f}" if g is not None else '') + ')')
+        if veto:
+            dq = model.get('data_quality_tag')
+            dq_s = f" The buy leans on a {dq} rp3 (suppressed rank gap)." if dq and 'marcel' in str(dq) else ''
+            return (
+                'CAUTION — decline veto',
+                (f"Decline VETO (consistency mandate): original '{verdict}' downgraded — "
+                 f"{' + '.join(veto)} contradict the buy.{dq_s} The bullish read is a LEVEL/"
+                 f"outcome signal blind to TRAJECTORY; the velo/decline lens is the trajectory "
+                 f"veto (Framber 2026). Headline the decline. rp3 point estimate unchanged (#13)."),
+                'DECLINE_VETO',
+            )
+
     if not arche.get('have'):
         return verdict, rationale, None
     is_bearish = verdict.startswith('FADE') or verdict.startswith('CAUTION')
     if not is_bearish:
         return verdict, rationale, None
 
-    bucket = player['bucket']
     sub = arche.get('sub_ratings', {}) or {}
 
     # Override A (SPEED_PROFILE) — REMOVED after empirical calibration showed
@@ -543,6 +616,7 @@ _VERDICT_MAP = {
     'BUY — outcomes only (no archetype)': ('BUY',     'outcomes_only_rookie'),
     'HOLD — post-TJ ramp candidate':      ('HOLD',    'post_tj_ramp'),
     'HOLD — process intact':              ('HOLD',    'process_intact'),
+    'CAUTION — decline veto':             ('CAUTION', 'decline_veto'),
     'CAUTION':                            ('CAUTION', 'process_red_flag'),
     'FADE — PL chasing outcomes':         ('FADE',    'pl_outcome_chase'),
     'MIXED — see profile':                ('MIXED',   'no_convergence'),

@@ -469,14 +469,37 @@ Implementation: `compute_il_return_flag()` in
 and the validation report at
 `data/research/validation_runs/bust_stack_v2_context_validation.md`.
 
-### SP card additions — sp-decline tier (RoS DECLINE-RISK lens)
+### SP card additions — sp-decline velo-trajectory lens + DECLINE VETO ✅ WIRED (2026-06-14)
 
 **The concrete operationalization of the §2 / consistency-mandate decline
-cross-check.** The mandate (top of this file) says a high-Stuff+ / lagging-results
-"buy-low" is a LEVEL read, blind to TRAJECTORY, and must be cross-checked against
-the decline lenses before headlining a BUY. `/sp-decline` is the validated,
-ready-made version of that cross-check — surface its tier on every SP card so the
-check is one glance, not a separate skill invocation.
+cross-check — now wired into the engine, not a manual side-call.** The mandate (top
+of this file) says a high-Stuff+ / lagging-results "buy-low" is a LEVEL read, blind
+to TRAJECTORY, and must be cross-checked against the decline lenses before headlining
+a BUY. The SP card now joins `sp_decline_model.decline_lens_map()` by MLBAM and
+surfaces both the **velo-trajectory flags** and the **decline-risk tier**, and a new
+**DECLINE_VETO override** enforces the mandate automatically.
+
+**Velo-trajectory token** on the rp3 detail row (validated `velo_signal_2026-06-13.md`):
+`velo[vYoY±X.X▼ vIn±X.X v2y±X.X▼▼] SEVERE` — the three velo decline horizons
+(YoY vs last-season-end, in-season vs 2026-peak gated ≥80 BF, 2-year vs 2024-end)
+plus the composite severity (`SEVERE` double-fade / `LOW-VELO` tilt). Velo is a
+bust/conviction lens, NOT a mean-FP term — it never moves the rp3 point estimate
+(CLAUDE.md #13). Callouts fire below the table on SEVERE (~49% forward bust) and
+LOW-VELO.
+
+**DECLINE VETO** (`apply_overrides`, override_tag `DECLINE_VETO`): when a verdict
+resolves to any **BUY** but the SP shows a **SEVERE velo fade** OR a **DECLINE-RISK**
+whiff/K-level tier, the headline is downgraded to **`CAUTION — decline veto`** with an
+explicit actuals-vs-trajectory reconciliation. This is the Framber/Weathers trap: an
+"archetype breakout" / "model anchored" BUY that is really a `marcel_il`-suppressed
+rank gap on a fading arm. The veto changes the verdict **LABEL only** — the rp3 point
+number is untouched (#13 preserved; the mandate about not contradicting yourself is
+enforced). Canonical: **Ryan Weathers 2026-06-14** (BUY — archetype breakout →
+CAUTION — decline veto; SEVERE velo fade + marcel_il rp3).
+
+`/sp-decline` remains the dedicated full board (league-wide + your staff). The
+triangulate card now carries the same lens inline so a Stuff+/PL buy-low can't slip
+through without the trajectory cross-check.
 
 The lens (`sp_decline_model.build()`, validated 2026-06-13
 `sp_decline_stuff_decay_2026-06-13.md`, partial-r ~0.235 on the whiff/K LEVEL)
@@ -497,24 +520,21 @@ in the rp3 detail row, and when it fires DECLINE-RISK, a callout below the table
 > the buy headline (≥2 declining signals → headline the DECLINE, not the buy).
 > Display/context flag only — does NOT move the rp3 point estimate (CLAUDE.md #13).
 
-**How it interacts with the verdict:** it is a **context/risk flag, never a
-headline mover or an additive verdict input** (CLAUDE.md #13). It does NOT add a
-new branch to the verdict decision tree. It functions exactly like the existing
-SP-card display tags (boom_stack, HIGH-K, framing) — informational, surfaced for
-the reader's synthesis. Its specific job is to make the consistency-mandate's
-"if ≥2 decline lenses agree, headline DECLINE not BUY" check concrete: sp-decline
-DECLINE-RISK is one of those decline votes (alongside archetype STUFF YoY slope
-and sustainability K%/SwStr).
+**How it interacts with the verdict:** the velo flags + tier are **display/conviction
+context** (never move the rp3 point number, #13). The **DECLINE_VETO** is the one
+place the decline lens touches the verdict — and it touches the **label only**, never
+the projection: it downgrades a BUY *headline* to `CAUTION — decline veto` when SEVERE
+velo or DECLINE-RISK contradicts it. This is the engine enforcing the mandate's
+"if the decline lenses veto, headline the DECLINE not the BUY" rule, so it can't be
+forgotten in a fast turn.
 
-**Engine wiring (TODO — documented-only for now).** Surfacing this in
-`run_triangulate.py` cleanly means joining `sp_decline_model.build()` by MLBAM in
-the SP branch of `triangulate_core.model_row()` and rendering the token/callout in
-`format_card()`. That touches the verdict-augmentation path and the multi-bucket
-card renderer, so it is left as a clear TODO rather than wired inline to avoid
-destabilizing the verdict tree. **Until wired, run `/sp-decline --players "X"`
-alongside `/triangulate "X"` for any SP where a Stuff+/PL buy-low is in play** —
-the mandate at the top of this file already requires that cross-check; this names
-the exact tool.
+**Engine wiring (DONE 2026-06-14).** `triangulate_core.model_row()` SP branch joins
+`sp_decline_model.decline_lens_map()` (a cached, ownership-free public helper) by
+MLBAM and adds `decline_tier` / `velo_*` fields; `apply_overrides()` adds the
+`DECLINE_VETO` branch; `run_triangulate.format_card()` renders the velo token +
+callouts and `compare_table()` adds a "Velo traj" column; the batch CSV carries
+`decline_tier`/`velo_severity`/`velo_yoy`/`velo_in`/`velo_2y`. Regression fixtures
+updated in `tests/test_triangulate.py` (Weathers veto canonical + 12th verdict tier).
 
 ### RP card additions — rp-decline tier (role-loss CONVERGENCE WATCH lens)
 

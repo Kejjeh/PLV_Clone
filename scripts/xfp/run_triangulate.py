@@ -225,9 +225,57 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 hbs_tok = f"boom_stack={hbs_val}/4 (boom%~{hbr*100:.1f}%)"
             else:
                 hbs_tok = f"boom_stack={hbs_val}/4"
+        # sp-decline velo-trajectory token (vYoY/vIn/v2y + SEVERE/LOW-VELO tier).
+        # Display/conviction lens only — never moves the rp3 headline (CLAUDE.md #13).
+        velo_tok = ''
+        if bucket == 'SP':
+            _fm = {'VV': '▼▼', 'v': '▼', '^': '▲'}
+            vparts = []
+            for key, fkey, lbl in (('velo_yoy', 'velo_yoy_flag', 'vYoY'),
+                                   ('velo_in', 'velo_in_flag', 'vIn'),
+                                   ('velo_2y', 'velo_2y_flag', 'v2y')):
+                val = model.get(key)
+                if val is not None:
+                    arrow = _fm.get(model.get(fkey) or '', '')
+                    vparts.append(f"{lbl}{val:+.1f}{arrow}")
+            if vparts:
+                sev = model.get('velo_severity')
+                sev_s = f" {sev}" if sev else ''
+                velo_tok = "velo[" + " ".join(vparts) + "]" + sev_s
+            dtier = model.get('decline_tier')
+            if dtier and dtier != 'STABLE':
+                g = model.get('decline_gap')
+                velo_tok += f" sp-decline={dtier}" + (f"(gap{g:+.0f})" if g is not None else '')
         extra = f" | {model.get('extra','')}"
-        detail = ' '.join(s for s in (sig, rep, recf, dq, bs_tok, hbs_tok) if s) + extra
+        detail = ' '.join(s for s in (sig, rep, recf, dq, bs_tok, hbs_tok, velo_tok) if s) + extra
         lines.append(f"| **{model_label}** | #{model['rank']} | {proj_s} | {detail} |")
+        # sp-decline velo-trajectory callout — fires on SEVERE / DECLINE-RISK.
+        if bucket == 'SP':
+            sev = model.get('velo_severity')
+            dtier = model.get('decline_tier')
+            if sev == 'SEVERE':
+                lines.append(
+                    "\n⚠ **SEVERE velo fade** — YoY *and* in-season velo both down "
+                    "(validated ~49% forward bust / −2.5 FP/start, 2.1× base; "
+                    "velo_signal_2026-06-13). The strongest velo cutoff — read this as a "
+                    "trajectory VETO on any Stuff+/PL buy-low. Conviction flag, not a "
+                    "headline mover (CLAUDE.md #13)."
+                )
+            elif sev == 'LOW-VELO':
+                lines.append(
+                    "\n⚠ *LOW-VELO tilt* — a velo drop on a sub-median-velo (finesse) arm "
+                    "bites ~2× harder (no margin). Conviction flag only."
+                )
+            if dtier == 'DECLINE-RISK':
+                g = model.get('decline_gap'); lp = model.get('decline_level_pctl')
+                g_s = f"gap {g:+.0f}" if g is not None else ''
+                lp_s = f"lvlPct {lp:.0f}" if lp is not None else ''
+                lines.append(
+                    f"\n⚠ **sp-decline DECLINE-RISK** ({', '.join(s for s in (lp_s, g_s) if s)}) "
+                    "— below-average whiff/K LEVEL with FP propped above it → RoS FP regresses "
+                    "DOWN. If a Stuff+/PL buy-low is on the table, this is the trajectory lens "
+                    "that VETOES the buy (Framber 2026). Context flag — does NOT move rp3."
+                )
         # SP: boom-stack tier-aware callout block (display tag only; not a verdict override).
         if bucket == 'SP' and isinstance(model.get('boom_stack'), int):
             bs_val = model['boom_stack']
@@ -418,8 +466,8 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
 
 def compare_table(rows):
     out = ["\n## Comparison\n"]
-    out.append("| Player | Bucket | PL | Model | Archetype OVERALL | T+1 | Traj | Verdict |")
-    out.append("|---|---|---|---|---|---|---|---|")
+    out.append("| Player | Bucket | PL | Model | Archetype OVERALL | Velo traj | T+1 | Traj | Verdict |")
+    out.append("|---|---|---|---|---|---|---|---|---|")
     for r in rows:
         p = r['player']; pl = r['pl_main']; m = r['model']; a = r['arche']
         pl_show = f"#{pl}" if isinstance(pl, int) else pl
@@ -430,7 +478,16 @@ def compare_table(rows):
             tr = a['traj_flag']
         else:
             a_show = '—'; t1 = '—'; tr = '—'
-        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} | {t1} | {tr} | {r['verdict']} |")
+        # SP velo-trajectory summary cell: severity tag, else the YoY flag/value.
+        velo_show = '—'
+        if p['bucket'] == 'SP':
+            sev = m.get('velo_severity')
+            if sev:
+                velo_show = sev
+            elif m.get('velo_yoy') is not None:
+                arrow = {'VV': '▼▼', 'v': '▼', '^': '▲'}.get(m.get('velo_yoy_flag') or '', '')
+                velo_show = f"{m['velo_yoy']:+.1f}{arrow}"
+        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} | {velo_show} | {t1} | {tr} | {r['verdict']} |")
     return '\n'.join(out)
 
 
@@ -599,6 +656,12 @@ def main():
                 'watch_list': '; '.join(watch_list) if watch_list else '',
                 'rationale': rationale,
                 'override_tag': override_tag,
+                # sp-decline velo-trajectory lens (SP only; blank for H/RP)
+                'decline_tier': model.get('decline_tier'),
+                'velo_severity': model.get('velo_severity'),
+                'velo_yoy': model.get('velo_yoy'),
+                'velo_in': model.get('velo_in'),
+                'velo_2y': model.get('velo_2y'),
             }
             if category_map:
                 rec['category'] = category_map.get(name)
