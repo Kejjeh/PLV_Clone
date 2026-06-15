@@ -513,3 +513,4 @@ timestamp,call_date,scope,player_id,player_name,kind,bucket,signal,model_at_call
 2026-06-11T13:44:56,2026-06-11,adhoc,,Parker Messick,pitcher,NO_BASELINE,,,,,,,13,,,,
 2026-06-11T13:45:02,2026-06-11,adhoc,680694,Kyle Bradish,pitcher,REGRESS,AGREE_BEARISH,11.6600,13.0350,-1.8410,-3.4056,,13,,,,
 2026-06-11T13:45:02,2026-06-11,adhoc,664285,Framber Valdez,pitcher,REGRESS,AGREE_BEARISH,12.2300,12.6213,-1.0402,-2.5780,,13,,,,
+2026-06-13T13:24:19,2026-06-13,adhoc,664285,Framber Valdez,pitcher,REGRESS,AGREE_BEARISH,12.2300,12.6213,-1.0402,-2.5780,-0.4966,13,,,,
