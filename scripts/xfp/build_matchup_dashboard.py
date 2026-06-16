@@ -1359,6 +1359,47 @@ def render_injury_alerts(my_lineup):
     return '\n'.join(out)
 
 
+def render_trend_watch(my_lineup):
+    """Physical getting-better/worse watch for rostered players (DISPLAY/CONTEXT
+    only — never a projection input, CLAUDE.md #13). Hitters = 3-axis bat-tracking
+    (bat speed + attack angle + fast-swing%); SP/RP = FB velo (induced bat speed
+    rejected for pitchers). Notable movers only (|z|>=1.0). Robust: returns '' on
+    any failure so it can never break the build. Engine + validation:
+    scripts/xfp/lib/trend_signal.py, early_season_bat_speed_2026-06-16.md."""
+    try:
+        from scripts.xfp.lib.trend_signal import (trend_line, hitter_trend_table,
+                                                  pitcher_trend_table)
+        ht, pt = hitter_trend_table(), pitcher_trend_table()
+        risers, decliners = [], []
+        for p in my_lineup:
+            role = detect_pitcher_role(p)
+            is_p = role in ('SP', 'RP')
+            tag = trend_line(p.name, team=getattr(p, 'proTeam', None),
+                             position=getattr(p, 'position', None),
+                             role=role if is_p else None, hit_tbl=ht, pit_tbl=pt)
+            if not tag:
+                continue
+            if tag.startswith('\U0001f53a'):
+                risers.append((p.name, tag))
+            elif tag.startswith('\U0001f53b'):
+                decliners.append((p.name, tag))
+        if not risers and not decliners:
+            return ('<h2 id="trend">📈 Physical Trend Watch</h2>'
+                    '<p class="muted">No notable physical risers/decliners on the roster '
+                    '(all within ±1σ of prior-year baseline).</p>')
+        out = ['<h2 id="trend">📈 Physical Trend Watch '
+               '<small class="muted">(hitters: bat speed/swing-path/intent; SP/RP: FB velo · '
+               'vs prior-yr baseline · display/context, NOT a projection input)</small></h2>',
+               '<table><thead><tr><th>Player</th><th>Physical trend</th></tr></thead><tbody>']
+        for name, tag in risers + decliners:
+            cls = 'pos' if tag.startswith('\U0001f53a') else 'neg'
+            out.append(f'<tr><td>{h(name)}</td><td class="{cls}">{h(tag)}</td></tr>')
+        out.append('</tbody></table>')
+        return '\n'.join(out)
+    except Exception:
+        return ''
+
+
 def render_power_rankings():
     """League-wide team rankings by total RoS projection."""
     try:
@@ -3011,6 +3052,7 @@ def main():
     playoff_block = render_playoff_simulation()
     pos_comp_block = render_position_competition(rh3_map)
     injury_block = render_injury_alerts(mu['my_lineup'])
+    trend_block = render_trend_watch(mu['my_lineup'])
 
     current_gap = mu['my_score'] - mu['opp_score']
     proj_gap = my_total - opp_total
@@ -3387,6 +3429,8 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 {cap_block}
 
 {injury_block}
+
+{trend_block}
 
 <section id="optimizer"><details open>
 <summary>🎯 Lineup Optimizer</summary>

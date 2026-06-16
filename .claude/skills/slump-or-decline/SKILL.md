@@ -750,3 +750,29 @@ underlying contact-quality platform has dropped.
   12-15 steps. For a fast take, use the L21d xwOBA + CI from Step 3
   as a quick gut check, then come back for full analysis if the gap
   is borderline
+
+
+## Physical-trend layer (bat-tracking, added 2026-06-16)
+
+Surface the physical getting-better/worse read from the validated `/trending`
+engine. It is **DISPLAY/CONTEXT only** — never moves the projection or flips the
+headline (CLAUDE.md #13) — and routing through the one engine keeps a player's
+read identical across skills (#12).
+
+```python
+from scripts.xfp.lib.trend_signal import trend_line, hitter_trend_table, pitcher_trend_table
+ht, pt = hitter_trend_table(), pitcher_trend_table()   # batch: reuse across players
+tag = trend_line(name, team=pro_team, position=pos, hit_tbl=ht, pit_tbl=pt)  # or role='SP'/'RP'
+```
+Quick CLI: `python scripts/xfp/run_trending.py --names "A, B"`.
+
+- **Hitters = 3-axis** (bat speed + attack angle toward ~15deg band + fast-swing%
+  intent), each non-redundant; validated as an EARLY-WARNING read (bat speed
+  trustworthy in ~20 swings vs 6-12 wks for the rate stats). **Pitchers = FB velo**
+  (induced bat speed REJECTED for pitchers). Attack angle is direction-aware
+  (toward band, NOT "up = good").
+- **Necessary-not-sufficient:** a 🔺/🔻 flags the physical TOOL moving; confirm with
+  the contact/results column in the tag (tool-moved-but-not-yet-translating is common).
+- **Fold into the structural-vs-recoverable call:** bat-speed / swing-path DOWN on a slumping hitter = physical/structural decline (lower recovery ceiling → lean SELL/DROP); physical STABLE during the slump = approach/luck (bounce-back plausible → lean HOLD). This is the mechanism behind the xwOBACON-YoY-trajectory rule — show it alongside; do NOT let it move the MC/Bayesian/comp numbers.
+
+Validation: `data/research/validation_runs/early_season_bat_speed_2026-06-16.md`.

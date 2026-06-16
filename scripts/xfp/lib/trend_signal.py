@@ -136,3 +136,26 @@ def trend_for_mlbam(mlbam: int, role: str, hit_tbl=None, pit_tbl=None):
         return None, None
     row = tbl.loc[mlbam]
     return (tag_pitcher(row) if is_p else tag_hitter(row)), row.to_dict()
+
+
+def trend_line(name, *, team=None, position=None, role=None, hit_tbl=None, pit_tbl=None):
+    """Convenience for OTHER skills: resolve a player by name (+team/position
+    hints, collision-safe) and return the one-line physical-trend tag, or None if
+    unresolved / no qualifying 2026 sample. Pass hit_tbl/pit_tbl for batch use to
+    avoid recomputing the tables per call. DISPLAY/CONTEXT only — never moves a
+    projection (Rule 13). Routing all skills through this keeps a player's trend
+    read identical everywhere (Rule 12 — no cross-skill flip-flops)."""
+    from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+    is_p = (str(role).upper() in {'SP', 'RP', 'P'}) or (str(position).upper() in {'SP', 'RP', 'P'})
+    try:
+        if is_p:
+            r = role or ('SP' if str(position).upper() == 'SP' else 'RP')
+            pid = resolve_pitcher_id(name, team=team, role=r)
+        else:
+            pid = resolve_batter_id(name, team=team, position=position)
+    except Exception:
+        return None
+    if pid is None:
+        return None
+    tag, _ = trend_for_mlbam(pid, 'SP' if is_p else 'H', hit_tbl=hit_tbl, pit_tbl=pit_tbl)
+    return tag

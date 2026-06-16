@@ -47,6 +47,19 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     if confidence is not None and n_aligned is not None and n_available is not None:
         lines.append(f"**Confidence:** {confidence:.2f} ({n_aligned} of {n_available} signals agree) | verdict_top={verdict_top} | reason_tag={reason_tag}\n")
 
+    # Physical-trend lens (display/conviction only — never moves the verdict or
+    # the headline projection, CLAUDE.md #13). Hitter = 3-axis bat speed + attack
+    # angle + fast-swing% (early-warning, stabilizes fast); pitcher = FB velo.
+    # Engine + validation: scripts/xfp/lib/trend_signal.py,
+    # data/research/validation_runs/early_season_bat_speed_2026-06-16.md.
+    try:
+        from scripts.xfp.lib.trend_signal import trend_for_mlbam
+        _trend_tag, _ = trend_for_mlbam(int(player['id']), bucket)
+        if _trend_tag:
+            lines.append(f"**Physical trend:** {_trend_tag}\n")
+    except Exception:
+        pass
+
     # Blended xFP (Phase 3, additive — does NOT override verdict).
     try:
         from scripts.xfp.lib.blend_score import compute_blended_xfp

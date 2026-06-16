@@ -414,3 +414,29 @@ Sustainability is a RoS skill question; boom_stack is a per-game flag.
 A SUSTAINABLE hitter with boom_stack=3 today is a top-of-lineup play;
 SUSTAINABLE with boom_stack=0 is a normal hold. See
 `reference_hitter_boom_stack.md`.
+
+
+## Physical-trend layer (bat-tracking, added 2026-06-16)
+
+Surface the physical getting-better/worse read from the validated `/trending`
+engine. It is **DISPLAY/CONTEXT only** — never moves the projection or flips the
+headline (CLAUDE.md #13) — and routing through the one engine keeps a player's
+read identical across skills (#12).
+
+```python
+from scripts.xfp.lib.trend_signal import trend_line, hitter_trend_table, pitcher_trend_table
+ht, pt = hitter_trend_table(), pitcher_trend_table()   # batch: reuse across players
+tag = trend_line(name, team=pro_team, position=pos, hit_tbl=ht, pit_tbl=pt)  # or role='SP'/'RP'
+```
+Quick CLI: `python scripts/xfp/run_trending.py --names "A, B"`.
+
+- **Hitters = 3-axis** (bat speed + attack angle toward ~15deg band + fast-swing%
+  intent), each non-redundant; validated as an EARLY-WARNING read (bat speed
+  trustworthy in ~20 swings vs 6-12 wks for the rate stats). **Pitchers = FB velo**
+  (induced bat speed REJECTED for pitchers). Attack angle is direction-aware
+  (toward band, NOT "up = good").
+- **Necessary-not-sufficient:** a 🔺/🔻 flags the physical TOOL moving; confirm with
+  the contact/results column in the tag (tool-moved-but-not-yet-translating is common).
+- **Use as physical confirmation of the SUSTAINABLE / NARROW / HOT-STREAK verdict:** swing-path-toward-band or bat-speed UP = the tool genuinely changed (supports SUSTAINABLE); flat physical under hot outcomes = lean HOT-STREAK. The confirmation column separates tool-moved-and-translating from tool-moved-not-yet.
+
+Validation: `data/research/validation_runs/early_season_bat_speed_2026-06-16.md`.
