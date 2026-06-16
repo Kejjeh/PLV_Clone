@@ -47,6 +47,10 @@ jobs:
         run: python3 scripts/xfp/ci_games_live.py
 
   # ── Build + publish, only when games are live ──────────────────────────────
+  # Build is decoupled from the publish target: dashboards are built into the
+  # workspace first, then copied into the xfp-model checkout and pushed. So the
+  # whole build (imports + ESPN auth + MLB API) is exercised before anything
+  # token-gated runs.
   publish:
     needs: gate
     if: needs.gate.outputs.live == 'true'
@@ -67,21 +71,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install pandas numpy pyarrow requests espn-api
 
-      - name: Checkout xfp-model (GitHub Pages target)
-        uses: actions/checkout@v5
-        with:
-          repository: Kejjeh/xfp-model
-          token: ${{ secrets.XFP_MODEL_TOKEN }}
-          path: xfp-model-pages
-
-      - name: Build live + matchup and write into xfp-model/docs
+      - name: Build live + matchup dashboards
         env:
           ESPN_LEAGUE_ID: ${{ secrets.ESPN_LEAGUE_ID }}
           ESPN_YEAR:      ${{ secrets.ESPN_YEAR }}
           ESPN_SWID:      ${{ secrets.ESPN_SWID }}
           ESPN_S2:        ${{ secrets.ESPN_S2 }}
           PLV_ROOT:       ${{ github.workspace }}
-          PLV_XFP_DOCS:   ${{ github.workspace }}/xfp-model-pages/docs
           PYTHONPATH:     ${{ github.workspace }}/src:${{ github.workspace }}
           PYTHONUTF8:     "1"
           PYTHONIOENCODING: "utf-8"
@@ -89,9 +85,18 @@ jobs:
           python -X utf8 scripts/xfp/live_monitor.py --dashboard
           python -X utf8 scripts/xfp/build_matchup_dashboard.py
 
-      - name: Commit & publish to GitHub Pages
-        working-directory: xfp-model-pages
+      - name: Checkout xfp-model (GitHub Pages target)
+        uses: actions/checkout@v5
+        with:
+          repository: Kejjeh/xfp-model
+          token: ${{ secrets.XFP_MODEL_TOKEN }}
+          path: xfp-model-pages
+
+      - name: Publish dashboards to GitHub Pages
         run: |
+          cp data/outputs/matchup.html        xfp-model-pages/docs/matchup.html
+          cp data/outputs/live_dashboard.html xfp-model-pages/docs/live_dashboard.html
+          cd xfp-model-pages
           git config user.name  "plv-live-bot"
           git config user.email "actions@users.noreply.github.com"
           git add docs/matchup.html docs/live_dashboard.html

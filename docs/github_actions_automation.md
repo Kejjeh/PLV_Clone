@@ -99,8 +99,9 @@ rebuilds — so it naturally stops for the night.
 
 - The builders are now path-portable via `PLV_ROOT` / `PLV_XFP_DOCS` env vars
   (default to the local Windows paths when unset, so manual runs are
-  unchanged). The cloud job sets them to the runner workspace + the checked-out
-  `xfp-model`.
+  unchanged). The cloud job sets `PLV_ROOT` to the runner workspace, builds the
+  HTML into `data/outputs/`, then copies it into the checked-out `xfp-model`
+  and pushes (build decoupled from the token-gated publish).
 - The cloud job installs only light deps (`pandas numpy pyarrow requests
   espn-api`) and sets `PYTHONPATH=src:.` — it never does `pip install -e .`
   (which would drag in pybaseball/lightgbm/sklearn).
