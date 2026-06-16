@@ -57,6 +57,7 @@ OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 XFP_DOCS = ROOT / 'xfp-model' / 'docs'
 _BS_PITCHERS = CACHE / 'boxscore_pitchers.parquet'
+_BS_HITTERS  = CACHE / 'boxscore_hitters.parquet'
 
 
 def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
@@ -90,6 +91,36 @@ def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
         return out
     except Exception:
         return {}
+
+
+def _load_bs_week_hitter_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
+    """Return {norm_name: {fp, games}} for boxscore-bridge hitter games in [week_start, yesterday]."""
+    if not _BS_HITTERS.exists():
+        return {}
+    try:
+        df = pd.read_parquet(_BS_HITTERS)
+        df = df[(df['game_date'] >= week_start.isoformat()) &
+                (df['game_date'] <= yesterday.isoformat())]
+        if df.empty:
+            return {}
+        out: dict[str, dict] = {}
+        for _, row in df.iterrows():
+            nk = unicodedata.normalize('NFD', str(row['player_name'])) \
+                            .encode('ascii', 'ignore').decode().lower().strip()
+            if nk not in out:
+                out[nk] = {'fp': 0.0, 'games': []}
+            out[nk]['fp'] += float(row['fp_h'])
+            out[nk]['games'].append({
+                'date': str(row['game_date']),
+                'r':   int(row['r']),
+                'tb':  int(row['tb']),
+                'rbi': int(row['rbi']),
+                'fp':  float(row['fp_h']),
+            })
+        return out
+    except Exception:
+        return {}
+
 
 # Canonical IL statuses across ESPN. Any of these = IL'd; must be excluded
 # from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
@@ -2606,23 +2637,33 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
 
 
 def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
-                      bs_actuals: dict | None = None):
+                      bs_actuals: dict | None = None,
+                      bs_h_actuals: dict | None = None):
     rows = []
     for p in lineup:
         proj = projections.get(p.name, {'fp': 0, 'units': 0, 'breakdown': [], 'badges': []})
         wtd = p.points or 0
         badges = list(proj['badges'])
         bs_starts = []
-        # Bridge inject: if ESPN WTD is 0 for an SP but the boxscore bridge has
-        # a start this week, show bridge FP so the dashboard reflects reality
-        # before ESPN's morning score update. Never overrides a non-zero ESPN score.
-        if wtd == 0 and (p.position or '').upper() == 'SP' and bs_actuals:
+        bs_games = []
+        pos = (p.position or '').upper()
+        # Bridge inject: if ESPN WTD is 0 but the boxscore bridge has data this
+        # week, show bridge FP so the dashboard reflects reality before ESPN's
+        # morning score update. Never overrides a non-zero ESPN score.
+        if wtd == 0:
             nk = _norm(p.name)
-            bs = bs_actuals.get(nk)
-            if bs and bs['fp'] > 0:
-                wtd = bs['fp']
-                bs_starts = bs['starts']
-                badges.append('📋 bridge')
+            if pos == 'SP' and bs_actuals:
+                bs = bs_actuals.get(nk)
+                if bs and bs['fp'] > 0:
+                    wtd = bs['fp']
+                    bs_starts = bs['starts']
+                    badges.append('📋 bridge')
+            elif pos not in ('SP', 'RP', 'P') and bs_h_actuals:
+                bs = bs_h_actuals.get(nk)
+                if bs and bs['fp'] > 0:
+                    wtd = bs['fp']
+                    bs_games = bs['games']
+                    badges.append('📋 bridge')
         rows.append({
             'name': p.name, 'pos': p.position or '?',
             'wtd': wtd,
@@ -2632,6 +2673,7 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
             'breakdown': proj['breakdown'],
             'badges': badges,
             'bs_starts': bs_starts,
+            'bs_games': bs_games,
         })
     rows.sort(key=lambda r: -r['total'])
     total_rest = sum(r['rest'] for r in rows)
@@ -2669,6 +2711,11 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
                 out.append(f'<tr class="breakdown"><td colspan="7">'
                            f'→ 📋 {s["date"][5:]} actual: {ip_disp}IP {s["so"]}K '
                            f'<b>{s["fp"]:.1f} FP</b> (boxscore bridge)</td></tr>')
+        if r.get('bs_games'):
+            for g in r['bs_games']:
+                out.append(f'<tr class="breakdown"><td colspan="7">'
+                           f'→ 📋 {g["date"][5:]} actual: {g["r"]}R {g["tb"]}TB {g["rbi"]}RBI '
+                           f'<b>{g["fp"]:.1f} FP</b> (boxscore bridge)</td></tr>')
         if r['breakdown']:
             for b in r['breakdown']:
                 if b.get('type') == 'start':
@@ -2742,7 +2789,8 @@ def main():
     # (week_start through yesterday). Injected into render_team_table when
     # ESPN WTD is still 0 — bridges the ~few-hour lag before ESPN scores games.
     yesterday = today - timedelta(days=1)
-    bs_week = _load_bs_week_actuals(week_start, yesterday) if week_start <= yesterday else {}
+    bs_week   = _load_bs_week_actuals(week_start, yesterday)        if week_start <= yesterday else {}
+    bs_h_week = _load_bs_week_hitter_actuals(week_start, yesterday) if week_start <= yesterday else {}
 
     print(f'  matchup period: {mu["period"]}')
     print(f'  week: {week_start} → {week_end} (today: {today})')
@@ -2877,10 +2925,10 @@ def main():
 
     my_block, _, _ = render_team_table(mu['mine'].team_name, mu['my_lineup'],
                                           mu['my_score'], my_proj, my_capped,
-                                          bs_actuals=bs_week)
+                                          bs_actuals=bs_week, bs_h_actuals=bs_h_week)
     opp_block, _, _ = render_team_table(mu['opp'].team_name, mu['opp_lineup'],
                                            mu['opp_score'], opp_proj, opp_capped,
-                                           bs_actuals=bs_week)
+                                           bs_actuals=bs_week, bs_h_actuals=bs_h_week)
 
     # ---- LINEUP OPTIMIZER ----
     opt_block = render_lineup_optimizer(mu['my_lineup'], my_proj, schedules_by_team,
