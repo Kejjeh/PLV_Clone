@@ -1,0 +1,181 @@
+owner,name,team,own,per_start,stuff,src,inj,ret,xfp_ros,xfp_po,dec,st
+FA,Aaron Nola,Phi,40.7,13.09,107.0,Stuff+,,,220.0,47.0,,ok
+FA,Christian Scott,NYM,10.9,13.04,108.0,Stuff+,,,219.0,47.0,,ok
+FA,Trevor McDonald,SF,7.5,13.03,101.0,Stuff+,,,219.0,47.0,,ok
+FA,Jack Leiter,Tex,18.6,12.74,103.0,Stuff+,,,214.0,46.0,,ok
+FA,Reynaldo Lopez,Atl,3.7,12.6,,talent_prior,,,212.0,45.0,,ok
+FA,Ryan Weathers,NYY,39.4,12.39,99.0,Stuff+,,,209.0,45.0,,ok
+FA,Dustin May,StL,12.5,12.14,103.0,Stuff+,,,204.0,44.0,,ok
+FA,Landen Roupp,SF,30.3,12.12,99.0,Stuff+,,,204.0,44.0,,ok
+FA,Connor Prielipp,Min,3.1,12.02,103.0,Stuff+,,,202.0,43.0,,ok
+FA,Walbert Urena,LAA,12.4,11.93,99.0,Stuff+,,,201.0,43.0,,ok
+FA,Matthew Boyd,ChC,41.7,12.42,97.0,Stuff+,FIFTEEN_DAY_DL,2026-06-17,201.0,45.0,,IL 06-17
+FA,Kyle Bradish,Bal,62.0,11.86,100.0,Stuff+,,,200.0,43.0,,ok
+FA,Bubba Chandler,Pit,25.3,11.8,105.0,Stuff+,,,199.0,42.0,,ok
+FA,Ryne Nelson,Ari,9.9,11.55,106.0,Stuff+,,,194.0,42.0,,ok
+FA,Sean Burke,ChW,13.1,11.47,98.0,Stuff+,,,193.0,41.0,,ok
+FA,Luis Castillo,Sea,60.0,11.49,98.0,Stuff+,,,193.0,41.0,,ok
+FA,Anthony Kay,ChW,4.8,11.46,104.0,Stuff+,,,193.0,41.0,,ok
+FA,Logan Henderson,Mil,12.7,14.03,107.0,Stuff+,FIFTEEN_DAY_DL,2026-07-01,193.0,51.0,,IL 07-01
+FA,J.T. Ginn,Oak,23.5,11.49,95.0,Stuff+,,,193.0,41.0,,ok
+FA,Luis F. Castillo,FA,0.0,11.49,98.0,Stuff+,,,193.0,41.0,,ok
+FA,Matthew Liberatore,StL,6.3,11.36,99.0,Stuff+,,,191.0,41.0,,ok
+FA,Spencer Arrighetti,Hou,61.9,11.31,99.0,Stuff+,,,190.0,41.0,,ok
+FA,Brandon Sproat,Mil,1.4,11.25,99.0,Stuff+,,,189.0,41.0,,ok
+FA,Jeffrey Springs,Oak,16.4,11.02,98.0,Stuff+,,,186.0,40.0,,ok
+FA,Robbie Ray,SF,51.4,11.03,98.0,Stuff+,,,186.0,40.0,,ok
+FA,Randy Vasquez,SD,32.2,11.0,99.0,Stuff+,,,185.0,40.0,,ok
+FA,Andrew Painter,Phi,8.0,10.97,100.0,Stuff+,,,185.0,40.0,,ok
+FA,Zebby Matthews,Min,8.0,10.95,96.0,Stuff+,,,184.0,39.0,,ok
+FA,Andre Pallante,StL,5.2,10.94,97.0,Stuff+,,,184.0,39.0,,ok
+FA,Edward Cabrera,ChC,29.6,10.87,94.0,Stuff+,,,183.0,39.0,,ok
+FA,Trevor Rogers,Bal,30.1,10.81,100.0,Stuff+,,,182.0,39.0,,ok
+FA,Lance McCullers Jr.,Hou,2.6,11.05,97.0,Stuff+,FIFTEEN_DAY_DL,2026-06-15,182.0,40.0,,IL 06-15
+FA,Walker Buehler,SD,7.1,10.63,96.0,Stuff+,,,179.0,38.0,,ok
+FA,Colin Rea,ChC,5.7,10.55,94.0,Stuff+,,,177.0,38.0,,ok
+FA,Brandon Young,Bal,8.2,10.48,96.0,Stuff+,,,176.0,38.0,,ok
+FA,Stephen Kolek,KC,17.1,10.47,92.0,Stuff+,,,176.0,38.0,,ok
+FA,Jake Irvin,Wsh,0.6,11.6,98.0,Stuff+,FIFTEEN_DAY_DL,2026-06-23,176.0,42.0,,IL 06-23
+FA,Tyler Wells,Bal,0.4,10.42,,talent_prior,,,175.0,38.0,,ok
+FA,Grant Holmes,Atl,12.1,10.27,90.0,Stuff+,,,173.0,37.0,,ok
+FA,Kumar Rocker,Tex,3.8,10.25,92.0,Stuff+,,,172.0,37.0,,ok
+FA,Shane Drohan,Mil,5.8,10.13,,rp3_dd,,,170.0,36.0,,ok
+FA,Braxton Garrett,Mia,0.6,10.09,,talent_prior,,,170.0,36.0,,ok
+FA,Mike Burrows,Hou,3.5,10.11,93.0,Stuff+,,,170.0,36.0,,ok
+FA,Slade Cecconi,Cle,1.8,10.04,93.0,Stuff+,,,169.0,36.0,,ok
+FA,Luis Gil,NYY,1.2,10.04,,talent_prior,,,169.0,36.0,,ok
+FA,Mitch Keller,Pit,30.0,10.01,93.0,Stuff+,,,168.0,36.0,,ok
+FA,Ryan Feltner,Col,0.6,9.97,92.0,Stuff+,,,168.0,36.0,,ok
+FA,JR Ritchie,Atl,2.2,9.97,94.0,Stuff+,,,168.0,36.0,,ok
+FA,Griffin Canning,SD,1.0,9.97,91.0,Stuff+,,,168.0,36.0,,ok
+FA,Kodai Senga,NYM,6.4,10.81,97.0,Stuff+,FIFTEEN_DAY_DL,2026-06-21,167.0,39.0,,IL 06-21
+FA,Clayton Kershaw,FA,0.1,9.94,,talent_prior,,,167.0,36.0,,ok
+FA,Jack Flaherty,Det,34.8,11.54,100.0,Stuff+,FIFTEEN_DAY_DL,2026-06-28,165.0,42.0,,IL 06-28
+FA,Andrew Abbott,Cin,45.0,9.83,95.0,Stuff+,,,165.0,35.0,,ok
+FA,Janson Junk,Mia,1.4,10.88,101.0,Stuff+,FIFTEEN_DAY_DL,2026-06-23,165.0,39.0,,IL 06-23
+FA,Keider Montero,Det,6.4,9.72,94.0,Stuff+,,,164.0,35.0,,ok
+FA,Patrick Corbin,Tor,1.7,9.71,93.0,Stuff+,,,163.0,35.0,,ok
+FA,Kyle Freeland,Col,0.8,9.67,92.0,Stuff+,,,163.0,35.0,,ok
+FA,Tyler Mahle,SF,0.8,9.6,89.0,Stuff+,FIFTEEN_DAY_DL,2026-06-13,162.0,35.0,,IL 06-13
+FA,Sean Manaea,NYM,2.9,9.56,,talent_prior,,,161.0,34.0,,ok
+FA,Elmer Rodriguez,NYY,0.6,9.6,90.0,Stuff+,,,161.0,35.0,,ok
+FA,Zack Littell,Wsh,6.5,9.52,,talent_prior,,,160.0,34.0,,ok
+FA,Julio Urias,FA,0.0,9.4,,talent_prior,,,158.0,34.0,,ok
+FA,Tatsuya Imai,Hou,19.8,9.38,87.0,Stuff+,,,158.0,34.0,,ok
+FA,Chris Bassitt,Bal,3.6,10.01,96.0,Stuff+,FIFTEEN_DAY_DL,2026-06-20,157.0,36.0,,IL 06-20
+FA,Gage Jump,Oak,18.8,9.27,,rp3_dd,,,156.0,33.0,,ok
+FA,Noah Schultz,ChW,4.1,10.2,97.0,Stuff+,FIFTEEN_DAY_DL,2026-06-22,156.0,37.0,,IL 06-22
+FA,Brady Singer,Cin,5.2,9.23,91.0,Stuff+,,,155.0,33.0,,ok
+FA,Chad Patrick,Mil,5.8,9.17,,talent_prior,,,154.0,33.0,,ok
+FA,Aaron Civale,Oak,3.7,9.5,96.0,Stuff+,FIFTEEN_DAY_DL,2026-06-17,153.0,34.0,,IL 06-17
+FA,Ryan Bergert,KC,0.0,9.08,,talent_prior,,,153.0,33.0,,ok
+FA,Chris Paddack,Cin,0.2,9.02,89.0,Stuff+,,,152.0,32.0,,ok
+FA,Shane Smith,ChW,1.9,8.97,,talent_prior,,,151.0,32.0,,ok
+FA,J.P. France,Hou,0.0,8.81,,talent_prior,,,148.0,32.0,,ok
+FA,Eury Perez,Mia,58.0,15.06,118.0,Stuff+,FIFTEEN_DAY_DL,2026-07-24,148.0,54.0,,IL 07-24
+FA,Kyle Gibson,FA,0.0,8.71,,talent_prior,,,147.0,31.0,,ok
+FA,Michael Lorenzen,Col,0.4,8.71,88.0,Stuff+,,,147.0,31.0,,ok
+FA,Nestor Cortes,FA,0.1,10.15,,talent_prior,OUT,2026-06-27,147.0,37.0,,IL 06-27
+FA,Jacob Lopez,Oak,0.4,8.7,93.0,Stuff+,,,146.0,31.0,,ok
+FA,Kai-Wei Teng,Hou,2.9,8.69,,rp3_dd,,,146.0,31.0,,ok
+FA,David Peterson,NYM,3.1,8.65,,talent_prior,,,146.0,31.0,,ok
+FA,Brayan Bello,Bos,3.2,8.64,,talent_prior,,,145.0,31.0,,ok
+FA,Adrian Houser,SF,0.7,8.59,89.0,Stuff+,,,145.0,31.0,,ok
+FA,Blake Snell,LAD,67.5,13.02,,talent_prior,SIXTY_DAY_DL,2026-07-17,144.0,47.0,,IL 07-17
+FA,Merrill Kelly,Ari,25.4,8.5,87.0,Stuff+,,,143.0,31.0,,ok
+FA,Luis Severino,Oak,4.4,12.81,108.0,Stuff+,FIFTEEN_DAY_DL,2026-07-17,142.0,46.0,,IL 07-17
+FA,Jason Alexander,Hou,0.0,8.46,,talent_prior,,,142.0,30.0,,ok
+FA,Javier Assad,ChC,2.2,8.42,,talent_prior,,,142.0,30.0,,ok
+FA,Michael McGreevy,StL,27.4,8.36,81.0,Stuff+,,,141.0,30.0,,ok
+FA,Robert Gasser,Mil,0.3,8.38,,rp3_dd,,,141.0,30.0,,ok
+FA,Matt Waldron,SD,0.1,8.84,,talent_prior,FIFTEEN_DAY_DL,2026-06-19,140.0,32.0,,IL 06-19
+FA,Ben Lively,Cle,0.0,8.31,,talent_prior,,,140.0,30.0,,ok
+FA,Justin Verlander,Det,2.1,8.68,,talent_prior,SIXTY_DAY_DL,2026-06-17,140.0,31.0,,IL 06-17
+FA,Brandon Pfaadt,Ari,1.4,8.24,,talent_prior,,,139.0,30.0,,ok
+FA,Rhett Lowder,Cin,3.8,8.19,85.0,Stuff+,,,138.0,29.0,,ok
+FA,Kris Bubic,KC,35.0,10.97,94.0,Stuff+,FIFTEEN_DAY_DL,2026-07-08,138.0,39.0,,IL 07-08
+FA,Johan Oviedo,Bos,0.3,8.51,,talent_prior,SIXTY_DAY_DL,2026-06-17,137.0,31.0,,IL 06-17
+FA,Grayson Rodriguez,LAA,4.2,8.1,,rp3_dd,,,136.0,29.0,,ok
+FA,Eric Lauer,LAD,2.1,8.01,87.0,Stuff+,,,135.0,29.0,,ok
+FA,Brandon Williamson,Cin,0.1,9.56,98.0,Stuff+,SIXTY_DAY_DL,2026-06-29,135.0,34.0,,IL 06-29
+FA,Lance Lynn,FA,0.0,7.98,,talent_prior,,,134.0,29.0,,ok
+FA,Wade Miley,FA,0.0,9.16,,talent_prior,OUT,2026-06-27,132.0,33.0,,IL 06-27
+FA,JP Sears,SD,0.1,7.8,,talent_prior,,,131.0,28.0,,ok
+FA,Andrew Heaney,FA,0.0,7.78,,talent_prior,,,131.0,28.0,,ok
+FA,Tyler Anderson,LAA,0.1,7.79,,talent_prior,,,131.0,28.0,,ok
+FA,Cristian Javier,Hou,0.8,8.78,,talent_prior,SIXTY_DAY_DL,2026-06-25,130.0,32.0,,IL 06-25
+FA,Alex Cobb,FA,0.0,8.94,,talent_prior,OUT,2026-06-27,129.0,32.0,,IL 06-27
+FA,Yu Darvish,SD,0.1,8.96,,talent_prior,OUT,2026-06-27,129.0,32.0,,IL 06-27
+FA,Luis Ortiz,Cle,0.0,8.84,,talent_prior,OUT,2026-06-27,128.0,32.0,,IL 06-27
+FA,James Paxton,FA,0,7.57,,talent_prior,,,127.0,27.0,,ok
+FA,Charlie Morton,FA,0.1,7.53,,talent_prior,,,127.0,27.0,,ok
+FA,Simeon Woods Richardson,Tor,0.3,7.42,87.0,Stuff+,,,125.0,27.0,,ok
+FA,Joey Estes,Oak,0.3,7.37,,talent_prior,,,124.0,27.0,,ok
+FA,Yusei Kikuchi,LAA,7.9,11.1,98.0,Stuff+,SIXTY_DAY_DL,2026-07-17,123.0,40.0,,IL 07-17
+FA,Tomoyuki Sugano,Col,3.0,7.34,81.0,Stuff+,,,123.0,26.0,,ok
+FA,Lucas Giolito,SD,3.3,7.33,,rp3_dd,,,123.0,26.0,,ok
+FA,Marcus Stroman,FA,0.1,7.33,,talent_prior,,,123.0,26.0,,ok
+FA,Bailey Ober,Min,18.4,9.6,93.0,Stuff+,FIFTEEN_DAY_DL,2026-07-07,122.0,35.0,,IL 07-07
+FA,German Marquez,SD,0.4,7.98,86.0,Stuff+,FIFTEEN_DAY_DL,2026-06-22,122.0,29.0,,IL 06-22
+FA,Dean Kremer,Bal,1.6,8.89,,talent_prior,SIXTY_DAY_DL,2026-07-01,122.0,32.0,,IL 07-01
+FA,Max Scherzer,Tor,2.5,7.17,90.0,Stuff+,,,121.0,26.0,,ok
+FA,Martin Perez,Atl,13.9,7.12,,talent_prior,,,120.0,26.0,,ok
+FA,Marcelo Perez,Sea,0,7.12,,talent_prior,,,120.0,26.0,,ok
+FA,Cole Irvin,LAD,0.0,7.09,,talent_prior,,,119.0,26.0,,ok
+FA,Miles Mikolas,Wsh,0.9,7.07,,talent_prior,,,119.0,25.0,,ok
+FA,Kyle Hendricks,FA,0.0,6.9,,talent_prior,,,116.0,25.0,,ok
+FA,Logan Allen,Cle,0.2,6.92,,talent_prior,,,116.0,25.0,,ok
+FA,Erick Fedde,ChW,1.0,6.8,,rp3_dd,,,115.0,24.0,,ok
+FA,Cooper Criswell,Sea,0.1,7.69,,talent_prior,FIFTEEN_DAY_DL,2026-06-24,115.0,28.0,,IL 06-24
+FA,James Hicks,Hou,0,6.77,,talent_prior,,,114.0,24.0,,ok
+FA,Bailey Falter,KC,0.1,6.75,,talent_prior,,,114.0,24.0,,ok
+FA,Jameson Taillon,ChC,4.5,10.22,93.0,Stuff+,FIFTEEN_DAY_DL,2026-07-17,113.0,37.0,,IL 07-17
+FA,Colton Gordon,Hou,0.0,6.58,,talent_prior,,,111.0,24.0,,ok
+FA,Mitchell Parker,Wsh,0.1,6.49,,talent_prior,,,109.0,23.0,,ok
+FA,Jonathan Cannon,ChW,0.0,6.35,,talent_prior,,,107.0,23.0,,ok
+FA,Cade Povich,Bal,0.2,6.78,,talent_prior,FIFTEEN_DAY_DL,2026-06-19,107.0,24.0,,IL 06-19
+FA,Frankie Montas,FA,0.0,7.36,,talent_prior,OUT,2026-06-27,106.0,26.0,,IL 06-27
+FA,Tony Gonsolin,LAD,0.0,7.33,,talent_prior,OUT,2026-06-27,106.0,26.0,,IL 06-27
+FA,Josiah Gray,Wsh,0.1,8.02,,talent_prior,SIXTY_DAY_DL,2026-07-05,105.0,29.0,,IL 07-05
+FA,Trey Gibson,Bal,0.4,6.25,,rp3_dd,,,105.0,22.0,,ok
+FA,Kenta Maeda,FA,0.0,6.13,,talent_prior,,,103.0,22.0,,ok
+FA,Taijuan Walker,LAA,0.1,6.05,,talent_prior,,,102.0,22.0,,ok
+FA,Ryan Gusto,Mia,0.1,5.7,,talent_prior,,,96.0,21.0,,ok
+FA,Rich Hill,FA,0.0,5.62,,talent_prior,,,95.0,20.0,,ok
+FA,Austin Gomber,Tex,0.0,5.57,,talent_prior,,,94.0,20.0,,ok
+FA,Spencer Schwellenbach,Atl,11.9,12.75,,talent_prior,SIXTY_DAY_DL,2026-08-08,93.0,46.0,,IL 08-08
+FA,Ross Stripling,KC,0,5.4,,talent_prior,,,91.0,19.0,,ok
+FA,Cal Quantrill,Tex,0.1,5.26,,talent_prior,,,89.0,19.0,,ok
+FA,Ronel Blanco,Hou,0.1,12.11,,talent_prior,SIXTY_DAY_DL,2026-08-08,89.0,44.0,,IL 08-08
+FA,Corbin Burnes,Ari,6.2,12.06,,talent_prior,SIXTY_DAY_DL,2026-08-08,88.0,43.0,,IL 08-08
+FA,Gavin Stone,LAD,0.2,10.36,,talent_prior,SIXTY_DAY_DL,2026-08-01,88.0,37.0,,IL 08-01
+FA,Pablo Lopez,Min,3.1,11.46,,talent_prior,SIXTY_DAY_DL,2026-08-08,84.0,41.0,,IL 08-08
+FA,Carlos Carrasco,Atl,0.0,4.79,,talent_prior,,,81.0,17.0,,ok
+FA,Tanner Gordon,Col,0.1,4.92,,talent_prior,FIFTEEN_DAY_DL,2026-06-17,79.0,18.0,,IL 06-17
+FA,Tanner Houck,Bos,0.1,9.73,,talent_prior,SIXTY_DAY_DL,2026-08-08,71.0,35.0,,IL 08-08
+FA,Reese Olson,Det,0.3,9.72,,talent_prior,SIXTY_DAY_DL,2026-08-08,71.0,35.0,,IL 08-08
+FA,Clarke Schmidt,NYY,0.4,9.63,,talent_prior,SIXTY_DAY_DL,2026-08-08,70.0,35.0,,IL 08-08
+FA,DJ Herz,Wsh,0.1,9.59,,talent_prior,SIXTY_DAY_DL,2026-08-08,70.0,35.0,,IL 08-08
+FA,Kutter Crawford,Bos,0.2,9.62,,talent_prior,SIXTY_DAY_DL,2026-08-08,70.0,35.0,,IL 08-08
+FA,Quinn Priester,Mil,2.4,9.46,,talent_prior,SIXTY_DAY_DL,2026-08-08,69.0,34.0,,IL 08-08
+FA,Dakota Hudson,LAA,0.0,4.07,,talent_prior,,,68.0,15.0,,ok
+FA,Jose Quintana,Col,0.2,6.69,80.0,Stuff+,SIXTY_DAY_DL,2026-07-24,66.0,24.0,,IL 07-24
+FA,David Festa,Min,0.1,8.43,,talent_prior,SIXTY_DAY_DL,2026-08-08,62.0,30.0,,IL 08-08
+FA,Bowden Francis,Tor,0.0,8.19,,talent_prior,SIXTY_DAY_DL,2026-08-08,60.0,29.0,,IL 08-08
+FA,Alec Marsh,KC,0.0,7.79,,talent_prior,SIXTY_DAY_DL,2026-08-08,57.0,28.0,,IL 08-08
+FA,Jordan Montgomery,Tex,0.1,7.78,,talent_prior,SIXTY_DAY_DL,2026-08-08,57.0,28.0,,IL 08-08
+FA,Tylor Megill,NYM,0.1,7.74,,talent_prior,SIXTY_DAY_DL,2026-08-08,57.0,28.0,,IL 08-08
+FA,Clay Holmes,NYM,17.6,12.41,101.0,Stuff+,SIXTY_DAY_DL,2026-08-25,55.0,34.0,,IL 08-25
+FA,Ty Blach,ChC,0,3.28,,talent_prior,,,55.0,12.0,,ok
+FA,Logan Evans,Sea,0.0,7.09,,talent_prior,SIXTY_DAY_DL,2026-08-08,52.0,26.0,,IL 08-08
+FA,Patrick Sandoval,Bos,0.1,6.91,,talent_prior,SIXTY_DAY_DL,2026-08-08,51.0,25.0,,IL 08-08
+FA,Trevor Williams,Wsh,0.0,6.6,,talent_prior,SIXTY_DAY_DL,2026-08-08,48.0,24.0,,IL 08-08
+FA,Antonio Senzatela,Col,6.4,2.32,,talent_prior,,,39.0,8.0,,ok
+FA,Bradley Blalock,Mia,0.0,0.5,,talent_prior,,,8.0,2.0,,ok
+FA,Chase Dollander,Col,6.0,4.11,,talent_prior,SIXTY_DAY_DL,2027-02-01,0.0,0.0,,IL 02-01
+FA,Ryan Pepiot,TB,34.8,9.85,,talent_prior,SIXTY_DAY_DL,2027-02-01,0.0,0.0,,IL 02-01
+FA,Cade Horton,ChC,8.0,9.96,,talent_prior,SIXTY_DAY_DL,2027-08-01,0.0,0.0,,IL 08-01
+FA,Zach Eflin,Bal,0.4,9.56,,talent_prior,SIXTY_DAY_DL,2027-07-01,0.0,0.0,,IL 07-01
+FA,Jack Kochanowicz,LAA,1.4,10.35,95.0,Stuff+,SIXTY_DAY_DL,2027-09-01,0.0,0.0,,IL 09-01
+FA,Jose Berrios,Tor,1.2,9.58,,talent_prior,SIXTY_DAY_DL,2027-08-01,0.0,0.0,,IL 08-01
+FA,Ken Waldichuk,Wsh,0.0,5.91,,talent_prior,SIXTY_DAY_DL,2027-06-01,0.0,0.0,,IL 06-01
