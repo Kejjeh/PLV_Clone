@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 1.0,
+  "decision_id": "2026-06-15_pete_fairbanks_RP_001",
+  "inputs": {
+    "archetype_label": "LIGHT_USE_MIDDLE",
+    "archetype_overall": 47,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 3.9517175004812417,
+    "live_marginal": 7.400000000000006,
+    "model_rank": 22,
+    "override_tag": null,
+    "pl_rank": 16,
+    "proj_per": 141.5,
+    "replacement_delta": 13.6
+  },
+  "mlbam_id": 664126,
+  "player_name": "Pete Fairbanks",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-15",
+  "verdict_top": "MIXED"
+}

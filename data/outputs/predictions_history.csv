@@ -271,3 +271,7 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-06-16T02:10:18.470603,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,277.47,39.6,346.39,0.0206,,,MA_v1,,
 2026-06-16T02:15:46.771387,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,245.19,39.6,310.94,0.0241,,,baseline,,
 2026-06-16T02:15:47.744751,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,277.47,39.6,346.39,0.0206,,,MA_v1,,
+2026-06-16T02:32:09.694359,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,245.19,39.6,310.94,0.0241,,,baseline,,
+2026-06-16T02:32:10.725105,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,277.47,39.6,346.39,0.0206,,,MA_v1,,
+2026-06-16T16:42:53.082598,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,260.44,39.6,310.94,0.0664,,,baseline,,
+2026-06-16T16:42:54.114560,2026-06-16,12,New York Ligers,Boone's Bad Bullpen,62.0,292.71,39.6,346.39,0.0575,,,MA_v1,,

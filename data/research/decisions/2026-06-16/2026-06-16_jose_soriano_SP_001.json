@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-16_jose_soriano_SP_001",
+  "inputs": {
+    "archetype_label": "STUFF_PLUS_MOVE",
+    "archetype_overall": 66,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 11.895569120248263,
+    "live_marginal": -52.04095238240194,
+    "model_rank": 126,
+    "override_tag": null,
+    "pl_rank": 48,
+    "proj_per": 8.83,
+    "replacement_delta": null
+  },
+  "mlbam_id": 667755,
+  "player_name": "Jos\u00e9 Soriano",
+  "reason_tag": "archetype_breakout",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "BUY"
+}

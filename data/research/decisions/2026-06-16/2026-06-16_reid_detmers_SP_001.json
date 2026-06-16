@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-16_reid_detmers_SP_001",
+  "inputs": {
+    "archetype_label": "MT_RUSHMORE",
+    "archetype_overall": 64,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 14.578477957062335,
+    "live_marginal": -81.72095238240195,
+    "model_rank": 175,
+    "override_tag": null,
+    "pl_rank": 60,
+    "proj_per": 7.77,
+    "replacement_delta": null
+  },
+  "mlbam_id": 672282,
+  "player_name": "Reid Detmers",
+  "reason_tag": "archetype_breakout",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "BUY"
+}

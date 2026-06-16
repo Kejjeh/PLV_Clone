@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-15_trea_turner_H_001",
+  "inputs": {
+    "archetype_label": "AVG_HACKER",
+    "archetype_overall": 42,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 2.7007226128114494,
+    "live_marginal": -20.0,
+    "model_rank": 150,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 1.72,
+    "replacement_delta": null
+  },
+  "mlbam_id": 607208,
+  "player_name": "Trea Turner",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-15",
+  "verdict_top": "MIXED"
+}

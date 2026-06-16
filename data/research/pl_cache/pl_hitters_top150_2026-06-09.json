@@ -1,0 +1,16 @@
+{
+  "source_url": "https://pitcherlist.com/top-150-hitters-for-fantasy-baseball-2026-week-10/",
+  "fetched": "2026-06-09",
+  "week": 10,
+  "note": "Partial cache - only tracked players verified this pass (full 150 not re-scraped). Prior full snapshot at pl_hitters_top150_2026-05-30.json (week 9).",
+  "ranks": {
+    "Hunter Goodman": 36,
+    "Spencer Steer": 87,
+    "Curtis Mead": 95,
+    "Spencer Horwitz": 111
+  },
+  "unranked": {
+    "Carlos Cortes": "Taxi Squad / streamer mention only - not in Top 150; higher in points/OBP formats",
+    "Elly De La Cruz": "Injured List - expected return July, timeline uncertain"
+  }
+}

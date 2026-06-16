@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-06-16_aaron_judge_H_001",
+  "inputs": {
+    "archetype_label": "GOAT_TIER",
+    "archetype_overall": 74,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.7171536358424655,
+    "live_marginal": null,
+    "model_rank": null,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": null,
+    "replacement_delta": null
+  },
+  "mlbam_id": 592450,
+  "player_name": "Aaron Judge",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "MIXED"
+}

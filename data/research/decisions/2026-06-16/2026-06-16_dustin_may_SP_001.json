@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-16_dustin_may_SP_001",
+  "inputs": {
+    "archetype_label": "JUNKBALLER",
+    "archetype_overall": 42,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 10.570093660552708,
+    "live_marginal": -91.80095238240193,
+    "model_rank": 187,
+    "override_tag": null,
+    "pl_rank": 75,
+    "proj_per": 7.41,
+    "replacement_delta": null
+  },
+  "mlbam_id": 669160,
+  "player_name": "Dustin May",
+  "reason_tag": "pl_outcome_chase",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "FADE"
+}
