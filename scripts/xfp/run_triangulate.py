@@ -461,6 +461,42 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             lines.append(f"\n**Velo:** {v:.1f} mph [{vt}]")
     else:
         lines.append(f"| **Archetype** | — | NOT AVAILABLE | {arche.get('reason','')} |")
+
+    # ── Process / Sustainability Panel ────────────────────────────────────────
+    # Display-only conviction layer (CLAUDE.md #13 — does not move the projection).
+    sl = model.get('sustainability') or {}
+    pv = sl.get('process_verdict', '')
+    if pv and pv != 'INSUFFICIENT_DATA':
+        from scripts.xfp.lib.sustainability_lens import verdict_prefix, verdict_label
+        icon = verdict_prefix(pv)
+        lbl  = verdict_label(pv)
+        detail = sl.get('process_detail', '')
+        if bucket in ('SP', 'RP'):
+            k24  = sl.get('k_pct_24');  k25  = sl.get('k_pct_25');  k26  = sl.get('k_pct_26')
+            sw24 = sl.get('swstr_pct_24'); sw25 = sl.get('swstr_pct_25'); sw26 = sl.get('swstr_pct_26')
+            def _p(v): return f"{v*100:.1f}%" if v is not None else "—"
+            k_trail  = " -> ".join(_p(x) for x in (k24, k25, k26)  if x is not None)
+            sw_trail = " -> ".join(_p(x) for x in (sw24, sw25, sw26) if x is not None)
+            lines.append(
+                f"\n{icon} **Process [{lbl}]** K%: {k_trail} | SwStr%: {sw_trail}\n"
+                f"*{detail}*"
+            )
+        else:
+            xw24 = sl.get('xwobacon_24'); xw25 = sl.get('xwobacon_25'); xw26 = sl.get('xwobacon_26')
+            xwl  = sl.get('xwobacon_l21d')
+            brl  = sl.get('barrel_pct_26');  brll = sl.get('barrel_pct_l21d')
+            k26v = sl.get('k_pct_26');       k_l  = sl.get('k_pct_l21d')
+            def _x(v): return f"{v:.3f}" if v is not None else "—"
+            def _pp(v): return f"{v*100:.1f}%" if v is not None else "—"
+            xw_trail = " -> ".join(_x(x) for x in (xw24, xw25, xw26) if x is not None)
+            l21_str  = f" | L21d xwOBACON {_x(xwl)}" if xwl is not None else ""
+            brl_str  = f" | Brl% {_pp(brl)}/{_pp(brll)}" if brl is not None else ""
+            k_str    = f" | K% {_pp(k26v)}/{_pp(k_l)}" if k26v is not None else ""
+            lines.append(
+                f"\n{icon} **Process [{lbl}]** xwOBACON: {xw_trail}{l21_str}{brl_str}{k_str}\n"
+                f"*{detail}*"
+            )
+
     return '\n'.join(lines)
 
 

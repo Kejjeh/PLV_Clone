@@ -17,6 +17,7 @@ from .hitter_boom_stack import (
     resolve_opp_sp_id_for_today,
 )
 from .blend_score import compute_blended_xfp
+from .sustainability_lens import sustainability_sp, sustainability_h
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -145,6 +146,11 @@ def model_row(player: dict) -> dict:
             # Defensive: never break hitter cards on boom_stack failure.
             hboom_stack = None
             hboom_detail = None
+        # Sustainability/breakout lens (process layer, display-only, CLAUDE.md #13)
+        try:
+            _sl_h = sustainability_h(player['id'])
+        except Exception:
+            _sl_h = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
@@ -158,6 +164,7 @@ def model_row(player: dict) -> dict:
             'hitter_boom_rate_expected': hboom_rate_expected,
             'hitter_boom_bust_expected': hboom_bust_expected,
             'hitter_boom_detail': hboom_detail,
+            'sustainability': _sl_h,
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -307,6 +314,11 @@ def model_row(player: dict) -> dict:
         # sp-decline velo-trajectory lens (validated velo_signal_2026-06-13.md +
         # sp_decline_stuff_decay_2026-06-13.md). Display/conviction tokens only.
         dl = _decline_lens_lookup(player['id']) or {}
+        # Sustainability/breakout lens (K%/SwStr% trajectory, display-only, CLAUDE.md #13)
+        try:
+            _sl_sp = sustainability_sp(player['id'])
+        except Exception:
+            _sl_sp = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -351,6 +363,7 @@ def model_row(player: dict) -> dict:
             'recform_trail_starts': recform_trail_starts,
             'recform_mean_per_start_fp': recform_mean_per_start_fp,
             'recform_cohort_label': recform_cohort_label,
+            'sustainability': _sl_sp,
             # sp-decline velo-trajectory lens (display/conviction only, CLAUDE.md #13)
             'decline_tier': dl.get('tier'),
             'decline_gap': dl.get('decline_gap'),
@@ -364,6 +377,11 @@ def model_row(player: dict) -> dict:
             'velo_double': dl.get('velo_double'),
             'velo_severity': dl.get('velo_severity'),
         }
+    # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
+    try:
+        _sl_rp = sustainability_sp(player['id'])  # sp_multiyr covers RP too
+    except Exception:
+        _sl_rp = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
     return {
         'rank': int(r['rank']),
         'proj_label': 'xfp_ros',
@@ -372,6 +390,7 @@ def model_row(player: dict) -> dict:
         'rep_delta': float(r['replacement_delta']),
         'recform': None,
         'extra': f"role={r['role_lag1']} sv_to={int(r.get('sv_to') or 0)} hld_to={int(r.get('hld_to') or 0)}",
+        'sustainability': _sl_rp,
     }
 
 
@@ -559,6 +578,20 @@ def apply_overrides(verdict, rationale, player, arche, model):
                  f"outcome signal blind to TRAJECTORY; the velo/decline lens is the trajectory "
                  f"veto (Framber 2026). Headline the decline. rp3 point estimate unchanged (#13)."),
                 'DECLINE_VETO',
+            )
+        # Process STRUCTURAL_DECLINE veto: consecutive-year K%/SwStr% erosion also
+        # downgrades naive BUY when the process lens says the arm is genuinely fading.
+        # Fires only when velo veto did NOT already fire (avoid double-downgrade).
+        sl = model.get('sustainability') or {}
+        if sl.get('process_verdict') == 'STRUCTURAL_DECLINE':
+            detail = sl.get('process_detail', '')
+            return (
+                'CAUTION — process decline veto',
+                (f"Process VETO: original '{verdict}' downgraded — "
+                 f"K%/SwStr% structural erosion (2 consecutive years): {detail} "
+                 f"Outcome/rank signals are blind to this trajectory. "
+                 f"rp3 point estimate unchanged (CLAUDE.md #13)."),
+                'PROCESS_DECLINE_VETO',
             )
 
     if not arche.get('have'):
