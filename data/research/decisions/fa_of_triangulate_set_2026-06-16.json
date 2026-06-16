@@ -1,0 +1,254 @@
+[
+ {
+  "name":"Sam Antonacci",
+  "mlbam":803011.0,
+  "pos":"2B",
+  "own":13.0,
+  "rh3_per_g":1.47,
+  "rh3_ros":90.0,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Ezequiel Duran",
+  "mlbam":677649.0,
+  "pos":"SS",
+  "own":28.0,
+  "rh3_per_g":1.41,
+  "rh3_ros":96.0,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Willi Castro",
+  "mlbam":650489.0,
+  "pos":"RF",
+  "own":17.0,
+  "rh3_per_g":1.4,
+  "rh3_ros":97.0,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Brent Rooker",
+  "mlbam":667670.0,
+  "pos":"DH",
+  "own":66.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Jose Caballero",
+  "mlbam":null,
+  "pos":"RF",
+  "own":32.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Trent Grisham",
+  "mlbam":663757.0,
+  "pos":"CF",
+  "own":29.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Sal Frelick",
+  "mlbam":686217.0,
+  "pos":"RF",
+  "own":28.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Spencer Steer",
+  "mlbam":668715.0,
+  "pos":"1B",
+  "own":25.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Giancarlo Stanton",
+  "mlbam":519317.0,
+  "pos":"DH",
+  "own":21.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Braden Montgomery",
+  "mlbam":null,
+  "pos":"CF",
+  "own":20.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Luis Robert Jr.",
+  "mlbam":673357.0,
+  "pos":"CF",
+  "own":16.0,
+  "rh3_per_g":null,
+  "rh3_ros":null,
+  "tier":"name_brand"
+ },
+ {
+  "name":"Carlos Cortes",
+  "mlbam":666126.0,
+  "pos":"RF",
+  "own":10.0,
+  "rh3_per_g":2.17,
+  "rh3_ros":121.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Dominic Canzone",
+  "mlbam":686527.0,
+  "pos":"RF",
+  "own":12.0,
+  "rh3_per_g":1.89,
+  "rh3_ros":101.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Javier Sanoja",
+  "mlbam":691594.0,
+  "pos":"LF",
+  "own":4.0,
+  "rh3_per_g":1.87,
+  "rh3_ros":93.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Gavin Sheets",
+  "mlbam":657757.0,
+  "pos":"LF",
+  "own":15.0,
+  "rh3_per_g":1.82,
+  "rh3_ros":124.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Kody Clemens",
+  "mlbam":665019.0,
+  "pos":"1B",
+  "own":14.0,
+  "rh3_per_g":1.78,
+  "rh3_ros":120.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Tyler Freeman",
+  "mlbam":671289.0,
+  "pos":"RF",
+  "own":1.0,
+  "rh3_per_g":1.76,
+  "rh3_ros":87.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Jeremiah Jackson",
+  "mlbam":669236.0,
+  "pos":"RF",
+  "own":9.0,
+  "rh3_per_g":1.75,
+  "rh3_ros":94.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Jeff McNeil",
+  "mlbam":643446.0,
+  "pos":"2B",
+  "own":6.0,
+  "rh3_per_g":1.75,
+  "rh3_ros":120.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Jakob Marsee",
+  "mlbam":805300.0,
+  "pos":"CF",
+  "own":33.0,
+  "rh3_per_g":1.71,
+  "rh3_ros":146.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Luke Raley",
+  "mlbam":670042.0,
+  "pos":"RF",
+  "own":12.0,
+  "rh3_per_g":1.68,
+  "rh3_ros":104.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Troy Johnston",
+  "mlbam":687859.0,
+  "pos":"RF",
+  "own":12.0,
+  "rh3_per_g":1.66,
+  "rh3_ros":124.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Isaac Collins",
+  "mlbam":686555.0,
+  "pos":"LF",
+  "own":1.0,
+  "rh3_per_g":1.66,
+  "rh3_ros":116.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Jacob Young",
+  "mlbam":696285.0,
+  "pos":"CF",
+  "own":2.0,
+  "rh3_per_g":1.65,
+  "rh3_ros":115.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Chandler Simpson",
+  "mlbam":802415.0,
+  "pos":"CF",
+  "own":38.0,
+  "rh3_per_g":1.56,
+  "rh3_ros":123.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Jo Adell",
+  "mlbam":666176.0,
+  "pos":"CF",
+  "own":38.0,
+  "rh3_per_g":1.56,
+  "rh3_ros":139.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Kyle Stowers",
+  "mlbam":669065.0,
+  "pos":"LF",
+  "own":27.0,
+  "rh3_per_g":1.53,
+  "rh3_ros":92.0,
+  "tier":"rh3"
+ },
+ {
+  "name":"Zack Gelof",
+  "mlbam":680869.0,
+  "pos":"2B",
+  "own":20.0,
+  "rh3_per_g":1.51,
+  "rh3_ros":88.0,
+  "tier":"rh3"
+ }
+]
