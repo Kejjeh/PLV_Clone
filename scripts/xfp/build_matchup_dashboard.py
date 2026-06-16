@@ -14,6 +14,7 @@ Output: data/outputs/matchup.html + xfp-model/docs/matchup.html
 """
 from __future__ import annotations
 import sys
+import os
 import json
 import math
 import unicodedata
@@ -27,7 +28,7 @@ from typing import Optional
 
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+ROOT = Path(os.environ.get('PLV_ROOT', 'c:/Users/Joshua/plv_clone'))
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
@@ -55,7 +56,7 @@ except Exception as _e:  # pragma: no cover
 
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
-XFP_DOCS = ROOT / 'xfp-model' / 'docs'
+XFP_DOCS = Path(os.environ.get('PLV_XFP_DOCS', str(ROOT / 'xfp-model' / 'docs')))
 _BS_PITCHERS = CACHE / 'boxscore_pitchers.parquet'
 _BS_HITTERS  = CACHE / 'boxscore_hitters.parquet'
 

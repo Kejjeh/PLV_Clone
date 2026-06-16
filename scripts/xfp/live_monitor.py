@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import os
 import time
 import unicodedata
 import re
@@ -30,7 +31,7 @@ from html import escape as h
 import json
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+ROOT = Path(os.environ.get('PLV_ROOT', 'c:/Users/Joshua/plv_clone'))
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'

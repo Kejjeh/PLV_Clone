@@ -1,0 +1,103 @@
+name: Live matchup (in-game hourly)
+
+# Refreshes the LIVE dashboards (matchup.html + live_dashboard.html) in the
+# cloud, every hour, but ONLY while MLB games are actually in progress.
+#
+# How "start when games start / stop when they end" works:
+#   * The cheap `gate` job runs on every scheduled tick and asks the MLB Stats
+#     API whether any game is live right now (scripts/xfp/ci_games_live.py).
+#   * The heavier `publish` job runs only when the gate says live == true.
+#     Once the last game goes Final, the gate returns false and nothing builds.
+#
+# The cron window is just the *polling* window (UTC). The gate is the real
+# control, so an over-broad window is free — empty ticks cost only ~30s.
+#   16:00-23:00 UTC  = 12pm-7pm ET (day + early evening starts)
+#   00:00-06:00 UTC  = 8pm-2am ET  (evening + late west-coast finishes)
+on:
+  schedule:
+    - cron: "0 16-23 * * *"
+    - cron: "0 0-6 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force a rebuild even if no games are live"
+        type: boolean
+        default: false
+
+# Don't pile up overlapping runs; let the in-flight one finish.
+concurrency:
+  group: live-matchup
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  # ── Cheap gate: is any MLB game live right now? ────────────────────────────
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      live: ${{ steps.gate.outputs.live }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Check MLB schedule (stdlib only, no deps)
+        id: gate
+        env:
+          FORCE_LIVE: ${{ github.event.inputs.force }}
+        run: python3 scripts/xfp/ci_games_live.py
+
+  # ── Build + publish, only when games are live ──────────────────────────────
+  publish:
+    needs: gate
+    if: needs.gate.outputs.live == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout plv_clone (scripts + committed model CSVs)
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install light runtime deps
+        # Dashboard builders need only these — NO statcast/lightgbm/sklearn.
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas numpy pyarrow requests espn-api
+
+      - name: Checkout xfp-model (GitHub Pages target)
+        uses: actions/checkout@v5
+        with:
+          repository: Kejjeh/xfp-model
+          token: ${{ secrets.XFP_MODEL_TOKEN }}
+          path: xfp-model-pages
+
+      - name: Build live + matchup and write into xfp-model/docs
+        env:
+          ESPN_LEAGUE_ID: ${{ secrets.ESPN_LEAGUE_ID }}
+          ESPN_YEAR:      ${{ secrets.ESPN_YEAR }}
+          ESPN_SWID:      ${{ secrets.ESPN_SWID }}
+          ESPN_S2:        ${{ secrets.ESPN_S2 }}
+          PLV_ROOT:       ${{ github.workspace }}
+          PLV_XFP_DOCS:   ${{ github.workspace }}/xfp-model-pages/docs
+          PYTHONPATH:     ${{ github.workspace }}/src:${{ github.workspace }}
+          PYTHONUTF8:     "1"
+          PYTHONIOENCODING: "utf-8"
+        run: |
+          python -X utf8 scripts/xfp/live_monitor.py --dashboard
+          python -X utf8 scripts/xfp/build_matchup_dashboard.py
+
+      - name: Commit & publish to GitHub Pages
+        working-directory: xfp-model-pages
+        run: |
+          git config user.name  "plv-live-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add docs/matchup.html docs/live_dashboard.html
+          if git diff --staged --quiet; then
+            echo "No dashboard changes to publish this tick."
+          else
+            git commit -m "live: in-game matchup + live refresh ($(date -u +'%Y-%m-%d %H:%MZ'))"
+            git push
+          fi

@@ -1,0 +1,56 @@
+name: Daily full refresh (self-hosted)
+
+# Runs the FULL pipeline once a day on a self-hosted runner installed on
+# Josh's PC: statcast pull -> rh3/rp3/rprs2 model retrain -> all dashboards
+# -> publish xfp-model (GitHub Pages). This is the heavy job that keeps the
+# projection NUMBERS fresh; the cloud live-matchup job only refreshes
+# rosters/scores on top of these committed projections.
+#
+# It runs in Josh's real working tree (C:\Users\Joshua\plv_clone), NOT a fresh
+# checkout, so refresh_dashboards.py's existing hardcoded ROOT, the sibling
+# xfp-model repo, the local .env, and saved git credentials all work exactly
+# as they do when run by hand.
+#
+# Schedule: 11:00 UTC = 07:00 ET (EDT) / 06:00 ET (EST). A missed run (PC off)
+# queues and executes when the runner next comes online.
+on:
+  schedule:
+    - cron: "0 11 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  refresh:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 180
+    defaults:
+      run:
+        shell: powershell
+        working-directory: C:\Users\Joshua\plv_clone
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+    steps:
+      - name: Diagnostics (python + git on the runner's PATH)
+        run: |
+          Write-Host "python: $((Get-Command python).Source)"
+          python --version
+          git --version
+          git rev-parse --abbrev-ref HEAD
+
+      - name: Full refresh (statcast + models + dashboards + publish xfp-model)
+        run: python scripts/xfp/refresh_dashboards.py
+
+      - name: Commit & push regenerated plv_clone data
+        run: |
+          git add data
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            $stamp = Get-Date -Format 'yyyy-MM-dd'
+            git commit -m "refresh: daily auto-refresh $stamp"
+            git push origin main
+          } else {
+            Write-Host "No data changes to commit."
+          }
