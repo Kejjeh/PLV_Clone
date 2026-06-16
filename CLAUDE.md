@@ -338,6 +338,18 @@ the printed full-log path when the summary doesn't have enough detail.
   game predictor. ~85% command so needs no live matchup. Engine
   `scripts/xfp/sp_floor_model.py`. Cross-check outliers (measured≫predicted
   bust = shape/contact, e.g. Soriano) via `/pitcher-sustainability`.
+- `/trending` — physical getting-better/worse detector from fast-stabilizing
+  signals. **Hitters = 3-axis** (bat speed + attack angle toward ~15° band +
+  fast-swing% intent), each non-redundant, OOS CV R² 0.495→0.536; **pitchers =
+  FB velo** (induced bat speed REJECTED for pitchers). 2026-to-date vs prior-yr
+  baseline, z-scored, contact/results column as confirmation. Default = my roster
+  + FA risers; `--names "A,B"` for cards. **DISPLAY/CONTEXT ONLY** (Rule 13 — never
+  moves rh3/rp3); necessary-not-sufficient; attack angle is direction-aware (toward
+  band, NOT "up=good"). Built on the bat-tracking stabilization insight: bat speed
+  trustworthy in ~20 swings vs 6-12 wks for rate stats, so it's an EARLY read.
+  Engine `scripts/xfp/lib/trend_signal.py`, runner `scripts/xfp/run_trending.py`.
+  Validation `early_season_bat_speed_2026-06-16.md`. Rejected forward-ranker
+  promotion (sample-blocked to 2027) — `bat_tracking_fp_family_2026-06-16.md`.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
