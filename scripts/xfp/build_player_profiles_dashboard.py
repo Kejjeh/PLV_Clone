@@ -55,6 +55,14 @@ H_SRC     = CACHE / 'hitters_multiyr_2015_2026.csv'
 S_SRC     = CACHE / 'sp_multiyr_2015_2025.csv'
 R_SRC     = CACHE / 'relievers_multiyr_2018_2026.csv'
 
+# Validated production-model projections — joined onto CURRENT-YEAR rows only so
+# the quadrant can plot a player's model rank (rh3/rp3/rprs2) against their actual
+# FP performance or archetype ratings. rh3 also supplies primary_position, the
+# POS-filter fallback for FA hitters (eligible_positions only covers rostered).
+RH3_PROJ   = REPO / 'data/outputs/xfp_rh3_projections.csv'
+RP3_PROJ   = REPO / 'data/outputs/xfp_rp3_projections.csv'
+RPRS2_PROJ = REPO / 'data/outputs/xfp_rprs2_projections.csv'
+
 # Whitelisted columns — drives payload size.
 H_COLS = [
     'batter', 'year', 'player_name', 'team', 'pa', 'fp_per_pa', 't1_fp_projection', 't2_fp_projection',
@@ -884,6 +892,54 @@ def load_boom_stack_payload() -> dict:
     return {'meta': meta, 'by_pitcher': by_pid}
 
 
+def _proj_value_map(path: Path, id_col: str, val_col: str) -> dict:
+    """id(int) -> rounded model value from a projection CSV. Fail-soft: returns
+    {} on any error / missing columns so a stale or absent projection file can
+    never break the dashboard build."""
+    try:
+        if not path.exists():
+            print(f'  model proj absent: {path.name} (axis will be null)', flush=True)
+            return {}
+        d = pd.read_csv(path, usecols=lambda c: c in (id_col, val_col))
+        if id_col not in d.columns or val_col not in d.columns:
+            return {}
+        d = d.dropna(subset=[id_col, val_col])
+        return {int(r[id_col]): round(float(r[val_col]), 3) for _, r in d.iterrows()}
+    except Exception as e:
+        print(f'  model proj load failed ({path.name}): {e}', flush=True)
+        return {}
+
+
+def _rh3_primary_pos_map() -> dict:
+    """batter(int) -> MLB primary_position string (POS-filter fallback for FAs)."""
+    try:
+        d = pd.read_csv(RH3_PROJ, usecols=lambda c: c in ('batter', 'primary_position'))
+        if 'primary_position' not in d.columns:
+            return {}
+        d = d.dropna(subset=['batter', 'primary_position'])
+        return {int(r['batter']): str(r['primary_position']) for _, r in d.iterrows()}
+    except Exception as e:
+        print(f'  rh3 primary_position map failed: {e}', flush=True)
+        return {}
+
+
+def annotate_model_axis(records: list[dict], id_key: str, vmap: dict, out_key: str,
+                        current_year: int, pos_map: dict | None = None) -> None:
+    """In-place: add out_key (model value) to current-year rows; optionally also
+    primary_position. Non-current-year rows get None so all-years/blend modes
+    simply omit the point (Number.isFinite filter) rather than mis-scale."""
+    n = 0
+    for r in records:
+        cur = r.get('year') == current_year
+        rid = r.get(id_key)
+        r[out_key] = (vmap.get(int(rid)) if (cur and rid is not None) else None)
+        if r[out_key] is not None:
+            n += 1
+        if pos_map is not None:
+            r['primary_position'] = (pos_map.get(int(rid)) if (cur and rid is not None) else None)
+    print(f'  {out_key}: annotated {n} current-year rows', flush=True)
+
+
 def build_payload():
     h, s, rp = assert_schema()
 
@@ -919,6 +975,14 @@ def build_payload():
     annotate_current_year_rows(hitter_records, current_year, roster_map, 'hitter')
     annotate_current_year_rows(sp_records,     current_year, roster_map, 'sp')
     annotate_current_year_rows(rp_records,     current_year, roster_map, 'rp')
+
+    print('Joining validated-model projections (rh3/rp3/rprs2) for quadrant axes...', flush=True)
+    annotate_model_axis(hitter_records, 'batter', _proj_value_map(RH3_PROJ, 'batter', 'xfp_rh3_per_game'),
+                        'rh3', current_year, pos_map=_rh3_primary_pos_map())
+    annotate_model_axis(sp_records, 'pitcher', _proj_value_map(RP3_PROJ, 'pitcher', 'xfp_rp3_per_start'),
+                        'rp3', current_year)
+    annotate_model_axis(rp_records, 'pitcher', _proj_value_map(RPRS2_PROJ, 'pitcher', 'xfp_ros'),
+                        'rprs2', current_year)
 
     print('Loading boom/bust/variance payload (stream_the_stack)...', flush=True)
     boom_payload = load_boom_stack_payload()

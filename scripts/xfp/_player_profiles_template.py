@@ -675,19 +675,44 @@ HITTERS_TAB = """
   <div class="quad-controls">
     <label>X axis</label>
     <select id="h-x">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="CONTACT">Contact</option>
       <option value="POWER" selected>Power</option>
       <option value="DISCIPLINE">Discipline</option>
       <option value="SB">SB</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rh3">rh3 (xFP/g)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_pa">FP/PA (actual)</option>
+      </optgroup>
     </select>
     <label>Y axis</label>
     <select id="h-y">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="CONTACT" selected>Contact</option>
       <option value="POWER">Power</option>
       <option value="DISCIPLINE">Discipline</option>
       <option value="SB">SB</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rh3">rh3 (xFP/g)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_pa">FP/PA (actual)</option>
+      </optgroup>
+    </select>
+    <label for="h-quad-pos">Position</label>
+    <select id="h-quad-pos">
+      <option value="all" selected>All positions</option>
+      <option value="C">C</option>
+      <option value="1B/3B">1B / 3B</option>
+      <option value="2B/SS">2B / SS</option>
+      <option value="OF">OF</option>
+      <option value="UTIL">UTIL (all)</option>
     </select>
     <span class="r-display" id="h-r"></span>
   </div>
@@ -804,19 +829,35 @@ SPS_TAB = """
   <div class="quad-controls">
     <label>X axis</label>
     <select id="s-x">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="STUFF">Stuff</option>
       <option value="MOVEMENT" selected>Movement</option>
       <option value="CONTROL">Control</option>
       <option value="velo_rating">Velo</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rp3">rp3 (xFP/start)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_start">FP/start (actual)</option>
+      </optgroup>
     </select>
     <label>Y axis</label>
     <select id="s-y">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="STUFF" selected>Stuff</option>
       <option value="MOVEMENT">Movement</option>
       <option value="CONTROL">Control</option>
       <option value="velo_rating">Velo</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rp3">rp3 (xFP/start)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_start">FP/start (actual)</option>
+      </optgroup>
     </select>
     <span class="r-display" id="s-r"></span>
   </div>
@@ -909,19 +950,35 @@ RPS_TAB = """
   <div class="quad-controls">
     <label>X axis</label>
     <select id="rp-x">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="STUFF">Stuff</option>
       <option value="CONTROL">Control</option>
       <option value="BATTED_BALL" selected>Batted-ball</option>
       <option value="velo_rating">Velo</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rprs2">rprs2 (xFP RoS)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_g">FP/g (actual)</option>
+      </optgroup>
     </select>
     <label>Y axis</label>
     <select id="rp-y">
+      <optgroup label="Ratings (20-80)">
       <option value="OVERALL">Overall</option>
       <option value="STUFF" selected>Stuff</option>
       <option value="CONTROL">Control</option>
       <option value="BATTED_BALL">Batted-ball</option>
       <option value="velo_rating">Velo</option>
+      </optgroup>
+      <optgroup label="Models &amp; FP">
+      <option value="rprs2">rprs2 (xFP RoS)</option>
+      <option value="t1_fp_projection">Archetype T+1</option>
+      <option value="t2_fp_projection">Archetype T+2</option>
+      <option value="fp_per_g">FP/g (actual)</option>
+      </optgroup>
     </select>
     <span class="r-display" id="rp-r"></span>
   </div>
@@ -1038,12 +1095,15 @@ function snapshotDatesForYear(snaps, year) {
 }
 
 // ── Axis labels (display only) ──────────────────────────────────────────
-const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB' };
-const SP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo' };
+const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB',
+  rh3: 'rh3 (xFP/g)', t1_fp_projection: 'Archetype T+1', t2_fp_projection: 'Archetype T+2', fp_per_pa: 'FP/PA (actual)' };
+const SP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', MOVEMENT: 'Movement', CONTROL: 'Control', velo_rating: 'Velo',
+  rp3: 'rp3 (xFP/start)', t1_fp_projection: 'Archetype T+1', t2_fp_projection: 'Archetype T+2', fp_per_start: 'FP/start (actual)' };
 // RP axes use BATTED_BALL natively now that the RP tab reads directly from
 // the RP master fields (no more MOVEMENT bridge). The MOVEMENT entry remains
 // for backwards compatibility with old #hash URLs that may carry rpX=MOVEMENT.
-const RP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', CONTROL: 'Control', BATTED_BALL: 'Batted-ball', MOVEMENT: 'Batted-ball', velo_rating: 'Velo' };
+const RP_AXIS_LABEL     = { OVERALL: 'Overall', STUFF: 'Stuff', CONTROL: 'Control', BATTED_BALL: 'Batted-ball', MOVEMENT: 'Batted-ball', velo_rating: 'Velo',
+  rprs2: 'rprs2 (xFP RoS)', t1_fp_projection: 'Archetype T+1', t2_fp_projection: 'Archetype T+2', fp_per_g: 'FP/g (actual)' };
 
 // Convert SCREAMING_SNAKE_CASE labels to "Title Case" for display
 function prettyLabel(s) {
@@ -1253,6 +1313,7 @@ const state = {
   sRosterFilter: 'all',
   rpRosterFilter: 'all',
   hPosFilter:    'all',   // 'all' | 'C' | '1B' | '2B' | '3B' | 'SS' | 'OF' | 'DH' | '1B/3B' | '2B/SS'
+  hQuadPos:      'all',   // hitter-QUADRANT-only POS filter (independent of the all-table chip group)
   sPosFilter:    'all',   // legacy slot — SP tab is SP-only now; kept so old hash URLs don't crash
   // Lineup-role chip — hitters only, single-select, parallel to the position
   // chip group. UNKNOWN tier rows (pre-2018 data) bypass via the same
@@ -1451,11 +1512,16 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role, opts) {
   const xRange = ratingAxes.includes(xKey) ? [20, 80] : undefined;
   const yRange = ratingAxes.includes(yKey) ? [20, 80] : undefined;
 
-  // 50/50 reference lines (only when on rating scale)
+  // Reference crosshair: 50 on the 20-80 rating scale; otherwise the MEDIAN of
+  // the plotted values, so for model/FP axes "top-right" still reads as
+  // "above typical on both."
+  function _median(a){ if(!a.length) return null; const s=a.slice().sort((p,q)=>p-q); const m=s.length>>1; return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+  const xCross = xRange ? 50 : _median(px);
+  const yCross = yRange ? 50 : _median(py);
   const shapes = [];
-  if (xRange) shapes.push({ type:'line', x0:50, x1:50, yref:'paper', y0:0, y1:1,
+  if (xCross != null) shapes.push({ type:'line', x0:xCross, x1:xCross, yref:'paper', y0:0, y1:1,
                             line:{ color:'#8d8579', width:1, dash:'dot' } });
-  if (yRange) shapes.push({ type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50,
+  if (yCross != null) shapes.push({ type:'line', xref:'paper', x0:0, x1:1, y0:yCross, y1:yCross,
                             line:{ color:'#8d8579', width:1, dash:'dot' } });
 
   // Quadrant labels (only when both 20-80)
@@ -3609,7 +3675,21 @@ function renderAll() {
   renderLeaderboard(spRows,     'sp',     'lb-sps');
   renderLeaderboard(rpRows,     'rp',     'lb-rps');
 
-  renderQuadrant('h-quad', 'h-r', hitterRows, state.hX, state.hY, 'hitter');
+  // Hitter-quadrant POS filter (quadrant-only, independent of the all-table
+  // chip group). Matches ESPN eligible_positions when present, else the rh3
+  // primary_position fallback; rows with neither pass through so all-years /
+  // blend modes (no eligibility data) aren't emptied. 'UTIL' = all hitters.
+  let hQuadRows = hitterRows;
+  if (state.hQuadPos && state.hQuadPos !== 'all' && state.hQuadPos !== 'UTIL') {
+    const want = POS_BUTTON_MATCH[state.hQuadPos] || [state.hQuadPos];
+    hQuadRows = hitterRows.filter(r => {
+      const elig = r.eligible_positions || [];
+      const have = elig.length ? elig : (r.primary_position ? [r.primary_position] : []);
+      if (!have.length) return true;
+      return want.some(w => have.indexOf(w) !== -1);
+    });
+  }
+  renderQuadrant('h-quad', 'h-r', hQuadRows, state.hX, state.hY, 'hitter');
 
   // SP quadrant — pure SP now that RPs have their own tab. The schema-bridge
   // fields on RP rows (MOVEMENT ← BATTED_BALL, etc.) are no longer pooled
@@ -3751,6 +3831,13 @@ function init() {
   document.getElementById('s-y').addEventListener('change',  e => { state.sY  = e.target.value; renderAll(); });
   document.getElementById('rp-x').addEventListener('change', e => { state.rpX = e.target.value; renderAll(); });
   document.getElementById('rp-y').addEventListener('change', e => { state.rpY = e.target.value; renderAll(); });
+
+  // Hitter-quadrant POS filter (quadrant-only)
+  const hQuadPosEl = document.getElementById('h-quad-pos');
+  if (hQuadPosEl) {
+    hQuadPosEl.value = state.hQuadPos;
+    hQuadPosEl.addEventListener('change', e => { state.hQuadPos = e.target.value; renderAll(); });
+  }
 
   // All-players search (debounced)
   let hSearchTimer = null, sSearchTimer = null, rpSearchTimer = null;
