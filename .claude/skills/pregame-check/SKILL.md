@@ -134,6 +134,53 @@ r = requests.get(url, timeout=20).json()
 **Note**: ESPN's `player_id` ≠ MLBAM. Resolve via name match against
 `rp3` projections file. Use `resolve_pitcher_id` if available.
 
+## Step 1.5: Load boxscore bridge for recent SP actuals
+
+Before computing verdicts, load the last 14 days of actual starts from the
+boxscore bridge. This fills the context gap between the blended projection
+(model-based) and what the pitcher actually did last time out.
+
+```python
+from pathlib import Path
+import pandas as pd
+from datetime import date, timedelta
+
+BS_P = Path('data/research/xfp_cache/boxscore_pitchers.parquet')
+
+def load_bs_recent(lookback_days: int = 14) -> dict[int, list[dict]]:
+    """Return {mlbam_id: [starts sorted newest-first]} for last N days."""
+    if not BS_P.exists():
+        return {}
+    cutoff = (date.today() - timedelta(days=lookback_days)).isoformat()
+    df = pd.read_parquet(BS_P)
+    df = df[df['game_date'] >= cutoff].sort_values('game_date', ascending=False)
+    out: dict[int, list[dict]] = {}
+    for _, row in df.iterrows():
+        mid = int(row['mlbam_id'])
+        out.setdefault(mid, []).append({
+            'date': str(row['game_date']),
+            'ip':   float(row['ip']),
+            'so':   int(row['so']),
+            'h':    int(row['h_allowed']),
+            'er':   int(row['er']),
+            'fp':   float(row['fp_sp']),
+        })
+    return out
+
+bs_recent = load_bs_recent()
+```
+
+Use this dict in Step 2 to annotate each SP's verdict card with their
+most recent 1-2 actual starts. Do NOT use it to override the blended
+projection or change verdict rules — it is context only.
+
+**Interpretation heuristics (display only, not rule triggers):**
+- Last start FP ≥ 20 (⚡ elite): reinforces START even if model shows mid-tier
+- Last start FP < 0 (💀 disaster): note the rough outing but don't auto-bench;
+  check whether it was a genuine implosion (ER ≥ 5) or a short hook (IP < 3)
+- 2+ consecutive poor starts (FP < 5 each): worth noting trend, not a rule change
+- Recent actuals confirming the model (within ±5 FP of blended xFP): label "MODEL ALIGNED"
+
 ## Step 2: Per-SP cap-worthy verdict
 
 For each my-SP confirmed for today:
@@ -232,6 +279,8 @@ Win prob today: ~<WP>%
 ### My SP starts today
 1. <Pitcher> vs <opp> (<time> ET)
    Blended xFP: <X> (<conf>)
+   Recent actual: <MM-DD> <IP>IP <K>K → <FP> FP [⚡/💀/MODEL ALIGNED]
+   (or last 2 if both within 7 days)
    Tier B: <status>
    Matchup: <tier> (opp_bat <X.XX>)
    boom_stack: <N>/4
