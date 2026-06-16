@@ -31,6 +31,7 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 
 # Layered display-tag library (validated 2026-06-03). All defensive — every
 # compute_* call returns sentinel-tagged dicts on failure so the dashboard
@@ -55,6 +56,40 @@ except Exception as _e:  # pragma: no cover
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 XFP_DOCS = ROOT / 'xfp-model' / 'docs'
+_BS_PITCHERS = CACHE / 'boxscore_pitchers.parquet'
+
+
+def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
+    """Return {norm_name: {fp, starts}} for boxscore-bridge SP starts in [week_start, yesterday].
+
+    Used to supplement ESPN WTD when it hasn't yet processed a start (typically
+    the few hours between midnight and ESPN's morning score update).  Only
+    injects when p.points == 0 so it never double-counts confirmed ESPN scores.
+    """
+    if not _BS_PITCHERS.exists():
+        return {}
+    try:
+        df = pd.read_parquet(_BS_PITCHERS)
+        df = df[(df['game_date'] >= week_start.isoformat()) &
+                (df['game_date'] <= yesterday.isoformat())]
+        if df.empty:
+            return {}
+        out: dict[str, dict] = {}
+        for _, row in df.iterrows():
+            nk = unicodedata.normalize('NFD', str(row['player_name'])) \
+                            .encode('ascii', 'ignore').decode().lower().strip()
+            if nk not in out:
+                out[nk] = {'fp': 0.0, 'starts': []}
+            out[nk]['fp'] += float(row['fp_sp'])
+            out[nk]['starts'].append({
+                'date': str(row['game_date']),
+                'ip': float(row['ip']),
+                'so': int(row['so']),
+                'fp': float(row['fp_sp']),
+            })
+        return out
+    except Exception:
+        return {}
 
 # Canonical IL statuses across ESPN. Any of these = IL'd; must be excluded
 # from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
@@ -73,7 +108,10 @@ IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
 # `data/research/validation_runs/slot_aware_fp_test_actual.md` and
 # `reference_team_variance_aggregation.md` for full evidence.
 INACTIVE_LINEUP_SLOTS = frozenset({
-    'BE', 'BENCH', 'BN',
+    # BE/BENCH intentionally excluded: Josh manages lineup daily, so every
+    # healthy bench player will be activated before lock. Only true IL slots
+    # and IR should count as non-scoring. DTD/injury zeroing is handled
+    # separately inside project_player via injuryStatus — not by slot.
     'IL', 'IL10', 'IL15', 'IL60',
     'IR',
 })
@@ -1465,7 +1503,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         n_il_excluded = 0
         fas = league.free_agents(size=2000)  # full pool — avoid silent truncation
         for fa in fas:
-            if getattr(fa, 'position', '') != 'SP':
+            if detect_pitcher_role(fa) != 'SP':
                 continue
             nk = _norm(fa.name)
             if nk in rostered:
@@ -1743,7 +1781,7 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
     add_dates = add_dates or {}
     past = 0
     for p in my_lineup:
-        if (p.position or '') != 'SP':
+        if detect_pitcher_role(p) != 'SP':
             continue
         inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
         if inj in ('SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
@@ -2375,7 +2413,7 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
         sps = []
         for side, lineup in (('mine', my_lineup), ('opp', opp_lineup)):
             for p in lineup:
-                if (p.position or '') != 'SP':
+                if detect_pitcher_role(p) != 'SP':
                     continue
                 if is_il_player(p):
                     # IL'd SPs are not pitching this week — skip.
@@ -2567,18 +2605,33 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
         return f'<h2>🎯 Boom / Bust Scan</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
+def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
+                      bs_actuals: dict | None = None):
     rows = []
     for p in lineup:
         proj = projections.get(p.name, {'fp': 0, 'units': 0, 'breakdown': [], 'badges': []})
+        wtd = p.points or 0
+        badges = list(proj['badges'])
+        bs_starts = []
+        # Bridge inject: if ESPN WTD is 0 for an SP but the boxscore bridge has
+        # a start this week, show bridge FP so the dashboard reflects reality
+        # before ESPN's morning score update. Never overrides a non-zero ESPN score.
+        if wtd == 0 and (p.position or '').upper() == 'SP' and bs_actuals:
+            nk = _norm(p.name)
+            bs = bs_actuals.get(nk)
+            if bs and bs['fp'] > 0:
+                wtd = bs['fp']
+                bs_starts = bs['starts']
+                badges.append('📋 bridge')
         rows.append({
             'name': p.name, 'pos': p.position or '?',
-            'wtd': p.points or 0,
+            'wtd': wtd,
             'rest': proj['fp'],
             'units': proj['units'],
-            'total': (p.points or 0) + proj['fp'],
+            'total': wtd + proj['fp'],
             'breakdown': proj['breakdown'],
-            'badges': proj['badges'],
+            'badges': badges,
+            'bs_starts': bs_starts,
         })
     rows.sort(key=lambda r: -r['total'])
     total_rest = sum(r['rest'] for r in rows)
@@ -2609,6 +2662,13 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0):
                    f'<td data-label="Units" class="muted">{unit_label}</td>'
                    f'<td data-label="Rest">{r["rest"]:+.1f}</td>'
                    f'<td data-label="Total"><b>{r["total"]:+.1f}</b></td><td></td></tr>')
+        if r.get('bs_starts'):
+            for s in r['bs_starts']:
+                ip_f = float(s['ip'])
+                ip_disp = f"{int(ip_f)}.{int(round((ip_f % 1) * 3))}" if ip_f % 1 else f"{int(ip_f)}.0"
+                out.append(f'<tr class="breakdown"><td colspan="7">'
+                           f'→ 📋 {s["date"][5:]} actual: {ip_disp}IP {s["so"]}K '
+                           f'<b>{s["fp"]:.1f} FP</b> (boxscore bridge)</td></tr>')
         if r['breakdown']:
             for b in r['breakdown']:
                 if b.get('type') == 'start':
@@ -2678,6 +2738,12 @@ def main():
     week_end = week_start + timedelta(days=6)
     days_remaining_in_week = (week_end - today).days
 
+    # Boxscore bridge: load actuals for any SP starts already played this week
+    # (week_start through yesterday). Injected into render_team_table when
+    # ESPN WTD is still 0 — bridges the ~few-hour lag before ESPN scores games.
+    yesterday = today - timedelta(days=1)
+    bs_week = _load_bs_week_actuals(week_start, yesterday) if week_start <= yesterday else {}
+
     print(f'  matchup period: {mu["period"]}')
     print(f'  week: {week_start} → {week_end} (today: {today})')
     print(f'  Ligers WTD: {mu["my_score"]:.1f}  |  Opp WTD: {mu["opp_score"]:.1f}')
@@ -2707,7 +2773,7 @@ def main():
     # plv_clone.mlb_stats.fetch_week_probables.
     sp_pitcher_ids = set()
     for p in mu['my_lineup'] + mu['opp_lineup']:
-        if (p.position or '') != 'SP':
+        if detect_pitcher_role(p) != 'SP':
             continue
         inj_p = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
         if inj_p in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
@@ -2748,12 +2814,12 @@ def main():
     pred_note = f' + {my_pred} rotation-gap predicted' if my_pred else ''
     print(f'  SP starts: {my_conf} confirmed{pred_note} = {my_total_starts}/10 cap')
 
-    # Team totals + variance — SLOT-AWARE (2026-06-03).
-    # Project from ACTIVE slots only (exclude BE/IL/IR). Validation showed
-    # all-rostered projection over-projects by ~20 FP/team-period because
-    # bench/IL contribute ~0 actual FP. Keep `my_proj` / `opp_proj` intact
-    # for downstream consumers that legitimately need bench rows (render
-    # tables, action-item IL warnings, days-of-fire scan, lineup optimizer).
+    # Team totals + variance — SLOT-AWARE (2026-06-03, updated 2026-06-15).
+    # Exclude only true IL/IR slots. BE is treated as active because the
+    # roster owner manages lineup daily — every healthy bench player gets
+    # activated before lock. IL/DTD zeroing is handled inside project_player
+    # via injuryStatus, not slot. Keep `my_proj` / `opp_proj` intact for
+    # downstream consumers (render tables, IL warnings, days-of-fire scan).
     my_active = {p.name: my_proj[p.name] for p in mu['my_lineup']
                  if _is_active_slot(p) and p.name in my_proj}
     opp_active = {p.name: opp_proj[p.name] for p in mu['opp_lineup']
@@ -2810,9 +2876,11 @@ def main():
           f'(Δ {(win_prob - legacy_wp)*100:+.1f} pp)')
 
     my_block, _, _ = render_team_table(mu['mine'].team_name, mu['my_lineup'],
-                                          mu['my_score'], my_proj, my_capped)
+                                          mu['my_score'], my_proj, my_capped,
+                                          bs_actuals=bs_week)
     opp_block, _, _ = render_team_table(mu['opp'].team_name, mu['opp_lineup'],
-                                           mu['opp_score'], opp_proj, opp_capped)
+                                           mu['opp_score'], opp_proj, opp_capped,
+                                           bs_actuals=bs_week)
 
     # ---- LINEUP OPTIMIZER ----
     opt_block = render_lineup_optimizer(mu['my_lineup'], my_proj, schedules_by_team,

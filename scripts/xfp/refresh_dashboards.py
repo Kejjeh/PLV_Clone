@@ -89,6 +89,19 @@ def main():
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
 
+    # 1.5. Boxscore bridge — fills the 1-2 day Statcast lag.
+    # MLB Stats API boxscores are real-time (available minutes after game end)
+    # while Savant/pybaseball pitch-level data lags 1-2 days. This step pulls
+    # all final game boxscores for yesterday, computes BrownU FP from counting
+    # stats (K + IP*3.3 − H − 2*ER − BB − HBP for SP/RP; R+TB+RBI+BB+HBP+SB−K
+    # for hitters), and writes to boxscore_pitchers.parquet + boxscore_hitters.parquet.
+    # Idempotent — skips game_pks already cached. Fail-soft.
+    ok_bs = run('1.5. Bridge boxscores (fills Statcast lag)',
+                'python -X utf8 scripts/xfp/refresh_boxscores.py',
+                timeout=120)
+    if not ok_bs:
+        print('  ⚠ boxscore bridge failed — recent actuals may lag 1-2 days')
+
     run('1b. Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 

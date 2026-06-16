@@ -53,6 +53,20 @@ data/research/validation_runs/         # pre-registration files for /validate-fe
 xfp-model/docs/                        # GitHub Pages dashboards (separate repo)
 ```
 
+## claude-mem background worker
+
+The `claude-mem` plugin requires a background worker (Bun) on port **37778**
+(set in `~/.claude-mem/settings.json`). The plugin auto-starts it with `--daemon`
+when Claude Code opens. A `UserPromptSubmit` hook in `~/.claude/settings.json`
+also checks port 37778 and restarts via `Start-Process bun --daemon` if down.
+No manual action needed — if you ever see hook errors saying "worker unreachable",
+just send any message and the hook will restart it.
+
+To start manually if needed:
+```
+bun C:/Users/Joshua/.claude/plugins/cache/thedotmack/claude-mem/13.6.1/scripts/worker-service.cjs --daemon
+```
+
 ## Common commands
 
 ```bash
@@ -365,6 +379,22 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
    in one script. Reserve agent fan-out for genuine broad FA-pool scans.
 6. **`sp_bench_mc.py`** imports `fetch_schedules_by_team(team_ids, start, end)`
    (batch) from `build_matchup_dashboard`; keep in sync if that module refactors.
+7. **BE slot = active for Josh.** He manages lineup daily — every healthy bench
+   player gets activated before lock. **Only `IL`/`IR` slots and `injuryStatus`
+   in `IL_INJURY_STATES` / `DAY_TO_DAY` zero a player.** `INACTIVE_LINEUP_SLOTS`
+   in `build_matchup_dashboard.py` intentionally excludes `BE`/`BENCH`/`BN`.
+   Never tell Josh a bench player "won't score" — the slot doesn't matter, health
+   does. Canonical fix 2026-06-15.
+8. **Never bucket pitchers by ESPN `.position` tag alone.** ESPN can mislabel
+   dual-eligible pitchers (canonical: Detmers 2026 — `position='RP'` but
+   `'SP' in eligible_slots` and `gamesStarted=6`; he's rp3 #29 @ 12.19
+   fp/start, not an RP). Always use `detect_pitcher_role(player_or_row)`
+   from `scripts/xfp/lib/pitcher_role.py`, which checks `eligible_slots`
+   first and falls back to MLB Stats API `gamesStarted` for dual-eligible
+   cases. The rule: SP `eligible_slots` only → SP; RP only → RP; both →
+   `gamesStarted / gamesPlayed >= 0.4` → SP. Applied in
+   `build_matchup_dashboard.py` and `run_roster_audit.py`; wire it anywhere
+   you filter pitchers by role. Canonical fix 2026-06-15.
 
 ## Don't do these (load-bearing feedback)
 

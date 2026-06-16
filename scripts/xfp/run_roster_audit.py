@@ -16,6 +16,27 @@ sys.path.insert(0, str(ROOT))
 
 from plv_clone.league_state import LeagueState
 from plv_clone.utils.name_match import fuzzy_match_name
+from scripts.xfp.lib.pitcher_role import build_role_lookup, detect_pitcher_role
+
+_BS_PITCHERS = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
+_BS_LOOKBACK_DAYS = 14
+
+
+def _load_bs_last_start() -> dict[int, dict]:
+    """Return {mlbam_id: most-recent-start-row} from boxscore bridge (last 14d)."""
+    if not _BS_PITCHERS.exists():
+        return {}
+    try:
+        df = pd.read_parquet(_BS_PITCHERS)
+        cutoff = (date.today() - pd.Timedelta(days=_BS_LOOKBACK_DAYS)).isoformat()
+        df = df[df['game_date'] >= cutoff].copy()
+        if df.empty:
+            return {}
+        idx = df.sort_values('game_date').groupby('mlbam_id')['game_date'].idxmax()
+        return {int(row['mlbam_id']): row.to_dict()
+                for _, row in df.loc[idx].iterrows()}
+    except Exception:
+        return {}
 
 _ls = LeagueState()
 get_my_roster_with_injuries = _ls.my_roster_with_injuries
@@ -51,14 +72,61 @@ def main():
     rp3 = pd.read_csv(proj_files['rp3']).dropna(subset=['player_name'])
     rprs2 = pd.read_csv(proj_files['rprs2']).dropna(subset=['name_api'])
 
+    # Boxscore bridge: recent actual start stats (fills statcast lag).
+    # Build name→mlbam from rp3, then look up each rostered SP's last start.
+    bs_last = _load_bs_last_start()
+    _rp3_mlbam: dict[str, int] = {}
+    for _, row in rp3.iterrows():
+        pid = row.get('pitcher')
+        nm = str(row.get('player_name', ''))
+        if pid and nm:
+            _rp3_mlbam[nm.lower().strip()] = int(pid)
+            if ',' in nm:
+                parts = nm.split(',', 1)
+                canon = (parts[1].strip() + ' ' + parts[0].strip()).lower().strip()
+                _rp3_mlbam[canon] = int(pid)
+
+    def _bs_last_str(player_name: str) -> str:
+        mlbam = _rp3_mlbam.get(player_name.lower().strip())
+        if not mlbam:
+            return ''
+        row = bs_last.get(mlbam)
+        if not row:
+            return ''
+        d = str(row['game_date'])[5:]  # MM-DD
+        ip = float(row['ip'])
+        ip_disp = f"{int(ip)}.{int(round((ip % 1) * 3))}" if ip % 1 else f"{int(ip)}.0"
+        so = int(row['so'])
+        fp = float(row['fp_sp'])
+        flag = ' ⚡' if fp >= 20 else (' 🔥' if fp >= 15 else '')
+        return f' | last {d}: {ip_disp}IP {so}K → {fp:.1f}FP{flag}'
+
     il_used = (roster['lineup_slot'] == 'IL').sum()
     be_used = (roster['lineup_slot'] == 'BE').sum()
-    active = (~roster['lineup_slot'].isin(['IL', 'BE'])).sum()
+    # BE counts as active: owner manages lineup daily, bench players get activated.
+    # Only true IL slots are excluded from scoring.
+    active = (~roster['lineup_slot'].isin(['IL'])).sum()
     injured_not_il = roster[(roster['injured']) & (roster['lineup_slot'] != 'IL')]
 
     il_df = roster[roster['injured']].sort_values('days_until_return')
 
-    healthy_sp_count = ((roster['position'] == 'SP') & (roster['lineup_slot'] != 'IL') & (~roster['injured'])).sum()
+    # Detect effective pitcher role from eligible_slots + MLB Stats API for dual-eligible.
+    # Canonical bug: Detmers position='RP' in ESPN but eligible for SP and GS=6 → should
+    # use rp3 (SP model), not rprs2. Never bucket pitchers by .position alone.
+    pitcher_rows = roster[roster['position'].isin(['SP', 'RP', 'P'])].copy()
+    role_lookup = build_role_lookup(pitcher_rows, rp3_df=rp3, rprs2_df=rprs2)
+    roster = roster.copy()
+    roster['effective_role'] = roster.apply(
+        lambda r: role_lookup.get(r['player_name'], r['position'])
+        if r['position'] in ('SP', 'RP', 'P') else r['position'],
+        axis=1,
+    )
+
+    healthy_sp_count = (
+        (roster['effective_role'] == 'SP') &
+        (roster['lineup_slot'] != 'IL') &
+        (~roster['injured'])
+    ).sum()
     projected_starts = healthy_sp_count * 1.19
 
     hitters = roster[~roster['position'].isin(['SP', 'RP', 'P'])].copy()
@@ -66,12 +134,12 @@ def main():
     hitters['rank'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[1])
     hit_drops = hitters.sort_values('proj', ascending=True, na_position='first').head(3)
 
-    sps = roster[(roster['position'] == 'SP') & (~roster['injured'])].copy()
+    sps = roster[(roster['effective_role'] == 'SP') & (~roster['injured'])].copy()
     sps['proj'] = sps['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[0])
     sps['rank'] = sps['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[1])
     sp_drops = sps.sort_values('proj', ascending=True, na_position='first').head(3)
 
-    rps = roster[(roster['position'] == 'RP') & (~roster['injured'])].copy()
+    rps = roster[(roster['effective_role'] == 'RP') & (~roster['injured'])].copy()
     rps['proj'] = rps['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[0])
     rps['rank'] = rps['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[1])
     rp_drops = rps.sort_values('proj', ascending=True, na_position='first').head(2)
@@ -177,7 +245,8 @@ def main():
     for _, r in sp_drops.iterrows():
         p = f"{r['proj']:.2f}" if pd.notna(r['proj']) else "no-match"
         rk = f"#{int(r['rank'])}" if pd.notna(r['rank']) else "?"
-        print(f"  - {r['player_name']} ({r['pro_team']}) — xfp_rp3 {p} fp/start, rank {rk}")
+        bs = _bs_last_str(r['player_name'])
+        print(f"  - {r['player_name']} ({r['pro_team']}) — xfp_rp3 {p} fp/start, rank {rk}{bs}")
     print("\n### RPs (healthy)")
     for _, r in rp_drops.iterrows():
         p = f"{r['proj']:.1f}" if pd.notna(r['proj']) else "no-match"
