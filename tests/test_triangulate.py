@@ -54,12 +54,19 @@ CANONICAL_CASES = [
     #      cannot touch the four hitters, and Detmers came through as a
     #      (correctly) non-vetoed BUY. Refreshed per the docstring's option (b).
     #      NOTE: Judge STRONG HOLD -> MIXED is a meaningful drift worth a look.
+    #  2026-06-17 (option b) — the rp3 coverage fix moved recently-pitched
+    #      starters from suppressed marcel_il priors to real data_driven reads
+    #      (Detmers 7.77 -> 11.84, etc.). Detmers stays BUY but the sub-reason
+    #      shifts archetype-breakout -> process-upgrade; Weathers' base read is
+    #      now MIXED, so he no longer qualifies for the SP+BUY+SEVERE decline
+    #      veto (the velo concern now reads as MIXED, not CAUTION). Schmitt
+    #      (hitter, independent rh3/PL drift) flips BUY -> MIXED.
     ("Aaron Judge",     "MIXED — see profile",     "H",  "MIXED",   None),
-    ("Reid Detmers",    "BUY — archetype breakout", "SP", "BUY",     None),
-    ("Ryan Weathers",   "CAUTION — decline veto",   "SP", "CAUTION", "DECLINE_VETO"),
+    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
+    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
     ("Eugenio Suárez",   "MIXED — see profile",     "H",  "MIXED",   None),
-    ("Casey Schmitt",   "BUY — process upgrade",   "H",  "BUY",     None),
+    ("Casey Schmitt",   "MIXED — see profile",     "H",  "MIXED",   None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
