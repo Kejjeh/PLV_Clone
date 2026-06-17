@@ -54,6 +54,11 @@ SIGMA_CALIB_JSON = ROOT / 'data' / 'research' / 'validation_runs' / 'sigma_calib
 TARGET = 'ros_fp_per_start'
 EVAL_GS_MIN = 2
 ROS_GS_MIN = 5
+# 2026 projection picks each pitcher's most-recent rolling snapshot, but only
+# if it's within this many days of the global latest split — so a pitcher who
+# has been inactive longer than this still falls through to the Marcel/IL prior
+# rather than being projected on stale form. ~2 weekly snapshots.
+PROJ_SPLIT_RECENCY_DAYS = 14
 TRAIN_YEARS = [2018, 2019, 2021, 2022, 2023, 2024, 2025]
 PRIOR_K_GS = 5
 MARCEL_WEIGHTS = (5, 4, 3)
@@ -371,7 +376,20 @@ def main():
     if df_26.empty:
         return
     latest_split = int(df_26['split_day'].max())
-    df_26 = df_26[(df_26['split_day'] == latest_split) & (df_26['gs_to'] >= EVAL_GS_MIN)]
+    # Use each pitcher's MOST-RECENT rolling snapshot, not only the global latest
+    # split. The rolling builder emits a split row only when the pitcher has a
+    # subsequent start in the data (ros_gs>=1, the training target), so anyone
+    # whose latest start has no "next start" logged yet — every rookie who just
+    # debuted (Messick/Sasaki 2026) and any starter coming off their most recent
+    # outing — has NO row at the global latest split and was silently dropped to
+    # the suppressed marcel_il prior (gs_to forced to 0) despite having real
+    # 2026 form. Take their latest snapshot instead, capped to recent splits so
+    # long-inactive arms still fall through to the Marcel/IL fallback.
+    df_26 = df_26[(df_26['split_day'] >= latest_split - PROJ_SPLIT_RECENCY_DAYS)
+                  & (df_26['gs_to'] >= EVAL_GS_MIN)]
+    df_26 = (df_26.sort_values('split_day')
+                  .groupby('pitcher', as_index=False, sort=False)
+                  .tail(1))
     valid = df_26.dropna(subset=RP3_FEATS).copy()
     valid['xfp_rp3_per_start'] = pipe.predict(valid[RP3_FEATS].values)
     valid['prior_source'] = 'rp3_model'
