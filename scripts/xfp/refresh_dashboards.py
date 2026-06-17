@@ -421,7 +421,11 @@ def main():
             f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)
+        # Pull-before-push: the cloud live-matchup job also pushes to xfp-model
+        # throughout game days, so this local clone is often behind. Reconcile
+        # first (this full build wins on conflict) so the push can't be rejected.
         run('6. Push to GitHub Pages',
+            'git fetch origin && git merge -X ours --no-edit origin/main && '
             'git push origin main', cwd=XFP_MODEL)
 
     print(f'\n{"="*70}\n  ALL DONE — {datetime.now().strftime("%Y-%m-%d %H:%M")}\n{"="*70}')

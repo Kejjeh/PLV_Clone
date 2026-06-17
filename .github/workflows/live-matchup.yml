@@ -91,6 +91,7 @@ jobs:
           repository: Kejjeh/xfp-model
           ssh-key: ${{ secrets.XFP_MODEL_DEPLOY_KEY }}
           path: xfp-model-pages
+          fetch-depth: 0   # full history so the pull-merge before push works
 
       - name: Publish dashboards to GitHub Pages
         run: |
@@ -104,5 +105,9 @@ jobs:
             echo "No dashboard changes to publish this tick."
           else
             git commit -m "live: in-game matchup + live refresh ($(date -u +'%Y-%m-%d %H:%MZ'))"
+            # Reconcile in case the daily refresh pushed in between (this live
+            # build wins on conflict — it's the most current during games).
+            git fetch origin
+            git merge -X ours --no-edit origin/main
             git push
           fi

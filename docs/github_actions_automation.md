@@ -112,3 +112,9 @@ rebuilds — so it naturally stops for the night.
   noise); it only publishes the two HTML dashboards to `xfp-model`.
 - The matchup builder falls back to canonical `rp3` if the `il_fixed` shim is
   >24h stale (never hard-fails), so a day-old shim won't break the cloud build.
+- **Two writers to `xfp-model`:** both jobs push to the Pages repo (cloud =
+  matchup/live during games; daily = full dashboard set), so each does
+  `git fetch && git merge -X ours --no-edit && git push` before publishing —
+  whichever ran most recently wins on the overlapping HTML and neither push is
+  rejected. (Added 2026-06-16 after the first daily run's xfp-model push was
+  rejected non-fast-forward because the cloud job had pushed in between.)
