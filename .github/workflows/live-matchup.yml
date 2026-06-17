@@ -89,7 +89,7 @@ jobs:
         uses: actions/checkout@v5
         with:
           repository: Kejjeh/xfp-model
-          token: ${{ secrets.XFP_MODEL_TOKEN }}
+          ssh-key: ${{ secrets.XFP_MODEL_DEPLOY_KEY }}
           path: xfp-model-pages
 
       - name: Publish dashboards to GitHub Pages

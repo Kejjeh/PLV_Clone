@@ -21,49 +21,52 @@ committed.
 secrets (the existing `build-report.yml` uses them and runs green), so the
 cloud live job authenticates to ESPN out of the box.
 
-### 2. `XFP_MODEL_TOKEN` secret — **you must add this** (for the cloud live job)
+### 2. Cross-repo publish credential — already done ✅ (write-scoped deploy key)
 
 The cloud job runs in `PLV_Clone` but publishes to the **separate** `xfp-model`
-repo. The default `GITHUB_TOKEN` can't reach another repo, so it needs a token:
+repo, which the default `GITHUB_TOKEN` can't reach. This is wired with an SSH
+**deploy key** (set up 2026-06-16 via `gh` CLI — no action needed):
 
-1. GitHub → your avatar → **Settings → Developer settings → Personal access
-   tokens → Fine-grained tokens → Generate new token**.
-2. **Resource owner:** `Kejjeh`. **Repository access:** *Only select
-   repositories* → `xfp-model`.
-3. **Permissions → Repository permissions → Contents: Read and write.**
-4. Generate, copy the token.
-5. In **`PLV_Clone` → Settings → Secrets and variables → Actions → New
-   repository secret**: name `XFP_MODEL_TOKEN`, paste the value.
+- `xfp-model` has a read-write deploy key titled **`plv-live-ci`**.
+- `PLV_Clone` has the matching private key as the secret
+  **`XFP_MODEL_DEPLOY_KEY`**, consumed by `live-matchup.yml`'s xfp-model
+  checkout (`ssh-key:`).
 
-Set a calendar reminder to rotate it before it expires (fine-grained tokens
-max out at ~1 year). If it lapses, the live job's publish step fails but
-nothing else breaks.
-
-> Alternative if you'd rather not manage a PAT: add a **deploy key** to
-> `xfp-model` and switch the `live-matchup.yml` checkout to SSH. The PAT is
-> simpler for a solo setup.
+Why a deploy key over a PAT: least-privilege (only `xfp-model`'s git, not the
+whole account), **no expiry to rotate**, and it was creatable entirely from the
+CLI (no browser / 2FA dance). To revoke: delete the `plv-live-ci` key from
+`xfp-model` → Settings → Deploy keys and remove the secret. To regenerate:
+`ssh-keygen -t ed25519`, `gh repo deploy-key add <pub> --allow-write -R
+Kejjeh/xfp-model`, `gh secret set XFP_MODEL_DEPLOY_KEY -R Kejjeh/PLV_Clone < <priv>`.
 
 ### 3. Self-hosted runner — **you must install this** (for the daily job)
 
-1. **`PLV_Clone` → Settings → Actions → Runners → New self-hosted runner →
-   Windows / x64.**
-2. Run the download + `./config.cmd` commands GitHub shows (they embed a
-   one-time registration token). Accept the **default labels** — the auto
-   labels `self-hosted`, `Windows`, `X64` are what `daily-refresh.yml` targets.
-3. When prompted **"Run as service"**, choose **Yes**, and install it **under
-   your own Windows user account** (not `LocalSystem`). This is what makes the
-   git push and your Python "just work":
-   - **Git credentials:** running as you reuses the saved GitHub credentials
-     in Windows Credential Manager (the same ones the manual `git push` uses).
-   - **Python + deps:** the service must see the same `python` you use by hand
-     (with `pybaseball`, `lightgbm`, `scikit-learn`, etc. installed). If you
-     use a conda/venv, install/run the runner from inside that activated
-     environment, or make sure that interpreter is first on the **system**
-     PATH the service inherits.
-4. Confirm the runner shows **Idle** (green) under Settings → Actions → Runners.
+**Quick path** — open PowerShell **as Administrator** and run:
 
-The **Diagnostics** step in the daily workflow prints which `python` and `git`
-the runner resolves — check it on the first run if anything misbehaves.
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\ci\install_self_hosted_runner.ps1
+```
+
+It downloads the latest runner into `C:\actions-runner`, fetches a registration
+token via `gh` (nothing to copy/paste), and launches `config.cmd`. Answer the
+prompts as the script header explains — the important ones are **"Run as
+service: Y"** and **entering your own Windows account** for the service. Then
+confirm the runner shows **Idle** under PLV_Clone → Settings → Actions →
+Runners, and trigger *Daily full refresh* once (Actions → Run workflow) to
+smoke-test.
+
+**Manual path** (equivalent, if you prefer the GitHub UI): Settings → Actions →
+Runners → New self-hosted runner → Windows/x64, then follow the shown commands.
+
+Why the service must run as **you** (both paths):
+- **Git credentials:** reuses the saved GitHub creds in Windows Credential
+  Manager (the same ones the manual `git push` uses). `NETWORK SERVICE` has none.
+- **Python + deps:** the service must see the same `python` you use by hand
+  (with `pybaseball`/`lightgbm`/`scikit-learn` etc.). If you use a conda/venv,
+  make that interpreter first on the **system** PATH the service inherits.
+
+The **Diagnostics** step in `daily-refresh.yml` prints which `python`/`git` the
+runner resolved — check it on the first run if anything misbehaves.
 
 ---
 
