@@ -32,7 +32,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO  # single source for repo paths
 RES = REPO / 'data/research'
 CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'

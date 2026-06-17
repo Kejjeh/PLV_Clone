@@ -69,6 +69,10 @@ _Avoid_: putting auth or credentials back in `app/espn_connector` (it's a re-exp
 The module owning *applied* league mechanics. Two distinct SP-cap faces, both real: `weekly_sp_projection` is the **chronological** scoring rule (the first `SP_CAP` starts that occur count — what ESPN scores if you start everyone); `cap_excess_starts` is the **FP-rank planning** cap (start your best `SP_CAP`, bench the rest — what the matchup + optimizers use). `SP_CAP` is the single source for the 10-start constant. Also IL slot arithmetic. Pure functions over data passed in; never imports `league_state`. Lives at `src/plv_clone/cap_math.py`.
 _Avoid_: decisions, scheduler, optimizer; conflating the chronological rule with the planning cap.
 
+**paths**:
+`src/plv_clone/paths.py` — the single source for the repo root + data locations (`ROOT`, `DATA`, `OUTPUTS`, `RESEARCH`, `CACHE`, `MODELS`, `XFP_DOCS`). Resolves `ROOT` from the package location (works from any CWD / machine) with a `PLV_ROOT` env override (CI → `$GITHUB_WORKSPACE`); `XFP_DOCS` honors `PLV_XFP_DOCS`. New/critical code imports from here; ~165 research one-off scripts still hardcode the path and migrate incrementally.
+_Avoid_: `Path('c:/Users/Joshua/plv_clone')`, per-script `ROOT`/`REPO` constants, env-var-with-hardcoded-default variants.
+
 **mlb_stats**:
 The adapter module for the MLB Stats API. Owns `fetch_week_probables(week_start, week_end) → WeekProbables` and `resolve_mlbam(names) → dict[str, int]`. Keeps the remote dependency out of `cap_math` so cap math stays pure-over-data and testable with literals. Lives at `src/plv_clone/mlb_stats.py`.
 _Avoid_: mlb_api, statsapi_client.

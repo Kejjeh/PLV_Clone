@@ -31,7 +31,7 @@ from html import escape as h
 import json
 import pandas as pd
 
-ROOT = Path(os.environ.get('PLV_ROOT', 'c:/Users/Joshua/plv_clone'))
+from plv_clone.paths import ROOT  # noqa: E402  (single source for repo paths)
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'

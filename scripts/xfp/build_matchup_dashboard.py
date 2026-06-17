@@ -28,7 +28,7 @@ from typing import Optional
 
 import pandas as pd
 
-ROOT = Path(os.environ.get('PLV_ROOT', 'c:/Users/Joshua/plv_clone'))
+from plv_clone.paths import ROOT, XFP_DOCS  # noqa: E402  (single source for repo paths)
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
@@ -57,7 +57,7 @@ except Exception as _e:  # pragma: no cover
 
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
-XFP_DOCS = Path(os.environ.get('PLV_XFP_DOCS', str(ROOT / 'xfp-model' / 'docs')))
+# XFP_DOCS imported from plv_clone.paths (honors PLV_XFP_DOCS for CI).
 _BS_PITCHERS = CACHE / 'boxscore_pitchers.parquet'
 _BS_HITTERS  = CACHE / 'boxscore_hitters.parquet'
 
