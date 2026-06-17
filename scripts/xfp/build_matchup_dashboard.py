@@ -227,8 +227,8 @@ def player_link(name: str, *, mlbam: Optional[int] = None) -> str:
 USER_AGENT = 'Mozilla/5.0 (matchup-dashboard)'
 SEASON_END = date(2026, 9, 28)
 
-# SP start cap per BrownU rules
-MAX_SP_STARTS_PER_WEEK = 10
+# SP start cap per BrownU rules — single source of truth is cap_math.SP_CAP.
+from plv_clone.cap_math import SP_CAP as MAX_SP_STARTS_PER_WEEK  # noqa: E402
 
 # League-average per-event FP (for opp factor centering)
 LEAGUE_AVG_SP_FP_PER_START = 11.5
@@ -1150,18 +1150,22 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
 
 
 def apply_sp_cap(team_projections, cap=MAX_SP_STARTS_PER_WEEK):
-    """Cap SP starts at `cap` per team. Sort SP starts by FP desc; zero excess."""
+    """Cap SP starts at `cap` per team — zero the lowest-FP starts beyond the
+    cap (the bench-your-worst planning rule). The ranking rule itself lives in
+    cap_math.cap_excess_starts; this only applies it to the matchup's breakdown
+    structure."""
+    from plv_clone.cap_math import cap_excess_starts
     sp_starts = []
     for name, proj in team_projections.items():
         for i, b in enumerate(proj.get('breakdown', [])):
             if b.get('type') == 'start':
                 sp_starts.append({'name': name, 'idx': i, 'fp': b['fp']})
-    if len(sp_starts) <= cap:
+    excess = cap_excess_starts([s['fp'] for s in sp_starts], cap)
+    if not excess:
         return 0
-    sp_starts.sort(key=lambda x: -x['fp'])
-    capped = sp_starts[cap:]
     capped_fp = 0.0
-    for c in capped:
+    for j in excess:
+        c = sp_starts[j]
         proj = team_projections[c['name']]
         b = proj['breakdown'][c['idx']]
         b['fp_capped'] = True

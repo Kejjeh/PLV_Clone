@@ -62,8 +62,8 @@ The module owning *read-side* league rules. Encodes IL-slot-vs-status, FA cross-
 _Avoid_: espn_connector, espn_client, league_client.
 
 **cap_math**:
-The module owning *applied* league mechanics — the 10-start SP cap, `weekly_sp_projection`, IL slot arithmetic. Pure functions over data passed in; never imports `league_state`. Lives at `src/plv_clone/cap_math.py`.
-_Avoid_: decisions, scheduler, optimizer.
+The module owning *applied* league mechanics. Two distinct SP-cap faces, both real: `weekly_sp_projection` is the **chronological** scoring rule (the first `SP_CAP` starts that occur count — what ESPN scores if you start everyone); `cap_excess_starts` is the **FP-rank planning** cap (start your best `SP_CAP`, bench the rest — what the matchup + optimizers use). `SP_CAP` is the single source for the 10-start constant. Also IL slot arithmetic. Pure functions over data passed in; never imports `league_state`. Lives at `src/plv_clone/cap_math.py`.
+_Avoid_: decisions, scheduler, optimizer; conflating the chronological rule with the planning cap.
 
 **mlb_stats**:
 The adapter module for the MLB Stats API. Owns `fetch_week_probables(week_start, week_end) → WeekProbables` and `resolve_mlbam(names) → dict[str, int]`. Keeps the remote dependency out of `cap_math` so cap math stays pure-over-data and testable with literals. Lives at `src/plv_clone/mlb_stats.py`.

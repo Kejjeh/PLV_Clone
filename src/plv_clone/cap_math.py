@@ -72,3 +72,23 @@ def weekly_sp_projection(
         )
         for i, (p, mlbam, day, opp) in enumerate(matches)
     ]
+
+
+def cap_excess_starts(fps: list[float], cap: int = SP_CAP) -> set[int]:
+    """Planning cap: which SP starts this week do NOT count toward scoring,
+    given each start's projected FP.
+
+    This is the *bench-your-worst* planning view — you start your best ``cap``
+    SPs and the rest score zero — used by the matchup and the optimizers. It is
+    distinct from :func:`weekly_sp_projection`'s ``counts_toward_cap``, which is
+    the raw chronological scoring rule (the first ``cap`` starts that occur).
+    Both are real; this one answers "which starts should I let count if I manage
+    my lineup optimally," the other answers "which count if I start everyone."
+
+    Returns the INDICES (into ``fps``) of the starts beyond the top ``cap`` by
+    FP. Ties keep input order (stable). Empty set when at/under the cap.
+    """
+    if len(fps) <= cap:
+        return set()
+    ranked = sorted(range(len(fps)), key=lambda i: -fps[i])  # stable: ties keep order
+    return set(ranked[cap:])
