@@ -47,7 +47,19 @@ def load_completed_periods(today_iso: str | None = None) -> pd.DataFrame:
     if len(df) == 0:
         return pd.DataFrame()
 
-    df['date'] = pd.to_datetime(df['date'])
+    # Exclude backfill rows — they were produced by a different model vintage and
+    # will corrupt a scalar fit against current-model projections.
+    if 'model_version' in df.columns:
+        df = df[~df['model_version'].astype(str).str.contains('backfill', na=False)].copy()
+    if len(df) == 0:
+        return pd.DataFrame()
+
+    # Handle mixed date formats ('2025-W02' vs ISO dates) from legacy backfill rows
+    # that may survive the above filter in edge cases.
+    df['date'] = pd.to_datetime(
+        df['date'].str.replace(r'^\d{4}-W\d+$', '1970-01-01', regex=True),
+        format='mixed',
+    )
     today = pd.to_datetime(today_iso) if today_iso else pd.Timestamp.today().normalize()
 
     has_actual_cols = 'actual_my_final' in df.columns and 'actual_opp_final' in df.columns
@@ -98,9 +110,25 @@ def fit_calibration(completed: pd.DataFrame) -> dict:
             'n_periods': 0,
             'mae_before': None,
             'mae_after': None,
+            'safe_to_consume': False,
             'method': 'NO_DATA',
             'fit_date': datetime.now().isoformat(),
             'note': 'No completed periods yet — scalar=1.0 (identity)',
+        }
+
+    # Drop periods with zero projections (pre-model or broken snapshots).
+    completed = completed[completed['projected_total'] > 0].copy()
+    if len(completed) == 0:
+        return {
+            'scalar_correction': 1.0,
+            'n_observations': 0,
+            'n_periods': 0,
+            'mae_before': None,
+            'mae_after': None,
+            'safe_to_consume': False,
+            'method': 'NO_DATA',
+            'fit_date': datetime.now().isoformat(),
+            'note': 'All periods had zero projections — scalar=1.0 (identity)',
         }
 
     sum_actual = completed['actual_total'].sum()
@@ -112,15 +140,21 @@ def fit_calibration(completed: pd.DataFrame) -> dict:
     after_errors = (completed['actual_total'] - completed['projected_total'] * scalar).abs()
     mae_before = float(before_errors.mean())
     mae_after = float(after_errors.mean())
+    mae_improvement_pct = round((mae_before - mae_after) / mae_before * 100, 1) if mae_before > 0 else 0.0
+
+    n_periods = int(completed['period'].nunique())
+    # Consume only when we have enough clean data and the scalar demonstrably helps.
+    safe_to_consume = (n_periods >= 3) and (mae_improvement_pct > 0)
 
     return {
         'scalar_correction': round(scalar, 4),
         'n_observations': int(len(completed)),
-        'n_periods': int(completed['period'].nunique()),
+        'n_periods': n_periods,
         'periods_used': sorted(completed['period'].unique().tolist()),
         'mae_before': round(mae_before, 2),
         'mae_after': round(mae_after, 2),
-        'mae_improvement_pct': round((mae_before - mae_after) / mae_before * 100, 1) if mae_before > 0 else 0.0,
+        'mae_improvement_pct': mae_improvement_pct,
+        'safe_to_consume': safe_to_consume,
         'method': 'POOLED_SCALAR',
         'fit_date': datetime.now().isoformat(),
         'note': (f'Scalar={scalar:.3f} → multiply all projections by this. '

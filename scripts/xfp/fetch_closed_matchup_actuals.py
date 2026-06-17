@@ -70,7 +70,7 @@ def run_backfill(verbose: bool = True) -> tuple[int, int, int]:
         return 0, 0, 0
     df = pd.read_csv(HISTORY)
     df = _ensure_actual_cols(df)
-    df['date'] = pd.to_datetime(df['date'])
+    df['date'] = pd.to_datetime(df['date'].str.replace(r'^\d{4}-W\d+$', lambda m: pd.Timestamp.fromisocalendar(int(m.group()[:4]), int(m.group()[6:]), 1).strftime('%Y-%m-%d'), regex=True), format='mixed')
     today = pd.Timestamp.today().normalize()
 
     new_filled = 0

@@ -2882,9 +2882,13 @@ def main():
               f'pitcher_splits={len(_PSPLIT)} bat_side={len(_BAT_SIDE)} '
               f'il_returns={len(_IL_RETURNS)} calib={_CALIB:.3f}')
     else:
-        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS, _CALIB = (
-            {}, {}, {}, {}, {}, {}, {}, 1.0)
-        print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only — pending backtest validation)')
+        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS = (
+            {}, {}, {}, {}, {}, {}, {})
+        # Calibration scalar is fit on baseline projections — safe to apply here.
+        # The double-correction warning applies to applying a baseline-fit scalar
+        # on top of post-adjuster projections, not the other direction.
+        _CALIB = load_calibration_scalar()
+        print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only) calib={_CALIB:.3f}')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
