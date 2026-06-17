@@ -58,8 +58,12 @@ Confidence-layer classification applied on top of a model projection — `LEGIT 
 ### Modules
 
 **league_state**:
-The module owning *read-side* league rules. Encodes IL-slot-vs-status, FA cross-team verification, and the `size=2000` default as method-level invariants. Lives at `src/plv_clone/league_state.py`. Replaces `app/espn_connector.py`. Imports `cap_math` for constants (`SP_CAP`, `RP_SLOT_CAP`, `IL_SLOT_COUNT`).
+The module owning *read-side* league rules. Encodes IL-slot-vs-status, FA cross-team verification, and the `size=2000` default as method-level invariants. Lives at `src/plv_clone/league_state.py`. Replaces `app/espn_connector.py` as the read-side interface. Imports `cap_math` for constants (`SP_CAP`, `RP_SLOT_CAP`, `IL_SLOT_COUNT`); imports `_get_league` from `plv_clone.espn` (the auth home), not from app/.
 _Avoid_: espn_connector, espn_client, league_client.
+
+**espn (auth)**:
+`src/plv_clone/espn.py` — the single ESPN **auth** home: credential loading (env / `.env`) + the cached `_get_league` League factory. `app/espn_connector.py` now re-exports these (back-compat for its ~37 importers + the higher-level roster/FA helpers it still owns); `league_state` and any script reach auth through here. The re-exported `_get_league` is the same lru-cached object.
+_Avoid_: putting auth or credentials back in `app/espn_connector` (it's a re-export shim now).
 
 **cap_math**:
 The module owning *applied* league mechanics. Two distinct SP-cap faces, both real: `weekly_sp_projection` is the **chronological** scoring rule (the first `SP_CAP` starts that occur count — what ESPN scores if you start everyone); `cap_excess_starts` is the **FP-rank planning** cap (start your best `SP_CAP`, bench the rest — what the matchup + optimizers use). `SP_CAP` is the single source for the 10-start constant. Also IL slot arithmetic. Pure functions over data passed in; never imports `league_state`. Lives at `src/plv_clone/cap_math.py`.

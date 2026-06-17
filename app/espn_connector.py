@@ -20,85 +20,19 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
-_AUTH_ERROR_HINTS = (
-    "401",
-    "403",
-    "unauthorized",
-    "forbidden",
-    "authentication",
-    "invalid session",
-    "login",
-    "cookie",
-    "espn_s2",
-    "swid",
+# ── ESPN auth (moved to plv_clone.espn; re-exported here for back-compat) ──────
+# Auth + the raw League factory now live in the package (plv_clone/espn.py) so
+# league_state and scripts depend on one home. Re-exported here so this module's
+# existing importers and the higher-level helpers below are unaffected. The
+# re-exported `_get_league` is the same lru_cached object (cache_clear() works).
+from plv_clone.espn import (  # noqa: F401
+    _get_league,
+    _AUTH_ERROR_HINTS,
+    LEAGUE_ID,
+    YEAR,
+    SWID,
+    ESPN_S2,
 )
-
-# ── Credentials ───────────────────────────────────────────────────────────────
-# Cookies are read from the environment so they never enter version control.
-# Set them in your shell, in `.env` (auto-loaded if python-dotenv is installed),
-# or via your CI secret store. Refresh if ESPN starts returning 401s (cookies
-# expire periodically).
-#
-# Required env vars:
-#   ESPN_LEAGUE_ID   numeric league id
-#   ESPN_YEAR        season year
-#   ESPN_SWID        SWID cookie, e.g. "{XXXX-XXXX-XXXX-XXXX-XXXX}"
-#   ESPN_S2          espn_s2 cookie (long urlencoded blob)
-
-import os
-
-# Best-effort .env loader so local dev doesn't need to export vars manually.
-try:
-    from dotenv import load_dotenv
-    from pathlib import Path
-    _here = Path(__file__).resolve().parent
-    for _candidate in (_here / ".env", _here.parent / ".env"):
-        if _candidate.exists():
-            load_dotenv(_candidate)
-            break
-except ImportError:
-    pass
-
-LEAGUE_ID = int(os.environ.get("ESPN_LEAGUE_ID", "0"))
-YEAR      = int(os.environ.get("ESPN_YEAR", "2026"))
-SWID      = os.environ.get("ESPN_SWID", "")
-ESPN_S2   = os.environ.get("ESPN_S2", "")
-
-# ── League loader ─────────────────────────────────────────────────────────────
-
-@lru_cache(maxsize=1)
-def _get_league():
-    """Return authenticated ESPN League object (cached for process lifetime)."""
-    if not (LEAGUE_ID and SWID and ESPN_S2):
-        raise RuntimeError(
-            "ESPN credentials missing. Set ESPN_LEAGUE_ID, ESPN_SWID, ESPN_S2 "
-            "(and optionally ESPN_YEAR) in your environment or in a `.env` file. "
-            "See .env.example for the format."
-        )
-    try:
-        from espn_api.baseball import League
-        return League(
-            league_id=LEAGUE_ID,
-            year=YEAR,
-            espn_s2=ESPN_S2,
-            swid=SWID,
-        )
-    except ImportError:
-        raise ImportError(
-            "espn-api not installed. Run: pip install espn-api"
-        )
-    except Exception as e:
-        msg = str(e).strip()
-        msg_l = msg.lower()
-        if any(tok in msg_l for tok in _AUTH_ERROR_HINTS):
-            friendly = (
-                "ESPN authentication failed. Refresh the espn_s2 and SWID cookies "
-                "in app/espn_connector.py."
-            )
-        else:
-            friendly = f"ESPN API connection failed: {msg or e.__class__.__name__}"
-        logger.error(friendly)
-        raise RuntimeError(friendly) from e
 
 
 # ── Player name normalisation ─────────────────────────────────────────────────

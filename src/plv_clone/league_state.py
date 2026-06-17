@@ -88,7 +88,7 @@ class LeagueState:
 
     def _get_league(self) -> object:
         if self._league is None:
-            from app.espn_connector import _get_league as _factory
+            from plv_clone.espn import _get_league as _factory
             self._league = _factory()
         return self._league
 
