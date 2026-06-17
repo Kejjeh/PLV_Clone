@@ -242,6 +242,11 @@ LEAGUE_AVG_HITTER_PER_GAME = 2.8
 SIGMA_PER_HITTER_GAME = 3.5  # std dev of hitter daily FP
 SIGMA_PER_SP_START = 5.5      # std dev of SP per-start FP
 SIGMA_PER_RP_GAME = 2.5       # std dev of RP per-game FP
+# Conservative per-start FP for a rostered SP who is making a start but is
+# absent from xfp_rp3 (rookies / recent call-ups like Messick & Sasaki 2026).
+# ~rp3 overall median (8.8) / data-driven p25 (8.3); keeps their start in the
+# cap count + projection instead of silently dropping it.
+FALLBACK_SP_PER_START = 8.0
 
 # Set MATCHUP_LEGACY_SIGMA=1 in env to force old fixed-σ aggregation (for
 # before/after comparison). Default: use per-player σ where available.
@@ -951,15 +956,25 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
             # No known return date — assume out for the week.
             return out
 
-    if pos == 'SP':
-        # Skip IL'd pitchers entirely — no projection regardless of MLB stale probables
+    # Effective pitcher role (gotcha #8): ESPN .position is stale for dual-
+    # eligible pitchers (Detmers: position='RP' but starting). Resolve the real
+    # role via MLBAM + gamesStarted so SP starts route here, not the RP branch —
+    # and so this matches main()'s sp_pitcher_ids resolution exactly.
+    pitch_mlbam = None
+    eff_sp = False
+    if pos in ('SP', 'RP', 'P'):
+        pitch_mlbam = player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)
+        eff_sp = (detect_pitcher_role(player, mlbam_id=int(pitch_mlbam)) == 'SP'
+                  if pitch_mlbam else pos == 'SP')
+
+    if eff_sp:
+        # Skip only true IL/out — a DAY_TO_DAY pitcher with a scheduled start
+        # still pitches (Soriano 2026), so DTD must not zero his starts.
         if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE',
-                   'OUT', 'DAY_TO_DAY'):
+                   'OUT'):
             return out
 
-        mlbam = player_mlbam_lookup(name)
-        if not mlbam:  # unresolvable MLBAM — try MLB Stats API search
-            mlbam = _resolve_mlbam_via_api(name)
+        mlbam = pitch_mlbam
         if not mlbam:
             return out  # Can't match without an ID
 
@@ -971,8 +986,14 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                   if today_s <= s['date'] <= week_end_s]
 
         rp_info = rp3_map.get(nk, {})
-        per_start_base = rp_info.get('per_start') or 0
-        if not per_start_base or not starts: return out
+        if not starts:
+            return out
+        # Fallback for SPs absent from rp3 (rookies/recent call-ups, e.g.
+        # Messick/Sasaki 2026): count the start with a conservative per-start so
+        # the cap math + team projection don't silently drop it.
+        per_start_base = rp_info.get('per_start') or FALLBACK_SP_PER_START
+        if not rp_info.get('per_start'):
+            out['badges'].append('≈ est')
         if len(starts) >= 2:
             out['badges'].append('🔥 2-START')
 
@@ -1004,7 +1025,9 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         out['sigma2'] = len(starts) * sp_sigma ** 2
         return out
 
-    elif pos in ('RP', 'P'):
+    elif pos in ('SP', 'RP', 'P'):
+        # Any rostered pitcher not routed to the SP branch above (true RPs, or a
+        # former starter now relieving) is projected here via rprs2.
         rp_info = rprs2_map.get(nk, {})
         role = rp_info.get('role') or 'middle'
         app_rate = RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE)
@@ -2863,15 +2886,22 @@ def main():
     # plv_clone.mlb_stats.fetch_week_probables.
     sp_pitcher_ids = set()
     for p in mu['my_lineup'] + mu['opp_lineup']:
-        if detect_pitcher_role(p) != 'SP':
-            continue
         inj_p = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
+        # Skip only true IL/out states. A DAY_TO_DAY pitcher with a scheduled
+        # start still pitches (Soriano 2026: DTD but a confirmed probable), so
+        # DTD must NOT drop him from the week's SP-start projection.
         if inj_p in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-                     'INJURY_RESERVE', 'OUT', 'DAY_TO_DAY'):
+                     'INJURY_RESERVE', 'OUT'):
             continue
         pid_sp = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
-        if pid_sp:
-            sp_pitcher_ids.add(int(pid_sp))
+        if not pid_sp:
+            continue
+        # detect_pitcher_role MUST get the MLBAM id — without it a dual-eligible
+        # starter (Detmers: ESPN position='RP' but 15 GS) can't be resolved via
+        # gamesStarted and silently falls back to the stale 'RP' tag (gotcha #8).
+        if detect_pitcher_role(p, mlbam_id=int(pid_sp)) != 'SP':
+            continue
+        sp_pitcher_ids.add(int(pid_sp))
     print(f'  resolving rotation for {len(sp_pitcher_ids)} healthy SPs...')
     sp_starts_by_pitcher = build_sp_starts_by_pitcher(
         sp_pitcher_ids, schedules_by_team, today, week_end)
