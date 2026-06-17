@@ -34,7 +34,7 @@ import duckdb
 import pandas as pd
 from pathlib import Path
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 STATCAST_2026 = ROOT / 'data' / 'research' / 'xfp_cache' / 'statcast_2026.parquet'
 POPULATION_PITCH_FLOOR = 200
 

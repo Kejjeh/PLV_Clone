@@ -15,7 +15,7 @@ import pandas as pd
 import sys
 sys.path.insert(0, '.')
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 
 from plv_clone.league_state import LeagueState

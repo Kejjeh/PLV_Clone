@@ -36,7 +36,7 @@ import numpy as np
 import pandas as pd
 from pathlib import Path
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 CACHE = REPO / 'data' / 'research' / 'xfp_cache'
 OUT_CSV = CACHE / 'hitter_lineup_features_2018_2026.csv'
 

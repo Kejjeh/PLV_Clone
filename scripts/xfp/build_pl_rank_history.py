@@ -22,7 +22,7 @@ import shutil
 import sys
 from pathlib import Path
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 CACHE = ROOT / 'data' / 'research' / 'pl_cache'
 
 CANONICAL = [

@@ -23,7 +23,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 SNAP = ROOT / 'data' / 'research' / 'projection_snapshots'
 RES = ROOT / 'data' / 'research'

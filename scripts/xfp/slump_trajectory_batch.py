@@ -18,7 +18,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-ROOT = Path("c:/Users/Joshua/plv_clone")
+from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 
 import duckdb

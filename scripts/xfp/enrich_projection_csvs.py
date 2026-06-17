@@ -40,9 +40,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
-OUT = ROOT / 'data' / 'outputs'
-RES = ROOT / 'data' / 'research'
+from plv_clone.paths import ROOT, DATA, OUTPUTS as OUT, RESEARCH as RES
 
 RH3 = OUT / 'xfp_rh3_projections.csv'
 RP3 = OUT / 'xfp_rp3_projections.csv'
@@ -52,7 +50,7 @@ HIT_MASTER = RES / 'hitter_ratings_master.csv'
 SP_MASTER = RES / 'sp_ratings_master.csv'
 RP_MASTER = RES / 'rp_ratings_master.csv'
 
-STATCAST_2025 = ROOT / 'data' / 'raw' / 'statcast_2025.parquet'
+STATCAST_2025 = DATA / 'raw' / 'statcast_2025.parquet'
 
 PRIOR_YEAR = 2025
 # Hard guard — never use 2020 (COVID) in any rolling computation. Today this

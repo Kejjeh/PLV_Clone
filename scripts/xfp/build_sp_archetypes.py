@@ -16,7 +16,7 @@ import pandas as pd, numpy as np, json
 from pathlib import Path
 import pyarrow.parquet as pq
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 HIST_CSV   = REPO / 'data/research/xfp_cache/sp_multiyr_2015_2025.csv'  # actually has 2015-2026
 PITCH_DIR  = REPO / 'data/processed/pitch_features'                    # pitch-level parquets 2021-2026
 AGE_CSV    = REPO / 'data/outputs/sp_age_career.csv'                    # pitcher / year / age / career_year

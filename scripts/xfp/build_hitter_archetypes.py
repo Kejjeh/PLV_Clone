@@ -26,7 +26,7 @@ from __future__ import annotations
 import pandas as pd, numpy as np, json
 from pathlib import Path
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 HIST_CSV = REPO / 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 AGE_CSV  = REPO / 'data/outputs/hitter_age_career.csv'
 PARK_CSV = REPO / 'data/research/xfp_cache/park_factors_2018_2026.csv'

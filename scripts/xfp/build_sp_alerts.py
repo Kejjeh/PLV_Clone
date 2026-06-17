@@ -11,7 +11,7 @@ import sys, duckdb, json, unicodedata, re, pandas as pd
 from pathlib import Path
 from datetime import date
 
-REPO = Path(r"c:\Users\Joshua\plv_clone")
+from plv_clone.paths import ROOT as REPO
 sys.path.insert(0, str(REPO))
 from app.espn_connector import get_my_roster_with_injuries, _get_league
 from plv_clone.utils.name_match import lookup_batter_id_cached

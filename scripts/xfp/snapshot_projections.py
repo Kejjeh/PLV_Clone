@@ -13,7 +13,7 @@ from datetime import date
 from pathlib import Path
 import shutil
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 SNAP = ROOT / 'data' / 'research' / 'projection_snapshots'
 

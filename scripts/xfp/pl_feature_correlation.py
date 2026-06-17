@@ -16,7 +16,7 @@ import pandas as pd
 import numpy as np
 from scipy.stats import spearmanr
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rprs1_projections.csv')
 PROJ['ros_rank'] = PROJ['xfp_ros'].rank(ascending=False, method='min')
 

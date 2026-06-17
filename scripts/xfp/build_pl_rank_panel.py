@@ -19,7 +19,7 @@ from plv_clone.utils.name_match import (
     _normalize, KNOWN_COLLISIONS, KNOWN_PITCHER_COLLISIONS,
 )
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 PL_DIR = ROOT / 'data' / 'research' / 'pl_historical'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'research' / 'historical_panel' / 'pl_rank_panel.parquet'

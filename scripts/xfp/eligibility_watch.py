@@ -20,10 +20,9 @@ from pathlib import Path
 import json
 import sys
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT, OUTPUTS as OUT, RESEARCH
 sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'data' / 'outputs'
-SNAPS = ROOT / 'data' / 'research' / 'eligibility_snapshots'
+SNAPS = RESEARCH / 'eligibility_snapshots'
 
 
 def main():

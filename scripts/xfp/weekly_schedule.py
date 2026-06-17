@@ -13,7 +13,7 @@ import argparse
 import json
 import requests
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 
 MLB_TEAM_ID_TO_ABBR = {

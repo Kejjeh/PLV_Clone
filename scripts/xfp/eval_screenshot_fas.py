@@ -14,9 +14,8 @@ import re
 import pandas as pd
 import numpy as np
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT, OUTPUTS as OUT
 sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'data' / 'outputs'
 
 FAS_FROM_SCREENSHOT = [
     'Hunter Goodman',

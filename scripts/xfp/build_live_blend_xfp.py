@@ -29,7 +29,7 @@ import numpy as np
 import pandas as pd
 from sklearn.linear_model import LinearRegression
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 RESEARCH = ROOT / 'data' / 'research'
 HP = RESEARCH / 'historical_panel'

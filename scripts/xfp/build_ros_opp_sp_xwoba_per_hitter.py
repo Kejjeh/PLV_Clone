@@ -36,7 +36,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "data" / "research" / "xfp_cache"
 # Statcast parquets are gitignored — live in the main repo's cache only.
-MAIN_CACHE = Path("C:/Users/Joshua/plv_clone/data/research/xfp_cache")
+from plv_clone.paths import CACHE as MAIN_CACHE
 
 ROLLING_CSV = CACHE / "rolling_hitters_2018_2026.csv"
 MULTIYR_CSV = CACHE / "hitters_multiyr_2015_2026.csv"

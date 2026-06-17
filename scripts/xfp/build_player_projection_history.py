@@ -39,7 +39,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 PANEL = ROOT / 'data' / 'research' / 'player_projection_history.parquet'
 

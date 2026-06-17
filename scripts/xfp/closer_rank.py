@@ -14,10 +14,8 @@ import unicodedata
 import re
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT, CACHE, OUTPUTS as OUT
 sys.path.insert(0, str(ROOT))
-OUT = ROOT / 'data' / 'outputs'
-CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 
 def _norm(s):

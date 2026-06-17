@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 
 

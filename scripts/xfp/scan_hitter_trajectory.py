@@ -10,7 +10,7 @@ from __future__ import annotations
 import pandas as pd, numpy as np, json
 from pathlib import Path
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 
 
 def bucket(x):

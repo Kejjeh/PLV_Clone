@@ -29,7 +29,7 @@ import pandas as pd
 
 sys.path.insert(0, '.')
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 
 # Roster positional needs (BrownU 8-team H2H — confirmed 2026-05-10/11)

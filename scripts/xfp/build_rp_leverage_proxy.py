@@ -16,7 +16,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 FG = ROOT / 'data/research/xfp_cache/fangraphs_rp_leverage_2018_2026.csv'
 IR = ROOT / 'data/research/xfp_cache/rp_ir_is_2018_2026.csv'
 OUT = ROOT / 'data/research/historical_panel/rp_leverage_proxy_panel.parquet'

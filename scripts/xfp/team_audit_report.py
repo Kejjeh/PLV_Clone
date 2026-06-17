@@ -32,7 +32,7 @@ import unicodedata
 import re
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
 RES = ROOT / 'data' / 'research'

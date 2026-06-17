@@ -54,7 +54,7 @@ import numpy as np
 import json
 from pathlib import Path
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 RP_MULTIYR    = REPO / 'data/research/xfp_cache/relievers_multiyr_2018_2026.csv'
 RP_BIP_CSV    = REPO / 'data/research/xfp_cache/rp_damage_gb_2018_2026.csv'
 AGE_CSV       = REPO / 'data/outputs/sp_age_career.csv'

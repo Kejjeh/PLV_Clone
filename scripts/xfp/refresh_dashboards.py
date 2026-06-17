@@ -23,7 +23,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 XFP_MODEL = ROOT / 'xfp-model'
 SCRIPTS = ROOT / 'scripts' / 'xfp'
 

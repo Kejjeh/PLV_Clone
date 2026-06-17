@@ -12,9 +12,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
-CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
-OUT = ROOT / 'data' / 'outputs'
+from plv_clone.paths import CACHE, OUTPUTS as OUT
 
 
 def main():

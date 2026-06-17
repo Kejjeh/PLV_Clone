@@ -14,7 +14,8 @@ import os
 import duckdb
 import pandas as pd
 
-ROOT = "c:/Users/Joshua/plv_clone"
+from plv_clone.paths import ROOT as _ROOT
+ROOT = str(_ROOT)
 ROLLING_CSV   = f"{ROOT}/data/research/xfp_cache/rolling_pitchers_2018_2026.csv"
 STATCAST_TMPL = f"{ROOT}/data/research/xfp_cache/statcast_{{yr}}.parquet"
 OUT_CSV       = f"{ROOT}/data/research/xfp_cache/pl_signals_split_day_2018_2026.csv"

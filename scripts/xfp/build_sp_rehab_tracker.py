@@ -16,7 +16,8 @@ from datetime import date
 pd.set_option('display.width', 260)
 pd.set_option('display.max_columns', 40)
 
-sys.path.insert(0, 'c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
+sys.path.insert(0, str(ROOT))
 from app.espn_connector import get_all_teams, get_my_roster_with_injuries
 
 SP_MULTIYR  = 'data/research/xfp_cache/sp_multiyr_2015_2025.csv'

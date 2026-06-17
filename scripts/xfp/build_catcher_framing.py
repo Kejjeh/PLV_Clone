@@ -36,7 +36,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 YEARS_FRAMING = list(range(2017, 2026))  # 2017 needed as prior for 2018 rows

@@ -28,7 +28,7 @@ import pandas as pd
 import numpy as np
 import re
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 EXT = ROOT / 'data' / 'research' / 'external_projections'
 OUT = ROOT / 'data' / 'outputs'
 

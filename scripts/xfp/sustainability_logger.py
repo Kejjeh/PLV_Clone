@@ -9,7 +9,7 @@ import csv
 from datetime import datetime
 from pathlib import Path
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 HISTORY = ROOT / 'data' / 'research' / 'sustainability_history.csv'
 
 SCHEMA = [

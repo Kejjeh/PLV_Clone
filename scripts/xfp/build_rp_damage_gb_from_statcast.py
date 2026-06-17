@@ -31,7 +31,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 
-REPO = Path(r'c:\Users\Joshua\plv_clone')
+from plv_clone.paths import ROOT as REPO
 RP_MULTIYR = REPO / 'data/research/xfp_cache/relievers_multiyr_2018_2026.csv'
 STATCAST_DIR = REPO / 'data/research/xfp_cache'
 OUT_CSV = REPO / 'data/research/xfp_cache/rp_damage_gb_2018_2026.csv'

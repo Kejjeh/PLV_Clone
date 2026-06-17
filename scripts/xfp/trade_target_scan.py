@@ -49,7 +49,7 @@ try:
 except Exception:  # pragma: no cover - graceful degrade
     _rp_decline_tier_map = lambda: {}  # noqa: E731
 
-ROOT = Path(r'c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 FA_SNAP_DIR = ROOT / 'data' / 'research' / 'fa_snapshots'
 MY_TEAM = 'New York Ligers'
