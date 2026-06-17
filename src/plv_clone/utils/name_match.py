@@ -410,6 +410,40 @@ def resolve_pitcher_id(
     return _try_sp() or _try_rp()
 
 
+def resolve_id(
+    name: str,
+    *,
+    kind: str,
+    team: Optional[str] = None,
+    position: Optional[str] = None,
+    role: Optional[str] = None,
+) -> Optional[int]:
+    """Unified, collision-safe name → MLBAM resolution — the single seam every
+    caller should reach for.
+
+    Routes to :func:`resolve_batter_id` or :func:`resolve_pitcher_id` by
+    ``kind``. Both consult the KNOWN_COLLISIONS tables and **safe-fail to None**
+    on an ambiguous collision rather than guessing, so a caller can't grab the
+    wrong same-name player (the Max Muncy LAD-vs-ATH footgun).
+
+    Args:
+        name: Player name as it appears in ESPN / model outputs.
+        kind: 'batter'/'hitter'/'H' or 'pitcher'/'SP'/'RP'/'P'.
+        team: Team abbreviation — required to disambiguate a colliding name.
+        position: Hitter position hint (second-line tie-breaker).
+        role: Pitcher role hint ('SP'/'RP') — orders which cache is checked.
+    """
+    k = (kind or "").strip().lower()
+    if k in ("batter", "hitter", "h"):
+        return resolve_batter_id(name, team=team, position=position)
+    if k in ("pitcher", "sp", "rp", "p"):
+        r = role or (kind.upper() if k in ("sp", "rp") else None)
+        return resolve_pitcher_id(name, team=team, role=r)
+    raise ValueError(
+        f"resolve_id: unknown kind {kind!r} (expected batter/hitter or pitcher/SP/RP)"
+    )
+
+
 # ── Pre-resolved name → batter-ID cache lookup ──────────────────────────
 
 _CACHE_DF: Optional[pd.DataFrame] = None

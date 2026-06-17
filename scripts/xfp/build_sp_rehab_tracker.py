@@ -96,9 +96,22 @@ def fold(s):
 
 
 def resolve_mlbam(name: str, multiyr_lookup: dict, cache: dict) -> int | None:
-    """Resolve name → MLBAM via sp_multiyr name index, then pybaseball fallback."""
+    """Resolve name → MLBAM. Collision-safe deep resolver first
+    (name_match.resolve_id consults KNOWN_PITCHER_COLLISIONS), then the
+    sp_multiyr name index, then pybaseball."""
     if name in cache and cache[name]:
         return int(cache[name])
+    # Collision-safe deep resolver first — never silently grab the wrong
+    # same-name pitcher. Safe-fails to None on an ambiguous collision (no team
+    # hint here), in which case we fall through to the legacy index + pybaseball.
+    try:
+        from plv_clone.utils.name_match import resolve_id as _resolve_id
+        pid = _resolve_id(name, kind="pitcher")
+        if pid:
+            cache[name] = int(pid)
+            return int(pid)
+    except Exception:
+        pass
     nf = fold(name)
     # sp_multiyr names are "Last, First" — build both formats
     parts = name.strip().split()
