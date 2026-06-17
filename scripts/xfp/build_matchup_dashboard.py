@@ -32,6 +32,7 @@ ROOT = Path(os.environ.get('PLV_ROOT', 'c:/Users/Joshua/plv_clone'))
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
+from plv_clone.utils.name_match import resolve_id, KNOWN_COLLISIONS as _KNOWN_COLLISIONS  # noqa: E402
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 
 # Layered display-tag library (validated 2026-06-03). All defensive — every
@@ -334,6 +335,30 @@ def load_projections():
                           'sigma_factor': r.get('batter_sigma_factor')}
                 for _, r in rh3.iterrows()}
 
+    # Collision-safe hitter lookup: build an id-keyed rh3 from the FULL (un-deduped)
+    # projection so a same-name hitter (Max Muncy LAD vs ATH) can be resolved by
+    # batter id + team in project_player, not just by name — which drop_duplicates
+    # collapses to one row. Module global; read by project_player's hitter branch.
+    global _RH3_BY_BATTER
+    _RH3_BY_BATTER = {}
+    _rh3_full = PROJECTIONS.rh3()
+    if 'batter' in _rh3_full.columns:
+        for _, r in _rh3_full.iterrows():
+            try:
+                _bid = int(r['batter'])
+            except (TypeError, ValueError):
+                continue
+            _RH3_BY_BATTER[_bid] = {
+                'per_game': r.get('xfp_rh3_per_game') or 0,
+                'per_pa': r.get('xfp_rh3_per_pa') or 0,
+                'prior_fp_per_pa': r.get('prior_fp_per_pa'),
+                'recency_form_gap': r.get('recency_form_gap'),
+                'sigma': r.get('xfp_rh3_sigma'),
+                'sigma_hetero_pa': r.get('xfp_rh3_sigma_hetero'),
+                'sigma_global_pa': r.get('xfp_rh3_sigma_global'),
+                'sigma_factor': r.get('batter_sigma_factor'),
+            }
+
     rp3 = PROJECTIONS.rp3(live_il=True).drop_duplicates('player_name')
     rp3['nk'] = rp3['player_name'].map(_norm)
     rp3_map = {r['nk']: {'per_start': r.get('xfp_rp3_per_start') or 0,
@@ -607,6 +632,7 @@ _LINEUP = {}
 _PARK = {}                   # MA4 DROPPED; kept as empty stub for backward compat
 _PSPLIT = {}
 _BAT_SIDE = {}
+_RH3_BY_BATTER = {}          # batter mlbam → rh3 info; collision-safe hitter lookup (Max Muncy LAD vs ATH)
 _IL_RETURNS = {}             # #10 — player_id → return_date from get_injury_details upstream cache
 _CALIB = 1.0
 LEAGUE_AVG_XWOBA = 0.310     # MA5 platoon normalization
@@ -1021,12 +1047,25 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         return out
 
     else:  # hitter
-        rh = rh3_map.get(nk, {})
+        # Collision-safe: a same-name hitter (Max Muncy LAD vs ATH) can't be keyed
+        # by name. For KNOWN_COLLISIONS, resolve the batter id via team and use the
+        # id-keyed rh3; otherwise the fast name key (behavior-preserving).
+        rh = None
+        coll_batter_mlbam = None
+        if name in _KNOWN_COLLISIONS:
+            _bid = resolve_id(name, kind='batter',
+                              team=getattr(player, 'proTeam', None) or None,
+                              position=pos)
+            if _bid is not None:
+                rh = _RH3_BY_BATTER.get(int(_bid))
+                coll_batter_mlbam = int(_bid)
+        if rh is None:
+            rh = rh3_map.get(nk, {})
         per_game_base = rh.get('per_game') or 0
         if not per_game_base or not rem: return out
 
         # MA3: lineup-spot adjuster (uses mlbam → lineup map)
-        batter_mlbam = player_mlbam_lookup(name)
+        batter_mlbam = coll_batter_mlbam or player_mlbam_lookup(name)
         # MA2 hitter: use rh3.recency_form_gap directly (#8 — no double-count;
         # rh3 includes the column as display-only, not in features).
         # Gap is xwoba_per_pa_last21_sh - prior_fp_per_pa. Convert to factor.
