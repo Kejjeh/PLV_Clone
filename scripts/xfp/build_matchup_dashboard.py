@@ -277,6 +277,63 @@ RP_APP_RATE = {
 }
 DEFAULT_RP_APP_RATE = 0.35
 
+# IL partial-credit fractions when no ESPN return date is known.
+# Logic: TEN/FIFTEEN-day DL with unknown return means ESPN hasn't set the date yet,
+# which typically happens early in the IL stint — player likely out most of the week.
+# SIXTY_DAY / INJURY_RESERVE / OUT: definitively zero.
+_IL_PARTIAL_CREDIT = {
+    'TEN_DAY_DL': 0.20,
+    'FIFTEEN_DAY_DL': 0.10,
+    'SIXTY_DAY_DL': 0.0,
+    'INJURY_RESERVE': 0.0,
+    'OUT': 0.0,
+}
+
+
+def load_rp_appearance_rates(n_days: int = 21) -> dict:
+    """Compute per-pitcher RP appearance rates from recent boxscore data.
+
+    Bayesian shrinkage toward role priors so sparse pitchers (just called up,
+    just acquired) stay anchored to their role's historical rate.
+
+    ALPHA=8: equivalent to 8 prior-weighted games. With 7 team games available
+    (~1 week), this gives ~46% weight to observed data and ~54% to the prior.
+    As the parquet accumulates more history the observed rate takes over.
+
+    Returns dict: mlbam_id (int) -> appearance_rate (float)
+    """
+    ALPHA = 8
+    try:
+        bp = pd.read_parquet(CACHE / 'boxscore_pitchers.parquet')
+    except Exception:
+        return {}
+    bp['game_date'] = pd.to_datetime(bp['game_date'])
+    cutoff = pd.Timestamp.today() - pd.Timedelta(days=n_days)
+    bp = bp[bp['game_date'] >= cutoff]
+    if len(bp) == 0:
+        return {}
+
+    # mlbam_id → role mapping from rprs2
+    try:
+        rp_df = pd.read_csv(ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv',
+                            usecols=['pitcher', 'role_lag1'])
+        mlbam_to_role = dict(zip(rp_df['pitcher'].astype(int), rp_df['role_lag1']))
+    except Exception:
+        mlbam_to_role = {}
+
+    appears = bp.groupby(['team_id', 'mlbam_id'])['game_pk'].nunique().reset_index()
+    appears.columns = ['team_id', 'mlbam_id', 'n_apps']
+    team_games = bp.groupby('team_id')['game_pk'].nunique().reset_index()
+    team_games.columns = ['team_id', 'n_team_games']
+    rates = appears.merge(team_games, on='team_id')
+
+    rates['role'] = rates['mlbam_id'].map(mlbam_to_role).fillna('middle')
+    rates['prior_rate'] = rates['role'].map(RP_APP_RATE).fillna(DEFAULT_RP_APP_RATE)
+    rates['app_rate'] = ((rates['n_apps'] + ALPHA * rates['prior_rate'])
+                         / (rates['n_team_games'] + ALPHA))
+    return dict(zip(rates['mlbam_id'].astype(int), rates['app_rate'].round(4)))
+
+
 ESPN_TO_MLB_TEAM = {
     'BAL': 110, 'BOS': 111, 'NYY': 147, 'TB': 139, 'TOR': 141,
     'CHW': 145, 'CWS': 145, 'CLE': 114, 'DET': 116, 'KC': 118, 'KCR': 118, 'MIN': 142,
@@ -389,7 +446,8 @@ def load_projections():
         rprs2_map[r['nk']] = {'xfp_ros': r.get('xfp_ros') or 0,
                               'xfp_full_year': r.get('xfp_full_year') or 0,
                               'role': r.get('role_lag1') or 'middle',
-                              'sigma': sigma}
+                              'sigma': sigma,
+                              'mlbam': int(r['pitcher']) if pd.notna(r.get('pitcher')) else None}
 
     team_strength = pd.read_csv(CACHE / 'team_strength_2026.csv')
     team_strength['team'] = team_strength['team'].str.upper()
@@ -628,6 +686,7 @@ def load_calibration_scalar():
 
 # Module-level lazy caches (populated on first call from main())
 _ADJUSTERS_ON = False        # master CLI flag
+_RP_APP_RATES: dict = {}     # mlbam_id -> observed app rate (Bayesian-shrunk)
 _MA2_HITTER_ON = False       # #6 — independent toggle for hitter MA2 (rh3.recency_form_gap)
 _MA2_SP_ON = False           # #6 — independent toggle for SP MA2 (rolling 21d)
 _HITTER_FORM = {}            # SP form keyed by mlbam (MA2 SP); hitters now use rh3 recency_form_gap directly
@@ -968,8 +1027,14 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
             else:
                 return out  # returns after window — zero
         else:
-            # No known return date — assume out for the week.
-            return out
+            # No ESPN return date. Apply small partial credit for short-IL types
+            # (TEN/FIFTEEN_DAY) because the missing date usually means the IL
+            # stint is early and the minimum eligible return may fall this week.
+            # SIXTY_DAY / INJURY_RESERVE / OUT → definitively zero.
+            partial = _IL_PARTIAL_CREDIT.get(inj, 0.0)
+            if partial <= 0.0:
+                return out
+            il_factor = partial
 
     # Effective pitcher role (gotcha #8): ESPN .position is stale for dual-
     # eligible pitchers (Detmers: position='RP' but starting). Resolve the real
@@ -1053,7 +1118,11 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         # former starter now relieving) is projected here via rprs2.
         rp_info = rprs2_map.get(nk, {})
         role = rp_info.get('role') or 'middle'
-        app_rate = RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE)
+        rp_mlbam = rp_info.get('mlbam')
+        # Use observed appearance rate (Bayesian-shrunk toward role prior) when
+        # available; fall back to static role rate for pitchers not in boxscore.
+        app_rate = (_RP_APP_RATES.get(int(rp_mlbam), RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
+                    if rp_mlbam else RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
         xfp_ros = rp_info.get('xfp_ros') or 0
         if not xfp_ros or not rem: return out
         # rest_of_season RoS / team games remaining (rough)
@@ -2869,6 +2938,10 @@ def main():
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
     # MA2-MA7: load adjuster data into module-level caches (only if enabled).
     global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS, _CALIB
+    global _RP_APP_RATES
+    # RP appearance rates are objective data (not an adjuster) — always load.
+    _RP_APP_RATES = load_rp_appearance_rates()
+    print(f'  RP appearance rates loaded: {len(_RP_APP_RATES)} pitchers from boxscore')
     if _ADJUSTERS_ON:
         _HITTER_FORM, _SP_FORM = load_recent_form_maps()  # SP form only used now
         _LINEUP = load_lineup_map()
