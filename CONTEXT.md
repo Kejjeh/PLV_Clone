@@ -70,7 +70,7 @@ The module owning *applied* league mechanics. Two distinct SP-cap faces, both re
 _Avoid_: decisions, scheduler, optimizer; conflating the chronological rule with the planning cap.
 
 **paths**:
-`src/plv_clone/paths.py` — the single source for the repo root + data locations (`ROOT`, `DATA`, `OUTPUTS`, `RESEARCH`, `CACHE`, `MODELS`, `XFP_DOCS`). Resolves `ROOT` from the package location (works from any CWD / machine) with a `PLV_ROOT` env override (CI → `$GITHUB_WORKSPACE`); `XFP_DOCS` honors `PLV_XFP_DOCS`. New/critical code imports from here; ~165 research one-off scripts still hardcode the path and migrate incrementally.
+`src/plv_clone/paths.py` — the single source for the repo root + data locations (`ROOT`, `DATA`, `OUTPUTS`, `RESEARCH`, `CACHE`, `MODELS`, `XFP_DOCS`). Resolves `ROOT` from the package location (works from any CWD / machine) with a `PLV_ROOT` env override (CI → `$GITHUB_WORKSPACE`); `XFP_DOCS` honors `PLV_XFP_DOCS`. New code, the 3 critical dashboards, and the ~80 maintained skill-driver + refresh-pipeline scripts import from here; ~94 stale `validate_*`/`fit_*`/research/`_`-prefixed one-offs still hardcode the path and migrate incrementally (they run from the repo root where the literal still resolves).
 _Avoid_: `Path('c:/Users/Joshua/plv_clone')`, per-script `ROOT`/`REPO` constants, env-var-with-hardcoded-default variants.
 
 **mlb_stats**:
