@@ -128,6 +128,58 @@ def _load_bs_week_hitter_actuals(week_start: date, yesterday: date) -> dict[str,
         return {}
 
 
+def compute_weekly_momentum(bs_h_week: dict, rh3_map: dict,
+                             bs_week: dict | None = None,
+                             rp3_map: dict | None = None) -> dict:
+    """Within-week Bayesian form signal keyed by normalized player name.
+
+    Compares each player's actual FP/game so far this week to their rh3/rp3
+    per-game/start projection.  Returns a momentum factor (1.0 = neutral) with
+    λ=0.15 shrinkage toward 1.0 so outlier single-game noise is damped.
+
+    Range before shrinkage: clipped [0.50, 2.00] → after λ: [0.925, 1.075].
+    Applied multiplicatively in project_player after all other adjusters.
+    Only fires when ≥1 game has been played this week.
+    """
+    LAMBDA = 0.15
+    MIN_GAMES = 1  # need at least 1 completed game
+    result: dict = {}
+
+    # bs_h_week keys use space-preserving normalization ('kyle schwarber');
+    # rh3_map / rp3_map use _norm's sorted-parts join ('kyleschwarber').
+    # Re-key through _norm before lookup so the dicts match.
+    def _rekey(raw_nk: str) -> str:
+        return _norm(raw_nk)  # _norm defined at module level
+
+    for raw_nk, data in bs_h_week.items():
+        n_games = len(data.get('games', []))
+        if n_games < MIN_GAMES:
+            continue
+        nk = _rekey(raw_nk)
+        expected_fpg = (rh3_map.get(nk) or {}).get('per_game') or 0
+        if expected_fpg <= 0.5:
+            continue  # skip edge cases: IL'd proj, brand-new call-up, etc.
+        actual_fpg = data['fp'] / n_games
+        ratio = max(0.50, min(2.00, actual_fpg / expected_fpg))
+        result[nk] = round(1.0 + LAMBDA * (ratio - 1.0), 4)
+
+    # SP / RP momentum from bs_week (same λ, keyed by _norm)
+    if bs_week and rp3_map:
+        for raw_nk, data in bs_week.items():
+            n_starts = len(data.get('starts', []))
+            if n_starts < MIN_GAMES:
+                continue
+            nk = _rekey(raw_nk)
+            expected = (rp3_map.get(nk) or {}).get('per_start') or 0
+            if expected <= 0.5:
+                continue
+            actual = data['fp'] / n_starts
+            ratio = max(0.50, min(2.00, actual / expected))
+            result[nk] = round(1.0 + LAMBDA * (ratio - 1.0), 4)
+
+    return result
+
+
 # Canonical IL statuses across ESPN. Any of these = IL'd; must be excluded
 # from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
 # per the user's spec — when in doubt, exclude.
@@ -252,6 +304,11 @@ SIGMA_PER_RP_GAME = 2.5       # std dev of RP per-game FP
 # ~rp3 overall median (8.8) / data-driven p25 (8.3); keeps their start in the
 # cap count + projection instead of silently dropping it.
 FALLBACK_SP_PER_START = 8.0
+
+# Rotation-gap predicted starts have ~80% probability of actually occurring
+# (confirmed ESPN-probable = 1.0). Applied per-start so a 2-start week with
+# one confirmed + one predicted gets the asymmetric discount correctly.
+_UNCONFIRMED_START_CONF = 0.80
 
 # Set MATCHUP_LEGACY_SIGMA=1 in env to force old fixed-σ aggregation (for
 # before/after comparison). Default: use per-player σ where available.
@@ -687,6 +744,7 @@ def load_calibration_scalar():
 # Module-level lazy caches (populated on first call from main())
 _ADJUSTERS_ON = False        # master CLI flag
 _RP_APP_RATES: dict = {}     # mlbam_id -> observed app rate (Bayesian-shrunk)
+_WEEKLY_MOMENTUM: dict = {}  # norm_name -> within-week form factor (λ=0.15 shrinkage)
 _MA2_HITTER_ON = False       # #6 — independent toggle for hitter MA2 (rh3.recency_form_gap)
 _MA2_SP_ON = False           # #6 — independent toggle for SP MA2 (rolling 21d)
 _HITTER_FORM = {}            # SP form keyed by mlbam (MA2 SP); hitters now use rh3 recency_form_gap directly
@@ -1092,12 +1150,19 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         for s in starts:
             opp_idx = ts_map.get(s['opp_team'], {}).get('bat_index') or 1.0
             opp_factor = max(0.80, min(1.20, 1.0 / opp_idx))
+            # Confidence: confirmed probables = 1.0; rotation-gap predictions
+            # are ~80% likely to occur (per _UNCONFIRMED_START_CONF).
+            confidence = 1.0 if s.get('confirmed', True) else _UNCONFIRMED_START_CONF
+            # Within-week momentum (λ=0.15 shrinkage toward neutral)
+            sp_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
             # MA7: residual calibration scalar (final pass). MA4 dropped per #5.
-            fp = per_start_base * opp_factor * recent_factor * _CALIB
+            fp = per_start_base * opp_factor * recent_factor * _CALIB * confidence * sp_momentum
             total += fp
             out['breakdown'].append({'date': s['date'], 'opp': s['opp_team'],
                                        'opp_idx': opp_idx, 'factor': opp_factor,
                                        'recent_factor': recent_factor,
+                                       'confidence': confidence,
+                                       'sp_momentum': sp_momentum,
                                        'fp': fp, 'type': 'start',
                                        'confirmed': s.get('confirmed', True)})
         out['fp'] = total
@@ -1214,9 +1279,11 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                     if opp_xwoba and opp_xwoba > 0:
                         platoon_factor = max(0.85, min(1.15, opp_xwoba / LEAGUE_AVG_XWOBA))
 
+            # Within-week momentum (λ=0.15 shrinkage toward neutral)
+            h_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
             # MA7: residual calibration as final scalar
             fp = (per_game_base * opp_factor * recent_factor * lineup_factor
-                  * park_factor * platoon_factor * il_factor * _CALIB)
+                  * park_factor * platoon_factor * il_factor * _CALIB * h_momentum)
             total += fp
             out['breakdown'].append({
                 'date': g['date'], 'opp': g['opp_team'],
@@ -1227,6 +1294,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                 'park_factor': park_factor,
                 'platoon_factor': platoon_factor,
                 'il_factor': il_factor,
+                'h_momentum': h_momentum,
                 'fp': fp, 'type': 'game',
             })
         out['fp'] = total
@@ -2919,15 +2987,15 @@ def main():
     _parser = argparse.ArgumentParser(add_help=False)
     _parser.add_argument('--with-adjusters', action='store_true',
                           help='Enable MA0-MA7 accuracy adjuster chain (default OFF — pending validation)')
-    _parser.add_argument('--bootstrap', action='store_true',
-                          help='Use Monte Carlo (lognormal) win-prob instead of normal-approx CDF')
+    _parser.add_argument('--no-bootstrap', action='store_true',
+                          help='Use normal-approx CDF for win-prob (default: lognormal MC simulation)')
     _parser.add_argument('-h', '--help', action='store_true')
     _args, _ = _parser.parse_known_args()
     if _args.help:
         _parser.print_help(); return
     global _ADJUSTERS_ON, _MA2_HITTER_ON, _MA2_SP_ON
     _ADJUSTERS_ON = _args.with_adjusters or os.environ.get('ADJUSTERS_ON') == '1'
-    _USE_BOOTSTRAP = _args.bootstrap or os.environ.get('WIN_PROB_BOOTSTRAP') == '1'
+    _USE_BOOTSTRAP = (not _args.no_bootstrap) and os.environ.get('WIN_PROB_BOOTSTRAP') != '0'
     # MA2 sub-toggles default to master flag (#6 — can be split independently
     # later via env vars if MAE shows one direction net-helps but the other doesn't)
     _MA2_HITTER_ON = _ADJUSTERS_ON and os.environ.get('MA2_HITTER_OFF') != '1'
@@ -2973,6 +3041,14 @@ def main():
     yesterday = today - timedelta(days=1)
     bs_week   = _load_bs_week_actuals(week_start, yesterday)        if week_start <= yesterday else {}
     bs_h_week = _load_bs_week_hitter_actuals(week_start, yesterday) if week_start <= yesterday else {}
+
+    # Within-week Bayesian momentum: compare each player's actual FP/game so
+    # far this week to their model projection. λ=0.15 shrinkage applied inside.
+    global _WEEKLY_MOMENTUM
+    _WEEKLY_MOMENTUM = compute_weekly_momentum(
+        bs_h_week, rh3_map, bs_week=bs_week, rp3_map=rp3_map)
+    if _WEEKLY_MOMENTUM:
+        print(f'  weekly momentum: {len(_WEEKLY_MOMENTUM)} players have mid-week form signal')
 
     print(f'  matchup period: {mu["period"]}')
     print(f'  week: {week_start} → {week_end} (today: {today})')
