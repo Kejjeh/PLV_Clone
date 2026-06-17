@@ -4,7 +4,7 @@
   "decision_id": "2026-06-16_jacob_latz_RP_001",
   "inputs": {
     "archetype_label": "COMMAND_MIDDLE",
-    "archetype_overall": 62,
+    "archetype_overall": 61,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 3.8153690500116597,
     "live_marginal": null,

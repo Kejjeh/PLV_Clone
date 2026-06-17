@@ -3,11 +3,11 @@
   "confidence": 1.0,
   "decision_id": "2026-06-16_tanner_scott_RP_001",
   "inputs": {
-    "archetype_label": "K_AND_CTRL_LITE_BULK",
+    "archetype_label": "LATE_INNING_STUFF_CTRL",
     "archetype_overall": 75,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 4.032229395551612,
-    "live_marginal": -7.0,
+    "live_marginal": -20.099999999999994,
     "model_rank": 12,
     "override_tag": null,
     "pl_rank": 3,
