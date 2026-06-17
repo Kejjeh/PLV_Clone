@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-06-17_luis_arraez_H_001",
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_SLAP",
+    "archetype_overall": 56,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 2.254457584433707,
+    "live_marginal": 19.599999999999994,
+    "model_rank": 57,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 1.93,
+    "replacement_delta": null
+  },
+  "mlbam_id": 650333,
+  "player_name": "Luis Arraez",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-17",
+  "verdict_top": "CAUTION"
+}

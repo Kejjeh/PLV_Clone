@@ -1,9 +1,9 @@
 {
-  "generated": "2026-06-16",
+  "generated": "2026-06-17",
   "upgrade_floor_fpp": -0.0769,
   "hit_upgrade_floor_xwoba": 0.297,
   "alert_count": 4,
-  "hitter_alert_count": 29,
+  "hitter_alert_count": 30,
   "alerts": [
     {
       "name": "Logan Henderson",
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 28.7,
       "xwoba_con": 0.372,
-      "rp3_rank": 14
+      "rp3_rank": 24
     },
     {
       "name": "Drew Anderson",
@@ -34,7 +34,7 @@
       "l4": "3/4",
       "whiff_pct": 27.9,
       "xwoba_con": 0.329,
-      "rp3_rank": 81
+      "rp3_rank": 26
     },
     {
       "name": "Spencer Miles",
@@ -49,7 +49,7 @@
       "l4": "2/4",
       "whiff_pct": 20.3,
       "xwoba_con": 0.349,
-      "rp3_rank": 16
+      "rp3_rank": 25
     },
     {
       "name": "Chase Dollander",
@@ -64,7 +64,7 @@
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
-      "rp3_rank": 12
+      "rp3_rank": 18
     }
   ],
   "hitter_alerts": [
@@ -72,13 +72,25 @@
       "name": "Max Muncy",
       "tier": "HIGH",
       "signals": [
-        "SigI-HIGH(gap=+0.097)"
+        "SigI-HIGH(gap=+0.093)"
       ],
-      "pa": 255,
-      "xwoba_szn": 0.393,
-      "xwoba_gap": 0.097,
-      "xwoba_con": 0.475,
+      "pa": 258,
+      "xwoba_szn": 0.39,
+      "xwoba_gap": 0.093,
+      "xwoba_con": 0.468,
       "rh3_rank": 29
+    },
+    {
+      "name": "Randal Grichuk",
+      "tier": "HIGH",
+      "signals": [
+        "SigI-HIGH(gap=+0.088)"
+      ],
+      "pa": 95,
+      "xwoba_szn": 0.384,
+      "xwoba_gap": 0.088,
+      "xwoba_con": 0.485,
+      "rh3_rank": 64
     },
     {
       "name": "Nathaniel Lowe",
@@ -86,23 +98,35 @@
       "signals": [
         "SigI-HIGH(gap=+0.080)"
       ],
-      "pa": 175,
-      "xwoba_szn": 0.377,
+      "pa": 177,
+      "xwoba_szn": 0.376,
       "xwoba_gap": 0.08,
-      "xwoba_con": 0.453,
-      "rh3_rank": 49
+      "xwoba_con": 0.455,
+      "rh3_rank": 51
     },
     {
       "name": "Carlos Cortes",
       "tier": "HIGH",
       "signals": [
-        "SigI-HIGH(gap=+0.072)"
+        "SigI-HIGH(gap=+0.069)"
       ],
-      "pa": 196,
-      "xwoba_szn": 0.369,
-      "xwoba_gap": 0.072,
-      "xwoba_con": 0.363,
+      "pa": 199,
+      "xwoba_szn": 0.366,
+      "xwoba_gap": 0.069,
+      "xwoba_con": 0.364,
       "rh3_rank": 18
+    },
+    {
+      "name": "Spencer Steer",
+      "tier": "HIGH",
+      "signals": [
+        "SigI-HIGH(gap=+0.069)"
+      ],
+      "pa": 275,
+      "xwoba_szn": 0.366,
+      "xwoba_gap": 0.069,
+      "xwoba_con": 0.424,
+      "rh3_rank": 49
     },
     {
       "name": "Paul Goldschmidt",
@@ -110,11 +134,11 @@
       "signals": [
         "SigI-HIGH(gap=+0.069)"
       ],
-      "pa": 175,
-      "xwoba_szn": 0.365,
+      "pa": 180,
+      "xwoba_szn": 0.366,
       "xwoba_gap": 0.069,
-      "xwoba_con": 0.406,
-      "rh3_rank": 59
+      "xwoba_con": 0.415,
+      "rh3_rank": 61
     },
     {
       "name": "Gabriel Moreno",
@@ -126,55 +150,31 @@
       "xwoba_szn": 0.365,
       "xwoba_gap": 0.069,
       "xwoba_con": 0.403,
-      "rh3_rank": 45
-    },
-    {
-      "name": "Spencer Steer",
-      "tier": "HIGH",
-      "signals": [
-        "SigI-HIGH(gap=+0.066)"
-      ],
-      "pa": 271,
-      "xwoba_szn": 0.363,
-      "xwoba_gap": 0.066,
-      "xwoba_con": 0.42,
       "rh3_rank": 47
-    },
-    {
-      "name": "Michael Busch",
-      "tier": "HIGH",
-      "signals": [
-        "SigI-HIGH(gap=+0.058)"
-      ],
-      "pa": 319,
-      "xwoba_szn": 0.355,
-      "xwoba_gap": 0.058,
-      "xwoba_con": 0.389,
-      "rh3_rank": 73
-    },
-    {
-      "name": "Jared Young",
-      "tier": "HIGH",
-      "signals": [
-        "SigI-HIGH(gap=+0.048)"
-      ],
-      "pa": 88,
-      "xwoba_szn": 0.344,
-      "xwoba_gap": 0.048,
-      "xwoba_con": 0.404,
-      "rh3_rank": 62
     },
     {
       "name": "Julio Rodriguez",
       "tier": "HIGH",
       "signals": [
-        "SigI-HIGH(gap=+0.047)"
+        "SigI-HIGH(gap=+0.045)"
       ],
-      "pa": 323,
-      "xwoba_szn": 0.343,
-      "xwoba_gap": 0.047,
-      "xwoba_con": 0.401,
+      "pa": 327,
+      "xwoba_szn": 0.342,
+      "xwoba_gap": 0.045,
+      "xwoba_con": 0.398,
       "rh3_rank": 13
+    },
+    {
+      "name": "Jared Young",
+      "tier": "HIGH",
+      "signals": [
+        "SigI-HIGH(gap=+0.044)"
+      ],
+      "pa": 91,
+      "xwoba_szn": 0.34,
+      "xwoba_gap": 0.044,
+      "xwoba_con": 0.395,
+      "rh3_rank": 65
     },
     {
       "name": "Bryce Eldridge",
@@ -186,7 +186,19 @@
       "xwoba_szn": 0.405,
       "xwoba_gap": 0.108,
       "xwoba_con": 0.477,
-      "rh3_rank": 83
+      "rh3_rank": 87
+    },
+    {
+      "name": "Curtis Mead",
+      "tier": "MONITOR",
+      "signals": [
+        "SigI-MONITOR(gap=+0.077)"
+      ],
+      "pa": 209,
+      "xwoba_szn": 0.374,
+      "xwoba_gap": 0.077,
+      "xwoba_con": 0.398,
+      "rh3_rank": 98
     },
     {
       "name": "Gary Sanchez",
@@ -198,19 +210,19 @@
       "xwoba_szn": 0.37,
       "xwoba_gap": 0.074,
       "xwoba_con": 0.384,
-      "rh3_rank": 143
+      "rh3_rank": 150
     },
     {
-      "name": "Curtis Mead",
+      "name": "J.P. Crawford",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.070)"
+        "SigI-MONITOR(gap=+0.065)"
       ],
-      "pa": 205,
-      "xwoba_szn": 0.366,
-      "xwoba_gap": 0.07,
-      "xwoba_con": 0.39,
-      "rh3_rank": 94
+      "pa": 237,
+      "xwoba_szn": 0.362,
+      "xwoba_gap": 0.065,
+      "xwoba_con": 0.373,
+      "rh3_rank": 86
     },
     {
       "name": "Luke Raley",
@@ -222,19 +234,31 @@
       "xwoba_szn": 0.359,
       "xwoba_gap": 0.062,
       "xwoba_con": 0.507,
-      "rh3_rank": 130
+      "rh3_rank": 137
     },
     {
-      "name": "Heriberto Hernandez",
+      "name": "Michael Busch",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.059)"
+        "SigI-MONITOR(gap=+0.061)"
       ],
-      "pa": 150,
+      "pa": 323,
+      "xwoba_szn": 0.357,
+      "xwoba_gap": 0.061,
+      "xwoba_con": 0.392,
+      "rh3_rank": 76
+    },
+    {
+      "name": "Jeremy Pena",
+      "tier": "MONITOR",
+      "signals": [
+        "SigI-MONITOR(gap=+0.060)"
+      ],
+      "pa": 159,
       "xwoba_szn": 0.356,
-      "xwoba_gap": 0.059,
-      "xwoba_con": 0.439,
-      "rh3_rank": 128
+      "xwoba_gap": 0.06,
+      "xwoba_con": 0.38,
+      "rh3_rank": 112
     },
     {
       "name": "Joc Pederson",
@@ -242,23 +266,23 @@
       "signals": [
         "SigI-MONITOR(gap=+0.058)"
       ],
-      "pa": 214,
+      "pa": 218,
       "xwoba_szn": 0.355,
       "xwoba_gap": 0.058,
       "xwoba_con": 0.388,
-      "rh3_rank": 91
+      "rh3_rank": 96
     },
     {
-      "name": "Jeremy Pena",
+      "name": "Heriberto Hernandez",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.058)"
+        "SigI-MONITOR(gap=+0.054)"
       ],
       "pa": 154,
-      "xwoba_szn": 0.354,
-      "xwoba_gap": 0.058,
-      "xwoba_con": 0.375,
-      "rh3_rank": 106
+      "xwoba_szn": 0.35,
+      "xwoba_gap": 0.054,
+      "xwoba_con": 0.436,
+      "rh3_rank": 135
     },
     {
       "name": "Jesus Sanchez",
@@ -270,7 +294,19 @@
       "xwoba_szn": 0.346,
       "xwoba_gap": 0.049,
       "xwoba_con": 0.418,
-      "rh3_rank": 111
+      "rh3_rank": 117
+    },
+    {
+      "name": "Francisco Alvarez",
+      "tier": "MONITOR",
+      "signals": [
+        "SigI-MONITOR(gap=+0.047)"
+      ],
+      "pa": 150,
+      "xwoba_szn": 0.343,
+      "xwoba_gap": 0.047,
+      "xwoba_con": 0.409,
+      "rh3_rank": 138
     },
     {
       "name": "Dominic Smith",
@@ -282,7 +318,7 @@
       "xwoba_szn": 0.342,
       "xwoba_gap": 0.045,
       "xwoba_con": 0.37,
-      "rh3_rank": 115
+      "rh3_rank": 121
     },
     {
       "name": "Jhonny Pereda",
@@ -294,67 +330,55 @@
       "xwoba_szn": 0.341,
       "xwoba_gap": 0.044,
       "xwoba_con": 0.378,
-      "rh3_rank": 120
-    },
-    {
-      "name": "Francisco Alvarez",
-      "tier": "MONITOR",
-      "signals": [
-        "SigI-MONITOR(gap=+0.040)"
-      ],
-      "pa": 146,
-      "xwoba_szn": 0.337,
-      "xwoba_gap": 0.04,
-      "xwoba_con": 0.404,
-      "rh3_rank": 131
-    },
-    {
-      "name": "Matt McLain",
-      "tier": "MONITOR",
-      "signals": [
-        "SigI-MONITOR(gap=+0.038)"
-      ],
-      "pa": 268,
-      "xwoba_szn": 0.334,
-      "xwoba_gap": 0.038,
-      "xwoba_con": 0.383,
-      "rh3_rank": 138
+      "rh3_rank": 127
     },
     {
       "name": "Kody Clemens",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.038)"
+        "SigI-MONITOR(gap=+0.041)"
       ],
-      "pa": 233,
-      "xwoba_szn": 0.334,
-      "xwoba_gap": 0.038,
-      "xwoba_con": 0.393,
-      "rh3_rank": 104
+      "pa": 238,
+      "xwoba_szn": 0.338,
+      "xwoba_gap": 0.041,
+      "xwoba_con": 0.397,
+      "rh3_rank": 110
     },
     {
       "name": "Troy Johnston",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.036)"
+        "SigI-MONITOR(gap=+0.035)"
       ],
-      "pa": 257,
-      "xwoba_szn": 0.333,
-      "xwoba_gap": 0.036,
-      "xwoba_con": 0.367,
-      "rh3_rank": 139
+      "pa": 261,
+      "xwoba_szn": 0.331,
+      "xwoba_gap": 0.035,
+      "xwoba_con": 0.364,
+      "rh3_rank": 147
+    },
+    {
+      "name": "Matt McLain",
+      "tier": "MONITOR",
+      "signals": [
+        "SigI-MONITOR(gap=+0.034)"
+      ],
+      "pa": 271,
+      "xwoba_szn": 0.331,
+      "xwoba_gap": 0.034,
+      "xwoba_con": 0.38,
+      "rh3_rank": 145
     },
     {
       "name": "Edmundo Sosa",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.030)"
+        "SigI-MONITOR(gap=+0.033)"
       ],
-      "pa": 117,
-      "xwoba_szn": 0.327,
-      "xwoba_gap": 0.03,
-      "xwoba_con": 0.4,
-      "rh3_rank": 134
+      "pa": 120,
+      "xwoba_szn": 0.33,
+      "xwoba_gap": 0.033,
+      "xwoba_con": 0.401,
+      "rh3_rank": 141
     },
     {
       "name": "Amed Rosario",
@@ -366,55 +390,43 @@
       "xwoba_szn": 0.327,
       "xwoba_gap": 0.031,
       "xwoba_con": 0.391,
-      "rh3_rank": 110
+      "rh3_rank": 116
     },
     {
       "name": "Gavin Sheets",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.031)"
+        "SigI-MONITOR(gap=+0.028)"
       ],
-      "pa": 234,
-      "xwoba_szn": 0.327,
-      "xwoba_gap": 0.031,
-      "xwoba_con": 0.374,
-      "rh3_rank": 89
+      "pa": 237,
+      "xwoba_szn": 0.325,
+      "xwoba_gap": 0.028,
+      "xwoba_con": 0.372,
+      "rh3_rank": 94
     },
     {
       "name": "Colson Montgomery",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.027)"
+        "SigI-MONITOR(gap=+0.026)"
       ],
-      "pa": 283,
-      "xwoba_szn": 0.324,
-      "xwoba_gap": 0.027,
+      "pa": 285,
+      "xwoba_szn": 0.322,
+      "xwoba_gap": 0.026,
       "xwoba_con": 0.421,
-      "rh3_rank": 81
-    },
-    {
-      "name": "Tyler Stephenson",
-      "tier": "MONITOR",
-      "signals": [
-        "SigI-MONITOR(gap=+0.027)"
-      ],
-      "pa": 202,
-      "xwoba_szn": 0.323,
-      "xwoba_gap": 0.027,
-      "xwoba_con": 0.392,
-      "rh3_rank": 149
+      "rh3_rank": 84
     },
     {
       "name": "Marcus Semien",
       "tier": "MONITOR",
       "signals": [
-        "SigI-MONITOR(gap=+0.025)"
+        "SigI-MONITOR(gap=+0.026)"
       ],
-      "pa": 287,
+      "pa": 291,
       "xwoba_szn": 0.322,
-      "xwoba_gap": 0.025,
-      "xwoba_con": 0.38,
-      "rh3_rank": 86
+      "xwoba_gap": 0.026,
+      "xwoba_con": 0.379,
+      "rh3_rank": 91
     }
   ],
   "my_active_sp_count": 8
