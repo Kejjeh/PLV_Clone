@@ -69,6 +69,10 @@ _Avoid_: decisions, scheduler, optimizer.
 The adapter module for the MLB Stats API. Owns `fetch_week_probables(week_start, week_end) → WeekProbables` and `resolve_mlbam(names) → dict[str, int]`. Keeps the remote dependency out of `cap_math` so cap math stays pure-over-data and testable with literals. Lives at `src/plv_clone/mlb_stats.py`.
 _Avoid_: mlb_api, statsapi_client.
 
+**functional role**:
+A pitcher's SP-vs-RP classification decided by REAL starts, never ESPN's stale `.position` tag. `detect_pitcher_role(player)` owns it: SP-only / RP-only eligibility short-circuits; a dual-eligible pitcher (SP **and** RP in `eligible_slots`, e.g. Detmers — tagged `RP` but starting) has its MLBAM id resolved internally and the role decided on `gamesStarted`. Callers never pass an id; the stale tag is a last resort only. Lives at `scripts/xfp/lib/pitcher_role.py`.
+_Avoid_: ESPN `.position` tag, `p.position == 'SP'` (the stale check this exists to replace).
+
 **xfp engine**:
 The deep *toolkit* of shared model helpers — `build_marcel_prior`, `compute_population_means`, `apply_shrinkage`, `cross_year_eval`, `fit_residual_ci`, `lookup_sigma`, `train_final`, `compute_replacement_delta`, `write_model_pkl`. Lives at `src/plv_clone/models/xfp/engine.py`. **Not an orchestrator** — each per-model file (`rh3.py`, `rp3.py`, `rprs2.py`) owns its own `fit_and_project` and composes the toolkit. Per-model orchestration is code, not config.
 _Avoid_: pipeline base class, model framework.

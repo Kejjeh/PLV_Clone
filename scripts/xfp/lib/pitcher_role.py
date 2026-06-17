@@ -70,23 +70,86 @@ def _position_tag(player_or_row) -> str:
     return (pos or '').upper()
 
 
+def _name_of(player_or_row) -> str:
+    """Player name from an ESPN player object or a df row."""
+    nm = getattr(player_or_row, 'name', None)
+    if nm is None and hasattr(player_or_row, 'get'):
+        nm = player_or_row.get('player_name') or player_or_row.get('name')
+    return (nm or '').strip()
+
+
+def _team_of(player_or_row):
+    """Pro-team abbreviation hint (for collision-safe resolution), or None."""
+    for attr in ('proTeam', 'pro_team'):
+        v = getattr(player_or_row, attr, None)
+        if v:
+            return str(v).upper()
+    if hasattr(player_or_row, 'get'):
+        for k in ('pro_team', 'team', 'team_abbr', 'proTeam'):
+            v = player_or_row.get(k)
+            if v:
+                return str(v).upper()
+    return None
+
+
+@lru_cache(maxsize=1024)
+def _resolve_pitcher_mlbam(name: str, team: str | None) -> int | None:
+    """Best-effort name -> MLBAM id for role detection. Collision-safe CSV
+    caches first (KNOWN_PITCHER_COLLISIONS), MLB Stats API as fallback. Cached
+    per (name, team). This is what lets ``detect_pitcher_role`` own resolution
+    so callers never have to pass an id."""
+    if not name:
+        return None
+    try:
+        from plv_clone.utils.name_match import resolve_pitcher_id
+        pid = resolve_pitcher_id(name, team=team)
+        if pid:
+            return int(pid)
+    except Exception:
+        pass
+    try:
+        from plv_clone.mlb_stats import resolve_mlbam
+        pid = resolve_mlbam([name]).get(name)
+        return int(pid) if pid else None
+    except Exception:
+        return None
+
+
 # ── public API ────────────────────────────────────────────────────────────────
 
 def detect_pitcher_role(
     player_or_row,
     mlbam_id: int | None = None,
     season: int = 2026,
+    *,
+    gs_lookup=None,
+    id_resolver=None,
 ) -> str:
     """
     Return 'SP' or 'RP' for a pitcher.
 
+    The module OWNS resolution: callers do not need to pass an id. For a
+    dual-eligible pitcher (SP and RP both in ``eligible_slots``, e.g. Detmers —
+    ESPN ``.position`` says 'RP' but he's starting) the role is decided on real
+    ``gamesStarted``, and the MLBAM id needed for that is resolved here from the
+    player's name. The stale ESPN ``.position`` tag is only a last resort when
+    resolution is exhausted, so a caller can no longer get a silent wrong answer
+    by forgetting to pass ``mlbam_id``.
+
     Args:
-        player_or_row: ESPN player object (has .eligibleSlots, .position, .playerId)
-                       OR a pandas Series / dict row with 'eligible_slots', 'position',
-                       'player_id' columns.
-        mlbam_id:      MLBAM pitcher ID — pass explicitly when known (avoids name lookup).
-                       If None, tries player_or_row.playerId then row['player_id'].
-        season:        Season year for MLB Stats API lookup (default 2026).
+        player_or_row: ESPN player object (has .eligibleSlots, .position, .name)
+                       OR a pandas Series / dict row with 'eligible_slots',
+                       'position', 'player_name' columns.
+        mlbam_id:      MLBAM pitcher ID — an optional optimisation. When omitted,
+                       the dual-eligible path resolves it internally.
+        season:        Season year for the gamesStarted lookup (default 2026).
+
+    Keyword-only seams (for tests — production leaves them None):
+        gs_lookup:   (mlbam_id, season) -> 'SP'|'RP'. Defaults to the live MLB
+                     Stats API gamesStarted source. Inject an in-memory adapter
+                     to test the dual-eligible path without the network.
+        id_resolver: (name, team) -> int|None. Defaults to the collision-safe
+                     CSV+API resolver. Inject to test without CSV/API.
     """
     elig = _elig_set(player_or_row)
     has_sp = 'SP' in elig
@@ -97,18 +160,17 @@ def detect_pitcher_role(
     if has_rp and not has_sp:
         return 'RP'
     if has_sp and has_rp:
-        # Dual-eligible: resolve via MLB Stats API using MLBAM ID only.
-        # Never use player_id from the ESPN row — that's ESPN's internal ID,
-        # not MLBAM, and will silently map to the wrong player.
+        # Dual-eligible: decide on real starts. Use a caller-supplied id if
+        # given, otherwise resolve it ourselves — never silently fall back to
+        # the stale ESPN .position tag while a real read is obtainable.
         pid = mlbam_id
         if pid is None:
-            # ESPN player objects have .playerId which is also ESPN's ID,
-            # not MLBAM. Don't use it — caller must supply mlbam_id explicitly
-            # (via build_role_lookup which reads it from rp3/rprs2 projections).
-            pass
+            resolver = id_resolver or _resolve_pitcher_mlbam
+            pid = resolver(_name_of(player_or_row), _team_of(player_or_row))
         if pid:
-            return _role_from_mlb_stats(int(pid), season)
-        # No MLBAM ID available — fall back to ESPN position tag
+            gs = gs_lookup or _role_from_mlb_stats
+            return gs(int(pid), season)
+        # Resolution exhausted — last resort only.
         return _position_tag(player_or_row) or 'SP'
 
     # No pitcher eligibility detected in slots — use position tag
