@@ -31,7 +31,13 @@ _DEFAULT_OUTPUTS = _REPO_ROOT / "data" / "outputs"
 
 RH3_NAME = "xfp_rh3_projections.csv"
 RP3_NAME = "xfp_rp3_projections.csv"
+RP3_IL_FIXED_NAME = "xfp_rp3_projections_il_fixed.csv"
 RPRS2_NAME = "xfp_rprs2_projections.csv"
+
+# The il_fixed shim (live ESPN IL status patched onto rp3) is preferred only
+# while it's fresh relative to the canonical rp3; older than this it's treated
+# as stale and we fall back to canonical (the matchup-audit freshness contract).
+IL_FIXED_MAX_STALE_SECONDS = 24 * 3600
 
 
 class ProjectionStore:
@@ -55,14 +61,35 @@ class ProjectionStore:
         """Hitter rest-of-season projections (per-game scale)."""
         return self._load(RH3_NAME)
 
-    def rp3(self) -> pd.DataFrame:
+    def rp3(self, live_il: bool = False) -> pd.DataFrame:
         """Starting-pitcher rest-of-season projections (per-start scale).
 
-        Returns the canonical projection. The live-IL override (il_fixed shim +
-        freshness guard) will be exposed here as ``rp3(live_il=True)`` when the
-        matchup migrates onto the store.
+        ``live_il=True`` prefers the ``il_fixed`` shim (live ESPN IL status
+        patched onto rp3) — but only while it's fresh relative to canonical;
+        once it's >24h staler than canonical it's ignored and canonical is used
+        (a regenerated rp3 must not be shadowed by a stale shim). This is the
+        freshness guard that used to live inline in the matchup's
+        ``_select_rp3_path``.
         """
-        return self._load(RP3_NAME)
+        if not live_il:
+            return self._load(RP3_NAME)
+        canonical = self._dir / RP3_NAME
+        shim = self._dir / RP3_IL_FIXED_NAME
+        if not shim.exists():
+            return self._load(RP3_NAME)
+        if not canonical.exists():
+            return self._load(RP3_IL_FIXED_NAME)
+        try:
+            stale = canonical.stat().st_mtime - shim.stat().st_mtime
+            if stale > IL_FIXED_MAX_STALE_SECONDS:
+                print(
+                    f"  ⚠ {RP3_IL_FIXED_NAME} is {stale / 3600:.1f}h older than "
+                    f"{RP3_NAME} — using canonical rp3. Re-run fix_il_flag_from_espn.py."
+                )
+                return self._load(RP3_NAME)
+        except OSError:
+            return self._load(RP3_NAME)
+        return self._load(RP3_IL_FIXED_NAME)
 
     def rprs2(self) -> pd.DataFrame:
         """Reliever rest-of-season projections (includes SV/HLD scoring)."""
