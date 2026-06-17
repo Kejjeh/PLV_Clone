@@ -56,10 +56,10 @@ except Exception as _tag_imp_err:
 
 def _load_rp3_proj():
     """Load xfp_rp3 projections for rank/recform/next_opp lookup, keyed by pitcher MLBAM."""
-    f = OUT / 'xfp_rp3_projections.csv'
-    if not f.exists():
+    from plv_clone.projections import PROJECTIONS
+    df = PROJECTIONS.rp3()
+    if df.empty:
         return {}
-    df = pd.read_csv(f)
     out = {}
     for _, r in df.iterrows():
         try:

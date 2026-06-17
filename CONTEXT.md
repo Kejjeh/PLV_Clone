@@ -73,6 +73,16 @@ _Avoid_: mlb_api, statsapi_client.
 A pitcher's SP-vs-RP classification decided by REAL starts, never ESPN's stale `.position` tag. `detect_pitcher_role(player)` owns it: SP-only / RP-only eligibility short-circuits; a dual-eligible pitcher (SP **and** RP in `eligible_slots`, e.g. Detmers — tagged `RP` but starting) has its MLBAM id resolved internally and the role decided on `gamesStarted`. Callers never pass an id; the stale tag is a last resort only. Lives at `scripts/xfp/lib/pitcher_role.py`.
 _Avoid_: ESPN `.position` tag, `p.position == 'SP'` (the stale check this exists to replace).
 
+**ProjectionStore**:
+The single seam for loading the validated projection artifacts (`rh3` / `rp3` /
+`rprs2` CSVs). Memoizes per process and resolves paths relative to the repo root,
+so dashboards/skills stop reading the CSVs inline with their own path constants.
+`from plv_clone.projections import PROJECTIONS` → `PROJECTIONS.rh3()/rp3()/rprs2()`.
+The live-IL override (il_fixed shim + freshness guard) will land here as
+`rp3(live_il=True)` when the matchup migrates onto it. Lives at
+`src/plv_clone/projections.py`.
+_Avoid_: per-script `RH3_PROJ`/`RP3_PROJ` path constants, inline `pd.read_csv` of the projection CSVs.
+
 **xfp engine**:
 The deep *toolkit* of shared model helpers — `build_marcel_prior`, `compute_population_means`, `apply_shrinkage`, `cross_year_eval`, `fit_residual_ci`, `lookup_sigma`, `train_final`, `compute_replacement_delta`, `write_model_pkl`. Lives at `src/plv_clone/models/xfp/engine.py`. **Not an orchestrator** — each per-model file (`rh3.py`, `rp3.py`, `rprs2.py`) owns its own `fit_and_project` and composes the toolkit. Per-model orchestration is code, not config.
 _Avoid_: pipeline base class, model framework.

@@ -892,31 +892,28 @@ def load_boom_stack_payload() -> dict:
     return {'meta': meta, 'by_pitcher': by_pid}
 
 
-def _proj_value_map(path: Path, id_col: str, val_col: str) -> dict:
-    """id(int) -> rounded model value from a projection CSV. Fail-soft: returns
-    {} on any error / missing columns so a stale or absent projection file can
-    never break the dashboard build."""
+def _proj_value_map(df, id_col: str, val_col: str) -> dict:
+    """id(int) -> rounded model value from a projection DataFrame (loaded via the
+    ProjectionStore). Fail-soft: returns {} on any error / missing columns so a
+    stale or absent projection can never break the dashboard build."""
     try:
-        if not path.exists():
-            print(f'  model proj absent: {path.name} (axis will be null)', flush=True)
+        if df is None or df.empty or id_col not in df.columns or val_col not in df.columns:
             return {}
-        d = pd.read_csv(path, usecols=lambda c: c in (id_col, val_col))
-        if id_col not in d.columns or val_col not in d.columns:
-            return {}
-        d = d.dropna(subset=[id_col, val_col])
+        d = df[[id_col, val_col]].dropna(subset=[id_col, val_col])
         return {int(r[id_col]): round(float(r[val_col]), 3) for _, r in d.iterrows()}
     except Exception as e:
-        print(f'  model proj load failed ({path.name}): {e}', flush=True)
+        print(f'  model proj value map failed ({val_col}): {e}', flush=True)
         return {}
 
 
 def _rh3_primary_pos_map() -> dict:
     """batter(int) -> MLB primary_position string (POS-filter fallback for FAs)."""
     try:
-        d = pd.read_csv(RH3_PROJ, usecols=lambda c: c in ('batter', 'primary_position'))
-        if 'primary_position' not in d.columns:
+        from plv_clone.projections import PROJECTIONS
+        d = PROJECTIONS.rh3()
+        if d.empty or 'primary_position' not in d.columns or 'batter' not in d.columns:
             return {}
-        d = d.dropna(subset=['batter', 'primary_position'])
+        d = d[['batter', 'primary_position']].dropna(subset=['batter', 'primary_position'])
         return {int(r['batter']): str(r['primary_position']) for _, r in d.iterrows()}
     except Exception as e:
         print(f'  rh3 primary_position map failed: {e}', flush=True)
@@ -977,11 +974,12 @@ def build_payload():
     annotate_current_year_rows(rp_records,     current_year, roster_map, 'rp')
 
     print('Joining validated-model projections (rh3/rp3/rprs2) for quadrant axes...', flush=True)
-    annotate_model_axis(hitter_records, 'batter', _proj_value_map(RH3_PROJ, 'batter', 'xfp_rh3_per_game'),
+    from plv_clone.projections import PROJECTIONS
+    annotate_model_axis(hitter_records, 'batter', _proj_value_map(PROJECTIONS.rh3(), 'batter', 'xfp_rh3_per_game'),
                         'rh3', current_year, pos_map=_rh3_primary_pos_map())
-    annotate_model_axis(sp_records, 'pitcher', _proj_value_map(RP3_PROJ, 'pitcher', 'xfp_rp3_per_start'),
+    annotate_model_axis(sp_records, 'pitcher', _proj_value_map(PROJECTIONS.rp3(), 'pitcher', 'xfp_rp3_per_start'),
                         'rp3', current_year)
-    annotate_model_axis(rp_records, 'pitcher', _proj_value_map(RPRS2_PROJ, 'pitcher', 'xfp_ros'),
+    annotate_model_axis(rp_records, 'pitcher', _proj_value_map(PROJECTIONS.rprs2(), 'pitcher', 'xfp_ros'),
                         'rprs2', current_year)
 
     print('Loading boom/bust/variance payload (stream_the_stack)...', flush=True)
