@@ -22,11 +22,11 @@ import json
 import sys
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT  # single source for the repo root (was a hardcoded literal)
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
 
-WEEKLY_SP_CAP = 10  # BrownU starts/week cap
+from plv_clone.cap_math import SP_CAP as WEEKLY_SP_CAP  # BrownU 10-starts/week cap (single source)
 
 
 def main():

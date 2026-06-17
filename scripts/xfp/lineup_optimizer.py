@@ -30,11 +30,12 @@ import requests
 
 sys.path.insert(0, '.')
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT  # single source for the repo root (was a hardcoded literal)
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
-WEEK_CAP_SP_STARTS = 10  # BrownU league rule
+from plv_clone.cap_math import SP_CAP, cap_excess_starts  # single source for the SP-cap rule
+WEEK_CAP_SP_STARTS = SP_CAP  # BrownU 10-starts/week cap (was a local literal)
 
 # MLB team_id → tricode mapping
 TEAM_ID_TO_ABBR = {
@@ -161,9 +162,14 @@ def main():
     starts['xfp_per_start_sched'] = starts['xfp_per_start_sched'].fillna(10.0)
     starts['xfp_per_start'] = starts['xfp_per_start'].fillna(starts['xfp_per_start_sched'])
 
-    # Rank globally by xfp_per_start_sched, descending
+    # Rank globally by xfp_per_start_sched, descending (display column).
     starts['rank'] = starts['xfp_per_start_sched'].rank(ascending=False, method='min').astype(int)
-    starts['count_toward_cap'] = starts['rank'] <= WEEK_CAP_SP_STARTS
+    # Cap which starts count via the canonical planning cap (cap_math): start the
+    # best SP_CAP by projected FP, bench the rest. cap_excess_starts takes EXACTLY
+    # the top SP_CAP (stable tie-break) — unlike rank<=cap, which over-counts when
+    # ties straddle the boundary.
+    _excess = cap_excess_starts(starts['xfp_per_start_sched'].tolist(), WEEK_CAP_SP_STARTS)
+    starts['count_toward_cap'] = [i not in _excess for i in range(len(starts))]
     starts['decision'] = starts['count_toward_cap'].map(lambda x: 'START' if x else 'BENCH (cap)')
 
     total = len(starts)

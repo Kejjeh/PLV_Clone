@@ -30,8 +30,10 @@ from pathlib import Path
 from collections import defaultdict
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT  # single source for the repo root (was a hardcoded literal)
 sys.path.insert(0, str(ROOT))
+
+from plv_clone.cap_math import SP_CAP  # single source for the 10-starts/week cap
 
 OUT = ROOT / 'data' / 'outputs'
 MY_TEAM_NAME = 'New York Ligers'
@@ -179,7 +181,7 @@ def fill_slots(players: list[dict]) -> tuple[dict, list]:
     from datetime import date as _date
     days_remaining = max((pd.Timestamp(SEASON_END_DATE).date() - _date.today()).days, 0)
     weeks_remaining = days_remaining / 7
-    TEAM_SP_STARTS_CAP = int(round(weeks_remaining * 10))  # 10 SP starts/week
+    TEAM_SP_STARTS_CAP = int(round(weeks_remaining * SP_CAP))  # SP_CAP starts/week
 
     available = sorted(players, key=lambda x: -x['value'])
     assigned = {}

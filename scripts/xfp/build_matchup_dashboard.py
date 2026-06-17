@@ -32,7 +32,11 @@ from plv_clone.paths import ROOT, XFP_DOCS  # noqa: E402  (single source for rep
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
-from plv_clone.utils.name_match import resolve_id, KNOWN_COLLISIONS as _KNOWN_COLLISIONS  # noqa: E402
+from plv_clone.utils.name_match import (  # noqa: E402
+    resolve_id,
+    KNOWN_COLLISIONS as _KNOWN_COLLISIONS,
+    KNOWN_PITCHER_COLLISIONS as _KNOWN_PITCHER_COLLISIONS,
+)
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 
 # Layered display-tag library (validated 2026-06-03). All defensive — every
@@ -797,6 +801,24 @@ def _resolve_mlbam_via_api(name, cache={}):
     return pid
 
 
+def _resolve_pitcher_mlbam(name, *, team=None, role=None):
+    """Collision-safe pitcher name → MLBAM id — the single seam for resolving a
+    rostered/FA pitcher's id in this module (mirrors the hitter collision guard
+    in project_player).
+
+    For a same-name pitcher (KNOWN_PITCHER_COLLISIONS, e.g. the two Logan Allens)
+    disambiguate via resolve_id(team=...) BEFORE the name-based lookups, which
+    would otherwise grab whichever same-name row landed in the cache first. For
+    every non-colliding name this is byte-identical to the prior
+    `player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)` path.
+    """
+    if name in _KNOWN_PITCHER_COLLISIONS:
+        pid = resolve_id(name, kind='pitcher', team=(team or None), role=role)
+        if pid is not None:
+            return int(pid)
+    return player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)
+
+
 def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
     """Adapter — call `fetch_week_probables` once and reshape the result into
     `{mlbam: [game_dict]}` matching the original SP-start payload shape.
@@ -956,7 +978,9 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
     pitch_mlbam = None
     eff_sp = False
     if pos in ('SP', 'RP', 'P'):
-        pitch_mlbam = player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)
+        pitch_mlbam = _resolve_pitcher_mlbam(
+            name, team=team or None,
+            role=(pos if pos in ('SP', 'RP') else None))
         eff_sp = (detect_pitcher_role(player, mlbam_id=int(pitch_mlbam)) == 'SP'
                   if pitch_mlbam else pos == 'SP')
 
@@ -978,7 +1002,13 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         starts = [s for s in all_starts
                   if today_s <= s['date'] <= week_end_s]
 
-        rp_info = rp3_map.get(nk, {})
+        # Collision-safe: for a same-name SP key rp3 by the resolved id, not the
+        # shared norm-name key (which would grab whichever Logan Allen loaded first).
+        rp_info = {}
+        if name in _KNOWN_PITCHER_COLLISIONS and mlbam:
+            rp_info = rp3_by_mlbam.get(int(mlbam), {})
+        if not rp_info:
+            rp_info = rp3_map.get(nk, {})
         if not starts:
             return out
         # Fallback for SPs absent from rp3 (rookies/recent call-ups, e.g.
@@ -1665,7 +1695,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         if schedules_by_team and today and week_end:
             mlbam_by_name = {}
             for c in candidates:
-                pid = _resolve_mlbam_via_api(c['name'])
+                pid = _resolve_pitcher_mlbam(c['name'], team=c.get('team'), role='SP')
                 if pid:
                     mlbam_by_name[c['name']] = int(pid)
             if mlbam_by_name:
@@ -1706,7 +1736,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             c['confirmed'] = ns.get('confirmed', False)
 
             # Layered display tags — all defensive (returns {} on failure).
-            mlbam = _resolve_mlbam_via_api(c['name'])
+            mlbam = _resolve_pitcher_mlbam(c['name'], team=c.get('team'), role='SP')
             c['mlbam'] = int(mlbam) if mlbam else None
             bs = compute_boom_stack(c['mlbam'], c['rec_form'], opp,
                                     rp3_rank=c['rp3_rank']) if c['mlbam'] else {}
@@ -1892,7 +1922,7 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
         inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
         if inj in ('SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
             continue
-        pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+        pid = _resolve_pitcher_mlbam(p.name, team=(getattr(p, 'proTeam', None) or None), role='SP')
         if not pid:
             continue
         per_player_start = week_start
@@ -2524,7 +2554,7 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
                 if is_il_player(p):
                     # IL'd SPs are not pitching this week — skip.
                     continue
-                pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+                pid = _resolve_pitcher_mlbam(p.name, team=(p.proTeam or None), role='SP')
                 if not pid:
                     continue
                 team_abbr = (p.proTeam or '').upper()
@@ -2903,7 +2933,7 @@ def main():
         if inj_p in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
                      'INJURY_RESERVE', 'OUT'):
             continue
-        pid_sp = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+        pid_sp = _resolve_pitcher_mlbam(p.name, team=(getattr(p, 'proTeam', None) or None), role='SP')
         if not pid_sp:
             continue
         # detect_pitcher_role MUST get the MLBAM id — without it a dual-eligible
