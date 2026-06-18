@@ -1,8 +1,8 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-06-17  
+**Generated:** 2026-06-18  
 **Source:** `data/outputs/predictions_history.csv`  
-**Backfilled rows:** 150  
+**Backfilled rows:** 314  
 **Minimum N per bucket to trust:** 5
 
 ## 1. Periods covered
@@ -15,11 +15,11 @@
 | 5 | 7 | 448.9 | 450.2 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 6 | 7 | 484.8 | 552.9 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 7 | 16 | 351.0 | 300.0 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline_pre_versioning |
-| 8 | 7 | 542.7 | 453.0 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
-| 9 | 7 | 587.0 | 543.0 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
-| 10 | 7 | 472.3 | 487.2 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
-| 11 | 7 | 450.8 | 493.3 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
-| 12 | 7 | 406.5 | 479.2 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
+| 8 | 49 | 364.2 | 289.8 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline, baseline_pre_versioning |
+| 9 | 39 | 312.1 | 292.1 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
+| 10 | 43 | 262.6 | 343.4 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
+| 11 | 11 | 450.8 | 493.3 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
+| 12 | 57 | 406.5 | 479.2 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 13 | 7 | 603.7 | 512.6 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 14 | 7 | 563.1 | 429.5 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 15 | 7 | 562.5 | 443.9 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
@@ -37,9 +37,11 @@ Error = projected − actual. Bias > 0 means model over-projects.
 
 | Model | n | my MAE | my RMSE | my bias | opp MAE | opp RMSE | opp bias |
 |---|---|---|---|---|---|---|---|
+| `MA_v1` | 74 | 100.8 | 134.2 | +99.3 | 113.8 | 150.1 | +97.0 |
 | `backfill_2024_bayes_shrink` | 84 | 74.4 | 133.3 | -43.5 | 72.4 | 135.2 | -53.2 |
 | `backfill_2025_bayes_shrink` | 57 | 70.9 | 104.2 | -30.9 | 74.0 | 104.2 | -45.2 |
-| `baseline_pre_versioning` | 9 | 56.1 | 58.7 | -56.1 | 27.3 | 28.9 | -27.3 |
+| `baseline` | 74 | 78.7 | 111.7 | +72.6 | 100.6 | 127.8 | +68.0 |
+| `baseline_pre_versioning` | 25 | 37.1 | 44.3 | -33.0 | 39.2 | 44.6 | +12.4 |
 
 ## 3. Error metrics — latest snapshot per (period, model)
 
@@ -60,16 +62,27 @@ This is the "what the dashboard showed at end of week" view.
 | 7 | `backfill_2024_bayes_shrink` | 315.6 | 429.1 | -113.5 | 322.9 | 386.7 | -63.8 |
 | 7 | `backfill_2025_bayes_shrink` | 457.7 | 442.0 | +15.7 | 506.2 | 578.1 | -71.9 |
 | 7 | `baseline_pre_versioning` | 323.7 | 351.0 | -27.3 | 281.5 | 300.0 | -18.5 |
+| 8 | `MA_v1` | 362.0 | 364.2 | -2.2 | 346.4 | 289.8 | +56.6 |
 | 8 | `backfill_2024_bayes_shrink` | 327.7 | 349.2 | -21.5 | 315.1 | 373.6 | -58.5 |
 | 8 | `backfill_2025_bayes_shrink` | 457.7 | 432.7 | +25.0 | 465.5 | 541.2 | -75.7 |
+| 8 | `baseline` | 352.7 | 364.2 | -11.5 | 338.0 | 289.8 | +48.2 |
+| 8 | `baseline_pre_versioning` | 342.9 | 364.2 | -21.2 | 341.7 | 289.8 | +51.9 |
+| 9 | `MA_v1` | 308.1 | 312.1 | -4.0 | 288.8 | 292.1 | -3.3 |
 | 9 | `backfill_2024_bayes_shrink` | 310.5 | 331.7 | -21.2 | 321.1 | 445.8 | -124.7 |
 | 9 | `backfill_2025_bayes_shrink` | 481.7 | 565.7 | -84.0 | 473.0 | 393.7 | +79.3 |
+| 9 | `baseline` | 301.8 | 312.1 | -10.3 | 282.4 | 292.1 | -9.7 |
+| 10 | `MA_v1` | 315.2 | 262.6 | +52.6 | 404.9 | 343.4 | +61.5 |
 | 10 | `backfill_2024_bayes_shrink` | 313.4 | 344.1 | -30.7 | 356.7 | 288.4 | +68.3 |
 | 10 | `backfill_2025_bayes_shrink` | 489.7 | 528.6 | -38.9 | 502.3 | 521.2 | -18.9 |
+| 10 | `baseline` | 310.0 | 262.6 | +47.4 | 397.9 | 343.4 | +54.5 |
+| 11 | `MA_v1` | 578.3 | 319.6 | +258.7 | 602.3 | 324.4 | +277.9 |
 | 11 | `backfill_2024_bayes_shrink` | 310.1 | 374.3 | -64.2 | 351.4 | 454.1 | -102.7 |
 | 11 | `backfill_2025_bayes_shrink` | 531.4 | 565.0 | -33.6 | 504.1 | 477.6 | +26.5 |
+| 11 | `baseline` | 536.0 | 319.6 | +216.4 | 548.6 | 324.4 | +224.2 |
+| 12 | `MA_v1` | 400.9 | 167.2 | +233.7 | 423.2 | 185.5 | +237.7 |
 | 12 | `backfill_2024_bayes_shrink` | 314.9 | 256.8 | +58.1 | 348.5 | 375.4 | -26.9 |
 | 12 | `backfill_2025_bayes_shrink` | 533.9 | 502.5 | +31.4 | 461.2 | 489.8 | -28.6 |
+| 12 | `baseline` | 369.9 | 167.2 | +202.7 | 386.4 | 185.5 | +200.9 |
 | 13 | `backfill_2024_bayes_shrink` | 338.7 | 415.2 | -76.5 | 350.5 | 371.7 | -21.2 |
 | 13 | `backfill_2025_bayes_shrink` | 458.5 | 431.0 | +27.5 | 462.7 | 507.1 | -44.4 |
 | 14 | `backfill_2024_bayes_shrink` | 343.9 | 314.0 | +29.9 | 329.9 | 402.9 | -73.0 |
@@ -93,6 +106,15 @@ This is the "what the dashboard showed at end of week" view.
 
 Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈ actual win rate. Buckets with N < 5 are flagged INSUFFICIENT.
 
+### `MA_v1` (n=74)
+
+| Bucket | n | mean predicted | actual win rate | abs gap | status |
+|---|---|---|---|---|---|
+| 0.00-0.25 | 19 | 0.074 | 0.000 | 0.074 | OK |
+| 0.25-0.50 | 18 | 0.359 | 0.167 | 0.192 | OK |
+| 0.50-0.75 | 18 | 0.592 | 0.389 | 0.203 | OK |
+| 0.75-1.00 | 19 | 0.850 | 1.000 | 0.150 | OK |
+
 ### `backfill_2024_bayes_shrink` (n=84)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
@@ -111,14 +133,23 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 | 0.50-0.75 | 26 | 0.589 | 0.500 | 0.089 | OK |
 | 0.75-1.00 | 2 | 0.760 | 1.000 | 0.240 | INSUFFICIENT |
 
-### `baseline_pre_versioning` (n=9)
+### `baseline` (n=74)
+
+| Bucket | n | mean predicted | actual win rate | abs gap | status |
+|---|---|---|---|---|---|
+| 0.00-0.25 | 15 | 0.041 | 0.000 | 0.041 | OK |
+| 0.25-0.50 | 19 | 0.365 | 0.000 | 0.365 | OK |
+| 0.50-0.75 | 23 | 0.608 | 0.522 | 0.086 | OK |
+| 0.75-1.00 | 17 | 0.832 | 1.000 | 0.168 | OK |
+
+### `baseline_pre_versioning` (n=25)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
 | 0.00-0.25 | 0 | — | — | — | empty |
-| 0.25-0.50 | 0 | — | — | — | empty |
-| 0.50-0.75 | 7 | 0.642 | 1.000 | 0.358 | OK |
-| 0.75-1.00 | 2 | 0.953 | 1.000 | 0.047 | INSUFFICIENT |
+| 0.25-0.50 | 6 | 0.447 | 1.000 | 0.553 | OK |
+| 0.50-0.75 | 11 | 0.594 | 1.000 | 0.406 | OK |
+| 0.75-1.00 | 8 | 0.889 | 1.000 | 0.111 | OK |
 
 ## 5. Verdict
 
