@@ -18,6 +18,7 @@ Output:
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -98,7 +99,7 @@ def main():
 
     print('\nTop 15 SPs by 2-start-week rate:')
     # Add names from rp3 if available
-    rp = pd.read_csv(ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv')[['pitcher', 'player_name']].drop_duplicates('pitcher')
+    rp = PROJECTIONS.rp3()[['pitcher', 'player_name']].drop_duplicates('pitcher')
     avg_starts = avg_starts.merge(rp, on='pitcher', how='left')
     top = avg_starts.sort_values('pct_2plus_weeks', ascending=False).head(15)
     for _, r in top.iterrows():

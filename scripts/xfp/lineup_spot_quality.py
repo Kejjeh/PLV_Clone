@@ -13,6 +13,7 @@ Output: data/outputs/lineup_spot_quality.csv
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -81,7 +82,7 @@ def main():
     out = lineup_splits()
     if out.empty:
         print('  no data'); return
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     out = out.merge(rh[['batter','player_name','team','rank']], on='batter', how='left')
     fname = OUT / 'lineup_spot_quality.csv'
     out.to_csv(fname, index=False)

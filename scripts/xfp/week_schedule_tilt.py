@@ -14,6 +14,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import requests
 import sys
 
@@ -91,7 +92,7 @@ def main():
     # Mapping from our per-batter team to MLB team_id (we need to know what team each
     # Ligers hitter plays for to fetch THAT team's schedule). Use rh3 'team' which is
     # a 2-3 letter abbreviation.
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
 
     # Pull schedule for the next 7 days
     sched = fetch_team_schedule({}, days_ahead=7)

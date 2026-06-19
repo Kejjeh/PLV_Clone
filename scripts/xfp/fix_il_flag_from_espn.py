@@ -22,6 +22,7 @@ import unicodedata
 import re
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
@@ -42,7 +43,7 @@ def _norm(s):
 
 
 def main():
-    rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp3 = PROJECTIONS.rp3().copy()
     print(f'Loaded xfp_rp3_projections.csv: {len(rp3)} rows')
 
     rp3['nk'] = rp3['player_name'].map(_norm)

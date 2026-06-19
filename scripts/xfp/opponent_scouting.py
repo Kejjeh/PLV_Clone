@@ -26,6 +26,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 sys.path.insert(0, '.')
 
@@ -67,7 +68,7 @@ def main():
     league = ls._get_league()
 
     # Load projections — hitters and pitchers
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     rh = rh.drop_duplicates('nk')
     rh_lookup = rh.set_index('nk')['xfp_rh3_per_pa'].to_dict()

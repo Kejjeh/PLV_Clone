@@ -14,6 +14,7 @@ import re
 import pandas as pd
 import numpy as np
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT, OUTPUTS as OUT
 sys.path.insert(0, str(ROOT))
 
@@ -76,7 +77,7 @@ def drift_summary(row):
 
 
 def main():
-    rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh3 = PROJECTIONS.rh3()
     rh3['_nk'] = rh3['player_name'].map(_norm)
     drift = pd.read_csv(OUT / 'skill_drift_2026.csv')
     drift['_nk'] = drift['name'].map(_norm)

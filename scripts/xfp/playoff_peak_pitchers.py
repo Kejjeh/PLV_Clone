@@ -17,6 +17,7 @@ from datetime import timedelta
 from pathlib import Path
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -135,7 +136,7 @@ def main():
         / career['career_rate_pre'].replace(0, np.nan).abs() * 100)
 
     # Attach names
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')[['pitcher', 'player_name']]
+    rp = PROJECTIONS.rp3()[['pitcher', 'player_name']]
     rp = rp.drop_duplicates('pitcher')
     career = career.merge(rp, on='pitcher', how='left')
 

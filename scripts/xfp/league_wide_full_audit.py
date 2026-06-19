@@ -38,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -331,7 +332,7 @@ def main() -> None:
     multiyr["_nk"] = multiyr["player_name"].map(_norm)
     cf_dict = build_career_form_dict()
 
-    rh3_df = pd.read_csv(ROOT / "data/outputs/xfp_rh3_projections.csv")
+    rh3_df = PROJECTIONS.rh3()
     rh3_df["_nk"] = rh3_df["player_name"].map(_norm)
     rh3_lu: dict[str, dict] = {}
     for _, r in rh3_df.iterrows():
@@ -626,8 +627,8 @@ def main() -> None:
             return f"{parts[1]} {parts[0]}"
         return name
 
-    rp3 = pd.read_csv(ROOT / "data/outputs/xfp_rp3_projections.csv")
-    rprs2 = pd.read_csv(ROOT / "data/outputs/xfp_rprs2_projections.csv")
+    rp3 = PROJECTIONS.rp3()
+    rprs2 = PROJECTIONS.rprs2()
     rprs2_col = "xfp_ros" if "xfp_ros" in rprs2.columns else rprs2.columns[-1]
     # rp3 uses "Last, First" format; ESPN roster uses "First Last" — build both-way lookup
     # Also store accent-stripped variants so "Jesús" matches ESPN's "Jesus" etc.

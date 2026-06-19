@@ -16,6 +16,7 @@ Output: data/outputs/hitter_xwoba_residual.csv
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -91,7 +92,7 @@ def main():
             'barrel_pct_latest': round(latest['barrel_pct'], 1),
         })
     out = pd.DataFrame(out_rows)
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')[['batter', 'player_name']].drop_duplicates('batter')
+    rh = PROJECTIONS.rh3()[['batter', 'player_name']].drop_duplicates('batter')
     out = out.merge(rh, on='batter', how='left')
 
     fname = OUT / 'hitter_xwoba_residual.csv'

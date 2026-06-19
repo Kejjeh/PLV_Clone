@@ -15,6 +15,8 @@ import unicodedata
 import re
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
+
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
@@ -131,7 +133,7 @@ def main():
               f'(per_GS {r.get("per_start","?"):.2f}, RoS {r["my_ros"]:.1f})')
 
     # ===================== RPs (closers) =====================
-    rprs2 = pd.read_csv(OUT / 'xfp_rprs2_projections.csv')
+    rprs2 = PROJECTIONS.rprs2()
     rprs2['nk'] = rprs2['name_api'].map(_norm)
     rprs2_sorted = rprs2.sort_values('xfp_ros', ascending=False).reset_index(drop=True)
     rprs2_sorted['my_rank'] = rprs2_sorted.index + 1

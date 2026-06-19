@@ -29,6 +29,7 @@ import re
 from pathlib import Path
 from collections import defaultdict
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT  # single source for the repo root (was a hardcoded literal)
 sys.path.insert(0, str(ROOT))
@@ -104,7 +105,7 @@ def _norm(s):
 
 
 def load_projections():
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     rh = rh.drop_duplicates('nk', keep='first')
     h_lookup = {}
@@ -115,7 +116,7 @@ def load_projections():
         }
 
     # SP projections from rp3 (per-start × estimated remaining starts)
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp['nk'] = rp['player_name'].map(_norm)
     rp = rp.drop_duplicates('nk', keep='first')
     p_lookup = {}
@@ -130,7 +131,7 @@ def load_projections():
     # RP projections from rprs2 (closer/setup roles, has xfp_ros directly)
     rprs2_path = OUT / 'xfp_rprs2_projections.csv'
     if rprs2_path.exists():
-        rprs2 = pd.read_csv(rprs2_path)
+        rprs2 = PROJECTIONS.rprs2()
         if 'name_api' in rprs2.columns:
             rprs2['nk'] = rprs2['name_api'].map(_norm)
             rprs2 = rprs2.drop_duplicates('nk', keep='first')

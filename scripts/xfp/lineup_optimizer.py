@@ -26,6 +26,7 @@ import unicodedata
 import re
 
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import requests
 
 sys.path.insert(0, '.')
@@ -103,7 +104,7 @@ def main():
     print(f'\nWeek schedule: {len(sched)} games')
 
     # Load rp3 projections + name normalization
-    rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp3 = PROJECTIONS.rp3()
     rp3['name_key'] = rp3['player_name'].map(_norm)
     # Dedupe by name_key — keep first (highest-rank duplicate)
     rp3 = rp3.drop_duplicates('name_key', keep='first')

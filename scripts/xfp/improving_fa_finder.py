@@ -19,6 +19,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -54,7 +55,7 @@ def main():
     fas = league.free_agents(size=2000)
 
     # Attach rh3 projection (the validated cross-year r=0.62 ranker)
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     proj = rh.drop_duplicates('nk').set_index('nk')[[
         'xfp_rh3_per_pa', 'expected_total_fp_remaining', 'signal',

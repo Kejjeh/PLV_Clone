@@ -13,6 +13,7 @@ Output: data/outputs/sp_days_rest.csv
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -115,7 +116,7 @@ def main():
     if starts.empty:
         print('  no data'); return
     agg = aggregate(starts)
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     agg = agg.merge(rp[['pitcher','player_name','rank']], on='pitcher', how='left')
     out = OUT / 'sp_days_rest.csv'
     agg.to_csv(out, index=False)

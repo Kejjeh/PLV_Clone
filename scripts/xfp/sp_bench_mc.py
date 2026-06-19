@@ -29,6 +29,7 @@ import numpy as np
 import pandas as pd
 
 from plv_clone.paths import ROOT
+from plv_clone.fantasy.scoring import pitcher_fp
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
 
@@ -61,7 +62,7 @@ def sp_fp_from_stat(stat: dict) -> float:
     bb = int(stat.get('baseOnBalls', 0))
     k = int(stat.get('strikeOuts', 0))
     hbp = int(stat.get('hitByPitch', 0))
-    return k + ip * 3.3 - h - 2 * er - bb - hbp
+    return pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp)
 
 
 def fetch_pitcher_starts_multi_year(mlbam: int, years=(2024, 2025, 2026),

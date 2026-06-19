@@ -26,6 +26,7 @@ import pandas as pd
 import numpy as np
 
 from plv_clone.paths import ROOT
+from plv_clone.fantasy.scoring import pitcher_fp
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
 
@@ -160,7 +161,7 @@ def pitcher_fp_in_window(pitcher_id: int, start: pd.Timestamp, end: pd.Timestamp
     outs = int(pa['outs'].sum())
     ip = outs / 3.0
 
-    fp = k + ip * 3.3 - h - 2 * er - bb - hbp
+    fp = pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp)
     return {'fp': round(fp, 1), 'g': games, 'gs': gs, 'k': k, 'bb': bb,
             'h': h, 'er': round(er, 1), 'ip': round(ip, 1),
             'days': (end - start).days + 1}

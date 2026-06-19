@@ -26,6 +26,7 @@ from pathlib import Path
 import json
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -38,7 +39,7 @@ HEALTHY_SP_STARTS_PER_WEEK = 1.19
 
 def main():
     # Hitters: scale RoS by playoff-share
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['playoff_share'] = PLAYOFF_WEEKS / RoS_WEEKS_TOTAL  # 30%
     # Some players' PA is more concentrated in playoffs (e.g., late callups, IL
     # returnees). For most, evenly distributed across RoS.
@@ -52,7 +53,7 @@ def main():
     print(f'wrote playoff_ros_hitters.csv ({len(rh_out)} hitters)')
 
     # SPs: per_start × ~7 playoff starts
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     playoff_starts = round(HEALTHY_SP_STARTS_PER_WEEK * PLAYOFF_WEEKS, 1)  # ~7.14
     rp['playoff_ros'] = (rp['xfp_rp3_per_start'].fillna(0) * playoff_starts).round(1)
     rp_out = rp[['pitcher', 'player_name', 'xfp_rp3_per_start',
@@ -64,7 +65,7 @@ def main():
     # RPs
     rprs2_path = OUT / 'xfp_rprs2_projections.csv'
     if rprs2_path.exists():
-        rps = pd.read_csv(rprs2_path)
+        rps = PROJECTIONS.rprs2()
         # xfp_ros covers full RoS; playoff portion = share
         rps['playoff_ros'] = (rps['xfp_ros'].fillna(0)
                               * (PLAYOFF_WEEKS / RoS_WEEKS_TOTAL)).round(1)

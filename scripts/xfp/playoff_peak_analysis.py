@@ -23,6 +23,7 @@ from datetime import timedelta
 from pathlib import Path
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -131,7 +132,7 @@ def main():
             print(f'  insufficient clean pairs ({ok.sum()})')
 
     # Attach names
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')[['batter', 'player_name', 'team', 'primary_position']]
+    rh = PROJECTIONS.rh3()[['batter', 'player_name', 'team', 'primary_position']]
     rh = rh.drop_duplicates('batter')
     career = career.merge(rh, on='batter', how='left')
 

@@ -17,6 +17,7 @@ from collections import defaultdict
 import json
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -90,7 +91,7 @@ def main():
             print(f'  {r["pitcher_name"]:<25s} week of {r["week_start"]}: {games_s}')
 
     # Top FAs with 2-start weeks (streamer alert)
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp_names = set(rp['player_name'].dropna())
     # Build FA set: in rp3 but not on any team
     rostered = set()

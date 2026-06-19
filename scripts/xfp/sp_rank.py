@@ -8,6 +8,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -48,7 +49,7 @@ def career_summary(df):
 
 def main():
     sp = pd.read_csv(CACHE / 'sp_multiyr_2015_2025.csv')
-    rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp3 = PROJECTIONS.rp3()
 
     ligers_sps = [
         'Max Fried', 'Freddy Peralta', 'Carlos Rodon', 'Jose Soriano',

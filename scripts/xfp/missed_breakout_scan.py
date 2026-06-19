@@ -1,11 +1,12 @@
 import sys
 sys.path.insert(0, r'c:\Users\Joshua\plv_clone')
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 from difflib import SequenceMatcher
 
-rh3 = pd.read_csv(r'c:\Users\Joshua\plv_clone\data\outputs\xfp_rh3_projections.csv')
-rp3 = pd.read_csv(r'c:\Users\Joshua\plv_clone\data\outputs\xfp_rp3_projections.csv')
-rprs2 = pd.read_csv(r'c:\Users\Joshua\plv_clone\data\outputs\xfp_rprs2_projections.csv')
+rh3 = PROJECTIONS.rh3()
+rp3 = PROJECTIONS.rp3()
+rprs2 = PROJECTIONS.rprs2()
 
 def normalize_model_name(n):
     if ',' in str(n):

@@ -10,8 +10,10 @@ from pathlib import Path
 import pandas as pd
 from scipy.stats import spearmanr
 
+from plv_clone.projections import PROJECTIONS
+
 ROOT = Path('c:/Users/Joshua/plv_clone')
-PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rh3_projections.csv')
+PROJ = PROJECTIONS.rh3()
 
 def _strip(s): return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
 def norm(s):   return re.sub(r'[^a-z]+', '', _strip((s or '').lower()))

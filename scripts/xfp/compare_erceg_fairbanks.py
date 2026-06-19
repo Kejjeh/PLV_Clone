@@ -7,6 +7,8 @@ from pathlib import Path
 import sys
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
+
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
@@ -15,7 +17,7 @@ CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 def main():
     rel = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv')
-    rprs2 = pd.read_csv(OUT / 'xfp_rprs2_projections.csv')
+    rprs2 = PROJECTIONS.rprs2()
 
     erceg = rel[rel['name'].str.contains('Erceg', case=False, na=False)]
     fairbanks = rel[rel['name'].str.contains('Fairbanks', case=False, na=False)]

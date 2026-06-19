@@ -16,6 +16,7 @@ This is decision-support, not a model feature (matchups are pairwise).
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -88,7 +89,7 @@ def main():
         pit_full = pit_full.merge(total, on='pitcher', how='left')
         pit_full = pit_full[pit_full['total'] >= 200]
         pit_full['mix_pct'] = (pit_full['pitches'] / pit_full['total'] * 100).round(1)
-        rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')[['pitcher', 'player_name']].drop_duplicates('pitcher')
+        rp = PROJECTIONS.rp3()[['pitcher', 'player_name']].drop_duplicates('pitcher')
         pit_full = pit_full.merge(rp, on='pitcher', how='left')
         f2 = OUT / 'pitcher_pitch_mix.csv'
         pit_full.sort_values(['pitcher', 'mix_pct'], ascending=[True, False]).to_csv(f2, index=False)

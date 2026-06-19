@@ -26,6 +26,8 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 HISTORY = ROOT / 'data' / 'research' / 'sustainability_history.csv'
 sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
 
+from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+
 
 def _fetch_json(url):
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
@@ -41,15 +43,17 @@ def _sp_fp(stat):
     bb = int(stat.get('baseOnBalls', 0))
     k = int(stat.get('strikeOuts', 0))
     hbp = int(stat.get('hitByPitch', 0))
-    return k + ip * 3.3 - h - 2 * er - bb - hbp
+    return pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp)
 
 
 def _hitter_fp(stat):
     """BrownU hitter FP formula."""
-    return (int(stat.get('runs', 0)) + int(stat.get('totalBases', 0))
-            + int(stat.get('rbi', 0)) + int(stat.get('baseOnBalls', 0))
-            + int(stat.get('hitByPitch', 0)) + int(stat.get('stolenBases', 0))
-            - int(stat.get('strikeOuts', 0)))
+    return hitter_fp(
+        r=int(stat.get('runs', 0)), tb=int(stat.get('totalBases', 0)),
+        rbi=int(stat.get('rbi', 0)), bb=int(stat.get('baseOnBalls', 0)),
+        hbp=int(stat.get('hitByPitch', 0)), sb=int(stat.get('stolenBases', 0)),
+        k=int(stat.get('strikeOuts', 0)),
+    )
 
 
 def actual_fp_per_unit(mlbam: int, kind: str, start_date: str, end_date: str,

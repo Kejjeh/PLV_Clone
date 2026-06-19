@@ -15,6 +15,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
@@ -70,7 +71,7 @@ def main():
     print('  → OAK/ATH is the rookie call-up')
 
     # 3. Check rh3 projection — is 228.5 the LAD Muncy or the OAK rookie?
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh_muncy = rh[rh['player_name'].str.lower() == 'max muncy']
     print(f'\n  rh3 projections for Max Muncy:')
     cols = [c for c in ['player_name', 'team', 'primary_position', 'pa_2026',

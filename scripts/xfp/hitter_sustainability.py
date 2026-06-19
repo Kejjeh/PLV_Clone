@@ -32,8 +32,10 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
+from plv_clone.fantasy.scoring import hitter_fp
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -68,7 +70,7 @@ def load_rh3_map() -> dict:
     xfp_rh3_per_game directly.
     """
     try:
-        rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+        rh3 = PROJECTIONS.rh3()
     except Exception:
         return {}
     rh3['_nk'] = rh3['player_name'].map(_norm)
@@ -270,13 +272,12 @@ def fetch_hitter_games_recent(mlbam: int, limit: int = 15) -> list[dict]:
         if pa == 0:
             continue
         # FP = R + TB + RBI + BB + HBP + SB − K
-        fp = (int(st.get('runs', 0))
-              + int(st.get('totalBases', 0))
-              + int(st.get('rbi', 0))
-              + int(st.get('baseOnBalls', 0))
-              + int(st.get('hitByPitch', 0))
-              + int(st.get('stolenBases', 0))
-              - int(st.get('strikeOuts', 0)))
+        fp = hitter_fp(
+            r=int(st.get('runs', 0)), tb=int(st.get('totalBases', 0)),
+            rbi=int(st.get('rbi', 0)), bb=int(st.get('baseOnBalls', 0)),
+            hbp=int(st.get('hitByPitch', 0)), sb=int(st.get('stolenBases', 0)),
+            k=int(st.get('strikeOuts', 0)),
+        )
         games.append({'date': s.get('date'), 'fp': fp, 'pa': pa})
     games.sort(key=lambda x: x['date'] or '', reverse=True)
     return games[:limit]

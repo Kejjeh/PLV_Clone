@@ -31,6 +31,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -52,7 +53,7 @@ def _norm(s):
 def collect_player_info():
     """Build {name_key: {dict of every signal we have}}."""
     info = {}
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     rh = rh.drop_duplicates('nk', keep='first').set_index('nk')
     for nk, r in rh.iterrows():
@@ -72,7 +73,7 @@ def collect_player_info():
             'rank': int(r['rank']) if pd.notna(r.get('rank')) else None,
         }
 
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp['nk'] = rp['player_name'].map(_norm)
     rp = rp.drop_duplicates('nk', keep='first').set_index('nk')
     for nk, r in rp.iterrows():
@@ -93,7 +94,7 @@ def collect_player_info():
     # Add xwoba residual + age
     try:
         xw = pd.read_csv(OUT / 'hitter_xwoba_residual.csv')
-        rh_names = pd.read_csv(OUT / 'xfp_rh3_projections.csv')[['batter', 'player_name']]
+        rh_names = PROJECTIONS.rh3()[['batter', 'player_name']]
         xw = xw.merge(rh_names, on='batter', how='left')
         for _, r in xw.iterrows():
             nk = _norm(r['player_name'])
@@ -106,7 +107,7 @@ def collect_player_info():
     try:
         age = pd.read_csv(OUT / 'hitter_age_career.csv')
         age = age[age['year'] == 2026]
-        rh_names = pd.read_csv(OUT / 'xfp_rh3_projections.csv')[['batter', 'player_name']]
+        rh_names = PROJECTIONS.rh3()[['batter', 'player_name']]
         age = age.merge(rh_names, on='batter', how='left')
         for _, r in age.iterrows():
             nk = _norm(r['player_name'])
@@ -271,7 +272,7 @@ def main():
     # Top FREE-AGENT pickups available (true FAs only, ranked by RoS value)
     print('\nTOP AVAILABLE HITTER FAs (model RoS, ranked):')
     print(f'{"PLAYER":<25s} {"POS":<5s} {"TEAM":<5s} {"%OWN":>6s} {"RoS":>7s} {"fp/PA":>7s} {"SIG":>5s}')
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     # Build owned set across whole league
     owned = set()
     for t in league.teams:
@@ -294,7 +295,7 @@ def main():
     # Top FA pitchers too — in case any are sneaky
     print('\nTOP AVAILABLE PITCHER FAs (model RoS, ranked):')
     print(f'{"PLAYER":<25s} {"%OWN":>6s} {"fp/start":>8s} {"RoS":>7s} {"SRC":<12s} {"SIG":>5s}')
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp['nk'] = rp['player_name'].map(_norm)
     fa_pit = rp[~rp['nk'].isin(owned)].copy()
     fa_pit['ros_proxy'] = fa_pit['xfp_rp3_per_start'].fillna(0) * SP_REMAINING_STARTS

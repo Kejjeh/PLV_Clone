@@ -25,10 +25,12 @@ Output:
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 import re
 
 from plv_clone.paths import ROOT
+from plv_clone.fantasy.scoring import pitcher_fp
 EXT = ROOT / 'data' / 'research' / 'external_projections'
 OUT = ROOT / 'data' / 'outputs'
 
@@ -78,7 +80,7 @@ def pitcher_fp_per_g(row) -> float:
     er = row.get('ER', 0)
     bb = row.get('BB', 0)
     hbp = row.get('HBP', 0)
-    fp = k + ip * 3.3 - h - 2 * er - bb - hbp
+    fp = pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp)
     return float(fp / g)
 
 
@@ -121,7 +123,7 @@ def main():
     EXT.mkdir(parents=True, exist_ok=True)
 
     # Hitters — join on mlb_id (rh3 'batter' col == MLBAM player_id)
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['mlb_id'] = rh['batter'].astype(int)
     h_ext = load_external('hitters')
     if not h_ext.empty:
@@ -150,7 +152,7 @@ def main():
         rh.to_csv(OUT / 'projection_ensemble_hitters.csv', index=False)
 
     # Pitchers
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp['mlb_id'] = rp['pitcher'].astype(int)
     p_ext = load_external('pitchers')
     if not p_ext.empty:

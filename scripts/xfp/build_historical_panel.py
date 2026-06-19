@@ -32,6 +32,8 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+from plv_clone.fantasy.scoring import pitcher_fp
+
 ROOT = Path(r"c:/Users/Joshua/plv_clone")
 CACHE = ROOT / "data" / "research" / "xfp_cache"
 RES = ROOT / "data" / "research"
@@ -91,7 +93,7 @@ def _ip_from_str(ip_val) -> float:
 
 
 def _pitcher_fp(K, IP, H, ER, BB, HBP, SV=0, HLD=0) -> float:
-    return K + IP * 3.3 - H - 2 * ER - BB - HBP + 5 * SV + 2 * HLD
+    return pitcher_fp(k=K, ip=IP, h=H, er=ER, bb=BB, hbp=HBP, sv=SV, hld=HLD)
 
 
 def build_pitcher_actuals_json(year: int) -> pd.DataFrame:

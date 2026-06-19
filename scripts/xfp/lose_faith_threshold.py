@@ -19,6 +19,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -85,7 +86,7 @@ def slump_precedent_at_rate(history: pd.DataFrame, target_rate: float, N: int,
 
 
 def main():
-    rh = pd.read_csv(ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     targets = [('Bo Bichette', None), ('Salvador Perez', None)]
     target_rows = []
     for name, _ in targets:

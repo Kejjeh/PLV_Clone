@@ -23,6 +23,7 @@ import unicodedata
 import re
 import numpy as np
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
@@ -219,7 +220,7 @@ def main():
     print('  APPLIED FP/start IMPACT to 2026 pitchers (4-seam shape model)')
     print('='*70)
 
-    rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp3 = PROJECTIONS.rp3()
     rp3['nk'] = rp3['player_name'].map(_norm)
 
     # 2026 shape from cache statcast vs 2023-2025 career

@@ -8,8 +8,10 @@ from pathlib import Path
 import pandas as pd
 from scipy.stats import spearmanr
 
+from plv_clone.projections import PROJECTIONS
+
 ROOT = Path('c:/Users/Joshua/plv_clone')
-PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rp3_projections.csv')
+PROJ = PROJECTIONS.rp3()
 PROJ['ros_rank']   = PROJ['xfp_rp3_per_start'].rank(ascending=False, method='min')
 PROJ['total_rank'] = PROJ['xfp_rp3_per_start'].rank(ascending=False, method='min')
 

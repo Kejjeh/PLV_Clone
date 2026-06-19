@@ -18,6 +18,7 @@ import re
 import ast
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
@@ -42,12 +43,12 @@ def main():
     league = ls._get_league()
     my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
 
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     rh_lkup = rh.drop_duplicates('nk').set_index('nk').to_dict('index')
 
     try:
-        rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+        rp3 = PROJECTIONS.rp3()
         rp3['nk'] = rp3['player_name'].map(_norm)
         rp3_lkup = rp3.drop_duplicates('nk').set_index('nk').to_dict('index')
     except Exception:

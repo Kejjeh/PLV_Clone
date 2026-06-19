@@ -27,6 +27,7 @@ import json
 import sys
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -193,7 +194,7 @@ def main():
                     help='Run on all 2026 hitters in rh3 (not just Ligers)')
     args = ap.parse_args()
 
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     if args.league:
         target_ids = set(rh['batter'].astype(int))
         print(f'Running league-wide on {len(target_ids)} hitters')

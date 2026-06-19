@@ -8,6 +8,7 @@ import sys
 import unicodedata
 import re
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -54,7 +55,7 @@ def career_summary(df):
 def main():
     h = pd.read_csv(CACHE / 'hitters_multiyr_2015_2026.csv')
     h['_nk'] = h['player_name'].map(_norm)
-    rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh3 = PROJECTIONS.rh3()
     rh3['_nk'] = rh3['player_name'].map(_norm)
 
     ligers_hitters = [

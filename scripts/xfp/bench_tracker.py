@@ -23,7 +23,9 @@ import json
 import sys
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
+from plv_clone.fantasy.scoring import pitcher_fp
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -58,8 +60,10 @@ def player_fp_in_window(pid: int, is_pitcher: bool, year: int,
         pa['outs'] = (~pa['events'].isin({'single','double','triple','home_run','walk',
                                             'intent_walk','hit_by_pitch','field_error','catcher_interf'})).astype(int)
         ip = pa['outs'].sum() / 3.0
-        return float(pa['k'].sum() + ip * 3.3 - pa['h'].sum()
-                     - 2 * pa['runs'].sum() - pa['bb'].sum() - pa['hbp'].sum())
+        return float(pitcher_fp(
+            k=pa['k'].sum(), ip=ip, h=pa['h'].sum(),
+            er=pa['runs'].sum(), bb=pa['bb'].sum(), hbp=pa['hbp'].sum(),
+        ))
     else:
         df = pd.read_parquet(path, columns=['game_date', 'batter', 'events'])
         df['game_date'] = pd.to_datetime(df['game_date'])
@@ -92,13 +96,13 @@ def main():
         try:
             # Best-effort: pull mlb_id from name lookup
             if is_pit:
-                rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+                rp = PROJECTIONS.rp3()
                 m = rp[rp['player_name'].fillna('').str.contains(p.name.split()[-1], case=False, na=False)]
                 if not m.empty:
                     mlb_id = int(m.iloc[0]['pitcher'])
                     fp = player_fp_in_window(mlb_id, True, 2026, week_start, week_end)
             else:
-                rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+                rh = PROJECTIONS.rh3()
                 m = rh[rh['player_name'] == p.name]
                 if not m.empty:
                     mlb_id = int(m.iloc[0]['batter'])

@@ -18,6 +18,7 @@ Output: data/outputs/lineup_protection.csv
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -130,7 +131,7 @@ def main():
     if 'iso_STRONG' in pivot.columns and 'iso_WEAK' in pivot.columns:
         pivot['iso_protect_lift'] = (pivot['iso_STRONG'] - pivot['iso_WEAK']).round(3)
 
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')[['batter', 'player_name']].drop_duplicates('batter')
+    rh = PROJECTIONS.rh3()[['batter', 'player_name']].drop_duplicates('batter')
     pivot = pivot.merge(rh, on='batter', how='left')
 
     fname = OUT / 'lineup_protection.csv'

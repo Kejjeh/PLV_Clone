@@ -17,6 +17,7 @@ import sys
 import pandas as pd
 import numpy as np
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -96,7 +97,7 @@ def main():
     h1g = h1.groupby('batter'); h2g = h2.groupby('batter')
 
     # Load name map from rh3
-    rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh3 = PROJECTIONS.rh3()
     name_map = rh3.set_index('batter')['player_name'].to_dict() if 'batter' in rh3.columns else {}
 
     rows = []

@@ -22,6 +22,7 @@ from __future__ import annotations
 from pathlib import Path
 import sys
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
@@ -101,7 +102,7 @@ def _aggregate_player(batter_id: int, year: int) -> dict | None:
 
 
 def main():
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     targets = [('Bo Bichette', None), ('Salvador Perez', None)]
 
     summary_rows = []

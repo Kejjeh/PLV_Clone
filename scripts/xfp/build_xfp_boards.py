@@ -55,6 +55,7 @@ sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp" / "lib"))
 
 from plv_clone.league_state import LeagueState
+from plv_clone.projections import PROJECTIONS
 from app.espn_connector import get_my_roster_with_injuries
 from plv_clone.utils.name_match import resolve_batter_id
 import sp_stuff_model as ss
@@ -152,7 +153,7 @@ def build_sp_board() -> pd.DataFrame:
     d["proj_ros_fp"] = mdl.predict(sc.transform(d[ss.FEATS]))
     sf = _build_map(d["player_name_fg"], d["proj_ros_fp"])
     st = _build_map(d["player_name_fg"], d["stuff_plus"])
-    rp3 = pd.read_csv(ROOT / "data/outputs/xfp_rp3_projections.csv").dropna(subset=["player_name"])
+    rp3 = PROJECTIONS.rp3().dropna(subset=["player_name"])
     tag = rp3["data_quality_tag"].astype(str)
     dd = rp3[tag.str.startswith("data_driven")]
     mar = rp3[tag.str.contains("marcel")]
@@ -242,7 +243,7 @@ def _load_rh3():
     global _RH3, _RH3_BY_ID, _FULL, _AMBIG_NAMES, _MULTIYR
     if _RH3 is not None:
         return
-    rh3 = pd.read_csv(ROOT / "data/outputs/xfp_rh3_projections.csv").dropna(subset=["player_name"])
+    rh3 = PROJECTIONS.rh3().dropna(subset=["player_name"])
     rh3 = rh3[rh3["batter"].notna()].copy()
     rh3["batter"] = rh3["batter"].astype(int)
     _RH3 = rh3

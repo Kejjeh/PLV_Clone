@@ -28,6 +28,7 @@ import re
 from pathlib import Path
 from collections import defaultdict
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -89,7 +90,7 @@ def build_ytd_lookup() -> dict:
         else:
             rp['fp_ytd'] = 0
         # Need mlb_id -> name; use rh3/rp3 lookup
-        rp_proj = pd.read_csv(OUT / 'xfp_rp3_projections.csv')[['pitcher', 'player_name']]
+        rp_proj = PROJECTIONS.rp3()[['pitcher', 'player_name']]
         rp_proj['nk'] = rp_proj['player_name'].map(_norm)
         m = rp.merge(rp_proj, on='pitcher', how='left')
         for _, r in m.iterrows():

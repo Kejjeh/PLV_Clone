@@ -19,6 +19,7 @@ Output:
 from __future__ import annotations
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -117,7 +118,7 @@ def main():
     if splits.empty:
         print('  no data')
         return
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     splits = splits.merge(rh[['batter', 'player_name', 'team', 'rank']], on='batter', how='left')
     out_long = OUT / 'park_player_splits.csv'
     splits.to_csv(out_long, index=False)

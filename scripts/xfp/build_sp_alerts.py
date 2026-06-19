@@ -14,12 +14,13 @@ from datetime import date
 from plv_clone.paths import ROOT as REPO
 sys.path.insert(0, str(REPO))
 from app.espn_connector import get_my_roster_with_injuries, _get_league
+from plv_clone.projections import PROJECTIONS
 from plv_clone.utils.name_match import lookup_batter_id_cached
 
 PARQ26 = (REPO / "data/research/xfp_cache/statcast_2026.parquet").as_posix()
 PARQ25 = (REPO / "data/research/xfp_cache/statcast_2025.parquet").as_posix()
-rp3 = pd.read_csv(REPO / "data/outputs/xfp_rp3_projections.csv")
-rh3 = pd.read_csv(REPO / "data/outputs/xfp_rh3_projections.csv")
+rp3 = PROJECTIONS.rp3()
+rh3 = PROJECTIONS.rh3()
 OUT = REPO / "data/outputs/sp_alerts.json"
 
 

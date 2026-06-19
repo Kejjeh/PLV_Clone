@@ -1,10 +1,11 @@
 import duckdb, pandas as pd, unicodedata
+from plv_clone.projections import PROJECTIONS
 con = duckdb.connect()
 
 def _norm(s):
     return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
 
-rp3 = pd.read_csv('data/outputs/xfp_rp3_projections.csv')
+rp3 = PROJECTIONS.rp3()
 def flip(s):
     if ',' in str(s):
         a,b = s.split(',',1)

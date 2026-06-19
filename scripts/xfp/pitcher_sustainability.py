@@ -38,6 +38,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
@@ -78,7 +79,7 @@ def load_rp3_map() -> dict:
     surface the same number for the same pitcher.
     """
     try:
-        rp3 = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+        rp3 = PROJECTIONS.rp3()
     except Exception:
         return {}
     rp3['_nk'] = rp3['player_name'].map(_norm)

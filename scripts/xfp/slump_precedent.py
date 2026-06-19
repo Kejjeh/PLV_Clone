@@ -32,6 +32,7 @@ import sys
 from pathlib import Path
 import numpy as np
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -257,7 +258,7 @@ def slump_precedent(history: pd.DataFrame, *,
 
 def run_hitters(min_2026_pa: int = 50, min_2026_games: int = 12) -> pd.DataFrame:
     print(f'[slump] hitter mode: scanning rh3 projection batters with ≥{min_2026_pa} 2026 PA')
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh = rh[rh['pa_to'] >= min_2026_pa]
     rows = []
     for i, r in enumerate(rh.itertuples(), 1):
@@ -295,7 +296,7 @@ def run_pitchers(role: str, min_2026_apps: int = 3) -> pd.DataFrame:
     fname_role = 'sps' if is_sp else 'rps'
     print(f'[slump] pitcher mode: {role}, ≥{min_2026_apps} 2026 appearances')
     if is_sp:
-        proj = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+        proj = PROJECTIONS.rp3()
         proj = proj[proj['gs_to'] >= min_2026_apps]
         id_col, name_col = 'pitcher', 'player_name'
     else:

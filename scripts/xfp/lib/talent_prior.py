@@ -20,6 +20,7 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 import pandas as pd, numpy as np
+from plv_clone.projections import PROJECTIONS
 
 # scripts/xfp/lib/talent_prior.py -> parents[3] == repo root (plv_clone)
 ROOT = Path(__file__).resolve().parents[3]
@@ -67,7 +68,7 @@ def _load():
     _MU = pd.read_csv(ROOT / "data/research/xfp_cache/hitters_multiyr_2015_2026.csv")
     lg = _MU[_MU["year"].between(2023, 2025)]
     _LGF = float(np.average(lg["fp_per_pa_actual"], weights=lg["pa"].clip(lower=1)))
-    rh3 = pd.read_csv(ROOT / "data/outputs/xfp_rh3_projections.csv")
+    rh3 = PROJECTIONS.rh3()
     xs, ys = [], []
     for _, r in rh3.iterrows():
         rp = _raw_pg(r["batter"])

@@ -15,6 +15,7 @@ from datetime import date
 from pathlib import Path
 
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 REPO = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO / "src"))
@@ -65,7 +66,7 @@ def cross_verdict(form: str, gap: float | None, signal: str | None) -> str:
 
 def main() -> None:
     cf = pd.read_csv(REPO / f"data/research/league_career_form_{TODAY}.csv")
-    rh3 = pd.read_csv(REPO / "data/outputs/xfp_rh3_projections.csv")
+    rh3 = PROJECTIONS.rh3()
 
     merged = cf.merge(
         rh3[["batter", "xfp_rh3_per_pa", "prior_fp_per_pa", "recency_form_gap",
@@ -82,8 +83,8 @@ def main() -> None:
     from app.espn_connector import get_all_teams  # noqa: E402
     all_rosters = get_all_teams()
     pitchers = all_rosters[all_rosters["position"].isin(["SP", "RP"])].copy()
-    rp3 = pd.read_csv(REPO / "data/outputs/xfp_rp3_projections.csv")
-    rprs2 = pd.read_csv(REPO / "data/outputs/xfp_rprs2_projections.csv")
+    rp3 = PROJECTIONS.rp3()
+    rprs2 = PROJECTIONS.rprs2()
 
     # Fuzzy-join pitchers by name only (cheap; mlbam matching is overkill here)
     rp3_lookup = dict(zip(rp3["player_name"], rp3["xfp_rp3_per_start"]))

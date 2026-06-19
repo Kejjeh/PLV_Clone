@@ -14,6 +14,7 @@ Run: python scripts/xfp/build_triangulate_universe.py
 import sys, os, unicodedata
 sys.path.insert(0, '.')
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 from app.espn_connector import _get_league, get_my_roster_with_injuries
 
 OUT_DIR = 'data/research/triangulate_universe'
@@ -121,14 +122,14 @@ def main():
     } for p in fas])
     print(f"  verified FA pool: {len(fa_df)}")
     # Compute season-to-date FP from model files
-    rh3 = pd.read_csv('data/outputs/xfp_rh3_projections.csv')
+    rh3 = PROJECTIONS.rh3()
     rh3['fp_to'] = rh3['prior_fp_per_pa'] * rh3['pa_to']
     rh3['key'] = rh3['player_name'].apply(_norm)
-    rp3 = pd.read_csv('data/outputs/xfp_rp3_projections.csv')
+    rp3 = PROJECTIONS.rp3()
     rp3['display_name'] = rp3['player_name'].apply(lambda s: f"{s.split(',')[1].strip()} {s.split(',')[0].strip()}" if ',' in str(s) else s)
     rp3['fp_to'] = rp3['fp_per_start_to'] * rp3['gs_to']
     rp3['key'] = rp3['display_name'].apply(_norm)
-    rprs2 = pd.read_csv('data/outputs/xfp_rprs2_projections.csv')
+    rprs2 = PROJECTIONS.rprs2()
     rprs2['fp_to'] = rprs2['fp_actual_2026']
     rprs2['key'] = rprs2['name_api'].apply(_norm)
     # Build name->fp lookup

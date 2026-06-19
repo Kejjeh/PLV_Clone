@@ -29,6 +29,7 @@ from __future__ import annotations
 from datetime import date as _date
 from pathlib import Path
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
@@ -266,7 +267,7 @@ def main():
     print('[seasonality-monthly] hitters...')
     h = hitter_monthly()
     if not h.empty:
-        rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+        rh = PROJECTIONS.rh3()
         h = h.merge(rh[['batter', 'player_name', 'team', 'rank',
                         'xfp_rh3_per_game', 'expected_total_fp_remaining']],
                     on='batter', how='left')
@@ -279,7 +280,7 @@ def main():
     print('[seasonality-monthly] SPs...')
     s = sp_monthly()
     if not s.empty:
-        rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+        rp = PROJECTIONS.rp3()
         s = s.merge(rp[['pitcher', 'player_name', 'rank',
                         'xfp_rp3_per_start_sched', 'gs_to']],
                     on='pitcher', how='left')

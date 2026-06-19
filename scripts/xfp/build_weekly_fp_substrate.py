@@ -28,6 +28,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT, CACHE, OUTPUTS as OUT
 
 YEARS = [2024, 2025, 2026]
@@ -63,7 +64,7 @@ def get_scope_player_ids() -> tuple[set[int], set[int], dict]:
 
     # rh3 / rp3 give us batter/pitcher IDs + names
     bat_ids, pit_ids = set(), set()
-    rh = pd.read_csv(OUT / 'xfp_rh3_projections.csv')
+    rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)
     # Include rostered + top-100 FAs
     for _, r in rh.head(150).iterrows():
@@ -74,7 +75,7 @@ def get_scope_player_ids() -> tuple[set[int], set[int], dict]:
             bat_ids.add(int(r['batter']))
             name_map[int(r['batter'])] = r['player_name']
 
-    rp = pd.read_csv(OUT / 'xfp_rp3_projections.csv')
+    rp = PROJECTIONS.rp3()
     rp['nk'] = rp['player_name'].map(_norm)
     for _, r in rp.head(150).iterrows():
         pit_ids.add(int(r['pitcher']))

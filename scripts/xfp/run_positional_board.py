@@ -27,6 +27,7 @@ if sys.platform == "win32":
 
 import unicodedata
 import pandas as pd
+from plv_clone.projections import PROJECTIONS
 
 OUT = ROOT / "data" / "outputs"
 SNAPSHOTS = ROOT / "data" / "research" / "fa_snapshots"
@@ -72,7 +73,7 @@ def load_pl_ranks() -> dict[str, int]:
 
 
 def load_rh3() -> pd.DataFrame:
-    df = pd.read_csv(OUT / "xfp_rh3_projections.csv")
+    df = PROJECTIONS.rh3()
     df["name_norm"] = df["player_name"].apply(
         lambda x: _ascii_lower(str(x).strip()) if isinstance(x, str) else "")
     df["ros"] = df["expected_total_fp_remaining"].fillna(0).round(1)
@@ -101,7 +102,7 @@ def _norm_sp_name(raw) -> str:
 
 
 def load_rp3() -> pd.DataFrame:
-    df = pd.read_csv(OUT / "xfp_rp3_projections.csv")
+    df = PROJECTIONS.rp3()
     # rp3 stores names as "Lastname, Firstname" — normalize to "firstname lastname"
     df["name_norm"] = df["player_name"].apply(_norm_sp_name)
     # RoS = per_start × SP_STARTS_REMAINING (weeks left × 1.19/wk)
@@ -112,7 +113,7 @@ def load_rp3() -> pd.DataFrame:
 
 
 def load_rprs2() -> pd.DataFrame:
-    df = pd.read_csv(OUT / "xfp_rprs2_projections.csv")
+    df = PROJECTIONS.rprs2()
     df["name_norm"] = df["name_api"].apply(
         lambda x: _ascii_lower(str(x).strip()) if isinstance(x, str) else "")
     df["ros"] = df["xfp_ros"].fillna(0).round(1)

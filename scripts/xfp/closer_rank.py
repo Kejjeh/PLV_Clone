@@ -14,6 +14,7 @@ import unicodedata
 import re
 import pandas as pd
 
+from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT, CACHE, OUTPUTS as OUT
 sys.path.insert(0, str(ROOT))
 
@@ -50,7 +51,7 @@ def career_summary(df):
 
 def main():
     rel = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv')
-    rprs2 = pd.read_csv(OUT / 'xfp_rprs2_projections.csv')
+    rprs2 = PROJECTIONS.rprs2()
 
     targets = ['Pete Fairbanks', 'Daniel Palencia', 'Ryan Helsley', 'Jhoan Duran']
     targets_recent = {}
