@@ -193,38 +193,42 @@ def main() -> None:
 
     existing_p = load_existing(OUT_P)
     existing_h = load_existing(OUT_H)
-    seen_pks = set(existing_p['game_pk'].tolist()) if len(existing_p) else set()
+    seen_pks_p = set(existing_p['game_pk'].tolist()) if len(existing_p) else set()
+    seen_pks_h = set(existing_h['game_pk'].tolist()) if len(existing_h) else set()
 
     new_p_rows, new_h_rows = [], []
     total_games = 0
 
     for d in dates:
         pks = game_pks_for_date(d)
-        fresh = [pk for pk in pks if pk not in seen_pks]
+        fresh = [pk for pk in pks if pk not in seen_pks_p or pk not in seen_pks_h]
         if not fresh:
-            print(f'  {d}: {len(pks)} games, all cached — skip')
+            print(f'  {d}: {len(pks)} games, all cached - skip')
             continue
-        print(f'  {d}: {len(pks)} games, {len(fresh)} new')
+        print(f'  {d}: {len(pks)} games, {len(fresh)} need refresh')
         for pk in fresh:
             try:
                 p_rows, h_rows = boxscore_rows(pk, d)
-                new_p_rows.extend(p_rows)
-                new_h_rows.extend(h_rows)
-                seen_pks.add(pk)
+                if pk not in seen_pks_p:
+                    new_p_rows.extend(p_rows)
+                    seen_pks_p.add(pk)
+                if pk not in seen_pks_h:
+                    new_h_rows.extend(h_rows)
+                    seen_pks_h.add(pk)
                 total_games += 1
             except Exception as e:
-                print(f'    ⚠ game {pk} failed: {e}', file=sys.stderr)
+                print(f'    !! game {pk} failed: {e}', file=sys.stderr)
 
     if new_p_rows:
         df_new_p = pd.DataFrame(new_p_rows)
         df_p = pd.concat([existing_p, df_new_p], ignore_index=True)
         atomic_write(df_p, OUT_P)
-        print(f'  pitchers → {len(df_p)} rows ({len(new_p_rows)} new) → {OUT_P.name}')
+        print(f'  pitchers -> {len(df_p)} rows ({len(new_p_rows)} new) -> {OUT_P.name}')
 
         # quick summary for new games
         for _, r in df_new_p[df_new_p['ip'] >= 5].sort_values('fp_sp', ascending=False).head(5).iterrows():
             print(f'    {r["game_date"]} {r["player_name"]}: {r["ip"]:.1f}IP '
-                  f'{r["so"]}K {r["h_allowed"]}H {r["er"]}ER → {r["fp_sp"]:.1f} FP(SP)')
+                  f'{r["so"]}K {r["h_allowed"]}H {r["er"]}ER -> {r["fp_sp"]:.1f} FP(SP)')
     else:
         print('  pitchers: no new games')
 
@@ -232,11 +236,11 @@ def main() -> None:
         df_new_h = pd.DataFrame(new_h_rows)
         df_h = pd.concat([existing_h, df_new_h], ignore_index=True)
         atomic_write(df_h, OUT_H)
-        print(f'  hitters  → {len(df_h)} rows ({len(new_h_rows)} new) → {OUT_H.name}')
+        print(f'  hitters  -> {len(df_h)} rows ({len(new_h_rows)} new) -> {OUT_H.name}')
     else:
         print('  hitters: no new games')
 
-    print(f'  done — {total_games} new games processed')
+    print(f'  done - {total_games} games refreshed')
 
 
 if __name__ == '__main__':
