@@ -32,8 +32,9 @@ from scripts.xfp.lib.bucket_dispatch import resolve_player
 from scripts.xfp.lib.pl_cache import pl_rank, pl_streamer_rank, _warn_stale_caches, print_refresh_instructions
 from scripts.xfp.lib.triangulate_core import (
     model_row, archetype_row, synthesize, apply_overrides,
-    consolidate_verdict, compute_confidence, build_watch_list,
+    consolidate_verdict, compute_confidence, build_watch_list, il_caveat,
 )
+from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_report_for_stdout
 
 # ---------- presentation layer (stays in the CLI) ----------
@@ -623,6 +624,14 @@ def main():
         verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
         verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
+        # IL caveat — inject live ESPN injury status (cached offline) so an
+        # injured player isn't surfaced as a naked BUY. See injury_status.
+        il_status = _il_status_for(player['display_name'])
+        _il_mark = il_caveat(il_status)
+        if _il_mark:
+            verdict = f"{_il_mark} {verdict}"
+            override_tag = override_tag or 'IL'
+
         verdict_top, reason_tag = consolidate_verdict(verdict)
         m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
         confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
@@ -635,7 +644,7 @@ def main():
             'player': player, 'pl_main': pl_main, 'pl_main_date': pl_main_date,
             'pl_stream': pl_stream, 'pl_stream_date': pl_stream_date,
             'model': model, 'arche': arche, 'verdict': verdict, 'rationale': rationale,
-            'override_tag': override_tag,
+            'override_tag': override_tag, 'il_status': il_status,
             'verdict_top': verdict_top, 'reason_tag': reason_tag,
             'confidence': confidence, 'n_aligned': n_aligned, 'n_avail': n_avail,
             'watch_list': watch_list,
@@ -669,6 +678,7 @@ def main():
                 'verdict': verdict,
                 'rationale': rationale,
                 'override_tag': override_tag,
+                'il_status': il_status,
                 'category': category_map.get(name) if category_map else None,
             }
             json_rows.append(jrec)

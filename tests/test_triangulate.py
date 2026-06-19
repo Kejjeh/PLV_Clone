@@ -87,10 +87,10 @@ def _warm_cache():
     yield
 
 
-# Known-injured canonical players: their ESPN/MLB IL status is injected so the
-# verdict reflects the injury (deterministic + PL-independent). Update when a
-# player comes off / goes on the IL.
-_CANONICAL_IL = {"Aaron Judge": "IL60"}
+# Injured canonical players have their ESPN IL status injected (deterministic +
+# PL-independent) — sourced AUTOMATICALLY from the injury_status cache the daily
+# pipeline refreshes, so no hand-maintained list goes stale.
+from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 
 # PL-cache staleness windows (days) — mirror pl_cache._warn_stale_caches.
 _PL_STALE_DAYS = {'H': 7, 'SP': 7, 'RP': 7}
@@ -119,7 +119,7 @@ def _pl_cache_age_days(bucket: str):
     ids=[c[0] for c in CANONICAL_CASES],
 )
 def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, _warm_cache):
-    il = _CANONICAL_IL.get(name)
+    il = _il_status_for(name)   # from the injury_status cache (auto-refreshed)
     result = triangulate_player(name, il_status=il)
     assert result is not None, f"{name!r} failed to resolve"
     assert result["bucket"] == bucket, (
