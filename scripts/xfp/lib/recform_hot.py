@@ -101,6 +101,11 @@ def _load_starts_2026() -> pd.DataFrame:
     )
     g = g[g['BF'] >= SP_START_BF_MIN].copy()
     g['IP'] = g['outs'] / 3.0
+    # NOT the canonical BrownU FP formula — a deliberate Statcast-source PROXY.
+    # Pitch-by-pitch Statcast exposes runs_on_play (R), not earned runs (ER), and
+    # no SV/HLD, so this uses −2*R as a stand-in for −2*ER. Do NOT route this to
+    # fantasy.scoring.pitcher_fp and do NOT "correct" R→ER: the validated good-
+    # start threshold (fp_proxy_per_bf ≥ −0.0476) was calibrated on THIS proxy.
     g['fp_proxy'] = g['K'] + 3.3 * g['IP'] - g['H'] - 2 * g['R'] - g['BB'] - g['HBP']
     g['pitcher'] = g['pitcher'].astype('int64')
     g = g.sort_values(['pitcher', 'game_date']).reset_index(drop=True)

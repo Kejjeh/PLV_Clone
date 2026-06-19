@@ -83,7 +83,11 @@ def per_start_fp_proxy(year: int) -> pd.DataFrame:
     ).reset_index()
 
     g['IP'] = g['outs'] / 3.0
-    # fp_proxy: K + 3.3*IP - H - 2*ER - BB - HBP  (ER ≈ R, small over-count)
+    # Deliberate Statcast-source PROXY, not the canonical BrownU FP formula:
+    # pitch data has runs_on_play (R), not ER (and no SV/HLD), so −2*R stands in
+    # for −2*ER. Must match lib/recform_hot.py exactly — the validated good-start
+    # threshold (≥ −0.0476) was calibrated on this proxy. Do NOT route to
+    # fantasy.scoring.pitcher_fp or "correct" R→ER.
     g['fp_proxy'] = g['K'] + 3.3 * g['IP'] - g['H'] - 2 * g['R'] - g['BB'] - g['HBP']
     g['fp_proxy_per_bf'] = np.where(g['BF'] > 0, g['fp_proxy'] / g['BF'], np.nan)
     g['year'] = year

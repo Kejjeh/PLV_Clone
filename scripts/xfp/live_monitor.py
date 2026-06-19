@@ -32,6 +32,7 @@ import json
 import pandas as pd
 
 from plv_clone.paths import ROOT  # noqa: E402  (single source for repo paths)
+from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp  # noqa: E402
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -242,27 +243,34 @@ def compute_hitter_fp(stats: dict) -> float:
     hr = stats.get('homeRuns', 0)
     singles = h - doubles - triples - hr
     tb = singles + 2*doubles + 3*triples + 4*hr
-    return (stats.get('runs', 0) + tb + stats.get('rbi', 0)
-              + stats.get('baseOnBalls', 0) + stats.get('hitByPitch', 0)
-              + stats.get('stolenBases', 0) - stats.get('strikeOuts', 0))
+    return hitter_fp(
+        r=stats.get('runs', 0), tb=tb, rbi=stats.get('rbi', 0),
+        bb=stats.get('baseOnBalls', 0), hbp=stats.get('hitByPitch', 0),
+        sb=stats.get('stolenBases', 0), k=stats.get('strikeOuts', 0),
+    )
 
 
 def compute_sp_fp(stats: dict) -> float:
     if not stats: return 0.0
     ip = _ip_to_float(stats.get('inningsPitched', '0.0'))
-    return (stats.get('strikeOuts', 0) + ip*3.3
-              - stats.get('hits', 0) - 2*stats.get('earnedRuns', 0)
-              - stats.get('baseOnBalls', 0) - stats.get('hitBatsmen', 0))
+    return pitcher_fp(
+        k=stats.get('strikeOuts', 0), ip=ip, h=stats.get('hits', 0),
+        er=stats.get('earnedRuns', 0), bb=stats.get('baseOnBalls', 0),
+        hbp=stats.get('hitBatsmen', 0),
+    )
 
 
 def compute_rp_fp(stats: dict) -> float:
     if not stats: return 0.0
     ip = _ip_to_float(stats.get('inningsPitched', '0.0'))
-    return (stats.get('strikeOuts', 0) + ip*3.3
-              + stats.get('saves', 0)*5 + stats.get('holds', 0)*2
-              + stats.get('wins', 0)*2 - stats.get('losses', 0)*2
-              - stats.get('baseOnBalls', 0) - stats.get('hitBatsmen', 0)
-              - 2*stats.get('earnedRuns', 0) - stats.get('hits', 0))
+    # BrownU RP scoring has NO win/loss term (see LeagueScoring + CLAUDE.md).
+    # The old inline formula added +2*W −2*L, over-counting by 2*(W−L)/appearance.
+    return pitcher_fp(
+        k=stats.get('strikeOuts', 0), ip=ip, h=stats.get('hits', 0),
+        er=stats.get('earnedRuns', 0), bb=stats.get('baseOnBalls', 0),
+        hbp=stats.get('hitBatsmen', 0),
+        sv=stats.get('saves', 0), hld=stats.get('holds', 0),
+    )
 
 
 def detect_highlights(name: str, role: str, stats_b: dict, stats_p: dict) -> list[str]:
