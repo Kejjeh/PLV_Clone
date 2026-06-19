@@ -730,21 +730,11 @@ def load_calibration_scalar():
         return 1.0
 
 
-# Module-level lazy caches (populated on first call from main())
-_ADJUSTERS_ON = False        # master CLI flag
-_RP_APP_RATES: dict = {}     # mlbam_id -> observed app rate (Bayesian-shrunk)
-_WEEKLY_MOMENTUM: dict = {}  # norm_name -> within-week form factor (λ=0.15 shrinkage)
-_MA2_HITTER_ON = False       # #6 — independent toggle for hitter MA2 (rh3.recency_form_gap)
-_MA2_SP_ON = False           # #6 — independent toggle for SP MA2 (rolling 21d)
-_HITTER_FORM = {}            # SP form keyed by mlbam (MA2 SP); hitters now use rh3 recency_form_gap directly
-_SP_FORM = {}
-_LINEUP = {}
-_PARK = {}                   # MA4 DROPPED; kept as empty stub for backward compat
-_PSPLIT = {}
-_BAT_SIDE = {}
+# Adjuster data is no longer module-global state — it's bundled into a frozen
+# matchup_projection.Adjusters value in main() and threaded into project_player
+# (R2-1). The one remaining module cache is the collision-safe hitter lookup,
+# populated by load_projections().
 _RH3_BY_BATTER = {}          # batter mlbam → rh3 info; collision-safe hitter lookup (Max Muncy LAD vs ATH)
-_IL_RETURNS = {}             # #10 — player_id → return_date from get_injury_details upstream cache
-_CALIB = 1.0
 LEAGUE_AVG_XWOBA = 0.310     # MA5 platoon normalization
 
 # Scalar knobs for the deep matchup_projection core, sourced from the dashboard
@@ -1043,9 +1033,16 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
 
 
 def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
-                     rp3_map, rp3_by_mlbam, rprs2_map, ts_map, today, week_end):
+                     rp3_map, rp3_by_mlbam, rprs2_map, ts_map, today, week_end,
+                     adj=None):
     """Schedule + opp + role aware projection. Returns dict with fp, units,
-       per-game/start breakdown, sigma_total, and any badges."""
+       per-game/start breakdown, sigma_total, and any badges.
+
+       `adj` is the frozen Adjusters value (form/lineup/platoon/IL/calib/
+       momentum maps + toggles). Defaults to neutral so a missing adjuster
+       set yields the baseline xfp projection."""
+    if adj is None:
+        adj = _mproj.Adjusters.neutral()
     name, pos = player.name, (player.position or '?')
     nk = _norm(name)
     team = (player.proTeam or '').upper()
@@ -1073,7 +1070,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                  'INJURY_RESERVE', 'OUT')
     if inj in IL_STATES:
         pid_for_il = getattr(player, 'playerId', None)
-        rd = _IL_RETURNS.get(pid_for_il) if pid_for_il else None
+        rd = adj.il_returns.get(pid_for_il) if pid_for_il else None
         if rd is None:
             # fallback to player.returnDate if upstream cache missed
             rd_str = getattr(player, 'returnDate', None) or None
@@ -1146,11 +1143,11 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         if len(starts) >= 2:
             out['badges'].append('🔥 2-START')
 
-        # MA2 (SP): recent-form factor — gated on _MA2_SP_ON
-        recent_factor = _SP_FORM.get(mlbam, 1.0) if _MA2_SP_ON else 1.0
+        # MA2 (SP): recent-form factor — gated on adj.ma2_sp_on
+        recent_factor = adj.sp_form.get(mlbam, 1.0) if adj.ma2_sp_on else 1.0
         # Within-week momentum (λ=0.15 shrinkage toward neutral) — constant
         # across this pitcher's starts.
-        sp_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
+        sp_momentum = adj.weekly_momentum.get(nk, 1.0)
         # Per-player σ from xfp_rp3 (per-start FP units). Globally calibrated
         # — currently identical across SPs but still beats the legacy 5.5 FP.
         # Falls back to fixed SIGMA_PER_SP_START if the SP isn't in the projection
@@ -1165,7 +1162,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
             for s in starts
         ]
         res = _mproj.project_sp_starts(per_start_base, start_ctx,
-                                       recent_factor=recent_factor, calib=_CALIB,
+                                       recent_factor=recent_factor, calib=adj.calib,
                                        momentum=sp_momentum, sigma=sp_sigma,
                                        cfg=_MCFG)
         out['fp'] = res.fp
@@ -1182,7 +1179,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         rp_mlbam = rp_info.get('mlbam')
         # Use observed appearance rate (Bayesian-shrunk toward role prior) when
         # available; fall back to static role rate for pitchers not in boxscore.
-        app_rate = (_RP_APP_RATES.get(int(rp_mlbam), RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
+        app_rate = (adj.rp_app_rates.get(int(rp_mlbam), RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
                     if rp_mlbam else RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
         xfp_ros = rp_info.get('xfp_ros') or 0
         if not xfp_ros or not rem: return out
@@ -1191,7 +1188,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         days_remaining_season = max((SEASON_END - today).days, 1)
         res = _mproj.project_rp(xfp_ros, len(rem), role=role, app_rate=app_rate,
                                 days_remaining_season=days_remaining_season,
-                                il_factor=il_factor, calib=_CALIB,
+                                il_factor=il_factor, calib=adj.calib,
                                 rp_sigma=SIGMA_PER_RP_GAME, cfg=_MCFG)
         out['fp'] = res.fp
         out['units'] = res.units
@@ -1222,7 +1219,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         # MA2 hitter: use rh3.recency_form_gap directly (#8 — no double-count;
         # rh3 includes the column as display-only, not in features).
         # Gap is xwoba_per_pa_last21_sh - prior_fp_per_pa. Convert to factor.
-        if _MA2_HITTER_ON:
+        if adj.ma2_hitter_on:
             base_pa = rh.get('prior_fp_per_pa') or rh.get('per_pa') or 0
             gap = rh.get('recency_form_gap')
             if gap and base_pa and base_pa > 0:
@@ -1231,14 +1228,14 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                 recent_factor = 1.0
         else:
             recent_factor = 1.0
-        lineup_info = _LINEUP.get(batter_mlbam, {}) if batter_mlbam else {}
+        lineup_info = adj.lineup.get(batter_mlbam, {}) if batter_mlbam else {}
         lineup_factor = lineup_spot_factor(lineup_info.get('modal_spot'),
                                             lineup_info.get('pa_per_g')) if lineup_info else 1.0
 
         # MA5 stance resolution (data assembly stays here; switch hitters bat
         # opposite the pitcher's throwing arm). The clamp + combination math
         # live in matchup_projection.
-        h_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
+        h_momentum = adj.weekly_momentum.get(nk, 1.0)
         game_ctx = []
         for g in rem:
             opp_sp_id = g.get('opp_probable_id')
@@ -1249,9 +1246,9 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                 ops = None
                 tpi = ts_map.get(g['opp_team'], {}).get('pit_index') or 1.0
             plat_xwoba = None
-            if opp_sp_id and opp_sp_id in _PSPLIT and batter_mlbam in _BAT_SIDE:
-                stance = _BAT_SIDE.get(batter_mlbam, 'R')
-                ps = _PSPLIT[opp_sp_id]
+            if opp_sp_id and opp_sp_id in adj.psplit and batter_mlbam in adj.bat_side:
+                stance = adj.bat_side.get(batter_mlbam, 'R')
+                ps = adj.psplit[opp_sp_id]
                 if stance == 'S':
                     p_throws = ps.get('p_throws', 'R')
                     stance = 'L' if p_throws == 'R' else 'R'
@@ -1268,7 +1265,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         res = _mproj.project_hitter_games(
             per_game_base, game_ctx,
             recent_factor=recent_factor, lineup_factor=lineup_factor,
-            il_factor=il_factor, calib=_CALIB, momentum=h_momentum,
+            il_factor=il_factor, calib=adj.calib, momentum=h_momentum,
             sigma_factor=rh.get('sigma_factor'), pa_per_g=pa_per_g,
             legacy_sigma=LEGACY_SIGMA, cfg=_MCFG)
         out['fp'] = res.fp
@@ -1823,8 +1820,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             venue = c['team'] if is_home else opp
             pf_wOBA = pf_map.get(venue, 1.0)
             opp_idx = ts_map_local.get(opp, 1.0)
-            mult = (1 - 0.5 * (pf_wOBA - 1)) * (1 - 0.7 * (opp_idx - 1))
-            mult = max(0.6, min(1.4, mult))
+            mult = _mproj.two_start_multiplier(pf_wOBA, opp_idx)
             c['opp'] = opp
             c['is_home'] = is_home
             c['pf_wOBA'] = pf_wOBA
@@ -1857,9 +1853,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             c['is_il_return'] = bool(il.get('is_first_back_long_il'))
 
             # Matchup-tier from opp_idx (mirrors stream_the_stack soft/avg/tough).
-            if opp_idx <= 0.97: c['matchup_tier'] = 'soft'
-            elif opp_idx >= 1.03: c['matchup_tier'] = 'tough'
-            else: c['matchup_tier'] = 'avg'
+            c['matchup_tier'] = _mproj.matchup_tier(opp_idx)
 
         # Composite ranking: exp_fp DESC, then boom_stack DESC, then
         # matchup_tier (soft > avg > tough), then pct_owned ASC.
@@ -2700,24 +2694,9 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
                 'components': hbs.get('components') or {},
             })
 
-        def _verdict_sp(r):
-            tags = []
-            if (r['boom_stack'] or 0) >= 2: tags.append('🎯 HIGH-CONVICTION')
-            if r['is_high_k']:               tags.append('🎯K')
-            if r['is_elite_framer']:         tags.append('🧊 elite-framer')
-            if r['anti_pred']:               tags.append('⛔ anti-predictive')
-            if r['is_framing_tax']:          tags.append('⚠ framing-tax')
-            if r['is_il_return']:            tags.append('🏥 IL-return')
-            return tags
-
-        def _verdict_hit(r):
-            tags = []
-            comps = r['components']
-            if (r['boom_stack'] or 0) >= 3:  tags.append('🎯 HIGH-CONVICTION')
-            elif (r['boom_stack'] or 0) >= 2: tags.append('✨ stack 2+')
-            if comps.get('lineup_amp_hitter'): tags.append('🔥 lineup-amp')
-            if comps.get('skill_spike_hitter'): tags.append('🎯 skill-spike')
-            return tags
+        # Pure verdict kernels live in matchup_projection (R2-3) — tested there.
+        _verdict_sp = _mproj.boom_verdict_sp
+        _verdict_hit = _mproj.boom_verdict_hit
 
         # Conviction list (combined SP + hitter), downside list.
         conv_sp = [r for r in sp_rows
@@ -2929,43 +2908,47 @@ def main():
     _args, _ = _parser.parse_known_args()
     if _args.help:
         _parser.print_help(); return
-    global _ADJUSTERS_ON, _MA2_HITTER_ON, _MA2_SP_ON
+    # Adjuster toggles are local; the adjuster DATA is bundled into a frozen
+    # Adjusters value (built below) and threaded into project_player — no module
+    # globals, no mid-run mutation. See plv_clone.matchup_projection.Adjusters.
     _ADJUSTERS_ON = _args.with_adjusters or os.environ.get('ADJUSTERS_ON') == '1'
     _USE_BOOTSTRAP = (not _args.no_bootstrap) and os.environ.get('WIN_PROB_BOOTSTRAP') != '0'
     # MA2 sub-toggles default to master flag (#6 — can be split independently
     # later via env vars if MAE shows one direction net-helps but the other doesn't)
-    _MA2_HITTER_ON = _ADJUSTERS_ON and os.environ.get('MA2_HITTER_OFF') != '1'
-    _MA2_SP_ON = _ADJUSTERS_ON and os.environ.get('MA2_SP_OFF') != '1'
+    _ma2_hitter_on = _ADJUSTERS_ON and os.environ.get('MA2_HITTER_OFF') != '1'
+    _ma2_sp_on = _ADJUSTERS_ON and os.environ.get('MA2_SP_OFF') != '1'
 
     print('Loading matchup + projections...')
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
-    # MA2-MA7: load adjuster data into module-level caches (only if enabled).
-    global _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS, _CALIB
-    global _RP_APP_RATES
-    # RP appearance rates are objective data (not an adjuster) — always load.
-    _RP_APP_RATES = load_rp_appearance_rates()
-    print(f'  RP appearance rates loaded: {len(_RP_APP_RATES)} pitchers from boxscore')
-    if _ADJUSTERS_ON:
-        _HITTER_FORM, _SP_FORM = load_recent_form_maps()  # SP form only used now
-        _LINEUP = load_lineup_map()
-        _PARK = load_park_factors()                       # stub returns {}
-        _PSPLIT = load_pitcher_splits()
-        _BAT_SIDE = load_bat_side_map()
-        _IL_RETURNS = load_il_returns(mu)                 # #10
-        _CALIB = load_calibration_scalar()
-        print(f'  ⚙ ADJUSTERS ON  MA2_hitter={_MA2_HITTER_ON} MA2_sp={_MA2_SP_ON}  '
-              f'caches: sp_form={len(_SP_FORM)} lineup={len(_LINEUP)} '
-              f'pitcher_splits={len(_PSPLIT)} bat_side={len(_BAT_SIDE)} '
-              f'il_returns={len(_IL_RETURNS)} calib={_CALIB:.3f}')
-    else:
-        _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _IL_RETURNS = (
-            {}, {}, {}, {}, {}, {}, {})
+
+    def _load_adjuster_maps(on: bool):
+        """Load the adjuster data maps for the given toggle state. Returns a
+        dict of the per-map locals; momentum + rp_app_rates are added by the
+        caller (they don't depend on the toggle)."""
+        if on:
+            hitter_form, sp_form = load_recent_form_maps()  # SP form only used now
+            return dict(hitter_form=hitter_form, sp_form=sp_form,
+                        lineup=load_lineup_map(), park=load_park_factors(),
+                        psplit=load_pitcher_splits(), bat_side=load_bat_side_map(),
+                        il_returns=load_il_returns(mu), calib=load_calibration_scalar())
         # Calibration scalar is fit on baseline projections — safe to apply here.
         # The double-correction warning applies to applying a baseline-fit scalar
         # on top of post-adjuster projections, not the other direction.
-        _CALIB = load_calibration_scalar()
-        print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only) calib={_CALIB:.3f}')
+        return dict(hitter_form={}, sp_form={}, lineup={}, park={}, psplit={},
+                    bat_side={}, il_returns={}, calib=load_calibration_scalar())
+
+    # RP appearance rates are objective data (not an adjuster) — always load.
+    rp_app_rates = load_rp_appearance_rates()
+    print(f'  RP appearance rates loaded: {len(rp_app_rates)} pitchers from boxscore')
+    _maps = _load_adjuster_maps(_ADJUSTERS_ON)
+    if _ADJUSTERS_ON:
+        print(f'  ⚙ ADJUSTERS ON  MA2_hitter={_ma2_hitter_on} MA2_sp={_ma2_sp_on}  '
+              f'caches: sp_form={len(_maps["sp_form"])} lineup={len(_maps["lineup"])} '
+              f'pitcher_splits={len(_maps["psplit"])} bat_side={len(_maps["bat_side"])} '
+              f'il_returns={len(_maps["il_returns"])} calib={_maps["calib"]:.3f}')
+    else:
+        print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only) calib={_maps["calib"]:.3f}')
     today = date.today()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
@@ -2980,11 +2963,24 @@ def main():
 
     # Within-week Bayesian momentum: compare each player's actual FP/game so
     # far this week to their model projection. λ=0.15 shrinkage applied inside.
-    global _WEEKLY_MOMENTUM
-    _WEEKLY_MOMENTUM = compute_weekly_momentum(
+    weekly_momentum = compute_weekly_momentum(
         bs_h_week, rh3_map, bs_week=bs_week, rp3_map=rp3_map)
-    if _WEEKLY_MOMENTUM:
-        print(f'  weekly momentum: {len(_WEEKLY_MOMENTUM)} players have mid-week form signal')
+    if weekly_momentum:
+        print(f'  weekly momentum: {len(weekly_momentum)} players have mid-week form signal')
+
+    # Bundle all adjuster data into one frozen value (R2-1). project_player reads
+    # from this instead of module globals; the shadow A/B pass below builds a
+    # SECOND value rather than mutating shared state.
+    def _build_adjusters(on, maps):
+        return _mproj.Adjusters(
+            adjusters_on=on,
+            ma2_hitter_on=(on and os.environ.get('MA2_HITTER_OFF') != '1'),
+            ma2_sp_on=(on and os.environ.get('MA2_SP_OFF') != '1'),
+            calib=maps['calib'], sp_form=maps['sp_form'], hitter_form=maps['hitter_form'],
+            lineup=maps['lineup'], park=maps['park'], psplit=maps['psplit'],
+            bat_side=maps['bat_side'], il_returns=maps['il_returns'],
+            rp_app_rates=rp_app_rates, weekly_momentum=weekly_momentum)
+    adj = _build_adjusters(_ADJUSTERS_ON, _maps)
 
     print(f'  matchup period: {mu["period"]}')
     print(f'  week: {week_start} → {week_end} (today: {today})')
@@ -3039,11 +3035,11 @@ def main():
     print('  projecting (schedule + opp-SP + role + cap aware)...')
     my_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                          rh3_map, rp3_map, rp3_by_mlbam,
-                                         rprs2_map, ts_map, today, week_end)
+                                         rprs2_map, ts_map, today, week_end, adj=adj)
                for p in mu['my_lineup']}
     opp_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                           rh3_map, rp3_map, rp3_by_mlbam,
-                                          rprs2_map, ts_map, today, week_end)
+                                          rprs2_map, ts_map, today, week_end, adj=adj)
                 for p in mu['opp_lineup']}
 
     # Apply SP cap (10 starts/week)
@@ -3144,28 +3140,18 @@ def main():
     try:
         shadow_on = not _ADJUSTERS_ON
         shadow_version = 'MA_v1' if shadow_on else 'baseline'
-        # Toggle module state for the shadow projection
-        prior_state = (_ADJUSTERS_ON, _HITTER_FORM, _SP_FORM, _LINEUP, _PARK, _PSPLIT, _BAT_SIDE, _CALIB)
-        globals()['_ADJUSTERS_ON'] = shadow_on
-        if shadow_on:
-            globals()['_HITTER_FORM'], globals()['_SP_FORM'] = load_recent_form_maps()
-            globals()['_LINEUP'] = load_lineup_map()
-            globals()['_PARK'] = load_park_factors()
-            globals()['_PSPLIT'] = load_pitcher_splits()
-            globals()['_BAT_SIDE'] = load_bat_side_map()
-            globals()['_CALIB'] = load_calibration_scalar()
-        else:
-            (globals()['_HITTER_FORM'], globals()['_SP_FORM'], globals()['_LINEUP'],
-             globals()['_PARK'], globals()['_PSPLIT'], globals()['_BAT_SIDE'],
-             globals()['_CALIB']) = {}, {}, {}, {}, {}, {}, 1.0
+        # Build a SECOND Adjusters value for the shadow state — no global
+        # mutation, no save/restore. The shadow projection is a pure function of
+        # this value (rp_app_rates + weekly_momentum are toggle-independent).
+        shadow_adj = _build_adjusters(shadow_on, _load_adjuster_maps(shadow_on))
         # Reproject under shadow state
         my_proj_s = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                               rh3_map, rp3_map, rp3_by_mlbam,
-                                              rprs2_map, ts_map, today, week_end)
+                                              rprs2_map, ts_map, today, week_end, adj=shadow_adj)
                      for p in mu['my_lineup']}
         opp_proj_s = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                                 rh3_map, rp3_map, rp3_by_mlbam,
-                                                rprs2_map, ts_map, today, week_end)
+                                                rprs2_map, ts_map, today, week_end, adj=shadow_adj)
                       for p in mu['opp_lineup']}
         apply_sp_cap(my_proj_s); apply_sp_cap(opp_proj_s)
         # Slot-aware filter for shadow log (mirrors live aggregation 2026-06-03)
@@ -3183,10 +3169,6 @@ def main():
         else:
             wp_s = win_probability(my_total_s, opp_total_s, my_sig2_s, opp_sig2_s)
         log_prediction(mu, my_total_s, opp_total_s, wp_s, today, model_version=shadow_version)
-        # Restore prior state for any downstream code (no live impact, but be tidy)
-        (globals()['_ADJUSTERS_ON'], globals()['_HITTER_FORM'], globals()['_SP_FORM'],
-         globals()['_LINEUP'], globals()['_PARK'], globals()['_PSPLIT'],
-         globals()['_BAT_SIDE'], globals()['_CALIB']) = prior_state
     except Exception as e:
         print(f'  ⚠ shadow-log skipped: {e}')
 

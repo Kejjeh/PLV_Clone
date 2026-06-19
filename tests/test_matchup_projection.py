@@ -172,3 +172,78 @@ def test_win_prob_dispatch():
     assert win_prob(110, 100, 50, 50, method='normal') == win_prob_normal(110, 100, 50, 50)
     with pytest.raises(ValueError):
         win_prob(0, 0, 0, 0, method='bootstrap')
+
+
+# --- Adjusters value object (R2-1) -------------------------------------------
+
+def test_adjusters_neutral_is_inert():
+    from plv_clone.matchup_projection import Adjusters
+    a = Adjusters.neutral()
+    # neutral = no adjustment: empty maps, calib 1.0, all toggles off
+    assert a.calib == 1.0
+    assert a.adjusters_on is False
+    assert a.ma2_hitter_on is False and a.ma2_sp_on is False
+    assert a.sp_form == {} and a.lineup == {} and a.weekly_momentum == {}
+    assert a.rp_app_rates == {} and a.il_returns == {}
+
+
+def test_adjusters_is_frozen():
+    from dataclasses import FrozenInstanceError
+    from plv_clone.matchup_projection import Adjusters
+    a = Adjusters.neutral()
+    with pytest.raises(FrozenInstanceError):
+        a.calib = 1.2  # immutable — no in-place mutation
+
+
+def test_adjusters_shadow_variant_is_a_new_value():
+    # The shadow A/B pass must build a SECOND value, never mutate the first.
+    from dataclasses import replace
+    from plv_clone.matchup_projection import Adjusters
+    base = Adjusters.neutral()
+    shadow = replace(base, adjusters_on=True, calib=1.1)
+    assert shadow.adjusters_on is True and shadow.calib == 1.1
+    assert base.adjusters_on is False and base.calib == 1.0   # original untouched
+    assert shadow is not base
+
+
+# --- pure kernels extracted from render_* functions (R2-3) --------------------
+
+def test_two_start_multiplier_neutral_and_clamped():
+    from plv_clone.matchup_projection import two_start_multiplier
+    assert two_start_multiplier(1.0, 1.0) == pytest.approx(1.0)        # neutral park + opp
+    # pitcher-park (pf<1) + weak opp (idx<1) both boost → clamp hi 1.4
+    assert two_start_multiplier(0.0, 0.0) == 1.4                       # 1.5 * 1.7 = 2.55 → 1.4
+    # hitter-park (pf>1) + tough opp (idx>1) both suppress → clamp lo 0.6
+    assert two_start_multiplier(2.0, 2.0) == 0.6                       # 0.5 * 0.3 = 0.15 → 0.6
+    # a real-ish value: pf 1.05, opp_idx 0.95
+    assert two_start_multiplier(1.05, 0.95) == pytest.approx(
+        (1 - 0.5 * 0.05) * (1 - 0.7 * -0.05))
+
+
+def test_matchup_tier_thresholds():
+    from plv_clone.matchup_projection import matchup_tier
+    assert matchup_tier(0.95) == 'soft'
+    assert matchup_tier(0.97) == 'soft'     # boundary inclusive
+    assert matchup_tier(1.00) == 'avg'
+    assert matchup_tier(1.03) == 'tough'    # boundary inclusive
+    assert matchup_tier(1.10) == 'tough'
+
+
+def test_boom_verdict_sp_tags():
+    from plv_clone.matchup_projection import boom_verdict_sp
+    row = {'boom_stack': 2, 'is_high_k': True, 'is_elite_framer': False,
+           'anti_pred': False, 'is_framing_tax': False, 'is_il_return': False}
+    tags = boom_verdict_sp(row)
+    assert '🎯 HIGH-CONVICTION' in tags and '🎯K' in tags
+    # an inert row produces no tags
+    assert boom_verdict_sp({'boom_stack': 0, 'is_high_k': False, 'is_elite_framer': False,
+                            'anti_pred': False, 'is_framing_tax': False,
+                            'is_il_return': False}) == []
+
+
+def test_boom_verdict_hit_tags():
+    from plv_clone.matchup_projection import boom_verdict_hit
+    hi = boom_verdict_hit({'boom_stack': 3, 'components': {'lineup_amp_hitter': True}})
+    assert '🎯 HIGH-CONVICTION' in hi and '🔥 lineup-amp' in hi
+    mid = boom_verdict_hit({'boom_stack': 2, 'components': {}})
+    assert '✨ stack 2+' in mid and '🎯 HIGH-CONVICTION' not in mid

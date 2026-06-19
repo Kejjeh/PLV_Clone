@@ -60,6 +60,38 @@ class MatchupConfig:
 
 
 @dataclass(frozen=True)
+class Adjusters:
+    """The matchup dashboard's adjuster *data* as one immutable value.
+
+    Bundles the ~10 maps + toggles the dashboard used to keep as mutable module
+    globals (MA2 form, lineup, platoon splits, bat side, IL returns, calibration,
+    RP appearance rates, within-week momentum).  ``project_player`` reads from an
+    injected ``Adjusters`` instead of globals, so its dependencies are its
+    signature and the shadow A/B pass builds a *second* value (via
+    ``dataclasses.replace``) rather than mutating shared state mid-run.
+    """
+    adjusters_on: bool = False
+    ma2_hitter_on: bool = False
+    ma2_sp_on: bool = False
+    calib: float = 1.0
+    sp_form: dict = field(default_factory=dict)        # mlbam -> recency-form factor (SP)
+    hitter_form: dict = field(default_factory=dict)    # legacy SP-form map (kept for compat)
+    lineup: dict = field(default_factory=dict)         # batter mlbam -> {modal_spot, pa_per_g}
+    park: dict = field(default_factory=dict)           # MA4 dropped; empty stub
+    psplit: dict = field(default_factory=dict)         # pitcher mlbam -> platoon split
+    bat_side: dict = field(default_factory=dict)       # batter mlbam -> stance
+    il_returns: dict = field(default_factory=dict)     # player_id -> return date
+    rp_app_rates: dict = field(default_factory=dict)   # mlbam -> appearance rate
+    weekly_momentum: dict = field(default_factory=dict)  # join_key -> within-week form factor
+
+    @classmethod
+    def neutral(cls) -> "Adjusters":
+        """All-inert adjusters: empty maps, calib 1.0, every toggle off.  A
+        projection run with neutral adjusters is the baseline xfp model."""
+        return cls()
+
+
+@dataclass(frozen=True)
 class ProjResult:
     """Output of a per-role projection: total FP, scoring units, variance, and
     the per-event breakdown rows the dashboard renders."""
@@ -284,6 +316,53 @@ def il_availability_factor(return_date, today, week_end) -> Optional[float]:
     days_avail = max(0, (week_end - max(return_date, today)).days + 1)
     days_total = max(1, (week_end - today).days + 1)
     return days_avail / days_total
+
+
+# =============================================================================
+# Display kernels — pure logic lifted out of the dashboard's render_* functions
+# (R2-3). The render functions keep the HTML; these own the decisions/math so
+# they can be tested without generating a page.
+# =============================================================================
+
+def two_start_multiplier(pf_wOBA: float, opp_idx: float) -> float:
+    """2-start-gem FP multiplier: hitter-park (pf_wOBA) suppresses a pitcher,
+    a strong opposing offense (opp_idx) suppresses more.  Clamped to [0.6, 1.4]."""
+    mult = (1 - 0.5 * (pf_wOBA - 1)) * (1 - 0.7 * (opp_idx - 1))
+    return max(0.6, min(1.4, mult))
+
+
+def matchup_tier(opp_idx: float) -> str:
+    """soft / avg / tough from the opposing-offense index (mirrors
+    stream_the_stack's bucketing)."""
+    if opp_idx <= 0.97:
+        return 'soft'
+    if opp_idx >= 1.03:
+        return 'tough'
+    return 'avg'
+
+
+def boom_verdict_sp(row: dict) -> list:
+    """Conviction/risk tags for an SP boom-bust row (pure over the row's tag
+    booleans)."""
+    tags = []
+    if (row.get('boom_stack') or 0) >= 2: tags.append('🎯 HIGH-CONVICTION')
+    if row.get('is_high_k'):              tags.append('🎯K')
+    if row.get('is_elite_framer'):        tags.append('🧊 elite-framer')
+    if row.get('anti_pred'):              tags.append('⛔ anti-predictive')
+    if row.get('is_framing_tax'):         tags.append('⚠ framing-tax')
+    if row.get('is_il_return'):           tags.append('🏥 IL-return')
+    return tags
+
+
+def boom_verdict_hit(row: dict) -> list:
+    """Conviction tags for a hitter boom-bust row."""
+    tags = []
+    comps = row.get('components') or {}
+    if (row.get('boom_stack') or 0) >= 3:   tags.append('🎯 HIGH-CONVICTION')
+    elif (row.get('boom_stack') or 0) >= 2: tags.append('✨ stack 2+')
+    if comps.get('lineup_amp_hitter'):  tags.append('🔥 lineup-amp')
+    if comps.get('skill_spike_hitter'): tags.append('🎯 skill-spike')
+    return tags
 
 
 # =============================================================================
