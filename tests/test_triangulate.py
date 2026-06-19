@@ -84,6 +84,27 @@ def _warm_cache():
     yield
 
 
+# PL-cache staleness windows (days) — mirror pl_cache._warn_stale_caches.
+_PL_STALE_DAYS = {'H': 7, 'SP': 7, 'RP': 7}
+
+
+def _pl_cache_age_days(bucket: str):
+    """Days since the PL Top-N cache for this bucket was fetched, or None."""
+    import json
+    import datetime
+    from scripts.xfp.lib.pl_cache import PL_CACHE_FILES
+    try:
+        from plv_clone.paths import RESEARCH
+        path = RESEARCH / 'pl_cache' / PL_CACHE_FILES[bucket]
+        with open(path, encoding='utf-8') as fh:
+            fetched = json.load(fh).get('fetched')
+        if not fetched:
+            return None
+        return (datetime.date.today() - datetime.date.fromisoformat(fetched)).days
+    except Exception:
+        return None
+
+
 @pytest.mark.parametrize(
     "name,verdict_sub,bucket,verdict_top,override_tag",
     CANONICAL_CASES,
@@ -95,6 +116,18 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     assert result["bucket"] == bucket, (
         f"{name!r} bucket={result['bucket']!r}, expected {bucket!r}"
     )
+    # Canonical verdicts depend on the weekly PL Top-N cache. When that cache is
+    # STALE and this player is consequently unranked (pl_main UR/—), the verdict
+    # can flip on operational data staleness rather than a code change. Relax the
+    # lock (xfail) rather than red-CI — refresh PL Top 150 to re-engage it. A
+    # genuine code regression with a FRESH cache still fails hard, and a
+    # fresh-cache UR still enforces. Resolution + bucket above are always locked.
+    _age = _pl_cache_age_days(bucket)
+    if (_age is not None and _age > _PL_STALE_DAYS.get(bucket, 7)
+            and result.get("pl_main") in ("UR", "—")):
+        pytest.xfail(
+            f"{name}: PL {bucket} cache {_age}d stale -> pl_main={result.get('pl_main')!r}; "
+            f"refresh PL Top 150 to re-enforce the verdict lock.")
     if verdict_sub is not None:
         assert verdict_sub in result["verdict"], (
             f"{name!r} verdict={result['verdict']!r} did not contain {verdict_sub!r}"
