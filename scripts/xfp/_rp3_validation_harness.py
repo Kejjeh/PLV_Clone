@@ -14,6 +14,11 @@ warnings.filterwarnings('ignore')
 import pandas as pd
 import numpy as np
 
+import sys as _sys
+from plv_clone.paths import ROOT as _ROOT
+_sys.path.insert(0, str(_ROOT))
+from scripts.xfp.lib.rule9 import rule9_lift  # position-agnostic Rule-9 scoring
+
 from plv_clone.models.xfp.rp3 import (
     RP3_FEATS, cross_year_eval, ROLLING_CSV, MULTIYR_CSV, IL_CSV,
     SHRINK_SPEC_TO, SHRINK_SPEC_LAST21, build_prior_table,
@@ -131,38 +136,22 @@ def evaluate_candidate(
     # Baseline: full production RP3_FEATS
     py_base, ov_base = cross_year_eval(df, RP3_FEATS)
     py_full, ov_full = cross_year_eval(df, RP3_FEATS + [candidate_col])
-    lift = ov_full['r'] - ov_base['r']
-
-    HOLDOUT = [2024, 2025]
-    sign_match = 0; n_total = 0
-    per_year_lift = {}
-    for y in sorted(py_full.keys()):
-        if y in py_base:
-            d = py_full[y]['r'] - py_base[y]['r']
-            per_year_lift[y] = round(d, 4)
-            n_total += 1
-            if d > 0:
-                sign_match += 1
-    holdout_full = [py_full[y]['r'] for y in HOLDOUT if y in py_full]
-    holdout_base = [py_base[y]['r'] for y in HOLDOUT if y in py_base]
-    holdout_lift = (
-        float(np.mean(holdout_full) - np.mean(holdout_base))
-        if holdout_full and holdout_base else None
-    )
+    # Rule-9 lift scoring (position-agnostic) lives in lib/rule9.
+    r9 = rule9_lift(py_base, py_full, r_base=ov_base['r'], r_full=ov_full['r'])
 
     return {
         'candidate': label,
         'r_baseline': round(ov_base['r'], 4),
         'r_full': round(ov_full['r'], 4),
-        'lift': round(lift, 4),
+        'lift': round(r9['lift'], 4),
         'n_baseline': ov_base['n'],
         'n_full': ov_full['n'],
         'per_year_baseline': {y: info['r'] for y, info in sorted(py_base.items())},
         'per_year_full': {y: info['r'] for y, info in sorted(py_full.items())},
-        'per_year_lift': per_year_lift,
-        'sign_match_years': sign_match,
-        'n_total_years': n_total,
-        'holdout_lift': round(holdout_lift, 4) if holdout_lift is not None else None,
+        'per_year_lift': r9['per_year_lift'],
+        'sign_match_years': r9['sign_match_years'],
+        'n_total_years': r9['n_total_years'],
+        'holdout_lift': round(r9['holdout_lift'], 4) if r9['holdout_lift'] is not None else None,
     }
 
 
