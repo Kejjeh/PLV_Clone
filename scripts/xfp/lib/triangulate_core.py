@@ -786,8 +786,35 @@ def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict
 
 # ---------- public high-level entry point ----------
 
-def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
+_IL_STATES = frozenset({
+    'IL', 'IL10', 'IL15', 'IL60', 'OUT', 'INJURY_RESERVE',
+    'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
+})
+
+
+def il_caveat(il_status) -> str | None:
+    """Return an IL caveat marker for an injury status, or None.
+
+    An injured player can still rate elite on talent (model + archetype), so the
+    raw verdict can read BUY for someone on the 60-day IL. This marker is
+    prepended to the verdict so the IL is impossible to miss — without rewriting
+    the underlying talent read.
+    """
+    if not il_status:
+        return None
+    s = str(il_status).upper()
+    if s in _IL_STATES or 'DL' in s or s.startswith('IL'):
+        return f'🏥 ON IL ({il_status}) — talent read only:'
+    return None
+
+
+def triangulate_player(name: str, bucket: str | None = None,
+                       *, il_status=None) -> dict | None:
     """Run the full triangulate pipeline for one player.
+
+    ``il_status`` is an injected ESPN/MLB injury status (e.g. 'IL60'); the engine
+    stays offline (caller supplies it). When set, the verdict is caveated so an
+    injured player isn't surfaced as a naked BUY.
 
     Returns a structured dict, or None if the player couldn't be resolved.
     """
@@ -821,6 +848,14 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
     confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
     watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main)
 
+    # IL caveat (injected) — applied AFTER verdict synthesis so the talent read
+    # (verdict_top, confidence, watch_list) is untouched; only the surfaced
+    # verdict string + override_tag mark the injury.
+    _il_mark = il_caveat(il_status)
+    if _il_mark:
+        verdict = f'{_il_mark} {verdict}'
+        override_tag = override_tag or 'IL'
+
     result = {
         'player': player,
         'bucket': b,
@@ -840,6 +875,7 @@ def triangulate_player(name: str, bucket: str | None = None) -> dict | None:
         'verdict': verdict,
         'verdict_top': verdict_top,
         'reason_tag': reason_tag,
+        'il_status': il_status,
         'confidence': confidence,
         'confidence_n_aligned': n_aligned,
         'confidence_n_available': n_avail,

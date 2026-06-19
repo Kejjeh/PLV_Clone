@@ -61,7 +61,10 @@ CANONICAL_CASES = [
     #      now MIXED, so he no longer qualifies for the SP+BUY+SEVERE decline
     #      veto (the velo concern now reads as MIXED, not CAUTION). Schmitt
     #      (hitter, independent rh3/PL drift) flips BUY -> MIXED.
-    ("Aaron Judge",     "MIXED — see profile",     "H",  "MIXED",   None),
+    # On the 60-day IL (2026-06): PL-unranked + elite model/archetype would read
+    # as a naked BUY, so the engine caveats it. Verdict-top intentionally not
+    # locked for an injured player (talent-only, secondary). See _CANONICAL_IL.
+    ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
     ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
     ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
@@ -83,6 +86,11 @@ def _warm_cache():
     triangulate_player("Aaron Judge")
     yield
 
+
+# Known-injured canonical players: their ESPN/MLB IL status is injected so the
+# verdict reflects the injury (deterministic + PL-independent). Update when a
+# player comes off / goes on the IL.
+_CANONICAL_IL = {"Aaron Judge": "IL60"}
 
 # PL-cache staleness windows (days) — mirror pl_cache._warn_stale_caches.
 _PL_STALE_DAYS = {'H': 7, 'SP': 7, 'RP': 7}
@@ -111,7 +119,8 @@ def _pl_cache_age_days(bucket: str):
     ids=[c[0] for c in CANONICAL_CASES],
 )
 def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, _warm_cache):
-    result = triangulate_player(name)
+    il = _CANONICAL_IL.get(name)
+    result = triangulate_player(name, il_status=il)
     assert result is not None, f"{name!r} failed to resolve"
     assert result["bucket"] == bucket, (
         f"{name!r} bucket={result['bucket']!r}, expected {bucket!r}"
@@ -122,12 +131,15 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     # lock (xfail) rather than red-CI — refresh PL Top 150 to re-engage it. A
     # genuine code regression with a FRESH cache still fails hard, and a
     # fresh-cache UR still enforces. Resolution + bucket above are always locked.
-    _age = _pl_cache_age_days(bucket)
-    if (_age is not None and _age > _PL_STALE_DAYS.get(bucket, 7)
-            and result.get("pl_main") in ("UR", "—")):
-        pytest.xfail(
-            f"{name}: PL {bucket} cache {_age}d stale -> pl_main={result.get('pl_main')!r}; "
-            f"refresh PL Top 150 to re-enforce the verdict lock.")
+    # Injured players (il set) are PL-independent — the IL caveat dominates — so
+    # they skip the freshness relaxation and stay locked.
+    if il is None:
+        _age = _pl_cache_age_days(bucket)
+        if (_age is not None and _age > _PL_STALE_DAYS.get(bucket, 7)
+                and result.get("pl_main") in ("UR", "—")):
+            pytest.xfail(
+                f"{name}: PL {bucket} cache {_age}d stale -> pl_main={result.get('pl_main')!r}; "
+                f"refresh PL Top 150 to re-enforce the verdict lock.")
     if verdict_sub is not None:
         assert verdict_sub in result["verdict"], (
             f"{name!r} verdict={result['verdict']!r} did not contain {verdict_sub!r}"
@@ -147,6 +159,33 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
 # --------------------------------------------------------------------
 # Structural / invariant tests
 # --------------------------------------------------------------------
+
+def test_il_caveat_helper():
+    """The pure IL-marker helper: IL states -> caveat string, else None."""
+    from scripts.xfp.lib.triangulate_core import il_caveat
+    assert il_caveat('IL60') and 'ON IL' in il_caveat('IL60')
+    assert il_caveat('IL10').startswith('🏥')
+    assert il_caveat('SIXTY_DAY_DL') is not None
+    assert il_caveat(None) is None
+    assert il_caveat('ACTIVE') is None
+
+
+def test_triangulate_il_status_surfaces_caveat():
+    """An injured player rates elite on talent (model+archetype), so without an
+    IL caveat triangulate would surface a naked BUY. Injecting il_status marks
+    it without rewriting the talent verdict."""
+    from scripts.xfp.lib.triangulate_core import triangulate_player
+    base = triangulate_player('Aaron Judge')
+    assert base['il_status'] is None
+    assert '🏥' not in base['verdict']
+
+    inj = triangulate_player('Aaron Judge', il_status='IL60')
+    assert inj['il_status'] == 'IL60'
+    assert '🏥 ON IL' in inj['verdict']
+    assert inj['override_tag'] and 'IL' in inj['override_tag']
+    # the underlying talent read is preserved, just caveated
+    assert base['verdict'] in inj['verdict']
+
 
 def test_unknown_player_returns_none():
     """Names that don't resolve to any bucket must return None, not raise."""
