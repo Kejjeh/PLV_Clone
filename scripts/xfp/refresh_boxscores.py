@@ -30,6 +30,8 @@ from pathlib import Path
 import pandas as pd
 import requests
 
+from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT_P = CACHE / 'boxscore_pitchers.parquet'
@@ -103,7 +105,7 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
             hbp = int(ps.get('hitBatsmen', 0))
             sv = int(ps.get('saves', 0))
             hld = int(ps.get('holds', 0))
-            base = so + ip_f * 3.3 - h - 2 * er - bb - hbp
+            base = pitcher_fp(k=so, ip=ip_f, h=h, er=er, bb=bb, hbp=hbp)
             pitchers.append({
                 'game_pk':    game_pk,
                 'game_date':  game_date.isoformat(),
@@ -120,7 +122,7 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
                 'sv':         sv,
                 'hld':        hld,
                 'fp_sp':      round(base, 2),
-                'fp_rp':      round(base + 5 * sv + 2 * hld, 2),
+                'fp_rp':      round(pitcher_fp(k=so, ip=ip_f, h=h, er=er, bb=bb, hbp=hbp, sv=sv, hld=hld), 2),
             })
 
         for bid in team.get('batters', []):
@@ -144,7 +146,7 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
                 'team_name':  team_name,
                 'r':   r, 'tb': tb, 'rbi': rbi,
                 'bb':  bb, 'hbp': hbp, 'sb': sb, 'k': k,
-                'fp_h': round(r + tb + rbi + bb + hbp + sb - k, 2),
+                'fp_h': round(hitter_fp(r=r, tb=tb, rbi=rbi, bb=bb, hbp=hbp, sb=sb, k=k), 2),
             })
 
     return pitchers, hitters
