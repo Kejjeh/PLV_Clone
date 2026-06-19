@@ -82,6 +82,25 @@ def test_sp_card_uses_sp_boom_and_signals():
     assert c['arche']['velo_tier'] == 'POWER' and c['arche']['stuff_subtype'] == 'WHIFF_LED'
 
 
+def test_sustainability_dict_is_normalized_to_label_and_detail():
+    # model_row sometimes returns a rich process dict, not a string bucket —
+    # it must NOT be dumped raw into the card.
+    c = build_card_data(_hitter(model={
+        'sustainability': {
+            'bucket': 'H', 'process_verdict': 'STRUCTURAL_DECLINE',
+            'process_detail': 'xwOBACON 0.625->0.592->0.548 (-0.077 over 2yr)',
+            'xwobacon_26': 0.548,
+        }}))
+    assert c['sustainability'] == 'STRUCTURAL_DECLINE'        # short label
+    assert 'xwOBACON' in c['sustainability_detail']           # readable detail
+    assert not isinstance(c['sustainability'], dict)
+
+
+def test_sustainability_string_passthrough():
+    c = build_card_data(_hitter())                            # fixture uses 'LEGIT'
+    assert c['sustainability'] == 'LEGIT' and c['sustainability_detail'] is None
+
+
 def test_build_card_data_tolerates_sparse_result():
     c = build_card_data({'player': {'display_name': 'X'}, 'bucket': 'SP'})
     assert c['name'] == 'X' and c['is_il'] is False and c['watch_list'] == []

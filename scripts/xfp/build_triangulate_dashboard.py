@@ -41,6 +41,17 @@ def build_card_data(result: dict) -> dict:
     bucket = result.get('bucket')
     il_status = result.get('il_status')
 
+    # Sustainability may be a plain bucket string OR a rich process dict —
+    # normalize to a short label + readable detail (never dump the dict).
+    sus_raw = model.get('sustainability')
+    if isinstance(sus_raw, dict):
+        sus_label = sus_raw.get('process_verdict') or sus_raw.get('bucket')
+        sus_detail = sus_raw.get('process_detail')
+    elif isinstance(sus_raw, str):
+        sus_label, sus_detail = sus_raw, None
+    else:
+        sus_label, sus_detail = None, None
+
     # Boom/bust comes from SP fields for pitchers, hitter_* fields for hitters.
     if bucket == 'H':
         boom = {
@@ -75,7 +86,8 @@ def build_card_data(result: dict) -> dict:
         'n_avail': result.get('confidence_n_available'),
         'rationale': result.get('rationale'),
         'watch_list': result.get('watch_list') or [],
-        'sustainability': model.get('sustainability'),
+        'sustainability': sus_label,
+        'sustainability_detail': sus_detail,
         # --- back-compat flat keys (used by the rail/summary) ---
         'pl_rank': result.get('pl_main'),
         'model_rank': result.get('model_rank'),
@@ -227,7 +239,7 @@ border:0;color:var(--text);padding:7px 16px;cursor:pointer;font-family:inherit;f
 .cyc button{background:var(--panel);border:1px solid var(--border);color:var(--text);
 border-radius:3px;padding:6px 13px;cursor:pointer;font-family:inherit}
 .cyc button:hover{border-color:var(--accent);color:var(--accent)}.cyc .pos{color:var(--dim)}
-.card{display:none;max-width:940px}.card.show{display:block}
+.card{display:none;max-width:1320px}.card.show{display:block}
 .vhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:4px}
 .vhead h2{margin:0;font-size:30px;font-weight:600}
 .vhead .team{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:12.5px}
@@ -398,6 +410,17 @@ def _blend_panel(c):
     return _panel('Blended xFP & Value', inner)
 
 
+def _process_panel(c):
+    lab = c.get('sustainability')
+    det = c.get('sustainability_detail')
+    if not lab and not det:
+        return ''
+    body = f'<div class="big" style="font-size:18px;color:var(--{_word_cls(lab) or "text"})">{h(str(lab or "—"))}</div>'
+    if det:
+        body += f'<div style="color:var(--dim);font-size:13.5px;margin-top:8px;line-height:1.5">{h(str(det))}</div>'
+    return _panel('Sustainability / process', body, span=bool(det))
+
+
 def _sp_panel(c):
     if c['bucket'] != 'SP':
         return ''
@@ -450,7 +473,7 @@ def _card_html(c: dict, idx: int) -> str:
         verdict_html = verdict_html.replace(':', ':</span>', 1)
     panels = ''.join(p for p in [
         summary, _model_panel(c), _arche_panel(c), _boom_panel(c),
-        _blend_panel(c), _sp_panel(c),
+        _blend_panel(c), _process_panel(c), _sp_panel(c),
     ] if p)
     return f"""
 <article class="card" data-i="{idx}">
