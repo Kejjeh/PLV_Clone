@@ -17,8 +17,6 @@ import sys
 import os
 import json
 import math
-import unicodedata
-import re
 import shutil
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -32,6 +30,7 @@ from plv_clone.paths import ROOT, XFP_DOCS  # noqa: E402  (single source for rep
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.mlb_stats import fetch_week_probables, resolve_mlbam  # noqa: E402
+from plv_clone import matchup_projection as _mproj  # noqa: E402  (deep adjuster core)
 from plv_clone.utils.name_match import (  # noqa: E402
     resolve_id,
     KNOWN_COLLISIONS as _KNOWN_COLLISIONS,
@@ -83,8 +82,7 @@ def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
             return {}
         out: dict[str, dict] = {}
         for _, row in df.iterrows():
-            nk = unicodedata.normalize('NFD', str(row['player_name'])) \
-                            .encode('ascii', 'ignore').decode().lower().strip()
+            nk = _norm(row['player_name'])   # canonical join key (matches rh3/rp3 maps)
             if nk not in out:
                 out[nk] = {'fp': 0.0, 'starts': []}
             out[nk]['fp'] += float(row['fp_sp'])
@@ -111,8 +109,7 @@ def _load_bs_week_hitter_actuals(week_start: date, yesterday: date) -> dict[str,
             return {}
         out: dict[str, dict] = {}
         for _, row in df.iterrows():
-            nk = unicodedata.normalize('NFD', str(row['player_name'])) \
-                            .encode('ascii', 'ignore').decode().lower().strip()
+            nk = _norm(row['player_name'])   # canonical join key (matches rh3/rp3 maps)
             if nk not in out:
                 out[nk] = {'fp': 0.0, 'games': []}
             out[nk]['fp'] += float(row['fp_h'])
@@ -145,17 +142,12 @@ def compute_weekly_momentum(bs_h_week: dict, rh3_map: dict,
     MIN_GAMES = 1  # need at least 1 completed game
     result: dict = {}
 
-    # bs_h_week keys use space-preserving normalization ('kyle schwarber');
-    # rh3_map / rp3_map use _norm's sorted-parts join ('kyleschwarber').
-    # Re-key through _norm before lookup so the dicts match.
-    def _rekey(raw_nk: str) -> str:
-        return _norm(raw_nk)  # _norm defined at module level
-
-    for raw_nk, data in bs_h_week.items():
+    # bs_h_week / bs_week are keyed with the canonical `_norm` join key (the same
+    # sorted-parts key rh3_map / rp3_map use), so lookups match directly.
+    for nk, data in bs_h_week.items():
         n_games = len(data.get('games', []))
         if n_games < MIN_GAMES:
             continue
-        nk = _rekey(raw_nk)
         expected_fpg = (rh3_map.get(nk) or {}).get('per_game') or 0
         if expected_fpg <= 0.5:
             continue  # skip edge cases: IL'd proj, brand-new call-up, etc.
@@ -163,13 +155,12 @@ def compute_weekly_momentum(bs_h_week: dict, rh3_map: dict,
         ratio = max(0.50, min(2.00, actual_fpg / expected_fpg))
         result[nk] = round(1.0 + LAMBDA * (ratio - 1.0), 4)
 
-    # SP / RP momentum from bs_week (same λ, keyed by _norm)
+    # SP / RP momentum from bs_week (same λ, same canonical key)
     if bs_week and rp3_map:
-        for raw_nk, data in bs_week.items():
+        for nk, data in bs_week.items():
             n_starts = len(data.get('starts', []))
             if n_starts < MIN_GAMES:
                 continue
-            nk = _rekey(raw_nk)
             expected = (rp3_map.get(nk) or {}).get('per_start') or 0
             if expected <= 0.5:
                 continue
@@ -401,11 +392,9 @@ ESPN_TO_MLB_TEAM = {
 }
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
+# _norm is the canonical order-independent join key (sorted-parts). It now lives
+# in name_match.join_key so the ~20 scripts that hand-rolled this share one home.
 
 
 def _fetch_json(url):
@@ -757,6 +746,20 @@ _RH3_BY_BATTER = {}          # batter mlbam → rh3 info; collision-safe hitter 
 _IL_RETURNS = {}             # #10 — player_id → return_date from get_injury_details upstream cache
 _CALIB = 1.0
 LEAGUE_AVG_XWOBA = 0.310     # MA5 platoon normalization
+
+# Scalar knobs for the deep matchup_projection core, sourced from the dashboard
+# constants above so they stay single-source. project_player passes this in.
+_MCFG = _mproj.MatchupConfig(
+    league_avg_sp_fp_per_start=LEAGUE_AVG_SP_FP_PER_START,
+    league_avg_xwoba=LEAGUE_AVG_XWOBA,
+    unconfirmed_start_conf=_UNCONFIRMED_START_CONF,
+    default_rp_app_rate=DEFAULT_RP_APP_RATE,
+    sigma_per_sp_start=SIGMA_PER_SP_START,
+    sigma_per_rp_game=SIGMA_PER_RP_GAME,
+    sigma_per_hitter_game=SIGMA_PER_HITTER_GAME,
+    global_sigma_pa_fp=GLOBAL_SIGMA_PA_FP,
+    league_pa_per_game=LEAGUE_PA_PER_GAME,
+)
 
 
 def fetch_espn_week_schedule(league, week_start, week_end):
@@ -1145,37 +1148,30 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
 
         # MA2 (SP): recent-form factor — gated on _MA2_SP_ON
         recent_factor = _SP_FORM.get(mlbam, 1.0) if _MA2_SP_ON else 1.0
-
-        total = 0.0
-        for s in starts:
-            opp_idx = ts_map.get(s['opp_team'], {}).get('bat_index') or 1.0
-            opp_factor = max(0.80, min(1.20, 1.0 / opp_idx))
-            # Confidence: confirmed probables = 1.0; rotation-gap predictions
-            # are ~80% likely to occur (per _UNCONFIRMED_START_CONF).
-            confidence = 1.0 if s.get('confirmed', True) else _UNCONFIRMED_START_CONF
-            # Within-week momentum (λ=0.15 shrinkage toward neutral)
-            sp_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
-            # MA7: residual calibration scalar (final pass). MA4 dropped per #5.
-            fp = per_start_base * opp_factor * recent_factor * _CALIB * confidence * sp_momentum
-            total += fp
-            out['breakdown'].append({'date': s['date'], 'opp': s['opp_team'],
-                                       'opp_idx': opp_idx, 'factor': opp_factor,
-                                       'recent_factor': recent_factor,
-                                       'confidence': confidence,
-                                       'sp_momentum': sp_momentum,
-                                       'fp': fp, 'type': 'start',
-                                       'confirmed': s.get('confirmed', True)})
-        out['fp'] = total
-        out['units'] = len(starts)
+        # Within-week momentum (λ=0.15 shrinkage toward neutral) — constant
+        # across this pitcher's starts.
+        sp_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
         # Per-player σ from xfp_rp3 (per-start FP units). Globally calibrated
         # — currently identical across SPs but still beats the legacy 5.5 FP.
         # Falls back to fixed SIGMA_PER_SP_START if the SP isn't in the projection
         # file (rare — e.g., minor-league call-up not yet in xfp_rp3).
-        if LEGACY_SIGMA:
-            sp_sigma = SIGMA_PER_SP_START
-        else:
-            sp_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
-        out['sigma2'] = len(starts) * sp_sigma ** 2
+        sp_sigma = SIGMA_PER_SP_START if LEGACY_SIGMA else (rp_info.get('sigma') or SIGMA_PER_SP_START)
+        # Adjuster math lives in the deep matchup_projection module (ADR-0001/2):
+        # the dashboard assembles per-start context, the module combines it.
+        start_ctx = [
+            _mproj.SPStartCtx(date=s['date'], opp_team=s['opp_team'],
+                              opp_bat_index=ts_map.get(s['opp_team'], {}).get('bat_index'),
+                              confirmed=s.get('confirmed', True))
+            for s in starts
+        ]
+        res = _mproj.project_sp_starts(per_start_base, start_ctx,
+                                       recent_factor=recent_factor, calib=_CALIB,
+                                       momentum=sp_momentum, sigma=sp_sigma,
+                                       cfg=_MCFG)
+        out['fp'] = res.fp
+        out['units'] = res.units
+        out['sigma2'] = res.sigma2
+        out['breakdown'] = res.breakdown
         return out
 
     elif pos in ('SP', 'RP', 'P'):
@@ -1190,24 +1186,17 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                     if rp_mlbam else RP_APP_RATE.get(role, DEFAULT_RP_APP_RATE))
         xfp_ros = rp_info.get('xfp_ros') or 0
         if not xfp_ros or not rem: return out
-        # rest_of_season RoS / team games remaining (rough)
+        # rest_of_season RoS / team games remaining (rough). Appearance-rate
+        # scaling, IL pro-rate, calibration, and σ all live in the module.
         days_remaining_season = max((SEASON_END - today).days, 1)
-        per_team_game = xfp_ros / days_remaining_season
-        # apply role-based appearance rate adjustment
-        expected_appearances = len(rem) * app_rate
-        per_app = (per_team_game / DEFAULT_RP_APP_RATE) if DEFAULT_RP_APP_RATE else per_team_game
-        # MA6 IL pro-rate + MA7 calibration
-        proj = per_app * expected_appearances * il_factor * _CALIB
-        out['fp'] = proj
-        out['units'] = round(expected_appearances, 1)
-        out['breakdown'].append({'role': role, 'app_rate': app_rate,
-                                   'n_team_games': len(rem),
-                                   'expected_apps': expected_appearances,
-                                   'il_factor': il_factor,
-                                   'fp': proj})
-        # MA1 RP sigma: rprs2 p25/p75 are SEASON totals, not per-app — derived σ
-        # blows up by ~5-15x. Keep static FP/game sigma until rprs2 emits per-app σ.
-        out['sigma2'] = expected_appearances * SIGMA_PER_RP_GAME ** 2
+        res = _mproj.project_rp(xfp_ros, len(rem), role=role, app_rate=app_rate,
+                                days_remaining_season=days_remaining_season,
+                                il_factor=il_factor, calib=_CALIB,
+                                rp_sigma=SIGMA_PER_RP_GAME, cfg=_MCFG)
+        out['fp'] = res.fp
+        out['units'] = res.units
+        out['sigma2'] = res.sigma2
+        out['breakdown'] = res.breakdown
         return out
 
     else:  # hitter
@@ -1246,73 +1235,46 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         lineup_factor = lineup_spot_factor(lineup_info.get('modal_spot'),
                                             lineup_info.get('pa_per_g')) if lineup_info else 1.0
 
-        total = 0.0
+        # MA5 stance resolution (data assembly stays here; switch hitters bat
+        # opposite the pitcher's throwing arm). The clamp + combination math
+        # live in matchup_projection.
+        h_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
+        game_ctx = []
         for g in rem:
-            # Use opposing SP's projection if known; fall back to team pit_index
             opp_sp_id = g.get('opp_probable_id')
-            opp_factor = 1.0
-            opp_proj = None
             if opp_sp_id and opp_sp_id in rp3_by_mlbam:
-                opp_proj = rp3_by_mlbam[opp_sp_id]['per_start']
-                opp_factor = LEAGUE_AVG_SP_FP_PER_START / opp_proj if opp_proj else 1.0
-                opp_factor = max(0.70, min(1.30, opp_factor))
+                ops = rp3_by_mlbam[opp_sp_id]['per_start']
+                tpi = None
             else:
-                opp_pit = ts_map.get(g['opp_team'], {}).get('pit_index') or 1.0
-                opp_factor = max(0.85, min(1.15, opp_pit))
-
-            # MA4 DROPPED (#5) — park factor was ±0.1 FP/team, not worth complexity.
-            park_factor = 1.0
-
-            # MA5: platoon factor — opposing SP's xwOBA vs batter's stance.
-            # Bat-side comes from Statcast `stand` map; switch hitters batting
-            # OPPOSITE the pitcher's hand (e.g., S vs RHP → bat L).
-            platoon_factor = 1.0
+                ops = None
+                tpi = ts_map.get(g['opp_team'], {}).get('pit_index') or 1.0
+            plat_xwoba = None
             if opp_sp_id and opp_sp_id in _PSPLIT and batter_mlbam in _BAT_SIDE:
                 stance = _BAT_SIDE.get(batter_mlbam, 'R')
                 ps = _PSPLIT[opp_sp_id]
                 if stance == 'S':
-                    # Switch hitters bat opposite the pitcher's throwing arm
                     p_throws = ps.get('p_throws', 'R')
                     stance = 'L' if p_throws == 'R' else 'R'
                 if stance in ('L', 'R'):
-                    opp_xwoba = ps.get(f'xwoba_vs_{stance}')
-                    if opp_xwoba and opp_xwoba > 0:
-                        platoon_factor = max(0.85, min(1.15, opp_xwoba / LEAGUE_AVG_XWOBA))
+                    _ox = ps.get(f'xwoba_vs_{stance}')
+                    if _ox and _ox > 0:
+                        plat_xwoba = _ox
+            game_ctx.append(_mproj.HitterGameCtx(
+                date=g['date'], opp_team=g['opp_team'],
+                opp_probable_name=g.get('opp_probable_name', '?'),
+                opp_per_start=ops, team_pit_index=tpi, platoon_xwoba=plat_xwoba))
 
-            # Within-week momentum (λ=0.15 shrinkage toward neutral)
-            h_momentum = _WEEKLY_MOMENTUM.get(nk, 1.0)
-            # MA7: residual calibration as final scalar
-            fp = (per_game_base * opp_factor * recent_factor * lineup_factor
-                  * park_factor * platoon_factor * il_factor * _CALIB * h_momentum)
-            total += fp
-            out['breakdown'].append({
-                'date': g['date'], 'opp': g['opp_team'],
-                'opp_sp': g.get('opp_probable_name', '?'),
-                'opp_sp_proj': opp_proj, 'factor': opp_factor,
-                'recent_factor': recent_factor,
-                'lineup_factor': lineup_factor,
-                'park_factor': park_factor,
-                'platoon_factor': platoon_factor,
-                'il_factor': il_factor,
-                'h_momentum': h_momentum,
-                'fp': fp, 'type': 'game',
-            })
-        out['fp'] = total
-        out['units'] = len(rem)
-        # Hetero σ aggregation (2026-06-03). Empirical per-PA outcome σ
-        # (GLOBAL_SIGMA_PA_FP, 0.517 FP/PA) scaled by batter_sigma_factor (the
-        # ridge-derived per-batter multiplier ∈ [0.7, 1.5]). Per-game variance
-        # = PA_per_game * σ_pa² (sum of iid PAs); team variance sums across
-        # players + games. Falls back to legacy fixed σ per game when the
-        # hitter is missing from xfp_rh3 (e.g., new call-up not yet keyed).
-        factor = rh.get('sigma_factor')
-        if LEGACY_SIGMA or factor is None or pd.isna(factor):
-            out['sigma2'] = len(rem) * SIGMA_PER_HITTER_GAME ** 2
-        else:
-            pa_per_g = (lineup_info.get('pa_per_g') if lineup_info else None) or LEAGUE_PA_PER_GAME
-            sigma_pa = GLOBAL_SIGMA_PA_FP * float(factor)
-            var_per_game = (sigma_pa ** 2) * pa_per_g
-            out['sigma2'] = len(rem) * var_per_game
+        pa_per_g = (lineup_info.get('pa_per_g') if lineup_info else None)
+        res = _mproj.project_hitter_games(
+            per_game_base, game_ctx,
+            recent_factor=recent_factor, lineup_factor=lineup_factor,
+            il_factor=il_factor, calib=_CALIB, momentum=h_momentum,
+            sigma_factor=rh.get('sigma_factor'), pa_per_g=pa_per_g,
+            legacy_sigma=LEGACY_SIGMA, cfg=_MCFG)
+        out['fp'] = res.fp
+        out['units'] = res.units
+        out['sigma2'] = res.sigma2
+        out['breakdown'] = res.breakdown
         return out
 
 
@@ -2623,44 +2585,18 @@ def log_prediction(mu, my_total, opp_total, win_prob, today, model_version='base
 
 
 def win_probability(my_proj_total, opp_proj_total, my_sigma2, opp_sigma2):
-    """P(my_team > opp) given normal-approx remaining FP distributions."""
-    gap = my_proj_total - opp_proj_total
-    sigma = math.sqrt(my_sigma2 + opp_sigma2)
-    if sigma == 0: return 1.0 if gap > 0 else 0.0
-    z = gap / sigma
-    # standard normal CDF approximation
-    return 0.5 * (1 + math.erf(z / math.sqrt(2)))
+    """P(my_team > opp) — normal-approx. Thin adapter over the tested seam in
+    plv_clone.matchup_projection."""
+    return _mproj.win_prob_normal(my_proj_total, opp_proj_total, my_sigma2, opp_sigma2)
 
 
 def win_probability_bootstrap(my_proj, opp_proj, my_wtd, opp_wtd, n_trials=5000):
-    """#11 — Monte Carlo win prob with right-skewed (lognormal) marginals per player.
-
-    Each player's `fp` (mean) + `sigma2` (variance) are matched to a lognormal
-    distribution; team total per trial = WTD + sum of player draws. Win prob is
-    the fraction of trials where my_total > opp_total.
-
-    Lognormal captures HR upside (right tail) which the normal-approx misses.
-    For mean ≤ 0 (rare — bad SP projection) falls back to normal draws.
-    """
-    import numpy as np
-    rng = np.random.default_rng(seed=42)
-
-    def _player_draws(p):
-        mu = p['fp']
-        var = p['sigma2']
-        if mu <= 0 or var <= 0:
-            return rng.normal(mu, max(math.sqrt(max(var, 0)), 1e-6), n_trials)
-        sig2 = math.log(1 + var / (mu * mu))
-        lmu = math.log(mu) - sig2 / 2
-        return rng.lognormal(lmu, math.sqrt(sig2), n_trials)
-
-    my_trials = np.full(n_trials, my_wtd, dtype=float)
-    for p in my_proj.values():
-        my_trials = my_trials + _player_draws(p)
-    opp_trials = np.full(n_trials, opp_wtd, dtype=float)
-    for p in opp_proj.values():
-        opp_trials = opp_trials + _player_draws(p)
-    return float((my_trials > opp_trials).mean())
+    """Monte-Carlo win prob (lognormal per-player marginals). Thin adapter over
+    the tested seam; unpacks the player dicts into (mean, var) tuples."""
+    my_players = [(p['fp'], p['sigma2']) for p in my_proj.values()]
+    opp_players = [(p['fp'], p['sigma2']) for p in opp_proj.values()]
+    return _mproj.win_prob_bootstrap(my_players, opp_players, my_wtd, opp_wtd,
+                                     n_trials=n_trials, seed=42)
 
 
 def render_boom_bust_scan(my_lineup, opp_lineup):
