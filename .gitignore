@@ -95,6 +95,16 @@ data/outputs/_*
 # CodeGraph index (generated, regenerable via `codegraph init`)
 .codegraph/
 
+# CodeGraph index hygiene: keep dead/one-off trees OUT of the semantic index so
+# symbol search isn't diluted by stale v9/v10/v11 dupes. CodeGraph 0.9.9 has no
+# ignore config of its own but DOES honor .gitignore. These dirs stay tracked in
+# git (already committed) — gitignore only affects untracked files, so listing
+# them here is purely an indexer hint, not a git removal.
+scripts/xfp/archive/
+scripts/xfp/research/
+scripts/xfp/_research/
+scripts/_oneoff/
+
 # IDE / OS
 .idea/
 .vscode/

@@ -10,6 +10,37 @@ points). Owner: Josh (team: **New York Ligers**). Models live in
 `scripts/xfp/`, outputs in `data/outputs/`, dashboards published via
 the sibling `xfp-model/` repo to GitHub Pages.
 
+## CodeGraph (USE IT — don't re-derive with grep)
+
+`.codegraph/` is **initialized and live** here (~550 files, real-time
+file-watcher daemon). It's the pre-built semantic index; reaching for
+grep/glob/read to explore wastes the ~90% token saving. Full rules in
+the global `~/.claude/CLAUDE.md`; the load-bearing bits:
+
+- **Exploration ("how does X work", "where is Y", architecture, tracing)
+  → spawn an `Explore` agent** and paste the block below into its prompt.
+  Do NOT call `codegraph_explore`/`codegraph_context` from the main
+  session (they dump source and fill context).
+- **Targeted pre-edit lookups → main session may call the lightweight
+  tools directly:** `codegraph_search` (find a symbol), `codegraph_callers`
+  / `codegraph_callees` (trace call flow), `codegraph_impact` (blast radius
+  before editing), `codegraph_node` (one symbol's detail). Prefer
+  `codegraph_impact` over a grep sweep before changing a shared signature.
+
+Paste verbatim into every `Explore` agent prompt:
+
+> This project has CodeGraph initialized (`.codegraph/` exists). Use
+> `codegraph_explore` as your PRIMARY tool — one call returns full source
+> for all relevant files. Follow the call budget in its tool description.
+> Do NOT re-read files it already returned; only fall back to grep/glob/read
+> for "Additional relevant files" or if it returns nothing.
+
+Index hygiene: dead/one-off trees (`scripts/xfp/archive|research|_research/`,
+`scripts/_oneoff/`) are `.gitignore`d **purely to keep them out of the index**
+(they stay tracked in git) — CodeGraph 0.9.9 honors `.gitignore` and has no
+ignore config of its own. Re-add a tree there if a future symbol search
+surfaces stale `v9/v10/v11`-style duplicates.
+
 ## League rules (constants)
 
 - **Format:** 8-team H2H points
