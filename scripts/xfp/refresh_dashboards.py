@@ -259,6 +259,16 @@ def main():
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
+    # 4.05. Refresh the offline injury-status cache from live ESPN — powers the
+    # triangulate IL caveat (so an injured star isn't surfaced as a naked BUY).
+    run('4.05. Refresh injury-status cache (ESPN IL flags)',
+        'python -X utf8 scripts/xfp/lib/injury_status.py', timeout=120)
+
+    # 4.7. Build triangulate.html (cyclable three-lens roster report). Depends on
+    # the injury cache above + the archetype/projection panels. Fail-soft.
+    run('4.7. Build triangulate.html (three-lens roster report)',
+        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py', timeout=300)
+
     # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
     # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
     # probables window covered by stream_the_stack (~15-25). Lets the profiles

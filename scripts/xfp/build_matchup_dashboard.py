@@ -3509,6 +3509,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
         <a class="current">Matchup</a>
         <a href="xfp_board.html">xFP Board</a>
         <a href="player_profiles.html">Profiles</a>
+        <a href="triangulate.html">Triangulate</a>
         <a href="index.html">XFP</a>
       </nav>
     </div>

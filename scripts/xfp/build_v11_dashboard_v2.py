@@ -803,6 +803,7 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
     <a href="matchup.html">Matchup</a>
     <a href="live_dashboard.html">Live</a>
     <a href="player_profiles.html">Profiles</a>
+    <a href="triangulate.html">Triangulate</a>
   </nav>
 </div>
 <div id="root"></div>

@@ -775,6 +775,7 @@ tbody tr:hover td {{ background: var(--panel); }}
         <a class="current">Live</a>
         <a href="matchup.html">Matchup</a>
         <a href="player_profiles.html">Profiles</a>
+        <a href="triangulate.html">Triangulate</a>
         <a href="index.html">XFP</a>
       </nav>
     </div>

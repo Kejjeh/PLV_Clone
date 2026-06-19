@@ -509,6 +509,7 @@ BODY_HEADER = """
       <a href="matchup.html">Matchup</a>
       <a href="live_dashboard.html">Live</a>
       <a class="current">Profiles</a>
+      <a href="triangulate.html">Triangulate</a>
     </nav>
   </div>
   <div class="search-wrap">
