@@ -31,6 +31,26 @@ def _normalize(name: str) -> str:
     return name.lower().strip()
 
 
+def join_key(name) -> str:
+    """Order-independent normalization for use as a *dict join key*.
+
+    Lowercases, strips accents, then joins the sorted alphabetic tokens with no
+    separator: ``"Kyle Schwarber"`` and ``"Schwarber, Kyle"`` both → ``"kyleschwarber"``.
+
+    Distinct in purpose from :func:`_normalize` (which preserves token order and
+    strips suffixes for *fuzzy display matching*).  ``join_key`` exists to match
+    two dicts whose names may differ in order/format — it sacrifices readability
+    and anagram-safety for robustness.  This is the canonical home for the
+    ``_norm`` helper duplicated across the scripts layer.
+    """
+    import re
+    if name is None or (isinstance(name, float) and name != name):  # None / NaN
+        return ""
+    s = unicodedata.normalize("NFD", str(name))
+    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
+    return "".join(sorted(re.findall(r"[a-z]+", s)))
+
+
 def fuzzy_match_name(
     espn_name: str,
     model_names: list[str],
