@@ -204,3 +204,66 @@ def pitcher_fp_per_ip(
         + scoring.hb_pit * hb_per_ip
         + scoring.k_pit  * k_per_ip
     )
+
+
+# ── Totals-based convenience calculators ──────────────────────────────────────
+# These take SUMMED COUNTING TOTALS (not rates) and return total FP. They are
+# the seam for the ~35 scripts that inline-derive the BrownU formula from
+# accumulated stat totals. Default scoring is the module-level DEFAULT instance,
+# whose weights match the BrownU constants documented in CLAUDE.md.
+
+DEFAULT = LeagueScoring()
+
+
+def pitcher_fp(
+    k: float,
+    ip: float,
+    h: float,
+    er: float,
+    bb: float,
+    hbp: float,
+    sv: float = 0.0,
+    hld: float = 0.0,
+    scoring: LeagueScoring = DEFAULT,
+) -> float:
+    """Total pitcher FP from counting totals.
+
+    BrownU default: K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 2*HLD.
+    `ip` is expected already in decimal innings (use _parse_ip on raw
+    '5.2'-style MLB strings first). SV/HLD default to 0 for starters.
+    """
+    return (
+        scoring.k_pit    * k
+        + scoring.ip     * ip
+        + scoring.h_pit  * h
+        + scoring.er     * er
+        + scoring.bb_pit * bb
+        + scoring.hb_pit * hbp
+        + scoring.sv     * sv
+        + scoring.hd     * hld
+    )
+
+
+def hitter_fp(
+    r: float,
+    tb: float,
+    rbi: float,
+    bb: float,
+    hbp: float,
+    sb: float,
+    k: float,
+    scoring: LeagueScoring = DEFAULT,
+) -> float:
+    """Total hitter FP from counting totals.
+
+    BrownU default: R + TB + RBI + BB + HBP + SB - K.
+    """
+    return (
+        scoring.r        * r
+        + scoring.tb     * tb
+        + scoring.rbi    * rbi
+        + scoring.bb_bat * bb
+        + scoring.hbp_bat * hbp
+        + scoring.sb     * sb
+        + scoring.k_bat  * k
+    )

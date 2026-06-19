@@ -15,7 +15,12 @@ from __future__ import annotations
 
 import pytest
 
-from plv_clone.fantasy.scoring import LeagueScoring, _parse_ip
+from plv_clone.fantasy.scoring import (
+    LeagueScoring,
+    _parse_ip,
+    hitter_fp,
+    pitcher_fp,
+)
 
 
 # ── _parse_ip parametrize block (10 cases) ────────────────────────────────────
@@ -148,3 +153,28 @@ def test_score_pitcher_relief_adds_sv_hld():
     # Case 2: same base game with 1 SV (and 0 HLD) adds sv=5.0 on top.
     stats_sv = dict(stats_hld, saves=1, holds=0)
     assert scoring.score_pitcher_relief(stats_sv) == pytest.approx(base_game_fp + 5.0)
+
+
+# ── Totals-based convenience calculators (pitcher_fp / hitter_fp) ─────────────
+def test_pitcher_fp_starter_default_weights():
+    """pitcher_fp with BrownU defaults: K + IP*3.3 - H - 2*ER - BB - HBP."""
+    # 7 K, 6 IP, 4 H, 2 ER, 1 BB, 0 HBP, no SV/HLD.
+    expected = 7 + 6 * 3.3 - 4 - 2 * 2 - 1 - 0
+    assert pitcher_fp(k=7, ip=6.0, h=4, er=2, bb=1, hbp=0) == pytest.approx(expected)
+
+
+def test_pitcher_fp_reliever_with_sv_hld():
+    """pitcher_fp adds 5*SV + 2*HLD on top of the base formula."""
+    # 2 K, 1 IP, 1 H, 0 ER, 0 BB, 0 HBP, 1 SV, 1 HLD.
+    base = 2 + 1 * 3.3 - 1 - 0 - 0 - 0
+    expected = base + 5 * 1 + 2 * 1
+    assert pitcher_fp(k=2, ip=1.0, h=1, er=0, bb=0, hbp=0, sv=1, hld=1) == pytest.approx(
+        expected
+    )
+
+
+def test_hitter_fp_default_weights():
+    """hitter_fp with BrownU defaults: R + TB + RBI + BB + HBP + SB - K."""
+    # 2 R, 4 TB, 1 RBI, 1 BB, 0 HBP, 1 SB, 2 K.
+    expected = 2 + 4 + 1 + 1 + 0 + 1 - 2
+    assert hitter_fp(r=2, tb=4, rbi=1, bb=1, hbp=0, sb=1, k=2) == pytest.approx(expected)
