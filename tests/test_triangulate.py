@@ -68,12 +68,18 @@ CANONICAL_CASES = [
     ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
     ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
-    ("Eugenio Suárez",   "MIXED — see profile",     "H",  "MIXED",   None),
-    ("Casey Schmitt",   "MIXED — see profile",     "H",  "MIXED",   None),
+    # 2026-06-19 PL cache refresh (Wk12 hitters, Wk13 SPs): fresh ranks flipped
+    #   these off MIXED. Suárez/Turner now PL-ranked well above model -> FADE (PL
+    #   chasing outcomes); Schmitt's archetype-breakout rule fires with the fresh
+    #   PL rank + model lag. Data-driven (cache refresh), not a code change.
+    ("Eugenio Suárez",   "FADE — PL chasing outcomes", "H",  "FADE",  None),
+    ("Casey Schmitt",   "BUY — archetype breakout",   "H",  "BUY",   None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
-    ("Trea Turner",     "MIXED — see profile",     "H",  "MIXED",   None),
+    # 2026-06-19 PL refresh: PL #79 vs model #165 (gap 86) + declining 42 archetype
+    #   -> FADE (PL chasing outcomes). Data-driven, not a code change.
+    ("Trea Turner",     "FADE — PL chasing outcomes", "H",  "FADE",  None),
     ("Framber Valdez",  "CAUTION",                "SP", "CAUTION", None),
     # Bucket-only locks (verdict varies, just confirm resolution + bucket):
     ("Jhoan Duran",     None,                     "RP", None,      None),

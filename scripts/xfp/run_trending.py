@@ -14,6 +14,7 @@ sys.path.insert(0, '.')
 import pandas as pd
 from pathlib import Path
 from scripts.xfp.lib.trend_signal import (hitter_trend_table, pitcher_trend_table,
+                                          hitter_level_table, level_tag_hitter,
                                           tag_hitter, tag_pitcher)
 from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
 
@@ -27,6 +28,7 @@ except Exception:
 NAMES = HIT.query('year>=2025').drop_duplicates('batter').set_index('batter')['player_name'].to_dict()
 
 HT, PT = hitter_trend_table(), pitcher_trend_table()
+LT = hitter_level_table()
 
 
 def is_pitcher(pos):
@@ -53,6 +55,8 @@ def card(name, pos, team):
     else:
         if pid in HT.index:
             return f"  {name:<24} {tag_hitter(HT.loc[pid])}"
+        if pid in LT.index:  # no YoY baseline (rookie / thin '25) — level read fallback
+            return f"  {name:<24} {level_tag_hitter(LT.loc[pid])}"
     return f"  {name:<24} — no qualifying 2026 sample (IL / small sample)"
 
 

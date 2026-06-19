@@ -79,6 +79,42 @@ def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     return t
 
 
+def hitter_level_table(cur: int = 2026, min_sw: int = HIT_MIN_SW_CUR) -> pd.DataFrame:
+    """Single-year LEVEL read (no YoY baseline) for rookies / no-prior-year hitters
+    the change-detector can't read. Population percentiles of the SAME three
+    fast-stabilizing axes: bat speed (how hard), swing-path closeness to the
+    ~15deg productive band, and fast-swing% (intent). Needs only the current
+    sample (>= min_sw swings), so it surfaces players like Bryce Eldridge whose
+    2025 baseline is too thin for hitter_trend_table()'s inner join.
+    DISPLAY/CONTEXT only — a level, NOT a trend, and never moves a projection
+    (Rule 13). Parallels the SP /shadow-scout pattern."""
+    g = _hitter_season(cur, min_sw).copy()
+    g['aa_band_dist'] = (g['attack_angle'] - AA_OPT).abs()
+    g['bs_pctl'] = (g['bat_speed'].rank(pct=True) * 100).round()
+    g['fast_pctl'] = (g['fast_swing'].rank(pct=True) * 100).round()
+    # closer to the band = better, so percentile on NEGATIVE distance
+    g['aa_pctl'] = ((-g['aa_band_dist']).rank(pct=True) * 100).round()
+    return g
+
+
+def level_tag_hitter(row) -> str:
+    """One-line LEVEL read for a no-baseline hitter."""
+    return (f"\U0001f9ed LEVEL (no YoY baseline) — bat speed {row['bat_speed']:.1f}mph "
+            f"({int(row['bs_pctl'])}th pct), swing-path {row['attack_angle']:.1f}° "
+            f"({int(row['aa_pctl'])}th toward-band), intent {int(row['fast_pctl'])}th "
+            f"[n={int(row['n_sw'])} sw]")
+
+
+def level_for_mlbam(mlbam: int, lvl_tbl=None):
+    """Return (level_tag, row_dict) for a resolved batter MLBAM id, or (None, None).
+    Use as the fallback when trend_for_mlbam returns None for a hitter (no 2025
+    baseline). Pass lvl_tbl for batch use to avoid recomputing the table."""
+    tbl = lvl_tbl if lvl_tbl is not None else hitter_level_table()
+    if mlbam not in tbl.index:
+        return None, None
+    return level_tag_hitter(tbl.loc[mlbam]), tbl.loc[mlbam].to_dict()
+
+
 def pitcher_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     c, b = _pitcher_season(cur, PIT_MIN_FB_CUR), _pitcher_season(base, PIT_MIN_FB_BASE)
     t = c.join(b[['velo', 'xwoba_allow']], rsuffix='_base', how='inner')
@@ -138,7 +174,7 @@ def trend_for_mlbam(mlbam: int, role: str, hit_tbl=None, pit_tbl=None):
     return (tag_pitcher(row) if is_p else tag_hitter(row)), row.to_dict()
 
 
-def trend_line(name, *, team=None, position=None, role=None, hit_tbl=None, pit_tbl=None):
+def trend_line(name, *, team=None, position=None, role=None, hit_tbl=None, pit_tbl=None, lvl_tbl=None):
     """Convenience for OTHER skills: resolve a player by name (+team/position
     hints, collision-safe) and return the one-line physical-trend tag, or None if
     unresolved / no qualifying 2026 sample. Pass hit_tbl/pit_tbl for batch use to
@@ -158,4 +194,7 @@ def trend_line(name, *, team=None, position=None, role=None, hit_tbl=None, pit_t
     if pid is None:
         return None
     tag, _ = trend_for_mlbam(pid, 'SP' if is_p else 'H', hit_tbl=hit_tbl, pit_tbl=pit_tbl)
+    if tag is None and not is_p:
+        # no YoY baseline (rookie / thin prior year) — fall back to a level read
+        tag, _ = level_for_mlbam(pid, lvl_tbl=lvl_tbl)
     return tag

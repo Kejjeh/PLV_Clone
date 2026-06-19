@@ -77,6 +77,31 @@ xwOBACON-YoY-trajectory rule).
   allowed still good = watch, not yet confirmed).
 - z is vs the population SD of the YoY change (hitters ~1.2 mph, pitchers ~0.8 mph).
 
+## Level-read fallback for no-baseline hitters (rookies)
+
+The trend view is a **year-over-year change** detector — it needs a prior-year
+baseline (`HIT_MIN_SW_BASE=200` swings in the base year). A rookie / late-callup
+(e.g. **Bryce Eldridge** 2026 — 232 tracked swings this year but only 64 in 2025)
+has plenty of *current* sample yet no valid baseline, so `hitter_trend_table()`'s
+inner join drops them → "no qualifying 2026 sample".
+
+For these players the engine falls back to a **LEVEL read** (percentile vs the
+2026 population on the same three axes — bat speed, swing-path closeness to the
+~15° band, fast-swing% intent), which needs only the current sample. Rendered as:
+
+```
+🧭 LEVEL (no YoY baseline) — bat speed 72.3mph (80th pct), swing-path 12.4° (82th toward-band), intent 71th [n=232 sw]
+```
+
+This is the hitter analog of `/shadow-scout` for SPs. It's a **level, not a
+trend** — same Rule-13 display-only status; it says "the tool is here / not here,"
+not "the tool is rising/falling." `run_trending.py --names` applies it
+automatically; `trend_line()` also falls back to it for other skills. Engine:
+`hitter_level_table()` / `level_tag_hitter()` / `level_for_mlbam()` in
+`trend_signal.py`. **Do NOT instead lower `HIT_MIN_SW_BASE`** to force a rookie
+into the trend table — a YoY delta off a sub-200-swing baseline is noise (the gate
+is set well above stabilization on purpose).
+
 ## Caveats / scope
 
 - RoS predictive validation is 2 cohorts (2024-25, display-grade); the
