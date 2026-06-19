@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-19_will_warren_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_CONTROL",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 12.077750559478018,
+    "live_marginal": -104.18570660703301,
+    "model_rank": 92,
+    "override_tag": null,
+    "pl_rank": 38,
+    "proj_per": 9.969938424961075,
+    "replacement_delta": null
+  },
+  "mlbam_id": 701542,
+  "player_name": "Will Warren",
+  "reason_tag": "archetype_breakout",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-19",
+  "verdict_top": "BUY"
+}

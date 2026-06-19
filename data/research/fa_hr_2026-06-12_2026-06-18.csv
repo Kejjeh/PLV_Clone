@@ -1,0 +1,98 @@
+mlbam_id,player_name,team,team_name,position,fa_pro_team,percent_owned,hr_window,games_with_hr,hr_dates,team_match
+695657,Colson Montgomery,CHW,Chicago White Sox,SS,CHW,40.6,4,3,"2026-06-14,2026-06-17,2026-06-18",True
+642715,Willy Adames,SFG,San Francisco Giants,SS,SFG,55.8,3,2,"2026-06-16,2026-06-17",True
+680869,Zack Gelof,ATH,Athletics,2B,ATH,36.4,3,3,"2026-06-13,2026-06-16,2026-06-17",True
+502671,Paul Goldschmidt,NYY,New York Yankees,1B,NYY,20.4,3,3,"2026-06-13,2026-06-16,2026-06-17",True
+682622,Noelvi Marte,CIN,Cincinnati Reds,RF,CIN,10.1,3,3,"2026-06-12,2026-06-13,2026-06-14",True
+690993,Colt Keith,DET,Detroit Tigers,DH,DET,5.9,3,1,2026-06-15,True
+643217,Andrew Benintendi,CHW,Chicago White Sox,LF,CHW,3.0,3,3,"2026-06-12,2026-06-16,2026-06-18",True
+657041,Lane Thomas,KCR,Kansas City Royals,CF,KCR,0.7,3,3,"2026-06-13,2026-06-16,2026-06-17",True
+553993,Eugenio Suárez,CIN,Cincinnati Reds,3B,CIN,47.3,2,1,2026-06-15,True
+676609,José Caballero,NYY,New York Yankees,RF,NYY,35.2,2,2,"2026-06-14,2026-06-16",True
+681198,TJ Rumfield,COL,Colorado Rockies,3B,COL,34.6,2,2,"2026-06-14,2026-06-16",True
+686797,Brooks Lee,MIN,Minnesota Twins,SS,MIN,27.5,2,2,"2026-06-12,2026-06-18",True
+669065,Kyle Stowers,MIA,Miami Marlins,LF,MIA,27.4,2,1,2026-06-17,True
+805811,Bryce Eldridge,SFG,San Francisco Giants,DH,SFG,24.4,2,2,"2026-06-12,2026-06-17",True
+650489,Willi Castro,COL,Colorado Rockies,RF,COL,21.9,2,1,2026-06-14,True
+665019,Kody Clemens,MIN,Minnesota Twins,1B,MIN,17.6,2,2,"2026-06-12,2026-06-16",True
+806068,Colt Emerson,SEA,Seattle Mariners,SS,SEA,14.8,2,2,"2026-06-12,2026-06-13",True
+592663,J.T. Realmuto,PHI,Philadelphia Phillies,C,PHI,13.8,2,2,"2026-06-13,2026-06-15",True
+803011,Sam Antonacci,CHW,Chicago White Sox,2B,CHW,13.0,2,2,"2026-06-14,2026-06-17",True
+694249,Cole Carrigg,COL,Colorado Rockies,CF,COL,8.4,2,2,"2026-06-12,2026-06-15",True
+686611,Dylan Crews,WSN,Washington Nationals,RF,WSN,5.1,2,2,"2026-06-12,2026-06-15",True
+669003,Garrett Mitchell,MIL,Milwaukee Brewers,CF,MIL,3.5,2,2,"2026-06-13,2026-06-16",True
+682177,Daniel Schneemann,CLE,Cleveland Guardians,2B,CLE,3.0,2,2,"2026-06-13,2026-06-17",True
+663616,Trevor Larnach,MIN,Minnesota Twins,DH,MIN,2.4,2,2,"2026-06-16,2026-06-18",True
+622268,Donovan Walton,LAA,Los Angeles Angels,2B,LAA,1.1,2,2,"2026-06-14,2026-06-15",True
+691788,Joe Mack,MIA,Miami Marlins,C,MIA,1.1,2,2,"2026-06-14,2026-06-17",True
+682848,Endy Rodríguez,PIT,Pittsburgh Pirates,1B,PIT,0.8,2,2,"2026-06-12,2026-06-15",True
+694728,Brice Matthews,HOU,Houston Astros,2B,HOU,0.4,2,2,"2026-06-12,2026-06-13",True
+676914,Davis Schneider,TOR,Toronto Blue Jays,LF,TOR,0.4,2,2,"2026-06-14,2026-06-16",True
+660710,Rodolfo Durán,SDP,San Diego Padres,C,SDP,0.1,2,2,"2026-06-13,2026-06-14",True
+694514,Sterlin Thompson,COL,Colorado Rockies,LF,COL,0.1,2,1,2026-06-17,True
+521692,Salvador Perez,KCR,Kansas City Royals,C,KCR,64.7,1,1,2026-06-18,True
+665161,Jeremy Peña,HOU,Houston Astros,SS,HOU,59.1,1,1,2026-06-17,True
+683737,Michael Busch,CHC,Chicago Cubs,1B,CHC,42.8,1,1,2026-06-12,True
+543760,Marcus Semien,NYM,New York Mets,2B,NYM,42.1,1,1,2026-06-14,True
+672515,Gabriel Moreno,ARI,Arizona Diamondbacks,C,ARI,35.9,1,1,2026-06-14,True
+694212,Samuel Basallo,BAL,Baltimore Orioles,C,BAL,33.7,1,1,2026-06-12,True
+670623,Isaac Paredes,HOU,Houston Astros,3B,HOU,33.1,1,1,2026-06-15,True
+805300,Jakob Marsee,MIA,Miami Marlins,CF,MIA,32.3,1,1,2026-06-17,True
+702616,Jackson Holliday,BAL,Baltimore Orioles,2B,BAL,31.2,1,1,2026-06-17,True
+671277,Luis García Jr.,WSN,Washington Nationals,2B,WSN,28.4,1,1,2026-06-13,True
+702332,Caleb Durbin,BOS,Boston Red Sox,3B,BOS,26.0,1,1,2026-06-18,True
+677649,Ezequiel Duran,TEX,Texas Rangers,SS,TEX,25.7,1,1,2026-06-18,True
+683953,Travis Bazzana,CLE,Cleveland Guardians,2B,CLE,24.0,1,1,2026-06-18,True
+695600,Carter Jensen,KCR,Kansas City Royals,C,KCR,21.6,1,1,2026-06-17,True
+664761,Alec Bohm,PHI,Philadelphia Phillies,3B,PHI,17.8,1,1,2026-06-16,True
+657757,Gavin Sheets,SDP,San Diego Padres,LF,SDP,14.5,1,1,2026-06-13,True
+805367,Chase Meidroth,CHW,Chicago White Sox,SS,CHW,12.9,1,1,2026-06-14,True
+687859,Troy Johnston,COL,Colorado Rockies,RF,COL,11.8,1,1,2026-06-14,True
+691458,Blaze Jordan,STL,St. Louis Cardinals,1B,STL,11.0,1,1,2026-06-13,True
+665926,Andrés Giménez,TOR,Toronto Blue Jays,2B,TOR,10.5,1,1,2026-06-16,True
+681481,Kerry Carpenter,DET,Detroit Tigers,RF,DET,10.4,1,1,2026-06-17,True
+669394,Jake Burger,TEX,Texas Rangers,1B,TEX,10.0,1,1,2026-06-13,True
+605137,Josh Bell,MIN,Minnesota Twins,DH,MIN,9.7,1,1,2026-06-15,True
+702284,Cole Young,SEA,Seattle Mariners,2B,SEA,9.2,1,1,2026-06-17,True
+669236,Jeremiah Jackson,BAL,Baltimore Orioles,RF,BAL,8.4,1,1,2026-06-14,True
+678554,Curtis Mead,WSN,Washington Nationals,1B,WSN,7.9,1,1,2026-06-16,True
+805999,A.J. Ewing,NYM,New York Mets,CF,NYM,6.8,1,1,2026-06-14,True
+643446,Jeff McNeil,ATH,Athletics,2B,ATH,5.9,1,1,2026-06-15,True
+691176,Jasson Domínguez,NYY,New York Yankees,LF,NYY,5.8,1,1,2026-06-13,True
+682987,Spencer Jones,NYY,New York Yankees,CF,NYY,5.2,1,1,2026-06-16,True
+542303,Marcell Ozuna,PIT,Pittsburgh Pirates,DH,PIT,4.3,1,1,2026-06-17,True
+703607,Henry Bolte,ATH,Athletics,RF,ATH,3.8,1,1,2026-06-17,True
+669392,Samad Taylor,SDP,San Diego Padres,2B,SDP,3.5,1,1,2026-06-13,True
+700932,Kyle Manzardo,CLE,Cleveland Guardians,DH,CLE,3.1,1,1,2026-06-18,True
+668901,Mark Vientos,NYM,New York Mets,3B,NYM,3.1,1,1,2026-06-16,True
+683357,Owen Caissie,MIA,Miami Marlins,RF,MIA,2.4,1,1,2026-06-17,True
+592626,Joc Pederson,TEX,Texas Rangers,DH,TEX,1.5,1,1,2026-06-15,True
+671976,Tristan Peters,CHW,Chicago White Sox,CF,CHW,1.5,1,1,2026-06-13,True
+605170,Victor Caratini,MIN,Minnesota Twins,C,MIN,1.3,1,1,2026-06-14,True
+664770,Nathan Lukes,TOR,Toronto Blue Jays,RF,TOR,1.2,1,1,2026-06-18,True
+641857,Ryan McMahon,NYY,New York Yankees,3B,NYY,1.2,1,1,2026-06-18,True
+643396,Isiah Kiner-Falefa,BOS,Boston Red Sox,SS,BOS,1.1,1,1,2026-06-18,True
+500743,Miguel Rojas,LAD,Los Angeles Dodgers,2B,LAD,0.9,1,1,2026-06-15,True
+686681,Michael Massey,KCR,Kansas City Royals,2B,KCR,0.7,1,1,2026-06-17,True
+694371,Tommy Troy,ARI,Arizona Diamondbacks,2B,ARI,0.7,1,1,2026-06-14,True
+681715,Heriberto Hernández,MIA,Miami Marlins,LF,MIA,0.6,1,1,2026-06-14,True
+543309,Kyle Higashioka,TEX,Texas Rangers,C,TEX,0.6,1,1,2026-06-14,True
+691720,Kyle Karros,COL,Colorado Rockies,3B,COL,0.6,1,1,2026-06-17,True
+665923,Esteury Ruiz,MIA,Miami Marlins,LF,MIA,0.5,1,1,2026-06-16,True
+624641,Edmundo Sosa,PHI,Philadelphia Phillies,2B,PHI,0.4,1,1,2026-06-13,True
+676694,Jake Meyers,HOU,Houston Astros,CF,HOU,0.4,1,1,2026-06-13,True
+699393,Pedro Ramírez,CHC,Chicago Cubs,3B,CHC,0.4,1,1,2026-06-13,True
+810938,Ben Williamson,TBR,Tampa Bay Rays,3B,TBR,0.3,1,1,2026-06-14,True
+681807,David Fry,CLE,Cleveland Guardians,DH,CLE,0.2,1,1,2026-06-18,True
+642201,Eli White,ATL,Atlanta Braves,RF,ATL,0.2,1,1,2026-06-13,True
+687282,Gabriel Rincones Jr.,PHI,Philadelphia Phillies,RF,PHI,0.2,1,1,2026-06-15,True
+642350,Jose Siri,LAA,Los Angeles Angels,CF,LAA,0.2,1,1,2026-06-13,True
+656976,Pavin Smith,ARI,Arizona Diamondbacks,DH,ARI,0.2,1,1,2026-06-15,True
+668723,Ryan Vilade,TBR,Tampa Bay Rays,RF,TBR,0.2,1,1,2026-06-15,True
+663368,Blake Perkins,MIL,Milwaukee Brewers,CF,MIL,0.1,1,1,2026-06-14,True
+664954,Brett Sullivan,COL,Colorado Rockies,C,COL,0.1,1,1,2026-06-13,True
+681546,James Outman,DET,Detroit Tigers,CF,DET,0.1,1,1,2026-06-12,True
+670231,John Rave,KCR,Kansas City Royals,RF,KCR,0.1,1,1,2026-06-17,True
+679822,Justin Foscue,TEX,Texas Rangers,2B,TEX,0.1,1,1,2026-06-18,True
+668952,Ryan Kreidler,MIN,Minnesota Twins,CF,MIN,0.1,1,1,2026-06-18,True
+683748,Victor Mesa Jr.,TBR,Tampa Bay Rays,LF,TBR,0.0,1,1,2026-06-14,True

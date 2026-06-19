@@ -1,0 +1,3 @@
+name,mlbam_id,team,pos,own,hr_window,hr_dates,pa26,xw26,xc26,peak_xc,mlb_yrs,coverage_note,d_xw,d_xc,shrunk_gap,pow_axes,proc_axes,career_best,distinguish,score,tier,sub_tag
+Brooks Lee,686797,MIN,SS,27.5,2,"2026-06-12,2026-06-18",278,0.278,0.294,0.32,3,scored from refreshed multiyr cache; statcast max remains 2026-06-17,-0.011,-0.026,-0.007,0,2,False,False,1,HOT_STREAK,[DISCIPLINE-ONLY]
+Trevor Larnach,663616,MIN,DH,2.4,2,"2026-06-16,2026-06-18",213,0.33,0.344,0.408,6,scored from refreshed multiyr cache; statcast max remains 2026-06-17,0.012,-0.016,0.007,0,2,False,False,1,HOT_STREAK,[DISCIPLINE-ONLY]
