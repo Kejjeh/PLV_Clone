@@ -58,7 +58,8 @@ from scripts.xfp.historical_comp_matcher import batch_historical_comps   # noqa
 from scripts.xfp.peak_decay_calculator import (                          # noqa
     batch_peak_decay, get_league_peak_survival_curves,
 )
-from app.espn_connector import get_all_teams, _get_league              # noqa
+from app.espn_connector import _get_league              # noqa
+from plv_clone.league_state import LeagueState          # noqa
 from scripts.xfp.injury_signals import (                               # noqa
     batch_injury_status, classify_injury_impact, enrich_from_roster_df,
 )
@@ -313,7 +314,7 @@ def _f3(v) -> str:
 # ── Main ──────────────────────────────────────────────────────────────────────
 
 def main() -> None:
-    all_teams = get_all_teams()
+    all_teams = LeagueState().all_teams()
     hitters  = all_teams[~all_teams["position"].isin(["SP", "RP", "P"])].copy()
     pitchers = all_teams[all_teams["position"].isin(["SP", "RP"])].copy()
     print(f"[1/11] {len(hitters)} hitters, {len(pitchers)} pitchers across "

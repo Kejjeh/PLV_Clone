@@ -35,8 +35,8 @@ from scripts.xfp.lib.triangulate_core import triangulate_player  # noqa: E402
 def _my_roster_names() -> list[str]:
     """Return live roster display names. Fail-soft to empty list."""
     try:
-        from app.espn_connector import get_my_roster_with_injuries
-        df = get_my_roster_with_injuries()
+        from plv_clone.league_state import LeagueState
+        df = LeagueState().my_roster_with_injuries()
         if df is None or df.empty:
             return []
         if 'name' in df.columns:

@@ -47,11 +47,11 @@ def _resolve(name: str, team: str, pos: str):
                 return bid
     return None
 
-from app.espn_connector import get_all_teams  # noqa: E402
+from plv_clone.league_state import LeagueState  # noqa: E402
 
 
 def main() -> None:
-    teams = get_all_teams()
+    teams = LeagueState().all_teams()
     hitters = teams[~teams["position"].isin(["SP", "RP", "P"])].copy()
     print(f"[1/4] {len(hitters)} rostered hitters across {hitters['team_id'].nunique()} teams")
 

@@ -56,7 +56,6 @@ sys.path.insert(0, str(ROOT / "scripts" / "xfp" / "lib"))
 
 from plv_clone.league_state import LeagueState
 from plv_clone.projections import PROJECTIONS
-from app.espn_connector import get_my_roster_with_injuries
 from plv_clone.utils.name_match import resolve_batter_id
 import sp_stuff_model as ss
 import talent_prior as TP   # production lib (scripts/xfp/lib/talent_prior.py)
@@ -166,7 +165,7 @@ def build_sp_board() -> pd.DataFrame:
     rows = []
 
     # ---- MY staff ----
-    ros_my = get_my_roster_with_injuries()
+    ros_my = LeagueState().my_roster_with_injuries()
     mine = ros_my[ros_my["position"] == "SP"]
     for _, p in mine.iterrows():
         nm = p["player_name"]
@@ -343,7 +342,7 @@ def build_hitter_board() -> pd.DataFrame:
     rows = []
 
     # ── MY hitters ──
-    ros_my = get_my_roster_with_injuries()
+    ros_my = LeagueState().my_roster_with_injuries()
     mine = ros_my[~ros_my["position"].isin(["SP", "RP", "P"])].copy()
     for _, p in mine.iterrows():
         nm = p["player_name"]

@@ -15,7 +15,8 @@ import sys, os, unicodedata
 sys.path.insert(0, '.')
 import pandas as pd
 from plv_clone.projections import PROJECTIONS
-from app.espn_connector import _get_league, get_my_roster_with_injuries
+from app.espn_connector import _get_league
+from plv_clone.league_state import LeagueState
 
 OUT_DIR = 'data/research/triangulate_universe'
 os.makedirs(OUT_DIR, exist_ok=True)
@@ -31,7 +32,7 @@ def classify_bucket(pos):
 
 def main():
     league = _get_league()
-    roster_df = get_my_roster_with_injuries()
+    roster_df = LeagueState().my_roster_with_injuries()
     my_team_name = roster_df.iloc[0]['on_team_name']
     print(f"My team: {my_team_name}")
 

@@ -18,10 +18,10 @@ pd.set_option('display.max_columns', 40)
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 from app.espn_connector import (
-    get_my_roster_with_injuries,
     get_all_teams,
     get_free_agents,
 )
+from plv_clone.league_state import LeagueState
 
 MULTIYR = 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 HITTER_POSITIONS = {'C','1B','2B','3B','SS','OF','DH','MI','CI','LF','CF','RF','UTIL'}
@@ -58,7 +58,7 @@ def build_name_resolver(df):
 
 def pull_pools():
     print("Pulling MY_ROSTER...")
-    mine = get_my_roster_with_injuries()
+    mine = LeagueState().my_roster_with_injuries()
     mine_hit = mine[mine['position'].isin(HITTER_POSITIONS)].copy()
     mine_hit['source'] = 'MY_ROSTER'
     mine_hit['team_name'] = 'Ligers'

@@ -81,7 +81,8 @@ def batch_injury_status(player_ids: list[int]) -> dict[int, dict]:
             injury_class, injury_status_raw, injury_type, injury_side,
             return_date, days_until_return, short_comment, status_code.
     """
-    from app.espn_connector import get_injury_details
+    from plv_clone.league_state import LeagueState
+    get_injury_details = LeagueState().injury_details
 
     result: dict[int, dict] = {}
 

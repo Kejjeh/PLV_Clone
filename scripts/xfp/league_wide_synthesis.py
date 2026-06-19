@@ -80,8 +80,8 @@ def main() -> None:
 
     # Pitchers: pull rh3-sibling rp3 + rprs2 for power ranking only (no career-form on pitchers)
     teams_path = REPO / "data/research/league_career_form_{}.csv".format(TODAY)
-    from app.espn_connector import get_all_teams  # noqa: E402
-    all_rosters = get_all_teams()
+    from plv_clone.league_state import LeagueState  # noqa: E402
+    all_rosters = LeagueState().all_teams()
     pitchers = all_rosters[all_rosters["position"].isin(["SP", "RP"])].copy()
     rp3 = PROJECTIONS.rp3()
     rprs2 = PROJECTIONS.rprs2()

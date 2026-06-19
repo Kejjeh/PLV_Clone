@@ -13,7 +13,7 @@ from datetime import date
 
 from plv_clone.paths import ROOT as REPO
 sys.path.insert(0, str(REPO))
-from app.espn_connector import get_my_roster_with_injuries, _get_league
+from plv_clone.league_state import LeagueState
 from plv_clone.projections import PROJECTIONS
 from plv_clone.utils.name_match import lookup_batter_id_cached
 
@@ -98,7 +98,8 @@ merged["xwoba_con"] = merged["xwoba_con"].fillna(0.400)
 
 # ── Pull live roster ─────────────────────────────────────────────────────────
 print("Pulling live roster...", flush=True)
-roster = get_my_roster_with_injuries()
+_ls = LeagueState()
+roster = _ls.my_roster_with_injuries()
 my_sps = roster[(roster["position"] == "SP") & (roster["lineup_slot"] != "IL")]
 my_sp_names = set(my_sps["player_name"].tolist())
 
@@ -121,12 +122,11 @@ print(f"  Upgrade floor (3rd-weakest): {upgrade_floor:+.4f}", flush=True)
 
 # ── Pull FA SP pool ──────────────────────────────────────────────────────────
 print("Pulling FA pool...", flush=True)
-league = _get_league()
-fas = league.free_agents(size=2000)
+fas = _ls.available_fa()
 fa_sp_norm = {}
-for p in fas:
-    if getattr(p, "position", "") in ("SP", "P"):
-        fa_sp_norm[_norm(p.name)] = p.name
+for _, p in fas.iterrows():
+    if p.get("position", "") in ("SP", "P"):
+        fa_sp_norm[_norm(p["player_name"])] = p["player_name"]
 
 def is_fa(sc_name):
     n = _norm(display_name(sc_name))
