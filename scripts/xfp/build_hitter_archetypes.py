@@ -80,22 +80,17 @@ ARCHETYPES = {
 
 
 # ──────────────────────────────────────────────────────────────────────────────
-# Helpers (mirrors build_sp_archetypes.py)
+# Shared 20-80 scouting helpers live in the archetype_engine toolkit (ADR-0001
+# posture). age_tier is wrapped with this position's peak windows.
 # ──────────────────────────────────────────────────────────────────────────────
-def rating_20_80(series, grouper, invert=False):
-    """20-80 scouting scale: 50=mean, 10pts=1 SD, capped [20,80], within-year scaled."""
-    mu = grouper.transform('mean')
-    sd = grouper.transform('std').replace(0, np.nan)
-    z = (series - mu) / sd
-    if invert:
-        z = -z
-    return (50 + 10 * z).clip(20, 80)
+import sys as _sys
+_sys.path.insert(0, str(REPO))
+from scripts.xfp.lib.archetype_engine import (  # noqa: E402
+    rating_20_80, bucket, boundary_distance, boundary_tier_label,
+    age_tier as _eng_age_tier,
+)
 
 
-def bucket(rating):
-    if rating >= 60: return 'PLUS'
-    if rating >= 40: return 'AVG'
-    return 'MINUS'
 
 
 def contact_subtype(row):
@@ -162,22 +157,8 @@ def spray_archetype(row):
 
 
 def age_tier(age):
-    """PRE_PEAK (<=25) / PEAK (26-30) / POST_PEAK (31+).
-    Hitters peak ~1 year earlier than SPs (Mike Lichtman aging-curve work)."""
-    if pd.isna(age): return None
-    if age <= 25: return 'PRE_PEAK'
-    if age <= 30: return 'PEAK'
-    return 'POST_PEAK'
-
-
-def boundary_distance(rating):
-    return int(min(abs(rating - 40), abs(rating - 60)))
-
-
-def boundary_tier_label(d):
-    if d <= 2: return 'EDGE'
-    if d <= 5: return 'NEAR_EDGE'
-    return 'SOLID'
+    """Hitters peak ~1 year earlier than SPs (Mike Lichtman aging-curve work)."""
+    return _eng_age_tier(age, pre_max=25, peak_max=30)
 
 
 def attach_age(qual):

@@ -70,20 +70,13 @@ GS_FLOOR_RATED = 6
 GS_FLOOR_FULL = 20
 
 
-def rating_20_80(series, grouper, invert=False):
-    """20-80 scouting scale: 50=mean, 10pts=1 SD, capped [20,80], within-year scaled."""
-    mu = grouper.transform('mean')
-    sd = grouper.transform('std').replace(0, np.nan)
-    z = (series - mu) / sd
-    if invert:
-        z = -z
-    return (50 + 10 * z).clip(20, 80)
-
-
-def bucket(rating):
-    if rating >= 60: return 'PLUS'
-    if rating >= 40: return 'AVG'
-    return 'MINUS'
+# Shared 20-80 scouting helpers live in the archetype_engine toolkit.
+import sys as _sys
+_sys.path.insert(0, str(REPO))
+from scripts.xfp.lib.archetype_engine import (  # noqa: E402
+    rating_20_80, bucket, boundary_distance, boundary_tier_label,
+    age_tier as _eng_age_tier,
+)
 
 
 def stuff_subtype(row):
@@ -105,33 +98,9 @@ def velo_tier(row):
 
 
 def age_tier(age):
-    """PRE_PEAK (22-26) / PEAK (27-31) / POST_PEAK (32+).
-    Tested 2026-05-28: age-matched (±3 yr) comps reduce T+1 FP/s prediction MAE by ~4%
-    (2.28 → 2.19, p=0.08, n=440). PURE_STUFF stickiness varies sharply by age tier
-    (18%/31%/15% PRE_PEAK/PEAK/POST_PEAK) — peak-age PURE_STUFF most durable."""
-    if pd.isna(age): return None
-    if age <= 26: return 'PRE_PEAK'
-    if age <= 31: return 'PEAK'
-    return 'POST_PEAK'
-
-
-def boundary_distance(rating):
-    """Min distance to either archetype-bucket threshold (40 or 60).
-    Higher = further from a label flip."""
-    return int(min(abs(rating - 40), abs(rating - 60)))
-
-
-def boundary_tier_label(d):
-    """Tier label based on min distance across S/M/C.
-
-    Validated 2026-05-28: SOLID-tier ratings have 66% overall T+1 archetype
-    retention vs 35% for EDGE-tier (n=603 transitions, 11pp lift baseline,
-    nearly 2x at the extremes). High boundary_risk means the archetype label
-    is fragile — interpret it as advisory, not durable.
-    """
-    if d <= 2: return 'EDGE'       # 1-2 rating points from flipping a label
-    if d <= 5: return 'NEAR_EDGE'  # within striking distance but not adjacent
-    return 'SOLID'                  # well inside the cell — label is durable
+    """SPs peak ~1 year later than hitters; age-matched comps reduce T+1 FP/s
+    MAE ~4% (2026-05-28, n=440)."""
+    return _eng_age_tier(age, pre_max=26, peak_max=31)
 
 
 def attach_age(qual):

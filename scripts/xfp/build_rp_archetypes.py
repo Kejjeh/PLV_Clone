@@ -142,20 +142,13 @@ T2_BETAS = {
 # ──────────────────────────────────────────────────────────────────────────────
 # Helpers (mirror sp build)
 # ──────────────────────────────────────────────────────────────────────────────
-def rating_20_80(series, grouper, invert=False):
-    """20-80 scouting scale: 50=mean, 10pts=1 SD, capped [20,80], within-year."""
-    mu = grouper.transform('mean')
-    sd = grouper.transform('std').replace(0, np.nan)
-    z = (series - mu) / sd
-    if invert:
-        z = -z
-    return (50 + 10 * z).clip(20, 80)
-
-
-def bucket(rating):
-    if rating >= 60: return 'PLUS'
-    if rating >= 40: return 'AVG'
-    return 'MINUS'
+# Shared 20-80 scouting helpers live in the archetype_engine toolkit.
+import sys as _sys
+_sys.path.insert(0, str(REPO))
+from scripts.xfp.lib.archetype_engine import (  # noqa: E402
+    rating_20_80, bucket, boundary_distance, boundary_tier_label,
+    age_tier as _eng_age_tier,
+)
 
 
 def stuff_subtype(row):
@@ -177,22 +170,8 @@ def velo_tier(row):
 
 
 def age_tier(age):
-    """RP age tiers mirror SP (peaks ~26-30 for K-stuff arms; slight late shift OK)."""
-    if pd.isna(age): return None
-    if age <= 25: return 'PRE_PEAK'
-    if age <= 30: return 'PEAK'
-    return 'POST_PEAK'
-
-
-def boundary_distance(rating):
-    """Min distance to either archetype-bucket threshold (40 or 60)."""
-    return int(min(abs(rating - 40), abs(rating - 60)))
-
-
-def boundary_tier_label(d):
-    if d <= 2: return 'EDGE'
-    if d <= 5: return 'NEAR_EDGE'
-    return 'SOLID'
+    """RP age tiers mirror hitter windows (peaks ~26-30 for K-stuff arms)."""
+    return _eng_age_tier(age, pre_max=25, peak_max=30)
 
 
 def attach_age(qual):
