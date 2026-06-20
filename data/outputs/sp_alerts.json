@@ -1,7 +1,7 @@
 {
-  "generated": "2026-06-19",
+  "generated": "2026-06-20",
   "upgrade_floor_fpp": -0.0769,
-  "hit_upgrade_floor_xwoba": 0.299,
+  "hit_upgrade_floor_xwoba": 0.327,
   "alert_count": 4,
   "hitter_alert_count": 0,
   "alerts": [
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 28.7,
       "xwoba_con": 0.372,
-      "rp3_rank": 14
+      "rp3_rank": 15
     },
     {
       "name": "Drew Anderson",
@@ -32,8 +32,8 @@
       "fpp_gap": 0.1224,
       "gsp": 6,
       "l4": "3/4",
-      "whiff_pct": 27.9,
-      "xwoba_con": 0.329,
+      "whiff_pct": 27.8,
+      "xwoba_con": 0.33,
       "rp3_rank": 19
     },
     {
@@ -47,8 +47,8 @@
       "fpp_gap": 0.0506,
       "gsp": 6,
       "l4": "2/4",
-      "whiff_pct": 19.7,
-      "xwoba_con": 0.343,
+      "whiff_pct": 19.5,
+      "xwoba_con": 0.344,
       "rp3_rank": 21
     },
     {

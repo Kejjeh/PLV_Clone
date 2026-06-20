@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-20_hunter_goodman_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 54,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.480514792033566,
+    "live_marginal": 20.900000000000006,
+    "model_rank": 55,
+    "override_tag": null,
+    "pl_rank": 25,
+    "proj_per": 1.99,
+    "replacement_delta": null
+  },
+  "mlbam_id": 696100,
+  "player_name": "Hunter Goodman",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-20",
+  "verdict_top": "MIXED"
+}

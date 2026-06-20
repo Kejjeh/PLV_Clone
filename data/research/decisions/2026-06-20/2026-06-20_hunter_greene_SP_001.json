@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-20_hunter_greene_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 64,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 15.44642317676894,
+    "live_marginal": 44.43448940877062,
+    "model_rank": 28,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 12.27,
+    "replacement_delta": null
+  },
+  "mlbam_id": 668881,
+  "player_name": "Hunter Greene",
+  "reason_tag": "process_upgrade",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-20",
+  "verdict_top": "BUY"
+}
