@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-21_bryce_eldridge_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 65,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 1.684564820153025,
+    "live_marginal": -90.5,
+    "model_rank": 66,
+    "override_tag": null,
+    "pl_rank": 93,
+    "proj_per": 1.95,
+    "replacement_delta": null
+  },
+  "mlbam_id": 805811,
+  "player_name": "Bryce Eldridge",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "CAUTION"
+}

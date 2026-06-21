@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-21_elly_de_la_cruz_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 2.858521982277893,
+    "live_marginal": -26.700000000000003,
+    "model_rank": 106,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 1.86,
+    "replacement_delta": null
+  },
+  "mlbam_id": 682829,
+  "player_name": "Elly De La Cruz",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "MIXED"
+}

@@ -1,8 +1,8 @@
 {
-  "generated": "2026-06-20",
-  "upgrade_floor_fpp": -0.0769,
-  "hit_upgrade_floor_xwoba": 0.327,
-  "alert_count": 4,
+  "generated": "2026-06-21",
+  "upgrade_floor_fpp": -0.0794,
+  "hit_upgrade_floor_xwoba": 0.323,
+  "alert_count": 5,
   "hitter_alert_count": 0,
   "alerts": [
     {
@@ -13,7 +13,7 @@
       ],
       "gs": 4,
       "fpp": 0.061,
-      "fpp_gap": 0.1379,
+      "fpp_gap": 0.1404,
       "gsp": 3,
       "l4": "3/4",
       "whiff_pct": 28.7,
@@ -25,11 +25,11 @@
       "tier": "HIGH",
       "signals": [
         "SigA-HIGH",
-        "SigH-HIGH(gap=+0.122)"
+        "SigH-HIGH(gap=+0.125)"
       ],
       "gs": 7,
       "fpp": 0.0455,
-      "fpp_gap": 0.1224,
+      "fpp_gap": 0.1249,
       "gsp": 6,
       "l4": "3/4",
       "whiff_pct": 27.8,
@@ -40,11 +40,11 @@
       "name": "Spencer Miles",
       "tier": "HIGH",
       "signals": [
-        "SigH-HIGH(gap=+0.051)"
+        "SigH-HIGH(gap=+0.053)"
       ],
       "gs": 8,
       "fpp": -0.0263,
-      "fpp_gap": 0.0506,
+      "fpp_gap": 0.0531,
       "gsp": 6,
       "l4": "2/4",
       "whiff_pct": 19.5,
@@ -55,16 +55,31 @@
       "name": "Chase Dollander",
       "tier": "HIGH",
       "signals": [
-        "SigH-HIGH(gap=+0.032)"
+        "SigH-HIGH(gap=+0.034)"
       ],
       "gs": 8,
       "fpp": -0.0452,
-      "fpp_gap": 0.0317,
+      "fpp_gap": 0.0342,
       "gsp": 4,
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
       "rp3_rank": 17
+    },
+    {
+      "name": "Michael Soroka",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.034)"
+      ],
+      "gs": 14,
+      "fpp": -0.0455,
+      "fpp_gap": 0.0339,
+      "gsp": 8,
+      "l4": "3/4",
+      "whiff_pct": 21.5,
+      "xwoba_con": 0.378,
+      "rp3_rank": 83
     }
   ],
   "hitter_alerts": [],

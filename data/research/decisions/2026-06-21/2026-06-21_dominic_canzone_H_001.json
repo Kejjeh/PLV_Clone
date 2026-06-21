@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-21_dominic_canzone_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 67,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 1.95040816429107,
+    "live_marginal": null,
+    "model_rank": 87,
+    "override_tag": null,
+    "pl_rank": 119,
+    "proj_per": 1.9,
+    "replacement_delta": null
+  },
+  "mlbam_id": 686527,
+  "player_name": "Dominic Canzone",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "MIXED"
+}
