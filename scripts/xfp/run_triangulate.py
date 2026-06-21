@@ -552,6 +552,24 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             lines.append(f"\n🎲 **Expected (luck)** xwOBA {exp['xwoba']:.3f} vs actual wOBA "
                          f"{exp['woba']:.3f} (gap {g:+.3f}) — {exp['regression']}{tail}")
 
+    # ── Times-through-order (SP) — career-static durability, context-only ──────
+    tto = model.get('tto_decay') or {}
+    if bucket == 'SP' and tto.get('penalty') is not None:
+        warn = "" if tto.get('sample_ok') else " (small TTO3 sample)"
+        lines.append(f"\n🔁 **3rd-time-through** core fp/PA {tto['tto1_rate']:.3f} (1st) → "
+                     f"{tto['tto3_rate']:.3f} (3rd), penalty {tto['penalty']:+.3f} → {tto['tier']}"
+                     f" (career){warn}")
+
+    # ── Home/road split — context-only (CLAUDE.md #13) ────────────────────────
+    ha = model.get('home_away') or {}
+    if ha and ha.get('dominant_side'):
+        def _hr(v): return f"{v:.3f}" if v is not None else "—"
+        nh, na = int(ha.get('pa_home') or 0), int(ha.get('pa_away') or 0)
+        w = "" if (ha.get('sample_ok_home') and ha.get('sample_ok_away')) else " ⚠ small-sample"
+        unit = "xwOBA-allowed" if bucket in ('SP', 'RP') else "xwOBA"
+        lines.append(f"\n🏠 **Home/Road ({unit})** home {_hr(ha.get('rate_home'))} (n{nh}) / "
+                     f"road {_hr(ha.get('rate_away'))} (n{na}) — leans {ha['dominant_side']}{w}")
+
     return '\n'.join(lines)
 
 

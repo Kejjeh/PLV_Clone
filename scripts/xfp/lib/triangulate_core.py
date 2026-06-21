@@ -17,10 +17,12 @@ from .hitter_boom_stack import (
     resolve_opp_sp_id_for_today,
 )
 from .blend_score import compute_blended_xfp
-from .sustainability_lens import sustainability_sp, sustainability_h
+from .sustainability_lens import sustainability_sp, sustainability_h, sustainability_rp
 from .splits import hitter_platoon, sp_platoon  # platoon (vs L/R) context lens
 from .expected_stats import (  # expected-vs-actual (luck) lens, overall + by-split
     hitter_expected, sp_expected, hitter_expected_by_split, sp_expected_by_split)
+from .lineup_pass import sp_lineup_pass  # times-through-order decay (SP)
+from .home_away import hitter_home_away, sp_home_away  # home/road split lens
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -168,6 +170,10 @@ def model_row(player: dict) -> dict:
             _exp_splits_h = hitter_expected_by_split(player['id'])
         except Exception:
             _exp_splits_h = None
+        try:
+            _ha_h = hitter_home_away(player['id'])
+        except Exception:
+            _ha_h = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
@@ -185,6 +191,7 @@ def model_row(player: dict) -> dict:
             'splits': _splits_h,
             'expected': _exp_h,
             'expected_splits': _exp_splits_h,
+            'home_away': _ha_h,
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -353,6 +360,14 @@ def model_row(player: dict) -> dict:
             _exp_splits_sp = sp_expected_by_split(player['id'])
         except Exception:
             _exp_splits_sp = None
+        try:
+            _tto_sp = sp_lineup_pass(player['id'])
+        except Exception:
+            _tto_sp = None
+        try:
+            _ha_sp = sp_home_away(player['id'])
+        except Exception:
+            _ha_sp = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -413,10 +428,12 @@ def model_row(player: dict) -> dict:
             'splits': _splits_sp,
             'expected': _exp_sp,
             'expected_splits': _exp_splits_sp,
+            'tto_decay': _tto_sp,
+            'home_away': _ha_sp,
         }
     # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
     try:
-        _sl_rp = sustainability_sp(player['id'])  # sp_multiyr covers RP too
+        _sl_rp = sustainability_rp(player['id'])  # relievers_multiyr (sp_multiyr drops pure RPs)
     except Exception:
         _sl_rp = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
     return {

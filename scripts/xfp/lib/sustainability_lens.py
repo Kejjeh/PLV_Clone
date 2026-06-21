@@ -30,6 +30,18 @@ def _sp_multiyr() -> pd.DataFrame:
 
 
 @functools.lru_cache(maxsize=1)
+def _rp_multiyr() -> pd.DataFrame:
+    # RPs are absent from sp_multiyr (build_sp_multiyr hard-filters gs>=10), so the
+    # SP sustainability path returns INSUFFICIENT_DATA for every pure reliever. This
+    # is the reliever multiyr cache (same K%/SwStr%/BB%/velo columns by year).
+    path = os.path.join(_ROOT, 'data', 'research', 'xfp_cache', 'relievers_multiyr_2018_2026.csv')
+    df = pd.read_csv(path)
+    if 'pitcher' in df.columns:
+        df['_pid'] = pd.to_numeric(df['pitcher'], errors='coerce')
+    return df
+
+
+@functools.lru_cache(maxsize=1)
 def _h_multiyr() -> pd.DataFrame:
     path = os.path.join(_ROOT, 'data', 'research', 'xfp_cache', 'hitters_multiyr_2015_2026.csv')
     return pd.read_csv(path)
@@ -157,9 +169,10 @@ def _classify_h(xw24, xw25, xw26, xw_l21, k26, brl26):
 
 # ── public API ────────────────────────────────────────────────────────────────
 
-def sustainability_sp(pitcher_id):
-    """Sustainability lens dict for an SP/RP by MLBAM pitcher_id."""
-    df = _sp_multiyr()
+def _sustain_pitcher(df, pitcher_id, bucket):
+    """Shared K%/SwStr% trajectory lens for a pitcher against a multiyr df.
+    SP and RP differ ONLY in the source cache (sp_multiyr vs relievers_multiyr)
+    and the bucket tag — the classifier + return contract are identical."""
     rows = pd.DataFrame()
     if '_pid' in df.columns and pitcher_id is not None:
         try:
@@ -189,7 +202,7 @@ def sustainability_sp(pitcher_id):
 
     verdict, detail = _classify_sp(k24, k25, k26, sw24, sw25, sw26)
     return {
-        'bucket': 'SP',
+        'bucket': bucket,
         'k_pct_24': k24,   'k_pct_25': k25,   'k_pct_26': k26,
         'swstr_pct_24': sw24, 'swstr_pct_25': sw25, 'swstr_pct_26': sw26,
         'bb_pct_24': bb24, 'bb_pct_25': bb25, 'bb_pct_26': bb26,
@@ -199,6 +212,19 @@ def sustainability_sp(pitcher_id):
         'process_verdict': verdict,
         'process_detail': detail,
     }
+
+
+def sustainability_sp(pitcher_id):
+    """Sustainability lens dict for a STARTER by MLBAM pitcher_id (sp_multiyr)."""
+    return _sustain_pitcher(_sp_multiyr(), pitcher_id, 'SP')
+
+
+def sustainability_rp(pitcher_id):
+    """Sustainability lens dict for a RELIEVER by MLBAM pitcher_id (relievers_multiyr).
+    Pure RPs are absent from sp_multiyr, so sustainability_sp returned
+    INSUFFICIENT_DATA for every closer/setup man — this gives RP cards a real
+    K%/SwStr% skill-confirmation lens. Same return contract as sustainability_sp."""
+    return _sustain_pitcher(_rp_multiyr(), pitcher_id, 'RP')
 
 
 def sustainability_h(batter_id):
