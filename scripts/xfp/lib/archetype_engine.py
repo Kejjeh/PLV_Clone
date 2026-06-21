@@ -30,6 +30,37 @@ def rating_20_80(series, grouper, invert: bool = False):
     return (50 + 10 * z).clip(20, 80)
 
 
+def rate_value(val, mu, sd, invert: bool = False):
+    """Scalar sibling of :func:`rating_20_80` — rate one value against a
+    PRE-COMPUTED baseline (mu, sd), returning an int on the 20-80 scale.
+
+    Snapshot builders rate a single row against a prior-season baseline (they
+    have no in-frame population to group), so they need the scalar form. Same
+    rule as ``rating_20_80`` (50 = mean, 10 pts = 1 SD, clipped [20,80]); the
+    only difference is mu/sd are supplied rather than derived from a grouper.
+    Returns None when any input is missing or sd is zero (undefined rating).
+    """
+    if pd.isna(val) or pd.isna(mu) or pd.isna(sd) or sd == 0:
+        return None
+    z = (val - mu) / sd
+    if invert:
+        z = -z
+    return int(round(min(max(50 + 10 * z, 20), 80)))
+
+
+def label_for_cell(ratings, defs):
+    """Map an ordered list of pillar ratings to ``(cell, archetype_label)``.
+
+    ``ratings`` are the role's pillar 20-80 ratings in matrix order (e.g.
+    hitter CONTACT/POWER/DISCIPLINE, SP STUFF/MOVEMENT/CONTROL). ``defs`` is the
+    role's archetype-definitions dict (cell-string -> {'label': ...}). The
+    40/60 bucket cuts are the matrix's own definition, so they live here with
+    the labels rather than re-inlined per builder. Unknown cell -> 'UNKNOWN'.
+    """
+    cell = '/'.join(bucket(r) for r in ratings)
+    return cell, defs.get(cell, {}).get('label', 'UNKNOWN')
+
+
 def bucket(rating) -> str:
     """PLUS (>=60) / AVG (>=40) / MINUS — the coarse 20-80 bucket."""
     if rating >= 60:

@@ -73,7 +73,9 @@ CANONICAL_CASES = [
     #   chasing outcomes); Schmitt's archetype-breakout rule fires with the fresh
     #   PL rank + model lag. Data-driven (cache refresh), not a code change.
     ("Eugenio Suárez",   "FADE — PL chasing outcomes", "H",  "FADE",  None),
-    ("Casey Schmitt",   "BUY — archetype breakout",   "H",  "BUY",   None),
+    # 2026-06-20 refresh: Schmitt's BUY sub-reason drifted archetype-breakout ->
+    #   process-upgrade (rh3/archetype data shift; still BUY top). Data-driven.
+    ("Casey Schmitt",   "BUY — process upgrade",      "H",  "BUY",   None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),

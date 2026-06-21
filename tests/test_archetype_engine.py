@@ -9,6 +9,7 @@ import pytest
 
 from scripts.xfp.lib.archetype_engine import (
     rating_20_80, bucket, boundary_distance, boundary_tier_label, age_tier,
+    rate_value, label_for_cell,
 )
 
 
@@ -56,6 +57,40 @@ def test_boundary_tier_label():
     assert boundary_tier_label(2) == 'EDGE'
     assert boundary_tier_label(5) == 'NEAR_EDGE'
     assert boundary_tier_label(6) == 'SOLID'
+
+
+def test_rate_value_scalar_scale():
+    # Scalar sibling of rating_20_80: 50 at mean, +/-10 per SD, clipped, int.
+    assert rate_value(3.0, 3.0, 1.0) == 50
+    assert rate_value(5.0, 3.0, 1.0) == 70
+    assert rate_value(1.0, 3.0, 1.0) == 30
+    assert rate_value(100.0, 3.0, 1.0) == 80   # clipped high
+    assert rate_value(-100.0, 3.0, 1.0) == 20  # clipped low
+    assert isinstance(rate_value(4.0, 3.0, 1.0), int)
+
+
+def test_rate_value_invert_flips():
+    assert rate_value(5.0, 3.0, 1.0, invert=True) == 30  # +2 SD inverted -> 30
+
+
+def test_rate_value_none_on_bad_inputs():
+    assert rate_value(None, 3.0, 1.0) is None
+    assert rate_value(3.0, None, 1.0) is None
+    assert rate_value(3.0, 3.0, None) is None
+    assert rate_value(3.0, 3.0, 0) is None       # zero SD -> undefined
+
+
+def test_label_for_cell_builds_cell_and_label():
+    defs = {'PLUS/AVG/MINUS': {'label': 'WILD_FIREBALLER'}}
+    cell, label = label_for_cell([65, 45, 30], defs)
+    assert cell == 'PLUS/AVG/MINUS'
+    assert label == 'WILD_FIREBALLER'
+
+
+def test_label_for_cell_unknown_cell():
+    cell, label = label_for_cell([50, 50, 50], {})
+    assert cell == 'AVG/AVG/AVG'
+    assert label == 'UNKNOWN'
 
 
 def test_age_tier_parametrized_peak_windows():

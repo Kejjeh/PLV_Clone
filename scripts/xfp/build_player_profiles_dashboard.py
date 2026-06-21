@@ -33,6 +33,7 @@ import numpy as np
 import pandas as pd
 
 from plv_clone.paths import ROOT as REPO  # single source for repo paths
+from lib.archetype_engine import rate_value, bucket, label_for_cell  # shared 20-80 seam
 RES = REPO / 'data/research'
 CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'
@@ -282,19 +283,14 @@ def build_rp_records(rp: pd.DataFrame):
     return recs
 
 
+# 20-80 rating + bucket now live once in lib/archetype_engine (C2, 2026-06-21).
+# _rate is the scalar form (prior-year-baseline); _bucket adds a NaN guard over
+# the engine's bucket() so cell-building never crashes on a missing pillar.
+_rate = rate_value
+
+
 def _bucket(v):
-    if pd.isna(v): return None
-    if v >= 60: return 'PLUS'
-    if v >= 40: return 'AVG'
-    return 'MINUS'
-
-
-def _rate(val, mu, sd, invert=False):
-    if pd.isna(val) or pd.isna(mu) or pd.isna(sd) or sd == 0:
-        return None
-    z = (val - mu) / sd
-    if invert: z = -z
-    return int(round(min(max(50 + 10 * z, 20), 80)))
+    return None if pd.isna(v) else bucket(v)
 
 
 def build_hitter_snapshots():
@@ -317,6 +313,8 @@ def build_hitter_snapshots():
     # source for player_name + team lookups
     name_lookup = (src.sort_values('year').groupby('batter')
                    .agg({'player_name': 'last', 'team': 'last'}).to_dict('index'))
+    with open(H_DEFS, encoding='utf-8') as f:
+        hdefs = json.load(f)
 
     # Build per-year baselines (mean/sd of full-season rates) for stable rating units
     src['babip'] = ((src['h'] - src['hr']) /
@@ -361,7 +359,7 @@ def build_hitter_snapshots():
         POWER      = int(round(sum(p_vals) / len(p_vals)))
         DISCIPLINE = int(round(sum(d_vals) / len(d_vals)))
         SB = rSB if rSB is not None else 50
-        cell = _bucket(CONTACT) + '/' + _bucket(POWER) + '/' + _bucket(DISCIPLINE)
+        cell, arch = label_for_cell([CONTACT, POWER, DISCIPLINE], hdefs)
 
         info = name_lookup.get(int(row['batter']), {'player_name': None, 'team': None})
         # Weighted Overall — same coefficients as the master CSV builder.
@@ -375,102 +373,9 @@ def build_hitter_snapshots():
             'pa_to': int(row['pa_to']),
             'OVERALL': OVERALL,
             'CONTACT': CONTACT, 'POWER': POWER, 'DISCIPLINE': DISCIPLINE, 'SB': SB,
-            'cell': cell,
-        })
-    print(f'  hitter snapshots: {len(out)} rows ({len(set((o["batter"], o["year"]) for o in out))} player-years)', flush=True)
-    return out
-
-
-def build_sp_snapshots():
-    """Per-(pitcher, year, snapshot_date) STUFF + MOVEMENT + CONTROL + Velo ratings.
-
-    Uses the extended SP rolling cache that now carries barrel%, hard_hit%,
-    gb%, xwoba_on_contact. Archetype label is recomputed per-snapshot from
-    blended STUFF/MOVEMENT/CONTROL ratings.
-    """
-    if not S_ROLLING.exists() or not S_SRC.exists():
-        print('  ⚠ SP rolling/source not found — skipping snapshot build')
-        return []
-    r = pd.read_csv(S_ROLLING)
-    src = pd.read_csv(S_SRC)
-    r['cutoff_date'] = pd.to_datetime(r['cutoff_date'])
-    name_lookup = (src.sort_values('year').groupby('pitcher')
-                   .agg({'player_name': 'last'}).to_dict('index'))
-
-    src['hr_per_bf'] = src['hr'] / src['tbf'].clip(lower=1)
-    BASELINE_COLS = ['k_pct', 'swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo',
-                     'hr_per_bf', 'barrel_pct', 'hard_hit_pct', 'gb_pct', 'xwoba_contact']
-    baselines = {}
-    for yr, grp in src.groupby('year'):
-        baselines[int(yr)] = {}
-        for c in BASELINE_COLS:
-            if c not in grp.columns: continue
-            baselines[int(yr)][c] = (grp[c].mean(), grp[c].std())
-
-    r = r[r['gs_to'] >= 3].copy()
-    r['hr_per_bf_to'] = r['hr_to'] / r['tbf_to'].clip(lower=1)
-    if not len(r): return []
-
-    # Load archetype definitions to assign label per snapshot
-    with open(S_DEFS, encoding='utf-8') as f:
-        sdefs = json.load(f)
-
-    out = []
-    for _, row in r.iterrows():
-        yr = int(row['year'])
-        baseline_yr = yr - 1 if (yr - 1) in baselines else yr
-        if baseline_yr not in baselines:
-            continue
-        b = baselines[baseline_yr]
-
-        rK   = _rate(row['k_pct_to'],         *b['k_pct'])
-        rSW  = _rate(row['swstr_pct_to'],     *b['swstr_pct'])
-        rCSW = _rate(row['c_plus_swstr_to'],  *b['c_plus_swstr'])
-        rBB  = _rate(row['bb_pct_to'],        *b['bb_pct'], invert=True)
-        rV   = _rate(row['avg_velo_to'],      *b['avg_velo'])
-
-        # MOVEMENT components (rolling cache extended 2026-05-28). The hr_per_bf
-        # baseline in the source uses 'hr_per_bf'; the others use the same names.
-        rHR  = _rate(row['hr_per_bf_to'],     *b['hr_per_bf'], invert=True) if 'hr_per_bf' in b else None
-        rBR  = _rate(row['barrel_pct_to'],    *b['barrel_pct'], invert=True) if 'barrel_pct' in b else None
-        rHH  = _rate(row['hard_hit_pct_to'],  *b['hard_hit_pct'], invert=True) if 'hard_hit_pct' in b else None
-        rGB  = _rate(row['gb_pct_to'],        *b['gb_pct']) if 'gb_pct' in b else None
-        rXC  = _rate(row['xwoba_on_contact_to'], *b['xwoba_contact'], invert=True) if 'xwoba_contact' in b else None
-
-        s_vals = [v for v in [rK, rSW, rCSW] if v is not None]
-        m_vals = [v for v in [rHR, rBR, rHH, rGB, rXC] if v is not None]
-        if not (s_vals and m_vals and rBB is not None):
-            continue
-        STUFF    = int(round(sum(s_vals) / len(s_vals)))
-        MOVEMENT = int(round(sum(m_vals) / len(m_vals)))
-        CONTROL  = rBB
-
-        def _b(v):
-            if v >= 60: return 'PLUS'
-            if v >= 40: return 'AVG'
-            return 'MINUS'
-        cell = f'{_b(STUFF)}/{_b(MOVEMENT)}/{_b(CONTROL)}'
-        arch = sdefs.get(cell, {}).get('label', 'UNKNOWN')
-
-        info = name_lookup.get(int(row['pitcher']), {'player_name': None})
-        nm = info.get('player_name')
-        if isinstance(nm, str) and ',' in nm:
-            a, c = nm.split(',', 1)
-            nm = f'{c.strip()} {a.strip()}'
-        # Weighted Overall — same coefficients as the master CSV builder.
-        OVERALL = int(round(STUFF * 0.50 + MOVEMENT * 0.35 + CONTROL * 0.15))
-        out.append({
-            'pitcher': int(row['pitcher']),
-            'player_name': nm,
-            'year': yr,
-            'date': row['cutoff_date'].strftime('%Y-%m-%d'),
-            'gs_to': int(row['gs_to']),
-            'OVERALL': OVERALL,
-            'STUFF': STUFF, 'MOVEMENT': MOVEMENT, 'CONTROL': CONTROL,
-            'velo_rating': rV if rV is not None else 50,
             'cell': cell, 'archetype': arch,
         })
-    print(f'  SP snapshots: {len(out)} rows ({len(set((o["pitcher"], o["year"]) for o in out))} pitcher-years)', flush=True)
+    print(f'  hitter snapshots: {len(out)} rows ({len(set((o["batter"], o["year"]) for o in out))} player-years)', flush=True)
     return out
 
 
@@ -502,9 +407,6 @@ def build_sp_start_snapshots(years=(2024, 2025, 2026), window=10, min_starts=3):
                'events', 'launch_speed', 'launch_speed_angle', 'bb_type',
                'estimated_woba_using_speedangle']
 
-    def _b(v):
-        return 'PLUS' if v >= 60 else ('AVG' if v >= 40 else 'MINUS')
-
     out = []
     for yr in years:
         p = CACHE / f'statcast_{yr}.parquet'
@@ -533,8 +435,7 @@ def build_sp_start_snapshots(years=(2024, 2025, 2026), window=10, min_starts=3):
                 STUFF = int(round(sum(s_vals) / len(s_vals)))
                 MOVEMENT = int(round(sum(m_vals) / len(m_vals)))
                 CONTROL = rBB
-                cell = f'{_b(STUFF)}/{_b(MOVEMENT)}/{_b(CONTROL)}'
-                arch = sdefs.get(cell, {}).get('label', 'UNKNOWN')
+                cell, arch = label_for_cell([STUFF, MOVEMENT, CONTROL], sdefs)
                 nm = (name_lookup.get(int(pid), {}) or {}).get('player_name')
                 if isinstance(nm, str) and ',' in nm:
                     a, c = nm.split(',', 1); nm = f'{c.strip()} {a.strip()}'
@@ -683,12 +584,7 @@ def build_rp_snapshots():
             sum(v * w for v, w in bb_components) / bb_w_sum
         )) if bb_w_sum > 0 else 50
 
-        def _b(v):
-            if v >= 60: return 'PLUS'
-            if v >= 40: return 'AVG'
-            return 'MINUS'
-        cell = f'{_b(STUFF)}/{_b(CONTROL)}/{_b(BATTED_BALL)}'
-        arch = rdefs.get(cell, {}).get('label', 'UNKNOWN')
+        cell, arch = label_for_cell([STUFF, CONTROL, BATTED_BALL], rdefs)
 
         info = name_lookup.get(int(row['pitcher']), {'name': None})
         nm = info.get('name')
