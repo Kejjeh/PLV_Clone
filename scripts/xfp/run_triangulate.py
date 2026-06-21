@@ -708,6 +708,19 @@ def main():
             'confidence': confidence, 'n_aligned': n_aligned, 'n_avail': n_avail,
             'watch_list': watch_list,
         })
+        # Blended xFP for batch parity — the card leads with it; surface it (and an
+        # explicit headline_source) in batch output so CSV/JSON consumers headline the
+        # same Tier-A number the cards/slate-grids do (feedback #12). Display-only.
+        try:
+            from scripts.xfp.lib.blend_score import compute_blended_xfp
+            _blend = compute_blended_xfp(player_name=player['display_name'],
+                                         player_type=bucket, mlbam_id=int(player['id'])) or {}
+        except Exception:
+            _blend = {}
+        _bx = _blend.get('blended_xfp')
+        _headline_src = 'blended_xfp' if _bx is not None else {'H': 'rh3', 'SP': 'rp3', 'RP': 'rprs2'}.get(bucket, 'model')
+        _mp = model.get('proj')
+        _headline_proj = _bx if _bx is not None else (_mp if isinstance(_mp, (int, float)) else None)
         if args.json_out:
             def _num(x):
                 if x is None: return None
@@ -726,6 +739,11 @@ def main():
                 'model_rank': model.get('rank') if isinstance(model.get('rank'), int) else None,
                 'model_proj': _num(model.get('proj')),
                 'model_proj_label': model.get('proj_label'),
+                'blended_xfp': _num(_bx),
+                'blend_confidence': _blend.get('confidence_tier'),
+                'blend_unit': _blend.get('display_unit'),
+                'headline_proj': _num(_headline_proj),
+                'headline_source': _headline_src,
                 'model_signal': model.get('signal'),
                 'arche_have': bool(arche.get('have')),
                 'arche_overall': arche.get('overall') if arche.get('have') else None,
@@ -749,6 +767,10 @@ def main():
                 'pl_rank_raw': pl_main,
                 'model_rank': model.get('rank') if model.get('rank') != '—' else None,
                 'model_proj': model.get('proj'),
+                'blended_xfp': _bx,
+                'blend_confidence': _blend.get('confidence_tier'),
+                'headline_proj': _headline_proj,
+                'headline_source': _headline_src,
                 'model_signal': model.get('signal'),
                 'model_rep_delta': model.get('rep_delta'),
                 'model_recform': model.get('recform'),
