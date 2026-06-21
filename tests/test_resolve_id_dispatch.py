@@ -13,7 +13,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 import pytest
 
-from plv_clone.utils.name_match import resolve_id, KNOWN_COLLISIONS
+from plv_clone.utils.name_match import (
+    resolve_id, resolve_pitcher_id, KNOWN_COLLISIONS, KNOWN_PITCHER_COLLISIONS)
 
 
 def test_batter_collision_safe_fails_without_team():
@@ -38,3 +39,21 @@ def test_kind_aliases_route_to_pitcher():
 def test_unknown_kind_raises():
     with pytest.raises(ValueError):
         resolve_id("Whoever", kind="goalie")
+
+
+# --- José Soriano accent-drift resolution force (regression, 2026-06-21) ---
+# resolve_pitcher_id does an accent-SENSITIVE exact match, so the unaccented
+# "Jose Soriano" used to return None and ad-hoc scripts fell back to a wrong id.
+# These lock the forced entries in KNOWN_PITCHER_COLLISIONS.
+
+def test_jose_soriano_unaccented_resolves_with_team():
+    assert "Jose Soriano" in KNOWN_PITCHER_COLLISIONS
+    assert resolve_pitcher_id("Jose Soriano", team="LAA", role="SP") == 667755
+
+
+def test_jose_soriano_last_first_unaccented_resolves_with_role():
+    assert resolve_pitcher_id("Soriano, Jose", role="SP") == 667755
+
+
+def test_jose_soriano_via_unified_resolve_id():
+    assert resolve_id("Jose Soriano", kind="SP", team="LAA") == 667755

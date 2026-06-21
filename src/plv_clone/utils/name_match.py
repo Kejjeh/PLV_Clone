@@ -158,6 +158,23 @@ KNOWN_PITCHER_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
         ("CLE", "SP", 671106),
         ("SD", "SP", 663531),
     ],
+    # José Soriano (LAA SP, 667755). NOT a true two-player collision — this is an
+    # accent-drift RESOLUTION FORCE. resolve_pitcher_id does an accent-SENSITIVE
+    # exact string match, so the accent-free spellings "Jose Soriano" /
+    # "Soriano, Jose" never matched the cache's "Soriano, José" and returned None.
+    # That silent None caused wrong-ID fallbacks in ad-hoc analysis scripts
+    # (2026-06-21: a hardcoded fallback grabbed the WRONG pitcher's game log).
+    # Forcing the unaccented spellings here makes team/role-hinted resolution
+    # return the right id; the accented spelling still resolves via the cache
+    # path (it is a different dict key, so this entry does not shadow it).
+    # (There is also a George Soriano RP, 666277 — distinct full name, so no key
+    # collision, but it is why a bare "Soriano" must never be guessed.)
+    "Jose Soriano": [
+        ("LAA", "SP", 667755),
+    ],
+    "Soriano, Jose": [
+        ("LAA", "SP", 667755),
+    ],
 }
 
 
