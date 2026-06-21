@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from plv_clone.paths import ROOT as REPO  # single source for repo paths
-from lib.archetype_engine import rate_value, bucket, label_for_cell  # shared 20-80 seam
+from lib.archetype_engine import rate_value, label_for_cell  # shared 20-80 seam
 RES = REPO / 'data/research'
 CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'
@@ -283,14 +283,10 @@ def build_rp_records(rp: pd.DataFrame):
     return recs
 
 
-# 20-80 rating + bucket now live once in lib/archetype_engine (C2, 2026-06-21).
-# _rate is the scalar form (prior-year-baseline); _bucket adds a NaN guard over
-# the engine's bucket() so cell-building never crashes on a missing pillar.
+# 20-80 scalar rating lives once in lib/archetype_engine (C2, 2026-06-21); cell +
+# archetype label come from label_for_cell (C3). _rate keeps the legacy name the
+# builders' call sites already use.
 _rate = rate_value
-
-
-def _bucket(v):
-    return None if pd.isna(v) else bucket(v)
 
 
 def build_hitter_snapshots():
