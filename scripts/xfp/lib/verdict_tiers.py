@@ -46,3 +46,67 @@ def classify_sustainability(fp_delta: float, n_material: int,
     if abs(fp_delta) < fp_threshold:
         return "STABLE"
     return "MIXED"
+
+
+# Bull/base/bear probability mass per Sustainability bucket — shared by both
+# sustainability engines (pitcher used an if/elif chain, hitter a dict; identical
+# values). Unknown / non-sentinel buckets fall back to the symmetric default.
+ROS_BUCKET_P = {
+    "LEGIT":     (0.40, 0.45, 0.15),
+    "IMPROVING": (0.25, 0.50, 0.25),
+    "MIXED":     (0.20, 0.40, 0.40),
+    "NOISE":     (0.10, 0.30, 0.60),
+    "STABLE":    (0.20, 0.60, 0.20),
+    "BAD_LUCK":  (0.40, 0.40, 0.20),
+    "REGRESS":   (0.10, 0.30, 0.60),
+}
+_ROS_DEFAULT = (0.25, 0.50, 0.25)
+
+
+def ros_expectation(bucket: str, fp_cur: float, fp_prior: float) -> dict:
+    """Bayesian rest-of-season expectation (bull/base/bear) from a bucket.
+
+    Scale-free positional scalars: fp_cur/fp_prior are FP/start (SP) or FP/game
+    (H). bull = form sustains, bear = full revert to prior, base = halfway. The
+    caller pre-checks sentinel buckets (NO_2026_DATA / NO_BASELINE) and returns {}.
+    """
+    p = ROS_BUCKET_P.get(bucket, _ROS_DEFAULT)
+    bull, base, bear = fp_cur, 0.5 * fp_cur + 0.5 * fp_prior, fp_prior
+    ev = p[0] * bull + p[1] * base + p[2] * bear
+    return {"bull": bull, "base": base, "bear": bear,
+            "p_bull": p[0], "p_base": p[1], "p_bear": p[2], "ev": ev}
+
+
+def divergence_signal(my_ev: float, model_value: float, bucket: str, *,
+                      threshold: float, model_label: str) -> tuple[str, str]:
+    """Read the gap between sustainability E[ROS] and the validated model number.
+
+    Shared by both engines; ``threshold`` is the per-role scale (1.5 FP/start SP,
+    0.4 FP/game H) and ``model_label`` is woven into the interpretation text
+    ('rp3' / 'rh3'). ``model_value`` must be non-None — the caller emits the
+    NO_<MODEL> signal for a missing projection (the one role-specific fork).
+    """
+    gap = my_ev - model_value
+    if abs(gap) < threshold:
+        if bucket in ("LEGIT", "IMPROVING"):
+            return ("AGREE_BULLISH", f"sustainability + {model_label} both bullish")
+        if bucket in ("REGRESS", "NOISE"):
+            return ("AGREE_BEARISH", f"sustainability + {model_label} both bearish")
+        return ("AGREE", f"sustainability + {model_label} within noise")
+    if gap > threshold:
+        if bucket in ("LEGIT", "IMPROVING"):
+            return ("BUY_LOW", f"skill signals strong but {model_label} conservative — "
+                                "model may be lagging the breakout")
+        if bucket == "NOISE":
+            return ("SELL_HIGH", f"production up but skills do not support — "
+                                 f"{model_label} already conservative, regression coming")
+        if bucket == "BAD_LUCK":
+            return ("BUY_LOW", f"production down but skills holding — "
+                               f"{model_label} may catch the bounce")
+        return ("DISAGREE", f"sustainability E[ROS]={my_ev:.2f} "
+                            f">> {model_label}={model_value:.2f} — investigate")
+    if bucket == "REGRESS":
+        return ("SELL_HIGH", f"skill regression real but {model_label} still bullish — "
+                             "sell now before model catches up")
+    return ("DISAGREE", f"sustainability E[ROS]={my_ev:.2f} "
+                        f"<< {model_label}={model_value:.2f} — investigate")

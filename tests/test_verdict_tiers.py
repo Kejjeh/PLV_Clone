@@ -10,7 +10,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "xfp"))
 
-from lib.verdict_tiers import classify_sustainability, SUSTAINABILITY_TIERS
+from lib.verdict_tiers import (
+    classify_sustainability, SUSTAINABILITY_TIERS,
+    ros_expectation, divergence_signal, ROS_BUCKET_P)
 
 
 def test_tier_name_set_is_canonical():
@@ -61,3 +63,38 @@ def test_reproduces_both_engine_chains_over_grid():
             for n in range(0, 10):
                 assert classify_sustainability(delta, n, thr) == _reference_chain(delta, n, thr), \
                     (delta, n, thr)
+
+
+# --- C4: shared ros_expectation + divergence_signal ---
+
+def test_ros_expectation_table_and_math():
+    r = ros_expectation("LEGIT", 12.0, 8.0)
+    assert (r["p_bull"], r["p_base"], r["p_bear"]) == ROS_BUCKET_P["LEGIT"]
+    assert r["bull"] == 12.0 and r["bear"] == 8.0 and r["base"] == 10.0
+    assert abs(r["ev"] - (0.40 * 12 + 0.45 * 10 + 0.15 * 8)) < 1e-9
+
+
+def test_ros_expectation_unknown_bucket_uses_default():
+    r = ros_expectation("WHATEVER", 10.0, 6.0)
+    assert (r["p_bull"], r["p_base"], r["p_bear"]) == (0.25, 0.50, 0.25)
+
+
+def test_divergence_signal_core_cases():
+    # within threshold -> AGREE family; model_label woven into text
+    assert divergence_signal(10.0, 10.0, "LEGIT", threshold=1.5, model_label="rp3") == \
+        ("AGREE_BULLISH", "sustainability + rp3 both bullish")
+    # gap > threshold + LEGIT -> BUY_LOW
+    assert divergence_signal(13.0, 10.0, "LEGIT", threshold=1.5, model_label="rp3")[0] == "BUY_LOW"
+    # gap > threshold + NOISE -> SELL_HIGH
+    assert divergence_signal(13.0, 10.0, "NOISE", threshold=1.5, model_label="rp3")[0] == "SELL_HIGH"
+    # gap < -threshold + REGRESS -> SELL_HIGH
+    assert divergence_signal(7.0, 10.0, "REGRESS", threshold=1.5, model_label="rh3")[0] == "SELL_HIGH"
+    # label appears in DISAGREE text
+    sig, interp = divergence_signal(13.0, 10.0, "STABLE", threshold=1.5, model_label="rh3")
+    assert sig == "DISAGREE" and "rh3" in interp
+
+
+def test_divergence_signal_threshold_is_parametrized():
+    # gap of 0.5: a real move at hitter scale (0.4), within-noise at SP scale (1.5)
+    assert divergence_signal(10.5, 10.0, "LEGIT", threshold=0.4, model_label="rh3")[0] == "BUY_LOW"
+    assert divergence_signal(10.5, 10.0, "LEGIT", threshold=1.5, model_label="rp3")[0] == "AGREE_BULLISH"

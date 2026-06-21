@@ -60,7 +60,8 @@ MARKERS = [
 from plv_clone.utils.name_match import join_key as _norm
 # Fully-qualified so it resolves both as a direct script AND when imported via the
 # package path (league_wide_full_audit) — ROOT is on sys.path (above). (2026-06-21.)
-from scripts.xfp.lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
+from scripts.xfp.lib.verdict_tiers import (  # shared Sustainability seam (C3+C4)
+    classify_sustainability, ros_expectation as _vt_ros, divergence_signal as _vt_div)
 
 
 def load_rh3_map() -> dict:
@@ -310,61 +311,19 @@ def staleness_score(mlbam: int | None, rh3_per_game: float | None,
 
 
 def divergence_signal(my_ev: float, rh3_per_game: float, bucket: str) -> tuple[str, str]:
-    """Same logic as pitcher tool's divergence_signal, hitter-scaled."""
+    """Gap between sustainability E[ROS] and rh3 → (signal, interp). Shared logic in
+    verdict_tiers (C4); the None-guard (NO_RH3) is the rh3-specific fork kept here."""
     if rh3_per_game is None:
         return ('NO_RH3', 'rh3 has no projection for this hitter')
-    gap = my_ev - rh3_per_game
-    if abs(gap) < DIVERGENCE_THRESHOLD:
-        if bucket in ('LEGIT', 'IMPROVING'):
-            return ('AGREE_BULLISH', 'sustainability + rh3 both bullish')
-        elif bucket in ('REGRESS', 'NOISE'):
-            return ('AGREE_BEARISH', 'sustainability + rh3 both bearish')
-        else:
-            return ('AGREE', 'sustainability + rh3 within noise')
-    elif gap > DIVERGENCE_THRESHOLD:
-        if bucket in ('LEGIT', 'IMPROVING'):
-            return ('BUY_LOW', 'skill signals strong but rh3 conservative — '
-                                'model may be lagging the breakout')
-        elif bucket == 'NOISE':
-            return ('SELL_HIGH', 'production up but skills do not support — '
-                                  'rh3 already conservative, regression coming')
-        elif bucket == 'BAD_LUCK':
-            return ('BUY_LOW', 'production down but skills holding — '
-                                'rh3 may catch the bounce')
-        else:
-            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
-                                 f'>> rh3={rh3_per_game:.2f} — investigate')
-    else:
-        if bucket == 'REGRESS':
-            return ('SELL_HIGH', 'skill regression real but rh3 still bullish — '
-                                  'sell now before model catches up')
-        else:
-            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
-                                 f'<< rh3={rh3_per_game:.2f} — investigate')
+    return _vt_div(my_ev, rh3_per_game, bucket,
+                   threshold=DIVERGENCE_THRESHOLD, model_label='rh3')
 
 
 def ros_expectation(c: dict) -> dict:
+    """Bayesian ROS bull/base/bear — shared math in verdict_tiers (C4)."""
     if c['bucket'] in ('NO_2026_DATA', 'NO_BASELINE'):
         return {}
-    fp_cur = c['fp_2026']
-    fp_prior = c['fp_prior']
-    bucket = c['bucket']
-    bucket_p = {
-        'LEGIT':    [0.40, 0.45, 0.15],
-        'IMPROVING':[0.25, 0.50, 0.25],
-        'MIXED':    [0.20, 0.40, 0.40],
-        'NOISE':    [0.10, 0.30, 0.60],
-        'STABLE':   [0.20, 0.60, 0.20],
-        'BAD_LUCK': [0.40, 0.40, 0.20],
-        'REGRESS':  [0.10, 0.30, 0.60],
-    }
-    p = bucket_p.get(bucket, [0.25, 0.50, 0.25])
-    bull = fp_cur
-    base = 0.5 * fp_cur + 0.5 * fp_prior
-    bear = fp_prior
-    ev = p[0] * bull + p[1] * base + p[2] * bear
-    return {'bull': bull, 'base': base, 'bear': bear,
-            'p_bull': p[0], 'p_base': p[1], 'p_bear': p[2], 'ev': ev}
+    return _vt_ros(c['bucket'], c['fp_2026'], c['fp_prior'])
 
 
 # ─── Roster / FA scope helpers ────────────────────────────────────────

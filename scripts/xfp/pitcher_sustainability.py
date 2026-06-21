@@ -68,7 +68,8 @@ from plv_clone.utils.name_match import join_key as _norm
 # Fully-qualified so it resolves both as a direct script AND when imported via the
 # package path (league_wide_full_audit) — ROOT is on sys.path (above), scripts/xfp
 # is not guaranteed to be. (Import-path fix, 2026-06-21.)
-from scripts.xfp.lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
+from scripts.xfp.lib.verdict_tiers import (  # shared Sustainability seam (C3+C4)
+    classify_sustainability, ros_expectation as _vt_ros, divergence_signal as _vt_div)
 
 
 def load_rp3_map() -> dict:
@@ -268,80 +269,23 @@ def staleness_score(mlbam: int | None, rp3_per_start: float | None,
 
 
 def divergence_signal(my_ev: float, rp3_per_start: float, bucket: str) -> tuple[str, str]:
-    """Reading from the gap between my tool's E[ROS] and rp3's validated number.
+    """Gap between sustainability E[ROS] and rp3's validated number → (signal, interp).
 
-    Returns (signal, interpretation) tuple:
-      - BUY_LOW: bucket is LEGIT/IMPROVING but rp3 hasn't caught up
-                 (model conservative; sustainability says skills support more)
-      - SELL_HIGH: bucket is REGRESS but rp3 still high (model hasn't
-                   penalized the regression yet)
-      - AGREE: gap < threshold
-      - WATCH_REGRESS: bucket REGRESS, rp3 also low — both flag concern
-      - WATCH_NOISE: bucket NOISE, rp3 reasonable — production won't sustain
+    Shared logic in verdict_tiers (C4); the None-guard (NO_RP3) is the rp3-specific
+    fork kept here. Signals: AGREE[_BULLISH/_BEARISH] / BUY_LOW / SELL_HIGH /
+    DISAGREE / NO_RP3.
     """
     if rp3_per_start is None:
         return ('NO_RP3', 'rp3 has no projection for this pitcher')
-    gap = my_ev - rp3_per_start
-    if abs(gap) < DIVERGENCE_THRESHOLD:
-        if bucket in ('LEGIT', 'IMPROVING'):
-            return ('AGREE_BULLISH', 'sustainability + rp3 both bullish')
-        elif bucket in ('REGRESS', 'NOISE'):
-            return ('AGREE_BEARISH', 'sustainability + rp3 both bearish')
-        else:
-            return ('AGREE', 'sustainability + rp3 within noise')
-    elif gap > DIVERGENCE_THRESHOLD:
-        if bucket in ('LEGIT', 'IMPROVING'):
-            return ('BUY_LOW', 'skill signals strong but rp3 conservative — '
-                                'model may be lagging the breakout')
-        elif bucket == 'NOISE':
-            return ('SELL_HIGH', 'production up but skills do not support — '
-                                  'rp3 already conservative, regression coming')
-        elif bucket == 'BAD_LUCK':
-            return ('BUY_LOW', 'production down but skills holding — '
-                                'rp3 may catch the bounce')
-        else:
-            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
-                                 f'>> rp3={rp3_per_start:.2f} — investigate')
-    else:  # my_ev < rp3
-        if bucket == 'REGRESS':
-            return ('SELL_HIGH', 'skill regression real but rp3 still bullish — '
-                                  'sell now before model catches up')
-        else:
-            return ('DISAGREE', f'sustainability E[ROS]={my_ev:.2f} '
-                                 f'<< rp3={rp3_per_start:.2f} — investigate')
+    return _vt_div(my_ev, rp3_per_start, bucket,
+                   threshold=DIVERGENCE_THRESHOLD, model_label='rp3')
 
 
 def ros_expectation(c: dict) -> dict:
-    """Bayesian ROS expectation — bull/base/bear given bucket + skill support."""
+    """Bayesian ROS bull/base/bear — shared math in verdict_tiers (C4)."""
     if c['bucket'] in ('NO_2026_DATA', 'NO_BASELINE'):
         return {}
-    fp_cur = c['fp_2026']
-    fp_prior = c['fp_prior']
-
-    bucket = c['bucket']
-    if bucket == 'LEGIT':
-        p = [0.40, 0.45, 0.15]  # bull/base/bear
-    elif bucket == 'IMPROVING':
-        p = [0.25, 0.50, 0.25]
-    elif bucket == 'MIXED':
-        p = [0.20, 0.40, 0.40]
-    elif bucket == 'NOISE':
-        p = [0.10, 0.30, 0.60]
-    elif bucket == 'STABLE':
-        p = [0.20, 0.60, 0.20]
-    elif bucket == 'BAD_LUCK':
-        p = [0.40, 0.40, 0.20]
-    elif bucket == 'REGRESS':
-        p = [0.10, 0.30, 0.60]
-    else:
-        p = [0.25, 0.50, 0.25]
-
-    bull = fp_cur  # form sustains
-    base = 0.5 * fp_cur + 0.5 * fp_prior  # halfway regress
-    bear = fp_prior  # full revert
-    ev = p[0] * bull + p[1] * base + p[2] * bear
-    return {'bull': bull, 'base': base, 'bear': bear,
-            'p_bull': p[0], 'p_base': p[1], 'p_bear': p[2], 'ev': ev}
+    return _vt_ros(c['bucket'], c['fp_2026'], c['fp_prior'])
 
 
 # ─── Roster / FA scope helpers ────────────────────────────────────────
