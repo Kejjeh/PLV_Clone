@@ -511,6 +511,23 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 f"*{detail}*"
             )
 
+    # ── Platoon split panel (vs L/R) — context-only (CLAUDE.md #13) ───────────
+    spl = model.get('splits') or {}
+    if spl and spl.get('dominant_side'):
+        def _r(v): return f"{v:.3f}" if v is not None else "—"
+        nL, nR = int(spl.get('pa_vs_L') or 0), int(spl.get('pa_vs_R') or 0)
+        warn = "" if (spl.get('sample_ok_L') and spl.get('sample_ok_R')) else " ⚠ small-sample"
+        if bucket in ('SP', 'RP'):
+            lines.append(
+                f"\n🪓 **Platoon (xwOBA-allowed)** vs LHB {_r(spl.get('rate_vs_L'))} (n{nL}) / "
+                f"vs RHB {_r(spl.get('rate_vs_R'))} (n{nR}) — hit harder by {spl['dominant_side']}HB{warn}")
+        else:
+            ll = spl.get('lift_vs_L_pct')
+            lift_str = f" (vs-LHP {ll:+.0f}% vs own avg)" if ll is not None else ""
+            lines.append(
+                f"\n🪓 **Platoon (xwOBA)** vs LHP {_r(spl.get('rate_vs_L'))} (n{nL}) / "
+                f"vs RHP {_r(spl.get('rate_vs_R'))} (n{nR}){lift_str} — stronger vs {spl['dominant_side']}HP{warn}")
+
     return '\n'.join(lines)
 
 

@@ -18,6 +18,7 @@ from .hitter_boom_stack import (
 )
 from .blend_score import compute_blended_xfp
 from .sustainability_lens import sustainability_sp, sustainability_h
+from .splits import hitter_platoon, sp_platoon  # platoon (vs L/R) context lens
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -151,6 +152,11 @@ def model_row(player: dict) -> dict:
             _sl_h = sustainability_h(player['id'])
         except Exception:
             _sl_h = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
+        # Platoon split lens (vs LHP/RHP) — context-only display (CLAUDE.md #13)
+        try:
+            _splits_h = hitter_platoon(player['id'])
+        except Exception:
+            _splits_h = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
@@ -165,6 +171,7 @@ def model_row(player: dict) -> dict:
             'hitter_boom_bust_expected': hboom_bust_expected,
             'hitter_boom_detail': hboom_detail,
             'sustainability': _sl_h,
+            'splits': _splits_h,
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -319,6 +326,11 @@ def model_row(player: dict) -> dict:
             _sl_sp = sustainability_sp(player['id'])
         except Exception:
             _sl_sp = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
+        # Platoon split lens (xwOBA-allowed vs LHB/RHB) — context-only (CLAUDE.md #13)
+        try:
+            _splits_sp = sp_platoon(player['id'])
+        except Exception:
+            _splits_sp = None
         return {
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
@@ -376,6 +388,7 @@ def model_row(player: dict) -> dict:
             'velo_2y_flag': dl.get('velo_2y_flag'),
             'velo_double': dl.get('velo_double'),
             'velo_severity': dl.get('velo_severity'),
+            'splits': _splits_sp,
         }
     # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
     try:
