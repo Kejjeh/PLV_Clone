@@ -528,6 +528,21 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 f"\n🪓 **Platoon (xwOBA)** vs LHP {_r(spl.get('rate_vs_L'))} (n{nL}) / "
                 f"vs RHP {_r(spl.get('rate_vs_R'))} (n{nR}){lift_str} — stronger vs {spl['dominant_side']}HP{warn}")
 
+    # ── Expected-vs-actual (luck) panel — context-only (CLAUDE.md #13) ─────────
+    exp = model.get('expected') or {}
+    if exp and exp.get('gap') is not None:
+        g = exp['gap']
+        if bucket in ('SP', 'RP'):
+            tail = (" — allowing less than earned, regression UP coming" if exp['regression'] == 'OVERPERFORMING'
+                    else " — unlucky, ratios should improve" if exp['regression'] == 'UNDERPERFORMING' else "")
+            lines.append(f"\n🎲 **Expected (luck)** xwOBA-allowed {exp['xwoba']:.3f} vs actual "
+                         f"{exp['woba']:.3f} (gap {g:+.3f}) — {exp['regression']}{tail}")
+        else:
+            tail = (" — due for negative regression" if exp['regression'] == 'OVERPERFORMING'
+                    else " — bounce due" if exp['regression'] == 'UNDERPERFORMING' else "")
+            lines.append(f"\n🎲 **Expected (luck)** xwOBA {exp['xwoba']:.3f} vs actual wOBA "
+                         f"{exp['woba']:.3f} (gap {g:+.3f}) — {exp['regression']}{tail}")
+
     return '\n'.join(lines)
 
 

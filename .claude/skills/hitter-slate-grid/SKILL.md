@@ -301,9 +301,9 @@ RECOMMENDATION: <action> <player>
 
 Confidence labels come from the 8-lens agreement count:
 
-- HIGH — ≥6 of 8 lenses agree on direction
-- MEDIUM — 4-5 of 8 agree
-- LOW — ≤3 of 8 agree (and synthesis must surface the disagreement)
+- HIGH — ≥5 of 8 lenses agree on direction (calibrated 2026-06-06; NOT ≥6 — matches line 291)
+- MEDIUM — 3-4 of 8 agree
+- LOW — ≤2 of 8 agree (and synthesis must surface the disagreement)
 
 See `reference_lens_merge_protocol.md` for the full Tier A/B/C/D taxonomy
 and the 5 conflict resolution rules.
