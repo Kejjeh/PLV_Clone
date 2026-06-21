@@ -34,3 +34,34 @@ def test_percentile_passthrough_and_none_safe():
     assert r["xwoba_pctl"] == 88
     r2 = expected_vs_actual(xwoba=None, woba=0.340)
     assert r2["gap"] is None and r2["regression"] == "UNKNOWN"
+
+
+# --- expected stats BY SPLIT (vs L/R) ---
+
+def test_expected_by_split_groups_and_flags():
+    import pandas as pd
+    from lib.expected_stats import hitter_expected_by_split
+    # 60 PA vs LHP overperforming (woba >> xwoba); 60 vs RHP aligned
+    rows = []
+    for _ in range(60):
+        rows.append({"batter": 1, "p_throws": "L", "events": "single",
+                     "woba_value": 0.90, "woba_denom": 1, "estimated_woba_using_speedangle": 0.30})
+    for _ in range(60):
+        rows.append({"batter": 1, "p_throws": "R", "events": "single",
+                     "woba_value": 0.34, "woba_denom": 1, "estimated_woba_using_speedangle": 0.34})
+    df = pd.DataFrame(rows)
+    out = hitter_expected_by_split(1, statcast_df=df, pa_floor=40)
+    assert out["vs_L"]["regression"] == "OVERPERFORMING"   # .90 actual vs .30 expected = lucky
+    assert out["vs_R"]["regression"] == "ALIGNED"
+    assert out["vs_L"]["pa"] == 60
+
+
+def test_expected_by_split_respects_floor():
+    import pandas as pd
+    from lib.expected_stats import sp_expected_by_split
+    rows = [{"pitcher": 9, "stand": "L", "events": "single", "woba_value": 0.3,
+             "woba_denom": 1, "estimated_woba_using_speedangle": 0.3} for _ in range(10)]
+    df = pd.DataFrame(rows)
+    out = sp_expected_by_split(9, statcast_df=df, bf_floor=40)
+    assert out["vs_L"] is None    # 10 < 40 floor
+    assert out["vs_R"] is None

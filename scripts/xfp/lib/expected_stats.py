@@ -57,6 +57,28 @@ def _xwoba_woba(df: pd.DataFrame) -> tuple:
 
 _COLS = ["batter", "pitcher", "events", "woba_value", "woba_denom",
          "estimated_woba_using_speedangle"]
+# extra handedness cols for the by-split variants
+_COLS_SPLIT = _COLS + ["stand", "p_throws"]
+
+
+def _expected_by_split(df: pd.DataFrame, split_col: str, floor: int,
+                       pitcher: bool = False) -> dict:
+    """expected-vs-actual per handedness side. ``split_col`` = 'p_throws' for a
+    hitter's vs-LHP/RHP, 'stand' for a pitcher's vs-LHB/RHB."""
+    out = {}
+    for side, key in (("L", "vs_L"), ("R", "vs_R")):
+        s = df[df[split_col] == side]
+        xw, wo, denom = _xwoba_woba(s)
+        if xw is None or denom < floor:
+            out[key] = None
+            continue
+        r = expected_vs_actual(float(round(xw, 3)), float(round(wo, 3)))
+        if pitcher and r["gap"] is not None:  # flip: allowing LESS than expected = lucky
+            r["regression"] = ("OVERPERFORMING" if r["gap"] < -0.020
+                               else "UNDERPERFORMING" if r["gap"] > 0.020 else "ALIGNED")
+        r["pa"] = denom
+        out[key] = r
+    return out
 
 
 def _population_pctl(values: pd.Series, v: float) -> int | None:
@@ -97,3 +119,31 @@ def sp_expected(pitcher_id: int, statcast_df: pd.DataFrame | None = None,
         r["regression"] = ("OVERPERFORMING" if r["gap"] < -0.020
                            else "UNDERPERFORMING" if r["gap"] > 0.020 else "ALIGNED")
     return r
+
+
+def hitter_expected_by_split(batter_id: int, statcast_df: pd.DataFrame | None = None,
+                             pa_floor: int = 40) -> dict | None:
+    """Hitter expected-vs-actual wOBA split vs LHP / RHP (by pitcher hand)."""
+    if statcast_df is None:
+        p = CACHE / "statcast_2026.parquet"
+        if not p.exists():
+            return None
+        statcast_df = pd.read_parquet(p, columns=_COLS_SPLIT)
+    d = statcast_df[statcast_df["batter"] == batter_id]
+    if d.empty:
+        return None
+    return _expected_by_split(d, "p_throws", pa_floor, pitcher=False)
+
+
+def sp_expected_by_split(pitcher_id: int, statcast_df: pd.DataFrame | None = None,
+                         bf_floor: int = 40) -> dict | None:
+    """Pitcher expected-vs-actual wOBA-allowed split vs LHB / RHB (by batter stand)."""
+    if statcast_df is None:
+        p = CACHE / "statcast_2026.parquet"
+        if not p.exists():
+            return None
+        statcast_df = pd.read_parquet(p, columns=_COLS_SPLIT)
+    d = statcast_df[statcast_df["pitcher"] == pitcher_id]
+    if d.empty:
+        return None
+    return _expected_by_split(d, "stand", bf_floor, pitcher=True)

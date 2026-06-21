@@ -528,6 +528,15 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 f"\n🪓 **Platoon (xwOBA)** vs LHP {_r(spl.get('rate_vs_L'))} (n{nL}) / "
                 f"vs RHP {_r(spl.get('rate_vs_R'))} (n{nR}){lift_str} — stronger vs {spl['dominant_side']}HP{warn}")
 
+        # expected-vs-actual BY SPLIT — is the platoon edge real or luck?
+        es = model.get('expected_splits') or {}
+        if es and (es.get('vs_L') or es.get('vs_R')):
+            def _sx(side):
+                v = es.get(side)
+                return (f"{v['xwoba']:.3f}x/{v['woba']:.3f}a {v['regression'][:4].lower()}"
+                        if v else "—")
+            lines.append(f"   ↳ expected by split: vs L {_sx('vs_L')} | vs R {_sx('vs_R')}")
+
     # ── Expected-vs-actual (luck) panel — context-only (CLAUDE.md #13) ─────────
     exp = model.get('expected') or {}
     if exp and exp.get('gap') is not None:
