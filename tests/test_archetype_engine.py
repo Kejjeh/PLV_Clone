@@ -9,7 +9,7 @@ import pytest
 
 from scripts.xfp.lib.archetype_engine import (
     rating_20_80, bucket, boundary_distance, boundary_tier_label, age_tier,
-    rate_value, label_for_cell,
+    rate_value, label_for_cell, rate_pillars,
 )
 
 
@@ -91,6 +91,34 @@ def test_label_for_cell_unknown_cell():
     cell, label = label_for_cell([50, 50, 50], {})
     assert cell == 'AVG/AVG/AVG'
     assert label == 'UNKNOWN'
+
+
+def test_rate_pillars_plain_mean_rounded_int():
+    assert rate_pillars([60, 40, 50]) == 50
+    assert rate_pillars([61, 40]) == int(round((61 + 40) / 2))  # match int(round()) exactly
+    assert isinstance(rate_pillars([60, 40]), int)
+
+
+def test_rate_pillars_drops_none_components():
+    assert rate_pillars([60, None, 40]) == 50          # mean of 60,40
+    assert rate_pillars([None, None]) is None          # nothing survives -> None gate
+    assert rate_pillars([]) is None
+
+
+def test_rate_pillars_weighted_mean():
+    # (60*3 + 40*1)/4 = 55
+    assert rate_pillars([60, 40], weights=[3, 1]) == 55
+
+
+def test_rate_pillars_uniform_weights_equals_plain():
+    # THE graft: weights all-equal must equal the plain mean (one code path).
+    assert rate_pillars([60, 40, 50], weights=[1, 1, 1]) == rate_pillars([60, 40, 50])
+    assert rate_pillars([66, 48, 51], weights=[2, 2, 2]) == rate_pillars([66, 48, 51])
+
+
+def test_rate_pillars_weighted_drops_none_with_its_weight():
+    # None component (and its weight) drop out; remaining 60,40 weighted 1,1 -> 50
+    assert rate_pillars([60, None, 40], weights=[1, 5, 1]) == 50
 
 
 def test_age_tier_parametrized_peak_windows():

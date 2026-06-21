@@ -48,6 +48,28 @@ def rate_value(val, mu, sd, invert: bool = False):
     return int(round(min(max(50 + 10 * z, 20), 80)))
 
 
+def rate_pillars(components, weights=None):
+    """Fold already-rated 20-80 component ratings into ONE pillar rating.
+
+    The per-pillar fold the snapshot builders all repeat: drop None components,
+    take the (optionally weighted) mean of survivors, round to int. Returns None
+    when nothing survives — the caller's "skip this row / fall back" gate.
+
+    ``weights`` defaults to 1.0 each (plain mean); a weighted call (e.g. RP
+    BATTED_BALL) and a plain call are the SAME code path (uniform weights == plain
+    mean), which is the point of the consolidation. Rounding is ``int(round(...))``
+    to match the builders' historical output exactly.
+    """
+    if weights is None:
+        pairs = [(c, 1.0) for c in components if c is not None]
+    else:
+        pairs = [(c, w) for c, w in zip(components, weights) if c is not None]
+    wsum = sum(w for _, w in pairs)
+    if not pairs or wsum == 0:
+        return None
+    return int(round(sum(c * w for c, w in pairs) / wsum))
+
+
 def label_for_cell(ratings, defs):
     """Map an ordered list of pillar ratings to ``(cell, archetype_label)``.
 

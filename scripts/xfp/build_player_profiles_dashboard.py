@@ -33,7 +33,7 @@ import numpy as np
 import pandas as pd
 
 from plv_clone.paths import ROOT as REPO  # single source for repo paths
-from lib.archetype_engine import rate_value, label_for_cell  # shared 20-80 seam
+from lib.archetype_engine import rate_value, label_for_cell, rate_pillars  # shared 20-80 seam
 RES = REPO / 'data/research'
 CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'
@@ -346,14 +346,11 @@ def build_hitter_snapshots():
         rCH= _rate(row['chase_pct_to'],        *b['chase_pct'], invert=True)
         rSB= _rate(row['sb_per_pa_to'],        *b['sb_per_pa'])
 
-        c_vals = [v for v in [rC, rK, rB, rX] if v is not None]
-        p_vals = [v for v in [rBR, rHH, rI, rHR] if v is not None]
-        d_vals = [v for v in [rBB, rCH] if v is not None]
-        if not (c_vals and p_vals and d_vals):
+        CONTACT    = rate_pillars([rC, rK, rB, rX])
+        POWER      = rate_pillars([rBR, rHH, rI, rHR])
+        DISCIPLINE = rate_pillars([rBB, rCH])
+        if None in (CONTACT, POWER, DISCIPLINE):
             continue
-        CONTACT    = int(round(sum(c_vals) / len(c_vals)))
-        POWER      = int(round(sum(p_vals) / len(p_vals)))
-        DISCIPLINE = int(round(sum(d_vals) / len(d_vals)))
         SB = rSB if rSB is not None else 50
         cell, arch = label_for_cell([CONTACT, POWER, DISCIPLINE], hdefs)
 
@@ -424,13 +421,11 @@ def build_sp_start_snapshots(years=(2024, 2025, 2026), window=10, min_starts=3):
                 rV = R('avg_velo')
                 move = [R('hr_per_bf', True), R('barrel_pct', True), R('hard_hit_pct', True),
                         R('gb_pct'), R('xwoba_contact', True)]
-                s_vals = [v for v in [rK, rSW, rCSW] if v is not None]
-                m_vals = [v for v in move if v is not None]
-                if not (s_vals and m_vals and rBB is not None):
-                    continue
-                STUFF = int(round(sum(s_vals) / len(s_vals)))
-                MOVEMENT = int(round(sum(m_vals) / len(m_vals)))
+                STUFF = rate_pillars([rK, rSW, rCSW])
+                MOVEMENT = rate_pillars(move)
                 CONTROL = rBB
+                if None in (STUFF, MOVEMENT, CONTROL):
+                    continue
                 cell, arch = label_for_cell([STUFF, MOVEMENT, CONTROL], sdefs)
                 nm = (name_lookup.get(int(pid), {}) or {}).get('player_name')
                 if isinstance(nm, str) and ',' in nm:
@@ -567,18 +562,13 @@ def build_rp_snapshots():
                 continue
             bb_components.append((rated, weight))
 
-        s_vals = [v for v in [rSW, rCSW] if v is not None]
-        c_vals = [v for v in [rBB, rV] if v is not None]
-        if not (s_vals and c_vals and bb_components):
+        STUFF       = rate_pillars([rSW, rCSW])
+        CONTROL     = rate_pillars([rBB, rV])
+        # BATTED_BALL: weighted mean, weights re-normalized over surviving comps.
+        BATTED_BALL = rate_pillars([v for v, _ in bb_components],
+                                   weights=[w for _, w in bb_components])
+        if None in (STUFF, CONTROL, BATTED_BALL):
             continue
-        STUFF       = int(round(sum(s_vals) / len(s_vals)))
-        CONTROL     = int(round(sum(c_vals) / len(c_vals)))
-        # Weighted mean of BATTED_BALL components, weights re-normalized
-        # over whatever components were available.
-        bb_w_sum = sum(w for _, w in bb_components)
-        BATTED_BALL = int(round(
-            sum(v * w for v, w in bb_components) / bb_w_sum
-        )) if bb_w_sum > 0 else 50
 
         cell, arch = label_for_cell([STUFF, CONTROL, BATTED_BALL], rdefs)
 
