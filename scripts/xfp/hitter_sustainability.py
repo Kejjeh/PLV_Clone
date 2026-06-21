@@ -56,11 +56,11 @@ MARKERS = [
 ]
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# Name-join key now lives once in name_match (C1, 2026-06-21). This local def was
+# byte-identical to join_key; import the canonical seam so a collision/normalization
+# fix lands once for every skill.
+from plv_clone.utils.name_match import join_key as _norm
+from lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
 
 
 def load_rh3_map() -> dict:
@@ -199,21 +199,8 @@ def classify(rows: dict) -> dict:
     fp_cur = compute_fp_per_game(cur) or 0
     fp_delta = fp_cur - fp_prior
 
-    # Bucket logic — hitter scale: |fp_delta| threshold is 0.5 FP/game (vs 2.0 for pitchers)
-    if fp_delta >= 0.5 and n_material >= 7:
-        bucket = 'LEGIT'
-    elif fp_delta >= 0.5 and n_material >= 5:
-        bucket = 'IMPROVING'
-    elif fp_delta >= 0.5 and n_material <= 3:
-        bucket = 'NOISE'
-    elif fp_delta <= -0.5 and n_material <= 2:
-        bucket = 'REGRESS'
-    elif fp_delta <= -0.5:
-        bucket = 'BAD_LUCK'
-    elif abs(fp_delta) < 0.5:
-        bucket = 'STABLE'
-    else:
-        bucket = 'MIXED'
+    # Bucket logic — shared classifier (C3); 0.5 FP/game is the hitter scale.
+    bucket = classify_sustainability(fp_delta, n_material, 0.5)
 
     # Skill decomp (drop xwOBA — same as pitcher v2)
     #   K% (favorable: down): each fewer K = +1 FP. PA-per-game ≈ 4.

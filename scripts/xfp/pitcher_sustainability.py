@@ -63,11 +63,11 @@ MARKERS = [
 ]
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# Name-join key now lives once in name_match (C1, 2026-06-21). This local def was
+# byte-identical to join_key; import the canonical seam so a collision/normalization
+# fix lands once for every skill.
+from plv_clone.utils.name_match import join_key as _norm
+from lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
 
 
 def load_rp3_map() -> dict:
@@ -189,21 +189,8 @@ def classify(rows: dict) -> dict:
     # FP/start change
     fp_delta = float(cur['fp_per_start_actual']) - float(prior['fp_per_start_actual'])
 
-    # Bucket logic
-    if fp_delta >= 2.0 and n_material >= 7:
-        bucket = 'LEGIT'
-    elif fp_delta >= 2.0 and n_material >= 5:
-        bucket = 'IMPROVING'
-    elif fp_delta >= 2.0 and n_material <= 3:
-        bucket = 'NOISE'  # production up but skills don't support
-    elif fp_delta <= -2.0 and n_material <= 2:
-        bucket = 'REGRESS'  # production down + skills down
-    elif fp_delta <= -2.0:
-        bucket = 'BAD_LUCK'  # production down but skills holding
-    elif abs(fp_delta) < 2.0:
-        bucket = 'STABLE'
-    else:
-        bucket = 'MIXED'
+    # Bucket logic — shared classifier (C3); 2.0 FP/start is the SP scale.
+    bucket = classify_sustainability(fp_delta, n_material, 2.0)
 
     # Skill-attributable FP estimate. Each major skill change converted to
     # expected FP impact per start (BF=22 typical):
