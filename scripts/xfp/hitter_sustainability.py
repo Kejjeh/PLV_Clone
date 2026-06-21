@@ -26,8 +26,6 @@ Usage:
 from __future__ import annotations
 import argparse
 import sys
-import unicodedata
-import re
 from pathlib import Path
 
 import numpy as np
@@ -60,7 +58,9 @@ MARKERS = [
 # byte-identical to join_key; import the canonical seam so a collision/normalization
 # fix lands once for every skill.
 from plv_clone.utils.name_match import join_key as _norm
-from lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
+# Fully-qualified so it resolves both as a direct script AND when imported via the
+# package path (league_wide_full_audit) — ROOT is on sys.path (above). (2026-06-21.)
+from scripts.xfp.lib.verdict_tiers import classify_sustainability  # shared Sustainability bucket (C3)
 
 
 def load_rh3_map() -> dict:
@@ -73,6 +73,8 @@ def load_rh3_map() -> dict:
         rh3 = PROJECTIONS.rh3()
     except Exception:
         return {}
+    # Drop null-name rows (see load_rp3_map): they collapse to one empty key.
+    rh3 = rh3[rh3['player_name'].notna()].copy()
     rh3['_nk'] = rh3['player_name'].map(_norm)
     out = {}
     for _, r in rh3.iterrows():
