@@ -474,6 +474,83 @@ def build_sp_snapshots():
     return out
 
 
+def build_sp_start_snapshots(years=(2024, 2025, 2026), window=10, min_starts=3):
+    """START-ANCHORED SP snapshots (Option A) — same schema as build_sp_snapshots
+    but cadenced per START with an event-weighted trailing last-N-starts window,
+    computed directly from statcast (isolated from the shared rolling cache).
+
+    SPs pitch on an event cadence, so this replaces the calendar-weekly grid for
+    the intra-season SP chart. Display-only (Rule 13). Hitters stay weekly.
+    """
+    from lib.sp_start_snapshots import (
+        starts_from_statcast, trailing_start_windows, rates_from_counts)
+    if not S_SRC.exists():
+        print('  ⚠ SP source not found — skipping start-anchored snapshots'); return []
+    src = pd.read_csv(S_SRC)
+    src['hr_per_bf'] = src['hr'] / src['tbf'].clip(lower=1)
+    name_lookup = (src.sort_values('year').groupby('pitcher')
+                   .agg({'player_name': 'last'}).to_dict('index'))
+    BASELINE_COLS = ['k_pct', 'swstr_pct', 'c_plus_swstr', 'bb_pct', 'avg_velo',
+                     'hr_per_bf', 'barrel_pct', 'hard_hit_pct', 'gb_pct', 'xwoba_contact']
+    baselines = {}
+    for yr, grp in src.groupby('year'):
+        baselines[int(yr)] = {c: (grp[c].mean(), grp[c].std())
+                              for c in BASELINE_COLS if c in grp.columns}
+    with open(S_DEFS, encoding='utf-8') as f:
+        sdefs = json.load(f)
+    SC_COLS = ['pitcher', 'game_date', 'pitch_type', 'release_speed', 'description',
+               'events', 'launch_speed', 'launch_speed_angle', 'bb_type',
+               'estimated_woba_using_speedangle']
+
+    def _b(v):
+        return 'PLUS' if v >= 60 else ('AVG' if v >= 40 else 'MINUS')
+
+    out = []
+    for yr in years:
+        p = CACHE / f'statcast_{yr}.parquet'
+        if not p.exists():
+            continue
+        b = baselines.get(yr - 1) or baselines.get(yr)
+        if not b:
+            continue
+        sc = pd.read_parquet(p, columns=[c for c in SC_COLS])
+        for pid, g in sc.groupby('pitcher'):
+            starts = starts_from_statcast(g)
+            for w in trailing_start_windows(starts, window=window, min_starts=min_starts):
+                rt = rates_from_counts(w)
+                def R(key, invert=False):
+                    v = rt.get(key)
+                    return _rate(v, *b[key], invert=invert) if (v is not None and key in b) else None
+                rK, rSW, rCSW = R('k_pct'), R('swstr_pct'), R('c_plus_swstr')
+                rBB = R('bb_pct', invert=True)
+                rV = R('avg_velo')
+                move = [R('hr_per_bf', True), R('barrel_pct', True), R('hard_hit_pct', True),
+                        R('gb_pct'), R('xwoba_contact', True)]
+                s_vals = [v for v in [rK, rSW, rCSW] if v is not None]
+                m_vals = [v for v in move if v is not None]
+                if not (s_vals and m_vals and rBB is not None):
+                    continue
+                STUFF = int(round(sum(s_vals) / len(s_vals)))
+                MOVEMENT = int(round(sum(m_vals) / len(m_vals)))
+                CONTROL = rBB
+                cell = f'{_b(STUFF)}/{_b(MOVEMENT)}/{_b(CONTROL)}'
+                arch = sdefs.get(cell, {}).get('label', 'UNKNOWN')
+                nm = (name_lookup.get(int(pid), {}) or {}).get('player_name')
+                if isinstance(nm, str) and ',' in nm:
+                    a, c = nm.split(',', 1); nm = f'{c.strip()} {a.strip()}'
+                out.append({
+                    'pitcher': int(pid), 'player_name': nm, 'year': yr,
+                    'date': w['date'], 'start_no': w['start_no'], 'gs_to': w['start_no'],
+                    'OVERALL': int(round(STUFF * 0.50 + MOVEMENT * 0.35 + CONTROL * 0.15)),
+                    'STUFF': STUFF, 'MOVEMENT': MOVEMENT, 'CONTROL': CONTROL,
+                    'velo_rating': rV if rV is not None else 50,
+                    'cell': cell, 'archetype': arch,
+                })
+    print(f'  SP start-anchored snapshots: {len(out)} rows '
+          f'({len(set((o["pitcher"], o["year"]) for o in out))} pitcher-years)', flush=True)
+    return out
+
+
 def build_rp_snapshots():
     """Per-(pitcher, year, snapshot_date) STUFF / CONTROL / BATTED_BALL ratings
     for relievers — same shape as build_sp_snapshots() so the JS template can
@@ -960,7 +1037,7 @@ def build_payload():
 
     print('Computing intra-season snapshots...', flush=True)
     hitter_snapshots = build_hitter_snapshots()
-    sp_snapshots = build_sp_snapshots()
+    sp_snapshots = build_sp_start_snapshots()  # Option A: per-start cadence (was weekly build_sp_snapshots)
     rp_snapshots = build_rp_snapshots()
 
     hitter_records = build_hitter_records(h)
