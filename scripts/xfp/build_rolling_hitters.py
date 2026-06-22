@@ -201,6 +201,29 @@ def fp_per_pa_with_rrbi(window_agg: pd.DataFrame, rrbi_rates: pd.Series) -> pd.S
     return ((window_agg['fp_total'] + window_agg['pa'] * rrbi_per_pa) / pa).round(4)
 
 
+def select_inprogress_splits(base_splits, season_start, max_data_date, today):
+    """Choose split_days for an IN-PROGRESS season (pure / testable).
+
+    Returns (splits_to_use, elapsed_days). The elapsed weekly cutoffs are those that
+    have already happened (cutoff <= max_data_date). A current "in-progress" snapshot
+    (labeled elapsed_days) is appended WHENEVER data extends past the last weekly
+    cutoff — so that snapshot's `after` window is empty and it captures EVERY active
+    player. Without it, the last weekly split has a non-empty `after` window, is built
+    as a TRAINING row, and its target inner-join silently drops every player who
+    didn't play on the post-cutoff day(s) (e.g. a player whose last game WAS the
+    cutoff date), truncating the projection pool. The old `elapsed_days > max_split+5`
+    guard missed this whenever data landed 1-4 days past the weekly cutoff — the
+    Vlad/Judge dropout of 2026-06-22 (rh3 pool 433 -> 257).
+    """
+    elapsed_days = int((today - season_start).days)
+    splits = [s for s in base_splits
+              if season_start + pd.Timedelta(days=s) <= max_data_date]
+    last_cut = season_start + pd.Timedelta(days=max(splits, default=0))
+    if (not splits) or (last_cut < max_data_date):
+        splits = list(splits) + [elapsed_days]
+    return splits, elapsed_days
+
+
 def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     """For one year, build rows for each (batter, split_day) pair."""
     from datetime import date as _date
@@ -241,11 +264,8 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     # trajectory), monthly for older years to control runtime.
     base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS_OF_SEASON
     if is_in_progress:
-        elapsed_days = int((today - season_start).days)
-        splits_to_use = [s for s in base_splits
-                         if season_start + pd.Timedelta(days=s) <= max_data_date]
-        if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
-            splits_to_use = list(splits_to_use) + [elapsed_days]
+        splits_to_use, elapsed_days = select_inprogress_splits(
+            base_splits, season_start, max_data_date, today)
         print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
               f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
               f'({"weekly" if year in WEEKLY_YEARS else "monthly"})', flush=True)
