@@ -567,6 +567,23 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             f"{bb['min']}–{bb['max']} | {bb['l3_mean']} | {bb['trend']} |\n"
             f"_last {len(bb['last'])}: {bb['last']}_")
 
+    # ── In-season archetype trajectory (OVERALL + main domains over time) ──────
+    try:
+        from scripts.xfp.lib.season_snapshots import season_trajectory
+        traj = season_trajectory(int(player['id']), bucket)
+    except Exception:
+        traj = None
+    if traj and traj.get('points'):
+        doms = traj['domains']
+        cad = 'per start' if traj['xkey'] == 'start_no' else 'weekly'
+        hdr = "| pt | OVR | " + " | ".join(d[:4].title() for d in doms) + " | archetype |"
+        sep = "|---|---|" + "---|" * (len(doms) + 1)
+        body = [f"| {p['label']} | {p.get('OVERALL')} | "
+                + " | ".join(str(p.get(d) if p.get(d) is not None else '—') for d in doms)
+                + f" | {p.get('archetype')} |" for p in traj['points']]
+        lines.append(f"\n**📈 In-season archetype trajectory ({cad}; 20-80, context-only)**\n"
+                     f"{hdr}\n{sep}\n" + "\n".join(body))
+
     return '\n'.join(lines)
 
 
