@@ -33,6 +33,7 @@ from scripts.xfp.lib.pl_cache import pl_rank, pl_streamer_rank, _warn_stale_cach
 from scripts.xfp.lib.triangulate_core import (
     model_row, archetype_row, synthesize, apply_overrides,
     consolidate_verdict, compute_confidence, build_watch_list, il_caveat,
+    flatten_lenses,
 )
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_report_for_stdout
@@ -772,6 +773,8 @@ def main():
                 'il_status': il_status,
                 'category': category_map.get(name) if category_map else None,
             }
+            # context-only lenses (platoon / expected / home-road / TTO) — flat columns
+            jrec.update(flatten_lenses(model, bucket))
             json_rows.append(jrec)
         if args.csv_out:
             rec = {
@@ -817,6 +820,8 @@ def main():
                 'velo_in': model.get('velo_in'),
                 'velo_2y': model.get('velo_2y'),
             }
+            # context-only lenses (platoon / expected / home-road / TTO) — flat columns
+            rec.update(flatten_lenses(model, bucket))
             if category_map:
                 rec['category'] = category_map.get(name)
             csv_rows.append(rec)

@@ -344,3 +344,36 @@ def test_batch_smoke():
         if r is not None:
             n_resolved += 1
     assert n_resolved >= len(CANONICAL_CASES) - 1
+
+
+def test_flatten_lenses_full_and_none_safe():
+    """flatten_lenses serializes the nested context-only lenses into flat batch
+    columns, rounds floats, and is None-safe when a lens is absent."""
+    from scripts.xfp.lib.triangulate_core import flatten_lenses
+    model = {
+        'splits': {'rate_vs_L': 0.275123, 'rate_vs_R': 0.357987,
+                   'lift_vs_L_pct': -12.345, 'lift_vs_R_pct': 8.9,
+                   'pa_vs_L': 60, 'pa_vs_R': 180, 'dominant_side': 'R'},
+        'expected': {'xwoba': 0.341111, 'woba': 0.366, 'gap': 0.024889,
+                     'regression': 'OVERPERFORMING'},
+        'expected_splits': {
+            'vs_L': {'xwoba': 0.31, 'woba': 0.30, 'regression': 'ALIGNED', 'pa': 55},
+            'vs_R': None},
+        'home_away': {'rate_home': 0.36, 'rate_away': 0.33, 'lift_home_pct': 4.4,
+                      'lift_away_pct': -4.4, 'dominant_side': 'HOME'},
+        'tto_decay': {'tier': 'DECAY', 'penalty': -0.0612,
+                      'tto1_rate': 0.12, 'tto3_rate': 0.0588},
+    }
+    f = flatten_lenses(model, 'SP')
+    assert f['split_rate_vs_L'] == 0.275 and f['split_dominant'] == 'R'
+    assert f['split_lift_vs_L_pct'] == -12.3      # 1-dp rounding
+    assert f['xstat_regression'] == 'OVERPERFORMING' and f['xstat_gap'] == 0.025
+    assert f['xstat_vs_L_reg'] == 'ALIGNED' and f['xstat_vs_L_pa'] == 55
+    assert f['xstat_vs_R_xwoba'] is None and f['xstat_vs_R_reg'] is None
+    assert f['ha_dominant'] == 'HOME' and f['ha_rate_home'] == 0.36
+    assert f['tto_tier'] == 'DECAY' and f['tto_penalty'] == -0.061
+
+    # absent lenses -> all keys present, all None (schema-stable for CSV)
+    empty = flatten_lenses({}, 'H')
+    assert empty['split_rate_vs_L'] is None and empty['tto_tier'] is None
+    assert set(empty) == set(f), "column schema must be bucket-independent"

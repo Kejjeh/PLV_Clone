@@ -110,6 +110,64 @@ def _decline_lens_lookup(pid):
         return None
 
 
+# ---------- batch lens flattening ----------
+
+def _rnd(v, nd=3):
+    """Round a float to nd places; pass None / non-numbers through."""
+    return round(v, nd) if isinstance(v, (int, float)) else v
+
+
+def flatten_lenses(model: dict, bucket: str) -> dict:
+    """Flatten the nested context-only lenses (platoon splits, expected-vs-actual
+    overall + by-split, home/road, TTO decay) into flat batch columns. These are
+    already computed in model_row but were card-only; this serializes them for
+    CSV/JSON consumers (slate-grid-style scans) WITHOUT the slow live-gamelog
+    boom/bust or builder-backed trajectory (those stay card-only). Schema is
+    bucket-independent (every key always present, None when a lens is absent) so
+    the CSV columns are stable. Context-only (CLAUDE.md #13): never a headline,
+    never moves rh3/rp3/rprs2.
+    """
+    out = {}
+    sp = model.get('splits') or {}
+    # platoon (vs L/R) — present for H (vs LHP/RHP) and SP (vs LHB/RHB)
+    out['split_rate_vs_L'] = _rnd(sp.get('rate_vs_L'))
+    out['split_rate_vs_R'] = _rnd(sp.get('rate_vs_R'))
+    out['split_lift_vs_L_pct'] = _rnd(sp.get('lift_vs_L_pct'), 1)
+    out['split_lift_vs_R_pct'] = _rnd(sp.get('lift_vs_R_pct'), 1)
+    out['split_pa_vs_L'] = sp.get('pa_vs_L')
+    out['split_pa_vs_R'] = sp.get('pa_vs_R')
+    out['split_dominant'] = sp.get('dominant_side')
+
+    ex = model.get('expected') or {}
+    out['xstat_xwoba'] = _rnd(ex.get('xwoba'))
+    out['xstat_woba'] = _rnd(ex.get('woba'))
+    out['xstat_gap'] = _rnd(ex.get('gap'))
+    out['xstat_regression'] = ex.get('regression')
+
+    exs = model.get('expected_splits') or {}
+    for side in ('vs_L', 'vs_R'):
+        s = exs.get(side) or {}
+        out[f'xstat_{side}_xwoba'] = _rnd(s.get('xwoba'))
+        out[f'xstat_{side}_woba'] = _rnd(s.get('woba'))
+        out[f'xstat_{side}_reg'] = s.get('regression')
+        out[f'xstat_{side}_pa'] = s.get('pa')
+
+    ha = model.get('home_away') or {}
+    out['ha_rate_home'] = _rnd(ha.get('rate_home'))
+    out['ha_rate_away'] = _rnd(ha.get('rate_away'))
+    out['ha_lift_home_pct'] = _rnd(ha.get('lift_home_pct'), 1)
+    out['ha_lift_away_pct'] = _rnd(ha.get('lift_away_pct'), 1)
+    out['ha_dominant'] = ha.get('dominant_side')
+
+    # TTO decay — SP only (blank for H/RP)
+    tto = model.get('tto_decay') or {}
+    out['tto_tier'] = tto.get('tier')
+    out['tto_penalty'] = _rnd(tto.get('penalty'))
+    out['tto1_rate'] = _rnd(tto.get('tto1_rate'))
+    out['tto3_rate'] = _rnd(tto.get('tto3_rate'))
+    return out
+
+
 # ---------- model row ----------
 
 def model_row(player: dict) -> dict:
