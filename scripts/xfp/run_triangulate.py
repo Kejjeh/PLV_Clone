@@ -808,6 +808,21 @@ def main():
             _rt = arche.get('ratings') or {}
             _arche_domains = ';'.join(f"{k}={int(v)}" for k, v in _rt.items()
                                       if isinstance(v, (int, float))) or None
+        # Canonical fantasy position group (the one seam — plv_clone.positions). SP/RP
+        # already resolved into `bucket`; hitters group by primary_position; RPs split
+        # CLOSER/SETUP off current-season saves vs holds. Context-only display grouping.
+        try:
+            from plv_clone.positions import position_group as _position_group
+            if bucket == 'SP':
+                _pgroup = 'SP'
+            elif bucket == 'RP':
+                _pgroup = _position_group({}, 'RP', rp_row={
+                    'sv_to': model.get('sv_to'), 'hld_to': model.get('hld_to'),
+                    'role_lag1': model.get('role_lag1')})
+            else:
+                _pgroup = _position_group({'position': model.get('primary_position')}, 'H')
+        except Exception:
+            _pgroup = None
         if args.json_out:
             def _num(x):
                 if x is None: return None
@@ -820,6 +835,7 @@ def main():
             jrec = {
                 'name': player['display_name'],
                 'bucket': bucket,
+                'position_group': _pgroup,
                 'team': player.get('team') if isinstance(player, dict) else None,
                 'pl_rank': pl_main if isinstance(pl_main, int) else None,
                 'pl_rank_raw': pl_main if isinstance(pl_main, int) else (str(pl_main) if pl_main is not None else None),
@@ -859,6 +875,7 @@ def main():
             rec = {
                 'player_name': player['display_name'],
                 'bucket': bucket,
+                'position_group': _pgroup,
                 'pl_rank': pl_main if isinstance(pl_main, int) else None,
                 'pl_rank_raw': pl_main,
                 'model_rank': model.get('rank') if model.get('rank') != '—' else None,

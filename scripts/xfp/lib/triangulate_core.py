@@ -349,6 +349,7 @@ def model_row(player: dict) -> dict:
             'rep_delta': float(r['replacement_delta']),
             'recform': float(r['recency_form_gap']),
             'extra': f"pa_to={int(r['pa_to'])}",
+            'primary_position': (r.get('primary_position') if 'primary_position' in r.index else None),
             'hitter_boom_stack': hboom_stack,
             'hitter_boom_components': hboom_components,
             'hitter_boom_rate_expected': hboom_rate_expected,
@@ -618,6 +619,10 @@ def model_row(player: dict) -> dict:
         'rep_delta': float(r['replacement_delta']),
         'recform': None,
         'extra': f"role={r['role_lag1']} sv_to={int(r.get('sv_to') or 0)} hld_to={int(r.get('hld_to') or 0)}",
+        # current-season role fields for the canonical CLOSER/SETUP position split
+        'sv_to': int(r.get('sv_to') or 0),
+        'hld_to': int(r.get('hld_to') or 0),
+        'role_lag1': r.get('role_lag1'),
         'sustainability': _sl_rp,
         'trend': trend_lens(player['id'], 'RP'),  # FB velo trend — context-only
     }
