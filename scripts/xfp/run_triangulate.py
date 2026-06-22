@@ -614,8 +614,9 @@ def compare_table(rows):
     # Stuff/Control/Batted-ball (RP) — same order in both columns so they line up.
     out = ["\n## Comparison\n"]
     out.append("| Player | Bucket | PL | Model | Career arc (domains) | In-season arc (domains) "
-               "| Velo | T+1 | Boom/Bust (μ b%/B%) | Verdict |")
-    out.append("|---|---|---|---|---|---|---|---|---|---|")
+               "| Velo | Stuff+/Floor | T+1 | Boom/Bust (μ b%/B%) | Verdict |")
+    out.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    _floor_short = {'SAFE': 'SAFE', 'MODERATE': 'MOD', 'RISKY': 'RISK'}
     _arrow = {'UP': '▲', 'DOWN': '▼', 'FLAT': '▬'}
     _traj_arrow = {'TRENDING_UP': '▲', 'TRENDING_DOWN': '▼', 'CAREER_LOW': '▼',
                    'CAREER_HIGH': '▲', 'STABLE': '▬'}
@@ -656,8 +657,19 @@ def compare_table(rows):
             inseason_show = f"{pts[0].get('OVERALL')}→{pts[-1].get('OVERALL')}" + (f" ({dlast})" if dlast else '')
         else:
             inseason_show = '—'
+        # Stuff+/Floor cell (SP only): Stuff+ · breakout gap · floor tier
+        sf_show = '—'
+        if p['bucket'] == 'SP':
+            st = m.get('stuff') or {}; fl = m.get('floor') or {}
+            seg = []
+            if st.get('stuff_plus') is not None:
+                seg.append(f"{st['stuff_plus']} g{st.get('breakout_gap'):+d}")
+            if fl.get('tier'):
+                seg.append(_floor_short.get(fl['tier'], fl['tier']))
+            if seg:
+                sf_show = ' '.join(seg)
         out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {career_show} "
-                   f"| {inseason_show} | {velo_show} | {t1} | {bb_show} | {r['verdict']} |")
+                   f"| {inseason_show} | {velo_show} | {sf_show} | {t1} | {bb_show} | {r['verdict']} |")
     return '\n'.join(out)
 
 
