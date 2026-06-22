@@ -477,6 +477,54 @@ header.collapsed nav.topnav a { padding-top: .25em; padding-bottom: .25em; }
                        text-align: right; color: var(--text); }
 .comp-weight { color: var(--dim); font-size: .75em; font-family: 'IBM Plex Mono', monospace; }
 
+/* In-season arc subsection (Career-arc panel) — textual first→now domain story
+   sourced from the same 2026 snapshots as the trajectory chart. Display-only. */
+.inseason-arc { background: var(--panel); border: 1px solid var(--border);
+                 border-left: 3px solid var(--accent); border-radius: 5px;
+                 padding: .85em 1.1em; margin-top: 1em;
+                 font-family: 'IBM Plex Mono', monospace; }
+.inseason-arc .ia-head { display: flex; justify-content: space-between; align-items: baseline;
+                 flex-wrap: wrap; gap: .5em; margin-bottom: .55em; }
+.inseason-arc .ia-title { color: var(--accent); font-weight: 600; font-size: .92em;
+                 letter-spacing: .04em; }
+.inseason-arc .ia-cadence { color: var(--dim); font-size: .78em; }
+.inseason-arc .ia-overall { color: var(--text); font-size: .9em; margin-bottom: .5em; }
+.inseason-arc .ia-domains { display: flex; flex-wrap: wrap; gap: .5em .9em; }
+.inseason-arc .ia-dom { display: inline-flex; align-items: center; gap: .45em;
+                 background: var(--stripe); border: 1px solid var(--faint);
+                 border-radius: 999px; padding: .25em .7em; font-size: .82em; }
+.inseason-arc .ia-dom-label { color: var(--dim); text-transform: uppercase;
+                 letter-spacing: .06em; font-size: .92em; }
+.inseason-arc .ia-dom-val { color: var(--text); }
+.inseason-arc .ia-delta { font-weight: 600; }
+.inseason-arc .ia-delta.pos { color: var(--pos); }
+.inseason-arc .ia-delta.neg { color: var(--neg); }
+.inseason-arc .ia-delta.dim { color: var(--dim); }
+.inseason-arc .ia-arche { margin-top: .55em; color: var(--text); font-size: .82em; }
+.inseason-arc .ia-arche-label { color: var(--dim); text-transform: uppercase;
+                 letter-spacing: .08em; font-size: .9em; margin-right: .4em; }
+.inseason-arc .ia-note { margin-top: .55em; color: var(--dim); font-style: italic;
+                 font-size: .72em; letter-spacing: .04em; }
+
+/* Context-lens rows (below the Composition domain breakdown). Four validated
+   DISPLAY-ONLY lenses — Stuff+ / SP-floor / physical-trend / shadow-scout. */
+.lens-rows { margin-top: 1em; background: var(--panel); border: 1px solid var(--border);
+             border-radius: 5px; padding: .8em 1.1em; font-family: 'IBM Plex Mono', monospace; }
+.lens-rows .lens-head { color: var(--accent); font-weight: 600; font-size: .88em;
+             letter-spacing: .04em; margin-bottom: .55em;
+             display: flex; align-items: baseline; gap: .6em; flex-wrap: wrap; }
+.lens-rows .lens-tag { color: var(--warn); font-size: .68em; font-weight: 400;
+             text-transform: uppercase; letter-spacing: .1em; }
+.lens-rows .lens-row { display: grid; grid-template-columns: 130px 1fr; gap: .8em;
+             align-items: baseline; padding: .3em 0; border-top: 1px solid var(--faint);
+             font-size: .85em; }
+.lens-rows .lens-row:first-of-type { border-top: 0; }
+.lens-rows .lens-label { text-transform: uppercase; letter-spacing: .07em; font-size: .85em; }
+.lens-rows .lens-label.pos { color: var(--pos); }
+.lens-rows .lens-label.neg { color: var(--neg); }
+.lens-rows .lens-label.dim { color: var(--dim); }
+.lens-rows .lens-val { color: var(--text); }
+
 /* Domain-cell hover tooltip in all-players table */
 .alltable td.domain-cell { position: relative; cursor: help; }
 .domain-tooltip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
@@ -706,14 +754,15 @@ HITTERS_TAB = """
       <option value="fp_per_pa">FP/PA (actual)</option>
       </optgroup>
     </select>
-    <label for="h-quad-pos">Position</label>
-    <select id="h-quad-pos">
+    <label for="h-quad-pos">Position group</label>
+    <select id="h-quad-pos" title="Canonical fantasy position seam (plv_clone.positions) — current season only">
       <option value="all" selected>All positions</option>
       <option value="C">C</option>
       <option value="1B/3B">1B / 3B</option>
       <option value="2B/SS">2B / SS</option>
       <option value="OF">OF</option>
-      <option value="UTIL">UTIL (all)</option>
+      <option value="UTIL">UTIL (all hitters)</option>
+      <option value="DH">DH / non-fielder</option>
     </select>
     <span class="r-display" id="h-r"></span>
   </div>
@@ -860,6 +909,11 @@ SPS_TAB = """
       <option value="fp_per_start">FP/start (actual)</option>
       </optgroup>
     </select>
+    <label for="s-quad-pos">Position group</label>
+    <select id="s-quad-pos" title="Canonical fantasy position seam (plv_clone.positions) — current season only">
+      <option value="all" selected>All pitchers</option>
+      <option value="SP">SP (starters)</option>
+    </select>
     <span class="r-display" id="s-r"></span>
   </div>
   <div id="s-quad-note" style="color:var(--dim);font-size:.85em;font-family:'IBM Plex Mono',monospace;margin:.4em 0;"></div>
@@ -980,6 +1034,12 @@ RPS_TAB = """
       <option value="t2_fp_projection">Archetype T+2</option>
       <option value="fp_per_g">FP/g (actual)</option>
       </optgroup>
+    </select>
+    <label for="rp-quad-pos">Position group</label>
+    <select id="rp-quad-pos" title="Closer (saves) vs Setup (holds) — current-season split from plv_clone.positions">
+      <option value="all" selected>All relievers</option>
+      <option value="CLOSER">Closer (saves)</option>
+      <option value="SETUP">Setup (holds)</option>
     </select>
     <span class="r-display" id="rp-r"></span>
   </div>
@@ -1112,6 +1172,14 @@ function prettyLabel(s) {
   return String(s).split('_').map(w =>
     w ? (w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()) : w
   ).join(' ');
+}
+
+// Minimal HTML escaper for free-text lens strings (trend tags) injected via
+// innerHTML. Our own model emits these so the risk is nil, but escaping any
+// stray </> keeps the markup well-formed.
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 // ── Archetype category classification ──────────────────────────────────
@@ -1315,6 +1383,8 @@ const state = {
   rpRosterFilter: 'all',
   hPosFilter:    'all',   // 'all' | 'C' | '1B' | '2B' | '3B' | 'SS' | 'OF' | 'DH' | '1B/3B' | '2B/SS'
   hQuadPos:      'all',   // hitter-QUADRANT-only POS filter (independent of the all-table chip group)
+  sQuadPos:      'all',   // SP-quadrant position-group filter (canonical seam: all | SP)
+  rpQuadPos:     'all',   // RP-quadrant position-group filter (canonical seam: all | CLOSER | SETUP)
   sPosFilter:    'all',   // legacy slot — SP tab is SP-only now; kept so old hash URLs don't crash
   // Lineup-role chip — hitters only, single-select, parallel to the position
   // chip group. UNKNOWN tier rows (pre-2018 data) bypass via the same
@@ -1970,6 +2040,133 @@ function renderBoundaryGlossary() {
   document.getElementById('boundary-glossary').innerHTML = html;
 }
 
+// ── In-season arc + context lenses (modal subsections) ──────────────────
+// Both are DISPLAY-ONLY (CLAUDE.md #13): they surface already-computed context
+// and never alter the rh3/rp3/rprs2 headline or any verdict.
+
+// Domain pillars + cadence label per role, matching the snapshot row schema.
+const INSEASON_DOMAINS = {
+  hitter: { keys: ['CONTACT', 'POWER', 'DISCIPLINE'], cadence: 'weekly' },
+  sp:     { keys: ['STUFF', 'MOVEMENT', 'CONTROL'],   cadence: 'per start' },
+  rp:     { keys: ['STUFF', 'CONTROL', 'BATTED_BALL'], cadence: 'weekly' },
+};
+
+// Build the In-season arc block: cadence + first→now 3-domain ratings with
+// deltas, sourced from the SAME 2026 snapshots the trajectory chart uses (single
+// source of truth, no rating drift). Mirrors the multi-year career-arc slope
+// display above it. Returns '' when there's no usable in-season sample so the
+// arc panel quietly falls back to the career view only.
+function renderInSeasonArc(role, id, cur) {
+  // Snapshots only exist for the current season; the arc is a current-year story.
+  if (!cur || cur.year !== D.current_year) return '';
+  // Relievers reach this fn as role 'sp' (leaderboard/arch remap) OR 'rp'
+  // (all-table); the row's own `role` field is the authority on cadence/domains.
+  const isHitter = (role === 'hitter');
+  const isRP = (cur.role === 'RP');
+  const cfg = isHitter ? INSEASON_DOMAINS.hitter
+            : isRP     ? INSEASON_DOMAINS.rp
+            :            INSEASON_DOMAINS.sp;
+  const key = `${id}|${D.current_year}`;
+  let rows = (isHitter ? HSNAP_BY_PY[key] : SSNAP_BY_PY[key]) || [];
+  if (rows.length < 2) return '';
+  // Time-order: SP rows by start_no, hitters/RP by date (already date-sorted on
+  // load, but re-sort defensively so first/last endpoints are correct).
+  const xkey = (!isHitter && !isRP) ? 'start_no' : 'date';
+  rows = rows.slice().sort((a, b) => {
+    if (xkey === 'start_no') return (a.start_no || 0) - (b.start_no || 0);
+    return String(a.date).localeCompare(String(b.date));
+  });
+  const first = rows[0], now = rows[rows.length - 1];
+  const cadence = cfg.cadence;
+  const span = (xkey === 'start_no')
+    ? `${rows.length} starts (#${first.start_no || 1}→#${now.start_no || rows.length})`
+    : `${rows.length} weekly snapshots (${String(first.date).slice(5)}→${String(now.date).slice(5)})`;
+
+  // arche_domains — the current-year 3-pillar string baked on the record.
+  let archeStr = '';
+  if (cur.arche_domains) {
+    archeStr = String(cur.arche_domains).split(';').map(p => {
+      const [k, v] = p.split('=');
+      return `${prettyLabel(k)} <b>${v}</b>`;
+    }).join(' · ');
+  }
+
+  let h = `<div class="inseason-arc">`;
+  h += `<div class="ia-head"><span class="ia-title">In-season arc · ${D.current_year}</span>`;
+  h += `<span class="ia-cadence">${cadence} cadence · ${span}</span></div>`;
+  // Overall first→now delta line (parallels the career slope chip).
+  const dO = (now.OVERALL != null && first.OVERALL != null) ? (now.OVERALL - first.OVERALL) : null;
+  if (dO != null) {
+    const dCls = dO > 0 ? 'pos' : (dO < 0 ? 'neg' : 'dim');
+    h += `<div class="ia-overall">Overall <b>${first.OVERALL}</b> → <b>${now.OVERALL}</b> `
+       + `<span class="ia-delta ${dCls}">${dO > 0 ? '+' : ''}${dO}</span></div>`;
+  }
+  // Per-domain first→now with delta chips.
+  h += `<div class="ia-domains">`;
+  cfg.keys.forEach(k => {
+    const a = first[k], b = now[k];
+    if (a == null || b == null) return;
+    const d = b - a;
+    const dCls = d > 0 ? 'pos' : (d < 0 ? 'neg' : 'dim');
+    h += `<div class="ia-dom"><span class="ia-dom-label">${prettyLabel(k)}</span>`
+       + `<span class="ia-dom-val">${a} → <b>${b}</b></span>`
+       + `<span class="ia-delta ${dCls}">${d > 0 ? '+' : ''}${d}</span></div>`;
+  });
+  h += `</div>`;
+  if (archeStr) {
+    h += `<div class="ia-arche"><span class="ia-arche-label">Current-year pillars</span> ${archeStr}</div>`;
+  }
+  h += `<div class="ia-note">In-season snapshots · display-only context — does not move rh3/rp3/rprs2.</div>`;
+  h += `</div>`;
+  return h;
+}
+
+// Build the four-lens CONTEXT row block shown below the Composition domain
+// breakdown. Hitters → physical-trend only; SPs/RPs → Stuff+, SP-floor tier,
+// physical-trend, shadow-scout grade. Reads the `lenses` blob baked onto the
+// current-year record by build_player_profiles_dashboard.annotate_context_lenses.
+// Returns '' when no lens fired (older years carry no lenses).
+function renderContextLenses(role, cur) {
+  if (!cur || cur.year !== D.current_year) return '';
+  const lz = cur.lenses;
+  if (!lz) return '';
+  const rows = [];
+  if (role === 'hitter') {
+    if (lz.trend_tag) rows.push(['Physical trend', escapeHtml(lz.trend_tag), 'dim']);
+  } else {
+    if (lz.stuff_plus != null) {
+      let v = `Stuff+ <b>${lz.stuff_plus}</b>`;
+      if (lz.stuff_proj_ros_fp != null) v += ` · proj RoS <b>${lz.stuff_proj_ros_fp}</b> fp/start`;
+      if (lz.stuff_breakout_gap != null) v += ` · b/o gap ${lz.stuff_breakout_gap > 0 ? '+' : ''}${lz.stuff_breakout_gap}`;
+      const cls = (lz.stuff_plus >= 105) ? 'pos' : (lz.stuff_plus < 95 ? 'neg' : 'dim');
+      rows.push(['Stuff+', v, cls]);
+    }
+    if (lz.floor_tier) {
+      let v = `<b>${prettyLabel(lz.floor_tier)}</b>`;
+      if (lz.floor_bust_prob != null) v += ` · P(bust &lt;5 FP) ${lz.floor_bust_prob}%`;
+      const cls = (lz.floor_tier === 'SAFE') ? 'pos' : (lz.floor_tier === 'RISKY' ? 'neg' : 'dim');
+      rows.push(['SP floor', v, cls]);
+    }
+    if (lz.trend_tag) rows.push(['Physical trend', escapeHtml(lz.trend_tag), 'dim']);
+    if (lz.shadow_grade != null) {
+      let v = `grade <b>${lz.shadow_grade}</b>`;
+      if (lz.shadow_verdict) v += ` · ${prettyLabel(lz.shadow_verdict)}`;
+      const cls = (lz.shadow_verdict === 'PLUS_PROCESS') ? 'pos'
+                : (lz.shadow_verdict === 'BELOW_AVG' ? 'neg' : 'dim');
+      rows.push(['Shadow scout', v, cls]);
+    }
+  }
+  if (!rows.length) return '';
+  let h = `<div class="lens-rows"><div class="lens-head">Context lenses `
+        + `<span class="lens-tag">DISPLAY-ONLY · never moves rh3/rp3/rprs2</span></div>`;
+  rows.forEach(([label, val, cls]) => {
+    h += `<div class="lens-row"><span class="lens-label ${cls}">${label}</span>`
+       + `<span class="lens-val">${val}</span></div>`;
+  });
+  h += `</div>`;
+  return h;
+}
+
 // ── Modal ───────────────────────────────────────────────────────────
 function openModal(role, id) {
   const records = (role === 'hitter' ? H_BY_ID[id] : S_BY_ID[id]) || [];
@@ -2161,6 +2358,11 @@ function openModal(role, id) {
   let panels = '<div class="modal-mtab-panel active" data-mtab="arc">';
   panels += '<div class="traj">' + sorted.map(r => `<span>${r.year}: <b>${prettyLabel(r.archetype)}</b></span>`).join('<span class="arrow">→</span>') + '</div>';
   panels += '<div id="modal-spark" style="height: 320px; margin-top: 1em;"></div>';
+  // In-season arc — textual companion to the multi-year career arc above, sourced
+  // from the SAME 2026 snapshots that drive the In-season trajectory chart.
+  // Cadence (weekly hitters / per-start SPs), first→now 3-domain ratings + deltas,
+  // and the current-year archetype pillars (arche_domains). Display-only.
+  panels += renderInSeasonArc(role, id, cur);
   panels += '</div>';
 
   panels += '<div class="modal-mtab-panel" data-mtab="years">';
@@ -2227,6 +2429,10 @@ function openModal(role, id) {
     comp += '</div></div>';
   });
   comp += '</div>';
+  // Four validated CONTEXT lenses, rendered as rows BELOW the domain breakdown.
+  // Hitters: physical-trend only. SPs/RPs: Stuff+, SP-floor tier, physical-trend,
+  // shadow-scout grade. All DISPLAY-ONLY (CLAUDE.md #13) — none move a headline.
+  comp += renderContextLenses(role, cur);
 
   panels += '<div class="modal-mtab-panel" data-mtab="comp">' + comp + '</div>';
 
@@ -3052,6 +3258,31 @@ const POS_BUTTON_MATCH = {
   'RP':    ['RP'],
 };
 
+// Canonical position-group filter for the quadrants. Primary key is the
+// server-baked `position_group` (plv_clone.positions seam: C/1B/3B/2B/SS/OF/
+// UTIL/DH/SP/CLOSER/SETUP) on current-year rows. 'all' and 'UTIL' (every
+// hitter) always pass. Rows WITHOUT a position_group (historical / all-years /
+// blend modes carry none) pass through so those views aren't emptied — for
+// hitters we additionally honor the legacy ESPN eligible_positions / rh3
+// primary_position fallback there. Display-only (CLAUDE.md #13).
+function filterByPositionGroup(rows, group, role) {
+  if (!group || group === 'all') return rows;
+  if (role === 'hitter' && group === 'UTIL') return rows;  // UTIL = all hitters
+  return rows.filter(r => {
+    const pg = r.position_group;
+    if (pg != null && pg !== '') return pg === group;
+    // No canonical group on this row (historical / blend). Hitters fall back to
+    // the slot-based match so the filter still does something useful; pitchers
+    // pass through (SP-only / RP-only pools are already role-pure).
+    if (role !== 'hitter') return true;
+    const want = POS_BUTTON_MATCH[group] || [group];
+    const elig = r.eligible_positions || [];
+    const have = elig.length ? elig : (r.primary_position ? [r.primary_position] : []);
+    if (!have.length) return true;
+    return want.some(w => have.indexOf(w) !== -1);
+  });
+}
+
 function rowPassesChipFilters(r, role) {
   if (!chipFiltersActive()) return true;
   const rosterF = role === 'hitter' ? state.hRosterFilter
@@ -3676,33 +3907,33 @@ function renderAll() {
   renderLeaderboard(spRows,     'sp',     'lb-sps');
   renderLeaderboard(rpRows,     'rp',     'lb-rps');
 
-  // Hitter-quadrant POS filter (quadrant-only, independent of the all-table
-  // chip group). Matches ESPN eligible_positions when present, else the rh3
-  // primary_position fallback; rows with neither pass through so all-years /
-  // blend modes (no eligibility data) aren't emptied. 'UTIL' = all hitters.
-  let hQuadRows = hitterRows;
-  if (state.hQuadPos && state.hQuadPos !== 'all' && state.hQuadPos !== 'UTIL') {
-    const want = POS_BUTTON_MATCH[state.hQuadPos] || [state.hQuadPos];
-    hQuadRows = hitterRows.filter(r => {
-      const elig = r.eligible_positions || [];
-      const have = elig.length ? elig : (r.primary_position ? [r.primary_position] : []);
-      if (!have.length) return true;
-      return want.some(w => have.indexOf(w) !== -1);
-    });
-  }
+  // Quadrant position-group filter (quadrant-only, independent of the all-table
+  // chip group). Uses the canonical plv_clone.positions seam baked onto each
+  // current-year row as `position_group` (C/1B/3B/2B/SS/OF/UTIL/DH/SP/CLOSER/
+  // SETUP). UTIL = every hitter (always passes). Rows without a position_group
+  // (historical / all-years / blend — no live seam) pass through so those modes
+  // aren't emptied; for hitters we still honor the rh3 primary_position fallback
+  // there. Display-only filter — never touches a headline number (CLAUDE.md #13).
+  const hQuadRows = filterByPositionGroup(hitterRows, state.hQuadPos, 'hitter');
   renderQuadrant('h-quad', 'h-r', hQuadRows, state.hX, state.hY, 'hitter');
 
   // SP quadrant — pure SP now that RPs have their own tab. The schema-bridge
   // fields on RP rows (MOVEMENT ← BATTED_BALL, etc.) are no longer pooled
   // into the SP-side rendering, so no role gating is needed.
+  const sQuadRows = filterByPositionGroup(spRows, state.sQuadPos, 'sp');
   const sQuadNote = document.getElementById('s-quad-note');
-  if (sQuadNote) sQuadNote.textContent = `SP-only view (n=${spRows.length}).`;
-  renderQuadrant('s-quad', 's-r', spRows, state.sX, state.sY, 'sp', { axisLabel: SP_AXIS_LABEL });
+  if (sQuadNote) sQuadNote.textContent =
+    `SP-only view (n=${sQuadRows.length}${sQuadRows.length !== spRows.length ? ` of ${spRows.length}` : ''}).`;
+  renderQuadrant('s-quad', 's-r', sQuadRows, state.sX, state.sY, 'sp', { axisLabel: SP_AXIS_LABEL });
 
   // RP quadrant — true RP fields (BATTED_BALL native, no MOVEMENT bridge).
+  // The position-group filter splits CLOSER (saves) vs SETUP (holds).
+  const rpQuadRows = filterByPositionGroup(rpRows, state.rpQuadPos, 'rp');
   const rpQuadNote = document.getElementById('rp-quad-note');
-  if (rpQuadNote) rpQuadNote.textContent = `RP-only view (n=${rpRows.length}) · axes are RP-native (Stuff / Control / Batted-ball / Velo).`;
-  renderQuadrant('rp-quad', 'rp-r', rpRows, state.rpX, state.rpY, 'rp', { axisLabel: RP_AXIS_LABEL });
+  if (rpQuadNote) rpQuadNote.textContent =
+    `RP-only view (n=${rpQuadRows.length}${rpQuadRows.length !== rpRows.length ? ` of ${rpRows.length}` : ''})` +
+    ` · axes are RP-native (Stuff / Control / Batted-ball / Velo).`;
+  renderQuadrant('rp-quad', 'rp-r', rpQuadRows, state.rpX, state.rpY, 'rp', { axisLabel: RP_AXIS_LABEL });
 
   renderArchetypeTables(hitterRows, 'hitter', 'h-archetype-tables');
   renderArchetypeTables(spRows,     'sp',     's-archetype-tables');
@@ -3833,11 +4064,21 @@ function init() {
   document.getElementById('rp-x').addEventListener('change', e => { state.rpX = e.target.value; renderAll(); });
   document.getElementById('rp-y').addEventListener('change', e => { state.rpY = e.target.value; renderAll(); });
 
-  // Hitter-quadrant POS filter (quadrant-only)
+  // Quadrant position-group filters (quadrant-only, canonical seam).
   const hQuadPosEl = document.getElementById('h-quad-pos');
   if (hQuadPosEl) {
     hQuadPosEl.value = state.hQuadPos;
     hQuadPosEl.addEventListener('change', e => { state.hQuadPos = e.target.value; renderAll(); });
+  }
+  const sQuadPosEl = document.getElementById('s-quad-pos');
+  if (sQuadPosEl) {
+    sQuadPosEl.value = state.sQuadPos;
+    sQuadPosEl.addEventListener('change', e => { state.sQuadPos = e.target.value; renderAll(); });
+  }
+  const rpQuadPosEl = document.getElementById('rp-quad-pos');
+  if (rpQuadPosEl) {
+    rpQuadPosEl.value = state.rpQuadPos;
+    rpQuadPosEl.addEventListener('change', e => { state.rpQuadPos = e.target.value; renderAll(); });
   }
 
   // All-players search (debounced)

@@ -1,6 +1,7 @@
 ---
 name: fa-rp-pool
 description: Identify FA relief pitchers actually available in your ESPN league, ranked by leverage_tier + rprs2 with Pitcher List "Closers and Saves" cross-reference. Pulls all FA RPs (size=2000), verifies each is truly available (not on another team's roster — the Connelly Early gotcha), joins archetype + leverage_tier + CLOSER/FIREMAN tags from rp_ratings_master, cross-references with the latest PL Closers and Saves article via WebFetch, compares against the user's current RP staff, and flags meaningful upgrades. Use whenever the user asks "FA RP pool", "FA reliever pool", "find me a closer", "is there a closer available", "should I add a setup man", "RP pickup pool", "FAAB on closers", "FA closer scan", "available closers in my league".
+maturity: legacy-lens-stack
 ---
 
 # fa-rp-pool
@@ -77,6 +78,34 @@ Run this BEFORE recommending any PL-ranked RP as a pickup.
 ---
 
 ## Step 3 — Join archetype + leverage_tier from rp_ratings_master
+
+> **MLBAM-only join-guard (one-liner).** Join FA RPs to rp_ratings_master / rprs2
+> by MLBAM pitcher_id via `resolve_pitcher_id(name, team=…)` from
+> `plv_clone.utils.name_match` — NEVER on a bare normalized name. Same-name
+> pitchers collide silently (the Max Muncy collision, transposed). ESPN `playerId`
+> is NOT MLBAM — resolve, don't assume. The `on='player_name'` merges below are a
+> convenience; back them with an MLBAM cross-check before trusting any single row.
+
+### Canonical position split — CLOSER (saves) vs SETUP (holds)
+
+Group this pool with the committed seam, not ad-hoc rules. Relievers split into
+two display groups: **CLOSER** (the arm getting SAVES) vs **SETUP** (the arm
+getting HOLDS / any other relief role):
+
+```python
+from plv_clone.positions import position_group, detect_closer_status
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # SP/RP authority (Detmers)
+
+# Per FA reliever row (carries current-season sv/hld, e.g. sv_to/hld_to):
+grp = position_group(row, bucket=detect_pitcher_role(row), rp_row=row)  # 'CLOSER' or 'SETUP'
+# detect_closer_status(row) → CLOSER / SETUP / MIDDLE directly; CLOSER = sv>=8 or
+# save-share>=0.55 (display-only grouping, CLAUDE.md #13 — never a ranker input).
+```
+
+This is a DISPLAY split that complements (does not replace) the leverage tiers in
+Step 4 — render CLOSER-group adds and SETUP-group adds in separate sub-tables so a
+save-chaser vs hold-chaser read is one glance. See `/triangulate` "Canonical
+roster + FA report format" for the full house style across all groups.
 
 ```python
 import pandas as pd

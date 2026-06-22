@@ -1,6 +1,7 @@
 ---
 name: fa-replacement-pool
 description: Build a ranked FA replacement pool for a player being dropped. Pulls all hitters or pitchers above a season-FP threshold from ESPN, joins with our model (rh3/rp3/rprs2), computes Δ vs drop target, flags positional-flex match. Use whenever the user says "I'm dropping X, who do I pick up?", "find me a replacement for Y", or "show all FAs above N FP". Different from /fa-pickup-deep-dive (single-player deep-dive) — this is the BROAD scan.
+maturity: legacy-lens-stack
 ---
 
 # fa-replacement-pool
@@ -86,6 +87,13 @@ Filter by season FP ≥ threshold.
 ---
 
 ## Step 3 — Join with model projections
+
+> **MLBAM-only join-guard (one-liner).** Join every player to projections by
+> MLBAM id via `resolve_batter_id(name, team=…, position=…)` /
+> `resolve_pitcher_id(...)` from `plv_clone.utils.name_match` — NEVER on a
+> bare normalized name. Same-name players silently clobber (canonical: Max
+> Muncy LAD 3B 571970 vs ATH C 691777 → false drop rec, 2026-05-25). The
+> accent-key index below is a fallback only when an MLBAM id isn't resolvable.
 
 Name-normalize for joining (Iván Herrera, Luis García Jr., José Soriano —
 accents WILL bite):
@@ -348,7 +356,33 @@ possibility.
 Sort by `xfp_rh3_per_game` descending (or `xfp_rp3_per_start` /
 `xfp_ros` for pitchers).
 
-Output format:
+### Canonical position-grouped house format
+
+For any multi-position pool (e.g. "show all FAs above N FP" with no single
+drop target), present **position-grouped** in the canonical house order, not
+one flat list. Use the committed seam — do NOT re-derive grouping:
+
+```python
+from plv_clone.positions import position_group, primary_hitter_group, order_groups, GROUP_ORDER
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # SP/RP authority (Detmers)
+
+# Hitters: primary_hitter_group(row) → C / 1B/3B / 2B/SS / OF / UTIL / DH
+# Pitchers: position_group(row, bucket=detect_pitcher_role(row), rp_row=row)
+#           → SP, or relievers split CLOSER (saves) vs SETUP (holds)
+```
+
+Taxonomy groups, in `GROUP_ORDER`: **C · 1B/3B · 2B/SS · OF · UTIL · DH · SP ·
+CLOSER · SETUP**. DH is a DISTINCT bucket (UTIL = flex membership; DH = fallback
+for a no-fielding hitter). Relievers split CLOSER vs SETUP via current-season
+sv/hld (`detect_closer_status`; CLOSER = sv≥8 or save-share≥0.55, display-only,
+CLAUDE.md #13). The triangulate batch CSV/JSON already emits a `position_group`
+column you can read directly when joining triangulate output. Render one
+sub-table per group, ordered by `order_groups(...)`, with FAs sorted by model
+projection within each group. For a single-drop-target query the flat Δ-tiered
+format below is fine. See `/triangulate` "Canonical roster + FA report format
+(position-grouped, arcs + domains)" for the full validated house style.
+
+Output format (single-target flat view):
 
 ```markdown
 ## FAs ≥<threshold> season FP — replacement candidates for <DropTarget>

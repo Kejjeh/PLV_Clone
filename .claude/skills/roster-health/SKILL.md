@@ -1,6 +1,7 @@
 ---
 name: roster-health
 description: Signal-driven Monday morning briefing across the user's full BrownU roster. Reads validated signal CSVs (hitter/sp/rp ratings master + xfp_rh3/rp3/rprs2 projections) and surfaces 3-7 prioritized alerts — TRENDING_DOWN, COLD_BABIP, COLD_xWOBA_L21d, ARCHETYPE_DOWNGRADE, DROP_RISK for hitters; TRENDING_DOWN, ARCHETYPE_DOWNGRADE, IL_RISK, RECENCY_BAD for SPs; LEVERAGE_SLIDE, LOST_CLOSER, TRENDING_DOWN, VELO_DECLINE, USAGE_DROP for RPs. Scores HIGH/MED/LOW and recommends the right deep-dive skill per alert. Use whenever the user asks "roster health", "roster check", "monday roster", "monday morning roster", "what's wrong with my roster", or "any roster red flags". Distinct from /roster-audit (slot/cap math) and /monday-morning (chains roster-verify + roster-audit + sp-week-plan + fa-monitor) — this skill is the signal layer.
+maturity: legacy-lens-stack
 ---
 
 # roster-health — signal-driven roster briefing
@@ -25,7 +26,7 @@ Run every player on the live BrownU roster through the validated signal layer (a
 - Don't pull statcast L21d directly — the recency_form_gap column in `xfp_rh3` / `xfp_rp3` already encodes this and is validated.
 - Don't rank RPs by `xfp_rp3` — RPs use **`xfp_rprs2`** (CLAUDE.md "validated models" table).
 - Don't surface a `DROP_RISK` alert for an IL'd player. Filter `lineup_slot != 'IL'` first.
-- Don't lookup batter/pitcher IDs by name alone. Use `plv_clone.utils.name_match.resolve_batter_id()` when joining roster → projection (rule #10).
+- Don't lookup batter/pitcher IDs by name alone. **MLBAM-only join-guard (one-liner):** join roster → projection by MLBAM id via `resolve_batter_id(name, team=…, position=…)` / `resolve_pitcher_id(...)` from `plv_clone.utils.name_match`, NEVER on a bare normalized name — same-name players silently clobber (Max Muncy LAD 571970 vs ATH 691777). (rule #10)
 
 ---
 
@@ -164,6 +165,23 @@ Score each player with their highest-severity alert. If a player has 2+ alerts a
 
 ### Step 4 — emit briefing
 
+> **Canonical position grouping.** When listing players (alerts, the LOW-priority
+> name dump, or a full board), group by the committed house taxonomy — do NOT
+> re-derive buckets:
+>
+> ```python
+> from plv_clone.positions import position_group, primary_hitter_group, order_groups
+> from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # SP/RP authority (Detmers)
+> # hitters: primary_hitter_group(row); pitchers: position_group(row, bucket=detect_pitcher_role(row), rp_row=row)
+> ```
+>
+> Groups: **C · 1B/3B · 2B/SS · OF · UTIL · DH · SP · CLOSER · SETUP**. DH is a
+> DISTINCT bucket (UTIL = flex; DH = no-fielding fallback). Relievers split CLOSER
+> (saves) vs SETUP (holds) via `detect_closer_status` (CLOSER = sv≥8 or
+> save-share≥0.55 — display-only, CLAUDE.md #13). Never bucket a dual-eligible
+> pitcher by ESPN `.position` alone (gotcha #8). See `/triangulate` "Canonical
+> roster + FA report format" for the full house style.
+
 ---
 
 ## Output format
@@ -173,6 +191,10 @@ Score each player with their highest-severity alert. If a player has 2+ alerts a
 
 Scanned R players (H hitters / S SPs / B RPs).
 Found: X HIGH / Y MED / Z LOW alerts.
+
+<!-- For a full position-grouped roster + FA board behind these alerts, see the
+canonical roster + FA report format in /triangulate (position-grouped, arcs +
+domains) — run /triangulate to fold the grouped grid + per-player verdict in. -->
 
 ## HIGH-priority (action recommended this week)
 

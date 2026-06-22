@@ -1,6 +1,7 @@
 ---
 name: fa-sp-pool
 description: Identify FA starting pitchers actually available in your ESPN league, ranked by quality with PL Top 100 cross-reference. Pulls all FA SPs (size=2000), verifies each is truly available (not on another team's roster — the Connelly Early gotcha), cross-references with the latest PL Top 100 SP article via WebFetch, compares against the user's current SP staff, and flags meaningful upgrades. Use whenever the user asks "what SPs are available", "is there an SP upgrade", "who should I add for streaming", or wants to validate a pickup target's availability.
+maturity: legacy-lens-stack
 ---
 
 # fa-sp-pool
@@ -85,10 +86,26 @@ a pickup. If a name comes from a PL article, the assumption
 
 ## Step 3 — Sort FA pool by quality metric
 
+> **MLBAM-only join-guard (one-liner).** Join FA SPs to rp3 / Stuff+ / archetype
+> by MLBAM pitcher_id via `resolve_pitcher_id(name, team=…)` from
+> `plv_clone.utils.name_match` — NEVER on a bare normalized name. Same-name
+> pitchers collide silently (the Max Muncy collision, transposed: e.g. the two
+> Logan Allens). ESPN `playerId` is NOT MLBAM (Castillo ESPN=33748 vs MLBAM=622491),
+> so resolve, don't assume.
+
 Default sort: `season_fp` descending (top-50 cut). Optional sorts:
 - By `projected_total_points` (more forward-looking)
 - By rh3/rp3 model rank if available (cross-join with
   `data/outputs/xfp_rp3_projections.csv`)
+
+**Position grouping:** this pool is all-SP, so it is the single **SP** group in
+the canonical taxonomy (`from plv_clone.positions import position_group`, with
+`bucket=detect_pitcher_role(row)` the SP/RP authority — a dual-eligible arm like
+Detmers resolves to SP via `eligible_slots` + `gamesStarted`, not the ESPN
+`.position` tag). RP/closer FAs are a separate group (CLOSER saves / SETUP holds)
+handled by `/fa-rp-pool`. See `/triangulate` "Canonical roster + FA report format"
+for the full position-grouped house style (C · 1B/3B · 2B/SS · OF · UTIL · DH · SP ·
+CLOSER · SETUP).
 
 For low-ownership upside plays, also surface bottom-quartile owned
 candidates with high season FP — these are the "league hasn't

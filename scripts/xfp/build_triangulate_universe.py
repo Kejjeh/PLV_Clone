@@ -15,7 +15,7 @@ import sys, os, unicodedata
 sys.path.insert(0, '.')
 import pandas as pd
 from plv_clone.projections import PROJECTIONS
-from app.espn_connector import _get_league
+from app.espn_connector import _get_league, get_all_teams
 from plv_clone.league_state import LeagueState
 
 OUT_DIR = 'data/research/triangulate_universe'
@@ -30,11 +30,31 @@ def classify_bucket(pos):
     if p in ('P','SP/RP','RP/SP'): return 'SP'  # default to SP; downstream auto-detect will correct
     return 'H'
 
+def build_owner_map():
+    """Map normalized player_name -> owning team_name from the 8-team league.
+    Players not in any roster are FAs (caller defaults to 'FA'). Source of truth
+    is get_all_teams() (CLAUDE.md gotcha #4/#7 — live roster scan, not pct_owned)."""
+    owner = {}
+    try:
+        teams = get_all_teams()
+    except Exception as e:
+        print(f"  [warn] get_all_teams() failed ({e}); owner_team falls back to FA")
+        return owner
+    for _, r in teams.iterrows():
+        owner[_norm(r.get('player_name'))] = str(r.get('team_name') or '').strip()
+    print(f"  owner_map: {len(owner)} rostered players across the 8-team league")
+    return owner
+
+
 def main():
     league = _get_league()
     roster_df = LeagueState().my_roster_with_injuries()
     my_team_name = roster_df.iloc[0]['on_team_name']
     print(f"My team: {my_team_name}")
+
+    # Ownership as a first-class dimension — which of the 8 teams owns each player
+    # (or FA). Built once from the live roster scan and joined onto every category.
+    owner_map = build_owner_map()
 
     # --- 1. My roster ---
     roster_df['bucket'] = roster_df['position'].apply(classify_bucket)
@@ -173,10 +193,16 @@ def main():
         lambda r: ','.join([c for c in cat_lookup.get(r['player_name'], []) if c != r['category']]),
         axis=1,
     )
+    # owner_team = which of the 8 teams owns the player right now, or FA. First-class
+    # ownership dimension; flows through run_triangulate into the CSV/JSON snapshot.
+    master['owner_team'] = master['player_name'].apply(
+        lambda nm: owner_map.get(_norm(nm)) or 'FA'
+    )
     master.to_csv(f'{OUT_DIR}/master_universe.csv', index=False)
     print(f"\nmaster_universe.csv: {len(master)} unique players")
     print(master['category'].value_counts().to_string())
     print(master['bucket'].value_counts().to_string())
+    print(master['owner_team'].value_counts().to_string())
 
 if __name__ == '__main__':
     main()

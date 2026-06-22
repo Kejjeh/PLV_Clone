@@ -1,6 +1,7 @@
 ---
 name: hitter-slate-grid
 description: Multi-day hitter FA-pickup decision board joining ALL 14 hitter model layers — Blended xFP (Phase 1 production scorer with 95% bootstrap CI), rh3 rank + per_pa/per_game + expected_total_fp_remaining, live_marginal + value_tier (Phase 2.5 same-position FA-pool-relative delta C/1B/2B/3B/SS/OF/DH with bucket-scaled tier cuts), Triangulate verdict + reason_tag + confidence (BUY/HOLD/CAUTION/FADE/MIXED for hitters), Sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS) with BUY-LOW/SELL-HIGH divergence flag (CAVEAT — hitter BUY-LOW REJECTED in PR 8 backtest 705defc at pooled −0.069 FP/PA with 95% CI [−0.114, −0.023]; divergence shown for diagnosis only, NOT as additive signal), xwOBA L21d vs 2025 baseline diagnostic (gap ±0.020 = skill holding, < −0.060 = real decline), xwOBACON year-over-year trajectory (RISING/STABLE/DECLINING distinguishes valid recovery templates from structural decline), Hitter archetype master (Contact/Power/Discipline + SB overlay, 27-cell C/P/D matrix, age_tier PRE_PEAK/PEAK/POST_PEAK, boundary_tier SOLID/EDGE), archetype T+1 projection + 5 historical comps with comp-density flag, Hitter boom_stack 0-4 score (skill_spike_hitter + recform_hot_hitter + opp_soft_hitter + lineup_amp_hitter components) + boom%/bust%/E[FP] from validated tier-aware lookup, Process panel composite (PR 8 L30/STD/PriorYr 9-marker decomposition with direction-adjusted z-score and level_pct), PL Top 150, lineup spot + confirmation status from MLB Stats API, park factor + vs LHP/RHP splits, positional eligibility for roster fit. Tags ownership (MINE / opp team name / FA) via league.teams roster walk. Includes mandatory KNOWN_COLLISIONS check for same-name players (canonical Max Muncy LAD 3B vs ATH C). Renders a positional grid with FA highlighted, then synthesizes a sustainability-aware boom-aware top-FA recommendation. Use when the user asks "rundown on all FA hitters", "best hitter pickups", "show me the FA hitter board", "use all hitting models", "FA pickup deep scan for hitters", or wants the multi-lens hitter decision surface across positions. Engine pattern — ESPN free_agents(size=2000) + Connelly-Early verification via league.teams + rh3/blend/hitter_master/process_panel/boom_stack JSON joins on MLBAM batter_id (NOT name — Max Muncy LAD vs ATH bug 2026-05-25 silently broke a career percentile lookup) + on-demand Sustainability/Triangulate/xwOBA-L21d/xwOBACON-YoY for shortlisted FAs.
+maturity: legacy-lens-stack
 ---
 
 # hitter-slate-grid
@@ -271,6 +272,19 @@ FA shortlist deep-dive table (top 15 FAs by Blended xFP):
 
 For FA rows, **bold** the name with `🟢 FA`; user's rows: `🟦 MINE`;
 opp rows: opp team name.
+
+**Use the committed position seam for grouping** — do NOT re-derive the buckets:
+
+```python
+from plv_clone.positions import primary_hitter_group, order_groups, GROUP_ORDER
+# primary_hitter_group(row) → C / 1B/3B / 2B/SS / OF / UTIL / DH (one row per player)
+```
+
+Canonical groups, in `GROUP_ORDER`: **C · 1B/3B · 2B/SS · OF · UTIL · DH** (the SP ·
+CLOSER · SETUP groups are the SP/RP boards). DH is a DISTINCT bucket (UTIL = flex
+membership; DH = no-fielding fallback). This matches the house style in
+`/triangulate` "Canonical roster + FA report format" — render groups in
+`order_groups(...)` order, FAs sorted by Blended xFP within each.
 
 ---
 

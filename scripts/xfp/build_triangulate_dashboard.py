@@ -14,6 +14,7 @@ Output: data/outputs/triangulate.html (+ xfp-model/docs/triangulate.html).
 from __future__ import annotations
 
 import json
+import math
 import sys
 from datetime import date
 from html import escape as h
@@ -23,8 +24,26 @@ sys.path.insert(0, str(ROOT))
 
 from scripts.xfp.lib.triangulate_core import triangulate_player  # noqa: E402
 from scripts.xfp.lib.injury_status import il_status_for, load_il_map  # noqa: E402
+from plv_clone.positions import (  # noqa: E402
+    ALL_POSITION_GROUPS, GROUP_ORDER, GROUP_RANK, order_groups, position_group,
+)
 
 OUT = ROOT / 'data' / 'outputs'
+
+# Batch artifacts the canonical triangulate builder persists (another step owns
+# writing these). The dashboard READS them to surface the ~40 already-computed
+# lens columns that the live triangulate_player() result does not carry. All
+# CONTEXT-ONLY (CLAUDE.md #13) — never moves the rh3/rp3/rprs2/blended headline.
+_BATCH_JSON = ROOT / 'data' / 'research' / '.tri_team_fa_out.json'
+_BATCH_CSV = ROOT / 'data' / 'research' / '.tri_grouped.csv'
+
+# Group display labels (canonical taxonomy) + the order_groups()-driven ordering.
+_GROUP_LABELS = dict(ALL_POSITION_GROUPS)
+_GROUP_LABELS.update({  # short rail headers
+    'C': 'Catchers', '1B/3B': 'Corner Infield', '2B/SS': 'Middle Infield',
+    'OF': 'Outfield', 'UTIL': 'UTIL', 'DH': 'DH / non-fielder',
+    'SP': 'Starting Pitchers', 'CLOSER': 'Closers', 'SETUP': 'Setup / Middle Relief',
+})
 
 _IL_STATES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE',
               'OUT', 'IL', 'IL10', 'IL15', 'IL60'}
@@ -162,6 +181,181 @@ def build_card_data(result: dict) -> dict:
     }
 
 
+def _num(v):
+    """CSV/JSON scalar -> float|None (NaN, '', '—', 'nan' all collapse to None)."""
+    if v is None:
+        return None
+    if isinstance(v, str):
+        s = v.strip()
+        if s in ('', '—', 'nan', 'NaN', 'None'):
+            return None
+        try:
+            return float(s)
+        except ValueError:
+            return None
+    try:
+        f = float(v)
+        return None if math.isnan(f) else f
+    except (TypeError, ValueError):
+        return None
+
+
+def _txt(v):
+    """CSV/JSON scalar -> stripped str|None (NaN/empty/sentinels collapse to None)."""
+    if v is None:
+        return None
+    try:
+        if isinstance(v, float) and math.isnan(v):
+            return None
+    except (TypeError, ValueError):
+        pass
+    s = str(v).strip()
+    return None if s in ('', '—', 'nan', 'NaN', 'None') else s
+
+
+def _parse_domains(s):
+    """'CONTACT=65;POWER=74;DISCIPLINE=61' / 'STUFF:+1;MOVEMENT:-1' -> [(name, val)]."""
+    out = []
+    s = _txt(s)
+    if not s:
+        return out
+    for part in s.split(';'):
+        part = part.strip()
+        if not part:
+            continue
+        sep = '=' if '=' in part else (':' if ':' in part else None)
+        if not sep:
+            continue
+        k, _, v = part.partition(sep)
+        out.append((k.strip(), v.strip()))
+    return out
+
+
+def load_batch_lens() -> dict:
+    """Build {player_name: lens_dict} from the canonical batch artifacts.
+
+    Merges the nested-rich JSON (trajectory.points / boom_bust.last arrays) with
+    the wide CSV (traj_* / bb_* / split_* / xstat_* / ha_* / tto_* scalars + the
+    canonical `group` column). Returns {} (never raises) if the batch files are
+    missing, so the dashboard degrades to live-only rendering. Pure read — these
+    fields are display/context only and never feed the headline number.
+    """
+    out: dict[str, dict] = {}
+    jrec: dict[str, dict] = {}
+    try:
+        if _BATCH_JSON.exists():
+            data = json.loads(_BATCH_JSON.read_text(encoding='utf-8'))
+            for p in data.get('players', []):
+                nm = p.get('name')
+                if nm:
+                    jrec[str(nm)] = p
+    except Exception:
+        jrec = {}
+    crows: dict[str, dict] = {}
+    try:
+        if _BATCH_CSV.exists():
+            import csv
+            with _BATCH_CSV.open(encoding='utf-8', newline='') as fh:
+                for row in csv.DictReader(fh):
+                    nm = row.get('player_name')
+                    if nm:
+                        crows[str(nm)] = row
+    except Exception:
+        crows = {}
+
+    for nm in set(jrec) | set(crows):
+        j = jrec.get(nm, {})
+        r = crows.get(nm, {})
+        bucket = _txt(j.get('bucket')) or _txt(r.get('bucket')) or 'H'
+        # canonical group: prefer the batch `position_group`/`group` column; else
+        # derive once via the canonical seam (never re-derive the taxonomy here).
+        grp = _txt(j.get('position_group')) or _txt(r.get('position_group')) or _txt(r.get('group'))
+        if grp not in GROUP_RANK:
+            grp = _group_from_seam(nm, bucket, j, r)
+        out[nm] = {
+            'bucket': bucket,
+            'group': grp,
+            # in-season trajectory arc
+            'traj': {
+                'n': _num(r.get('traj_n')),
+                'cadence': _txt(r.get('traj_cadence')),
+                'first_label': _txt(r.get('traj_first_label')),
+                'last_label': _txt(r.get('traj_last_label')),
+                'ovr_first': _num(r.get('traj_ovr_first')),
+                'ovr_last': _num(r.get('traj_ovr_last')),
+                'ovr_delta': _num(r.get('traj_ovr_delta')),
+                'last_archetype': _txt(r.get('traj_last_archetype')),
+                'dom_last': _parse_domains(r.get('traj_dom_last')),
+                'dom_deltas': _parse_domains(r.get('traj_dom_deltas')),
+                'points': (j.get('trajectory') or {}).get('points') or [],
+                'domains': (j.get('trajectory') or {}).get('domains') or [],
+            },
+            # 4-cell context lenses (the 4 validated signals)
+            'ctx': {
+                'stuff_plus': _num(r.get('stuff_plus')) if _num(r.get('stuff_plus')) is not None else _num(j.get('stuff_plus')),
+                'stuff_ros': _num(r.get('stuff_proj_ros_fp')) if _num(r.get('stuff_proj_ros_fp')) is not None else _num(j.get('stuff_proj_ros_fp')),
+                'stuff_gap': _num(r.get('stuff_breakout_gap')) if _num(r.get('stuff_breakout_gap')) is not None else _num(j.get('stuff_breakout_gap')),
+                'floor_tier': _txt(r.get('floor_tier')) or _txt(j.get('floor_tier')),
+                'floor_bust': _num(r.get('floor_bust_prob')) if _num(r.get('floor_bust_prob')) is not None else _num(j.get('floor_bust_prob')),
+                'trend_tag': _txt(r.get('trend_tag')) or _txt(j.get('trend_tag')),
+                'shadow_grade': _num(r.get('shadow_grade')) if _num(r.get('shadow_grade')) is not None else _num(j.get('shadow_grade')),
+                'shadow_verdict': _txt(r.get('shadow_verdict')) or _txt(j.get('shadow_verdict')),
+            },
+            # advanced (collapsible) — platoon / expected-vs-actual / home-road / TTO
+            'split': {
+                'dominant': _txt(r.get('split_dominant')),
+                'rate_L': _num(r.get('split_rate_vs_L')), 'rate_R': _num(r.get('split_rate_vs_R')),
+                'lift_L': _num(r.get('split_lift_vs_L_pct')), 'lift_R': _num(r.get('split_lift_vs_R_pct')),
+                'pa_L': _num(r.get('split_pa_vs_L')), 'pa_R': _num(r.get('split_pa_vs_R')),
+            },
+            'xstat': {
+                'xwoba': _num(r.get('xstat_xwoba')), 'woba': _num(r.get('xstat_woba')),
+                'gap': _num(r.get('xstat_gap')), 'regression': _txt(r.get('xstat_regression')),
+                'vL_xwoba': _num(r.get('xstat_vs_L_xwoba')), 'vL_woba': _num(r.get('xstat_vs_L_woba')),
+                'vL_reg': _txt(r.get('xstat_vs_L_reg')), 'vL_pa': _num(r.get('xstat_vs_L_pa')),
+                'vR_xwoba': _num(r.get('xstat_vs_R_xwoba')), 'vR_woba': _num(r.get('xstat_vs_R_woba')),
+                'vR_reg': _txt(r.get('xstat_vs_R_reg')), 'vR_pa': _num(r.get('xstat_vs_R_pa')),
+            },
+            'ha': {
+                'dominant': _txt(r.get('ha_dominant')),
+                'rate_home': _num(r.get('ha_rate_home')), 'rate_away': _num(r.get('ha_rate_away')),
+                'lift_home': _num(r.get('ha_lift_home_pct')), 'lift_away': _num(r.get('ha_lift_away_pct')),
+            },
+            'tto': {
+                'tier': _txt(r.get('tto_tier')), 'penalty': _num(r.get('tto_penalty')),
+                'r1': _num(r.get('tto1_rate')), 'r3': _num(r.get('tto3_rate')),
+            },
+            # boom/bust window label + actuals (window label sits next to the numbers)
+            'bb': {
+                'window': _txt(r.get('bb_window')) or _txt(j.get('boom_window')),
+                'n': _num(r.get('bb_n')), 'mean': _num(r.get('bb_mean')), 'std': _num(r.get('bb_std')),
+                'boom_pct': _num(r.get('bb_boom_pct')), 'bust_pct': _num(r.get('bb_bust_pct')),
+                'min': _num(r.get('bb_min')), 'max': _num(r.get('bb_max')),
+                'l3_mean': _num(r.get('bb_l3_mean')), 'trend': _txt(r.get('bb_trend')),
+                'last': (j.get('boom_bust') or {}).get('last') or [],
+            },
+        }
+    return out
+
+
+def _group_from_seam(name, bucket, jrec, crow) -> str:
+    """Single canonical group via plv_clone.positions when the batch did not emit
+    one. Pulls sv/hld/position/slots from whatever the batch rows carry; falls
+    back gracefully (RP with no sv/hld -> SETUP). Never re-derives the taxonomy."""
+    pl = {}
+    for src in (crow, jrec):
+        for k in ('position', 'primary_position', 'gpos', 'eligible_slots',
+                  'eligibleSlots', 'sv_to', 'hld_to', 'saves', 'holds', 'role_lag1'):
+            if k in src and src.get(k) not in (None, ''):
+                pl.setdefault(k, src.get(k))
+    b = (bucket or 'H').upper()
+    seam_bucket = 'SP' if b == 'SP' else ('RP' if b == 'RP' else 'H')
+    try:
+        return position_group(pl, bucket=seam_bucket, rp_row=pl)
+    except Exception:
+        return {'SP': 'SP', 'RP': 'SETUP'}.get(b, 'UTIL')
+
+
 def my_roster_names() -> list[str]:
     from plv_clone.league_state import LeagueState
     roster = LeagueState().my_roster()
@@ -183,8 +377,17 @@ def _verdict_class(card: dict) -> str:
     return 'mixed'
 
 
+def _resolve_group(c: dict, lens: dict | None) -> str:
+    """Canonical position group for a card: batch lens `group` first, else derive
+    via the canonical seam from the live card's bucket. Never re-derives taxonomy."""
+    if lens and lens.get('group') in GROUP_RANK:
+        return lens['group']
+    return _group_from_seam(c.get('name'), c.get('bucket'), {}, {})
+
+
 def collect_cards(names: list[str]) -> list[dict]:
     il_map = load_il_map()
+    lens_map = load_batch_lens()
     cards = []
     for name in names:
         try:
@@ -195,10 +398,14 @@ def collect_cards(names: list[str]) -> list[dict]:
             continue
         c = build_card_data(res)
         c['vclass'] = _verdict_class(c)
+        # attach the already-computed batch lenses (context-only enrichment)
+        lens = lens_map.get(c.get('name'))
+        c['lens'] = lens
+        c['group'] = _resolve_group(c, lens)
         cards.append(c)
-    # bucket order H, SP, RP then by name
-    order = {'H': 0, 'SP': 1, 'RP': 2}
-    cards.sort(key=lambda c: (order.get(c.get('bucket'), 9), str(c.get('name'))))
+    # canonical position-group order (C, 1B/3B, 2B/SS, OF, UTIL, DH, SP, CLOSER,
+    # SETUP), then by name — via plv_clone.positions, not a re-derived map.
+    cards.sort(key=lambda c: (GROUP_RANK.get(c.get('group'), len(GROUP_ORDER)), str(c.get('name'))))
     return cards
 
 
@@ -282,6 +489,30 @@ background:var(--bg);border:1px solid var(--border);color:var(--dim)}
 .conf{height:6px;background:var(--bg);border-radius:99px;overflow:hidden;width:100%;margin:7px 0 3px}
 .conf i{display:block;height:100%;background:var(--accent)}
 .empty{color:var(--dim);padding:48px;font-family:'IBM Plex Mono',monospace}
+/* boom/bust actuals window caption */
+.bb-win{color:var(--dim);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;
+margin:11px 0 5px;border-top:1px solid var(--faint);padding-top:9px}
+/* 4-cell context lens grid */
+.cctx{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px}
+.cc{background:var(--bg);border:1px solid var(--faint);border-radius:5px;padding:10px 11px}
+.cc-t{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;
+text-transform:uppercase;margin-bottom:5px}
+.cc-v{font-size:17px;font-weight:600;line-height:1.15}
+.cc-v.pos{color:var(--pos)}.cc-v.neg{color:var(--neg)}.cc-v.warn{color:var(--warn)}
+.cc-sub{color:var(--dim);font-size:11px;margin-top:3px;line-height:1.35}
+/* collapsible advanced panel */
+details.adv{margin-top:14px;max-width:none}
+details.adv>summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;
+align-items:center;margin-bottom:0}
+details.adv>summary::-webkit-details-marker{display:none}
+details.adv>summary::after{content:'▸';color:var(--dim);font-size:12px;margin-left:8px}
+details.adv[open]>summary::after{content:'▾'}
+details.adv[open]>summary{margin-bottom:12px}
+.adv-body{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 26px}
+.adv-col{min-width:0}
+.adv-h{color:var(--accent);font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.08em;
+text-transform:uppercase;margin:0 0 4px}
+.adv-col .kv:first-of-type{border-top:0}
 """
 
 _JS = """
@@ -384,7 +615,12 @@ def _arche_panel(c):
 
 def _boom_panel(c):
     b = c['boom']
-    if b['stack'] is None and b['boom_rate'] is None:
+    lens = c.get('lens')
+    bb = lens['bb'] if lens else None
+    # the boom/bust actuals window label (L8/L15/L21) sits next to the numbers
+    window = (bb or {}).get('window') if bb else None
+    has_actuals = bool(bb) and (bb.get('mean') is not None or bb.get('boom_pct') is not None)
+    if b['stack'] is None and b['boom_rate'] is None and not has_actuals:
         return ''
     stk = b['stack']
     bar = ''
@@ -394,7 +630,25 @@ def _boom_panel(c):
              + (_kv('boom rate', _pct(b['boom_rate']), 'pos') if b['boom_rate'] is not None else '')
              + (_kv('bust rate', _pct(b['bust_rate']), 'neg') if b['bust_rate'] is not None else '')
              + (_kv('E[FP]', _fmt(b['mean_fp'], 1)) if b['mean_fp'] is not None else ''))
-    return _panel('Boom / Bust', inner, tag=(b['tier'] or '') and f"tier {b['tier']}")
+    # actuals (boom-bust-history window) folded in with the window label as caption
+    if has_actuals:
+        win_cap = f'<div class="bb-win mono">actuals · {h(str(window or "recent"))}</div>'
+        inner += win_cap
+        inner += (_kv('mean / std', f'{_fmt(bb["mean"],1)} ± {_fmt(bb["std"],1)}')
+                  if bb.get('mean') is not None else '')
+        inner += (_kv('boom% / bust%', f'{_fmt(bb["boom_pct"],0)}% / {_fmt(bb["bust_pct"],0)}%',
+                      'pos' if (bb.get('boom_pct') or 0) >= (bb.get('bust_pct') or 0) else 'neg')
+                  if bb.get('boom_pct') is not None else '')
+        inner += (_kv('L3 mean', _fmt(bb['l3_mean'], 1),
+                      _word_cls('RISING' if (bb.get('trend') or '').upper() == 'UP' else 'DECLINE'
+                                if (bb.get('trend') or '').upper() == 'DOWN' else ''))
+                  if bb.get('l3_mean') is not None else '')
+        if bb.get('trend'):
+            inner += _kv('trend', h(str(bb['trend'])),
+                         _word_cls('RISING' if bb['trend'].upper() == 'UP'
+                                   else 'DECLINE' if bb['trend'].upper() == 'DOWN' else ''))
+    tag = (f"tier {b['tier']}" if b['tier'] else (window or ''))
+    return _panel('Boom / Bust', inner, tag=tag)
 
 
 def _blend_panel(c):
@@ -448,6 +702,174 @@ def _sp_panel(c):
     return _panel('SP signals', f'<div class="chips">{"".join(chips)}</div>', span=True)
 
 
+def _delta_cls(v):
+    """Numeric delta -> pos/neg/'' colour class."""
+    if v is None:
+        return ''
+    return 'pos' if v > 0 else ('neg' if v < 0 else '')
+
+
+def _sgn(v, nd=0):
+    if v is None:
+        return '—'
+    return f'{v:+.{nd}f}'
+
+
+def _trajectory_panel(c: dict) -> str:
+    """In-season trajectory arc: First->Last OVERALL + labels, OVERALL delta, last
+    archetype, and the 3-domain last values + deltas (context-only)."""
+    lens = c.get('lens')
+    if not lens:
+        return ''
+    t = lens['traj']
+    if t['ovr_first'] is None and t['ovr_last'] is None and not t['dom_last']:
+        return ''
+    first_l = t['first_label'] or 'first'
+    last_l = t['last_label'] or 'last'
+    arc = (f'<div class="big">{_fmt(t["ovr_first"],0)} '
+           f'<span class="u" style="font-size:18px;color:var(--dim)">→</span> '
+           f'{_fmt(t["ovr_last"],0)}<span class="u">OVERALL</span></div>')
+    sub = (f'<div class="kv"><span class="k mono">{h(str(first_l))} → {h(str(last_l))}</span>'
+           f'<span class="v {_delta_cls(t["ovr_delta"])}">{_sgn(t["ovr_delta"])}</span></div>')
+    rows = ''
+    deltas = {k: v for k, v in t['dom_deltas']}
+    for name, val in t['dom_last']:
+        d = deltas.get(name)
+        dnum = _num(d)
+        dtxt = (f' <span class="{_delta_cls(dnum)}">({d})</span>') if d is not None else ''
+        rows += (f'<div class="kv"><span class="k">{h(name.title())}</span>'
+                 f'<span class="v mono">{h(str(val))}{dtxt}</span></div>')
+    if not rows and deltas:
+        for name, d in t['dom_deltas']:
+            dnum = _num(d)
+            rows += (f'<div class="kv"><span class="k">{h(name.title())}</span>'
+                     f'<span class="v mono {_delta_cls(dnum)}">{h(str(d))}</span></div>')
+    last_arch = (_kv('last archetype', f'<span class="mono">{h(str(t["last_archetype"]))}</span>')
+                 if t['last_archetype'] else '')
+    cad = (t['cadence'] or '')
+    n = t['n']
+    tag = (f'{int(n)} pts · {cad}' if n is not None else cad)
+    return _panel('In-season trajectory', arc + sub + last_arch + rows, tag=tag)
+
+
+def _ctx_cell(label, value, sub='', cls=''):
+    v = value if value not in (None, '') else '—'
+    sub_html = f'<div class="cc-sub mono">{sub}</div>' if sub else ''
+    return (f'<div class="cc"><div class="cc-t">{h(label)}</div>'
+            f'<div class="cc-v {cls}">{v}</div>{sub_html}</div>')
+
+
+def _context_panel(c: dict) -> str:
+    """4-cell validated-lens context: Stuff+, SP-floor, physical trend, shadow grade.
+    SPs show all 4; hitters/RPs show whichever apply (trend always; stuff/floor/
+    shadow are SP signals). Context-only (CLAUDE.md #13)."""
+    lens = c.get('lens')
+    if not lens:
+        return ''
+    ctx = lens['ctx']
+    is_sp = c.get('bucket') == 'SP'
+    cells = []
+    if is_sp:
+        sp_sub = ''
+        if ctx['stuff_ros'] is not None:
+            sp_sub = f'RoS {_fmt(ctx["stuff_ros"],1)} FP'
+        if ctx['stuff_gap'] is not None:
+            sp_sub += (' · ' if sp_sub else '') + f'gap {_sgn(ctx["stuff_gap"])}'
+        cells.append(_ctx_cell('Stuff+', _fmt(ctx['stuff_plus'], 0), sp_sub))
+        floor_cls = {'SAFE': 'pos', 'RISKY': 'neg', 'MODERATE': 'warn'}.get(
+            (ctx['floor_tier'] or '').upper(), '')
+        floor_sub = f'bust {_fmt(ctx["floor_bust"],0)}%' if ctx['floor_bust'] is not None else ''
+        cells.append(_ctx_cell('Floor', h(str(ctx['floor_tier'] or '—')), floor_sub, floor_cls))
+    # physical trend (all roles)
+    trend = ctx['trend_tag']
+    if trend or is_sp:
+        cells.append(_ctx_cell('Physical trend', h(str(trend or '—')), '', _word_cls(trend)))
+    if is_sp:
+        sh_cls = _word_cls(ctx['shadow_verdict']) or (
+            'pos' if (ctx['shadow_grade'] or 0) >= 55 else ('neg' if (ctx['shadow_grade'] or 99) < 45 else ''))
+        sh_sub = h(str(ctx['shadow_verdict'])) if ctx['shadow_verdict'] else ''
+        cells.append(_ctx_cell('Shadow scout', _fmt(ctx['shadow_grade'], 0), sh_sub, sh_cls))
+    cells = [x for x in cells if x]
+    if not cells:
+        return ''
+    return _panel('Context lenses', f'<div class="cctx">{"".join(cells)}</div>',
+                  tag='Stuff+ / floor / trend / shadow' if is_sp else 'physical trend', span=True)
+
+
+def _adv_col(header, rows):
+    """One column of the advanced panel: a labelled header + its kv rows."""
+    return f'<div class="adv-col"><div class="adv-h">{h(header)}</div>{rows}</div>'
+
+
+def _advanced_panel(c: dict) -> str:
+    """Collapsible advanced detail: platoon splits, expected-vs-actual, home/road,
+    times-through-order. All context-only; absent values are skipped."""
+    lens = c.get('lens')
+    if not lens:
+        return ''
+    sp_, xs, ha, tto = lens['split'], lens['xstat'], lens['ha'], lens['tto']
+    blocks = []
+
+    # platoon splits
+    if sp_['rate_L'] is not None or sp_['rate_R'] is not None:
+        rows = ''
+        rows += _kv('vs LHP', f'{_fmt(sp_["rate_L"],3)}'
+                    + (f' · lift {_sgn(sp_["lift_L"],1)}%' if sp_['lift_L'] is not None else '')
+                    + (f' · {_fmt(sp_["pa_L"],0)} PA' if sp_['pa_L'] is not None else ''),
+                    _delta_cls(sp_['lift_L']))
+        rows += _kv('vs RHP', f'{_fmt(sp_["rate_R"],3)}'
+                    + (f' · lift {_sgn(sp_["lift_R"],1)}%' if sp_['lift_R'] is not None else '')
+                    + (f' · {_fmt(sp_["pa_R"],0)} PA' if sp_['pa_R'] is not None else ''),
+                    _delta_cls(sp_['lift_R']))
+        if sp_['dominant']:
+            rows += _kv('dominant side', h(str(sp_['dominant'])))
+        blocks.append(_adv_col('Platoon splits', rows))
+
+    # expected vs actual
+    if xs['xwoba'] is not None or xs['woba'] is not None:
+        rows = _kv('xwOBA / wOBA', f'{_fmt(xs["xwoba"],3)} / {_fmt(xs["woba"],3)}')
+        if xs['gap'] is not None:
+            rows += _kv('gap (x − actual)', _sgn(xs['gap'], 3), _delta_cls(-xs['gap']))
+        if xs['regression']:
+            rows += _kv('regression', h(str(xs['regression'])), _word_cls(xs['regression']))
+        if xs['vL_xwoba'] is not None or xs['vR_xwoba'] is not None:
+            rows += _kv('vs LHP x/actual', f'{_fmt(xs["vL_xwoba"],3)} / {_fmt(xs["vL_woba"],3)}'
+                        + (f' ({h(str(xs["vL_reg"]))})' if xs['vL_reg'] else ''))
+            rows += _kv('vs RHP x/actual', f'{_fmt(xs["vR_xwoba"],3)} / {_fmt(xs["vR_woba"],3)}'
+                        + (f' ({h(str(xs["vR_reg"]))})' if xs['vR_reg'] else ''))
+        blocks.append(_adv_col('Expected vs actual', rows))
+
+    # home / road
+    if ha['rate_home'] is not None or ha['rate_away'] is not None:
+        rows = _kv('home', f'{_fmt(ha["rate_home"],3)}'
+                   + (f' · {_sgn(ha["lift_home"],1)}%' if ha['lift_home'] is not None else ''),
+                   _delta_cls(ha['lift_home']))
+        rows += _kv('away', f'{_fmt(ha["rate_away"],3)}'
+                    + (f' · {_sgn(ha["lift_away"],1)}%' if ha['lift_away'] is not None else ''),
+                    _delta_cls(ha['lift_away']))
+        if ha['dominant']:
+            rows += _kv('dominant', h(str(ha['dominant'])))
+        blocks.append(_adv_col('Home / road', rows))
+
+    # times through order
+    if tto['tier'] or tto['penalty'] is not None:
+        rows = ''
+        if tto['tier']:
+            rows += _kv('TTO tier', h(str(tto['tier'])), _word_cls(tto['tier']))
+        if tto['penalty'] is not None:
+            rows += _kv('TTO penalty', _sgn(tto['penalty'], 3), _delta_cls(tto['penalty']))
+        if tto['r1'] is not None or tto['r3'] is not None:
+            rows += _kv('1st / 3rd time rate', f'{_fmt(tto["r1"],3)} / {_fmt(tto["r3"],3)}')
+        blocks.append(_adv_col('Times through order', rows))
+
+    if not blocks:
+        return ''
+    inner = ''.join(blocks)
+    return (f'<details class="panel adv span2"><summary class="pt">Advanced '
+            f'<span class="tag">platoon · x-vs-actual · home/road · TTO</span></summary>'
+            f'<div class="adv-body">{inner}</div></details>')
+
+
 def _card_html(c: dict, idx: int) -> str:
     vcls = c['vclass']
     badge = (f'<span class="badge il">🏥 {h(str(c["il_status"]))}</span>'
@@ -472,31 +894,41 @@ def _card_html(c: dict, idx: int) -> str:
     if '🏥' in str(c.get('verdict') or ''):
         verdict_html = verdict_html.replace(':', ':</span>', 1)
     panels = ''.join(p for p in [
-        summary, _model_panel(c), _arche_panel(c), _boom_panel(c),
-        _blend_panel(c), _process_panel(c), _sp_panel(c),
+        summary, _model_panel(c), _arche_panel(c), _trajectory_panel(c),
+        _boom_panel(c), _blend_panel(c), _process_panel(c),
+        _context_panel(c), _sp_panel(c),
     ] if p)
+    advanced = _advanced_panel(c)
+    grp_lab = _GROUP_LABELS.get(c.get('group'), c.get('group') or '')
     return f"""
 <article class="card" data-i="{idx}">
   <div class="vhead">
     <h2>{h(str(c['name']))}</h2>
-    <span class="team mono">{h(str(c.get('bucket') or ''))} · {h(str(c.get('team') or ''))}</span>
+    <span class="team mono">{h(str(grp_lab))} · {h(str(c.get('team') or ''))}</span>
     <span class="badge {vcls}">{top}</span>{badge}
   </div>
   <div class="verdict">{verdict_html}</div>
   <div class="grid">{panels}</div>
+  {advanced}
   <div class="rat"><div class="pt">Rationale</div>{h(str(c.get('rationale') or '—'))}</div>
   {f'<div class="rat"><div class="pt">Watch</div><div class="chips">{watch}</div></div>' if watch else ''}
 </article>"""
 
 
 def _rail_html(cards: list[dict]) -> str:
+    """Roster rail grouped by the canonical position taxonomy (C, 1B/3B, 2B/SS,
+    OF, UTIL, DH, SP, CLOSER, SETUP) — header order via plv_clone.positions."""
     out = []
-    last_bucket = None
-    labels = {'H': 'Hitters', 'SP': 'Starting Pitchers', 'RP': 'Relievers'}
+    last_group = None
+    # canonical header order (only the groups actually present)
+    present = order_groups(c.get('group') for c in cards if c.get('group'))
+    rank = {g: i for i, g in enumerate(present)}
+    cards = sorted(cards, key=lambda c: (rank.get(c.get('group'), len(present)), str(c.get('name'))))
     for c in cards:
-        if c.get('bucket') != last_bucket:
-            last_bucket = c.get('bucket')
-            out.append(f'<div class="grp">{labels.get(last_bucket, last_bucket or "")}</div>')
+        grp = c.get('group')
+        if grp != last_group:
+            last_group = grp
+            out.append(f'<div class="grp">{h(str(_GROUP_LABELS.get(grp, grp or "—")))}</div>')
         vt = h(str(c['blend'].get('value_tier') or c.get('verdict_top') or ''))
         out.append(
             f'<button><span class="dot {c["vclass"]}"></span>{h(str(c["name"]))}'

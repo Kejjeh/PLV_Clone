@@ -896,6 +896,166 @@ def annotate_model_axis(records: list[dict], id_key: str, vmap: dict, out_key: s
     print(f'  {out_key}: annotated {n} current-year rows', flush=True)
 
 
+# ── Canonical position seam + context lenses (DISPLAY-ONLY, CLAUDE.md #13) ────
+# Both annotations are additive context: they never touch the rh3/rp3/rprs2 /
+# blended headline number or any verdict. position_group uses the committed
+# plv_clone.positions taxonomy (C/1B/3B/2B/SS/OF/UTIL/DH/SP/CLOSER/SETUP); the
+# four context lenses come from scripts.xfp.lib.extra_lenses (the same Stuff+ /
+# SP-floor / physical-trend / shadow-scout reads triangulate folds in).
+
+
+def annotate_position_group(records: list[dict], bucket: str, current_year: int) -> None:
+    """In-place: attach `position_group` (canonical seam) to current-year rows.
+
+    bucket is 'H' | 'SP' | 'RP' — already authoritative here (records come from
+    role-native master CSVs, so no network re-derivation of SP-vs-RP is needed).
+    Hitters resolve their fielding group from ESPN `eligible_positions` (live
+    rostered) with the rh3 `primary_position` as the FA/historical fallback. RP
+    rows split CLOSER vs SETUP from current-season sv/hld. Non-current-year rows
+    get None (the UI only groups the live season). Fail-soft: any row that can't
+    be grouped is left as None rather than crashing the build."""
+    try:
+        from plv_clone.positions import position_group
+    except Exception as e:
+        print(f'  position_group import failed — grouping skipped: {e}', flush=True)
+        for r in records:
+            r['position_group'] = None
+        return
+    n = 0
+    for r in records:
+        if r.get('year') != current_year:
+            r['position_group'] = None
+            continue
+        try:
+            if bucket == 'H':
+                elig = r.get('eligible_positions') or []
+                prim = r.get('primary_position')
+                slots = list(elig) if elig else ([prim] if prim else [])
+                grp = position_group({'eligible_slots': slots,
+                                      'position': (prim or '')}, bucket='H')
+            elif bucket == 'RP':
+                grp = position_group(r, bucket='RP', rp_row=r)
+            else:  # SP
+                grp = position_group(r, bucket='SP')
+            r['position_group'] = grp
+            n += 1
+        except Exception:
+            r['position_group'] = None
+    print(f'  {bucket}: position_group annotated {n} current-year rows', flush=True)
+
+
+# Current-year archetype pillars, in the same "K=V;K=V;K=V" string the
+# triangulate batch emits as `arche_domains`. Hitters -> CONTACT/POWER/DISCIPLINE;
+# SP -> STUFF/MOVEMENT/CONTROL; RP -> STUFF/CONTROL/BATTED_BALL. Display-only.
+_ARCHE_DOMAIN_KEYS = {
+    'hitter': ['CONTACT', 'POWER', 'DISCIPLINE'],
+    'sp':     ['STUFF', 'MOVEMENT', 'CONTROL'],
+    'rp':     ['STUFF', 'CONTROL', 'BATTED_BALL'],
+}
+
+
+def annotate_arche_domains(records: list[dict], role: str, current_year: int) -> None:
+    """In-place: attach `arche_domains` (current-year 3-pillar string) to every
+    current-year row from the rating ints already present on the record. Mirrors
+    the triangulate batch column so the modal can surface the current-year pillars
+    alongside the in-season arc. Display-only."""
+    keys = _ARCHE_DOMAIN_KEYS.get(role, [])
+    n = 0
+    for r in records:
+        if r.get('year') != current_year or not keys:
+            r['arche_domains'] = None
+            continue
+        parts = []
+        for k in keys:
+            v = r.get(k)
+            if v is not None:
+                parts.append(f'{k}={v}')
+        r['arche_domains'] = ';'.join(parts) if parts else None
+        if parts:
+            n += 1
+    print(f'  {role}: arche_domains annotated {n} current-year rows', flush=True)
+
+
+def annotate_context_lenses(records: list[dict], role: str, current_year: int) -> None:
+    """In-place: attach the four validated CONTEXT-ONLY lenses to current-year rows.
+
+    Hitters carry physical-trend only; SPs carry Stuff+, SP-floor tier, physical
+    trend, and shadow-scout grade (the exact split triangulate uses). All reads
+    come from scripts.xfp.lib.extra_lenses, which fits each underlying model once
+    and caches it. Every accessor is defensive (returns None on any failure), so
+    a stale/absent model never breaks the dashboard. DISPLAY-ONLY (CLAUDE.md #13)
+    — none of these move the rh3/rp3/rprs2 headline.
+
+    The attached blob lives under each record's `lenses` key:
+      hitter -> {'trend_tag': str|None}
+      SP/RP  -> {'stuff_plus', 'stuff_proj_ros_fp', 'stuff_breakout_gap',
+                 'floor_bust_prob', 'floor_tier', 'trend_tag',
+                 'shadow_grade', 'shadow_verdict'}  (any subset may be None)
+    """
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from lib.extra_lenses import (stuff_lens, floor_lens, trend_lens,
+                                      shadow_lens)
+    except Exception as e:
+        print(f'  extra_lenses import failed — context lenses skipped: {e}',
+              flush=True)
+        for r in records:
+            r.setdefault('lenses', None)
+        return
+
+    trend_role = 'H' if role == 'hitter' else ('RP' if role == 'rp' else 'SP')
+    id_key = 'batter' if role == 'hitter' else 'pitcher'
+    n_trend = n_stuff = n_floor = n_shadow = 0
+    for r in records:
+        if r.get('year') != current_year:
+            r['lenses'] = None
+            continue
+        lz: dict = {}
+        rid = r.get(id_key)
+        # Physical trend — id-keyed (collision-safe, no name lookup).
+        if rid is not None:
+            try:
+                t = trend_lens(int(rid), trend_role)
+                if t and t.get('tag'):
+                    lz['trend_tag'] = t['tag']; n_trend += 1
+            except Exception:
+                pass
+        if role != 'hitter':
+            nm = r.get('player_name')
+            if nm:
+                try:
+                    sl = stuff_lens(nm)
+                    if sl:
+                        lz['stuff_plus'] = sl.get('stuff_plus')
+                        lz['stuff_proj_ros_fp'] = sl.get('proj_ros_fp')
+                        lz['stuff_breakout_gap'] = sl.get('breakout_gap')
+                        n_stuff += 1
+                except Exception:
+                    pass
+                try:
+                    fl = floor_lens(nm)
+                    if fl:
+                        lz['floor_bust_prob'] = fl.get('bust_prob')
+                        lz['floor_tier'] = fl.get('tier')
+                        n_floor += 1
+                except Exception:
+                    pass
+                try:
+                    sh = shadow_lens(nm)
+                    if sh:
+                        lz['shadow_grade'] = sh.get('avg_grade')
+                        lz['shadow_verdict'] = sh.get('verdict')
+                        n_shadow += 1
+                except Exception:
+                    pass
+        r['lenses'] = lz or None
+    if role == 'hitter':
+        print(f'  {role}: context lenses — trend={n_trend}', flush=True)
+    else:
+        print(f'  {role}: context lenses — trend={n_trend} stuff={n_stuff} '
+              f'floor={n_floor} shadow={n_shadow}', flush=True)
+
+
 def build_payload():
     h, s, rp = assert_schema()
 
@@ -940,6 +1100,25 @@ def build_payload():
                         'rp3', current_year)
     annotate_model_axis(rp_records, 'pitcher', _proj_value_map(PROJECTIONS.rprs2(), 'pitcher', 'xfp_ros'),
                         'rprs2', current_year)
+
+    # ── Canonical position seam — group every current-year row by the committed
+    # plv_clone.positions taxonomy (display-only grouping/filter axis). ──
+    print('Annotating canonical position groups (plv_clone.positions)...', flush=True)
+    annotate_position_group(hitter_records, 'H',  current_year)
+    annotate_position_group(sp_records,     'SP', current_year)
+    annotate_position_group(rp_records,     'RP', current_year)
+
+    # ── Current-year archetype pillars (mirrors triangulate `arche_domains`). ──
+    annotate_arche_domains(hitter_records, 'hitter', current_year)
+    annotate_arche_domains(sp_records,     'sp',     current_year)
+    annotate_arche_domains(rp_records,     'rp',     current_year)
+
+    # ── Four validated CONTEXT-ONLY lenses (Stuff+ / SP-floor / physical-trend /
+    # shadow-scout). Hitters get physical-trend only; SPs/RPs get all four. ──
+    print('Loading context lenses (extra_lenses: Stuff+/floor/trend/shadow)...', flush=True)
+    annotate_context_lenses(hitter_records, 'hitter', current_year)
+    annotate_context_lenses(sp_records,     'sp',     current_year)
+    annotate_context_lenses(rp_records,     'rp',     current_year)
 
     print('Loading boom/bust/variance payload (stream_the_stack)...', flush=True)
     boom_payload = load_boom_stack_payload()

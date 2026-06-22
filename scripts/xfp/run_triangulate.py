@@ -36,7 +36,10 @@ from scripts.xfp.lib.triangulate_core import (
     flatten_lenses, compute_actuals, flatten_actuals, flatten_extra,
 )
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
-from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_report_for_stdout
+from scripts.xfp.lib.snapshots import (
+    write_snapshot, write_diff, truncate_report_for_stdout,
+    write_run_manifest, list_runs, format_runs,
+)
 
 # ---------- presentation layer (stays in the CLI) ----------
 
@@ -700,7 +703,17 @@ def main():
                     help='After current run, emit a markdown diff vs PRIOR_CSV (verdict changes, new/dropped players, override flips).')
     ap.add_argument('--check-caches', action='store_true',
                     help='Print refresh instructions for stale PL cache files and exit.')
+    ap.add_argument('--run-id', default=None, metavar='YYYYMMDD-HHMMSS',
+                    help='Explicit deterministic run_id for the --snapshot manifest. '
+                         'If omitted, derived from the snapshot file mtime (scripts '
+                         'never mint an id from a fresh now()).')
+    ap.add_argument('--list-runs', action='store_true',
+                    help='Print the dated, sorted triangulate run manifests and exit.')
     args = ap.parse_args()
+
+    if args.list_runs:
+        print(format_runs(list_runs()))
+        return
 
     if args.check_caches:
         print_refresh_instructions()
@@ -719,12 +732,30 @@ def main():
     else:
         name_list = args.names
 
+    # Ownership dimension flows in from the names-file (built by
+    # build_triangulate_universe): category (ROSTER/MY_DROP/OPP_CHURN/FA_TOP),
+    # owner_team (which of the 8 teams owns the player, or FA), also_in (other
+    # categories the player appears in). All three are display/context-only.
     category_map = {}
-    if input_df is not None and 'category' in input_df.columns:
+    owner_map = {}
+    also_in_map = {}
+    if input_df is not None:
+        has_cat = 'category' in input_df.columns
+        has_owner = 'owner_team' in input_df.columns
+        has_also = 'also_in' in input_df.columns
         for _, row in input_df.iterrows():
             nm = row.get('player_name')
-            if pd.notna(nm):
-                category_map[str(nm)] = row.get('category')
+            if pd.isna(nm):
+                continue
+            key = str(nm)
+            if has_cat:
+                category_map[key] = row.get('category')
+            if has_owner:
+                ov = row.get('owner_team')
+                owner_map[key] = ov if pd.notna(ov) else None
+            if has_also:
+                av = row.get('also_in')
+                also_in_map[key] = av if pd.notna(av) else None
 
     batch_out = bool(args.csv_out or args.json_out)
     rows = []
@@ -737,12 +768,18 @@ def main():
                 rec = {'player_name': name, 'bucket': '?', 'resolved': False}
                 if category_map:
                     rec['category'] = category_map.get(name)
+                if owner_map:
+                    rec['owner_team'] = owner_map.get(name)
+                if also_in_map:
+                    rec['also_in'] = also_in_map.get(name)
                 if args.csv_out:
                     csv_rows.append(rec)
                 if args.json_out:
                     json_rows.append({
                         'name': name, 'bucket': '?', 'resolved': False,
                         'category': category_map.get(name) if category_map else None,
+                        'owner_team': owner_map.get(name) if owner_map else None,
+                        'also_in': also_in_map.get(name) if also_in_map else None,
                     })
             else:
                 print(f"\n### {name} — NOT FOUND in projections or archetype panels.\n")
@@ -860,7 +897,12 @@ def main():
                 'rationale': rationale,
                 'override_tag': override_tag,
                 'il_status': il_status,
+                # Ownership dimension (first-class). category was already emitted;
+                # owner_team + also_in were previously CSV-only — surface them here
+                # too so JSON consumers (history parquet, dashboards) get parity.
                 'category': category_map.get(name) if category_map else None,
+                'owner_team': owner_map.get(name) if owner_map else None,
+                'also_in': also_in_map.get(name) if also_in_map else None,
             }
             # context-only lenses (platoon / expected / home-road / TTO) — flat columns
             jrec.update(flatten_lenses(model, bucket))
@@ -923,8 +965,13 @@ def main():
             rec.update(flatten_actuals(actuals))
             # validated context lenses (Stuff+ / floor / trend / shadow) — flat
             rec.update(flatten_extra(model, bucket))
+            # Ownership dimension (first-class, display/context-only).
             if category_map:
                 rec['category'] = category_map.get(name)
+            if owner_map:
+                rec['owner_team'] = owner_map.get(name)
+            if also_in_map:
+                rec['also_in'] = also_in_map.get(name)
             csv_rows.append(rec)
         if not batch_out and not args.summary_only:
             print(format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale,
@@ -949,6 +996,14 @@ def main():
         if args.snapshot:
             snap_path = write_snapshot(df_out, args.snapshot)
             print(f"Snapshot written: {snap_path}")
+            # Run registry — sibling .json manifest (run_id, distributions,
+            # categories_found). run_id is derived deterministically (not now()).
+            try:
+                man_path = write_run_manifest(df_out, args.snapshot, snap_path,
+                                              run_id=args.run_id)
+                print(f"Run manifest written: {man_path}")
+            except Exception as _me:
+                print(f"  [warn] run manifest skipped: {type(_me).__name__}: {_me}")
         if args.diff:
             diff_path, report = write_diff(args.diff, args.csv_out)
             print(f"Diff written: {diff_path}\n")

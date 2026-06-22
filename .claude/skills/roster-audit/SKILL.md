@@ -1,6 +1,7 @@
 ---
 name: roster-audit
 description: Generate a structured audit of the user's BrownU fantasy roster — slot occupancy, IL/return timeline, SP cap math, drop candidates, FA add candidates, and forward-looking roster moves. Use weekly, after any IL transaction, or when planning lineup/drop decisions. Encodes feedback rules about IL-slot vs IL-status, FA-only "best available", and cap/role/eligibility awareness.
+maturity: legacy-lens-stack
 ---
 
 # roster-audit
@@ -150,6 +151,12 @@ name-format mismatches and need manual lookup.
 
 ### Name-collision guard (mandatory for hitter projection lookups)
 
+> **MLBAM-only join-guard (one-liner).** Join roster ↔ projection by MLBAM id via
+> `resolve_batter_id(name, team=…, position=…)` / `resolve_pitcher_id(...)` from
+> `plv_clone.utils.name_match` — NEVER on a bare normalized name (Max Muncy LAD
+> 571970 vs ATH 691777 collision). The `(name, pro_team)` tuple pattern below is
+> the explicit fallback when an id isn't resolvable.
+
 When building any `dict[name] → projection` lookup from the rh3 CSV,
 you MUST account for same-name MLB players. The canonical example:
 
@@ -186,6 +193,28 @@ Reference: `memory/feedback_player_name_collisions.md`.
 ---
 
 ## Step 6 — Drop candidates (sorted by RoS projection, ascending)
+
+### Canonical position grouping (drop + FA tables both use this)
+
+Group every roster/FA table by the committed house taxonomy — do NOT re-derive
+position buckets:
+
+```python
+from plv_clone.positions import position_group, primary_hitter_group, order_groups, GROUP_ORDER
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # SP/RP authority
+
+# Hitters: primary_hitter_group(row) → C / 1B/3B / 2B/SS / OF / UTIL / DH
+# Pitchers: position_group(row, bucket=detect_pitcher_role(row), rp_row=row)
+#           → SP, or relievers split CLOSER (saves) vs SETUP (holds)
+```
+
+Groups, in `GROUP_ORDER`: **C · 1B/3B · 2B/SS · OF · UTIL · DH · SP · CLOSER ·
+SETUP**. DH is a DISTINCT bucket (UTIL = flex membership; DH = no-fielding
+fallback). Relievers split CLOSER vs SETUP via current-season sv/hld
+(`detect_closer_status`; CLOSER = sv≥8 or save-share≥0.55 — display-only, CLAUDE.md
+#13). **Never bucket a dual-eligible pitcher by ESPN `.position` alone** — Detmers
+is `position=RP` but a bucket-SP (gotcha #8); always pass `detect_pitcher_role`.
+See `/triangulate` "Canonical roster + FA report format" for the full house style.
 
 For each position bucket (hitter, SP, RP) on the roster, sort by the
 appropriate projection column:
@@ -427,6 +456,14 @@ Final report uses this layout (markdown for readability):
 
 If `focus area = il-only` or `pitching` or `hitting`, suppress the
 irrelevant sections rather than emit empty ones.
+
+> **Canonical report format.** For a full "audit my whole team + all FAs above N
+> FP" board, render in the **position-grouped house style** (C · 1B/3B · 2B/SS ·
+> OF · UTIL · DH · SP · CLOSER · SETUP) — see `/triangulate` "Canonical roster + FA
+> report format (position-grouped, arcs + domains)", the validated house style as
+> of 2026-06-22. The triangulate batch CSV/JSON emits a `position_group` column you
+> can read directly; run `/triangulate` for the arcs+domains+verdict per player and
+> fold its grouped grid in alongside the slot/cap math here.
 
 ---
 

@@ -269,6 +269,46 @@ def main():
     run('4.7. Build triangulate.html (three-lens roster report)',
         'python -X utf8 scripts/xfp/build_triangulate_dashboard.py', timeout=300)
 
+    # 4.72. Nightly league-wide triangulate backfill + verdict history append.
+    # Builds the player universe (roster + my drops + opp churn + FA_TOP with
+    # owner_team), triangulates it into a dated snapshot (CSV+JSON+run manifest),
+    # then appends those verdicts to triangulate_verdict_history.parquet — the
+    # audit trail behind CLAUDE.md #12 (never flip a verdict silently). Fail-soft
+    # and non-gating: any ESPN/MLB hiccup must not abort the publish pipeline.
+    _tri_date = datetime.now().strftime('%Y-%m-%d')
+    _tri_label = f'nightly_{_tri_date}'
+    _tri_runid = datetime.now().strftime('%Y%m%d-%H%M%S')
+    _tri_csv = f'data/research/triangulate_universe/snapshots/triangulate_{_tri_label}_{_tri_date}.csv'
+    _tri_json = f'data/research/triangulate_universe/triangulate_{_tri_label}.json'
+    _tri_universe = 'data/research/triangulate_universe/master_universe.csv'
+    ok_tri_universe = run(
+        '4.72a. Build triangulate player universe (ownership-tagged)',
+        'python -X utf8 scripts/xfp/build_triangulate_universe.py',
+        timeout=600,
+    )
+    if not ok_tri_universe:
+        print('  ⚠ triangulate universe build failed — skipping nightly backfill')
+    else:
+        ok_tri_batch = run(
+            '4.72b. Triangulate the full universe -> dated snapshot',
+            f'python -X utf8 scripts/xfp/run_triangulate.py '
+            f'--names-file {_tri_universe} --snapshot {_tri_label} '
+            f'--run-id {_tri_runid} --csv-out {_tri_json.replace(".json", ".csv")} '
+            f'--json-out {_tri_json}',
+            timeout=1800,
+        )
+        if not ok_tri_batch:
+            print('  ⚠ nightly triangulate batch failed — skipping history append')
+        else:
+            ok_tri_hist = run(
+                '4.72c. Append verdicts to triangulate_verdict_history.parquet',
+                f'python -X utf8 scripts/xfp/build_triangulate_history.py '
+                f'--append {_tri_csv} --run-id {_tri_runid}',
+                timeout=180,
+            )
+            if not ok_tri_hist:
+                print('  ⚠ triangulate history append failed — continuing (non-gating)')
+
     # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
     # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
     # probables window covered by stream_the_stack (~15-25). Lets the profiles

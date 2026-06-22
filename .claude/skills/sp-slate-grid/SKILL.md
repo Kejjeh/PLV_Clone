@@ -1,6 +1,7 @@
 ---
 name: sp-slate-grid
 description: Full-slate SP scan over a date window (default today + tomorrow) joining ALL 14 model layers — Blended xFP (Phase 3 production scorer with 95% bootstrap CI), rp3 rank + per_start band + opp_bat_index + recency_form_gap, live_marginal + value_tier (Phase 2.5 FA-pool-relative delta with SP floor), Triangulate verdict + reason_tag + confidence (synthesized BUY/HOLD/CAUTION/FADE/MIXED), Sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS on rp3 with BUY-LOW/SELL-HIGH divergence flags), SP archetype master OVERALL + traj_flag + T+1, shadow_scout grade (20-80 ratings + PLUS_PROCESS/AVG_PROCESS/BELOW_AVG/NO_MLB_DATA for rookies/spot starts with no rp3 row), boom_stack 0-4 score + boom%/bust%/E[FP] from the validated tier-aware lookup + per-component breakdown (skill_spike / recform_hot / opp_soft / park_friendly), secondary boom tags (🔥 HIGH-K ARM standalone +6.84pp lift, 🧊 ELITE FRAMER / ⚠ FRAMING TAX within-pitcher paired p=0.017, 🚩 IL_RETURN salvage tag +2.93pp bust lift, ⚠ skill_spike_anti_predictive regression warning at SP2/3+Backend tiers), Process panel composite (PR 8 L30/STD/PriorYr SP marker decomposition with direction-adjusted z-score and level_pct), PL Top 100, PL daily streamer ranks with auto-fresh WebFetch when cache is stale and paywall fallback to nearest cached date. Tags ownership (MINE / opponent team name / FA) via league.teams roster walk. Renders a time-sorted multi-day grid with FA highlighted, decision-deadline header (first pitch ET), then synthesizes a boom-layer-aware top-FA recommendation that can DOWNGRADE high-rp3 picks when the live boom signal disagrees (canonical Emmet Sheehan 6/7/26 — rp3 #55 but boom 9/18 said skip; Cameron rp3 #85 with boom_stack 3/4 was the actual best play). Use when the user asks "rundown on all SP starts", "show me every SP start tomorrow", "what SPs are available across the slate", "all SP starts on DATE1 + DATE2 with FA highlighted", "use all models, every starter" or wants the full multi-day pitcher board not just their own roster. Engine pattern: probables from MLB Stats API + fa_sp_master.csv + sp_boom_stack_full_pool JSON + live_blend_xfp_latest.csv + sp_process_panel.csv + sp_ratings_master.csv + xfp_rp3_projections.csv + PL caches + on-demand shadow_scout and triangulate calls for shortlisted FAs — ALL joined on MLBAM pitcher_id (NOT name — same-name collisions like Logan Allen would silently break a name join, and ESPN's playerId is NOT MLBAM, canonical bug Castillo ESPN=33748 vs MLBAM=622491).
+maturity: legacy-lens-stack
 ---
 
 # sp-slate-grid
@@ -300,6 +301,15 @@ def streamer_cell(name, day_streamers):
 ---
 
 ## Step 5 — Render the time-sorted grid
+
+This is an SP slate (time-sorted, not position-grouped) — every row is the
+single canonical **SP** group. Resolve the SP/RP bucket with the committed
+authority, never ESPN `.position` alone (Detmers `position=RP` is a bucket-SP,
+gotcha #8): `from scripts.xfp.lib.pitcher_role import detect_pitcher_role`, and
+`from plv_clone.positions import position_group` if you need the canonical group
+label. For a position-grouped roster + FA board (C · 1B/3B · 2B/SS · OF · UTIL ·
+DH · SP · CLOSER · SETUP), see `/triangulate` "Canonical roster + FA report
+format" — that is the house style this slate's SP column feeds.
 
 ASCII-safe formatting (Windows cp1252 chokes on emoji unless you set
 `PYTHONIOENCODING=utf-8` AND use `python -X utf8`):
