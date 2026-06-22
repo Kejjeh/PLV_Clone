@@ -21,6 +21,7 @@ from pathlib import Path
 import warnings
 import numpy as np
 import pandas as pd
+from lib.rolling_splits import select_inprogress_splits  # shared, unit-tested
 
 warnings.filterwarnings('ignore')
 
@@ -225,12 +226,20 @@ def build_year(year: int) -> pd.DataFrame:
     # For an in-progress year, only completed cutoffs emit rows. Plus one
     # "current" row using actual elapsed days as split_day so the projection
     # uses today's snapshot at today's elapsed time (not at day 120's label).
-    elapsed_days = int((max_data_date - season_start).days)
     base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS
-    splits_to_use = [s for s in base_splits if season_start + pd.Timedelta(days=s) <= max_data_date]
-    # If the current cutoff is between defined split_days, add an actual-elapsed row.
-    if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
-        splits_to_use = list(splits_to_use) + [elapsed_days]
+    if year >= today.year:
+        # In-progress: shared, unit-tested selection emits a current snapshot whenever
+        # data lands past the last weekly cutoff so RPs whose last outing WAS the cutoff
+        # date aren't dropped by the training-row inner-join (the Vlad/Judge bug). Here
+        # max_data_date is `today`, so this also preserves the IL-state cutoff label.
+        splits_to_use, elapsed_days = select_inprogress_splits(
+            base_splits, season_start, max_data_date, max_data_date)
+    else:
+        # Complete past year: weekly cutoffs only (no current-snapshot append) so the
+        # training set is unchanged from prior behavior.
+        elapsed_days = int((max_data_date - season_start).days)
+        splits_to_use = [s for s in base_splits
+                         if season_start + pd.Timedelta(days=s) <= max_data_date]
     print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
           f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
           f'({"weekly" if year in WEEKLY_YEARS else "monthly"})')

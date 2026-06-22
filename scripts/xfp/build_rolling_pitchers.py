@@ -13,6 +13,7 @@ from pathlib import Path
 import warnings
 import numpy as np
 import pandas as pd
+from lib.rolling_splits import select_inprogress_splits  # shared, unit-tested
 
 warnings.filterwarnings('ignore')
 
@@ -188,11 +189,11 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     max_data_date = pitches['game_date'].max()
     base_splits = WEEKLY_SPLIT_DAYS if year in WEEKLY_YEARS else SPLIT_DAYS_OF_SEASON
     if is_in_progress:
-        elapsed_days = int((today - season_start).days)
-        splits_to_use = [s for s in base_splits
-                         if season_start + pd.Timedelta(days=s) <= max_data_date]
-        if (not splits_to_use) or (elapsed_days > max(splits_to_use, default=0) + 5):
-            splits_to_use = list(splits_to_use) + [elapsed_days]
+        # Shared, unit-tested split selection: emits a current snapshot whenever data
+        # lands past the last weekly cutoff, so SPs whose last start WAS the cutoff
+        # date aren't dropped by the training-row inner-join (the Vlad/Judge bug).
+        splits_to_use, elapsed_days = select_inprogress_splits(
+            base_splits, season_start, max_data_date, today)
         print(f'  [{year}] season_start={season_start.date()} max_data={max_data_date.date()} '
               f'elapsed={elapsed_days}d -> {len(splits_to_use)} splits '
               f'({"weekly" if year in WEEKLY_YEARS else "monthly"})', flush=True)

@@ -17,6 +17,7 @@ from pathlib import Path
 import warnings
 import numpy as np
 import pandas as pd
+from lib.rolling_splits import select_inprogress_splits  # shared, unit-tested
 
 warnings.filterwarnings('ignore')
 
@@ -199,29 +200,6 @@ def fp_per_pa_with_rrbi(window_agg: pd.DataFrame, rrbi_rates: pd.Series) -> pd.S
     pa = window_agg['pa'].replace(0, np.nan)
     rrbi_per_pa = window_agg['batter'].map(rrbi_rates).fillna(0.0)
     return ((window_agg['fp_total'] + window_agg['pa'] * rrbi_per_pa) / pa).round(4)
-
-
-def select_inprogress_splits(base_splits, season_start, max_data_date, today):
-    """Choose split_days for an IN-PROGRESS season (pure / testable).
-
-    Returns (splits_to_use, elapsed_days). The elapsed weekly cutoffs are those that
-    have already happened (cutoff <= max_data_date). A current "in-progress" snapshot
-    (labeled elapsed_days) is appended WHENEVER data extends past the last weekly
-    cutoff — so that snapshot's `after` window is empty and it captures EVERY active
-    player. Without it, the last weekly split has a non-empty `after` window, is built
-    as a TRAINING row, and its target inner-join silently drops every player who
-    didn't play on the post-cutoff day(s) (e.g. a player whose last game WAS the
-    cutoff date), truncating the projection pool. The old `elapsed_days > max_split+5`
-    guard missed this whenever data landed 1-4 days past the weekly cutoff — the
-    Vlad/Judge dropout of 2026-06-22 (rh3 pool 433 -> 257).
-    """
-    elapsed_days = int((today - season_start).days)
-    splits = [s for s in base_splits
-              if season_start + pd.Timedelta(days=s) <= max_data_date]
-    last_cut = season_start + pd.Timedelta(days=max(splits, default=0))
-    if (not splits) or (last_cut < max_data_date):
-        splits = list(splits) + [elapsed_days]
-    return splits, elapsed_days
 
 
 def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:

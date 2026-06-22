@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 import pandas as pd
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "xfp"))
-from build_rolling_hitters import select_inprogress_splits
+from lib.rolling_splits import select_inprogress_splits
 
 SS = pd.Timestamp("2026-03-26")          # season start
 WEEKLY = list(range(30, 201, 7))         # ...79, 86, 93 (86 -> 6/20)

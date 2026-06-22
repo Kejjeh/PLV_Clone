@@ -176,6 +176,13 @@ def main():
     df = df.sort_values(['pitcher', 'game_date']).reset_index(drop=True)
     df['start_idx'] = df.groupby('pitcher').cumcount() + 1
     df = df[df['start_idx'] <= MAX_STARTS_PER_PITCHER]
+    # Don't clobber a good schedule with nothing. An empty/near-empty result is an API
+    # outage, not a real "no probables" day (there are always probables a few days out).
+    # Raise BEFORE the atomic write so the existing file survives and the fail-soft
+    # refresh wrapper logs a failed step instead of silently shipping a stale schedule.
+    if df.empty:
+        raise ValueError('pitcher_schedule build produced 0 probable starts — likely '
+                         'an MLB schedule API outage. Keeping the existing file.')
     # Atomic write — temp file then rename so concurrent readers (boom_stack
     # consumers) never see a half-written CSV.
     tmp = OUT.with_suffix('.csv.tmp')
