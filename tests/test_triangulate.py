@@ -377,3 +377,36 @@ def test_flatten_lenses_full_and_none_safe():
     empty = flatten_lenses({}, 'H')
     assert empty['split_rate_vs_L'] is None and empty['tto_tier'] is None
     assert set(empty) == set(f), "column schema must be bucket-independent"
+
+
+def test_flatten_actuals_full_and_none_safe():
+    """flatten_actuals serializes boom/bust + in-season trajectory into flat batch
+    columns (compact deltas), and is schema-stable / None-safe when absent."""
+    from scripts.xfp.lib.triangulate_core import flatten_actuals
+    act = {
+        'boom_window': 'L8 starts',
+        'boom_bust': {'n': 8, 'mean': 14.9, 'std': 11.6, 'min': -9.1, 'max': 24.4,
+                      'boom_pct': 50, 'bust_pct': 12, 'l3_mean': 20.0, 'trend': 'UP',
+                      'last': [22.8, 9.0, 24.4, -9.1]},
+        'trajectory': {
+            'domains': ('STUFF', 'MOVEMENT', 'CONTROL'), 'xkey': 'start_no',
+            'points': [
+                {'label': '#3', 'OVERALL': 54, 'STUFF': 60, 'MOVEMENT': 50, 'CONTROL': 45,
+                 'archetype': 'PURE_STUFF'},
+                {'label': '#16', 'OVERALL': 48, 'STUFF': 54, 'MOVEMENT': 56, 'CONTROL': 52,
+                 'archetype': 'AVERAGE_4_5'},
+            ]},
+    }
+    f = flatten_actuals(act)
+    assert f['bb_window'] == 'L8 starts' and f['bb_n'] == 8 and f['bb_mean'] == 14.9
+    assert f['bb_boom_pct'] == 50 and f['bb_bust_pct'] == 12 and f['bb_trend'] == 'UP'
+    assert f['bb_last'] == '22.8 9.0 24.4 -9.1'
+    assert f['traj_n'] == 2 and f['traj_cadence'] == 'per_start'
+    assert f['traj_ovr_first'] == 54 and f['traj_ovr_last'] == 48 and f['traj_ovr_delta'] == -6
+    assert f['traj_last_archetype'] == 'AVERAGE_4_5'
+    # per-domain first->last deltas, compact and signed
+    assert f['traj_dom_deltas'] == 'STUFF:-6;MOVEMENT:+6;CONTROL:+7'
+
+    empty = flatten_actuals(None)
+    assert empty['bb_n'] is None and empty['traj_ovr_delta'] is None
+    assert set(empty) == set(f), "actuals column schema must be stable"

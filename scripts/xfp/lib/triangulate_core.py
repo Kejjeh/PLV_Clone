@@ -168,6 +168,86 @@ def flatten_lenses(model: dict, bucket: str) -> dict:
     return out
 
 
+# ---------- realized actuals (boom/bust + in-season trajectory) ----------
+#
+# These are the two heaviest context lenses, deliberately kept OUT of model_row:
+#   - boom/bust reads the materialized boxscore accumulator (~1ms/player; the live
+#     gameLog fallback only fires when a player is absent from the store)
+#   - in-season trajectory reuses the dashboard snapshot builders (one-time, cached)
+# They were card-only until the boxscore store made boom/bust disk-speed; now they
+# are also serialized into batch (CSV/JSON) and surfaced in the comparison grid.
+# Context-only (CLAUDE.md #13): variance/trajectory color, never a headline.
+
+_BOOM_WINDOW = {'SP': 'L8 starts', 'RP': 'L15 app', 'H': 'L21 games'}
+
+
+def compute_actuals(player_id, bucket: str) -> dict:
+    """Realized boom/bust summary + in-season archetype trajectory for one player.
+    Returns {'boom_bust': dict|None, 'boom_window': str|None, 'trajectory': dict|None}.
+    Safe-on-failure (any lens that errors degrades to None)."""
+    out = {'boom_bust': None, 'boom_window': _BOOM_WINDOW.get(bucket), 'trajectory': None}
+    try:
+        from .boom_bust import sp_boom_bust, rp_boom_bust, hitter_boom_bust
+        fn = {'SP': sp_boom_bust, 'RP': rp_boom_bust, 'H': hitter_boom_bust}.get(bucket)
+        if fn is not None:
+            out['boom_bust'] = fn(int(player_id))
+    except Exception:
+        pass
+    try:
+        from .season_snapshots import season_trajectory
+        out['trajectory'] = season_trajectory(int(player_id), bucket)
+    except Exception:
+        pass
+    return out
+
+
+def flatten_actuals(act: dict | None) -> dict:
+    """Flatten boom/bust + in-season trajectory into stable flat batch columns
+    (every key always present, None when absent — bucket-independent so CSV columns
+    stay stable). JSON consumers get the nested dicts instead; this is the
+    CSV-friendly scalar projection. Context-only (CLAUDE.md #13)."""
+    act = act or {}
+    out = {}
+    bb = act.get('boom_bust') or {}
+    out['bb_window'] = act.get('boom_window')
+    out['bb_n'] = bb.get('n')
+    out['bb_mean'] = bb.get('mean')
+    out['bb_std'] = bb.get('std')
+    out['bb_boom_pct'] = bb.get('boom_pct')
+    out['bb_bust_pct'] = bb.get('bust_pct')
+    out['bb_min'] = bb.get('min')
+    out['bb_max'] = bb.get('max')
+    out['bb_l3_mean'] = bb.get('l3_mean')
+    out['bb_trend'] = bb.get('trend')
+    last = bb.get('last')
+    out['bb_last'] = ' '.join(str(x) for x in last) if last else None
+
+    tr = act.get('trajectory') or {}
+    pts = tr.get('points') or []
+    doms = tr.get('domains') or ()
+    out['traj_n'] = len(pts) if pts else None
+    out['traj_cadence'] = (('per_start' if tr.get('xkey') == 'start_no' else 'weekly')
+                           if pts else None)
+    first = pts[0] if pts else {}
+    last_pt = pts[-1] if pts else {}
+    out['traj_first_label'] = first.get('label') if pts else None
+    out['traj_last_label'] = last_pt.get('label') if pts else None
+    o0, o1 = first.get('OVERALL'), last_pt.get('OVERALL')
+    out['traj_ovr_first'] = o0
+    out['traj_ovr_last'] = o1
+    out['traj_ovr_delta'] = (int(o1) - int(o0)
+                             if isinstance(o0, (int, float)) and isinstance(o1, (int, float))
+                             else None)
+    out['traj_last_archetype'] = last_pt.get('archetype') if pts else None
+    deltas = []
+    for d in doms:
+        a, b = first.get(d), last_pt.get(d)
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+            deltas.append(f"{d}:{int(b) - int(a):+d}")
+    out['traj_dom_deltas'] = ';'.join(deltas) if deltas else None
+    return out
+
+
 # ---------- model row ----------
 
 def model_row(player: dict) -> dict:

@@ -33,7 +33,7 @@ from scripts.xfp.lib.pl_cache import pl_rank, pl_streamer_rank, _warn_stale_cach
 from scripts.xfp.lib.triangulate_core import (
     model_row, archetype_row, synthesize, apply_overrides,
     consolidate_verdict, compute_confidence, build_watch_list, il_caveat,
-    flatten_lenses,
+    flatten_lenses, compute_actuals, flatten_actuals,
 )
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_report_for_stdout
@@ -41,7 +41,8 @@ from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_repor
 # ---------- presentation layer (stays in the CLI) ----------
 
 def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale,
-                confidence=None, n_aligned=None, n_available=None, watch_list=None, verdict_top=None, reason_tag=None):
+                confidence=None, n_aligned=None, n_available=None, watch_list=None, verdict_top=None, reason_tag=None,
+                actuals=None):
     lines = []
     bucket = player['bucket']
     lines.append(f"\n## {player['display_name']} ({bucket}) — {verdict}\n")
@@ -551,15 +552,14 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         lines.append(f"🔁 **3rd-time-through** {tto['tto1_rate']:.3f}→{tto['tto3_rate']:.3f} core fp/PA "
                      f"(penalty {tto['penalty']:+.3f}) → {tto['tier']} (career){w}")
 
-    # ── Boom/Bust realized actuals table (live gamelog; card-only, not batch) ──
-    try:
-        from scripts.xfp.lib.boom_bust import sp_boom_bust, rp_boom_bust, hitter_boom_bust
-        pid = int(player['id'])
-        bb, win, thr = ((sp_boom_bust(pid), 'L8 starts', '≥20 / <5') if bucket == 'SP'
-                        else (rp_boom_bust(pid), 'L15 app', '≥6 / <0') if bucket == 'RP'
-                        else (hitter_boom_bust(pid), 'L21 games', '≥10 / <2'))
-    except Exception:
-        bb, win, thr = None, '', ''
+    # ── Boom/Bust realized actuals table (boxscore store; reuse precomputed) ──
+    if actuals is None:
+        from scripts.xfp.lib.triangulate_core import compute_actuals as _ca
+        actuals = _ca(int(player['id']), bucket)
+    _thr = {'SP': '≥20 / <5', 'RP': '≥6 / <0', 'H': '≥10 / <2'}.get(bucket, '')
+    bb = actuals.get('boom_bust')
+    win = actuals.get('boom_window') or ''
+    thr = _thr
     if bb:
         lines.append(
             f"\n**📊 Boom/Bust actuals ({win}, BrownU FP; boom/bust {thr}; context-only)**\n"
@@ -569,11 +569,7 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
             f"_last {len(bb['last'])}: {bb['last']}_")
 
     # ── In-season archetype trajectory (OVERALL + main domains over time) ──────
-    try:
-        from scripts.xfp.lib.season_snapshots import season_trajectory
-        traj = season_trajectory(int(player['id']), bucket)
-    except Exception:
-        traj = None
+    traj = actuals.get('trajectory')
     if traj and traj.get('points'):
         doms = traj['domains']
         cad = 'per start' if traj['xkey'] == 'start_no' else 'weekly'
@@ -590,8 +586,10 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
 
 def compare_table(rows):
     out = ["\n## Comparison\n"]
-    out.append("| Player | Bucket | PL | Model | Archetype OVERALL | Velo traj | T+1 | Traj | Verdict |")
-    out.append("|---|---|---|---|---|---|---|---|---|")
+    out.append("| Player | Bucket | PL | Model | Archetype OVERALL | Velo traj | T+1 | Traj "
+               "| Boom/Bust (μ b%/B%) | OVR arc | Verdict |")
+    out.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    _arrow = {'UP': '▲', 'DOWN': '▼', 'FLAT': '▬'}
     for r in rows:
         p = r['player']; pl = r['pl_main']; m = r['model']; a = r['arche']
         pl_show = f"#{pl}" if isinstance(pl, int) else pl
@@ -611,7 +609,17 @@ def compare_table(rows):
             elif m.get('velo_yoy') is not None:
                 arrow = {'VV': '▼▼', 'v': '▼', '^': '▲'}.get(m.get('velo_yoy_flag') or '', '')
                 velo_show = f"{m['velo_yoy']:+.1f}{arrow}"
-        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} | {velo_show} | {t1} | {tr} | {r['verdict']} |")
+        # Realized actuals cells (boom/bust + in-season OVERALL arc) — context-only.
+        act = r.get('actuals') or {}
+        bb = act.get('boom_bust')
+        bb_show = (f"{bb['mean']}{_arrow.get(bb['trend'], '')} {bb['boom_pct']}/{bb['bust_pct']}%"
+                   if bb else '—')
+        traj = act.get('trajectory')
+        pts = (traj or {}).get('points') or []
+        arc_show = (f"{pts[0].get('OVERALL')}→{pts[-1].get('OVERALL')}"
+                    if len(pts) >= 2 else '—')
+        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} "
+                   f"| {velo_show} | {t1} | {tr} | {bb_show} | {arc_show} | {r['verdict']} |")
     return '\n'.join(out)
 
 
@@ -714,6 +722,11 @@ def main():
         if not _verdict_matches(verdict, filters):
             continue
 
+        # Realized actuals (boom/bust + in-season trajectory) — computed once per
+        # player and reused by the card, the batch serializers, and the comparison
+        # grid. Boom/bust now reads the materialized boxscore store (~1ms); the
+        # trajectory builders are cached so the cost is paid once per process.
+        actuals = compute_actuals(int(player['id']), bucket)
         rows.append({
             'player': player, 'pl_main': pl_main, 'pl_main_date': pl_main_date,
             'pl_stream': pl_stream, 'pl_stream_date': pl_stream_date,
@@ -721,7 +734,7 @@ def main():
             'override_tag': override_tag, 'il_status': il_status,
             'verdict_top': verdict_top, 'reason_tag': reason_tag,
             'confidence': confidence, 'n_aligned': n_aligned, 'n_avail': n_avail,
-            'watch_list': watch_list,
+            'watch_list': watch_list, 'actuals': actuals,
         })
         # Blended xFP for batch parity — the card leads with it; surface it (and an
         # explicit headline_source) in batch output so CSV/JSON consumers headline the
@@ -775,6 +788,10 @@ def main():
             }
             # context-only lenses (platoon / expected / home-road / TTO) — flat columns
             jrec.update(flatten_lenses(model, bucket))
+            # realized actuals — nested (JSON handles the full boom/bust + trajectory)
+            jrec['boom_bust'] = actuals.get('boom_bust')
+            jrec['boom_window'] = actuals.get('boom_window')
+            jrec['trajectory'] = actuals.get('trajectory')
             json_rows.append(jrec)
         if args.csv_out:
             rec = {
@@ -822,13 +839,16 @@ def main():
             }
             # context-only lenses (platoon / expected / home-road / TTO) — flat columns
             rec.update(flatten_lenses(model, bucket))
+            # realized actuals (boom/bust + in-season trajectory) — flat columns
+            rec.update(flatten_actuals(actuals))
             if category_map:
                 rec['category'] = category_map.get(name)
             csv_rows.append(rec)
         if not batch_out and not args.summary_only:
             print(format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale,
                               confidence=confidence, n_aligned=n_aligned, n_available=n_avail,
-                              watch_list=watch_list, verdict_top=verdict_top, reason_tag=reason_tag))
+                              watch_list=watch_list, verdict_top=verdict_top, reason_tag=reason_tag,
+                              actuals=actuals))
 
     if args.csv_out:
         df_out = pd.DataFrame(csv_rows)
