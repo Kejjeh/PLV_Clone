@@ -86,6 +86,54 @@ inspection and future calibration.
 
 ---
 
+## Canonical roster + FA report format (position-grouped, arcs + domains)
+
+When the user asks to "triangulate my whole team and all FAs above N FP" (or a
+position-organized board), present it in THIS format — it is the validated house
+style as of 2026-06-22.
+
+**Build the universe** (roster + FA pool ≥ threshold), tagging a `category` column
+(`MINE` / `FA-*`), then batch-run with `--csv-out` + `--json-out`. Group hitters by
+fielding position (**C / 1B-3B / 2B-SS / OF / DH**) and pitchers by the triangulate
+**bucket** (`SP`/`RP`, which already runs `detect_pitcher_role` — do NOT group
+pitchers by ESPN `.position`; Detmers is `position=RP` but a bucket-SP, gotcha #8).
+
+**Columns per player** (same shape every position):
+
+| Col | Source | Meaning |
+|---|---|---|
+| Head | `headline_proj` | Blended xFP (fp/game H · fp/start SP · rprs2 RP) |
+| Mdl | `model_rank` | rh3/rp3/rprs2 rank |
+| **Career arc (domains)** | `arche_overall` + `arche_traj` arrow + `arche_domains` | current-year OVERALL + MULTI-YEAR direction, with current-year 3-pillar ratings in parens |
+| **In-season arc (domains)** | `traj_ovr_first→traj_ovr_last` + `traj_dom_last` | OVERALL first→latest 2026 snapshot, with MOST-RECENT snapshot's 3 pillars in parens |
+| Boom/Bust | `bb_mean`+`bb_trend`, `bb_boom_pct`/`bb_bust_pct` | realized actuals (boxscore store) |
+| Verdict | `verdict_top` | BUY/HOLD/CAUTION/FADE/MIXED |
+
+Domains (same order in BOTH arc columns so they line up):
+**Contact/Power/Discipline** (H) · **Stuff/Movement/Control** (SP) ·
+**Stuff/Control/Batted-ball** (RP). The pillar values are now serialized to the
+batch CSV/JSON (`arche_domains`, `traj_dom_last`) and the comparison grid renders
+them — `flatten_actuals()` + `archetype_row` carry them. The two arcs diverging is
+the signal (e.g. Soriano career CONTROL 46 but in-season 21 = command collapse).
+
+**Freshness split (state it):** boom/bust = the boxscore store (current through
+**yesterday's finals**, ~same-day); archetype career/in-season arcs = the Statcast
+cache (lags ~1 day). If the user needs the latest start in the arcs, run
+`refresh_xfp_statcast.py --year YYYY --lag 1` then rebuild the archetype panels
+(`build_sp_archetypes.py` / `build_hitter_archetypes.py` / `build_rp_archetypes.py`).
+
+**SP FA artifact guard (mandatory):** sorting FA SPs by `headline_proj` surfaces
+`marcel_il`/thin-sample swingmen with impossible 40+ fp/start (blended_xfp blew up;
+tell = huge headline but model rank #200+). Re-rank FA SPs by `model_rank` (rp3)
+and filter to sane fp/start (< ~20) before presenting. Trust rp3 only where
+`data_quality_tag` is `data_driven_*` (gotcha #1).
+
+**FA-upgrade framing:** per position, surface FAs that beat the user's WEAKEST
+rostered player at that bucket, flag BUY verdicts, and call the net actionable move
+(usually 0-1 real adds — most FAs only beat the bench floor).
+
+---
+
 ## Inputs
 
 - **1 to ~6 player names** (positional args)
