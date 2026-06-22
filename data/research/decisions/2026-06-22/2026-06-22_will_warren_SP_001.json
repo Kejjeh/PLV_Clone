@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-06-22_will_warren_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_CONTROL",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 12.079139979724664,
+    "live_marginal": -105.64153462088987,
+    "model_rank": 75,
+    "override_tag": null,
+    "pl_rank": 42,
+    "proj_per": 10.261673630230394,
+    "replacement_delta": null
+  },
+  "mlbam_id": 701542,
+  "player_name": "Will Warren",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-22",
+  "verdict_top": "MIXED"
+}

@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 1.0,
+  "decision_id": "2026-06-22_jacob_latz_RP_001",
+  "inputs": {
+    "archetype_label": "COMMAND_MIDDLE",
+    "archetype_overall": 62,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 3.8153690500116597,
+    "live_marginal": null,
+    "model_rank": 5,
+    "override_tag": null,
+    "pl_rank": 6,
+    "proj_per": 121.0,
+    "replacement_delta": 97.3
+  },
+  "mlbam_id": 656641,
+  "player_name": "Jacob Latz",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-22",
+  "verdict_top": "BUY"
+}

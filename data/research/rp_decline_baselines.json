@@ -1,5 +1,5 @@
 {
-  "all_t_plus_1_decline_rate": 0.397,
+  "all_t_plus_1_decline_rate": 0.395,
   "elite_t_plus_1_decline_rate": 0.589,
   "decline_threshold": "next_fp_per_g - fp_per_g <= -1.0 OR arch_quality drop <= -0.5",
   "elite_definition": "fp_per_g >= 4.5 (top ~15% of RPs)",
