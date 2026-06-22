@@ -240,10 +240,16 @@ def flatten_actuals(act: dict | None) -> dict:
                              else None)
     out['traj_last_archetype'] = last_pt.get('archetype') if pts else None
     deltas = []
+    lastvals = []
     for d in doms:
         a, b = first.get(d), last_pt.get(d)
+        if isinstance(b, (int, float)):
+            lastvals.append(f"{d}={int(b)}")
         if isinstance(a, (int, float)) and isinstance(b, (int, float)):
             deltas.append(f"{d}:{int(b) - int(a):+d}")
+    # most-recent in-season snapshot's domain ratings (Contact/Power/Discipline |
+    # Stuff/Movement/Control | Stuff/Control/Batted_ball depending on bucket)
+    out['traj_dom_last'] = ';'.join(lastvals) if lastvals else None
     out['traj_dom_deltas'] = ';'.join(deltas) if deltas else None
     return out
 
@@ -648,9 +654,17 @@ def archetype_row(player: dict) -> dict:
         out['fireman']  = _is_truthy_flag(r.get('FIREMAN'))
         out['high_lev'] = _is_truthy_flag(r.get('HIGH_LEVERAGE'))
     else:
-        for k in ('C', 'P', 'D', 'SB'):
+        # Hitter pillars are stored under full names (CONTACT/POWER/DISCIPLINE),
+        # NOT the abbreviations C/P/D — reading C/P/D silently yielded only SB and
+        # left hitter cards/grids showing no pillar ratings. Mirror the SP/RP
+        # 3-pillar `ratings` shape so domain displays line up. SB is a speed overlay
+        # (excluded from the archetype label), kept separate from the big three.
+        for k in ('CONTACT', 'POWER', 'DISCIPLINE'):
             if k in p.columns:
                 out.setdefault('ratings', {})[k] = int(r[k]) if pd.notna(r.get(k)) else None
+        if 'SB' in p.columns and pd.notna(r.get('SB')):
+            out['sb_rating'] = int(r['SB'])
+            out.setdefault('sub_ratings', {})['SB'] = int(r['SB'])
         if 'SPEED_TOOL' in p.columns and pd.notna(r.get('SPEED_TOOL')):
             out.setdefault('sub_ratings', {})['SPEED_TOOL'] = int(r['SPEED_TOOL'])
     arc = rows.tail(4)[['year', 'archetype', 'OVERALL']]

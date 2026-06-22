@@ -406,6 +406,8 @@ def test_flatten_actuals_full_and_none_safe():
     assert f['traj_last_archetype'] == 'AVERAGE_4_5'
     # per-domain first->last deltas, compact and signed
     assert f['traj_dom_deltas'] == 'STUFF:-6;MOVEMENT:+6;CONTROL:+7'
+    # most-recent snapshot's domain values (Stuff/Movement/Control here)
+    assert f['traj_dom_last'] == 'STUFF=54;MOVEMENT=56;CONTROL=52'
 
     empty = flatten_actuals(None)
     assert empty['bb_n'] is None and empty['traj_ovr_delta'] is None

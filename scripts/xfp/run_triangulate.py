@@ -453,6 +453,8 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         lines.append(f"| **{model_label}** | — | not in projection file | — |")
     if arche.get('have'):
         rstr = ' / '.join(f"{k}={v}" for k, v in arche['ratings'].items())
+        if arche.get('sb_rating') is not None:   # hitter speed overlay (not a pillar)
+            rstr += f" / SB={arche['sb_rating']}"
         ar_h = f"OVERALL {arche['overall']} ({arche['archetype']} / {arche['cell']})"
         cp = arche.get('career_pct')
         cpstr = f", career-pct {cp*100:.0f}%" if cp is not None and pd.notna(cp) else ''
@@ -585,21 +587,32 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
 
 
 def compare_table(rows):
+    # Career arc  = current-year archetype OVERALL + multi-year trajectory arrow,
+    #               with the current-year three-domain breakdown in parens.
+    # In-season arc = OVERALL first→last across 2026 snapshots, with the MOST-RECENT
+    #               snapshot's three-domain breakdown in parens.
+    # Domains are Contact/Power/Discipline (H) | Stuff/Movement/Control (SP) |
+    # Stuff/Control/Batted-ball (RP) — same order in both columns so they line up.
     out = ["\n## Comparison\n"]
-    out.append("| Player | Bucket | PL | Model | Archetype OVERALL | Velo traj | T+1 | Traj "
-               "| Boom/Bust (μ b%/B%) | OVR arc | Verdict |")
-    out.append("|---|---|---|---|---|---|---|---|---|---|---|")
+    out.append("| Player | Bucket | PL | Model | Career arc (domains) | In-season arc (domains) "
+               "| Velo | T+1 | Boom/Bust (μ b%/B%) | Verdict |")
+    out.append("|---|---|---|---|---|---|---|---|---|---|")
     _arrow = {'UP': '▲', 'DOWN': '▼', 'FLAT': '▬'}
+    _traj_arrow = {'TRENDING_UP': '▲', 'TRENDING_DOWN': '▼', 'CAREER_LOW': '▼',
+                   'CAREER_HIGH': '▲', 'STABLE': '▬'}
     for r in rows:
         p = r['player']; pl = r['pl_main']; m = r['model']; a = r['arche']
         pl_show = f"#{pl}" if isinstance(pl, int) else pl
         m_show = f"#{m['rank']} ({m['proj']:.2f})" if m['rank'] != '—' and m.get('proj') is not None else '—'
+        # Career arc: OVERALL + multi-year arrow + current-year domain pillars
         if a.get('have'):
-            a_show = f"{a['overall']} ({a['archetype']})"
+            arr = _traj_arrow.get(a.get('traj_flag') or '', '')
+            rt = a.get('ratings') or {}
+            dom = '/'.join(str(int(v)) for v in rt.values() if isinstance(v, (int, float)))
+            career_show = f"{a['overall']}{arr}" + (f" ({dom})" if dom else '')
             t1 = f"{a['t1_fp']:.2f}" if a.get('t1_fp') is not None and pd.notna(a['t1_fp']) else '—'
-            tr = a['traj_flag']
         else:
-            a_show = '—'; t1 = '—'; tr = '—'
+            career_show = '—'; t1 = '—'
         # SP velo-trajectory summary cell: severity tag, else the YoY flag/value.
         velo_show = '—'
         if p['bucket'] == 'SP':
@@ -609,17 +622,23 @@ def compare_table(rows):
             elif m.get('velo_yoy') is not None:
                 arrow = {'VV': '▼▼', 'v': '▼', '^': '▲'}.get(m.get('velo_yoy_flag') or '', '')
                 velo_show = f"{m['velo_yoy']:+.1f}{arrow}"
-        # Realized actuals cells (boom/bust + in-season OVERALL arc) — context-only.
+        # Realized actuals cells (boom/bust + in-season arc with latest domains).
         act = r.get('actuals') or {}
         bb = act.get('boom_bust')
         bb_show = (f"{bb['mean']}{_arrow.get(bb['trend'], '')} {bb['boom_pct']}/{bb['bust_pct']}%"
                    if bb else '—')
         traj = act.get('trajectory')
         pts = (traj or {}).get('points') or []
-        arc_show = (f"{pts[0].get('OVERALL')}→{pts[-1].get('OVERALL')}"
-                    if len(pts) >= 2 else '—')
-        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {a_show} "
-                   f"| {velo_show} | {t1} | {tr} | {bb_show} | {arc_show} | {r['verdict']} |")
+        if len(pts) >= 2:
+            doms = (traj or {}).get('domains') or ()
+            last = pts[-1]
+            dlast = '/'.join(str(int(last[d])) for d in doms
+                             if isinstance(last.get(d), (int, float)))
+            inseason_show = f"{pts[0].get('OVERALL')}→{pts[-1].get('OVERALL')}" + (f" ({dlast})" if dlast else '')
+        else:
+            inseason_show = '—'
+        out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {career_show} "
+                   f"| {inseason_show} | {velo_show} | {t1} | {bb_show} | {r['verdict']} |")
     return '\n'.join(out)
 
 
@@ -749,6 +768,15 @@ def main():
         _headline_src = 'blended_xfp' if _bx is not None else {'H': 'rh3', 'SP': 'rp3', 'RP': 'rprs2'}.get(bucket, 'model')
         _mp = model.get('proj')
         _headline_proj = _bx if _bx is not None else (_mp if isinstance(_mp, (int, float)) else None)
+        # Career-arc domain ratings = the CURRENT-year (2026) archetype pillars
+        # (H: Contact/Power/Discipline | SP: Stuff/Movement/Control | RP: Stuff/
+        # Control/Batted_ball). Pairs with the in-season traj_dom_last (most-recent
+        # snapshot) so both arcs carry their three-domain breakdown.
+        _arche_domains = None
+        if arche.get('have'):
+            _rt = arche.get('ratings') or {}
+            _arche_domains = ';'.join(f"{k}={int(v)}" for k, v in _rt.items()
+                                      if isinstance(v, (int, float))) or None
         if args.json_out:
             def _num(x):
                 if x is None: return None
@@ -778,6 +806,7 @@ def main():
                 'arche_label': arche.get('archetype') if arche.get('have') else None,
                 'arche_cell': arche.get('cell') if arche.get('have') else None,
                 'arche_traj': arche.get('traj_flag') if arche.get('have') else None,
+                'arche_domains': _arche_domains,
                 'arche_t1_fp': _num(arche.get('t1_fp')) if arche.get('have') else None,
                 'arche_career_pct': _num(arche.get('career_pct')) if arche.get('have') else None,
                 'verdict': verdict,
@@ -814,6 +843,7 @@ def main():
                 'arche_label': arche.get('archetype') if arche.get('have') else None,
                 'arche_cell': arche.get('cell') if arche.get('have') else None,
                 'arche_traj': arche.get('traj_flag') if arche.get('have') else None,
+                'arche_domains': _arche_domains,
                 'arche_slope_3yr': arche.get('slope_3yr') if arche.get('have') else None,
                 'arche_career_pct': arche.get('career_pct') if arche.get('have') else None,
                 'arche_t1_fp': arche.get('t1_fp') if arche.get('have') else None,
