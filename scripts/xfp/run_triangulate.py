@@ -14,7 +14,7 @@ Other skills should import from `scripts.xfp.lib.triangulate_core` directly.
 from __future__ import annotations
 import argparse, io, json, os, sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 import pandas as pd
 
 # Force UTF-8 for stdout on Windows so arrows / accents don't crash
@@ -1014,7 +1014,7 @@ def main():
         override_counts = dict(Counter(r['override_tag'] for r in resolved if r.get('override_tag')))
         bucket_counts = dict(Counter(r['bucket'] for r in resolved if r.get('bucket')))
         payload = {
-            'generated': datetime.utcnow().isoformat(timespec='seconds') + 'Z',
+            'generated': datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z'),
             'n_players': len(resolved),
             'n_unresolved': len(json_rows) - len(resolved),
             'verdict_counts': verdict_counts,

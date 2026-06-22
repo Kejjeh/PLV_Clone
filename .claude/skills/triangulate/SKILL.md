@@ -1,6 +1,7 @@
 ---
 name: triangulate
 description: Unified three-lens player analysis combining Pitcher List ranks, our projection model (rh3/rp3/rprs2), and the archetype model (20-80 ratings, cell, trajectory, T+1 projection). Works for hitters, SPs, and RPs with a single script that auto-detects the position bucket. Produces a structured profile card per player plus a comparison table for multi-player queries, with a verdict synthesized from the agreement/disagreement pattern across the three sources. Use whenever the user wants the "complete picture" on one or more players, asks "triangulate X", "full profile on X", "compare X Y Z across all lenses", or wants to weigh a PL ranking against our model and the process-based archetype simultaneously.
+maturity: arcs-domains-lenses
 ---
 
 # triangulate — three-lens unified player analysis
