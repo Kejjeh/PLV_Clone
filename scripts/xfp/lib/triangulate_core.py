@@ -23,6 +23,8 @@ from .expected_stats import (  # expected-vs-actual (luck) lens, overall + by-sp
     hitter_expected, sp_expected, hitter_expected_by_split, sp_expected_by_split)
 from .lineup_pass import sp_lineup_pass  # times-through-order decay (SP)
 from .home_away import hitter_home_away, sp_home_away  # home/road split lens
+from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never headline)
+    stuff_lens, floor_lens, trend_lens, shadow_lens)
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -254,6 +256,27 @@ def flatten_actuals(act: dict | None) -> dict:
     return out
 
 
+def flatten_extra(model: dict, bucket: str) -> dict:
+    """Flatten the four validated context lenses (Stuff+, SP-floor, physical trend,
+    shadow scout) into stable flat batch columns. Bucket-independent schema (keys
+    always present, None when N/A — e.g. stuff/floor/shadow are SP-only). JSON
+    consumers get the nested dicts; this is the CSV projection. Context-only."""
+    out = {}
+    st = model.get('stuff') or {}
+    out['stuff_plus'] = st.get('stuff_plus')
+    out['stuff_proj_ros_fp'] = st.get('proj_ros_fp')
+    out['stuff_breakout_gap'] = st.get('breakout_gap')
+    fl = model.get('floor') or {}
+    out['floor_bust_prob'] = fl.get('bust_prob')
+    out['floor_tier'] = fl.get('tier')
+    tr = model.get('trend') or {}
+    out['trend_tag'] = tr.get('tag')
+    sh = model.get('shadow') or {}
+    out['shadow_grade'] = sh.get('avg_grade')
+    out['shadow_verdict'] = sh.get('verdict')
+    return out
+
+
 # ---------- model row ----------
 
 def model_row(player: dict) -> dict:
@@ -336,6 +359,8 @@ def model_row(player: dict) -> dict:
             'expected': _exp_h,
             'expected_splits': _exp_splits_h,
             'home_away': _ha_h,
+            # physical trend (bat speed + attack angle) — context-only
+            'trend': trend_lens(player['id'], 'H'),
         }
     if bucket == 'SP':
         sched = schedule_idx_for(player['id'])
@@ -574,6 +599,11 @@ def model_row(player: dict) -> dict:
             'expected_splits': _exp_splits_sp,
             'tto_decay': _tto_sp,
             'home_away': _ha_sp,
+            # validated SP context lenses (CLAUDE.md #13 — never headline):
+            'stuff': stuff_lens(player['display_name']),     # Stuff+ level + RoS proj
+            'floor': floor_lens(player['display_name']),     # bust-risk tier
+            'trend': trend_lens(player['id'], 'SP'),          # FB velo trend
+            'shadow': shadow_lens(player['display_name']),    # process grade (unranked fallback)
         }
     # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
     try:
@@ -589,6 +619,7 @@ def model_row(player: dict) -> dict:
         'recform': None,
         'extra': f"role={r['role_lag1']} sv_to={int(r.get('sv_to') or 0)} hld_to={int(r.get('hld_to') or 0)}",
         'sustainability': _sl_rp,
+        'trend': trend_lens(player['id'], 'RP'),  # FB velo trend — context-only
     }
 
 

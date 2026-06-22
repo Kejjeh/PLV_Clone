@@ -33,7 +33,7 @@ from scripts.xfp.lib.pl_cache import pl_rank, pl_streamer_rank, _warn_stale_cach
 from scripts.xfp.lib.triangulate_core import (
     model_row, archetype_row, synthesize, apply_overrides,
     consolidate_verdict, compute_confidence, build_watch_list, il_caveat,
-    flatten_lenses, compute_actuals, flatten_actuals,
+    flatten_lenses, compute_actuals, flatten_actuals, flatten_extra,
 )
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 from scripts.xfp.lib.snapshots import write_snapshot, write_diff, truncate_report_for_stdout
@@ -554,6 +554,25 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         lines.append(f"🔁 **3rd-time-through** {tto['tto1_rate']:.3f}→{tto['tto3_rate']:.3f} core fp/PA "
                      f"(penalty {tto['penalty']:+.3f}) → {tto['tier']} (career){w}")
 
+    # ── Validated SP context lenses: Stuff+ (level + RoS proj) / floor (bust risk) ──
+    # (physical bat-speed/velo trend already shown above; CLAUDE.md #13 — none headline)
+    st = model.get('stuff') or {}
+    fl = model.get('floor') or {}
+    if bucket == 'SP' and (st.get('stuff_plus') is not None or fl.get('tier')):
+        seg = []
+        if st.get('stuff_plus') is not None:
+            seg.append(f"Stuff+ {st['stuff_plus']} (pctl {st.get('stuff_pctl')}) · proj RoS "
+                       f"{st.get('proj_ros_fp')} fp/start · breakout gap {st.get('breakout_gap'):+d}")
+        if fl.get('tier'):
+            seg.append(f"floor {fl['tier']} (bust P {fl['bust_prob']}%)")
+        lines.append("\n🟦 **Stuff+ / floor (SP, context-only):** " + " · ".join(seg))
+    sh = model.get('shadow') or {}
+    if bucket == 'SP' and sh.get('verdict') and not arche.get('have'):
+        g = sh.get('grades') or {}
+        gstr = ' '.join(f"{k}={v}" for k, v in g.items())
+        lines.append(f"🔦 **Shadow scout (no rp3/archetype — process fallback):** "
+                     f"{sh['verdict']} (avg {sh['avg_grade']}) — {gstr}")
+
     # ── Boom/Bust realized actuals table (boxscore store; reuse precomputed) ──
     if actuals is None:
         from scripts.xfp.lib.triangulate_core import compute_actuals as _ca
@@ -821,6 +840,8 @@ def main():
             jrec['boom_bust'] = actuals.get('boom_bust')
             jrec['boom_window'] = actuals.get('boom_window')
             jrec['trajectory'] = actuals.get('trajectory')
+            # validated context lenses (Stuff+ / floor / trend / shadow) — flat
+            jrec.update(flatten_extra(model, bucket))
             json_rows.append(jrec)
         if args.csv_out:
             rec = {
@@ -871,6 +892,8 @@ def main():
             rec.update(flatten_lenses(model, bucket))
             # realized actuals (boom/bust + in-season trajectory) — flat columns
             rec.update(flatten_actuals(actuals))
+            # validated context lenses (Stuff+ / floor / trend / shadow) — flat
+            rec.update(flatten_extra(model, bucket))
             if category_map:
                 rec['category'] = category_map.get(name)
             csv_rows.append(rec)

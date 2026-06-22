@@ -79,9 +79,13 @@ CANONICAL_CASES = [
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
     ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
-    # 2026-06-19 PL refresh: PL #79 vs model #165 (gap 86) + declining 42 archetype
-    #   -> FADE (PL chasing outcomes). Data-driven, not a code change.
-    ("Trea Turner",     "FADE — PL chasing outcomes", "H",  "FADE",  None),
+    # Trea Turner sits ON the FADE/MIXED boundary: the FADE rule needs model−PL
+    # gap > 60, and his gap swings across 60 with small model-rank moves on each
+    # data refresh (2026-06-19 gap 86 → FADE; 2026-06-22 statcast/archetype rebuild
+    # model #120, gap 41 → MIXED). Archetype OVERALL stays 42 / TRENDING_DOWN either
+    # way. Locking a boundary verdict invites data-driven flip-flops, so this is a
+    # bucket-only lock — resolution + H bucket stay enforced.
+    ("Trea Turner",     None,                      "H",  None,    None),
     ("Framber Valdez",  "CAUTION",                "SP", "CAUTION", None),
     # Bucket-only locks (verdict varies, just confirm resolution + bucket):
     ("Jhoan Duran",     None,                     "RP", None,      None),
@@ -412,3 +416,23 @@ def test_flatten_actuals_full_and_none_safe():
     empty = flatten_actuals(None)
     assert empty['bb_n'] is None and empty['traj_ovr_delta'] is None
     assert set(empty) == set(f), "actuals column schema must be stable"
+
+
+def test_flatten_extra_full_and_none_safe():
+    """flatten_extra serializes the 4 validated context lenses (Stuff+ / floor /
+    trend / shadow) into stable flat columns, None-safe when absent."""
+    from scripts.xfp.lib.triangulate_core import flatten_extra
+    model = {
+        'stuff': {'stuff_plus': 104.6, 'proj_ros_fp': 12.38, 'breakout_gap': 39, 'stuff_pctl': 76},
+        'floor': {'bust_prob': 28, 'tier': 'MODERATE'},
+        'trend': {'tag': '🔺 breakout watch'},
+        'shadow': {'avg_grade': 59, 'verdict': 'AVG_PROCESS', 'grades': {'fb_velo': 30}},
+    }
+    f = flatten_extra(model, 'SP')
+    assert f['stuff_plus'] == 104.6 and f['stuff_breakout_gap'] == 39
+    assert f['floor_tier'] == 'MODERATE' and f['floor_bust_prob'] == 28
+    assert f['trend_tag'] == '🔺 breakout watch'
+    assert f['shadow_grade'] == 59 and f['shadow_verdict'] == 'AVG_PROCESS'
+    empty = flatten_extra({}, 'H')
+    assert empty['stuff_plus'] is None and empty['floor_tier'] is None and empty['trend_tag'] is None
+    assert set(empty) == set(f), "extra-lens column schema must be stable"
