@@ -511,64 +511,61 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 f"*{detail}*"
             )
 
-    # ── Platoon split panel (vs L/R) — context-only (CLAUDE.md #13) ───────────
+    # ── Splits table (platoon vs L/R + home/road + luck-by-split) — context-only
+    def _r(v): return f"{v:.3f}" if v is not None else "—"
     spl = model.get('splits') or {}
+    ha = model.get('home_away') or {}
+    es = model.get('expected_splits') or {}
+    srows = []
     if spl and spl.get('dominant_side'):
-        def _r(v): return f"{v:.3f}" if v is not None else "—"
         nL, nR = int(spl.get('pa_vs_L') or 0), int(spl.get('pa_vs_R') or 0)
-        warn = "" if (spl.get('sample_ok_L') and spl.get('sample_ok_R')) else " ⚠ small-sample"
-        if bucket in ('SP', 'RP'):
-            lines.append(
-                f"\n🪓 **Platoon (xwOBA-allowed)** vs LHB {_r(spl.get('rate_vs_L'))} (n{nL}) / "
-                f"vs RHB {_r(spl.get('rate_vs_R'))} (n{nR}) — hit harder by {spl['dominant_side']}HB{warn}")
-        else:
-            ll = spl.get('lift_vs_L_pct')
-            lift_str = f" (vs-LHP {ll:+.0f}% vs own avg)" if ll is not None else ""
-            lines.append(
-                f"\n🪓 **Platoon (xwOBA)** vs LHP {_r(spl.get('rate_vs_L'))} (n{nL}) / "
-                f"vs RHP {_r(spl.get('rate_vs_R'))} (n{nR}){lift_str} — stronger vs {spl['dominant_side']}HP{warn}")
-
-        # expected-vs-actual BY SPLIT — is the platoon edge real or luck?
-        es = model.get('expected_splits') or {}
+        read = (f"hit harder by {spl['dominant_side']}HB" if bucket in ('SP', 'RP')
+                else f"stronger vs {spl['dominant_side']}HP")
+        srows.append(f"| Platoon | {_r(spl.get('rate_vs_L'))} (n{nL}) | {_r(spl.get('rate_vs_R'))} (n{nR}) | {read} |")
         if es and (es.get('vs_L') or es.get('vs_R')):
             def _sx(side):
                 v = es.get(side)
-                return (f"{v['xwoba']:.3f}x/{v['woba']:.3f}a {v['regression'][:4].lower()}"
-                        if v else "—")
-            lines.append(f"   ↳ expected by split: vs L {_sx('vs_L')} | vs R {_sx('vs_R')}")
+                return f"{v['xwoba']:.3f}x/{v['woba']:.3f}a {v['regression'][:4].lower()}" if v else "—"
+            srows.append(f"| ↳ expected (luck) | {_sx('vs_L')} | {_sx('vs_R')} | xwOBA vs actual, by side |")
+    if ha and ha.get('dominant_side'):
+        nh, na = int(ha.get('pa_home') or 0), int(ha.get('pa_away') or 0)
+        srows.append(f"| Home/Road | {_r(ha.get('rate_home'))} (n{nh}) | {_r(ha.get('rate_away'))} (n{na}) | leans {ha['dominant_side']} |")
+    if srows:
+        unit = 'xwOBA-allowed' if bucket in ('SP', 'RP') else 'xwOBA'
+        lines.append(f"\n**📐 Splits & luck ({unit}; context-only)**\n"
+                     "| Lens | vs L / Home | vs R / Road | Read |\n|---|---|---|---|\n" + "\n".join(srows))
 
-    # ── Expected-vs-actual (luck) panel — context-only (CLAUDE.md #13) ─────────
+    # Overall luck + TTO (single-metric, kept as compact lines)
     exp = model.get('expected') or {}
     if exp and exp.get('gap') is not None:
-        g = exp['gap']
-        if bucket in ('SP', 'RP'):
-            tail = (" — allowing less than earned, regression UP coming" if exp['regression'] == 'OVERPERFORMING'
-                    else " — unlucky, ratios should improve" if exp['regression'] == 'UNDERPERFORMING' else "")
-            lines.append(f"\n🎲 **Expected (luck)** xwOBA-allowed {exp['xwoba']:.3f} vs actual "
-                         f"{exp['woba']:.3f} (gap {g:+.3f}) — {exp['regression']}{tail}")
-        else:
-            tail = (" — due for negative regression" if exp['regression'] == 'OVERPERFORMING'
-                    else " — bounce due" if exp['regression'] == 'UNDERPERFORMING' else "")
-            lines.append(f"\n🎲 **Expected (luck)** xwOBA {exp['xwoba']:.3f} vs actual wOBA "
-                         f"{exp['woba']:.3f} (gap {g:+.3f}) — {exp['regression']}{tail}")
-
-    # ── Times-through-order (SP) — career-static durability, context-only ──────
+        g = exp['gap']; lab = 'xwOBA-allowed' if bucket in ('SP', 'RP') else 'xwOBA'
+        tail = {'OVERPERFORMING': (' — regression UP coming' if bucket in ('SP', 'RP') else ' — due for negative regression'),
+                'UNDERPERFORMING': (' — ratios should improve' if bucket in ('SP', 'RP') else ' — bounce due'),
+                'ALIGNED': ''}.get(exp['regression'], '')
+        lines.append(f"\n🎲 **Expected (luck)** {lab} {exp['xwoba']:.3f} vs actual {exp['woba']:.3f} "
+                     f"(gap {g:+.3f}) — {exp['regression']}{tail}")
     tto = model.get('tto_decay') or {}
     if bucket == 'SP' and tto.get('penalty') is not None:
-        warn = "" if tto.get('sample_ok') else " (small TTO3 sample)"
-        lines.append(f"\n🔁 **3rd-time-through** core fp/PA {tto['tto1_rate']:.3f} (1st) → "
-                     f"{tto['tto3_rate']:.3f} (3rd), penalty {tto['penalty']:+.3f} → {tto['tier']}"
-                     f" (career){warn}")
+        w = "" if tto.get('sample_ok') else " (small sample)"
+        lines.append(f"🔁 **3rd-time-through** {tto['tto1_rate']:.3f}→{tto['tto3_rate']:.3f} core fp/PA "
+                     f"(penalty {tto['penalty']:+.3f}) → {tto['tier']} (career){w}")
 
-    # ── Home/road split — context-only (CLAUDE.md #13) ────────────────────────
-    ha = model.get('home_away') or {}
-    if ha and ha.get('dominant_side'):
-        def _hr(v): return f"{v:.3f}" if v is not None else "—"
-        nh, na = int(ha.get('pa_home') or 0), int(ha.get('pa_away') or 0)
-        w = "" if (ha.get('sample_ok_home') and ha.get('sample_ok_away')) else " ⚠ small-sample"
-        unit = "xwOBA-allowed" if bucket in ('SP', 'RP') else "xwOBA"
-        lines.append(f"\n🏠 **Home/Road ({unit})** home {_hr(ha.get('rate_home'))} (n{nh}) / "
-                     f"road {_hr(ha.get('rate_away'))} (n{na}) — leans {ha['dominant_side']}{w}")
+    # ── Boom/Bust realized actuals table (live gamelog; card-only, not batch) ──
+    try:
+        from scripts.xfp.lib.boom_bust import sp_boom_bust, rp_boom_bust, hitter_boom_bust
+        pid = int(player['id'])
+        bb, win, thr = ((sp_boom_bust(pid), 'L8 starts', '≥20 / <5') if bucket == 'SP'
+                        else (rp_boom_bust(pid), 'L15 app', '≥6 / <0') if bucket == 'RP'
+                        else (hitter_boom_bust(pid), 'L21 games', '≥10 / <2'))
+    except Exception:
+        bb, win, thr = None, '', ''
+    if bb:
+        lines.append(
+            f"\n**📊 Boom/Bust actuals ({win}, BrownU FP; boom/bust {thr}; context-only)**\n"
+            "| mean | std | boom% | bust% | min–max | L3 | trend |\n|---|---|---|---|---|---|---|\n"
+            f"| {bb['mean']} | {bb['std']} | {bb['boom_pct']}% | {bb['bust_pct']}% | "
+            f"{bb['min']}–{bb['max']} | {bb['l3_mean']} | {bb['trend']} |\n"
+            f"_last {len(bb['last'])}: {bb['last']}_")
 
     return '\n'.join(lines)
 
