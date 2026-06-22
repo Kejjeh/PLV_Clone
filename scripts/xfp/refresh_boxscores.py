@@ -74,7 +74,10 @@ def game_pks_for_date(game_date: date) -> list[int]:
     for d in data.get('dates', []):
         for g in d.get('games', []):
             status = g.get('status', {}).get('abstractGameState', '')
-            if status == 'Final':
+            # Regular season only ('R'). The live gameLog (season=YYYY) returns
+            # regular-season games, so spring training ('S')/exhibition ('E') would
+            # pollute boom/bust actuals and break parity with the live fallback tier.
+            if status == 'Final' and g.get('gameType') == 'R':
                 pks.append(g['gamePk'])
     return pks
 
@@ -96,7 +99,11 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
             if not ps:
                 continue
             ip_f = _ip_to_float(ps.get('inningsPitched', '0'))
-            if ip_f == 0:
+            # Keep 0-out appearances that still faced batters: a reliever who
+            # records no outs but allows hits/runs (a -12 FP blowup) is a real,
+            # scoreable game — and dropping it would silently censor the worst
+            # bust outings from the boom/bust lens. Only skip true no-ops.
+            if ip_f == 0 and int(ps.get('battersFaced', 0)) == 0:
                 continue
             h = int(ps.get('hits', 0))
             er = int(ps.get('earnedRuns', 0))
@@ -105,6 +112,7 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
             hbp = int(ps.get('hitBatsmen', 0))
             sv = int(ps.get('saves', 0))
             hld = int(ps.get('holds', 0))
+            gs = int(ps.get('gamesStarted', 0))  # 0/1 — lets boom/bust filter starts vs relief exactly like the live gameLog path
             base = pitcher_fp(k=so, ip=ip_f, h=h, er=er, bb=bb, hbp=hbp)
             pitchers.append({
                 'game_pk':    game_pk,
@@ -113,6 +121,7 @@ def boxscore_rows(game_pk: int, game_date: date) -> tuple[list[dict], list[dict]
                 'player_name': p.get('person', {}).get('fullName', ''),
                 'team_id':    team_id,
                 'team_name':  team_name,
+                'gs':         gs,
                 'ip':         round(ip_f, 4),
                 'h_allowed':  h,
                 'er':         er,
