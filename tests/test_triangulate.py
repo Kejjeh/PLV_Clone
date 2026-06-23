@@ -67,7 +67,12 @@ CANONICAL_CASES = [
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
     ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
     ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
-    ("Ryne Nelson",     "FADE",                   "SP", "FADE",    None),
+    # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
+    # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
+    # model #133, archetype OVR 36 TRENDING_DOWN) the gap rule can't fire and he reads
+    # CAUTION (process_red_flag) instead — equally bearish, different bucket. The verdict
+    # flips FADE↔CAUTION as he enters/exits the Top 100, so this is a bucket-only lock.
+    ("Ryne Nelson",     None,                     "SP", None,      None),
     # 2026-06-19 PL cache refresh (Wk12 hitters, Wk13 SPs): fresh ranks flipped
     #   these off MIXED. Suárez/Turner now PL-ranked well above model -> FADE (PL
     #   chasing outcomes); Schmitt's archetype-breakout rule fires with the fresh
