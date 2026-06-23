@@ -62,24 +62,27 @@ def hitters_urls(sp_week: int):
         yield f"https://pitcherlist.com/top-150-hitters-for-fantasy-baseball-{YEAR}-week-{w}/", w
 
 
-def parse_ranks(html_text: str, limit: int) -> dict:
-    """Extract {player_name: rank} from a PL article's HTML (regex over unescaped text)."""
+def parse_rank_table(html_text: str, limit: int):
+    """Parse PL's GLOBAL ranked table — used for BOTH the Top 100 SP and Top 150 hitters.
+    Each ranked row is <tr>...<td class="rank">N</td><td class="name"><a>Player</a>...
+    <td class="positions">POS</td>...</tr>. Returns ({name: rank}, {name: position}).
+    (PL articles also include a secondary by-position tier block; iterating the rank-table
+    <tr> rows specifically avoids picking that up — the bug that mis-ranked hitters.)"""
     import html as _html
-    txt = _html.unescape(re.sub(r"<[^>]+>", " ", html_text))
-    out = {}
-    for rk, nm in re.findall(
-            r"(?<![\d.])(\d{1,3})\.\s+([A-Z][A-Za-zÀ-ſ.'\" -]{2,30}?)"
-            r"(?=\s{2,}|\s*[,(–-])", txt):
-        rk = int(rk)
-        if 1 <= rk <= limit and rk not in (v for v in out.values()):
-            name = nm.strip()
-            if name and name not in out:
-                out[name] = rk
-    # keep one name per rank, ranks 1..limit
-    by_rank = {}
-    for name, rk in out.items():
-        by_rank.setdefault(rk, name)
-    return {name: rk for rk, name in sorted(by_rank.items()) if rk <= limit}
+    out, positions = {}, {}
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html_text, re.S):
+        rk = re.search(r'<td class="rank">(\d+)</td>', tr)
+        nm = re.search(r'<td class="name"><a[^>]*>([^<]+)</a>', tr)
+        if not (rk and nm):
+            continue
+        rank = int(rk.group(1))
+        name = _html.unescape(nm.group(1)).strip()
+        if rank <= limit and name and name not in out:
+            out[name] = rank
+            pos = re.search(r'<td class="positions">([^<]*)</td>', tr)
+            if pos and pos.group(1).strip():
+                positions[name] = pos.group(1).strip()
+    return out, positions
 
 
 # Reliever role -> rank tier (closers rank above setup above middle relief; within a
@@ -114,26 +117,6 @@ def parse_closers(html_text: str):
     return ranks, roles
 
 
-def parse_hitters(html_text: str):
-    """Parse PL's position-tiered Top-150 hitters (no global numbering). Returns
-    ({name: rank}, {name: position}). 'rank' is article appearance order — the only
-    signal available; the list is grouped by fielding position, not globally ranked."""
-    import html as _html
-    pat = re.compile(
-        r'(?:font-size:\s*16pt[^>]*><strong>([^<]+)</strong>)'
-        r'|(?:<a class="player-tag" href="https://pitcherlist\.com/player/[^>]+>([^<]+)</a>)')
-    ranks, positions, cur = {}, {}, ""
-    for m in pat.finditer(html_text):
-        if m.group(1):
-            cur = m.group(1).strip()
-        elif m.group(2):
-            name = _html.unescape(m.group(2)).strip()
-            if name and name not in ranks:
-                ranks[name] = len(ranks) + 1
-                positions[name] = cur
-    return ranks, positions
-
-
 def _write_cache(fname: str, url: str, ranks: dict, edition: date, extra: dict | None = None) -> bool:
     min_n = _VALID_MIN.get(fname, 40)
     if len(ranks) < min_n:
@@ -162,12 +145,13 @@ def _fetch(url: str):
 def refresh(force=False):
     now = _now_et()
     cur = {f: _cache_fetched(f) for f in _VALID_MIN}
-    # SP — Monday edition
+    # SP — Monday edition (global ranked table)
     if force or _stale("pl_sps_top100.json", cur, now):
         mon = _latest_published_edition(now, 0)
         html = _fetch(sp_url(mon))
         if html:
-            _write_cache("pl_sps_top100.json", sp_url(mon), parse_ranks(html, 100), mon)
+            ranks, _pos = parse_rank_table(html, 100)
+            _write_cache("pl_sps_top100.json", sp_url(mon), ranks, mon)
         else:
             print(f"  SP fetch failed: {sp_url(mon)}", file=sys.stderr)
     else:
@@ -189,7 +173,7 @@ def refresh(force=False):
         for url, _w in hitters_urls(_sp_week(_latest_published_edition(now, 0))):
             html = _fetch(url)
             if html:
-                ranks, positions = parse_hitters(html)
+                ranks, positions = parse_rank_table(html, 150)
                 if len(ranks) >= _VALID_MIN["pl_hitters_top150.json"]:
                     _write_cache("pl_hitters_top150.json", url, ranks, wed,
                                  extra={"positions": positions})
