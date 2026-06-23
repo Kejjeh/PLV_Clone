@@ -7,10 +7,9 @@ name: PL ranking cache auto-pull (self-hosted)
 # — it only writes a cache once its new edition is actually out, and a short/garbled parse
 # never overwrites a good cache.
 #
-# Coverage today: Top 100 SP (clean numbered list → robust regex parse). Closers + hitters
-# use tiered/table article formats the regex can't parse, so build_pl_cache safely skips
-# them; they remain refreshed via the cadence-flagged LLM WebFetch flow until dedicated
-# parsers (or a Claude WebFetch task) land.
+# Coverage: all three via format-specific parsers — Top 100 SP (numbered list), closers
+# (per-team role table → role + save% + synthesized rank), Top 150 hitters (position-tiered
+# → appearance-order rank + position). Each is count-validated + fail-soft.
 #
 # Schedule: 01:00 UTC = 21:00 ET (EDT) / 20:00 ET (EST) — comfortably past the ~7 PM ET drop.
 on:

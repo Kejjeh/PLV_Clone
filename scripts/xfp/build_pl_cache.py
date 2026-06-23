@@ -82,7 +82,59 @@ def parse_ranks(html_text: str, limit: int) -> dict:
     return {name: rk for rk, name in sorted(by_rank.items()) if rk <= limit}
 
 
-def _write_cache(fname: str, url: str, ranks: dict, edition: date) -> bool:
+# Reliever role -> rank tier (closers rank above setup above middle relief; within a
+# tier, by descending save-chance %). Closer-ish roles all rank as "closer".
+_CLOSER_ROLE_PRI = {"Closer": 0, "Co-Closer": 1, "Interim Closer": 2, "Closer?": 3,
+                    "Setup Role": 4, "Middle Relief": 5}
+
+
+def parse_closers(html_text: str):
+    """Parse PL's per-team reliever TABLE (role / player / save%). Returns
+    ({name: rank}, {name: {role, save_pct}}). Rank orders closers (by save% desc)
+    above setup above middle relief — a faithful fantasy-reliever ranking."""
+    import html as _html
+    rows = re.findall(
+        r'<td class="emphasis"><strong>([^<]+)</strong></td>\s*'
+        r'<td><a[^>]*player/[^>]*>([^<]+)</a></td>'
+        r'(?:\s*<td><em>([^<]*)</em></td>)?', html_text)
+    recs = []
+    for role, name, pct in rows:
+        role = role.strip()
+        name = _html.unescape(name).strip()
+        sv = int(re.sub(r"[^0-9]", "", pct) or 0)
+        if name:
+            recs.append((role, name, sv))
+    recs.sort(key=lambda r: (_CLOSER_ROLE_PRI.get(r[0], 9), -r[2]))
+    ranks, roles = {}, {}
+    for role, name, sv in recs:
+        if name in ranks:
+            continue
+        ranks[name] = len(ranks) + 1
+        roles[name] = {"role": role, "save_pct": sv}
+    return ranks, roles
+
+
+def parse_hitters(html_text: str):
+    """Parse PL's position-tiered Top-150 hitters (no global numbering). Returns
+    ({name: rank}, {name: position}). 'rank' is article appearance order — the only
+    signal available; the list is grouped by fielding position, not globally ranked."""
+    import html as _html
+    pat = re.compile(
+        r'(?:font-size:\s*16pt[^>]*><strong>([^<]+)</strong>)'
+        r'|(?:<a class="player-tag" href="https://pitcherlist\.com/player/[^>]+>([^<]+)</a>)')
+    ranks, positions, cur = {}, {}, ""
+    for m in pat.finditer(html_text):
+        if m.group(1):
+            cur = m.group(1).strip()
+        elif m.group(2):
+            name = _html.unescape(m.group(2)).strip()
+            if name and name not in ranks:
+                ranks[name] = len(ranks) + 1
+                positions[name] = cur
+    return ranks, positions
+
+
+def _write_cache(fname: str, url: str, ranks: dict, edition: date, extra: dict | None = None) -> bool:
     min_n = _VALID_MIN.get(fname, 40)
     if len(ranks) < min_n:
         print(f"  SKIP {fname}: parsed only {len(ranks)} ranks (< {min_n}) — not overwriting",
@@ -90,6 +142,8 @@ def _write_cache(fname: str, url: str, ranks: dict, edition: date) -> bool:
         return False
     path = Path(PL_CACHE_DIR) / fname
     payload = {"fetched": edition.isoformat(), "source_url": url, "ranks": ranks}
+    if extra:
+        payload.update(extra)
     tmp = path.with_suffix(".json.tmp")
     tmp.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     tmp.replace(path)
@@ -118,25 +172,27 @@ def refresh(force=False):
             print(f"  SP fetch failed: {sp_url(mon)}", file=sys.stderr)
     else:
         print("  SP current — skip")
-    # Closers — Tuesday edition
+    # Closers — Tuesday edition (per-team role table -> role + save% + synthesized rank)
     if force or _stale("pl_closers.json", cur, now):
         tue = _latest_published_edition(now, 1)
         html = _fetch(closers_url(tue))
         if html:
-            _write_cache("pl_closers.json", closers_url(tue), parse_ranks(html, 50), tue)
+            ranks, roles = parse_closers(html)
+            _write_cache("pl_closers.json", closers_url(tue), ranks, tue, extra={"roles": roles})
         else:
             print(f"  closers fetch failed: {closers_url(tue)}", file=sys.stderr)
     else:
         print("  closers current — skip")
-    # Hitters — Wednesday edition (best-effort week-number URL)
+    # Hitters — Wednesday edition (position-tiered; try recent week-number URLs)
     if force or _stale("pl_hitters_top150.json", cur, now):
         wed = _latest_published_edition(now, 2)
         for url, _w in hitters_urls(_sp_week(_latest_published_edition(now, 0))):
             html = _fetch(url)
             if html:
-                ranks = parse_ranks(html, 150)
+                ranks, positions = parse_hitters(html)
                 if len(ranks) >= _VALID_MIN["pl_hitters_top150.json"]:
-                    _write_cache("pl_hitters_top150.json", url, ranks, wed)
+                    _write_cache("pl_hitters_top150.json", url, ranks, wed,
+                                 extra={"positions": positions})
                     break
         else:
             print("  hitters: no week-number URL returned a full list (best-effort)", file=sys.stderr)
