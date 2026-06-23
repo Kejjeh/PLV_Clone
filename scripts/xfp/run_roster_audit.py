@@ -56,6 +56,16 @@ def match(df_proj, name_col, projection_col, roster_player):
 
 
 def main():
+    import argparse
+    _ap = argparse.ArgumentParser(description='Roster audit')
+    _ap.add_argument('--fresh', action='store_true',
+                     help='Catch local data up to yesterday via the two fast bridges '
+                          '(boxscore + statcast gf) before auditing. Skips if current.')
+    _args, _ = _ap.parse_known_args()
+    if _args.fresh:
+        from scripts.xfp.lib.freshness import ensure_fresh
+        ensure_fresh()
+
     roster = get_my_roster_with_injuries()
 
     proj_files = {

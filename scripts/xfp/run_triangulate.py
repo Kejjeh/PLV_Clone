@@ -709,6 +709,15 @@ def main():
                          'never mint an id from a fresh now()).')
     ap.add_argument('--list-runs', action='store_true',
                     help='Print the dated, sorted triangulate run manifests and exit.')
+    ap.add_argument('--fresh', action='store_true',
+                    help='Catch local data up to yesterday first via the two fast bridges '
+                         '(boxscore + statcast gf) so actuals + statcast-reading lenses are '
+                         'current. Skips instantly if already current. Does NOT retrain '
+                         'rh3/rp3/rprs2 (use --fresh-models for that).')
+    ap.add_argument('--fresh-models', action='store_true',
+                    help='Full local refresh (statcast + model retrain + dashboards) before '
+                         'running — slow (minutes). Use when you need the headline numbers '
+                         'rebuilt, not just the lens/actuals layer.')
     args = ap.parse_args()
 
     if args.list_runs:
@@ -718,6 +727,10 @@ def main():
     if args.check_caches:
         print_refresh_instructions()
         return
+
+    if args.fresh or args.fresh_models:
+        from scripts.xfp.lib.freshness import ensure_fresh
+        ensure_fresh(models=args.fresh_models)
 
     _warn_stale_caches()
 

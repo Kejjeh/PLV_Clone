@@ -1,20 +1,27 @@
 """Pitcher List rank lookup + stale-cache warnings."""
 from __future__ import annotations
 import json, os, sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
+
+try:
+    from zoneinfo import ZoneInfo
+    _ET = ZoneInfo('America/New_York')
+except Exception:  # pragma: no cover
+    _ET = None
 
 from .bucket_dispatch import _norm
 from .cached_data import _load_pl_cache, _load_pl_streamer_cache, PL_CACHE_DIR
 
-# ── PL publish cadence (when each ranking DROPS, inferred from article dates) ──
-# Staleness is cadence-aware, not flat calendar age: a weekly ranking is stale only
-# once its NEXT edition has actually published. Evidence from the article URLs:
-#   Top 100 SP — Monday    (titles dated to the week's Monday: "6-15 week-13",
-#                           "6-22 week-14")
-#   Closers/relievers — ~Tuesday (article dated "...closers-holds-solds-6-16", a Tue)
-#   Top 150 hitters — ~mid-week (~Wednesday; lagged the SP list — was "week-12" on a
-#                           Friday when SP was already "week-13")
-#   SP streamers — rolling 2-3 day windows ("...6-19-6-20-6-21"), refresh every ~2 days
+# ── PL publish cadence (which DAY each ranking drops + the ET TIME it lands) ──
+# Staleness is cadence- AND time-aware: a weekly ranking is stale only once its NEXT
+# edition has ACTUALLY published. PL drops each article ~6-7 PM ET on its day, so we
+# treat an edition as available at 19:00 ET (7 PM) on its weekday — a run at Tue 4 AM
+# sees only Monday's SP list as new, not Tuesday's closers (those land Tue evening).
+# Evidence from the article URLs:
+#   Top 100 SP — Monday    ("...6-15-week-13", "...6-22-week-14")
+#   Closers/relievers — ~Tuesday ("...closers-holds-solds-6-16", a Tue)
+#   Top 150 hitters — ~Wednesday (lagged the SP list; "week-12" on a Fri when SP=week-13)
+#   SP streamers — rolling 2-3 day windows ("...6-19-6-20-6-21")
 # ('weekly', weekday) where Monday=0; ('rolling', max_age_days).
 PL_PUBLISH_CADENCE = {
     'pl_sps_top100.json':          ('weekly', 0),   # Monday
@@ -22,24 +29,35 @@ PL_PUBLISH_CADENCE = {
     'pl_hitters_top150.json':      ('weekly', 2),   # ~Wednesday
     'pl_sp_streamers_latest.json': ('rolling', 2),  # every ~2 days
 }
+PL_PUBLISH_HOUR_ET = 19  # articles land ~6-7 PM ET; treat as out at 7 PM
 
 
-def _last_weekday_on_or_before(today: date, weekday: int) -> date:
-    """Most recent date <= today that falls on `weekday` (Mon=0)."""
-    return today - timedelta(days=(today.weekday() - weekday) % 7)
+def _now_et() -> datetime:
+    return datetime.now(_ET) if _ET else datetime.now()
 
 
-def _cache_is_stale(fname: str, fetched: date, today: date) -> tuple[bool, str]:
-    """Cadence-aware staleness. Returns (is_stale, human_reason)."""
+def _latest_published_edition(now_et: datetime, weekday: int) -> date:
+    """Most recent date on `weekday` whose ~7 PM ET publish moment is already past."""
+    d = now_et.date()
+    cand = d - timedelta(days=(d.weekday() - weekday) % 7)
+    pub_moment = datetime.combine(cand, time(PL_PUBLISH_HOUR_ET), tzinfo=now_et.tzinfo)
+    if pub_moment > now_et:        # this cycle's edition hasn't dropped yet
+        cand -= timedelta(days=7)  # -> the prior week's is the latest live one
+    return cand
+
+
+def _cache_is_stale(fname: str, fetched: date, now_et: datetime | None = None) -> tuple[bool, str]:
+    """Cadence- and ET-time-aware staleness. Returns (is_stale, human_reason)."""
+    now_et = now_et or _now_et()
     mode, val = PL_PUBLISH_CADENCE.get(fname, ('rolling', 7))
     if mode == 'rolling':
-        age = (today - fetched).days
+        age = (now_et.date() - fetched).days
         return age > val, f"{age}d old (rolling, refresh every {val}d)"
-    pub = _last_weekday_on_or_before(today, val)  # this cycle's publish date
+    pub = _latest_published_edition(now_et, val)  # latest edition actually out now
     wd = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][val]
     if fetched < pub:
-        return True, f"new {wd} edition out ({pub}); cache fetched {fetched}"
-    return False, f"current ({wd} edition {pub} already cached)"
+        return True, f"new {wd} edition out ({pub}, ~7pm ET); cache fetched {fetched}"
+    return False, f"current (latest live {wd} edition {pub} already cached)"
 
 PL_CACHE_FILES = {
     'H':         'pl_hitters_top150.json',
@@ -101,7 +119,7 @@ def _warn_stale_caches():
             fdate = datetime.strptime(fetched[:10], '%Y-%m-%d').date()
         except ValueError:
             continue
-        stale, reason = _cache_is_stale(fname, fdate, today)
+        stale, reason = _cache_is_stale(fname, fdate)
         if stale:
             print(f"WARN {fname} is STALE — {reason}", file=sys.stderr)
 
@@ -148,7 +166,7 @@ def print_refresh_instructions() -> None:
         except ValueError:
             print(f"BAD-DATE: {fname} (fetched={fetched})\n")
             continue
-        stale, reason = _cache_is_stale(fname, fdate, today)
+        stale, reason = _cache_is_stale(fname, fdate)
         if stale:
             any_stale = True
             print(f"STALE: {fname} — {reason}. To refresh:")
