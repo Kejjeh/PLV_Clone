@@ -438,6 +438,21 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
    `gamesStarted / gamesPlayed >= 0.4` → SP. Applied in
    `build_matchup_dashboard.py` and `run_roster_audit.py`; wire it anywhere
    you filter pitchers by role. Canonical fix 2026-06-15.
+9. **Data is through YESTERDAY — two bridges erase the Statcast lag (2026-06-23).**
+   `pybaseball.statcast()` finalizes ~1-2 days late, so two bridges fill the gap and
+   both run early in `refresh_dashboards.py`: (a) **boxscore bridge** (`refresh_boxscores.py`,
+   step 1.5) → real-time per-game BrownU FP into `boxscore_{hitters,pitchers}.parquet`
+   (powers boom/bust, `/boom-bust-history`); (b) **statcast gf bridge**
+   (`build_statcast_gf_bridge.py`, step 1.05) → Savant per-game-feed pitches mapped into
+   `statcast_2026.parquet` tagged `source='gf_provisional'`, so the MODELS (rh3/rp3/rprs2,
+   archetypes, splits, expected-stats, in-season arcs) are same-day current too. The
+   canonical pull overwrites the provisional rows once a day finalizes. **After a daily
+   refresh, assume everything reflects yesterday's games** — don't caveat "models lag a day."
+10. **PL rankings publish on a known cadence — staleness is cadence-aware (2026-06-23).**
+    Top 100 SP drops **Monday**; closers/relievers **~Tuesday**; Top 150 hitters **~Wednesday**;
+    SP streamers are **rolling 2-3 day** windows. `lib/pl_cache._cache_is_stale` (+ `/triangulate
+    --check-caches`) flags a cache stale only once its NEXT edition has actually published —
+    so a Friday SP pull is "stale" by Monday, not by a flat 7-day age. Refresh in that rhythm.
 
 ## Don't do these (load-bearing feedback)
 
