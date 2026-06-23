@@ -89,6 +89,19 @@ def main():
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
 
+    # 1.05. Statcast gf bridge — fills the SAME 1-2 day Statcast lag at PITCH level
+    # (the boxscore bridge only fixes FP actuals; this makes the MODELS same-day
+    # current). Pulls Savant's per-game feed for the days the pybaseball CSV hasn't
+    # finalized, maps pitches into the statcast schema (provisional), reconstructs
+    # xwOBA-on-contact. Runs BEFORE the rolling builders so they see yesterday.
+    # Provisional rows are overwritten by the canonical CSV on a later pull. Fail-soft.
+    if not args.skip_statcast:
+        ok_gf = run('1.05. Statcast gf bridge (fills lag at pitch level)',
+                    'python -X utf8 scripts/xfp/build_statcast_gf_bridge.py',
+                    timeout=300)
+        if not ok_gf:
+            print('  ⚠ statcast gf bridge failed — models may lag 1 day (boom/bust still current)')
+
     # 1.5. Boxscore bridge — fills the 1-2 day Statcast lag.
     # MLB Stats API boxscores are real-time (available minutes after game end)
     # while Savant/pybaseball pitch-level data lags 1-2 days. This step pulls
