@@ -11,11 +11,31 @@ from .bucket_dispatch import PROJECTIONS, ARCHETYPE_PANELS, _norm, _flip_lastfir
 
 PL_CACHE_DIR = 'data/research/pl_cache'
 
+# Load-bearing columns every consumer (model_row, the seam, the dashboards) relies on.
+# Validated at load so a model-pipeline refactor that drops a headline/id column fails
+# LOUDLY here with a clear message, instead of a cryptic KeyError deep inside model_row.
+REQUIRED_COLUMNS = {
+    'H':  ('batter', 'player_name', 'rank', 'xfp_rh3_per_game'),
+    'SP': ('pitcher', 'player_name', 'rank', 'xfp_rp3_per_start'),
+    'RP': ('pitcher', 'name_api', 'rank', 'xfp_ros'),
+}
+
 
 @functools.lru_cache(maxsize=None)
 def _load_projection(bucket: str) -> pd.DataFrame:
-    """Load + cache a projection CSV. Adds a normalized '_key' column."""
-    df = pd.read_csv(PROJECTIONS[bucket])
+    """Load + cache a projection CSV. Adds a normalized '_key' column.
+
+    Validates the load-bearing schema up front (REQUIRED_COLUMNS) so a missing headline
+    or id column surfaces as a clear ProjectionSchema error, not a downstream KeyError.
+    """
+    path = PROJECTIONS[bucket]
+    df = pd.read_csv(path)
+    missing = [c for c in REQUIRED_COLUMNS.get(bucket, ()) if c not in df.columns]
+    if missing:
+        raise ValueError(
+            f"projection schema error: {bucket} CSV {path} is missing required "
+            f"column(s) {missing}. A model refactor likely dropped them — fix the "
+            f"pipeline or REQUIRED_COLUMNS. Present: {sorted(df.columns)[:12]}...")
     if bucket == 'H':
         df['_key'] = df['player_name'].apply(_norm)
     elif bucket == 'SP':
