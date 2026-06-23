@@ -1,0 +1,49 @@
+name: PL ranking cache auto-pull (self-hosted)
+
+# Auto-pulls Pitcher List rankings into data/research/pl_cache/ on a cadence-gated
+# schedule, so the dashboards/triangulate read current PL ranks without a manual WebFetch.
+# Runs in the evening AFTER PL publishes (articles land ~6-7 PM ET), so a same-evening run
+# catches that day's edition. The puller (build_pl_cache.py) is cadence-gated and fail-soft
+# — it only writes a cache once its new edition is actually out, and a short/garbled parse
+# never overwrites a good cache.
+#
+# Coverage today: Top 100 SP (clean numbered list → robust regex parse). Closers + hitters
+# use tiered/table article formats the regex can't parse, so build_pl_cache safely skips
+# them; they remain refreshed via the cadence-flagged LLM WebFetch flow until dedicated
+# parsers (or a Claude WebFetch task) land.
+#
+# Schedule: 01:00 UTC = 21:00 ET (EDT) / 20:00 ET (EST) — comfortably past the ~7 PM ET drop.
+on:
+  schedule:
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pl-cache:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 10
+    defaults:
+      run:
+        shell: powershell
+        working-directory: C:\Users\Joshua\plv_clone
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+    steps:
+      - name: Pull PL rankings (cadence-gated)
+        run: python scripts/xfp/build_pl_cache.py
+
+      - name: Commit & push refreshed PL cache
+        run: |
+          git add data/research/pl_cache
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            $stamp = Get-Date -Format 'yyyy-MM-dd'
+            git commit -m "pl-cache: auto-pull rankings $stamp"
+            git push origin main
+          } else {
+            Write-Host "No PL cache changes to commit."
+          }
