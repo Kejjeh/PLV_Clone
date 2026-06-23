@@ -1,5 +1,5 @@
 {
-  "generated": "2026-06-22",
+  "generated": "2026-06-23",
   "upgrade_floor_fpp": -0.087,
   "hit_upgrade_floor_xwoba": 0.321,
   "alert_count": 5,
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 28.7,
       "xwoba_con": 0.372,
-      "rp3_rank": 13
+      "rp3_rank": 11
     },
     {
       "name": "Drew Anderson",
@@ -34,7 +34,7 @@
       "l4": "3/4",
       "whiff_pct": 27.8,
       "xwoba_con": 0.33,
-      "rp3_rank": 25
+      "rp3_rank": 19
     },
     {
       "name": "Spencer Miles",
@@ -49,7 +49,7 @@
       "l4": "2/4",
       "whiff_pct": 19.5,
       "xwoba_con": 0.344,
-      "rp3_rank": 23
+      "rp3_rank": 21
     },
     {
       "name": "Chase Dollander",
@@ -79,7 +79,7 @@
       "l4": "3/4",
       "whiff_pct": 21.5,
       "xwoba_con": 0.378,
-      "rp3_rank": 68
+      "rp3_rank": 83
     }
   ],
   "hitter_alerts": [],
