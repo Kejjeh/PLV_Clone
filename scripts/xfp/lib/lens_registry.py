@@ -96,6 +96,15 @@ LENS_FAMILIES: dict[str, dict] = {
         "accessor": "lib.extra_lenses.stuff_command_lens",
         "validation_ref": "floor_adjusted_ranking_2026-06-24.md",
     },
+    "next_start": {
+        "columns": ("next_start_date", "next_opp", "next_venue", "next_park_env", "next_opp_env"),
+        "context_only": True, "experimental": True,
+        "desc": "next-start matchup CONTEXT (SP): venue/opp + park-environment (Coors=EXTREME-"
+                "HITTER) + opp tier. A bench-decision FLAG — validated NON-predictive as a "
+                "projection multiplier (per-start noise swamps it), so context-only by design.",
+        "accessor": "lib.extra_lenses.next_start_lens",
+        "validation_ref": "next_start_park_2026-06-24.md",
+    },
     "physical_trend": {
         "columns": ("trend_tag",),
         "context_only": True, "validated": True,

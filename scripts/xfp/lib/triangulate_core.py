@@ -26,7 +26,8 @@ from .home_away import hitter_home_away, sp_home_away  # home/road split lens
 from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never headline)
     stuff_lens, floor_lens, trend_lens, shadow_lens,
     floor_adjusted_xfp, floor_flag,  # risk-aware decision score (decision-layer, not headline)
-    stuff_command_lens)              # within-season stuff-vs-command divergence (context)
+    stuff_command_lens,              # within-season stuff-vs-command divergence (context)
+    next_start_lens)                 # next-start venue/opp matchup context (flag, not multiplier)
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -290,6 +291,13 @@ def flatten_extra(model: dict, bucket: str) -> dict:
     out['stuff_cmd_velo_d'] = scd.get('velo_d')
     out['stuff_cmd_bb_d'] = scd.get('bb_d')
     out['stuff_cmd_yoy_swstr_d'] = scd.get('yoy_swstr_d')
+    # next-start matchup context (venue/opp environment) — flag, not a projection multiplier
+    ns = model.get('next_start') or {}
+    out['next_start_date'] = ns.get('date')
+    out['next_opp'] = ns.get('opp')
+    out['next_venue'] = ns.get('venue')
+    out['next_park_env'] = ns.get('park_env')
+    out['next_opp_env'] = ns.get('opp_env')
     tr = model.get('trend') or {}
     out['trend_tag'] = tr.get('tag')
     sh = model.get('shadow') or {}
@@ -627,6 +635,7 @@ def model_row(player: dict) -> dict:
             'trend': trend_lens(player['id'], 'SP'),          # FB velo trend
             'shadow': shadow_lens(player['display_name']),    # process grade (unranked fallback)
             'stuff_cmd': stuff_command_lens(player['id']),    # stuff-vs-command divergence (reversible vs structural)
+            'next_start': next_start_lens(player['id']),      # next-start venue/opp matchup context
         }
     # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
     try:

@@ -584,6 +584,15 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         _yoystr = f" · SwStr YoY {_yoy:+.1f}pp" if _yoy is not None else ""
         lines.append(f"\n{_ic} **Stuff-vs-command ({scd['tag']}):** SwStr {scd['swstr_d']:+.1f}pp · "
                      f"FBvelo {scd['velo_d']:+.1f} · BB {scd['bb_d']:+.1f}pp (early→recent 2026){_yoystr} — {_nt}")
+    nxt = model.get('next_start') or {}
+    if bucket == 'SP' and nxt.get('date'):
+        _pk = {'EXTREME-HITTER': '⚠ Coors-class extreme hitter park (high variance — cap-bench candidate)',
+               'HITTER': 'hitter-leaning park', 'PITCHER': 'pitcher-friendly park',
+               'NEUTRAL': 'neutral park'}.get(nxt.get('park_env'), 'park n/a')
+        _loc = f"{'vs' if nxt.get('is_home') else '@'} {nxt.get('opp')}"
+        lines.append(f"\n🗓️ **Next start ({nxt['date']}, {_loc} · {nxt.get('venue')}):** {_pk} · "
+                     f"opp offense {nxt.get('opp_env') or '?'} — CONTEXT ONLY (validated: park/opp are "
+                     f"NOT a point-predictable FP adjustment per-start; flag for bench/variance, not the number)")
     sh = model.get('shadow') or {}
     if bucket == 'SP' and sh.get('verdict') and not arche.get('have'):
         g = sh.get('grades') or {}

@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "xfp
 
 import pytest
 from lib.extra_lenses import (
-    floor_adjusted_xfp, floor_flag, classify_stuff_command,
+    floor_adjusted_xfp, floor_flag, classify_stuff_command, park_env, opp_env,
     FLOOR_BUST_BASE, FLOOR_BUST_FP_COST, FLOOR_RISK_LAMBDA,
 )
 from lib.triangulate_core import flatten_extra
@@ -149,4 +149,38 @@ def test_flatten_extra_emits_stuff_cmd():
 def test_stuff_cmd_columns_registered_context_only():
     for c in ('stuff_cmd_tag', 'stuff_cmd_swstr_d', 'stuff_cmd_velo_d',
               'stuff_cmd_bb_d', 'stuff_cmd_yoy_swstr_d'):
+        assert is_context_only_column(c)
+
+
+# ---- next-start matchup context (park/opp environment) ----
+
+def test_park_env_tiers():
+    assert park_env(1.20) == 'EXTREME-HITTER'   # Coors-class
+    assert park_env(1.10) == 'EXTREME-HITTER'
+    assert park_env(1.05) == 'HITTER'
+    assert park_env(1.00) == 'NEUTRAL'
+    assert park_env(0.93) == 'PITCHER'
+    assert park_env(None) is None
+
+
+def test_opp_env_tiers():
+    assert opp_env(1.10) == 'tough'
+    assert opp_env(1.00) == 'avg'
+    assert opp_env(0.90) == 'soft'
+    assert opp_env(None) is None
+
+
+def test_flatten_extra_emits_next_start():
+    model = {'proj': 11.0, 'floor': {},
+             'next_start': {'date': '2026-06-29', 'opp': 'COL', 'venue': 'COL',
+                            'is_home': False, 'park_env': 'EXTREME-HITTER', 'opp_env': 'avg'}}
+    out = flatten_extra(model, 'SP')
+    assert out['next_venue'] == 'COL'
+    assert out['next_park_env'] == 'EXTREME-HITTER'
+    assert out['next_opp_env'] == 'avg'
+    assert out['next_opp'] == 'COL'
+
+
+def test_next_start_columns_registered_context_only():
+    for c in ('next_start_date', 'next_opp', 'next_venue', 'next_park_env', 'next_opp_env'):
         assert is_context_only_column(c)

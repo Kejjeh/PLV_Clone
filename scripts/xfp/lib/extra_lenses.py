@@ -286,3 +286,131 @@ def stuff_command_lens(mlbam, season=2026):
         return None
     return {'tag': tag, 'swstr_d': swstr_d, 'velo_d': velo_d, 'bb_d': bb_d, 'zone_d': zone_d,
             'yoy_swstr_d': yoy_swstr_d}
+
+
+# --------------------------------------------------------------------------
+# Next-start matchup CONTEXT (venue + opponent) — flag, NOT a projection multiplier.
+# --------------------------------------------------------------------------
+# Validated 2026-06-24 (validate_next_start_park.py, 2,364 real 2026 SP starts): a park
+# OR opponent MULTIPLIER does NOT improve per-start SP FP prediction OOS (both best-k=0;
+# MAE flat at ~7.7 on a ~10 FP mean — single SP starts are ~75% irreducible noise). The
+# raw Coors gap is real as a POPULATION average (SP avg 7.67 FP at Coors vs 9.99 elsewhere,
+# -2.32) but is confounded (rotation/opponent) and swamped by per-start variance. So we do
+# NOT move the projection — we surface the matchup as DECISION CONTEXT: an extreme park
+# (Coors) is a high-variance, cap-bench flag even though it's not a point-predictable dock.
+# Rule 13: context-only, never a headline/feature.
+
+# Statcast team abbreviations (MLB full name -> abbr; matches park/team_strength caches).
+_TEAM_ABBR = {
+    'Arizona Diamondbacks': 'AZ', 'Atlanta Braves': 'ATL', 'Baltimore Orioles': 'BAL',
+    'Boston Red Sox': 'BOS', 'Chicago Cubs': 'CHC', 'Chicago White Sox': 'CWS',
+    'Cincinnati Reds': 'CIN', 'Cleveland Guardians': 'CLE', 'Colorado Rockies': 'COL',
+    'Detroit Tigers': 'DET', 'Houston Astros': 'HOU', 'Kansas City Royals': 'KC',
+    'Los Angeles Angels': 'LAA', 'Los Angeles Dodgers': 'LAD', 'Miami Marlins': 'MIA',
+    'Milwaukee Brewers': 'MIL', 'Minnesota Twins': 'MIN', 'New York Mets': 'NYM',
+    'New York Yankees': 'NYY', 'Athletics': 'ATH', 'Oakland Athletics': 'ATH',
+    'Philadelphia Phillies': 'PHI', 'Pittsburgh Pirates': 'PIT', 'San Diego Padres': 'SD',
+    'San Francisco Giants': 'SF', 'Seattle Mariners': 'SEA', 'St. Louis Cardinals': 'STL',
+    'Tampa Bay Rays': 'TB', 'Texas Rangers': 'TEX', 'Toronto Blue Jays': 'TOR',
+    'Washington Nationals': 'WSH',
+}
+
+
+def park_env(pf_R):
+    """Park run-environment tier from the multi-year pf_R (run factor). Coors-class is its
+    own tier — the only park material enough to flag for a bench decision."""
+    if pf_R is None:
+        return None
+    if pf_R >= 1.10:
+        return 'EXTREME-HITTER'   # Coors
+    if pf_R >= 1.03:
+        return 'HITTER'
+    if pf_R <= 0.95:
+        return 'PITCHER'
+    return 'NEUTRAL'
+
+
+def opp_env(bat_index):
+    """soft / avg / tough from the opposing offense's bat_index (mirrors matchup_tier)."""
+    if bat_index is None:
+        return None
+    if bat_index <= 0.97:
+        return 'soft'
+    if bat_index >= 1.03:
+        return 'tough'
+    return 'avg'
+
+
+@functools.lru_cache(maxsize=1)
+def _park_R_map():
+    """Multi-year-stable pf_R per team abbr (PA-weighted mean 2022-2026) — single-year
+    park factors are half-season-noisy (2026 Coors pf_wOBA=1.0165)."""
+    try:
+        import pandas as pd, numpy as np
+        p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'park_factors_2018_2026.csv'
+        df = pd.read_csv(p)
+        df = df[df.year >= 2022]
+        return {t: float(np.average(g.pf_R, weights=g.n_pa)) for t, g in df.groupby('team_abbr')}
+    except Exception:
+        return {}
+
+
+@functools.lru_cache(maxsize=1)
+def _opp_bat_map():
+    try:
+        import pandas as pd
+        p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'team_strength_2026.csv'
+        df = pd.read_csv(p)
+        return dict(zip(df.team, df.bat_index))
+    except Exception:
+        return {}
+
+
+@functools.lru_cache(maxsize=1)
+def _upcoming_schedule():
+    """Next 9 days of MLB games with probable-pitcher ids + venue team. Cached once per
+    process; returns () on any failure so the lens degrades to None."""
+    try:
+        import requests
+        from datetime import date, timedelta
+        start = date.today(); end = start + timedelta(days=9)
+        url = ('https://statsapi.mlb.com/api/v1/schedule?sportId=1'
+               f'&startDate={start.isoformat()}&endDate={end.isoformat()}&hydrate=probablePitcher')
+        r = requests.get(url, timeout=15)
+        if r.status_code != 200:
+            return ()
+        out = []
+        for dd in r.json().get('dates', []):
+            for g in dd.get('games', []):
+                # skip already-final games — "next start" must be upcoming
+                state = (g.get('status', {}) or {}).get('abstractGameState', '')
+                if state == 'Final':
+                    continue
+                h = g['teams']['home']['team']['name']; a = g['teams']['away']['team']['name']
+                hp = (g['teams']['home'].get('probablePitcher') or {}).get('id')
+                ap = (g['teams']['away'].get('probablePitcher') or {}).get('id')
+                out.append((dd['date'], _TEAM_ABBR.get(h, h), _TEAM_ABBR.get(a, a), hp, ap))
+        return tuple(out)
+    except Exception:
+        return ()
+
+
+def next_start_lens(mlbam):
+    """Next CONFIRMED start matchup context for an SP (decision flag, not a multiplier).
+    Returns {date, opp, venue, is_home, pf_R, park_env, opp_bat_index, opp_env} or None
+    when the pitcher's next start isn't yet posted as a probable."""
+    try:
+        mlbam = int(mlbam)
+    except (TypeError, ValueError):
+        return None
+    for d, home, away, hp, ap in _upcoming_schedule():   # already date-sorted
+        if mlbam == hp or mlbam == ap:
+            is_home = (mlbam == hp)
+            venue = home                      # game is played at the home team's park
+            opp = away if is_home else home
+            pfR = _park_R_map().get(venue)
+            oidx = _opp_bat_map().get(opp)
+            return {'date': d, 'opp': opp, 'venue': venue, 'is_home': is_home,
+                    'pf_R': round(pfR, 3) if pfR else None, 'park_env': park_env(pfR),
+                    'opp_bat_index': round(oidx, 3) if oidx else None, 'opp_env': opp_env(oidx)}
+    return None
