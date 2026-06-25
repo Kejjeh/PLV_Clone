@@ -568,7 +568,22 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                        f"{st.get('proj_ros_fp')} fp/start · breakout gap {st.get('breakout_gap'):+d}")
         if fl.get('tier'):
             seg.append(f"floor {fl['tier']} (bust P {fl['bust_prob']}%)")
+            if model.get('proj') is not None and fl.get('bust_prob') is not None:
+                from scripts.xfp.lib.extra_lenses import floor_adjusted_xfp as _faj, floor_flag as _ff
+                _fadj, _pen = _faj(model.get('proj'), fl.get('bust_prob'))
+                _mark = {'FLOOR-RISK': ' ⚠ FLOOR-RISK', 'SAFE-FLOOR': ' ✓ SAFE-FLOOR'}.get(
+                    _ff(_pen, fl.get('tier')), '')
+                seg.append(f"risk-adj {_fadj:.1f} fp ({_pen:+.1f} vs mean {model.get('proj'):.1f}){_mark}")
         lines.append("\n🟦 **Stuff+ / floor (SP, context-only):** " + " · ".join(seg))
+    scd = model.get('stuff_cmd') or {}
+    if bucket == 'SP' and scd.get('tag'):
+        _ic = {'COMMAND-WATCH': '🟡', 'STUFF-DECLINE': '🔴'}.get(scd['tag'], '⚪')
+        _nt = {'COMMAND-WATCH': 'stuff intact, command eroding — usually REVERSIBLE (yellow flag, not a sell)',
+               'STUFF-DECLINE': 'swing-and-miss/velo eroding — STRUCTURAL decline (sell candidate)'}.get(scd['tag'], '')
+        _yoy = scd.get('yoy_swstr_d')
+        _yoystr = f" · SwStr YoY {_yoy:+.1f}pp" if _yoy is not None else ""
+        lines.append(f"\n{_ic} **Stuff-vs-command ({scd['tag']}):** SwStr {scd['swstr_d']:+.1f}pp · "
+                     f"FBvelo {scd['velo_d']:+.1f} · BB {scd['bb_d']:+.1f}pp (early→recent 2026){_yoystr} — {_nt}")
     sh = model.get('shadow') or {}
     if bucket == 'SP' and sh.get('verdict') and not arche.get('have'):
         g = sh.get('grades') or {}
@@ -669,6 +684,14 @@ def compare_table(rows):
                 seg.append(f"{st['stuff_plus']} g{st.get('breakout_gap'):+d}")
             if fl.get('tier'):
                 seg.append(_floor_short.get(fl['tier'], fl['tier']))
+                if m.get('proj') is not None and fl.get('bust_prob') is not None:
+                    from scripts.xfp.lib.extra_lenses import floor_adjusted_xfp as _faj, floor_flag as _ff
+                    _fadj, _pen = _faj(m.get('proj'), fl.get('bust_prob'))
+                    _mk = {'FLOOR-RISK': '⚠', 'SAFE-FLOOR': '✓'}.get(_ff(_pen, fl.get('tier')), '')
+                    seg.append(f"→{_fadj:.1f}{_mk}")
+            scd = m.get('stuff_cmd') or {}
+            if scd.get('tag'):
+                seg.append({'COMMAND-WATCH': 'cmd⚠', 'STUFF-DECLINE': 'STUFF🔻'}.get(scd['tag'], scd['tag']))
             if seg:
                 sf_show = ' '.join(seg)
         out.append(f"| {p['display_name']} | {p['bucket']} | {pl_show} | {m_show} | {career_show} "
@@ -1004,6 +1027,15 @@ def main():
             df_out['within_bucket_rank'] = df_out['within_bucket_rank'].astype('Int64')
         else:
             df_out['within_bucket_rank'] = None
+        # floor_adj_rank: risk-aware within-(category,bucket) rank by floor_adj_xfp desc
+        # (higher = better). Lets the user see how the floor model's bust risk re-sorts a
+        # command-collapse arm vs the rp3-mean within_bucket_rank. Decision-layer (Rule 13).
+        if 'floor_adj_xfp' in df_out.columns and 'bucket' in df_out.columns:
+            _grp = [c for c in ('category', 'bucket') if c in df_out.columns]
+            df_out['floor_adj_rank'] = (
+                df_out.groupby(_grp)['floor_adj_xfp']
+                      .rank(method='min', ascending=False, na_option='bottom'))
+            df_out['floor_adj_rank'] = df_out['floor_adj_rank'].astype('Int64')
         df_out.to_csv(args.csv_out, index=False)
         print(f"Wrote {len(df_out)} rows to {args.csv_out}")
         if args.snapshot:

@@ -79,6 +79,23 @@ LENS_FAMILIES: dict[str, dict] = {
         "accessor": "lib.extra_lenses.floor_lens",
         "validation_ref": "sp_floor_model_2026-06-06.md",
     },
+    "floor_adjusted": {
+        "columns": ("floor_adj_xfp", "floor_adj_penalty", "floor_flag"),
+        "context_only": True, "validated": True,
+        "desc": "risk-aware FP/start (rp3 mean docked/credited by sp_floor bust risk) "
+                "+ mean-vs-floor conflict flag (SP). DECISION-LAYER, headline unchanged.",
+        "accessor": "lib.extra_lenses.floor_adjusted_xfp",
+        "validation_ref": "floor_adjusted_ranking_2026-06-24.md",
+    },
+    "stuff_command": {
+        "columns": ("stuff_cmd_tag", "stuff_cmd_swstr_d", "stuff_cmd_velo_d",
+                    "stuff_cmd_bb_d", "stuff_cmd_yoy_swstr_d"),
+        "context_only": True, "experimental": True,
+        "desc": "within-season STUFF-vs-COMMAND divergence (SP): STUFF-DECLINE (structural, "
+                "persistent — Framber) vs COMMAND-WATCH (reversible wobble — Soriano).",
+        "accessor": "lib.extra_lenses.stuff_command_lens",
+        "validation_ref": "floor_adjusted_ranking_2026-06-24.md",
+    },
     "physical_trend": {
         "columns": ("trend_tag",),
         "context_only": True, "validated": True,

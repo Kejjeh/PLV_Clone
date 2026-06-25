@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import functools
 import unicodedata
+from pathlib import Path
 
 
 def _norm(s) -> str:
@@ -132,3 +133,156 @@ def shadow_lens(name: str) -> dict | None:
         "verdict": r.get("verdict"),
         "grades": r.get("grades"),
     }
+
+
+# --------------------------------------------------------------------------
+# Floor-adjusted (risk-aware) decision score — DECISION-LAYER, never a headline.
+# --------------------------------------------------------------------------
+# Validated 2026-06-24 (validate_rp3_ideas.py + validate_floor_trajectory.py):
+# within-season trajectory / recency-trend features add ~0 OOS to BOTH the rp3 mean
+# (Δr ≈ 0 vs the +0.005 gate) AND the per-start bust model (ΔAUC ≈ 0, bootstrap 95%
+# CI spans 0). So a command-collapse arm (canonical: José Soriano 2026) cannot be
+# flagged by a new *projection feature* — the right move is to SURFACE the already-
+# validated sp_floor bust risk in the DECISION layer. floor_adj encodes H2H risk-
+# aversion (a <5 FP start can lose a scoring week): it docks the mean for above-base
+# bust probability and credits it for below-base (SAFE-floor) arms.
+#
+# Rule 13: this NEVER changes the rh3/rp3/rprs2/blended headline — it is a separate,
+# clearly-labelled decision metric (registered context-only in lens_registry).
+FLOOR_BUST_BASE = 0.27       # historical per-start bust (<5 FP) base rate (validation panel)
+FLOOR_BUST_FP_COST = 9.0     # FP swing a bust start represents vs a typical non-bust start
+FLOOR_RISK_LAMBDA = 0.5      # H2H risk-aversion knob (0 = mean-neutral; higher = penalize bust more)
+
+
+def floor_adjusted_xfp(mean_fp, bust_prob_pct):
+    """Risk-aware FP/start for H2H start/drop ranking. Returns (floor_adj_fp, penalty_fp):
+    penalty>0 docks an above-base-bust arm, penalty<0 credits a SAFE-floor arm. Returns
+    (mean_fp, 0.0) when either input is missing — never invents a number."""
+    if mean_fp is None or bust_prob_pct is None:
+        return (mean_fp, 0.0)
+    try:
+        bust = float(bust_prob_pct) / 100.0
+        penalty = FLOOR_RISK_LAMBDA * (bust - FLOOR_BUST_BASE) * FLOOR_BUST_FP_COST
+        return (round(float(mean_fp) - penalty, 2), round(penalty, 2))
+    except (TypeError, ValueError):
+        return (mean_fp, 0.0)
+
+
+def floor_flag(penalty_fp, tier=None):
+    """Mean-vs-floor conflict tag, aligned to the VALIDATED SAFE/MODERATE/RISKY floor
+    tiers (the calibrated cut), with a penalty-sign sanity check. FLOOR-RISK = a RISKY-
+    tier arm whose bust risk the mean doesn't show (command-collapse pattern); SAFE-FLOOR
+    = a SAFE-tier arm the mean under-credits. None otherwise (incl. MODERATE)."""
+    if penalty_fp is None or tier is None:
+        return None
+    if tier == 'RISKY' and penalty_fp > 0:
+        return 'FLOOR-RISK'
+    if tier == 'SAFE' and penalty_fp < 0:
+        return 'SAFE-FLOOR'
+    return None
+
+
+# --------------------------------------------------------------------------
+# Stuff-vs-command divergence — distinguishes REVERSIBLE from STRUCTURAL decline.
+# --------------------------------------------------------------------------
+# Built 2026-06-24 from the Soriano-vs-Framber process decomposition. The lesson:
+# what decays *permanently* is STUFF (swing-and-miss / velo); COMMAND (walks / zone%)
+# wobbles REVERT far more often, especially on a high-stuff arm (the stuff buys margin
+# to fix the strike-throwing). This classifier reads the WITHIN-season process trend so
+# a command-only slump (Soriano: SwStr intact, BB rising) isn't mistaken for a real
+# decline (Framber: SwStr collapsed 12->8). Context-only (Rule 13): NEVER moves the
+# headline, floor_adj, or verdict — it surfaces the *type* of decline as conviction color.
+
+def classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d=0.0):
+    """Pure, unit-testable classifier of an SP's process divergence. Within-season deltas
+    (recent minus early, 2026) PLUS a year-over-year SwStr delta (2026 minus 2025, pp) so a
+    stuff decline that happened *across* seasons (Framber: SwStr 12.4->10.1 YoY) is caught
+    even when 2026 looks flat. Returns:
+      'STUFF-DECLINE'  swing-and-miss/velo eroding in-season OR YoY -> structural (sell cand.)
+      'COMMAND-WATCH'  stuff intact (in-season AND YoY) but walks up / zone% down -> reversible
+      None             no clear divergence."""
+    stuff_eroding = (swstr_d <= -2.0) or (velo_d <= -1.5) or (yoy_swstr_d <= -2.0)
+    stuff_intact = (swstr_d >= -1.5) and (velo_d >= -1.0) and (yoy_swstr_d >= -1.0)
+    command_eroding = (bb_d >= 2.5) or (zone_d <= -2.5)
+    if stuff_eroding:
+        return 'STUFF-DECLINE'
+    if stuff_intact and command_eroding:
+        return 'COMMAND-WATCH'
+    return None
+
+
+@functools.lru_cache(maxsize=1)
+def _yoy_swstr_lookup():
+    """{pitcher: {year: (season-end SwStr%, gs_to)}} from the rolling panel, for the
+    year-over-year stuff-decline check. gs_to lets us require a real prior-year sample so
+    a post-injury/TJ arm (compromised prior season, e.g. Bradish) doesn't false-flag.
+    Empty dict on any failure (lens degrades to within-season only)."""
+    try:
+        import pandas as pd
+        p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'rolling_pitchers_2018_2026.csv'
+        df = pd.read_csv(p, usecols=['pitcher', 'year', 'split_day', 'swstr_pct_to', 'gs_to'])
+        last = df.sort_values('split_day').groupby(['pitcher', 'year']).tail(1)
+        out: dict = {}
+        for _, r in last.iterrows():
+            out.setdefault(int(r['pitcher']), {})[int(r['year'])] = (float(r['swstr_pct_to']), float(r['gs_to']))
+        return out
+    except Exception:
+        return {}
+
+
+@functools.lru_cache(maxsize=1)
+def _statcast_2026_pitch():
+    try:
+        import pandas as pd
+        p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'statcast_2026.parquet'
+        if not p.exists():
+            return None
+        return pd.read_parquet(p, columns=['pitcher', 'game_date', 'pitch_type',
+                                           'release_speed', 'description', 'events', 'zone'])
+    except Exception:
+        return None
+
+
+def stuff_command_lens(mlbam, season=2026):
+    """Within-season STUFF-vs-COMMAND divergence for an SP (mlbam id). Splits the
+    pitcher's 2026 pitches into early (first 50%) vs recent (last 30%) and compares
+    SwStr% / FB velo (stuff) against BB% / zone% (command). Returns {tag, swstr_d,
+    velo_d, bb_d, zone_d} or None (no divergence / thin sample). Context-only."""
+    df = _statcast_2026_pitch()
+    if df is None:
+        return None
+    try:
+        import pandas as pd
+        d = df[df['pitcher'] == int(mlbam)].sort_values('game_date')
+    except Exception:
+        return None
+    if len(d) < 300:
+        return None
+    n = len(d)
+    early, recent = d.iloc[:int(n * 0.5)], d.iloc[int(n * 0.7):]
+
+    def _m(g):
+        import pandas as pd
+        swstr = 100.0 * (g['description'] == 'swinging_strike').sum() / max(1, len(g))
+        velo = g[g['pitch_type'].isin(['FF', 'SI'])]['release_speed'].mean()
+        ev = g[g['events'].notna()]
+        bb = 100.0 * (ev['events'] == 'walk').mean() if len(ev) else float('nan')
+        zone = 100.0 * g['zone'].between(1, 9).mean() if 'zone' in g.columns else float('nan')
+        return swstr, velo, bb, zone
+
+    import pandas as pd
+    e, r = _m(early), _m(recent)
+    swstr_d = round(r[0] - e[0], 1)
+    velo_d = round((r[1] - e[1]) if pd.notna(r[1]) and pd.notna(e[1]) else 0.0, 1)
+    bb_d = round((r[2] - e[2]) if pd.notna(r[2]) and pd.notna(e[2]) else 0.0, 1)
+    zone_d = round((r[3] - e[3]) if pd.notna(r[3]) and pd.notna(e[3]) else 0.0, 1)
+    # year-over-year SwStr delta (2026 minus 2025), in pp — only if the PRIOR season had a
+    # real sample (>=10 GS), else 0.0 so post-injury/TJ arms (Bradish) don't false-flag.
+    yoy = _yoy_swstr_lookup().get(int(mlbam), {})
+    cur, prev = yoy.get(season), yoy.get(season - 1)
+    yoy_swstr_d = round((cur[0] - prev[0]) * 100, 1) if (cur and prev and prev[1] >= 10) else 0.0
+    tag = classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d)
+    if tag is None:
+        return None
+    return {'tag': tag, 'swstr_d': swstr_d, 'velo_d': velo_d, 'bb_d': bb_d, 'zone_d': zone_d,
+            'yoy_swstr_d': yoy_swstr_d}

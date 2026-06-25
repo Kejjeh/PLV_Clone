@@ -24,7 +24,9 @@ from .expected_stats import (  # expected-vs-actual (luck) lens, overall + by-sp
 from .lineup_pass import sp_lineup_pass  # times-through-order decay (SP)
 from .home_away import hitter_home_away, sp_home_away  # home/road split lens
 from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never headline)
-    stuff_lens, floor_lens, trend_lens, shadow_lens)
+    stuff_lens, floor_lens, trend_lens, shadow_lens,
+    floor_adjusted_xfp, floor_flag,  # risk-aware decision score (decision-layer, not headline)
+    stuff_command_lens)              # within-season stuff-vs-command divergence (context)
 
 import os as _os
 from functools import lru_cache as _lru_cache
@@ -269,6 +271,25 @@ def flatten_extra(model: dict, bucket: str) -> dict:
     fl = model.get('floor') or {}
     out['floor_bust_prob'] = fl.get('bust_prob')
     out['floor_tier'] = fl.get('tier')
+    # floor-adjusted (risk-aware) decision score — SP only; rp3/blended headline UNCHANGED
+    # (Rule 13). Docks the mean for above-base bust risk, credits SAFE-floor arms. Surfaces
+    # the mean-vs-floor conflict that flags command-collapse arms (Soriano) the mean can't.
+    if bucket == 'SP' and fl.get('bust_prob') is not None and model.get('proj') is not None:
+        _fadj, _pen = floor_adjusted_xfp(model.get('proj'), fl.get('bust_prob'))
+        out['floor_adj_xfp'] = _fadj
+        out['floor_adj_penalty'] = _pen
+        out['floor_flag'] = floor_flag(_pen, fl.get('tier'))
+    else:
+        out['floor_adj_xfp'] = None
+        out['floor_adj_penalty'] = None
+        out['floor_flag'] = None
+    # stuff-vs-command divergence (SP) — reversible (COMMAND-WATCH) vs structural (STUFF-DECLINE)
+    scd = model.get('stuff_cmd') or {}
+    out['stuff_cmd_tag'] = scd.get('tag')
+    out['stuff_cmd_swstr_d'] = scd.get('swstr_d')
+    out['stuff_cmd_velo_d'] = scd.get('velo_d')
+    out['stuff_cmd_bb_d'] = scd.get('bb_d')
+    out['stuff_cmd_yoy_swstr_d'] = scd.get('yoy_swstr_d')
     tr = model.get('trend') or {}
     out['trend_tag'] = tr.get('tag')
     sh = model.get('shadow') or {}
@@ -605,6 +626,7 @@ def model_row(player: dict) -> dict:
             'floor': floor_lens(player['display_name']),     # bust-risk tier
             'trend': trend_lens(player['id'], 'SP'),          # FB velo trend
             'shadow': shadow_lens(player['display_name']),    # process grade (unranked fallback)
+            'stuff_cmd': stuff_command_lens(player['id']),    # stuff-vs-command divergence (reversible vs structural)
         }
     # RP sustainability lens (K%/SwStr% from RP multiyr, display-only, CLAUDE.md #13)
     try:

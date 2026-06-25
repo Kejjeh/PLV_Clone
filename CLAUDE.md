@@ -453,6 +453,25 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     SP streamers are **rolling 2-3 day** windows. `lib/pl_cache._cache_is_stale` (+ `/triangulate
     --check-caches`) flags a cache stale only once its NEXT edition has actually published —
     so a Friday SP pull is "stale" by Monday, not by a flat 7-day age. Refresh in that rhythm.
+11. **Trajectory/recency-trend is NON-PREDICTIVE for SP projection — validated 2026-06-24.**
+    Don't re-attempt slope / EWMA / change-point / "recent K-BB% is falling" features for rp3
+    OR the floor model: tested leakage-safe through both models' own harnesses — **Δr ≈ 0**
+    (rp3 mean, vs the +0.005 gate) AND **ΔAUC ≈ 0** (per-start bust, bootstrap CI spans 0).
+    RoS FP and bust risk both **mean-revert**; the cumulative LEVEL already carries the decline.
+    For H2H downside, use the shipped **`floor_adj_xfp`** (rp3 mean docked/credited by sp_floor
+    bust risk) + **`floor_adj_rank`** + **`floor_flag`** (FLOOR-RISK on RISKY tier / SAFE-FLOOR on
+    SAFE tier) — decision-layer, Rule-13 context-only (registered `floor_adjusted` family).
+    Tunable knobs in `lib/extra_lenses` (FLOOR_RISK_LAMBDA=0.5). **Canonical:** Soriano's
+    *validated* bust risk is only 22% (his Ks protect the floor) → floor_adj ranks him #1 of his
+    peer set; his 63%-bust recent run is variance, not predictive decline — so "drop Soriano"
+    is selling low vs every validated lens. See `floor_adjusted_ranking_2026-06-24.md`.
+    **Companion flag (same memo):** `stuff_command_lens` classifies the TYPE of decline —
+    **STUFF-DECLINE** (SwStr/velo eroding in-season OR YoY, gated on a real prior-year sample so
+    post-TJ arms don't false-flag → structural, sell) vs **COMMAND-WATCH** (stuff intact but
+    walks up → reversible, hold-watch). Columns `stuff_cmd_tag`/`_swstr_d`/`_velo_d`/`_bb_d`/
+    `_yoy_swstr_d`, registered `stuff_command` family, context-only. Canonical split: **Framber =
+    STUFF-DECLINE** (SwStr 12.4→10.1 YoY, good drop) vs **Soriano = COMMAND-WATCH** (SwStr rising
+    YoY, hold). Watch an arm's STUFF, not its walks, to know when a wobble becomes a sell.
 
 ## Don't do these (load-bearing feedback)
 
