@@ -1,0 +1,244 @@
+{
+  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-6-26-6-27-6-28/",
+  "fetched": "2026-06-26",
+  "window": "6/26-6/27-6/28",
+  "note": "6/28 (Sunday) behind PL Pro paywall \u2014 not captured",
+  "ranks_by_day": {
+    "2026-06-27": {
+      "Chase Burns": {
+        "rank": 1,
+        "tier": "AUTO",
+        "opp": "@PIT"
+      },
+      "Yoshinobu Yamamoto": {
+        "rank": 2,
+        "tier": "AUTO",
+        "opp": "@SDP"
+      },
+      "Drew Rasmussen": {
+        "rank": 3,
+        "tier": "AUTO",
+        "opp": "vsARI"
+      },
+      "Logan Gilbert": {
+        "rank": 4,
+        "tier": "AUTO",
+        "opp": "@CLE"
+      },
+      "Dylan Cease": {
+        "rank": 5,
+        "tier": "AUTO",
+        "opp": "vsTEX"
+      },
+      "Logan Webb": {
+        "rank": 6,
+        "tier": "AUTO",
+        "opp": "vsATL"
+      },
+      "Kyle Harrison": {
+        "rank": 7,
+        "tier": "AUTO",
+        "opp": "vsCHC"
+      },
+      "Gerrit Cole": {
+        "rank": 8,
+        "tier": "PROBABLY",
+        "opp": "@BOS"
+      },
+      "Framber Valdez": {
+        "rank": 9,
+        "tier": "PROBABLY",
+        "opp": "home"
+      },
+      "Reid Detmers": {
+        "rank": 10,
+        "tier": "PROBABLY",
+        "opp": "vsATH"
+      },
+      "Foster Griffin": {
+        "rank": 11,
+        "tier": "PROBABLY",
+        "opp": "home"
+      },
+      "Jared Jones": {
+        "rank": 12,
+        "tier": "PROBABLY",
+        "opp": "vsCIN",
+        "pick": true
+      },
+      "Dustin May": {
+        "rank": 13,
+        "tier": "PROBABLY",
+        "opp": "vsMIA"
+      },
+      "Jack Perkins": {
+        "rank": 14,
+        "tier": "QUESTIONABLE",
+        "opp": "@LAA"
+      },
+      "Davis Martin": {
+        "rank": 15,
+        "tier": "QUESTIONABLE",
+        "opp": "vsKCR"
+      },
+      "Bryce Elder": {
+        "rank": 16,
+        "tier": "QUESTIONABLE",
+        "opp": "@SFG"
+      },
+      "Michael Wacha": {
+        "rank": 17,
+        "tier": "QUESTIONABLE",
+        "opp": "@CWS"
+      },
+      "Jose Cabrera": {
+        "rank": 18,
+        "tier": "QUESTIONABLE",
+        "opp": "@TBR"
+      },
+      "Brandon Young": {
+        "rank": 19,
+        "tier": "QUESTIONABLE",
+        "opp": "home"
+      },
+      "Kumar Rocker": {
+        "rank": 20,
+        "tier": "QUESTIONABLE",
+        "opp": "home"
+      },
+      "Slade Cecconi": {
+        "rank": 21,
+        "tier": "QUESTIONABLE",
+        "opp": "vsSEA"
+      },
+      "Alan Rangel": {
+        "rank": 22,
+        "tier": "QUESTIONABLE",
+        "opp": "home"
+      },
+      "Jake Bennett": {
+        "rank": 23,
+        "tier": "QUESTIONABLE",
+        "opp": "home"
+      }
+    }
+  },
+  "ranks": {
+    "Chase Burns": {
+      "rank": 1,
+      "tier": "AUTO",
+      "opp": "@PIT"
+    },
+    "Yoshinobu Yamamoto": {
+      "rank": 2,
+      "tier": "AUTO",
+      "opp": "@SDP"
+    },
+    "Drew Rasmussen": {
+      "rank": 3,
+      "tier": "AUTO",
+      "opp": "vsARI"
+    },
+    "Logan Gilbert": {
+      "rank": 4,
+      "tier": "AUTO",
+      "opp": "@CLE"
+    },
+    "Dylan Cease": {
+      "rank": 5,
+      "tier": "AUTO",
+      "opp": "vsTEX"
+    },
+    "Logan Webb": {
+      "rank": 6,
+      "tier": "AUTO",
+      "opp": "vsATL"
+    },
+    "Kyle Harrison": {
+      "rank": 7,
+      "tier": "AUTO",
+      "opp": "vsCHC"
+    },
+    "Gerrit Cole": {
+      "rank": 8,
+      "tier": "PROBABLY",
+      "opp": "@BOS"
+    },
+    "Framber Valdez": {
+      "rank": 9,
+      "tier": "PROBABLY",
+      "opp": "home"
+    },
+    "Reid Detmers": {
+      "rank": 10,
+      "tier": "PROBABLY",
+      "opp": "vsATH"
+    },
+    "Foster Griffin": {
+      "rank": 11,
+      "tier": "PROBABLY",
+      "opp": "home"
+    },
+    "Jared Jones": {
+      "rank": 12,
+      "tier": "PROBABLY",
+      "opp": "vsCIN",
+      "pick": true
+    },
+    "Dustin May": {
+      "rank": 13,
+      "tier": "PROBABLY",
+      "opp": "vsMIA"
+    },
+    "Jack Perkins": {
+      "rank": 14,
+      "tier": "QUESTIONABLE",
+      "opp": "@LAA"
+    },
+    "Davis Martin": {
+      "rank": 15,
+      "tier": "QUESTIONABLE",
+      "opp": "vsKCR"
+    },
+    "Bryce Elder": {
+      "rank": 16,
+      "tier": "QUESTIONABLE",
+      "opp": "@SFG"
+    },
+    "Michael Wacha": {
+      "rank": 17,
+      "tier": "QUESTIONABLE",
+      "opp": "@CWS"
+    },
+    "Jose Cabrera": {
+      "rank": 18,
+      "tier": "QUESTIONABLE",
+      "opp": "@TBR"
+    },
+    "Brandon Young": {
+      "rank": 19,
+      "tier": "QUESTIONABLE",
+      "opp": "home"
+    },
+    "Kumar Rocker": {
+      "rank": 20,
+      "tier": "QUESTIONABLE",
+      "opp": "home"
+    },
+    "Slade Cecconi": {
+      "rank": 21,
+      "tier": "QUESTIONABLE",
+      "opp": "vsSEA"
+    },
+    "Alan Rangel": {
+      "rank": 22,
+      "tier": "QUESTIONABLE",
+      "opp": "home"
+    },
+    "Jake Bennett": {
+      "rank": 23,
+      "tier": "QUESTIONABLE",
+      "opp": "home"
+    }
+  }
+}
