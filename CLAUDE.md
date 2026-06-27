@@ -472,6 +472,30 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     `_yoy_swstr_d`, registered `stuff_command` family, context-only. Canonical split: **Framber =
     STUFF-DECLINE** (SwStr 12.4→10.1 YoY, good drop) vs **Soriano = COMMAND-WATCH** (SwStr rising
     YoY, hold). Watch an arm's STUFF, not its walks, to know when a wobble becomes a sell.
+12. **Hitter rolling-window predictive validity — validated 2026-06-26.** Don't re-derive which
+    window to read or re-attempt a "hot-streak momentum" term for hitter FP. On our own 2026 panel
+    (leakage-safe, non-overlapping anchors, `window_predictive_validity_2026-06-26.md`): (a) **longer
+    trailing window predicts forward FP better, monotonically** — full season-to-date is the single
+    best predictor (L7 r~0.15 → season ~0.32); (b) recent form adds **~0 beyond the FULL running
+    season level** (it DOES add vs an older baseline, but the season average already contains it →
+    **no separate momentum term**, Rule 13); (c) **of all process metrics, ONLY bat speed adds
+    forward-FP signal beyond the FP level** (incremental partial r +0.076, CI excludes 0; K%/xwOBACON/
+    HardHit%/BB% are redundant/confirmatory). **Practical:** anchor on the season level, use **L21d**
+    as the recent-form window, trust **L7 only for bat speed**, and a hot L21d rate with flat bat
+    speed = variance, not a new tier. (Caveat: established everyday regulars only.)
+13. **Model forward-calibration is GOOD — don't "fix" the small under-projection (validated
+    2026-06-26).** True forward retrospective (real git-recovered rh3/rp3 snapshots, projected at
+    T vs actuals AFTER T; `model_forward_calibration_2026-06-26.md`): forward rank skill is modest
+    & honest (**rh3 r≈0.35, rp3 r≈0.40** over 2-3 wks — the same-period r 0.77-0.82 is INFLATED by
+    the projection containing the actuals). Forward bias is mildly positive (**rh3 +0.19 at the
+    survivorship floor → +0.56 for heavy-usage regulars**; corr(err, fwd games)=+0.31). **Do NOT
+    add an intercept / shade projections up / reduce shrinkage / widen σ from this** — the +bias is
+    conditional on "keeps playing" (unconditionally the models are centered-to-OVER, since they
+    hold priors for faders), shrinkage is validated to help, and the band check was a units bug
+    (rh3 p25/p75 are **per-PA** not per-game) / confounded (rp3). The conservatism on regulars is a
+    faint floor, **context-only (Rule 13) — never a number-mover or re-rank reason.** Snapshot
+    logger (`build_player_projection_history.py`, refresh step 4.10) re-verified live; re-run the
+    retro on logged (not git) snapshots in ~3-4 wks + do a proper single-start rp3 σ-coverage study.
 
 ## Don't do these (load-bearing feedback)
 
@@ -515,8 +539,22 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     (canonical: Max Muncy LAD vs ATH) silently grab the wrong row in a
     `dict[name]=batter_id` map. Always use
     `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`
-    which consults `KNOWN_COLLISIONS` and refuses to silently guess. See
+    (or `resolve_pitcher_id(name, team=..., role=...)`) which consults
+    `KNOWN_COLLISIONS` and refuses to silently guess. See
     `feedback_player_name_collisions.md` and `/player-id-resolve`.
+    **NEVER `df[player_name.str.contains(last_name)]` for a stats/projection/draft
+    lookup** — a surname substring grabs the wrong same-name player and `.iloc[0]`
+    hides it. Canonical 2026-06-26: **Will Warren** (701542, NYY, STARTER) vs
+    **Austin Warren** (681810, NYM, RELIEVER) — a `contains('Warren')` query pulled
+    Austin's relief games into Will's profile, falsely showing Will "moved to the
+    bullpen." (Will/Austin differ on FIRST name so they normalize differently —
+    a normalized FULL-name match is safe; only same-FULL-name pairs like Muncy /
+    the Garcias need a team hint.) A workflow audit fixed every skill engine doing
+    this (`run_fa_monitor`, `build_sp_alerts`, `bench_tracker`, `week_schedule_tilt`,
+    matchup boom-scan); the rule: resolve to mlbam with team/role, else a normalized
+    FULL-name match (skip-on-ambiguous) — never last-name `contains`. The boxscore
+    store + `lib/boom_bust.py` were already mlbam-keyed (safe). Locked by
+    `tests/test_name_collision.py`.
 11. **Don't label any player as "yours" without a live roster call.**
     On 2026-05-25, Weathers and Rasmussen were labeled "Your SP" from
     session memory — both were on opponent rosters. Always call
