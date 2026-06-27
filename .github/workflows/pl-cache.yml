@@ -45,7 +45,7 @@ jobs:
             # Integrate commits the other self-hosted job (daily-refresh) and any
             # interactive work pushed since checkout, so the push can't be
             # rejected non-fast-forward.
-            git pull --rebase origin main
+            git pull --rebase --autostash origin main
             if ($LASTEXITCODE -ne 0) {
               git rebase --abort
               git pull --no-rebase --no-edit -X ours origin main
