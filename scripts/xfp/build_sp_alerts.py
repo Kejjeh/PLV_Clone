@@ -31,6 +31,7 @@ def _norm(s):
 
 
 def display_name(sc):
+    sc = str(sc)          # coerce NaN/float names (avoid '"," in float' TypeError)
     if "," in sc:
         p = sc.split(",", 1)
         return p[1].strip() + " " + p[0].strip()

@@ -337,7 +337,8 @@ def main():
     # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
     ok_profiles = run('4.5. Build player_profiles.html (archetype browser)',
                       'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',
-                      timeout=120)
+                      timeout=420)   # 40MB embed reads the big rolling CSVs; 120s timed
+                      # out on the self-hosted runner and killed the whole refresh.
 
     # 4.55. Build merged xFP boards (SP + 5 hitter buckets) + xfp_board.html.
     # Regenerates data/research/{sp,hitter}_merged_xfp_rank_<date>.csv and the
