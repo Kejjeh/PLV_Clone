@@ -2635,10 +2635,17 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
                     continue
                 if is_il_player(p):
                     continue
-                pid = player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
+                team_abbr = (p.proTeam or '').upper()
+                # Collision-safe (Max Muncy LAD vs ATH): resolve KNOWN_COLLISIONS
+                # hitters by team via resolve_id; non-colliding names keep the fast
+                # name lookup byte-identical. (collision fix 2026-06-26)
+                pid = None
+                if p.name in _KNOWN_COLLISIONS:
+                    pid = resolve_id(p.name, kind='batter', team=(team_abbr or None),
+                                     position=(p.position or None))
+                pid = pid or player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
                 if not pid:
                     continue
-                team_abbr = (p.proTeam or '').upper()
                 hitters.append({'side': side, 'name': p.name, 'team': team_abbr,
                                 'mlbam': int(pid), 'pos': p.position or '?'})
 
@@ -2646,10 +2653,16 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
         rp3 = pd.read_csv(_select_rp3_path()).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
         rp3_idx = rp3.set_index('nk').to_dict('index')
+        # id-keyed index (collision-safe): sp['mlbam'] was resolved safely above, so
+        # prefer joining rp3 by pitcher id over the name key (the two Logan Allens /
+        # same-name SPs). Falls back to the name key. (collision fix 2026-06-26)
+        rp3_by_id = (rp3.dropna(subset=['pitcher'])
+                        .assign(_pid=lambda d: d['pitcher'].astype(int))
+                        .set_index('_pid').to_dict('index'))
 
         sp_rows = []
         for sp in sps:
-            r = rp3_idx.get(_norm(sp['name']), {})
+            r = rp3_by_id.get(int(sp['mlbam'])) or rp3_idx.get(_norm(sp['name']), {})
             try:
                 rec_form = float(r.get('recency_form_gap')) if pd.notna(r.get('recency_form_gap')) else None
             except Exception:

@@ -38,8 +38,11 @@ def display_name(sc):
 
 
 def rp3_rank(name):
-    last = _norm(name).split()[-1]
-    m = rp3[rp3["player_name"].str.lower().str.contains(re.escape(last), na=False)]
+    # Full normalized name (rp3 player_name is 'Last, First' -> display_name flips it);
+    # never a surname substring, which conflates same-name SPs (Will vs Austin Warren,
+    # the Garcias) and corrupts the displayed rank. (collision fix 2026-06-26)
+    target = _norm(name)
+    m = rp3[rp3["player_name"].apply(lambda s: _norm(display_name(s))) == target]
     if len(m):
         return int(m["rank"].iloc[0])
     return 999
@@ -105,9 +108,12 @@ my_sp_names = set(my_sps["player_name"].tolist())
 
 # compute fpp for each of my active SPs
 def find_fpp(name):
-    last = _norm(name).split()[-1]
+    # Full normalized-name match, not a surname substring (which would pull the wrong
+    # same-name SP's fpp and skew the upgrade floor). A miss falls to the floor default,
+    # which is a safe failure mode (no cross-person leak). (collision fix 2026-06-26)
+    target = _norm(name)
     for _, r in merged.iterrows():
-        if last in _norm(r["display"]):
+        if _norm(r["display"]) == target:
             return float(r["fpp"])
     return -0.200  # default floor if no starts yet
 

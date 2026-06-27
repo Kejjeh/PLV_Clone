@@ -254,6 +254,9 @@ def load_name_map() -> dict[int, str]:
     if not NAME_RES_PATH.exists():
         return {}
     df = pd.read_csv(NAME_RES_PATH)
+    # Drop unresolved rows (NaN batter_mlbam) before the int cast — name_resolution_2026.csv
+    # carries unresolved players with a NaN id, which would raise IntCastingNaNError.
+    df = df[df["batter_mlbam"].notna()]
     return dict(zip(df["batter_mlbam"].astype(int), df["player_name"]))
 
 

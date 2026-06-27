@@ -55,12 +55,9 @@ def _fuzzy_in(name: str, pool: list[str]) -> str | None:
     for cand in pool:
         if n == _norm(cand):
             return cand
-    # last-name partial match (fallback)
-    last = n.split()[-1] if n.split() else ""
-    if len(last) >= 4:
-        for cand in pool:
-            if last in _norm(cand):
-                return cand
+    # No last-name substring fallback: a surname (Warren/Garcia/Rodriguez/Lowe)
+    # silently grabs the wrong same-name player into a HEADLINE alert. A missed
+    # match is safer than a cross-person false positive. (collision fix 2026-06-26)
     return None
 
 
@@ -148,12 +145,10 @@ def _rank_for(full_name: str, df: pd.DataFrame) -> int:
         for _, row in df.iterrows():
             if _norm(str(row[nc])) == last_first:
                 return int(row[rc])
-    # Last-name fallback: take best rank among all surname matches
-    last = parts[-1].lower() if parts else ""
-    if len(last) >= 4:
-        hits = df[df[nc].str.lower().str.split().str[-1] == last]
-        if len(hits):
-            return int(hits[rc].min())
+    # No last-name fallback: surname-token match + min() can borrow a different
+    # same-name player's (better) rank (Will vs Austin Warren, the Garcias),
+    # corrupting the displayed rank + the rank gates. An unresolved 999 is safer
+    # than a wrong rank from the wrong player. (collision fix 2026-06-26)
     return 999
 
 
@@ -396,7 +391,7 @@ def signal_d(fas, rp3, rh3, rprs2):
     for fa_name in fa_names:
         n = _norm(fa_name)
         last = n.split()[-1] if n.split() else ""
-        matched = n in all_drafted or (len(last) >= 4 and last in drafted_lasts)
+        matched = n in all_drafted   # normalized full-name only (no surname-set leak)
         if not matched:
             continue
         # best model rank across all 3 models — use full name to avoid last-name explosion
@@ -408,11 +403,11 @@ def signal_d(fas, rp3, rh3, rprs2):
             continue
         # which draft?
         which = []
-        hits24 = d24[d24["player_name"].str.lower().str.contains(last, na=False)]
+        hits24 = d24[d24["player_name"].apply(_norm) == n]   # full-name, not surname
         if len(hits24):
             row24 = hits24.iloc[0]
             which.append(f"2024 R{int(row24['round'])} {row24['fantasy_team']}")
-        hits25 = d25[d25["player_name"].str.lower().str.contains(last, na=False)]
+        hits25 = d25[d25["player_name"].apply(_norm) == n]
         if len(hits25):
             row25 = hits25.iloc[0]
             which.append(f"2025 R{int(row25['round'])} {row25['fantasy_team']}")

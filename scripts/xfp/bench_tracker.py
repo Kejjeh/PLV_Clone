@@ -94,16 +94,29 @@ def main():
         # ESPN's playerId is NOT the MLB ID. Look up via rh3/rp3 player_name match.
         fp = 0.0
         try:
-            # Best-effort: pull mlb_id from name lookup
+            # Best-effort: pull mlb_id from name lookup. Use a collision-safe full
+            # normalized name (handles 'Last, First' + accents) — NEVER a surname
+            # substring, which grabs the wrong same-name player (Will vs Austin
+            # Warren, the Garcias). (collision fix 2026-06-26)
+            import unicodedata as _ud
+
+            def _nm(s):
+                s = "".join(c for c in _ud.normalize("NFD", str(s)) if _ud.category(c) != "Mn").lower()
+                if "," in s:
+                    a, b = s.split(",", 1)
+                    s = f"{b.strip()} {a.strip()}"
+                return " ".join(s.replace(".", "").split())
+
+            tgt = _nm(p.name)
             if is_pit:
                 rp = PROJECTIONS.rp3()
-                m = rp[rp['player_name'].fillna('').str.contains(p.name.split()[-1], case=False, na=False)]
+                m = rp[rp['player_name'].fillna('').apply(_nm) == tgt]
                 if not m.empty:
                     mlb_id = int(m.iloc[0]['pitcher'])
                     fp = player_fp_in_window(mlb_id, True, 2026, week_start, week_end)
             else:
                 rh = PROJECTIONS.rh3()
-                m = rh[rh['player_name'] == p.name]
+                m = rh[rh['player_name'].fillna('').apply(_nm) == tgt]
                 if not m.empty:
                     mlb_id = int(m.iloc[0]['batter'])
                     fp = player_fp_in_window(mlb_id, False, 2026, week_start, week_end)

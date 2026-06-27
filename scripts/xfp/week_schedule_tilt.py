@@ -109,8 +109,15 @@ def main():
         name = p['player_name']
         rh_row = rh[rh['player_name'] == name]
         if rh_row.empty:
-            # Try fuzzy match
-            rh_row = rh[rh['player_name'].fillna('').str.contains(name.split()[-1], na=False)]
+            # accent/format-tolerant FULL-name match — never a surname substring,
+            # which grabs the wrong same-name hitter's batter_id. (collision fix 2026-06-26)
+            import unicodedata as _ud
+
+            def _nm(s):
+                s = "".join(c for c in _ud.normalize("NFD", str(s)) if _ud.category(c) != "Mn").lower()
+                return " ".join(s.replace(".", "").split())
+
+            rh_row = rh[rh['player_name'].fillna('').apply(_nm) == _nm(name)]
         if rh_row.empty:
             continue
         rh_row = rh_row.iloc[0]
