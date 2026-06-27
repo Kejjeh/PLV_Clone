@@ -1,8 +1,8 @@
 {
-  "generated": "2026-06-24",
-  "upgrade_floor_fpp": -0.087,
-  "hit_upgrade_floor_xwoba": 0.318,
-  "alert_count": 5,
+  "generated": "2026-06-26",
+  "upgrade_floor_fpp": -0.0871,
+  "hit_upgrade_floor_xwoba": 0.321,
+  "alert_count": 7,
   "hitter_alert_count": 0,
   "alerts": [
     {
@@ -13,7 +13,7 @@
       ],
       "gs": 4,
       "fpp": 0.061,
-      "fpp_gap": 0.148,
+      "fpp_gap": 0.1481,
       "gsp": 3,
       "l4": "3/4",
       "whiff_pct": 28.7,
@@ -29,12 +29,27 @@
       ],
       "gs": 7,
       "fpp": 0.0455,
-      "fpp_gap": 0.1325,
+      "fpp_gap": 0.1326,
       "gsp": 6,
       "l4": "3/4",
-      "whiff_pct": 27.9,
-      "xwoba_con": 0.339,
-      "rp3_rank": 23
+      "whiff_pct": 27.8,
+      "xwoba_con": 0.33,
+      "rp3_rank": 19
+    },
+    {
+      "name": "Gage Jump",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.094)"
+      ],
+      "gs": 6,
+      "fpp": 0.0072,
+      "fpp_gap": 0.0943,
+      "gsp": 4,
+      "l4": "3/4",
+      "whiff_pct": 22.2,
+      "xwoba_con": 0.317,
+      "rp3_rank": 67
     },
     {
       "name": "Spencer Miles",
@@ -44,12 +59,12 @@
       ],
       "gs": 8,
       "fpp": -0.0263,
-      "fpp_gap": 0.0607,
+      "fpp_gap": 0.0608,
       "gsp": 6,
       "l4": "2/4",
-      "whiff_pct": 19.6,
-      "xwoba_con": 0.349,
-      "rp3_rank": 24
+      "whiff_pct": 19.5,
+      "xwoba_con": 0.344,
+      "rp3_rank": 22
     },
     {
       "name": "Chase Dollander",
@@ -59,7 +74,7 @@
       ],
       "gs": 8,
       "fpp": -0.0452,
-      "fpp_gap": 0.0418,
+      "fpp_gap": 0.0419,
       "gsp": 4,
       "l4": "2/4",
       "whiff_pct": 27.4,
@@ -70,16 +85,31 @@
       "name": "Michael Soroka",
       "tier": "HIGH",
       "signals": [
-        "SigH-HIGH(gap=+0.041)"
+        "SigH-HIGH(gap=+0.042)"
       ],
       "gs": 14,
       "fpp": -0.0455,
-      "fpp_gap": 0.0415,
+      "fpp_gap": 0.0416,
       "gsp": 8,
       "l4": "3/4",
       "whiff_pct": 21.5,
       "xwoba_con": 0.378,
       "rp3_rank": 84
+    },
+    {
+      "name": "Matthew Boyd",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.037)"
+      ],
+      "gs": 6,
+      "fpp": -0.0496,
+      "fpp_gap": 0.0375,
+      "gsp": 3,
+      "l4": "2/4",
+      "whiff_pct": 30.7,
+      "xwoba_con": 0.421,
+      "rp3_rank": 60
     }
   ],
   "hitter_alerts": [],
