@@ -17,8 +17,17 @@
   "mlbam_id": 607208,
   "player_name": "Trea Turner",
   "reason_tag": "pl_outcome_chase",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-06-27",
+  "settlement": {
+    "actual_fp_per_unit": 0.18840579710144928,
+    "classification": "FADE_HIT",
+    "event_unit": "PA",
+    "n_events": 69,
+    "proj_per": 1.79,
+    "residual": -1.6015942028985508,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-06",
   "verdict_top": "FADE"
 }

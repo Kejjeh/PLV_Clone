@@ -17,8 +17,17 @@
   "mlbam_id": 666182,
   "player_name": "Bo Bichette",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-06-27",
+  "settlement": {
+    "actual_fp_per_unit": 0.5256410256410257,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 78,
+    "proj_per": 2.0,
+    "residual": -1.4743589743589745,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-06",
   "verdict_top": "MIXED"
 }

@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-06-27_kyle_bradish_SP_001",
+  "inputs": {
+    "archetype_label": "WILD_MID",
+    "archetype_overall": 41,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 12.410060368909637,
+    "live_marginal": -113.47616898013993,
+    "model_rank": 52,
+    "override_tag": "POST_TJ_RAMP",
+    "pl_rank": 41,
+    "proj_per": 11.168988857899256,
+    "replacement_delta": null
+  },
+  "mlbam_id": 680694,
+  "player_name": "Kyle Bradish",
+  "reason_tag": "post_tj_ramp",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-27",
+  "verdict_top": "HOLD"
+}
