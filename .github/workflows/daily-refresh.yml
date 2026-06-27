@@ -50,6 +50,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             $stamp = Get-Date -Format 'yyyy-MM-dd'
             git commit -m "refresh: daily auto-refresh $stamp"
+            # Integrate commits the other self-hosted job (pl-cache) and any
+            # interactive work pushed since checkout, so the push can't be
+            # rejected non-fast-forward (the recurring morning-push failure).
+            git pull --rebase origin main
+            if ($LASTEXITCODE -ne 0) {
+              git rebase --abort
+              git pull --no-rebase --no-edit -X ours origin main
+            }
             git push origin main
           } else {
             Write-Host "No data changes to commit."

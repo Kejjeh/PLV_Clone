@@ -42,6 +42,14 @@ jobs:
           if ($LASTEXITCODE -ne 0) {
             $stamp = Get-Date -Format 'yyyy-MM-dd'
             git commit -m "pl-cache: auto-pull rankings $stamp"
+            # Integrate commits the other self-hosted job (daily-refresh) and any
+            # interactive work pushed since checkout, so the push can't be
+            # rejected non-fast-forward.
+            git pull --rebase origin main
+            if ($LASTEXITCODE -ne 0) {
+              git rebase --abort
+              git pull --no-rebase --no-edit -X ours origin main
+            }
             git push origin main
           } else {
             Write-Host "No PL cache changes to commit."
