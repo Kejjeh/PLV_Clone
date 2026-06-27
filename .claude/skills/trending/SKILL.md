@@ -32,6 +32,23 @@ beats the box score: **stabilization speed**. Validated 2026-06-16
   damage). The pitcher analog is FB velo, already validated and in rp3
   (`avg_velo_to` + `delta_velo`).
 
+## Why bat speed (and the L7 window) — forward-FP validation 2026-06-26
+
+`window_predictive_validity_2026-06-26.md` (2026 panel, 1.6k independent
+non-overlapping anchors, leakage-safe, player-cluster bootstrap) confirms on OUR
+own data why this skill reads bat speed in a short window when nothing else can:
+
+- **Bat speed is the ONLY process metric that adds forward-FP signal BEYOND the
+  season-to-date FP level** (incremental partial r **+0.076 [.024,.132]**, excludes
+  0 in both the overlapping AND non-overlapping runs). K%, xwOBACON, HardHit%, BB%
+  are all redundant with the level (partial r ≈ 0) — confirmatory, not additive.
+- **L7 is trustworthy ONLY for bat speed.** Trailing L7 *FP/rate* is the weakest
+  forward predictor (r ~0.15 vs season-to-date ~0.32) and carries no momentum beyond
+  the running level. So a hot L7 box score is noise; a +mph L7 bat-speed step is the
+  early read. This is the empirical basis for rule 2 below.
+- Recent form is NOT zero-information, but it earns its weight only by being folded
+  into the running season level — there is **no separate "momentum" term** (Rule 13).
+
 ## Hard rules
 
 1. **Display/context ONLY.** Never use to move an rh3/rp3/Blended xFP projection

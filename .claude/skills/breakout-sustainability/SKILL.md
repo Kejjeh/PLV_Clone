@@ -59,6 +59,20 @@ Compute for each window:
 
 Surface as a 4-column table per metric: 2025 | 2026 season | 2026 L21d | **Δ L21d vs 2025**.
 
+> **Forward-FP validation of these windows (2026-06-26).** The stabilization
+> thresholds above are now corroborated on our own data against forward FP
+> (`window_predictive_validity_2026-06-26.md`, leakage-safe, non-overlapping anchors):
+> - **L21d is the recent-form sweet spot** — it carries real incremental forward signal
+>   vs an older baseline (partial r ~+0.18) while L7 FP is noise-dominated (r ~0.15 vs
+>   season-to-date ~0.32). Read L21d, not L7, for the rate metrics in this table.
+> - **Of the contact/discipline metrics, ONLY bat speed adds forward-FP signal beyond
+>   the season-to-date FP level** (incremental partial r +0.076, CI excludes 0).
+>   xwOBACON / K% / HardHit% / BB% are confirmatory of a breakout, **not** independent
+>   forward predictors once you know the level — so a SUSTAINABLE verdict needs the
+>   bat-speed/physical axis moving, not just a hot L21d rate.
+> - Recency is already in the running level; there is **no momentum term** beyond it
+>   (Rule 13). A hot L21d rate with flat bat speed = outcome variance, not a new tier.
+
 ---
 
 ## Step 2 — Sample-size stabilization + 95% CI on L21d xwOBA
