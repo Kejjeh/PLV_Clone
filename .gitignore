@@ -115,3 +115,11 @@ Thumbs.db
 
 # Standalone xfp-model repo (separate git repo, copies of files)
 xfp-model/
+
+# Large regenerated caches/exports — rebuilt each refresh (build_rolling_*.py,
+# build_player_profiles_dashboard.py). Untracked to defuse GitHub's 100MB push
+# limit (rolling_hitters hit 63MB). Kept on disk; never hand-edited. 2026-06-27.
+data/research/xfp_cache/rolling_hitters_2018_2026.csv
+data/research/xfp_cache/rolling_relievers_2018_2026.csv
+data/research/xfp_cache/rolling_pitchers_2018_2026.csv
+data/outputs/player_profiles.html
