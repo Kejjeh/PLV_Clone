@@ -12,7 +12,17 @@ Cache shape: ``{"fetched": "YYYY-MM-DD", "il": {"<display name>": "IL60", ...}}`
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
+
+# Run as a script (python scripts/xfp/lib/injury_status.py), sys.path[0] is this
+# lib/ dir, so the function-level `from app.espn_connector import ...` can't find
+# `app` (it lives at the repo root). Put the root on the path. This was the CI
+# refresh step-4.05 `ModuleNotFoundError: No module named 'app'` (fail-soft, so the
+# injury cache silently went stale on the self-hosted runner). (fix 2026-06-27)
+_ROOT = Path(__file__).resolve().parents[3]
+if str(_ROOT) not in sys.path:
+    sys.path.insert(0, str(_ROOT))
 
 from plv_clone.paths import CACHE
 from plv_clone.utils.name_match import _normalize
