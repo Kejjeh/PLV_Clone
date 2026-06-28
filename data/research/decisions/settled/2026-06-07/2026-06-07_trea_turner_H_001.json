@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-07_trea_turner_H_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_HITTER",
+    "archetype_overall": 43,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 2.7027018502088973,
+    "live_marginal": 3.6999999999999886,
+    "model_rank": 123,
+    "override_tag": null,
+    "pl_rank": 28,
+    "proj_per": 1.79,
+    "replacement_delta": null
+  },
+  "mlbam_id": 607208,
+  "player_name": "Trea Turner",
+  "reason_tag": "pl_outcome_chase",
+  "settled_at": "2026-06-28",
+  "settlement": {
+    "actual_fp_per_unit": 0.34177215189873417,
+    "classification": "FADE_HIT",
+    "event_unit": "PA",
+    "n_events": 79,
+    "proj_per": 1.79,
+    "residual": -1.4482278481012658,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-07",
+  "verdict_top": "FADE"
+}

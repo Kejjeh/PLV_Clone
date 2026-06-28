@@ -1,9 +1,9 @@
 {
   "summary": {
     "window_start": "2026-06-27",
-    "window_end": "2026-06-29",
-    "n_probables_total": 59,
-    "n_fa_sps_in_league": 454,
+    "window_end": "2026-06-28",
+    "n_probables_total": 58,
+    "n_fa_sps_in_league": 455,
     "n_fa_sps_resolved_mlbam": 207,
     "n_fa_sp_starts_in_window": 20,
     "boom_stack_distribution": {
@@ -61,7 +61,7 @@
       "decline_stuff_level_pctl": 77.23684210526316,
       "decline_gap": -21.315789473684212,
       "decline_velo_flag": "VV",
-      "percent_owned": 51.42,
+      "percent_owned": 51.94,
       "pro_team": "LAD",
       "injury_status": "ACTIVE"
     },
@@ -111,7 +111,7 @@
       "decline_stuff_level_pctl": 51.97368421052632,
       "decline_gap": -33.55263157894738,
       "decline_velo_flag": "^",
-      "percent_owned": 30.81,
+      "percent_owned": 30.83,
       "pro_team": "Det",
       "injury_status": "FIFTEEN_DAY_DL"
     },
@@ -161,7 +161,7 @@
       "decline_stuff_level_pctl": 32.76315789473684,
       "decline_gap": 5.394736842105267,
       "decline_velo_flag": "v",
-      "percent_owned": 33.11,
+      "percent_owned": 31.65,
       "pro_team": "StL",
       "injury_status": "ACTIVE"
     },
@@ -211,7 +211,7 @@
       "decline_stuff_level_pctl": 66.44736842105263,
       "decline_gap": 23.026315789473685,
       "decline_velo_flag": "v",
-      "percent_owned": 71.88,
+      "percent_owned": 72.54,
       "pro_team": "Sea",
       "injury_status": "ACTIVE"
     },
@@ -261,7 +261,7 @@
       "decline_stuff_level_pctl": 23.157894736842106,
       "decline_gap": 0.5263157894736814,
       "decline_velo_flag": "",
-      "percent_owned": 7.33,
+      "percent_owned": 7.0,
       "pro_team": "Cle",
       "injury_status": "ACTIVE"
     },
@@ -311,7 +311,7 @@
       "decline_stuff_level_pctl": 17.763157894736842,
       "decline_gap": -11.842105263157896,
       "decline_velo_flag": "v",
-      "percent_owned": 10.19,
+      "percent_owned": 11.5,
       "pro_team": "Cin",
       "injury_status": "ACTIVE"
     },
@@ -361,7 +361,7 @@
       "decline_stuff_level_pctl": null,
       "decline_gap": null,
       "decline_velo_flag": "",
-      "percent_owned": 3.59,
+      "percent_owned": 3.56,
       "pro_team": "ChC",
       "injury_status": "ACTIVE"
     },
@@ -411,7 +411,7 @@
       "decline_stuff_level_pctl": 18.42105263157895,
       "decline_gap": -16.447368421052634,
       "decline_velo_flag": "",
-      "percent_owned": 0.85,
+      "percent_owned": 0.83,
       "pro_team": "Col",
       "injury_status": "ACTIVE"
     },
@@ -461,7 +461,7 @@
       "decline_stuff_level_pctl": 8.157894736842106,
       "decline_gap": 16.184210526315788,
       "decline_velo_flag": "VV",
-      "percent_owned": 3.2,
+      "percent_owned": 3.41,
       "pro_team": "Oak",
       "injury_status": "ACTIVE"
     },
@@ -511,7 +511,7 @@
       "decline_stuff_level_pctl": 39.21052631578948,
       "decline_gap": 7.499999999999993,
       "decline_velo_flag": "v",
-      "percent_owned": 4.17,
+      "percent_owned": 4.55,
       "pro_team": "Tex",
       "injury_status": "ACTIVE"
     },
@@ -561,7 +561,7 @@
       "decline_stuff_level_pctl": 32.5,
       "decline_gap": 11.578947368421048,
       "decline_velo_flag": "",
-      "percent_owned": 23.3,
+      "percent_owned": 22.5,
       "pro_team": "Bal",
       "injury_status": "ACTIVE"
     },
@@ -611,7 +611,7 @@
       "decline_stuff_level_pctl": null,
       "decline_gap": null,
       "decline_velo_flag": "",
-      "percent_owned": 0.2,
+      "percent_owned": 0.19,
       "pro_team": "Tex",
       "injury_status": "ACTIVE"
     },
@@ -661,7 +661,7 @@
       "decline_stuff_level_pctl": 32.236842105263165,
       "decline_gap": 43.42105263157893,
       "decline_velo_flag": "",
-      "percent_owned": 60.64,
+      "percent_owned": 60.43,
       "pro_team": "KC",
       "injury_status": "ACTIVE"
     },
@@ -711,7 +711,7 @@
       "decline_stuff_level_pctl": 49.736842105263165,
       "decline_gap": -18.815789473684216,
       "decline_velo_flag": "",
-      "percent_owned": 2.24,
+      "percent_owned": 2.53,
       "pro_team": "Min",
       "injury_status": "ACTIVE"
     },
@@ -761,7 +761,7 @@
       "decline_stuff_level_pctl": 24.868421052631582,
       "decline_gap": 10.657894736842103,
       "decline_velo_flag": "",
-      "percent_owned": 26.82,
+      "percent_owned": 27.47,
       "pro_team": "Pit",
       "injury_status": "ACTIVE"
     },
@@ -811,7 +811,7 @@
       "decline_stuff_level_pctl": 36.57894736842105,
       "decline_gap": -8.947368421052623,
       "decline_velo_flag": "",
-      "percent_owned": 0.83,
+      "percent_owned": 1.01,
       "pro_team": "Col",
       "injury_status": "ACTIVE"
     },
@@ -861,7 +861,7 @@
       "decline_stuff_level_pctl": 32.36842105263158,
       "decline_gap": -19.21052631578948,
       "decline_velo_flag": "",
-      "percent_owned": 22.23,
+      "percent_owned": 22.39,
       "pro_team": "Ari",
       "injury_status": "ACTIVE"
     },
@@ -911,7 +911,7 @@
       "decline_stuff_level_pctl": 25.26315789473685,
       "decline_gap": 0.3947368421052566,
       "decline_velo_flag": "",
-      "percent_owned": 9.39,
+      "percent_owned": 11.32,
       "pro_team": "ChW",
       "injury_status": "ACTIVE"
     },
@@ -961,7 +961,7 @@
       "decline_stuff_level_pctl": null,
       "decline_gap": null,
       "decline_velo_flag": "",
-      "percent_owned": 0.19,
+      "percent_owned": 0.18,
       "pro_team": "Mia",
       "injury_status": "ACTIVE"
     },
@@ -1011,10 +1011,10 @@
       "decline_stuff_level_pctl": null,
       "decline_gap": null,
       "decline_velo_flag": "",
-      "percent_owned": 2.97,
+      "percent_owned": 3.12,
       "pro_team": "Wsh",
       "injury_status": "ACTIVE"
     }
   ],
-  "generated_at": "2026-06-27T18:01:39.107585"
+  "generated_at": "2026-06-27T22:21:39.898533"
 }

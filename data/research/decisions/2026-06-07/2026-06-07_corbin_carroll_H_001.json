@@ -17,8 +17,17 @@
   "mlbam_id": 682998,
   "player_name": "Corbin Carroll",
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-06-28",
+  "settlement": {
+    "actual_fp_per_unit": 0.6461538461538462,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 65,
+    "proj_per": 2.29,
+    "residual": -1.643846153846154,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-07",
   "verdict_top": "BUY"
 }
