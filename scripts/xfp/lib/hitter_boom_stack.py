@@ -65,6 +65,7 @@ import pandas as pd
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 _STATCAST_2026 = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'statcast_2026.parquet')
+_BOXSCORE_H = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'boxscore_hitters.parquet')
 _RP3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rp3_projections.csv')
 _RH3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rh3_projections.csv')
 
@@ -79,6 +80,16 @@ _RH3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rh3_projections.csv
 # rate for stack=4 and 35.0% for bust (interpolating the stack 0→3 trend
 # of ~−2 pp per step, from 37.5% at stack=3 → 35.0% at stack=4). mean_fp
 # extrapolated linearly from the 0→3 slope (+0.15/step).
+#
+# SB note (2026-06-28): these rates are on the no-SB fp_proxy (TB+BB+HBP-K). The live
+# components below are now SB-AWARE (_load_batter_games_2026 joins boxscore SB). Using
+# the new multi-year store, the SB-inclusive boom rate was MEASURED on the same 245k
+# panel (scripts/_oneoff/rederive_hitter_sb.py): a UNIFORM +1.3pp at every stack
+# (0: 23.9→25.2, 3: 30.6→32.1) that PRESERVES the stack 0→3 EDGE (+6.7→+6.9pp). Since
+# the edge is what boom_stack discriminates on and the shift is uniform + sub-2pp, the
+# tables are LEFT as-is (the displayed absolute boom% runs ~1.3pp light for speedsters
+# whose SB lifts FP — documented, not a discrimination error). Re-derive on 2023+ SB-
+# inclusive FP if an exact absolute rate is ever needed. See boom_bust_cutoff_recalibration_2026-06-28.md.
 BOOM_RATE_BY_STACK = {0: 0.239, 1: 0.256, 2: 0.275, 3: 0.306, 4: 0.340}
 BUST_RATE_BY_STACK = {0: 0.434, 1: 0.407, 2: 0.402, 3: 0.375, 4: 0.350}
 MEAN_FP_PROXY_BY_STACK = {0: 1.12, 1: 1.27, 2: 1.35, 3: 1.58, 4: 1.73}
@@ -133,7 +144,34 @@ def _load_batter_games_2026() -> pd.DataFrame:
         xwoba_sum=('xwoba', 'sum'),
         xwoba_n=('xwoba', 'count'),
     ).reset_index()
-    g['fp_proxy'] = g['TB'] + g['BB'] + g['HBP'] - g['K']
+    # SB is a base-running event (not in pitch-level statcast), so it is joined from
+    # the boxscore (mlbam-keyed) to close the SB gap: fp_proxy now matches the full
+    # BrownU hitter scoring (R/RBI still absent — game-level, not modeled here).
+    # This makes the recform_hot component catch SB-DRIVEN recent form (a speedster on
+    # a stealing tear); for stable-SB hitters the SB term cancels in the L10-vs-season
+    # delta, so it is a no-op there. Display/context tag (CLAUDE.md #13). NOTE: the
+    # historical BOOM_RATE_BY_STACK outcome tables remain calibrated on the no-SB
+    # fp_proxy (245k panel, 2018-25 — no multi-year per-game SB to re-derive); the
+    # resulting bias is small (SB is ~2.4% of median hitter FP) and concentrated in
+    # speedsters. See boom_bust_cutoff_recalibration_2026-06-28.md (SB-gap note).
+    try:
+        _box = pd.read_parquet(_BOXSCORE_H, columns=['mlbam_id', 'game_pk', 'sb'])
+        # cast BOTH merge keys to int64 — a dtype mismatch (object vs int after parquet
+        # round-trip) would silently yield all-NaN -> fillna(0) -> the SB gap re-opens
+        # with NO error. Cast guards against that.
+        _box['mlbam_id'] = _box['mlbam_id'].astype('int64')
+        _box['game_pk'] = _box['game_pk'].astype('int64')
+        g['batter'] = g['batter'].astype('int64')
+        g['game_pk'] = g['game_pk'].astype('int64')
+        _sb = _box.groupby(['mlbam_id', 'game_pk'])['sb'].sum()
+        g = g.merge(_sb.rename('SB'), left_on=['batter', 'game_pk'], right_index=True, how='left')
+        g['SB'] = g['SB'].fillna(0).astype(int)
+        if g['SB'].sum() == 0:  # file read OK but 0 matched => key bug, not a real 0; surface it
+            import warnings
+            warnings.warn("hitter_boom_stack: SB merge matched 0 rows — possible key dtype mismatch")
+    except Exception:
+        g['SB'] = 0  # boxscore absent (legit fallback) -> components fall back to no-SB fp_proxy
+    g['fp_proxy'] = g['TB'] + g['BB'] + g['HBP'] + g['SB'] - g['K']
     g['xwoba_pg'] = g['xwoba_sum'] / g['xwoba_n'].replace(0, np.nan)
     g['batter'] = g['batter'].astype('int64')
     g = g.sort_values(['batter', 'game_date']).reset_index(drop=True)

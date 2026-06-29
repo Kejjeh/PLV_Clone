@@ -31,6 +31,10 @@ PIT_MIN_FB_CUR, PIT_MIN_FB_BASE = 50, 100
 # alone (0.495 -> 0.536), non-redundant. AA_OPT = population-optimal attack angle
 # (~15-16deg argmax xwOBACON); attack angle is scored as movement TOWARD this band.
 AA_OPT = 15.0
+# 2023 SB rule change (bigger bases + pickoff/disengagement caps + pitch clock) jumped
+# league SB rate ~+50% (0.013 -> 0.019 sb/PA). YoY SB deltas only mean something WITHIN a
+# regime; a cur/base pair straddling this year shows a fake league-wide "+running" shift.
+SB_RULE_YEAR = 2023
 
 
 def _hitter_season(y: int, min_sw: int) -> pd.DataFrame:
@@ -59,10 +63,59 @@ def _pitcher_season(y: int, min_fb: int) -> pd.DataFrame:
     return g[g['n_fb'] >= min_fb]
 
 
+def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
+    """SB/sprint trend (display CONTEXT, ORTHOGONAL to the validated 3 bat-tracking
+    axes — NOT part of the CV-R² family; never a number-mover, CLAUDE.md #13).
+    Two reads, both anchored on the fact that SB rate is a very STICKY skill (YoY
+    r~0.79), so annual is the reliable level and only a ~monthly window is non-noise:
+      (1) z_sb  — YoY SB-rate delta (cur sb_per_pa vs base), z-scored across the pool
+                  ("running more/less than last year");
+      (2) sb_recent — ROLLING L30d SB/game minus season-to-date SB/game (boxscore)
+                  (catches a mid-season green-light / aggressiveness change the YoY
+                  level lags — the one 'rolling' read that isn't count-noise: a
+                  30-SB runner only steals ~1.5/week, so weekly would be noise).
+    d_sprint (YoY sprint speed) is the underlying-wheels context. Index=batter."""
+    m = pd.read_csv(C / 'hitters_multiyr_2015_2026.csv',
+                    usecols=lambda col: col in ('batter', 'year', 'pa', 'sb_per_pa', 'sprint_speed'))
+    cu = m[(m.year == cur) & (m.pa >= 50)].set_index('batter')
+    ba = m[m.year == base].set_index('batter')
+    t = cu[['sb_per_pa', 'sprint_speed', 'pa']].join(
+        ba[['sb_per_pa', 'sprint_speed']], rsuffix='_base', how='left')
+    t['d_sb_pa'] = t['sb_per_pa'] - t['sb_per_pa_base']
+    t['d_sprint'] = t['sprint_speed'] - t['sprint_speed_base']
+    sd = t['d_sb_pa'].std()
+    t['z_sb'] = t['d_sb_pa'] / sd if sd and sd > 0 else 0.0
+    # suppress the YoY SB delta when cur/base straddle the 2023 rule break (the level
+    # jump would read as a fake league-wide "+running"). sb_recent (in-season L30d vs
+    # 2026 season) is always same-regime, so it stays valid. sprint is unaffected.
+    if (cur >= SB_RULE_YEAR) != (base >= SB_RULE_YEAR):
+        t['z_sb'] = np.nan
+        t['d_sb_pa'] = np.nan
+    try:  # rolling in-season overlay from the per-game boxscore
+        box = pd.read_parquet(C / 'boxscore_hitters.parquet',
+                              columns=['mlbam_id', 'game_pk', 'game_date', 'sb'])
+        box['game_date'] = pd.to_datetime(box['game_date'])
+        last = box['game_date'].max()
+        seas = box.groupby('mlbam_id').agg(sb=('sb', 'sum'), g=('game_pk', 'nunique'))
+        seas['sb_g'] = seas['sb'] / seas['g'].clip(lower=1)
+        l30 = (box[box['game_date'] >= last - pd.Timedelta(days=30)]
+               .groupby('mlbam_id').agg(sb=('sb', 'sum'), g=('game_pk', 'nunique')))
+        # require >=8 games in the L30d window so a part-timer's tiny sample isn't noise
+        l30['sb_g_l30'] = np.where(l30['g'] >= 8, l30['sb'] / l30['g'].clip(lower=1), np.nan)
+        t = t.join(seas['sb_g']).join(l30['sb_g_l30'])
+        t['sb_recent'] = t['sb_g_l30'] - t['sb_g']
+    except Exception:
+        t['sb_g'] = np.nan
+        t['sb_g_l30'] = np.nan
+        t['sb_recent'] = np.nan
+    return t
+
+
 def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     """3-axis physical-trend table: bat speed (how hard) + attack angle (swing
     path, scored toward the AA_OPT band) + fast-swing% (intent). Each z-scored;
-    z_comp is the equal-weight composite."""
+    z_comp is the equal-weight composite. SB/sprint columns (d_sb_pa, z_sb,
+    d_sprint, sb_recent) are LEFT-joined as an orthogonal display axis (#13)."""
     c, b = _hitter_season(cur, HIT_MIN_SW_CUR), _hitter_season(base, HIT_MIN_SW_BASE)
     t = c.join(b[['bat_speed', 'attack_angle', 'fast_swing', 'xwobacon']], rsuffix='_base', how='inner')
     t['d_bat_speed'] = t['bat_speed'] - t['bat_speed_base']
@@ -76,6 +129,9 @@ def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     t['z_aa'] = t['aa_toward'] / t['aa_toward'].std()
     t['z_comp'] = t[['z_bs', 'z_fast', 'z_aa']].mean(axis=1)
     t['z'] = t['z_bs']  # back-compat
+    # orthogonal SB/sprint axis (display context #13; left-join keeps all bat-track rows)
+    sb = hitter_sb_sprint_trend(cur, base)
+    t = t.join(sb[['d_sb_pa', 'z_sb', 'd_sprint', 'sb_recent', 'sb_g', 'sb_g_l30']], how='left')
     return t
 
 
@@ -146,11 +202,30 @@ def tag_hitter(row) -> str:
         parts.append(f"swing-path {'toward' if row['z_aa'] > 0 else 'off'}-band {row['z_aa']:+.1f}σ")
     drivers = ', '.join(parts) if parts else f"bat speed {row['d_bat_speed']:+.1f}mph"
     conf_good = 1 if dx > 0.02 else (-1 if dx < -0.02 else 0)   # contact up = good
+    sb_clause = _sb_speed_clause(row)
     if zc >= 1.0:
-        return f"\U0001f53a breakout watch (phys {zc:+.1f}σ) — {drivers}; {_confirm_phrase(1, conf_good, 'contact')}"
+        return f"\U0001f53a breakout watch (phys {zc:+.1f}σ) — {drivers}; {_confirm_phrase(1, conf_good, 'contact')}{sb_clause}"
     if zc <= -1.0:
-        return f"\U0001f53b decline watch (phys {zc:+.1f}σ) — {drivers}; {_confirm_phrase(-1, conf_good, 'contact')}"
-    return f"• stable (phys {zc:+.1f}σ) — bat speed {row['d_bat_speed']:+.1f}mph"
+        return f"\U0001f53b decline watch (phys {zc:+.1f}σ) — {drivers}; {_confirm_phrase(-1, conf_good, 'contact')}{sb_clause}"
+    return f"• stable (phys {zc:+.1f}σ) — bat speed {row['d_bat_speed']:+.1f}mph{sb_clause}"
+
+
+def _sb_speed_clause(row) -> str:
+    """Orthogonal SB/sprint context clause (display #13). Fires only when the YoY SB
+    rate moved >=1σ, the L30d running rate shifted, or sprint moved meaningfully.
+    NaN-safe via row.get(), BUT the SB columns only exist on hitter_trend_table rows
+    (left-joined there). Only tag_hitter (which runs on those rows) should call this;
+    do NOT route hitter_level_table (no-baseline rookie) rows through tag_hitter."""
+    bits = []
+    z_sb = row.get('z_sb'); d_sb = row.get('d_sb_pa')
+    sb_recent = row.get('sb_recent'); d_sprint = row.get('d_sprint')
+    if pd.notna(z_sb) and abs(z_sb) >= 1.0 and pd.notna(d_sb):
+        bits.append(f"SB rate {d_sb:+.3f}/PA ({z_sb:+.1f}σ vs '25)")
+    if pd.notna(sb_recent) and abs(sb_recent) >= 0.15:
+        bits.append(f"L30 {'running more' if sb_recent > 0 else 'cooling'} ({sb_recent:+.2f} SB/g)")
+    if pd.notna(d_sprint) and abs(d_sprint) >= 0.5:
+        bits.append(f"sprint {d_sprint:+.1f}ft/s")
+    return ('  \U0001f3c3 ' + '; '.join(bits)) if bits else ''
 
 
 def tag_pitcher(row) -> str:
