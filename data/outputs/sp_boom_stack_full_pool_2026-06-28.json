@@ -3,8 +3,8 @@
     "window_start": "2026-06-28",
     "window_end": "2026-06-28",
     "n_sps_total": 337,
-    "n_with_upcoming_start": 50,
-    "n_season_only": 287,
+    "n_with_upcoming_start": 112,
+    "n_season_only": 225,
     "n_errors": 0
   },
   "candidates": [
@@ -192,10 +192,10 @@
       "pitcher_id": 694973,
       "pitcher_name": "Skenes, Paul",
       "team": "PIT",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PHI",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 3,
       "rp3_per_start": 15.36683796269532,
       "rp3_p25": 9.877086532367374,
@@ -203,14 +203,14 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -0.427,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0039,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -223,19 +223,19 @@
           "recency_form_gap": -0.43
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0039,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.419,
-      "boom_bust_rate_expected": 0.05,
-      "boom_mean_fp_expected": 17.33,
+      "boom_rate_expected": 0.446,
+      "boom_bust_rate_expected": 0.037,
+      "boom_mean_fp_expected": 17.93,
       "tier": "ace",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -265,13 +265,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -282,10 +282,10 @@
       "pitcher_id": 650911,
       "pitcher_name": "S\u00e1nchez, Cristopher",
       "team": "PHI",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PIT",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 4,
       "rp3_per_start": 15.13980212576713,
       "rp3_p25": 9.650050695439182,
@@ -293,14 +293,14 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -5.859,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0238,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -313,19 +313,19 @@
           "recency_form_gap": -5.86
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0238,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.419,
-      "boom_bust_rate_expected": 0.05,
-      "boom_mean_fp_expected": 17.33,
+      "boom_rate_expected": 0.446,
+      "boom_bust_rate_expected": 0.037,
+      "boom_mean_fp_expected": 17.93,
       "tier": "ace",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -355,13 +355,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -462,10 +462,10 @@
       "pitcher_id": 693645,
       "pitcher_name": "Schlittler, Cam",
       "team": "NYY",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "DET",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 6,
       "rp3_per_start": 14.792588862667436,
       "rp3_p25": 9.302837432339487,
@@ -473,14 +473,14 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -0.463,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9657,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -493,19 +493,19 @@
           "recency_form_gap": -0.46
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9657,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "NYY",
+          "pf_wOBA": 0.983,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.419,
-      "boom_bust_rate_expected": 0.05,
-      "boom_mean_fp_expected": 17.33,
+      "boom_rate_expected": 0.487,
+      "boom_bust_rate_expected": 0.047,
+      "boom_mean_fp_expected": 18.91,
       "tier": "ace",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -535,13 +535,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -552,10 +552,10 @@
       "pitcher_id": 594798,
       "pitcher_name": "deGrom, Jacob",
       "team": "TEX",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CLE",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 7,
       "rp3_per_start": 14.779092534407756,
       "rp3_p25": 9.289341104079808,
@@ -563,13 +563,13 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.325,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.8865,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -583,19 +583,19 @@
           "recency_form_gap": 0.33
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.8865,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CLE",
+          "pf_wOBA": 1.004,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.419,
-      "boom_bust_rate_expected": 0.05,
-      "boom_mean_fp_expected": 17.33,
+      "boom_rate_expected": 0.446,
+      "boom_bust_rate_expected": 0.037,
+      "boom_mean_fp_expected": 17.93,
       "tier": "ace",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -625,13 +625,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -822,10 +822,10 @@
       "pitcher_id": 682243,
       "pitcher_name": "Miller, Bryce",
       "team": "SEA",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "LAA",
+      "is_home": true,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 10,
       "rp3_per_start": 14.074387626231786,
       "rp3_p25": 8.584636195903839,
@@ -833,14 +833,14 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 0.2,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9607,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -853,19 +853,19 @@
           "recency_form_gap": 0.2
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9607,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "SEA",
+          "pf_wOBA": 0.956,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.419,
-      "boom_bust_rate_expected": 0.05,
-      "boom_mean_fp_expected": 17.33,
+      "boom_rate_expected": 0.487,
+      "boom_bust_rate_expected": 0.047,
+      "boom_mean_fp_expected": 18.91,
       "tier": "ace",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -895,13 +895,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 7,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_7d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -912,10 +912,10 @@
       "pitcher_id": 554430,
       "pitcher_name": "Wheeler, Zack",
       "team": "PHI",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PIT",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 11,
       "rp3_per_start": 13.945675008859544,
       "rp3_p25": 8.455923578531596,
@@ -923,14 +923,14 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -0.294,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0238,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -943,19 +943,19 @@
           "recency_form_gap": -0.29
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0238,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.27,
-      "boom_bust_rate_expected": 0.06,
-      "boom_mean_fp_expected": 14.51,
+      "boom_rate_expected": 0.334,
+      "boom_bust_rate_expected": 0.047,
+      "boom_mean_fp_expected": 15.69,
       "tier": "sp2_sp3",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -985,13 +985,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 7,
+          "days_since_last_start": 10,
           "last_start_date": "2026-06-21",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_7d_below_threshold"
+          "reason": "gap_10d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -1182,10 +1182,10 @@
       "pitcher_id": 660271,
       "pitcher_name": "Ohtani, Shohei",
       "team": "LAD",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "ATH",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 14,
       "rp3_per_start": 13.666991850276538,
       "rp3_p25": 8.17724041994859,
@@ -1193,8 +1193,8 @@
       "rp3_signal": "add",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -6.459,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0134,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -1213,14 +1213,14 @@
           "recency_form_gap": -6.46
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0134,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.27,
@@ -1255,13 +1255,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 7,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_7d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -1362,10 +1362,10 @@
       "pitcher_id": 693433,
       "pitcher_name": "Woo, Bryan",
       "team": "SEA",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "LAA",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 16,
       "rp3_per_start": 13.580272344103602,
       "rp3_p25": 8.090520913775654,
@@ -1373,14 +1373,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -4.298,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 0.9607,
+      "matchup_tier": "soft",
+      "boom_stack": 3,
       "boom_components": {
         "skill_spike": 1,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -1393,19 +1393,19 @@
           "recency_form_gap": -4.3
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9607,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "SEA",
+          "pf_wOBA": 0.956,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.334,
-      "boom_bust_rate_expected": 0.047,
-      "boom_mean_fp_expected": 15.69,
+      "boom_rate_expected": 0.312,
+      "boom_bust_rate_expected": 0.043,
+      "boom_mean_fp_expected": 15.89,
       "tier": "sp2_sp3",
       "skill_spike_anti_predictive": true,
       "season_only_tags": {
@@ -1435,13 +1435,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -1452,10 +1452,10 @@
       "pitcher_id": 695505,
       "pitcher_name": "Burns, Chase",
       "team": "CIN",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIL",
+      "is_home": false,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 17,
       "rp3_per_start": 13.56859297759118,
       "rp3_p25": 8.078841547263233,
@@ -1463,14 +1463,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -3.2,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0302,
+      "matchup_tier": "tough",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -1483,19 +1483,19 @@
           "recency_form_gap": -3.2
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0302,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "MIL",
+          "pf_wOBA": 0.9433,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.27,
-      "boom_bust_rate_expected": 0.06,
-      "boom_mean_fp_expected": 14.51,
+      "boom_rate_expected": 0.334,
+      "boom_bust_rate_expected": 0.047,
+      "boom_mean_fp_expected": 15.69,
       "tier": "sp2_sp3",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -1525,13 +1525,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 1,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-27",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_1d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -1902,10 +1902,10 @@
       "pitcher_id": 677952,
       "pitcher_name": "Ashcraft, Braxton",
       "team": "PIT",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PHI",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 22,
       "rp3_per_start": 12.73489949214382,
       "rp3_p25": 7.245148061815872,
@@ -1913,14 +1913,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.483,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 1.0039,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 1,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -1933,19 +1933,19 @@
           "recency_form_gap": 0.48
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0039,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.334,
-      "boom_bust_rate_expected": 0.047,
-      "boom_mean_fp_expected": 15.69,
+      "boom_rate_expected": 0.28,
+      "boom_bust_rate_expected": 0.053,
+      "boom_mean_fp_expected": 15.16,
       "tier": "sp2_sp3",
       "skill_spike_anti_predictive": true,
       "season_only_tags": {
@@ -1975,13 +1975,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -2082,10 +2082,10 @@
       "pitcher_id": 684007,
       "pitcher_name": "Imanaga, Shota",
       "team": "CHC",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SD",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 24,
       "rp3_per_start": 12.499287708209549,
       "rp3_p25": 7.009536277881599,
@@ -2093,14 +2093,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.973,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9417,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -2113,19 +2113,19 @@
           "recency_form_gap": 0.97
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9417,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CHC",
+          "pf_wOBA": 0.9862,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.27,
-      "boom_bust_rate_expected": 0.06,
-      "boom_mean_fp_expected": 14.51,
+      "boom_rate_expected": 0.28,
+      "boom_bust_rate_expected": 0.053,
+      "boom_mean_fp_expected": 15.16,
       "tier": "sp2_sp3",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -2155,13 +2155,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -2802,10 +2802,10 @@
       "pitcher_id": 592332,
       "pitcher_name": "Gausman, Kevin",
       "team": "TOR",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "NYM",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 32,
       "rp3_per_start": 12.011815435945303,
       "rp3_p25": 6.5220640056173576,
@@ -2813,8 +2813,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -7.662,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0318,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -2833,14 +2833,14 @@
           "recency_form_gap": -7.66
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0318,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.203,
@@ -2875,13 +2875,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -3432,10 +3432,10 @@
       "pitcher_id": 667755,
       "pitcher_name": "Soriano, Jos\u00e9",
       "team": "LAA",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SEA",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 39,
       "rp3_per_start": 11.481821129023942,
       "rp3_p25": 5.402260666161983,
@@ -3443,14 +3443,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -8.059,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0126,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -3463,19 +3463,19 @@
           "recency_form_gap": -8.06
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0126,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "SEA",
+          "pf_wOBA": 0.956,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.203,
-      "boom_bust_rate_expected": 0.096,
-      "boom_mean_fp_expected": 12.59,
+      "boom_rate_expected": 0.251,
+      "boom_bust_rate_expected": 0.078,
+      "boom_mean_fp_expected": 13.65,
       "tier": "backend",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -3505,13 +3505,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -4062,10 +4062,10 @@
       "pitcher_id": 801139,
       "pitcher_name": "Payton Tolle",
       "team": "BOS",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "WSH",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 46,
       "rp3_per_start": 11.304966909034883,
       "rp3_p25": 5.225406446172924,
@@ -4073,8 +4073,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -5.888,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0236,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -4093,14 +4093,14 @@
           "recency_form_gap": -5.89
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0236,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.203,
@@ -4135,13 +4135,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 7,
+          "days_since_last_start": 10,
           "last_start_date": "2026-06-21",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_7d_below_threshold"
+          "reason": "gap_10d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -4152,10 +4152,10 @@
       "pitcher_id": 690997,
       "pitcher_name": "McLean, Nolan",
       "team": "NYM",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "TOR",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 47,
       "rp3_per_start": 11.299279327384976,
       "rp3_p25": 5.219718864523017,
@@ -4163,13 +4163,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.265,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9348,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -4183,19 +4183,19 @@
           "recency_form_gap": 0.27
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9348,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.203,
-      "boom_bust_rate_expected": 0.096,
-      "boom_mean_fp_expected": 12.59,
+      "boom_rate_expected": 0.251,
+      "boom_bust_rate_expected": 0.078,
+      "boom_mean_fp_expected": 13.65,
       "tier": "backend",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -4225,13 +4225,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -4242,10 +4242,10 @@
       "pitcher_id": 663556,
       "pitcher_name": "McClanahan, Shane",
       "team": "TB",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "KC",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 48,
       "rp3_per_start": 11.278826560604784,
       "rp3_p25": 5.199266097742823,
@@ -4253,8 +4253,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -7.929,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0221,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -4273,14 +4273,14 @@
           "recency_form_gap": -7.93
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0221,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "KC",
+          "pf_wOBA": 1.0094,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.203,
@@ -4315,13 +4315,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 11,
+          "days_since_last_start": 14,
           "last_start_date": "2026-06-17",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_11d_below_threshold"
+          "reason": "gap_14d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -4422,10 +4422,10 @@
       "pitcher_id": 669022,
       "pitcher_name": "Gore, MacKenzie",
       "team": "TEX",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CLE",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 50,
       "rp3_per_start": 11.22432036331088,
       "rp3_p25": 5.14475990044892,
@@ -4433,13 +4433,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 2.956,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.8865,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -4453,19 +4453,19 @@
           "recency_form_gap": 2.96
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.8865,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CLE",
+          "pf_wOBA": 1.004,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.203,
-      "boom_bust_rate_expected": 0.096,
-      "boom_mean_fp_expected": 12.59,
+      "boom_rate_expected": 0.251,
+      "boom_bust_rate_expected": 0.078,
+      "boom_mean_fp_expected": 13.65,
       "tier": "backend",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -4495,13 +4495,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -4962,10 +4962,10 @@
       "pitcher_id": 642547,
       "pitcher_name": "Peralta, Freddy",
       "team": "NYM",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "TOR",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 56,
       "rp3_per_start": 10.946904747511274,
       "rp3_p25": 4.867344284649315,
@@ -4973,13 +4973,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -7.909,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9348,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -4993,19 +4993,19 @@
           "recency_form_gap": -7.91
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9348,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -5035,13 +5035,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -5232,10 +5232,10 @@
       "pitcher_id": 624133,
       "pitcher_name": "Suarez, Ranger",
       "team": "BOS",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "WSH",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 59,
       "rp3_per_start": 10.896093893744093,
       "rp3_p25": 4.816533430882133,
@@ -5243,8 +5243,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 3.29,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0236,
+      "matchup_tier": "neutral",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
@@ -5263,14 +5263,14 @@
           "recency_form_gap": 3.29
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0236,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -5305,13 +5305,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -5322,10 +5322,10 @@
       "pitcher_id": 571510,
       "pitcher_name": "Boyd, Matthew",
       "team": "CHC",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SD",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 60,
       "rp3_per_start": 10.890205990907264,
       "rp3_p25": 4.810645528045306,
@@ -5333,14 +5333,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 1.0,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9417,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -5353,19 +5353,19 @@
           "recency_form_gap": 1.0
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9417,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CHC",
+          "pf_wOBA": 0.9862,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -5395,13 +5395,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -5592,10 +5592,10 @@
       "pitcher_id": 837227,
       "pitcher_name": NaN,
       "team": "HOU",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIN",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 63,
       "rp3_per_start": 10.7866597550284,
       "rp3_p25": 4.707099292166442,
@@ -5603,14 +5603,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 10.511,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 2,
+      "opp_bat_index_recent": 0.9704,
+      "matchup_tier": "neutral",
+      "boom_stack": 4,
       "boom_components": {
         "skill_spike": 1,
         "recform_hot": 1,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -5623,19 +5623,19 @@
           "recency_form_gap": 10.51
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9704,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "HOU",
+          "pf_wOBA": 0.932,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.132,
+      "boom_rate_expected": 0.184,
       "boom_bust_rate_expected": 0.152,
-      "boom_mean_fp_expected": 9.75,
+      "boom_mean_fp_expected": 10.6,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -5665,13 +5665,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -5952,10 +5952,10 @@
       "pitcher_id": 695611,
       "pitcher_name": "Gage Jump",
       "team": "ATH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "LAD",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 67,
       "rp3_per_start": 10.676832545103498,
       "rp3_p25": 4.597272082241538,
@@ -5963,8 +5963,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 3.175,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0795,
+      "matchup_tier": "tough",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
@@ -5983,14 +5983,14 @@
           "recency_form_gap": 3.17
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0795,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -6025,13 +6025,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -6402,10 +6402,10 @@
       "pitcher_id": 700712,
       "pitcher_name": "Ure\u00f1a, Walbert",
       "team": "LAA",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SEA",
+      "is_home": false,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 72,
       "rp3_per_start": 10.517841025609917,
       "rp3_p25": 4.438280562747957,
@@ -6413,14 +6413,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -0.125,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0126,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -6433,19 +6433,19 @@
           "recency_form_gap": -0.12
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0126,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "SEA",
+          "pf_wOBA": 0.956,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -6475,13 +6475,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 12,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_12d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -6582,10 +6582,10 @@
       "pitcher_id": 683003,
       "pitcher_name": "Jones, Jared",
       "team": "PIT",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PHI",
+      "is_home": false,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 74,
       "rp3_per_start": 10.429953955626551,
       "rp3_p25": 4.350393492764592,
@@ -6593,14 +6593,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": -0.917,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0039,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -6613,19 +6613,19 @@
           "recency_form_gap": -0.92
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0039,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -6655,13 +6655,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 1,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-27",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_1d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -7032,10 +7032,10 @@
       "pitcher_id": 669160,
       "pitcher_name": "May, Dustin",
       "team": "STL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "ATL",
+      "is_home": false,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 79,
       "rp3_per_start": 10.207478017200788,
       "rp3_p25": 4.127917554338829,
@@ -7043,14 +7043,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 4.813,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 2,
+      "opp_bat_index_recent": 0.9758,
+      "matchup_tier": "neutral",
+      "boom_stack": 3,
       "boom_components": {
         "skill_spike": 1,
         "recform_hot": 1,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -7063,19 +7063,19 @@
           "recency_form_gap": 4.81
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9758,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATL",
+          "pf_wOBA": 0.9893,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.132,
+      "boom_rate_expected": 0.174,
       "boom_bust_rate_expected": 0.152,
-      "boom_mean_fp_expected": 9.75,
+      "boom_mean_fp_expected": 10.6,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -7105,13 +7105,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 7,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-21",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_7d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -7572,10 +7572,10 @@
       "pitcher_id": 677960,
       "pitcher_name": "Weathers, Ryan",
       "team": "NYY",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "DET",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 85,
       "rp3_per_start": 10.06276742954038,
       "rp3_p25": 4.739222977474767,
@@ -7583,14 +7583,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -2.76,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9657,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -7603,19 +7603,19 @@
           "recency_form_gap": -2.76
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9657,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "NYY",
+          "pf_wOBA": 0.983,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -7645,13 +7645,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -7932,10 +7932,10 @@
       "pitcher_id": 605400,
       "pitcher_name": "Nola, Aaron",
       "team": "PHI",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PIT",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 89,
       "rp3_per_start": 9.998067928954631,
       "rp3_p25": 4.674523476889019,
@@ -7943,14 +7943,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -1.312,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0238,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -7963,19 +7963,19 @@
           "recency_form_gap": -1.31
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0238,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -8005,13 +8005,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -8022,10 +8022,10 @@
       "pitcher_id": 702056,
       "pitcher_name": "Trey Yesavage",
       "team": "TOR",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "NYM",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 90,
       "rp3_per_start": 9.99276724227289,
       "rp3_p25": 4.669222790207278,
@@ -8033,8 +8033,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -0.309,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0318,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -8053,14 +8053,14 @@
           "recency_form_gap": -0.31
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0318,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -8095,13 +8095,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -8112,10 +8112,10 @@
       "pitcher_id": 694738,
       "pitcher_name": "Roupp, Landen",
       "team": "SF",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "AZ",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 91,
       "rp3_per_start": 9.99051006184189,
       "rp3_p25": 4.666965609776278,
@@ -8123,13 +8123,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.852,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9681,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -8143,19 +8143,19 @@
           "recency_form_gap": 0.85
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9681,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "AZ",
+          "pf_wOBA": 1.0263,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -8185,13 +8185,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -8292,10 +8292,10 @@
       "pitcher_id": 701542,
       "pitcher_name": "Warren, Will",
       "team": "NYY",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "DET",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 93,
       "rp3_per_start": 9.985491180343327,
       "rp3_p25": 4.661946728277715,
@@ -8303,14 +8303,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -6.147,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9657,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -8323,19 +8323,19 @@
           "recency_form_gap": -6.15
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9657,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "NYY",
+          "pf_wOBA": 0.983,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -8365,13 +8365,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -8832,10 +8832,10 @@
       "pitcher_id": 641816,
       "pitcher_name": "Mahle, Tyler",
       "team": "SF",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "AZ",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 99,
       "rp3_per_start": 9.890851008681125,
       "rp3_p25": 4.56730655661551,
@@ -8843,13 +8843,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 9.583,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 0.9681,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 1,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -8863,19 +8863,19 @@
           "recency_form_gap": 9.58
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9681,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "AZ",
+          "pf_wOBA": 1.0263,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.122,
-      "boom_bust_rate_expected": 0.156,
-      "boom_mean_fp_expected": 9.64,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -8905,13 +8905,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -10272,10 +10272,10 @@
       "pitcher_id": 643377,
       "pitcher_name": "Jax, Griffin",
       "team": "TB",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "KC",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 115,
       "rp3_per_start": 9.710554774653485,
       "rp3_p25": 4.387010322587872,
@@ -10283,8 +10283,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 4.273,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0221,
+      "matchup_tier": "neutral",
       "boom_stack": 2,
       "boom_components": {
         "skill_spike": 1,
@@ -10303,14 +10303,14 @@
           "recency_form_gap": 4.27
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0221,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "KC",
+          "pf_wOBA": 1.0094,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.132,
@@ -10345,13 +10345,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -10542,10 +10542,10 @@
       "pitcher_id": 702070,
       "pitcher_name": "Cameron, Noah",
       "team": "KC",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "TB",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 118,
       "rp3_per_start": 9.67497665566776,
       "rp3_p25": 4.351432203602147,
@@ -10553,8 +10553,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -3.195,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 0.9952,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -10573,14 +10573,14 @@
           "recency_form_gap": -3.19
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9952,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "KC",
+          "pf_wOBA": 1.0094,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -10615,13 +10615,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -11262,10 +11262,10 @@
       "pitcher_id": 696149,
       "pitcher_name": "Chandler, Bubba",
       "team": "PIT",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "PHI",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 126,
       "rp3_per_start": 9.55165275873092,
       "rp3_p25": 4.228108306665308,
@@ -11273,14 +11273,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 3.953,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 1.0039,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 1,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -11293,19 +11293,19 @@
           "recency_form_gap": 3.95
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0039,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "PHI",
+          "pf_wOBA": 0.9569,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.122,
-      "boom_bust_rate_expected": 0.156,
-      "boom_mean_fp_expected": 9.64,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -11335,13 +11335,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -11352,10 +11352,10 @@
       "pitcher_id": 813349,
       "pitcher_name": "Early, Connelly",
       "team": "BOS",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "WSH",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 127,
       "rp3_per_start": 9.533807301840746,
       "rp3_p25": 4.210262849775133,
@@ -11363,8 +11363,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -2.819,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0236,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -11383,14 +11383,14 @@
           "recency_form_gap": -2.82
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0236,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -11425,13 +11425,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -11892,10 +11892,10 @@
       "pitcher_id": 663567,
       "pitcher_name": "Lambert, Peter",
       "team": "HOU",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIN",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 133,
       "rp3_per_start": 9.386179389833329,
       "rp3_p25": 4.062634937767716,
@@ -11903,14 +11903,14 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 6.682,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 0.9704,
+      "matchup_tier": "neutral",
+      "boom_stack": 3,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 1,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -11923,19 +11923,19 @@
           "recency_form_gap": 6.68
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9704,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "HOU",
+          "pf_wOBA": 0.932,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.122,
-      "boom_bust_rate_expected": 0.156,
-      "boom_mean_fp_expected": 9.64,
+      "boom_rate_expected": 0.174,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 10.6,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -11965,13 +11965,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 11,
+          "days_since_last_start": 12,
           "last_start_date": "2026-06-17",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_11d_below_threshold"
+          "reason": "gap_12d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -12072,10 +12072,10 @@
       "pitcher_id": 676917,
       "pitcher_name": "Cavalli, Cade",
       "team": "WSH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "BOS",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 135,
       "rp3_per_start": 9.318795771149526,
       "rp3_p25": 3.9952513190839136,
@@ -12083,13 +12083,13 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -1.976,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9141,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -12103,19 +12103,19 @@
           "recency_form_gap": -1.98
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9141,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -12145,13 +12145,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -12252,10 +12252,10 @@
       "pitcher_id": 669358,
       "pitcher_name": "Baz, Shane",
       "team": "BAL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CWS",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 137,
       "rp3_per_start": 9.295718690022312,
       "rp3_p25": 3.9721742379567,
@@ -12263,8 +12263,8 @@
       "rp3_signal": "hold",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -1.467,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0145,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -12283,14 +12283,14 @@
           "recency_form_gap": -1.47
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0145,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BAL",
+          "pf_wOBA": 1.0196,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -12325,13 +12325,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 10,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-18",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_10d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -13242,10 +13242,10 @@
       "pitcher_id": 669372,
       "pitcher_name": "Ginn, J.T.",
       "team": "ATH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "LAD",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 148,
       "rp3_per_start": 9.055762280389434,
       "rp3_p25": 3.732217828323821,
@@ -13253,8 +13253,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -4.431,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0795,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -13273,14 +13273,14 @@
           "recency_form_gap": -4.43
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0795,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -13315,13 +13315,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -13692,10 +13692,10 @@
       "pitcher_id": 674841,
       "pitcher_name": "Andrew Alvarez",
       "team": "WSH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "BOS",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 153,
       "rp3_per_start": 8.996064469004342,
       "rp3_p25": 3.672520016938729,
@@ -13703,13 +13703,13 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": -0.525,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9141,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -13723,19 +13723,19 @@
           "recency_form_gap": -0.53
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9141,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -13765,13 +13765,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 7,
+          "days_since_last_start": 10,
           "last_start_date": "2026-06-21",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_7d_below_threshold"
+          "reason": "gap_10d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -13782,10 +13782,10 @@
       "pitcher_id": 680732,
       "pitcher_name": "Burke, Sean",
       "team": "CWS",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "BAL",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 154,
       "rp3_per_start": 8.978522254763455,
       "rp3_p25": 3.654977802697842,
@@ -13793,8 +13793,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -8.318,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0542,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -13813,14 +13813,14 @@
           "recency_form_gap": -8.32
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0542,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BAL",
+          "pf_wOBA": 1.0196,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -13855,13 +13855,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 10,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-18",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_10d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -14232,10 +14232,10 @@
       "pitcher_id": 680736,
       "pitcher_name": "Wrobleski, Justin",
       "team": "LAD",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "ATH",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 159,
       "rp3_per_start": 8.886066978911241,
       "rp3_p25": 3.562522526845629,
@@ -14243,8 +14243,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -3.033,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0134,
+      "matchup_tier": "neutral",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 1,
@@ -14263,14 +14263,14 @@
           "recency_form_gap": -3.03
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0134,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -14305,13 +14305,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 12,
+          "days_since_last_start": 14,
           "last_start_date": "2026-06-16",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_12d_below_threshold"
+          "reason": "gap_14d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -14412,10 +14412,10 @@
       "pitcher_id": 640455,
       "pitcher_name": "Manaea, Sean",
       "team": "NYM",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "TOR",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 161,
       "rp3_per_start": 8.873087245003894,
       "rp3_p25": 3.549542792938282,
@@ -14423,13 +14423,13 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 0.0,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9348,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -14443,19 +14443,19 @@
           "recency_form_gap": 0.0
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9348,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -14485,13 +14485,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -16032,10 +16032,10 @@
       "pitcher_id": 677944,
       "pitcher_name": "Cecconi, Slade",
       "team": "CLE",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CWS",
+      "is_home": true,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 179,
       "rp3_per_start": 8.465035162270759,
       "rp3_p25": 2.282272129307437,
@@ -16043,8 +16043,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 4.797,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0145,
+      "matchup_tier": "neutral",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
@@ -16063,14 +16063,14 @@
           "recency_form_gap": 4.8
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0145,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CLE",
+          "pf_wOBA": 1.004,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -16105,13 +16105,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 1,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-27",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_1d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -16122,10 +16122,10 @@
       "pitcher_id": 681347,
       "pitcher_name": "Burrows, Mike",
       "team": "HOU",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIN",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 180,
       "rp3_per_start": 8.46046415709049,
       "rp3_p25": 2.2777011241271685,
@@ -16133,14 +16133,14 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.387,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9704,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -16153,19 +16153,19 @@
           "recency_form_gap": 0.39
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9704,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "HOU",
+          "pf_wOBA": 0.932,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -16195,13 +16195,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -16752,10 +16752,10 @@
       "pitcher_id": 607625,
       "pitcher_name": "Lugo, Seth",
       "team": "KC",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "TB",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 187,
       "rp3_per_start": 8.329318252583457,
       "rp3_p25": 2.146555219620136,
@@ -16763,8 +16763,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -5.465,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 0.9952,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -16783,14 +16783,14 @@
           "recency_form_gap": -5.46
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9952,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "KC",
+          "pf_wOBA": 1.0094,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -16825,13 +16825,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -17472,10 +17472,10 @@
       "pitcher_id": 621111,
       "pitcher_name": "Buehler, Walker",
       "team": "SD",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CHC",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 195,
       "rp3_per_start": 8.222688154675282,
       "rp3_p25": 2.0399251217119607,
@@ -17483,14 +17483,14 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 1.52,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0024,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -17503,19 +17503,19 @@
           "recency_form_gap": 1.52
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0024,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CHC",
+          "pf_wOBA": 0.9862,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -17545,13 +17545,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -17562,10 +17562,10 @@
       "pitcher_id": 593958,
       "pitcher_name": "Rodriguez, Eduardo",
       "team": "AZ",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SF",
+      "is_home": true,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 196,
       "rp3_per_start": 8.190439671450612,
       "rp3_p25": 2.0076766384872906,
@@ -17573,8 +17573,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -4.277,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.032,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -17593,14 +17593,14 @@
           "recency_form_gap": -4.28
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.032,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "AZ",
+          "pf_wOBA": 1.0263,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -17635,13 +17635,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 11,
+          "days_since_last_start": 12,
           "last_start_date": "2026-06-17",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_11d_below_threshold"
+          "reason": "gap_12d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -17832,10 +17832,10 @@
       "pitcher_id": 605488,
       "pitcher_name": "Springs, Jeffrey",
       "team": "ATH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "LAD",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 199,
       "rp3_per_start": 8.160612238003417,
       "rp3_p25": 1.977849205040095,
@@ -17843,8 +17843,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -6.066,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0795,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -17863,14 +17863,14 @@
           "recency_form_gap": -6.07
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0795,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -17905,13 +17905,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 3,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-25",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_3d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -18102,10 +18102,10 @@
       "pitcher_id": 668678,
       "pitcher_name": "Gallen, Zac",
       "team": "AZ",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SF",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 202,
       "rp3_per_start": 8.10478533761589,
       "rp3_p25": 1.922022304652569,
@@ -18113,8 +18113,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -4.525,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.032,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -18133,14 +18133,14 @@
           "recency_form_gap": -4.53
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.032,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "AZ",
+          "pf_wOBA": 1.0263,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -18175,13 +18175,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -18192,10 +18192,10 @@
       "pitcher_id": 607067,
       "pitcher_name": "Rea, Colin",
       "team": "CHC",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SD",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 203,
       "rp3_per_start": 8.027440942963745,
       "rp3_p25": 1.844677910000424,
@@ -18203,14 +18203,14 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -3.967,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9417,
+      "matchup_tier": "soft",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
-        "park_friendly": 0
+        "opp_soft": 1,
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -18223,19 +18223,19 @@
           "recency_form_gap": -3.97
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9417,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CHC",
+          "pf_wOBA": 0.9862,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -18265,13 +18265,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -18822,10 +18822,10 @@
       "pitcher_id": 547179,
       "pitcher_name": "Lorenzen, Michael",
       "team": "COL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIA",
+      "is_home": true,
+      "game_date": "2026-07-02",
+      "has_upcoming_start": true,
       "rp3_rank": 210,
       "rp3_per_start": 7.94132056219553,
       "rp3_p25": 1.7585575292322089,
@@ -18833,8 +18833,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 8.216,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 0.9925,
+      "matchup_tier": "neutral",
       "boom_stack": 2,
       "boom_components": {
         "skill_spike": 1,
@@ -18853,14 +18853,14 @@
           "recency_form_gap": 8.22
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9925,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "COL",
+          "pf_wOBA": 1.0964,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.132,
@@ -18895,13 +18895,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 1,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-27",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-02",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_1d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -19452,10 +19452,10 @@
       "pitcher_id": 686790,
       "pitcher_name": "Trevor McDonald",
       "team": "SF",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "AZ",
+      "is_home": false,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 217,
       "rp3_per_start": 7.8500291050907105,
       "rp3_p25": 1.667266072127389,
@@ -19463,13 +19463,13 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -5.133,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9681,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -19483,19 +19483,19 @@
           "recency_form_gap": -5.13
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9681,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "AZ",
+          "pf_wOBA": 1.0263,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -19525,13 +19525,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -19722,10 +19722,10 @@
       "pitcher_id": 676664,
       "pitcher_name": "Sears, JP",
       "team": "SD",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CHC",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 220,
       "rp3_per_start": 7.8,
       "rp3_p25": 1.6172369670366784,
@@ -19733,14 +19733,14 @@
       "rp3_signal": "il",
       "data_quality_tag": "marcel_il",
       "recency_form_gap": 0.0,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 1.0024,
+      "matchup_tier": "neutral",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -19753,19 +19753,19 @@
           "recency_form_gap": 0.0
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0024,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "CHC",
+          "pf_wOBA": 0.9862,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -19795,13 +19795,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -20622,10 +20622,10 @@
       "pitcher_id": 694346,
       "pitcher_name": "Trey Gibson",
       "team": "BAL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "CWS",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 230,
       "rp3_per_start": 7.694192255541903,
       "rp3_p25": 1.511429222578582,
@@ -20633,8 +20633,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 0.092,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0145,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -20653,14 +20653,14 @@
           "recency_form_gap": 0.09
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0145,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BAL",
+          "pf_wOBA": 1.0196,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -20695,13 +20695,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -20712,10 +20712,10 @@
       "pitcher_id": 607536,
       "pitcher_name": "Freeland, Kyle",
       "team": "COL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIA",
+      "is_home": true,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 231,
       "rp3_per_start": 7.690106815417218,
       "rp3_p25": 1.5073437824538969,
@@ -20723,8 +20723,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 3.932,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 0.9925,
+      "matchup_tier": "neutral",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
@@ -20743,14 +20743,14 @@
           "recency_form_gap": 3.93
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9925,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "COL",
+          "pf_wOBA": 1.0964,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -20785,13 +20785,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -21971,11 +21971,11 @@
     {
       "pitcher_id": 641778,
       "pitcher_name": "Lauer, Eric",
-      "team": "TOR",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "team": "LAD",
+      "opp_team": "ATH",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 245,
       "rp3_per_start": 7.514349039979039,
       "rp3_p25": 1.3315860070157175,
@@ -21983,8 +21983,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 4.27,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0134,
+      "matchup_tier": "neutral",
       "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
@@ -22003,14 +22003,14 @@
           "recency_form_gap": 4.27
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0134,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "ATH",
+          "pf_wOBA": 0.9965,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.122,
@@ -22039,19 +22039,19 @@
         "catcher_framing": {
           "is_elite_framer": false,
           "is_framing_tax": false,
-          "modal_catcher_name": "Alejandro Kirk",
-          "csaa_runs": 0.3872567789842543,
+          "modal_catcher_name": "Will Smith",
+          "csaa_runs": 0.14505706799307205,
           "framing_quintile": 4
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 13,
+          "days_since_last_start": 14,
           "last_start_date": "2026-06-15",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_13d_below_threshold"
+          "reason": "gap_14d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -25032,10 +25032,10 @@
       "pitcher_id": 571945,
       "pitcher_name": "Mikolas, Miles",
       "team": "WSH",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "BOS",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 279,
       "rp3_per_start": 6.907512181747982,
       "rp3_p25": 0.7247491487846602,
@@ -25043,13 +25043,13 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 0.0,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 0,
+      "opp_bat_index_recent": 0.9141,
+      "matchup_tier": "soft",
+      "boom_stack": 1,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 0,
-        "opp_soft": 0,
+        "opp_soft": 1,
         "park_friendly": 0
       },
       "boom_detail_summary": {
@@ -25063,19 +25063,19 @@
           "recency_form_gap": 0.0
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9141,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BOS",
+          "pf_wOBA": 1.0103,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
-      "boom_rate_expected": 0.094,
-      "boom_bust_rate_expected": 0.185,
-      "boom_mean_fp_expected": 8.36,
+      "boom_rate_expected": 0.122,
+      "boom_bust_rate_expected": 0.156,
+      "boom_mean_fp_expected": 9.64,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -25105,13 +25105,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 5,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_5d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -25212,10 +25212,10 @@
       "pitcher_id": 607200,
       "pitcher_name": "Fedde, Erick",
       "team": "CWS",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "BAL",
+      "is_home": false,
+      "game_date": "2026-06-30",
+      "has_upcoming_start": true,
       "rp3_rank": 281,
       "rp3_per_start": 6.8946179111815695,
       "rp3_p25": 0.7118548782182481,
@@ -25223,8 +25223,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": 0.067,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0542,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -25243,14 +25243,14 @@
           "recency_form_gap": 0.07
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0542,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "BAL",
+          "pf_wOBA": 1.0196,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -25285,13 +25285,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 4,
+          "days_since_last_start": 6,
           "last_start_date": "2026-06-24",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-30",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_4d_below_threshold"
+          "reason": "gap_6d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -27552,10 +27552,10 @@
       "pitcher_id": 696270,
       "pitcher_name": NaN,
       "team": "LAA",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "SEA",
+      "is_home": false,
+      "game_date": "2026-06-29",
+      "has_upcoming_start": true,
       "rp3_rank": 307,
       "rp3_per_start": 6.258822081605374,
       "rp3_p25": 0.0760590486420529,
@@ -27563,14 +27563,14 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_thin",
       "recency_form_gap": 4.75,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
-      "boom_stack": 1,
+      "opp_bat_index_recent": 1.0126,
+      "matchup_tier": "neutral",
+      "boom_stack": 2,
       "boom_components": {
         "skill_spike": 0,
         "recform_hot": 1,
         "opp_soft": 0,
-        "park_friendly": 0
+        "park_friendly": 1
       },
       "boom_detail_summary": {
         "skill_spike": {
@@ -27583,19 +27583,19 @@
           "recency_form_gap": 4.75
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0126,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "SEA",
+          "pf_wOBA": 0.956,
+          "reason": null
         }
       },
-      "boom_rate_expected": 0.122,
-      "boom_bust_rate_expected": 0.156,
-      "boom_mean_fp_expected": 9.64,
+      "boom_rate_expected": 0.132,
+      "boom_bust_rate_expected": 0.152,
+      "boom_mean_fp_expected": 9.75,
       "tier": "streamer",
       "skill_spike_anti_predictive": false,
       "season_only_tags": {
@@ -27625,13 +27625,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 10,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-18",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-06-29",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_10d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -27822,10 +27822,10 @@
       "pitcher_id": 571578,
       "pitcher_name": "Corbin, Patrick",
       "team": "TOR",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "NYM",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 310,
       "rp3_per_start": 6.155918150340361,
       "rp3_p25": 0.0,
@@ -27833,8 +27833,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -6.221,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 1.0318,
+      "matchup_tier": "tough",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -27853,14 +27853,14 @@
           "recency_form_gap": -6.22
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 1.0318,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "TOR",
+          "pf_wOBA": 1.0126,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -27895,13 +27895,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -28632,10 +28632,10 @@
       "pitcher_id": 608372,
       "pitcher_name": "Sugano, Tomoyuki",
       "team": "COL",
-      "opp_team": null,
-      "is_home": null,
-      "game_date": null,
-      "has_upcoming_start": false,
+      "opp_team": "MIA",
+      "is_home": true,
+      "game_date": "2026-07-01",
+      "has_upcoming_start": true,
       "rp3_rank": 319,
       "rp3_per_start": 5.6945158675388585,
       "rp3_p25": 0.0,
@@ -28643,8 +28643,8 @@
       "rp3_signal": "drop",
       "data_quality_tag": "data_driven_full",
       "recency_form_gap": -2.627,
-      "opp_bat_index_recent": null,
-      "matchup_tier": "unknown",
+      "opp_bat_index_recent": 0.9925,
+      "matchup_tier": "neutral",
       "boom_stack": 0,
       "boom_components": {
         "skill_spike": 0,
@@ -28663,14 +28663,14 @@
           "recency_form_gap": -2.63
         },
         "opp_soft": {
-          "opp_bat_index_recent": null,
-          "soft_p33_threshold": null,
-          "reason": "no_next_opp"
+          "opp_bat_index_recent": 0.9925,
+          "soft_p33_threshold": 0.974,
+          "reason": null
         },
         "park_friendly": {
-          "park_team": null,
-          "pf_wOBA": null,
-          "reason": "no_scheduled_start"
+          "park_team": "COL",
+          "pf_wOBA": 1.0964,
+          "reason": "park_not_in_friendly_tertile"
         }
       },
       "boom_rate_expected": 0.094,
@@ -28705,13 +28705,13 @@
         },
         "il_return": {
           "is_first_back_long_il": false,
-          "days_since_last_start": 8,
+          "days_since_last_start": 11,
           "last_start_date": "2026-06-20",
-          "reference_date": "2026-06-28",
-          "reference_source": "today",
+          "reference_date": "2026-07-01",
+          "reference_source": "next_scheduled",
           "threshold_days": 30,
           "baseline_bust_pp": 2.93,
-          "reason": "gap_8d_below_threshold"
+          "reason": "gap_11d_below_threshold"
         }
       },
       "percent_owned": null,
@@ -30339,6 +30339,6 @@
       "injury_status": null
     }
   ],
-  "generated_at": "2026-06-28T08:35:13.524728",
+  "generated_at": "2026-06-28T18:18:35.049624",
   "source": "build_sp_boom_stack_full_pool"
 }

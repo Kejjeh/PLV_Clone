@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-29_max_muncy_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 63,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.3462496935735926,
+    "live_marginal": -12.200000000000003,
+    "model_rank": 43,
+    "override_tag": null,
+    "pl_rank": 83,
+    "proj_per": 2.03,
+    "replacement_delta": null
+  },
+  "mlbam_id": 571970,
+  "player_name": "Max Muncy",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-29",
+  "verdict_top": "MIXED"
+}

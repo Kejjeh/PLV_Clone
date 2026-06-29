@@ -4,10 +4,10 @@
   "decision_id": "2026-06-28_tanner_scott_RP_001",
   "inputs": {
     "archetype_label": "LATE_INNING_STUFF_CTRL",
-    "archetype_overall": 78,
+    "archetype_overall": 77,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 4.032229395551612,
-    "live_marginal": -1.0,
+    "live_marginal": -0.20000000000000284,
     "model_rank": 11,
     "override_tag": null,
     "pl_rank": 26,

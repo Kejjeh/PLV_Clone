@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-29_luis_garcia_jr_H_001",
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_STAR",
+    "archetype_overall": 63,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.1957946883664246,
+    "live_marginal": -28.200000000000017,
+    "model_rank": 27,
+    "override_tag": null,
+    "pl_rank": 53,
+    "proj_per": 2.16,
+    "replacement_delta": null
+  },
+  "mlbam_id": 671277,
+  "player_name": "Luis Garc\u00eda Jr.",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-29",
+  "verdict_top": "MIXED"
+}
