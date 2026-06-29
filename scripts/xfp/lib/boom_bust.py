@@ -17,8 +17,12 @@ Source of per-game FP (two-tier, fast path first):
 Set ``PLV_BOOMBUST_FORCE_LIVE=1`` to bypass the parquet (used by the byte-identity
 verification harness to prove the two tiers agree).
 
-Boom/bust thresholds (calibrated vs 2025 league p80/p20): SP boom>=20 / bust<5;
-H boom>=10 / bust<2; RP boom>=6 / bust<0.
+Boom/bust thresholds (RECALIBRATED 2026-06-28 to empirical p~78/p~22, then
+confirmed across all 12 Statcast years on 656k real per-game FP): SP boom>=17 /
+bust<5; H boom>=5 / bust<0; RP boom>=6 / bust<0. The old H 10/2 fired a useless
+3%/57%; old SP 20 missed top-quartile starts (a 17.7 didn't count). These are the
+DISPLAY lens; the boom_stack forward tables intentionally use their own (stricter,
+separately-validated) thresholds. See boom_bust_cutoff_recalibration_2026-06-28.md.
 """
 from __future__ import annotations
 
@@ -218,9 +222,20 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
     return [round(x, 1) for x in s]
 
 
+# Display cutoffs recalibrated 2026-06-28 to the empirical per-game/per-start FP
+# distribution (boom_bust_cutoff_recalibration_2026-06-28.md). These are the
+# DISPLAY/context lens (CLAUDE.md #13) — they label realized boom/bust RATES and
+# never move a projection. They are intentionally INDEPENDENT of the boom_stack
+# forward-expectation tables, which use their own (stricter, validated) thresholds:
+#   - SP boom_stack: P(FP>=20) "monster start" / bust P(FP<0); 33k-start derived.
+#   - hitter boom_stack: fp_proxy >= 80th pct (~top-20%); 245k-game derived.
+# The hitter display boom (fp>=5 ~ top-17%) now SHARES the boom_stack top-quintile
+# philosophy (old fp>=10 was a top-3% mismatch). The SP display boom (fp>=17 ~ top
+# quartile, so a 17.7 start counts) is looser than the boom_stack 20 by design —
+# the display already differed on bust (5 vs 0), so the two lenses are separate tools.
 def sp_boom_bust(mlbam, n: int = 8, season: int = 2026) -> dict | None:
     fp = _fp_series(mlbam, "SP", season)[-n:]
-    return boom_bust_summary(fp, boom_thr=20, bust_thr=5)
+    return boom_bust_summary(fp, boom_thr=17, bust_thr=5)
 
 
 def rp_boom_bust(mlbam, n: int = 15, season: int = 2026) -> dict | None:
@@ -230,4 +245,4 @@ def rp_boom_bust(mlbam, n: int = 15, season: int = 2026) -> dict | None:
 
 def hitter_boom_bust(mlbam, n: int = 21, season: int = 2026) -> dict | None:
     fp = _fp_series(mlbam, "H", season)[-n:]
-    return boom_bust_summary(fp, boom_thr=10, bust_thr=2)
+    return boom_bust_summary(fp, boom_thr=5, bust_thr=0)

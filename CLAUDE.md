@@ -174,8 +174,11 @@ the printed full-log path when the summary doesn't have enough detail.
 - `/boom-bust-history` — variance-aware historical actuals across last
   N games per player. SP L8 / hitter L21 / RP L15 windows; pulls MLB
   Stats API gameLogs and computes BrownU FP per game. Surfaces
-  L8/L5/L3 averages + trend arrow + std + **boom% (SP ≥20 / H ≥10 /
-  RP ≥5) + bust% (SP <5 / H <2 / RP <0)** with auto-fallback to prior
+  L8/L5/L3 averages + trend arrow + std + **boom% (SP ≥17 / H ≥5 /
+  RP ≥6) + bust% (SP <5 / H <0 / RP <0)** (recalibrated 2026-06-28 to
+  empirical p~78/p~22 quantiles; old H ≥10/<2 fired 3%/57% = useless,
+  SP ≥20 missed top-quartile starts like a 17.7; see
+  `boom_bust_cutoff_recalibration_2026-06-28.md`) with auto-fallback to prior
   year for IL60+ stashes (Hunter Greene 2025 surfaces automatically).
   Status tags: HOT STREAK / CAP FODDER / DECLINING / RAMP / VOLATILE
   / FLOOR / STASH. Default scope = full roster (split by position);
