@@ -53,6 +53,7 @@ from sp_stuff_model import (  # noqa: E402  reuse validated loaders + ownership 
 
 ROOT = Path(__file__).resolve().parents[2]
 ROLLING = ROOT / "data" / "research" / "xfp_cache" / "rolling_pitchers_2018_2026.csv"
+STATCAST_2026 = ROOT / "data" / "research" / "xfp_cache" / "statcast_2026.parquet"
 
 # stuff_level weighting per backtest: whiff/K dominate (~0.23 each), velo light (~0.16).
 W_SWSTR, W_K, W_VELO = 0.40, 0.40, 0.20
@@ -124,6 +125,12 @@ def _load_velo_2026() -> pd.DataFrame:
       velo_yoy / velo_flag — current vs PRIOR-year (2025) season-end (leading flag)
       velo_in / velo_in_flag — current L21 vs 2026 SEASON-PEAK, gated >=80 BF L21
                                (in-season sustained drop; coverage complement to YoY)
+      velo_in_trend          — DIRECTIONAL in-season trend: L21 velo - season-to-date
+                               avg (two-sided; + = rising, - = fading). DISPLAY-ONLY
+                               conviction context (Rule 13), NOT a tier/severity input.
+                               Surfaces the RISING case the one-sided peak-drop velo_in
+                               caps at ~0 (e.g. a climbing arm whose weak FP is variance
+                               reverting UP). Same >=80 BF L21 gate as velo_in.
       velo_2y / velo_2y_flag — current vs 2-YEARS-AGO (2024) season-end (strongest
                                construct, partial-r +0.175; slow/lower coverage)
     Missing velo simply drops out of the blend / flags.
@@ -172,6 +179,34 @@ def _load_velo_2026() -> pd.DataFrame:
         latest["velo_2y"] = np.nan
     latest["velo_2y_flag"] = latest["velo_2y"].map(_velo_2y_flag)
     return latest[out_cols]
+
+
+def _inseason_velo_trend() -> pd.DataFrame:
+    """DIRECTIONAL in-season FB-velo trend per SP (DISPLAY-ONLY, Rule 13):
+    mean velo of the LAST 3 starts minus the FIRST 3 starts of 2026 (>=4 starts).
+    Two-sided (+ rising / - fading) — surfaces the climbing arm whose weak recent FP
+    is variance reverting UP, which the one-sided peak-drop velo_in caps at ~0.
+    Computed from per-start Statcast so it covers arms the rolling-cache L21-BF gate
+    (velo_in) drops (e.g. a hurt SP with thin recent BF). NOT a tier/severity input.
+    Returns {mlb_id, velo_in_trend}; empty frame if Statcast is unavailable."""
+    try:
+        import duckdb
+        g = duckdb.connect().execute(
+            "SELECT pitcher AS mlb_id, game_date::DATE AS gd, AVG(release_speed) AS v "
+            f"FROM read_parquet('{STATCAST_2026.as_posix()}') "
+            # FF/FT/SI = a complete fastball read for the directional TREND. Sibling
+            # velo reads (trend_signal._pitcher_season, the rolling cache) use FF/SI;
+            # FT (two-seam) was reclassified to SI ~2020 so it is near-empty in 2026 ->
+            # the two definitions agree to ~0.1mph here, well inside the display tolerance.
+            "WHERE pitch_type IN ('FF','FT','SI') "
+            "GROUP BY pitcher, game_date::DATE HAVING COUNT(*) >= 10").df()
+    except Exception:
+        return pd.DataFrame(columns=["mlb_id", "velo_in_trend"])
+    rows = []
+    for mid, sub in g.sort_values("gd").groupby("mlb_id"):
+        if len(sub) >= 4:
+            rows.append((int(mid), round(sub["v"].tail(3).mean() - sub["v"].head(3).mean(), 1)))
+    return pd.DataFrame(rows, columns=["mlb_id", "velo_in_trend"])
 
 
 def _velo_flag(yoy: float) -> str:
@@ -226,6 +261,8 @@ def _build_core():
 
     velo = _load_velo_2026()
     d = d.merge(velo, on="mlb_id", how="left")
+    # directional in-season velo trend (display-only context, Rule 13; per-start Statcast)
+    d = d.merge(_inseason_velo_trend(), on="mlb_id", how="left")
 
     # percentile-rank within the 2026 SP pool (higher pctl = better/more FP)
     d["swstr_pctl"] = d["swstr_pct"].rank(pct=True) * 100
@@ -305,6 +342,7 @@ def decline_lens_map():
             "velo_flag": r.get("velo_flag") or "",
             "velo_in": float(r["velo_in"]) if pd.notna(r.get("velo_in")) else None,
             "velo_in_flag": r.get("velo_in_flag") or "",
+            "velo_in_trend": float(r["velo_in_trend"]) if pd.notna(r.get("velo_in_trend")) else None,
             "velo_2y": float(r["velo_2y"]) if pd.notna(r.get("velo_2y")) else None,
             "velo_2y_flag": r.get("velo_2y_flag") or "",
             "velo_double": bool(r.get("velo_double")),
@@ -321,16 +359,19 @@ def _fmt_row(r, has_own):
     flag = {"VV": "▼▼", "v": " ▼", "^": " ▲"}.get(r.get("velo_flag", ""), "  ")
     vin = f"{r.velo_in:>+5.1f}" if pd.notna(r.get("velo_in")) else f"{'--':>5}"
     iflag = {"VV": "▼▼", "v": " ▼"}.get(r.get("velo_in_flag", ""), "  ")
+    _t = r.get("velo_in_trend")
+    vtr = f"{_t:>+5.1f}" if pd.notna(_t) else f"{'--':>5}"
+    tflag = " ▲" if (pd.notna(_t) and _t >= 0.5) else (" ▼" if (pd.notna(_t) and _t <= -0.5) else "  ")
     v2y = f"{r.velo_2y:>+5.1f}" if pd.notna(r.get("velo_2y")) else f"{'--':>5}"
     f2y = {"VV": "▼▼", "v": " ▼"}.get(r.get("velo_2y_flag", ""), "  ")
     return (f"{r.player_name_fg:<20}{owner:<16}{int(r.gs):>3}"
             f"{r.k_pct*100:>6.1f}{r.swstr_pct*100:>7.1f}{velo}"
-            f"{yoy}{flag}{vin}{iflag}{v2y}{f2y}"
+            f"{yoy}{flag}{vin}{iflag}{vtr}{tflag}{v2y}{f2y}"
             f"{r.stuff_level_pctl:>7.0f}{r.curfp_pctl:>7.0f}{r.decline_gap:>+7.0f}  {r.tier}")
 
 
 HDR = (f"{'pitcher':<20}{'owner':<16}{'GS':>3}{'K%':>6}{'SwStr':>7}{'velo':>6}"
-       f"{'vYoY':>5}{'':>2}{'vIn':>5}{'':>2}{'v2y':>5}{'':>2}"
+       f"{'vYoY':>5}{'':>2}{'vIn':>5}{'':>2}{'vTrnd':>5}{'':>2}{'v2y':>5}{'':>2}"
        f"{'lvlPct':>7}{'fpPct':>7}{'gap':>7}  tier")
 
 
@@ -382,6 +423,20 @@ def main(players: list[str] | None = None):
                              for _, r in mine_vin.iterrows())
             print(f"  IN-SEASON VELO DROP (vs 2026 peak, >=80 BF L21): {tags} "
                   f"— sustained dip not (yet) in the YoY line; same bust-risk tilt.")
+        # --- DIRECTIONAL in-season trend, folded into the cut order (display/context, Rule 13) ---
+        mine_tr = mine.dropna(subset=["velo_in_trend"])
+        rising_tr = mine_tr[mine_tr["velo_in_trend"] >= 0.5].sort_values("velo_in_trend", ascending=False)
+        falling_tr = mine_tr[mine_tr["velo_in_trend"] <= -0.5].sort_values("velo_in_trend")
+        if len(rising_tr):
+            tags = ", ".join(f"{r.player_name_fg} (+{r.velo_in_trend:.1f})" for _, r in rising_tr.iterrows())
+            print(f"  IN-SEASON VELO RISING (L21 vs season avg) — KEEP-signal: {tags} "
+                  f"— stuff improving; weak recent FP is likelier variance reverting UP. "
+                  f"Tilts these DOWN the cut order (context only, doesn't move the tier).")
+        if len(falling_tr):
+            tags = ", ".join(f"{r.player_name_fg} ({r.velo_in_trend:+.1f})" for _, r in falling_tr.iterrows())
+            print(f"  IN-SEASON VELO FALLING (L21 vs season avg) — CUT-tilt: {tags} "
+                  f"— stuff fading; strong recent FP is likelier over-performance reverting DOWN. "
+                  f"Tilts these UP the cut order (context only, doesn't move the tier).")
         mine_2y = mine[mine["velo_2y_flag"].isin(["VV", "v"])]
         if len(mine_2y):
             tags = ", ".join(f"{r.player_name_fg} ({r.velo_2y:+.1f})"
