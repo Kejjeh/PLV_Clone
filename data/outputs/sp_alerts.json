@@ -1,7 +1,7 @@
 {
-  "generated": "2026-06-29",
-  "upgrade_floor_fpp": -0.1065,
-  "hit_upgrade_floor_xwoba": 0.332,
+  "generated": "2026-06-30",
+  "upgrade_floor_fpp": -0.0871,
+  "hit_upgrade_floor_xwoba": 0.333,
   "alert_count": 2,
   "hitter_alert_count": 0,
   "alerts": [
@@ -13,7 +13,7 @@
       ],
       "gs": 4,
       "fpp": 0.061,
-      "fpp_gap": 0.1675,
+      "fpp_gap": 0.1481,
       "gsp": 3,
       "l4": "3/4",
       "whiff_pct": 28.7,
@@ -28,14 +28,14 @@
       ],
       "gs": 7,
       "fpp": 0.0455,
-      "fpp_gap": 0.152,
+      "fpp_gap": 0.1326,
       "gsp": 6,
       "l4": "3/4",
-      "whiff_pct": 28.1,
+      "whiff_pct": 28.2,
       "xwoba_con": 0.333,
       "rp3_rank": 999
     }
   ],
   "hitter_alerts": [],
-  "my_active_sp_count": 8
+  "my_active_sp_count": 7
 }

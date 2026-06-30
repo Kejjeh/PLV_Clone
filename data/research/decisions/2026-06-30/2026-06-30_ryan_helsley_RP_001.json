@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 0.75,
+  "decision_id": "2026-06-30_ryan_helsley_RP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF_RP",
+    "archetype_overall": 58,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.9076440924123785,
+    "live_marginal": 13.900000000000006,
+    "model_rank": 37,
+    "override_tag": null,
+    "pl_rank": 7,
+    "proj_per": 129.4,
+    "replacement_delta": -5.1
+  },
+  "mlbam_id": 664854,
+  "player_name": "Ryan Helsley",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-06-30",
+  "verdict_top": "BUY"
+}
