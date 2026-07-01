@@ -1,0 +1,81 @@
+player_name,player_id,position,bucket,category,also_in,owner_team
+Aaron Judge,33192.0,RF,H,ROSTER,,New York Ligers
+Vladimir Guerrero Jr.,35002.0,1B,H,ROSTER,,New York Ligers
+Corbin Carroll,42404.0,RF,H,ROSTER,,New York Ligers
+Max Fried,32685.0,SP,SP,ROSTER,,New York Ligers
+Elly De La Cruz,4917694.0,SS,H,ROSTER,,New York Ligers
+Freddy Peralta,39825.0,SP,SP,ROSTER,,New York Ligers
+Jhoan Duran,41109.0,RP,RP,ROSTER,,New York Ligers
+Pete Alonso,37498.0,1B,H,ROSTER,,New York Ligers
+Wyatt Langford,4719324.0,LF,H,ROSTER,,New York Ligers
+Luis Arraez,39572.0,1B,H,ROSTER,,New York Ligers
+Bo Bichette,38904.0,SS,H,ROSTER,,New York Ligers
+Tyler Glasnow,33190.0,SP,SP,ROSTER,,New York Ligers
+Michael Harris II,42470.0,CF,H,ROSTER,,New York Ligers
+Ryan Helsley,39909.0,RP,RP,ROSTER,,New York Ligers
+Carlos Rodon,33696.0,SP,SP,ROSTER,,New York Ligers
+Hunter Greene,39635.0,SP,SP,ROSTER,,New York Ligers
+Jose Soriano,40973.0,SP,SP,ROSTER,,New York Ligers
+Parker Messick,4619898.0,SP,SP,ROSTER,,New York Ligers
+Tanner Scott,35135.0,RP,RP,ROSTER,,New York Ligers
+Jordan Walker,4684778.0,RF,H,ROSTER,OPP_CHURN,New York Ligers
+Max Muncy,33303.0,3B,H,ROSTER,OPP_CHURN,New York Ligers
+Roki Sasaki,5134638.0,SP,SP,ROSTER,,New York Ligers
+Jacob Latz,3210625.0,RP,RP,ROSTER,,New York Ligers
+Hunter Goodman,4416591.0,C,H,ROSTER,OPP_CHURN,New York Ligers
+Reid Detmers,4326697.0,RP,RP,ROSTER,,New York Ligers
+Dustin May,40937.0,SP,SP,ROSTER,,New York Ligers
+Dominic Canzone,4345621.0,RF,H,ROSTER,,New York Ligers
+Emmet Sheehan,4417806.0,SP,SP,ROSTER,OPP_CHURN,New York Ligers
+Luis Garcia Jr.,40459.0,2B,H,ROSTER,,New York Ligers
+Kyle Bradish,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Bryce Eldridge,,,H,MY_DROP,FA_TOP,FA
+Will Warren,,,H,MY_DROP,FA_TOP,FA
+Trea Turner,,,H,MY_DROP,FA_TOP,FA
+Pete Fairbanks,,,H,MY_DROP,OPP_CHURN,Team Solomon
+Spencer Steer,,,H,MY_DROP,OPP_CHURN,Late Night Bettsing
+Framber Valdez,,,H,MY_DROP,OPP_CHURN,Frendy's Fantastic Team
+Salvador Perez,,,H,MY_DROP,FA_TOP,FA
+Daniel Palencia,,,H,MY_DROP,FA_TOP,FA
+Jack Leiter,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Merrill Kelly,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Logan Henderson,,,H,MY_DROP,FA_TOP,FA
+Brendan Donovan,,,H,MY_DROP,FA_TOP,FA
+Lucas Erceg,,,H,MY_DROP,FA_TOP,FA
+Kris Bubic,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Eury Perez,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Robert Suarez,,,H,MY_DROP,OPP_CHURN,Boone's Bad Bullpen
+Kyle Stowers,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Eugenio Suarez,,,H,MY_DROP,FA_TOP,FA
+Michael Soroka,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Jeffrey Springs,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Alex Vesia,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Louis Varland,,,H,MY_DROP,OPP_CHURN,Team Solomon
+Ceddanne Rafaela,,,H,MY_DROP,OPP_CHURN,U Just Lost To Edwin Diaz
+Trey Yesavage,,,H,MY_DROP,OPP_CHURN,U Just Lost To Edwin Diaz
+Bubba Chandler,,,H,MY_DROP,"FA_TOP,OPP_CHURN",FA
+Andrew Abbott,,,H,MY_DROP,FA_TOP,FA
+Cade Horton,,,H,MY_DROP,,FA
+Tim Anderson,,,H,MY_DROP,,FA
+Brandon Nimmo,,,H,OPP_CHURN,,Team Solomon
+Shota Imanaga,,,H,OPP_CHURN,FA_TOP,FA
+Abner Uribe,,,H,OPP_CHURN,,Boone's Bad Bullpen
+Gage Jump,,,H,OPP_CHURN,,U Just Lost To Edwin Diaz
+Cade Cavalli,,,H,OPP_CHURN,FA_TOP,FA
+TJ Rumfield,,,H,OPP_CHURN,,U Just Lost To Edwin Diaz
+Maikel Garcia,,,H,OPP_CHURN,FA_TOP,FA
+Ildemaro Vargas,,,H,OPP_CHURN,FA_TOP,FA
+Paul Goldschmidt,,,H,OPP_CHURN,,2015 Draft First Round
+Sam Antonacci,,,H,OPP_CHURN,,2015 Draft First Round
+Brayan Rocchio,,,H,OPP_CHURN,FA_TOP,FA
+Robbie Ray,,,H,OPP_CHURN,,Late Night Bettsing
+Joe Musgrove,,,H,OPP_CHURN,,FA
+Jarren Duran,,,H,OPP_CHURN,FA_TOP,FA
+Joshua Baez,,,H,OPP_CHURN,,Frendy's Fantastic Team
+Emerson Hancock,,,H,OPP_CHURN,FA_TOP,FA
+Vinnie Pasquantino,,,H,OPP_CHURN,FA_TOP,FA
+Blaze Jordan,,,H,OPP_CHURN,,U Just Lost To Edwin Diaz
+Justin Wrobleski,,,H,OPP_CHURN,,Late Night Bettsing
+Peter Lambert,,,H,OPP_CHURN,,2015 Draft First Round
+Spencer Strider,,,H,OPP_CHURN,FA_TOP,FA
+Royce Lewis,,,H,OPP_CHURN,FA_TOP,FA

@@ -12,7 +12,7 @@ Other skills should import from `scripts.xfp.lib.triangulate_core` directly.
 """
 
 from __future__ import annotations
-import argparse, io, json, os, sys
+import argparse, io, json, os, subprocess, sys, tempfile
 from collections import Counter
 from datetime import datetime, timezone
 import pandas as pd
@@ -715,6 +715,118 @@ def _verdict_matches(verdict: str, filters: list[str]) -> bool:
     return any(tok in v for tok in filters)
 
 
+# ---------- shared finalizers (single-process AND parallel paths use these) ----------
+
+def _apply_within_ranks(df_out):
+    """within_bucket_rank + floor_adj_rank over the FULL result set. These are
+    cross-player ranks (per category×bucket group), so under --jobs sharding they
+    MUST be recomputed on the concatenated frame, never per-shard. Single source of
+    truth so the two paths can't drift."""
+    if {'category', 'bucket', 'model_rank'} <= set(df_out.columns):
+        df_out['within_bucket_rank'] = (
+            df_out.groupby(['category', 'bucket'])['model_rank']
+                  .rank(method='min', ascending=True, na_option='bottom')).astype('Int64')
+    else:
+        df_out['within_bucket_rank'] = None
+    if 'floor_adj_xfp' in df_out.columns and 'bucket' in df_out.columns:
+        _grp = [c for c in ('category', 'bucket') if c in df_out.columns]
+        df_out['floor_adj_rank'] = (
+            df_out.groupby(_grp)['floor_adj_xfp']
+                  .rank(method='min', ascending=False, na_option='bottom')).astype('Int64')
+    return df_out
+
+
+def _json_payload(json_rows):
+    """Aggregate JSON payload (counts over the FULL set). Shared by both paths."""
+    resolved = [r for r in json_rows if r.get('resolved', True) is not False]
+    return {
+        'generated': datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z'),
+        'n_players': len(resolved),
+        'n_unresolved': len(json_rows) - len(resolved),
+        'verdict_counts': dict(Counter(r['verdict'] for r in resolved if r.get('verdict'))),
+        'override_counts': dict(Counter(r['override_tag'] for r in resolved if r.get('override_tag'))),
+        'bucket_counts': dict(Counter(r['bucket'] for r in resolved if r.get('bucket'))),
+        'players': json_rows,
+    }
+
+
+def _run_parallel(args, input_df, n_jobs):
+    """Shard the names-file across n_jobs child processes (each runs the verbatim
+    single-process engine with --jobs 1), then reassemble: concat the shard CSV/JSON
+    and recompute the cross-player finalizers ONCE on the full frame. Output is
+    value-identical to the single-process run (locked by tests/test_triangulate_golden).
+    Each child rebuilds the ~22s in-process caches in parallel, so wall-clock ≈ one
+    build + (per-player work / n_jobs)."""
+    rows = len(input_df)
+    n_jobs = max(1, min(n_jobs, rows))
+    # contiguous shards preserve global input order on concat
+    bounds = [(i * rows // n_jobs, (i + 1) * rows // n_jobs) for i in range(n_jobs)]
+    tmpdir = tempfile.mkdtemp(prefix='tri_jobs_')
+    jobs = []
+    for k, (a, b) in enumerate(bounds):
+        if a >= b:
+            continue
+        shard_in = os.path.join(tmpdir, f'in_{k}.csv')
+        input_df.iloc[a:b].to_csv(shard_in, index=False)
+        cmd = [sys.executable, '-X', 'utf8', os.path.abspath(__file__),
+               '--names-file', shard_in, '--jobs', '1']
+        out_csv = out_json = None
+        if args.csv_out:
+            out_csv = os.path.join(tmpdir, f'out_{k}.csv'); cmd += ['--csv-out', out_csv]
+        if args.json_out:
+            out_json = os.path.join(tmpdir, f'out_{k}.json'); cmd += ['--json-out', out_json]
+        if args.bucket:
+            cmd += ['--bucket', args.bucket]
+        if args.filter:
+            cmd += ['--filter', args.filter]
+        env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
+        jobs.append((subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.DEVNULL), out_csv, out_json))
+    # wait + collect (a failed child raises so we never write a silently-partial result)
+    csv_parts, json_parts = [], []
+    for proc, out_csv, out_json in jobs:
+        rc = proc.wait()
+        if rc != 0:
+            raise RuntimeError(f"triangulate shard failed (exit {rc}); aborting parallel run")
+        if out_csv and os.path.exists(out_csv):
+            csv_parts.append(pd.read_csv(out_csv))
+        if out_json and os.path.exists(out_json):
+            with open(out_json, encoding='utf-8') as f:
+                json_parts.extend(json.load(f).get('players', []))
+
+    if args.csv_out and csv_parts:
+        # union-concat (sort=False keeps first-appearance column order, matching the
+        # single-process pd.DataFrame(csv_rows) — do NOT reindex to one shard's columns,
+        # which would drop a column only present in a later shard, e.g. the `resolved`
+        # column that an unresolved-player shard adds).
+        df_out = pd.concat(csv_parts, ignore_index=True, sort=False)
+        df_out = _apply_within_ranks(df_out)        # recompute cross-player ranks on FULL set
+        # match single-process column order: _apply_within_ranks appends these two LAST,
+        # so force them to the tail (a late-appearing minimal-rec column like `resolved`
+        # otherwise concats after them and flips the order vs the golden).
+        _tail = [c for c in ('within_bucket_rank', 'floor_adj_rank') if c in df_out.columns]
+        df_out = df_out[[c for c in df_out.columns if c not in _tail] + _tail]
+        df_out.to_csv(args.csv_out, index=False)
+        print(f"Wrote {len(df_out)} rows to {args.csv_out}  [parallel jobs={n_jobs}]")
+        if args.snapshot:
+            snap_path = write_snapshot(df_out, args.snapshot)
+            print(f"Snapshot written: {snap_path}")
+            try:
+                print(f"Run manifest written: {write_run_manifest(df_out, args.snapshot, snap_path, run_id=args.run_id)}")
+            except Exception as _me:
+                print(f"  [warn] run manifest skipped: {type(_me).__name__}: {_me}")
+        if args.diff:
+            diff_path, report = write_diff(args.diff, args.csv_out)
+            print(f"Diff written: {diff_path}\n")
+            print(truncate_report_for_stdout(report, max_changes=20))
+    if args.json_out and json_parts:
+        payload = _json_payload(json_parts)
+        os.makedirs(os.path.dirname(os.path.abspath(args.json_out)) or '.', exist_ok=True)
+        with open(args.json_out, 'w', encoding='utf-8') as f:
+            json.dump(payload, f, indent=2, default=str)
+        print(f"Wrote {len(json_parts)} rows to {args.json_out}  [parallel jobs={n_jobs}]")
+
+
 # ---------- main ----------
 
 def main():
@@ -741,6 +853,10 @@ def main():
                          'never mint an id from a fresh now()).')
     ap.add_argument('--list-runs', action='store_true',
                     help='Print the dated, sorted triangulate run manifests and exit.')
+    ap.add_argument('--jobs', type=int, default=1, metavar='N',
+                    help='Parallelize a batch run across N child processes (shard the '
+                         'names-file, reassemble identically). 0/negative = auto (cpu-2). '
+                         'Only applies to --csv-out/--json-out batch runs. Default 1.')
     ap.add_argument('--fresh', action='store_true',
                     help='Catch local data up to yesterday first via the two fast bridges '
                          '(boxscore + statcast gf) so actuals + statcast-reading lenses are '
@@ -803,6 +919,17 @@ def main():
                 also_in_map[key] = av if pd.notna(av) else None
 
     batch_out = bool(args.csv_out or args.json_out)
+
+    # Parallel batch: shard the names-file across N child processes and reassemble
+    # identically (cross-player finalizers recomputed on the full frame). Children run
+    # with --jobs 1. Only for --names-file batch runs (positional names are small N).
+    n_jobs = args.jobs
+    if n_jobs is not None and n_jobs <= 0:
+        n_jobs = max(1, (os.cpu_count() or 2) - 2)
+    if n_jobs and n_jobs > 1 and batch_out and input_df is not None and len(input_df) > 1:
+        _run_parallel(args, input_df, n_jobs)
+        return
+
     rows = []
     csv_rows = []
     json_rows = []
@@ -1026,25 +1153,10 @@ def main():
 
     if args.csv_out:
         df_out = pd.DataFrame(csv_rows)
-        # within_bucket_rank: per (category, bucket) group, rank by model_rank asc.
-        # None when no category column present.
-        if 'category' in df_out.columns and 'bucket' in df_out.columns and 'model_rank' in df_out.columns:
-            df_out['within_bucket_rank'] = (
-                df_out.groupby(['category', 'bucket'])['model_rank']
-                      .rank(method='min', ascending=True, na_option='bottom')
-            )
-            df_out['within_bucket_rank'] = df_out['within_bucket_rank'].astype('Int64')
-        else:
-            df_out['within_bucket_rank'] = None
-        # floor_adj_rank: risk-aware within-(category,bucket) rank by floor_adj_xfp desc
-        # (higher = better). Lets the user see how the floor model's bust risk re-sorts a
-        # command-collapse arm vs the rp3-mean within_bucket_rank. Decision-layer (Rule 13).
-        if 'floor_adj_xfp' in df_out.columns and 'bucket' in df_out.columns:
-            _grp = [c for c in ('category', 'bucket') if c in df_out.columns]
-            df_out['floor_adj_rank'] = (
-                df_out.groupby(_grp)['floor_adj_xfp']
-                      .rank(method='min', ascending=False, na_option='bottom'))
-            df_out['floor_adj_rank'] = df_out['floor_adj_rank'].astype('Int64')
+        # within_bucket_rank + floor_adj_rank: cross-player ranks per (category,bucket).
+        # Extracted to _apply_within_ranks so the parallel path recomputes them
+        # identically on the concatenated frame (Rule 13 decision-layer).
+        df_out = _apply_within_ranks(df_out)
         df_out.to_csv(args.csv_out, index=False)
         print(f"Wrote {len(df_out)} rows to {args.csv_out}")
         if args.snapshot:
@@ -1063,19 +1175,7 @@ def main():
             print(f"Diff written: {diff_path}\n")
             print(truncate_report_for_stdout(report, max_changes=20))
     if args.json_out:
-        resolved = [r for r in json_rows if r.get('resolved', True) is not False]
-        verdict_counts = dict(Counter(r['verdict'] for r in resolved if r.get('verdict')))
-        override_counts = dict(Counter(r['override_tag'] for r in resolved if r.get('override_tag')))
-        bucket_counts = dict(Counter(r['bucket'] for r in resolved if r.get('bucket')))
-        payload = {
-            'generated': datetime.now(timezone.utc).isoformat(timespec='seconds').replace('+00:00', 'Z'),
-            'n_players': len(resolved),
-            'n_unresolved': len(json_rows) - len(resolved),
-            'verdict_counts': verdict_counts,
-            'override_counts': override_counts,
-            'bucket_counts': bucket_counts,
-            'players': json_rows,
-        }
+        payload = _json_payload(json_rows)
         os.makedirs(os.path.dirname(os.path.abspath(args.json_out)) or '.', exist_ok=True)
         with open(args.json_out, 'w', encoding='utf-8') as f:
             json.dump(payload, f, indent=2, default=str)

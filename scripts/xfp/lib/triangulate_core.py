@@ -106,7 +106,11 @@ def _decline_lens_lookup(pid):
             if _xfp_dir not in _sys.path:
                 _sys.path.insert(0, _xfp_dir)
             from sp_decline_model import decline_lens_map
-            _DECLINE_LENS = decline_lens_map()
+            from .disk_cache import disk_cached, STATCAST_2026
+            # disk-cached (statcast_2026 signature): the decline-map build reads statcast
+            # and is paid on the first SP of every run; warm load is ~instant.
+            _DECLINE_LENS = disk_cached("decline_lens_2026", decline_lens_map,
+                                        [STATCAST_2026], version=1)
         except Exception:
             _DECLINE_LENS = {}
     try:

@@ -30,22 +30,34 @@ def sample_trajectory(rows, n: int = 6):
     return [rows[i] for i in idx]
 
 
+# Disk-cached (keyed on statcast_2026 signature): the cold build is tens of seconds and
+# is paid on EVERY triangulate invocation incl. single-player cards; the warm pickle load
+# is ~1-2s. In-process lru_cache still sits on top (built/loaded once per process).
 @functools.lru_cache(maxsize=1)
 def _sp_snaps():
     from build_player_profiles_dashboard import build_sp_start_snapshots
-    return build_sp_start_snapshots(years=(2026,))
+    from .disk_cache import disk_cached, STATCAST_2026
+    return disk_cached("sp_snaps_2026",
+                       lambda: build_sp_start_snapshots(years=(2026,)),
+                       [STATCAST_2026], version=1)
 
 
 @functools.lru_cache(maxsize=1)
 def _h_snaps():
     from build_player_profiles_dashboard import build_hitter_snapshots
-    return [r for r in build_hitter_snapshots() if r.get("year") == 2026]
+    from .disk_cache import disk_cached, STATCAST_2026
+    return disk_cached("h_snaps_2026",
+                       lambda: [r for r in build_hitter_snapshots() if r.get("year") == 2026],
+                       [STATCAST_2026], version=1)
 
 
 @functools.lru_cache(maxsize=1)
 def _rp_snaps():
     from build_player_profiles_dashboard import build_rp_snapshots
-    return [r for r in build_rp_snapshots() if r.get("year") == 2026]
+    from .disk_cache import disk_cached, STATCAST_2026
+    return disk_cached("rp_snaps_2026",
+                       lambda: [r for r in build_rp_snapshots() if r.get("year") == 2026],
+                       [STATCAST_2026], version=1)
 
 
 def season_trajectory(player_id: int, bucket: str, n: int = 6) -> dict | None:

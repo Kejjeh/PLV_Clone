@@ -12,6 +12,7 @@ Computed from raw statcast_{year}.parquet via exact game_date split — no
 leaderboard date-param ambiguity.
 """
 from __future__ import annotations
+from functools import lru_cache
 import numpy as np
 import pandas as pd
 from pathlib import Path
@@ -37,6 +38,7 @@ AA_OPT = 15.0
 SB_RULE_YEAR = 2023
 
 
+@lru_cache(maxsize=None)  # perf: statcast read+groupby; pure(y,min_sw); callers .copy() before mutate
 def _hitter_season(y: int, min_sw: int) -> pd.DataFrame:
     df = pd.read_parquet(C / f'statcast_{y}.parquet',
                          columns=['batter', 'type', 'estimated_woba_using_speedangle', 'bat_speed', 'attack_angle'])
@@ -51,6 +53,7 @@ def _hitter_season(y: int, min_sw: int) -> pd.DataFrame:
     return g[g['n_sw'] >= min_sw]
 
 
+@lru_cache(maxsize=None)  # perf: statcast read+groupby; pure(y,min_fb); read-only downstream
 def _pitcher_season(y: int, min_fb: int) -> pd.DataFrame:
     df = pd.read_parquet(C / f'statcast_{y}.parquet',
                          columns=['pitcher', 'pitch_type', 'release_speed', 'events', 'woba_value', 'woba_denom'])
@@ -63,6 +66,7 @@ def _pitcher_season(y: int, min_fb: int) -> pd.DataFrame:
     return g[g['n_fb'] >= min_fb]
 
 
+@lru_cache(maxsize=None)  # perf: pure(cur,base); joined fresh into hitter_trend_table
 def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     """SB/sprint trend (display CONTEXT, ORTHOGONAL to the validated 3 bat-tracking
     axes — NOT part of the CV-R² family; never a number-mover, CLAUDE.md #13).
@@ -111,6 +115,7 @@ def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     return t
 
 
+@lru_cache(maxsize=None)  # perf: built once per process, not per-player; callers read tbl.loc[id]
 def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     """3-axis physical-trend table: bat speed (how hard) + attack angle (swing
     path, scored toward the AA_OPT band) + fast-swing% (intent). Each z-scored;
@@ -135,6 +140,7 @@ def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     return t
 
 
+@lru_cache(maxsize=None)  # perf: pure(cur,min_sw); already .copy()s _hitter_season before mutate
 def hitter_level_table(cur: int = 2026, min_sw: int = HIT_MIN_SW_CUR) -> pd.DataFrame:
     """Single-year LEVEL read (no YoY baseline) for rookies / no-prior-year hitters
     the change-detector can't read. Population percentiles of the SAME three
@@ -171,6 +177,7 @@ def level_for_mlbam(mlbam: int, lvl_tbl=None):
     return level_tag_hitter(tbl.loc[mlbam]), tbl.loc[mlbam].to_dict()
 
 
+@lru_cache(maxsize=None)  # perf: built once per process, not per-player; callers read tbl.loc[id]
 def pitcher_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     c, b = _pitcher_season(cur, PIT_MIN_FB_CUR), _pitcher_season(base, PIT_MIN_FB_BASE)
     t = c.join(b[['velo', 'xwoba_allow']], rsuffix='_base', how='inner')
