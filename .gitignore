@@ -66,6 +66,10 @@ data/models/*.pkl
 data/research/xfp_cache/*.parquet
 data/research/xfp_cache/*.parquet.bak
 
+# Disk-cache for the triangulate perf layer (pickled snapshots/decline-lens keyed on
+# statcast mtime,size; rebuilt on demand — binary, rotates per refresh, never track).
+data/research/xfp_cache/.build_cache/
+
 # Keep aggregated CSVs in xfp_cache (training reference, smaller)
 !data/research/xfp_cache/*.csv
 
