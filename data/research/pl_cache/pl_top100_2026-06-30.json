@@ -1,0 +1,27 @@
+{
+  "edition": "2026-06-30 Week 15",
+  "source": "Pitcher List The List (Top 100 SP)",
+  "note": "ranks only; team column in the source was scrambled and is ignored",
+  "ranks": {
+    "Jacob Misiorowski": 1, "Paul Skenes": 2, "Cristopher Sanchez": 3, "Chris Sale": 4, "Cam Schlittler": 5,
+    "Chase Burns": 6, "Joe Ryan": 7, "Shohei Ohtani": 8, "Yoshinobu Yamamoto": 9, "Zack Wheeler": 10,
+    "Jacob deGrom": 11, "Drew Rasmussen": 12, "Logan Gilbert": 13, "Tarik Skubal": 14, "Logan Webb": 15,
+    "Braxton Ashcraft": 16, "Bryce Miller": 17, "Kyle Harrison": 18, "Hunter Brown": 19, "Max Meyer": 20,
+    "Bryan Woo": 21, "Dylan Cease": 22, "Payton Tolle": 23, "Nathan Eovaldi": 24, "Jesus Luzardo": 25,
+    "George Kirby": 26, "Hunter Greene": 27, "Brandon Woodruff": 28, "Gerrit Cole": 29, "Kevin Gausman": 30,
+    "Nolan McLean": 31, "Gavin Williams": 32, "Shota Imanaga": 33, "Ranger Suarez": 34, "Sonny Gray": 35,
+    "Carlos Rodon": 36, "Parker Messick": 37, "Landen Roupp": 38, "Foster Griffin": 39, "Shane McClanahan": 40,
+    "Connelly Early": 41, "Nick Lodolo": 42, "Reid Detmers": 43, "Robbie Ray": 44, "Kyle Bradish": 45,
+    "Troy Melton": 46, "Gage Jump": 47, "Griffin Jax": 48, "MacKenzie Gore": 49, "Jared Jones": 50,
+    "Ryan Weathers": 51, "Freddy Peralta": 52, "Framber Valdez": 53, "Sandy Alcantara": 54, "Trey Yesavage": 55,
+    "Emmet Sheehan": 56, "Eury Perez": 57, "Casey Mize": 58, "Trevor Rogers": 59, "Joey Cantillo": 60,
+    "Jake Bennett": 61, "Emerson Hancock": 62, "Justin Wrobleski": 63, "Dustin May": 64, "Matthew Boyd": 65,
+    "Andrew Abbott": 66, "Sean Burke": 67, "Eduardo Rodriguez": 68, "Will Warren": 69, "Michael King": 70,
+    "Roki Sasaki": 71, "Jose Soriano": 72, "Connor Prielipp": 73, "Davis Martin": 74, "Ian Seymour": 75,
+    "Walbert Urena": 76, "Nick Martinez": 77, "Brandon Sproat": 78, "Jack Perkins": 79, "Jack Flaherty": 80,
+    "Tanner Bibee": 81, "Tatsuya Imai": 82, "Michael Wacha": 83, "Brandon Young": 84, "Cade Cavalli": 85,
+    "Christian Scott": 86, "Zebby Matthews": 87, "Shane Baz": 88, "Bubba Chandler": 89, "Shane Bieber": 90,
+    "Kumar Rocker": 91, "Cristian Javier": 92, "Noah Schultz": 93, "Spencer Arrighetti": 94, "Andre Pallante": 95,
+    "Stephen Kolek": 96, "Javier Assad": 97, "Taj Bradley": 98, "Martin Perez": 99, "Anthony Kay": 100
+  }
+}
