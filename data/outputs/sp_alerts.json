@@ -1,7 +1,7 @@
 {
-  "generated": "2026-06-30",
-  "upgrade_floor_fpp": -0.0871,
-  "hit_upgrade_floor_xwoba": 0.333,
+  "generated": "2026-07-01",
+  "upgrade_floor_fpp": -0.0859,
+  "hit_upgrade_floor_xwoba": 0.33,
   "alert_count": 2,
   "hitter_alert_count": 0,
   "alerts": [
@@ -13,7 +13,7 @@
       ],
       "gs": 4,
       "fpp": 0.061,
-      "fpp_gap": 0.1481,
+      "fpp_gap": 0.1469,
       "gsp": 3,
       "l4": "3/4",
       "whiff_pct": 28.7,
@@ -28,7 +28,7 @@
       ],
       "gs": 7,
       "fpp": 0.0455,
-      "fpp_gap": 0.1326,
+      "fpp_gap": 0.1314,
       "gsp": 6,
       "l4": "3/4",
       "whiff_pct": 28.2,
