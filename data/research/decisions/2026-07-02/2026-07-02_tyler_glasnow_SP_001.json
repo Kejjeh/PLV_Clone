@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.5,
+  "decision_id": "2026-07-02_tyler_glasnow_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 65,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 12.910717461777866,
+    "live_marginal": 46.375702279759025,
+    "model_rank": 14,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 13.825316417377277,
+    "replacement_delta": null
+  },
+  "mlbam_id": 607192,
+  "player_name": "Tyler Glasnow",
+  "reason_tag": "under_the_radar",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-02",
+  "verdict_top": "BUY"
+}
