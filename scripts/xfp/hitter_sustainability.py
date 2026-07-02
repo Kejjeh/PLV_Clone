@@ -33,7 +33,6 @@ import pandas as pd
 from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
-from plv_clone.fantasy.scoring import hitter_fp
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -62,6 +61,7 @@ from plv_clone.utils.name_match import join_key as _norm
 # package path (league_wide_full_audit) — ROOT is on sys.path (above). (2026-06-21.)
 from scripts.xfp.lib.verdict_tiers import (  # shared Sustainability seam (C3+C4)
     classify_sustainability, ros_expectation as _vt_ros, divergence_signal as _vt_div)
+from scripts.xfp.lib import boom_bust as _bb  # store-first per-game FP (two-tier) for staleness
 
 
 def load_rh3_map() -> dict:
@@ -89,8 +89,17 @@ def load_rh3_map() -> dict:
 
 
 def load_hitter_rows(h: pd.DataFrame, name: str):
-    """Return dict {year: row} for the requested hitter."""
-    h['_nk'] = h['player_name'].map(_norm)
+    """Return dict {year: row} for the requested hitter (with a 'Last, First'
+    fallback).
+
+    `_nk` is a pure function of `player_name`, so normalize once per frame and
+    reuse it: main()'s cohort loop calls this once per name, and the old body
+    rebuilt the normalized-key column over the WHOLE multiyr frame on every call
+    (O(names × rows) of redundant work). Guarded so it's built exactly once; the
+    value is identical either way.
+    """
+    if '_nk' not in h.columns:
+        h['_nk'] = h['player_name'].map(_norm)
     nk = _norm(name)
     rows = h[h['_nk'] == nk]
     if rows.empty:
@@ -241,38 +250,6 @@ def classify(rows: dict) -> dict:
     }
 
 
-def fetch_hitter_games_recent(mlbam: int, limit: int = 15) -> list[dict]:
-    """Most-recent `limit` 2026 games with FP computed from gameLog."""
-    from urllib.request import Request, urlopen
-    import json
-    url = (f'https://statsapi.mlb.com/api/v1/people/{mlbam}/stats?'
-           f'stats=gameLog&group=hitting&season=2026')
-    try:
-        req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
-        with urlopen(req, timeout=15) as r:
-            data = json.loads(r.read())
-    except Exception:
-        return []
-    stats_list = data.get('stats') or []
-    splits = stats_list[0].get('splits', []) if stats_list else []
-    games = []
-    for s in splits:
-        st = s.get('stat', {})
-        pa = int(st.get('plateAppearances', 0))
-        if pa == 0:
-            continue
-        # FP = R + TB + RBI + BB + HBP + SB − K
-        fp = hitter_fp(
-            r=int(st.get('runs', 0)), tb=int(st.get('totalBases', 0)),
-            rbi=int(st.get('rbi', 0)), bb=int(st.get('baseOnBalls', 0)),
-            hbp=int(st.get('hitByPitch', 0)), sb=int(st.get('stolenBases', 0)),
-            k=int(st.get('strikeOuts', 0)),
-        )
-        games.append({'date': s.get('date'), 'fp': fp, 'pa': pa})
-    games.sort(key=lambda x: x['date'] or '', reverse=True)
-    return games[:limit]
-
-
 def staleness_score(mlbam: int | None, rh3_per_game: float | None,
                      rh3_sigma: float | None, last_n_games: int = 15):
     """For hitters: (recent_mean_fp_per_game − rh3.per_game) / (rh3_sigma * PA_PER_GAME).
@@ -295,10 +272,14 @@ def staleness_score(mlbam: int | None, rh3_per_game: float | None,
     if (mlbam is None or rh3_per_game is None
             or rh3_sigma is None or rh3_sigma <= 0):
         return None
-    games = fetch_hitter_games_recent(mlbam, limit=last_n_games)
-    if len(games) < 5:
+    # Recent per-game BrownU FP from the boxscore-store-backed two-tier series
+    # (store-first, live-gameLog fallback inside _fp_series) — same per-game FP the
+    # live gameLog gave, but no per-player network round-trip once refresh_boxscores
+    # has run. The series is time-ordered; take the last N (order-independent mean).
+    series = _bb._fp_series(int(mlbam), 'H')[-last_n_games:]
+    if len(series) < 5:
         return None
-    recent_mean = sum(g['fp'] for g in games) / len(games)
+    recent_mean = sum(series) / len(series)
     # rh3 sigma is per-PA; convert to per-game scale
     sigma_per_game = rh3_sigma * PA_PER_GAME_LEAGUE
     if sigma_per_game <= 0:
@@ -306,7 +287,7 @@ def staleness_score(mlbam: int | None, rh3_per_game: float | None,
     return {
         'score': (recent_mean - rh3_per_game) / sigma_per_game,
         'recent_mean': recent_mean,
-        'n_sampled': len(games),
+        'n_sampled': len(series),
     }
 
 
