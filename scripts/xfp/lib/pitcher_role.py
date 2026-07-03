@@ -71,11 +71,20 @@ def _position_tag(player_or_row) -> str:
 
 
 def _name_of(player_or_row) -> str:
-    """Player name from an ESPN player object or a df row."""
-    nm = getattr(player_or_row, 'name', None)
-    if nm is None and hasattr(player_or_row, 'get'):
+    """Player name from an ESPN player object or a df row.
+
+    A pandas Series' ``.name`` attribute is its INDEX label (often an int), NOT
+    the player's name — so for dict/Series rows read the 'player_name'/'name'
+    COLUMN first (via ``.get``), and only fall back to the ``.name`` attribute for
+    ESPN player objects, where ``.name`` IS the player name. The final isinstance
+    guard means a stray non-string (e.g. an int index) can never reach ``.strip``.
+    """
+    if hasattr(player_or_row, 'get'):  # dict / pandas Series
         nm = player_or_row.get('player_name') or player_or_row.get('name')
-    return (nm or '').strip()
+        if nm is not None:
+            return str(nm).strip()
+    nm = getattr(player_or_row, 'name', None)  # ESPN player object
+    return nm.strip() if isinstance(nm, str) else ''
 
 
 def _team_of(player_or_row):

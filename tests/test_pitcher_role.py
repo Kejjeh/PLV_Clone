@@ -74,3 +74,27 @@ def test_df_row_input_dual_eligible():
         gs_lookup=lambda pid, season: "SP",
     )
     assert role == "SP"
+
+
+def test_pandas_series_row_reads_player_name_not_index():
+    """Regression (Detmers, 2026-07-03): a pandas Series' ``.name`` attribute is
+    its INDEX label (often an int), NOT the player's name. The prior _name_of did
+    ``getattr(row, 'name')`` and then ``.strip()``, so a df row with a non-zero
+    index crashed with ``'int' object has no attribute 'strip'`` on the dual-
+    eligible path — and callers fell back to the stale ESPN position='RP' tag.
+    A real pandas Series (not a dict) must read the 'player_name' column, resolve,
+    and return 'SP'. This is exactly how the forced-drop planner calls it."""
+    import pandas as pd
+
+    df = pd.DataFrame(
+        [{"player_name": "Reid Detmers", "position": "RP",
+          "eligible_slots": ["P", "RP", "BE", "IL", "SP"], "pro_team": "LAA"}],
+        index=[14],  # Series.name == 14 (int) — the trap
+    )
+    row = df.iloc[0]
+    role = detect_pitcher_role(
+        row,
+        gs_lookup=lambda mid, season: "SP",
+        id_resolver=lambda name, team: 12345 if name == "Reid Detmers" else None,
+    )
+    assert role == "SP"
