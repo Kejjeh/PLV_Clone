@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-03_carlos_rodon_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 13.650864523237571,
+    "live_marginal": -22.889236191026384,
+    "model_rank": 45,
+    "override_tag": null,
+    "pl_rank": 24,
+    "proj_per": 11.515332165151936,
+    "replacement_delta": null
+  },
+  "mlbam_id": 607074,
+  "player_name": "Carlos Rod\u00f3n",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-03",
+  "verdict_top": "BUY"
+}

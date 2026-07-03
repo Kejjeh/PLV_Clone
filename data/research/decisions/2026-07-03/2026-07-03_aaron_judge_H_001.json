@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-07-03_aaron_judge_H_001",
+  "inputs": {
+    "archetype_label": "GOAT_TIER",
+    "archetype_overall": 74,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.418465429975976,
+    "live_marginal": null,
+    "model_rank": 4,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 2.48,
+    "replacement_delta": null
+  },
+  "mlbam_id": 592450,
+  "player_name": "Aaron Judge",
+  "reason_tag": "under_the_radar",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-03",
+  "verdict_top": "BUY"
+}
