@@ -55,10 +55,18 @@ return but the next return resets the counter. Fix in TODO list.
 
 ```python
 from app.espn_connector import get_my_roster_with_injuries
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role
 import pandas as pd
 
 roster = get_my_roster_with_injuries()
-sps = roster[roster['position'] == 'SP']
+# Bucket by ACTUAL role, NOT the raw ESPN position tag: a dual-eligible starter
+# (Detmers 2026 — position='RP' but eligible 'SP' and actually starting) must
+# count as an SP against the 10-start cap. detect_pitcher_role self-resolves the
+# mlbam and decides on real gamesStarted (gotcha #8), never the stale tag.
+pitchers = roster[roster['eligible_slots'].apply(
+    lambda s: any(p in str(s) for p in ('SP', 'RP')))].copy()
+pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
+sps = pitchers[pitchers['role'] == 'SP']
 
 sps_healthy = sps[(sps['lineup_slot'] != 'IL') & (~sps['injured'])]
 n_healthy = len(sps_healthy)
@@ -219,6 +227,10 @@ ties, matching the BrownU value impact.
 - Waiting until the day of activation to identify the cut — by then it's
   reactive and usually means dropping someone on a gut feel
 - Cutting the wrong Muncy (or any same-name player) — use team-keyed rp3 lookup
+- Bucketing pitchers by the raw ESPN `position` tag — a dual-eligible starter
+  (Detmers 2026: position='RP' but eligible 'SP' and starting) gets silently
+  dropped from the SP pool, undercounting the cap. Use `detect_pitcher_role()`
+  (gotcha #8), never `position == 'SP'`.
 - Counting IL'd SPs as healthy — `sps_healthy` must use `lineup_slot != 'IL'`
   not `injured == False` (see `feedback_il_slot_vs_il_status.md`)
 - Forgetting that IL-slotted returning SPs free an IL slot (which may allow
