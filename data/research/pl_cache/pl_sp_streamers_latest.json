@@ -1,343 +1,51 @@
 {
-  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-6-28-6-29-6-30/",
-  "fetched": "2026-06-28",
-  "week": "6/28-6/30",
-  "ranks": {
-    "Chris Sale": {
-      "rank": 1,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "@SFG"
-    },
-    "Drew Rasmussen": {
-      "rank": 2,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "ARI"
-    },
-    "Jesus Luzardo": {
-      "rank": 3,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "@NYM"
-    },
-    "Hunter Brown": {
-      "rank": 4,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "@DET"
-    },
-    "Kyle Bradish": {
-      "rank": 5,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "WSH"
-    },
-    "Brandon Woodruff": {
-      "rank": 6,
-      "tier": "Auto-Start",
-      "date": "6/28",
-      "opp": "CHC"
-    },
-    "Gavin Williams": {
-      "rank": 7,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": "SEA"
-    },
-    "Carlos Rodon": {
-      "rank": 8,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": "@BOS"
-    },
-    "Emerson Hancock": {
-      "rank": 9,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Emmet Sheehan": {
-      "rank": 10,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": "@SDP"
-    },
-    "Robbie Ray": {
-      "rank": 11,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": "ATL"
-    },
-    "Sonny Gray": {
-      "rank": 12,
-      "tier": "Probably Start",
-      "date": "6/28",
-      "opp": "NYY"
-    },
-    "Brady Singer": {
-      "rank": 13,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "@PIT"
-    },
-    "Anthony Kay": {
-      "rank": 14,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "KCR"
-    },
-    "Merrill Kelly": {
-      "rank": 15,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "@TBR"
-    },
-    "Connor Prielipp": {
-      "rank": 16,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Mitch Keller": {
-      "rank": 17,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "CIN"
-    },
-    "Luinder Avila": {
-      "rank": 18,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "@CHW"
-    },
-    "Kumar Rocker": {
-      "rank": 19,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Michael King": {
-      "rank": 20,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "LAD"
-    },
-    "Shane Bieber": {
-      "rank": 21,
-      "tier": "Questionable Start",
-      "date": "6/28",
-      "opp": "TEX"
-    },
-    "Kyle Leahy": {
-      "rank": 22,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Tyler Phillips": {
-      "rank": 23,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Aaron Civale": {
-      "rank": 24,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Jack Flaherty": {
-      "rank": 25,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": "HOU"
-    },
-    "Sam Aldegheri": {
-      "rank": 26,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Zack Littell": {
-      "rank": 27,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Ryan Feltner": {
-      "rank": 28,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": "@MIN"
-    },
-    "Ryan Rolison": {
-      "rank": 29,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": null
-    },
-    "Cionel Perez": {
-      "rank": 30,
-      "tier": "Do Not Start",
-      "date": "6/28",
-      "opp": "PHI"
-    },
-    "Jacob deGrom": {
-      "rank": 1,
-      "tier": "Auto-Start",
-      "date": "6/29",
-      "opp": "@CLE"
-    },
-    "Braxton Ashcraft": {
-      "rank": 2,
-      "tier": "Auto-Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Parker Messick": {
-      "rank": 3,
-      "tier": "Auto-Start",
-      "date": "6/29",
-      "opp": "TEX"
-    },
-    "Shota Imanaga": {
-      "rank": 4,
-      "tier": "Auto-Start",
-      "date": "6/29",
-      "opp": "SDP"
-    },
-    "Nolan McLean": {
-      "rank": 5,
-      "tier": "Auto-Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "George Kirby": {
-      "rank": 6,
-      "tier": "Probably Start",
-      "date": "6/29",
-      "opp": "LAA"
-    },
-    "Ryan Weathers": {
-      "rank": 7,
-      "tier": "Probably Start",
-      "date": "6/29",
-      "opp": "DET"
-    },
-    "Nick Lodolo": {
-      "rank": 8,
-      "tier": "Probably Start",
-      "date": "6/29",
-      "opp": "@MIL"
-    },
-    "Ranger Suarez": {
-      "rank": 9,
-      "tier": "Probably Start",
-      "date": "6/29",
-      "opp": "WSH"
-    },
-    "Eduardo Rodriguez": {
-      "rank": 10,
-      "tier": "Probably Start",
-      "date": "6/29",
-      "opp": "SFG"
-    },
-    "Sean Burke": {
-      "rank": 11,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Robert Gasser": {
-      "rank": 12,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "CIN"
-    },
-    "Trey Yesavage": {
-      "rank": 13,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Shane Baz": {
-      "rank": 14,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "CHW"
-    },
-    "Gage Jump": {
-      "rank": 15,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Sandy Alcantara": {
-      "rank": 16,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "@COL"
-    },
-    "Peter Lambert": {
-      "rank": 17,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "MIN"
-    },
-    "Casey Mize": {
-      "rank": 18,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "@NYY"
-    },
-    "Aaron Nola": {
-      "rank": 19,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": "PIT"
-    },
-    "Zebby Matthews": {
-      "rank": 20,
-      "tier": "Questionable Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Ryan Johnson": {
-      "rank": 21,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Eric Lauer": {
-      "rank": 22,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Tyler Mahle": {
-      "rank": 23,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Griffin Canning": {
-      "rank": 24,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": "@CHC"
-    },
-    "Sean Sullivan": {
-      "rank": 25,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": null
-    },
-    "Miles Mikolas": {
-      "rank": 26,
-      "tier": "Do Not Start",
-      "date": "6/29",
-      "opp": "@BOS"
-    }
-  }
+ "fetched": "2026-07-02",
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-7-2-7-3-7-4/",
+ "week": "7/2-7/4",
+ "ranks": {
+  "Jacob Misiorowski": 1,
+  "Chase Burns": 2,
+  "Bryce Miller": 3,
+  "Nathan Eovaldi": 4,
+  "Davis Martin": 5,
+  "Framber Valdez": 6,
+  "Roki Sasaki": 7,
+  "Stephen Kolek": 8,
+  "Walbert Urena": 9,
+  "Jared Jones": 10,
+  "Dustin May": 11,
+  "Ian Seymour": 12,
+  "Slade Cecconi": 13,
+  "Alan Rangel": 14,
+  "Hurston Waldrep": 15,
+  "Randy Vasquez": 16,
+  "Ryan Gusto": 17,
+  "Michael Lorenzen": 18,
+  "Shohei Ohtani": 1,
+  "Dylan Cease": 2,
+  "Kyle Harrison": 3,
+  "Gavin Williams": 4,
+  "Logan Webb": 5,
+  "Reid Detmers": 6,
+  "Foster Griffin": 7,
+  "Jake Bennett": 8,
+  "Gerrit Cole": 9,
+  "Trevor Rogers": 10,
+  "Nick Martinez": 11,
+  "Jack Perkins": 12,
+  "Anthony Kay": 13,
+  "Luis Castillo": 14,
+  "Jose Cabrera": 15,
+  "Christian Scott": 16,
+  "Spencer Arrighetti": 17,
+  "Michael King": 18,
+  "Brady Singer": 19,
+  "Andre Pallante": 20,
+  "Mitch Keller": 21,
+  "David Peterson": 22,
+  "Grant Holmes": 23,
+  "Tyler Phillips": 24,
+  "Mike Paredes": 25,
+  "Tomoyuki Sugano": 26
+ }
 }
