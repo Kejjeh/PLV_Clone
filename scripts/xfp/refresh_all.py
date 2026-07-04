@@ -15,6 +15,7 @@ already pulled today.
 from __future__ import annotations
 import argparse
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -116,6 +117,9 @@ def main():
     print('\n' + '=' * 72)
     print(f'DONE — {total_t:.1f}s total, {fail_count} failure(s)')
     print('=' * 72)
+    # Propagate failure to the caller (audit 2026-07-04): a total model-rebuild
+    # failure must not exit 0 and publish yesterday's numbers as today's.
+    sys.exit(1 if fail_count else 0)
 
 
 if __name__ == '__main__':

@@ -36,9 +36,13 @@ def run(label, cmd, cwd=None, timeout=900, env=None):
     proc_env = None
     if env:
         proc_env = {**os.environ, **env}
-    result = subprocess.run(
-        cmd, cwd=cwd or ROOT, shell=True, timeout=timeout, env=proc_env,
-    )
+    try:
+        result = subprocess.run(
+            cmd, cwd=cwd or ROOT, shell=True, timeout=timeout, env=proc_env,
+        )
+    except subprocess.TimeoutExpired:
+        print(f'  ⚠ {label} TIMED OUT after {timeout}s — continuing with next step')
+        return False
     elapsed = time.time() - t0
     if result.returncode != 0:
         print(f'  ⚠ {label} returned exit code {result.returncode} after {elapsed:.1f}s')
@@ -269,6 +273,52 @@ def main():
         print('  ⚠ projection enrichment failed — blend scorer will see legacy '
               'columns only (rh3/rp3/rprs2 still valid as headline projections)')
 
+    # ── PRODUCERS MOVED AHEAD OF CONSUMERS (audit 2026-07-04) ──
+    # live_blend feeds matchup.html (step 4); stream_the_stack + hitter_boom_stack
+    # feed triangulate.html (4.7-label), the triangulate universe (4.72) and
+    # player_profiles (4.5). They previously ran AFTER those consumers, so every
+    # dashboard rendered yesterday's blend/boom numbers next to today's
+    # projections — and the PERMANENT nightly verdict history recorded day-old
+    # boom components. Pure block moves, no logic change.
+    # 4.11. Build the within-season weight-blend live projection
+    # (live_blend_xfp_<date>.csv + live_blend_xfp_latest.csv). Phase 3 Agent 3,
+    # validated 2026-06-04: within-season R^2 doubles vs preseason at split_day=90
+    # (H 0.642, SP 0.584, RP 0.398). Display-additive — does NOT replace rh3/rp3/
+    # rprs2 headline numbers; surfaced by build_matchup_dashboard as a "blended X.X
+    # [lo-hi]" suffix on each player projection cell. Fail-soft: matchup build
+    # tolerates a missing latest CSV and silently skips the suffix.
+    ok_blend = run(
+        '3.7 (was 4.11). Build live_blend_xfp (within-season blend ROS projection)',
+        'python -X utf8 scripts/xfp/build_live_blend_xfp.py',
+        timeout=300,
+    )
+    if not ok_blend:
+        print('  ⚠ live_blend_xfp build failed — continuing (display-only)')
+
+    # 4.6. Daily boom-stack streamer scan. Fail-soft: API errors or zero
+    # candidates must not abort the pipeline — outputs land at
+    # data/outputs/stream_the_stack_<date>.{md,json}. Depends on rp3
+    # projections (step 2) + team_strength cache.
+    ok_stream = run(
+        '3.8 (was 4.6). Build stream_the_stack daily streamer ranks',
+        'python -X utf8 scripts/xfp/stream_the_stack.py',
+        timeout=180,
+    )
+    if not ok_stream:
+        print('  ⚠ stream_the_stack failed — continuing (non-gating)')
+
+    # 4.7. Daily hitter boom_stack batch. Fail-soft mirror of 4.6 but for
+    # batters in today+tomorrow's scheduled games. Outputs at
+    # data/outputs/hitter_boom_stack_<date>.{md,json}. Consumed by the
+    # profiles dashboard Boom/Bust/Variance tab on the next build.
+    ok_hboom = run(
+        '3.85 (was 4.7). Build hitter_boom_stack daily batch',
+        'python -X utf8 scripts/xfp/build_hitter_boom_stack_daily.py',
+        timeout=300,
+    )
+    if not ok_hboom:
+        print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
+
     run('4. Build matchup.html (weekly H2H)',
         'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
 
@@ -354,29 +404,7 @@ def main():
     if not ok_xfp_board:
         print('  ⚠ xfp_board build failed — continuing (non-gating dashboard)')
 
-    # 4.6. Daily boom-stack streamer scan. Fail-soft: API errors or zero
-    # candidates must not abort the pipeline — outputs land at
-    # data/outputs/stream_the_stack_<date>.{md,json}. Depends on rp3
-    # projections (step 2) + team_strength cache.
-    ok_stream = run(
-        '4.6. Build stream_the_stack daily streamer ranks',
-        'python -X utf8 scripts/xfp/stream_the_stack.py',
-        timeout=180,
-    )
-    if not ok_stream:
-        print('  ⚠ stream_the_stack failed — continuing (non-gating)')
 
-    # 4.7. Daily hitter boom_stack batch. Fail-soft mirror of 4.6 but for
-    # batters in today+tomorrow's scheduled games. Outputs at
-    # data/outputs/hitter_boom_stack_<date>.{md,json}. Consumed by the
-    # profiles dashboard Boom/Bust/Variance tab on the next build.
-    ok_hboom = run(
-        '4.7. Build hitter_boom_stack daily batch',
-        'python -X utf8 scripts/xfp/build_hitter_boom_stack_daily.py',
-        timeout=300,
-    )
-    if not ok_hboom:
-        print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
 
     # 4.8. Append today's SP + hitter boom_stack snapshots to the growing
     # history panel at data/research/boom_stack_history_panel.parquet.
@@ -403,20 +431,6 @@ def main():
     if not ok_plhist:
         print('  ⚠ PL rank history archive failed — continuing (non-gating)')
 
-    # 4.11. Build the within-season weight-blend live projection
-    # (live_blend_xfp_<date>.csv + live_blend_xfp_latest.csv). Phase 3 Agent 3,
-    # validated 2026-06-04: within-season R^2 doubles vs preseason at split_day=90
-    # (H 0.642, SP 0.584, RP 0.398). Display-additive — does NOT replace rh3/rp3/
-    # rprs2 headline numbers; surfaced by build_matchup_dashboard as a "blended X.X
-    # [lo-hi]" suffix on each player projection cell. Fail-soft: matchup build
-    # tolerates a missing latest CSV and silently skips the suffix.
-    ok_blend = run(
-        '4.11. Build live_blend_xfp (within-season blend ROS projection)',
-        'python -X utf8 scripts/xfp/build_live_blend_xfp.py',
-        timeout=300,
-    )
-    if not ok_blend:
-        print('  ⚠ live_blend_xfp build failed — continuing (display-only)')
 
     # 4.10. Append today's per-player projection snapshot to the growing
     # panel at data/research/player_projection_history.parquet. Feeds the
@@ -481,7 +495,7 @@ def main():
             return
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         commit_cmd = (
-            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html docs/xfp_board.html && '
+            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html docs/player_profiles_data.js docs/triangulate.html docs/xfp_board.html && '
             f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)

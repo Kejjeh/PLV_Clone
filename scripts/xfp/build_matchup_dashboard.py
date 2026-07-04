@@ -1568,8 +1568,8 @@ def render_power_rankings():
         rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
         rh3['nk'] = rh3['player_name'].map(_norm)
         rh3_ros = dict(zip(rh3['nk'], rh3['expected_total_fp_remaining'].fillna(0)))
-        rp3_path = _select_rp3_path()
-        rp3 = pd.read_csv(rp3_path).drop_duplicates('player_name')
+        from plv_clone.projections import PROJECTIONS as _PROJ
+        rp3 = _PROJ.rp3(live_il=True).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
         SP_REM = 24
         rp3_ros = dict(zip(rp3['nk'],
@@ -1707,8 +1707,8 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         for t in league.teams:
             for p in t.roster:
                 rostered.add(_norm(p.name))
-        rp3_path = _select_rp3_path()
-        rp3 = pd.read_csv(rp3_path).drop_duplicates('player_name')
+        from plv_clone.projections import PROJECTIONS as _PROJ
+        rp3 = _PROJ.rp3(live_il=True).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
         # Phase 3 Agent 3: optional live within-season blend projection.
         # Display-only suffix appended to each streamer's projection band.
@@ -2650,7 +2650,8 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
                                 'mlbam': int(pid), 'pos': p.position or '?'})
 
         # rp3 row lookup for rank + recform + opp
-        rp3 = pd.read_csv(_select_rp3_path()).drop_duplicates('player_name')
+        from plv_clone.projections import PROJECTIONS as _PROJ
+        rp3 = _PROJ.rp3(live_il=True).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
         rp3_idx = rp3.set_index('nk').to_dict('index')
         # id-keyed index (collision-safe): sp['mlbam'] was resolved safely above, so
@@ -3697,6 +3698,15 @@ document.querySelector('.toc').appendChild(collapseBtn);
 </body></html>
 '''
 
+    # Publish-integrity smoke check (audit 2026-07-04): the per-section
+    # try/except-to-HTML pattern means a dead section ships silently as a
+    # literal 'error: ...' block — that ran for 17 DAYS after a helper was
+    # deleted. Fail the build loudly instead.
+    _err_markers = [m for m in ('<p class="muted">error:', '>error: name', 'NameError')
+                    if m in html]
+    if _err_markers:
+        raise RuntimeError(f'matchup.html contains rendered error sections: {_err_markers} '
+                           '— a section builder is throwing; fix before publishing')
     local = OUT / 'matchup.html'
     local.write_text(html, encoding='utf-8')
     print(f'  wrote {local}')
