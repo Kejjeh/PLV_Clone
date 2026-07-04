@@ -25,6 +25,10 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 GIN = os.path.join(ROOT, 'tests', 'golden', 'triangulate_input.csv')
 
 
+
+import pytest
+pytestmark = pytest.mark.slow  # 22.8s = 42% of suite wall (audit 2026-07-04)
+
 def _run_batch(out_path, extra=()):
     env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
     subprocess.run(

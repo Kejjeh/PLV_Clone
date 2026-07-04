@@ -127,3 +127,4 @@ data/research/xfp_cache/rolling_hitters_2018_2026.csv
 data/research/xfp_cache/rolling_relievers_2018_2026.csv
 data/research/xfp_cache/rolling_pitchers_2018_2026.csv
 data/outputs/player_profiles.html
+data/outputs/player_profiles_data.js

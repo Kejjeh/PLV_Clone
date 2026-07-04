@@ -75,8 +75,16 @@ def fetch_year(year: int, page_size: int = 1000) -> list[dict]:
 
 def main():
     CACHE.mkdir(parents=True, exist_ok=True)
+    from datetime import date as _date
+    _t = _date.today()
+    _cur = _t.year if _t.month >= 3 else _t.year - 1
     for year in YEARS:
         out_path = CACHE / f'pitcher_counting_stats_{year}.json'
+        # Inverse of the hitters bug (audit 2026-07-04): this refetched EVERY
+        # immutable year daily. Completed years with a cache are skipped.
+        if year < _cur and out_path.exists():
+            print(f'[{year}] immutable year cached - skipping fetch', flush=True)
+            continue
         print(f'[{year}] fetching pitcher counting stats...', flush=True)
         rows = fetch_year(year)
         out_path.write_text(json.dumps(rows, indent=2), encoding='utf-8')

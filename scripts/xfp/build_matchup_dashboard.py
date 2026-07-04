@@ -65,6 +65,16 @@ _BS_PITCHERS = CACHE / 'boxscore_pitchers.parquet'
 _BS_HITTERS  = CACHE / 'boxscore_hitters.parquet'
 
 
+
+def _today_et():
+    """Date in America/New_York (audit 2026-07-04): the hourly UTC runner made
+    date.today() flip to TOMORROW during 8pm-2am ET games — Sunday-night builds
+    computed NEXT week's matchup mid-game and excluded tonight's games."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo('America/New_York')).date()
+
+
 def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
     """Return {norm_name: {fp, starts}} for boxscore-bridge SP starts in [week_start, yesterday].
 
@@ -591,7 +601,7 @@ def load_lineup_map():
         df = pd.read_parquet(parq)
     except Exception:
         return {}
-    today = date.today()
+    today = _today_et()
     cutoff_21 = today - timedelta(days=21)
     cutoff_7 = today - timedelta(days=7)
     df['game_date'] = pd.to_datetime(df['game_date']).dt.date
@@ -2194,7 +2204,7 @@ def _load_closer_leaders_cache():
     Structure: {team_abbr: {'saves': [{name, value}], 'holds': [{name, value}]}}.
     One file per day so the dashboard refresh stays cheap after the first call.
     """
-    cache_path = OUT / f'closer_leaders_{date.today().isoformat()}.json'
+    cache_path = OUT / f'closer_leaders_{_today_et().isoformat()}.json'
     if cache_path.exists():
         try:
             with open(cache_path, 'r', encoding='utf-8') as f:
@@ -2976,7 +2986,7 @@ def main():
               f'il_returns={len(_maps["il_returns"])} calib={_maps["calib"]:.3f}')
     else:
         print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only) calib={_maps["calib"]:.3f}')
-    today = date.today()
+    today = _today_et()
     week_start = today - timedelta(days=today.weekday())
     week_end = week_start + timedelta(days=6)
     days_remaining_in_week = (week_end - today).days
@@ -3028,6 +3038,10 @@ def main():
         print(f'  ⚠ ESPN schedule empty — falling back to MLB Stats API ({len(team_ids)} teams)')
         schedules_by_team = fetch_schedules_by_team(
             team_ids, today.isoformat(), week_end.isoformat())
+        # Zero-game-week guard (audit 2026-07-04): API failure returns a TRUTHY
+        # dict of empty lists -> every projection collapses to 0 and PUBLISHES.
+        if schedules_by_team and sum(len(v) for v in schedules_by_team.values()) == 0:
+            raise RuntimeError('fetch_schedules_by_team returned ZERO games for the week - refusing to publish a zeroed matchup page')
     else:
         n_teams = len(schedules_by_team)
         n_games = sum(len(v) for v in schedules_by_team.values())

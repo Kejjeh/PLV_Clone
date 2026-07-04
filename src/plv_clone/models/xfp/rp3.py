@@ -278,7 +278,10 @@ def main():
     rolling = rolling.merge(il, on=['pitcher', 'year', 'split_day'], how='left')
     rolling['il_stints_to']        = rolling['il_stints_to'].fillna(0).astype(int)
     rolling['is_on_il_at_split']   = rolling['is_on_il_at_split'].fillna(0).astype(int)
-    max_dsr = float(rolling['days_since_il_return'].max(skipna=True) or 200)
+    _dsr_max = rolling['days_since_il_return'].max(skipna=True)
+    # NaN-truthy fix (audit 2026-07-04): float(nan or 200) returns nan (nan is
+    # truthy), poisoning the imputation for an all-NaN column.
+    max_dsr = float(_dsr_max) if pd.notna(_dsr_max) else 200.0
     rolling['days_since_il_return_imp'] = rolling['days_since_il_return'].fillna(max_dsr + 1)
 
     # RoS schedule-strength feature (validated 2026-05-24, PASS Δr +0.0145).
@@ -353,11 +356,12 @@ def main():
     delta = overall['r'] - baseline['r']
     print(f'\n--- Baseline (drops v2 drift features {sorted(v2_added)}) ---  r={baseline["r"]}')
     print(f'  Δr (RP3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
-    if v2_added:
-        assert delta >= 0.005, (
-            f"Rule 9 hard assert: Δr={delta:+.4f} below +0.005 gate for "
-            f"v2 features {sorted(v2_added)}. Revert or re-validate."
-        )
+    if v2_added and delta < 0.005:
+        # RuntimeError, not assert (audit 2026-07-04): assert vanishes under
+        # python -O, silently disabling the Rule-9 promotion gate.
+        raise RuntimeError(
+            f"Rule 9 gate: Δr={delta:+.4f} below +0.005 for v2 features "
+            f"{sorted(v2_added)}. Revert or re-validate.")
 
     # CI
     ci_table, overall_sigma = fit_residual_ci(rolling, RP3_FEATS)

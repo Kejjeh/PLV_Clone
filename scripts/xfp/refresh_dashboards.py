@@ -28,6 +28,16 @@ XFP_MODEL = ROOT / 'xfp-model'
 SCRIPTS = ROOT / 'scripts' / 'xfp'
 
 
+# Every xfp-model/docs artifact the daily refresh publishes. Tests assert this
+# list matches the tracked pages so a new dashboard can't silently go stale
+# (the triangulate.html incident, audit 2026-07-04).
+PUBLISH_PAGES_CORE = (
+    'docs/index.html', 'docs/matchup.html', 'docs/live_dashboard.html',
+    'docs/triangulate.html', 'docs/xfp_board.html',
+)
+PUBLISH_PAGES_PROFILES = ('docs/player_profiles.html', 'docs/player_profiles_data.js')
+
+
 def run(label, cmd, cwd=None, timeout=900, env=None):
     """Run a subprocess. `env` is an optional dict of EXTRA env vars merged
     on top of os.environ for THIS step only (scoped — does not leak)."""
@@ -123,21 +133,26 @@ def main():
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 
     # Snapshot rolling caches — feed the Player-Profiles intra-season trajectory
-    # view. Weekly cadence (2024-2026), monthly for older years (cost control).
-    # Each ~30-90s. Failure here only affects the Profiles trajectory dots, not
-    # the live ranker, so keep going.
-    run('1c. Build hitter rolling snapshot cache (weekly cadence 2024-2026)',
-        'python -X utf8 scripts/xfp/build_rolling_hitters.py',
-        timeout=300)
-    run('1d. Build SP rolling snapshot cache (weekly cadence 2024-2026)',
-        'python -X utf8 scripts/xfp/build_rolling_pitchers.py',
-        timeout=300)
-    run('1e. Build RP rolling snapshot cache (weekly cadence 2024-2026)',
-        'python -X utf8 scripts/xfp/build_rolling_relievers.py',
-        timeout=300)
+    # view. AUDIT 2026-07-04 (-343s/day, 28% of the ritual): these write the
+    # SAME rolling_*_2018_2026.csv files refresh_all's rolling stages rebuild
+    # minutes later with no consumer in between — so run them here ONLY when
+    # the model rebuild is being skipped (--no-models fast path).
+    if args.no_models:
+        run('1c. Build hitter rolling snapshot cache (weekly cadence 2024-2026)',
+            'python -X utf8 scripts/xfp/build_rolling_hitters.py',
+            timeout=300)
+        run('1d. Build SP rolling snapshot cache (weekly cadence 2024-2026)',
+            'python -X utf8 scripts/xfp/build_rolling_pitchers.py',
+            timeout=300)
+        run('1e. Build RP rolling snapshot cache (weekly cadence 2024-2026)',
+            'python -X utf8 scripts/xfp/build_rolling_relievers.py',
+            timeout=300)
 
     if not args.no_models:
-        ok = run('2. Rebuild xFP models', 'python -X utf8 scripts/xfp/refresh_all.py',
+        # --skip-schedule: build_pitcher_schedule already ran as its own step
+        # here (dead duplicate probables pull inside refresh_all otherwise).
+        ok = run('2. Rebuild xFP models',
+                 'python -X utf8 scripts/xfp/refresh_all.py --skip-schedule',
                   timeout=1800)
         if not ok: print('  → continuing despite model rebuild issue')
 
@@ -494,10 +509,9 @@ def main():
         # block the other five dashboards from publishing — withhold ONLY the
         # failed artifact. (--allow-empty dropped: a no-change day should not
         # mint an empty commit into xfp-model's already-heavy history.)
-        pages = ['docs/index.html', 'docs/matchup.html', 'docs/live_dashboard.html',
-                 'docs/triangulate.html', 'docs/xfp_board.html']
+        pages = list(PUBLISH_PAGES_CORE)
         if ok_profiles:
-            pages += ['docs/player_profiles.html', 'docs/player_profiles_data.js']
+            pages += list(PUBLISH_PAGES_PROFILES)
         else:
             print('\n  ⚠ player_profiles build failed — WITHHOLDING profiles from '
                   'the publish; other dashboards still ship')

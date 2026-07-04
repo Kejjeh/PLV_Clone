@@ -66,6 +66,21 @@ NON_PA = SB_EVENTS | {
 SCORE = {'r': 1.0, 'tb': 1.0, 'rbi': 1.0, 'bb': 1.0, 'hbp': 1.0, 'sb': 1.0, 'k': -1.0}
 
 
+
+def _cache_fresh_enough(cache_path, year) -> bool:
+    """Immutable (completed) years: any cache is valid. The IN-PROGRESS season:
+    cache must be from today, else refetch (audit 2026-07-04: the 2026 counting
+    stats froze for 15 days and silently fed rh3 training targets; sprint speed
+    was 59 days stale). Fetch failures still fall back to the stale cache via
+    the existing try/except."""
+    from datetime import date, datetime
+    t = date.today()
+    cur = t.year if t.month >= 3 else t.year - 1
+    if int(year) < cur:
+        return True
+    return datetime.fromtimestamp(cache_path.stat().st_mtime).date() >= t
+
+
 def aggregate_year(df: pd.DataFrame, year: int) -> pd.DataFrame:
     """Per-batter season aggregates from one year of pitch-by-pitch Statcast."""
     d = df.copy()
@@ -246,7 +261,7 @@ def fetch_counting_stats(year: int) -> pd.DataFrame:
     Pulled from MLB Stats API /stats?group=hitting endpoint, cached as JSON.
     """
     cache_path = CACHE / f'hitter_counting_stats_{year}.json'
-    if cache_path.exists():
+    if cache_path.exists() and _cache_fresh_enough(cache_path, year):
         try:
             data = json.loads(cache_path.read_text())
             df = pd.DataFrame(data)
@@ -313,7 +328,7 @@ def fetch_counting_stats(year: int) -> pd.DataFrame:
 def fetch_sprint_speed(year: int) -> pd.DataFrame:
     """Per-batter sprint speed (ft/s) from Baseball Savant. Cached as CSV."""
     cache_path = CACHE / f'sprint_speed_{year}.csv'
-    if cache_path.exists():
+    if cache_path.exists() and _cache_fresh_enough(cache_path, year):
         df = pd.read_csv(cache_path)
         print(f'  [{year}] sprint cached: {len(df)} batters', flush=True)
         return df

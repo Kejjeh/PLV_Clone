@@ -387,11 +387,12 @@ def main():
     print(f'\n--- Baseline (drops v2 features {sorted(v2_added)} + last21) ---')
     print(f'  Overall: r={baseline["r"]}')
     print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
-    if v2_added:
-        assert delta >= 0.005, (
-            f"Rule 9 hard assert: Δr={delta:+.4f} below +0.005 gate for "
-            f"v2 features {sorted(v2_added)}. Revert or re-validate."
-        )
+    if v2_added and delta < 0.005:
+        # RuntimeError, not assert (audit 2026-07-04): assert vanishes under
+        # python -O, silently disabling the Rule-9 promotion gate.
+        raise RuntimeError(
+            f"Rule 9 gate: Δr={delta:+.4f} below +0.005 for v2 features "
+            f"{sorted(v2_added)}. Revert or re-validate.")
 
     # Confidence interval table
     print('\n--- Building residual-based CI table ---')

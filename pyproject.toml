@@ -44,7 +44,7 @@ packages = ["src/plv_clone"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "--cov=plv_clone --cov-report=term-missing -v"
+addopts = "-r sxX --cov=plv_clone --cov-report=term-missing -v"
 markers = [
     "slow: end-to-end tests that run the real triangulate subprocess (deselect with -m 'not slow')",
 ]

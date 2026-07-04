@@ -115,6 +115,16 @@ MIN_PRIOR_GAMES = 20
 # Cached helpers
 # ---------------------------------------------------------------------------
 @lru_cache(maxsize=1)
+
+def _today_et():
+    """Date in America/New_York (audit 2026-07-04): the hourly UTC runner made
+    date.today() flip to TOMORROW during 8pm-2am ET games — Sunday-night builds
+    computed NEXT week's matchup mid-game and excluded tonight's games."""
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    return datetime.now(ZoneInfo('America/New_York')).date()
+
+
 def _load_batter_games_2026() -> pd.DataFrame:
     """Per-(batter, game) panel for 2026 — same construction as
     analyze_hitter_boom_bust.py (one row per PA, aggregated to game).
@@ -468,7 +478,7 @@ def compute_hitter_boom_stack(
         batter_id: MLBAM batter id
         opp_sp_id: MLBAM pitcher id of today's opposing starter (None if no
             confirmed probable yet — component 3 will be 0 with reason set)
-        today: optional override; defaults to date.today()
+        today: optional override; defaults to _today_et()
 
     Returns:
         {
@@ -482,7 +492,7 @@ def compute_hitter_boom_stack(
         }
     """
     if today is None:
-        today = date.today()
+        today = _today_et()
     c1, d1 = _component_skill_spike_hitter(batter_id, today)
     c2, d2 = _component_recform_hot_hitter(batter_id, today)
     c3, d3 = _component_opp_soft_hitter(opp_sp_id)
@@ -602,7 +612,7 @@ def resolve_opp_sp_id_for_today(team: Optional[str], today: Optional[date] = Non
     if not team or not isinstance(team, str):
         return None
     if today is None:
-        today = date.today()
+        today = _today_et()
     sched = _todays_team_to_opp_sp(today.isoformat())
     if not sched:
         return None

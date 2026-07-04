@@ -269,11 +269,11 @@ def main():
     rc_pass = (delta_rc >= 0.05)
     if not overall_pass:
         print('\nOVERALL r REGRESSED — rejecting RP-RS2 (would degrade general accuracy).')
-        return
+        raise SystemExit(1)   # audit 2026-07-04: exiting 0 silently served a STALE projections CSV
     if not rc_pass:
         print('\nROLE-CHANGE subset DID NOT IMPROVE — features have no signal where it matters.')
         print('Documenting negative result; not promoting.')
-        return
+        raise SystemExit(1)   # ditto — gate failure must be loud, not a stale-serve
 
     print('\n[BOTH GATES PASSED] Promoting RP-RS2 to production.')
 

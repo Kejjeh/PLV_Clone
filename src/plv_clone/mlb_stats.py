@@ -85,8 +85,21 @@ def predict_rotation_starts(
 
 
 def _default_http_get(url: str, **_: Any):
+    """3-attempt exponential backoff (pattern from refresh_boxscores). One MLB
+    blip must not poison a process-lifetime cache (audit 2026-07-04)."""
+    import time as _time
     import requests
-    return requests.get(url, timeout=15)
+    last = None
+    for attempt in range(3):
+        try:
+            r = requests.get(url, timeout=15)
+            r.raise_for_status()
+            return r
+        except Exception as e:  # noqa: BLE001 — retried, then re-raised
+            last = e
+            if attempt < 2:
+                _time.sleep(1.5 ** attempt)
+    raise last
 
 
 # ── Probable-pitcher slate (OWNER — audit 2026-07-04) ─────────────────────────
@@ -137,10 +150,15 @@ def get_probables(
     abbr = _team_abbr_map(http_get)
     url = (f"{_STATSAPI}/schedule?sportId=1&startDate={s}&endDate={e}"
            f"&hydrate=probablePitcher,team")
+    fetched_ok = True
     try:
         sched = http_get(url).json()
-    except Exception:
+    except Exception as exc:  # fail-soft, but LOUD and UNCACHED
+        import sys as _sys
+        print(f"WARN get_probables({s}..{e}): fetch failed after retries — {exc}; "
+              "returning empty slate (NOT cached)", file=_sys.stderr)
         sched = {"dates": []}
+        fetched_ok = False
     out: list[dict] = []
     for d in sched.get("dates", []):
         for g in d.get("games", []):
@@ -164,7 +182,9 @@ def get_probables(
                     "game_pk": g.get("gamePk"),
                     "game_state": state,
                 })
-    if use_cache:
+    if use_cache and fetched_ok:
+        # cache only SUCCESSFUL fetches — an API blip must not become a
+        # process-lifetime empty slate indistinguishable from an off-day
         _PROBABLES_CACHE[key] = out
     return out
 
