@@ -1615,7 +1615,7 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
         for t in league.teams:
             for p in t.roster:
                 rostered.add(_norm(p.name))
-        fas = league.free_agents(size=300)
+        fas = league.free_agents(size=2000)  # never <2000: size<2000 silently drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md)
         rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
         rh3['nk'] = rh3['player_name'].map(_norm)
         rh3_lkup = rh3.set_index('nk').to_dict('index')

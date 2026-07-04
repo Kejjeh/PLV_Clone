@@ -110,7 +110,11 @@ def _load_espn_roster(team_name: str = _MY_TEAM):
 
 
 @st.cache_data(ttl=300)
-def _load_espn_free_agents(position=None, size=250):
+def _load_espn_free_agents(position=None, size=2000):
+    # size=2000 is the documented-correct default (feedback_fa_pool_size_cap.md):
+    # per-position size<2000 silently drops low-owned high-FP FAs (Sheehan/Connelly
+    # -Early bug). Callers must NOT lower it. Mirrors league_state.available_fa's
+    # _FA_POOL_SIZE. Audit 2026-07-03.
     try:
         from espn_connector import get_free_agents
         return get_free_agents(position=position, size=size), None
@@ -1273,7 +1277,7 @@ elif active_tab == "Pitchers":
         st.caption("Available SP free agents sorted by projected fantasy value.")
 
         pf_26 = load_pitcher_fantasy(year)
-        _fa_all_sp, _fa_sp_err = _load_espn_free_agents(size=250)
+        _fa_all_sp, _fa_sp_err = _load_espn_free_agents()
         if _fa_sp_err:
             st.error(f"ESPN API: {_fa_sp_err}")
             st.stop()
@@ -1709,7 +1713,7 @@ elif active_tab == "Trends & Signals":
                     )
                     if not _conv_merged.empty:
                         # Mark ESPN free agents
-                        _fa_conv, _ = _load_espn_free_agents(size=200)
+                        _fa_conv, _ = _load_espn_free_agents()
                         _fa_names = set(_fa_conv["player_name"].dropna().tolist()) if not _fa_conv.empty else set()
                         _conv_merged["available"] = _conv_merged["player_name"].isin(_fa_names)
 
@@ -2166,7 +2170,7 @@ elif active_tab == "Waiver Wire":
 
     hf_26 = load_hitter_fantasy(year)
     pf_26 = load_pitcher_fantasy(year)
-    _fa_all, _fa_err = _load_espn_free_agents(size=250)
+    _fa_all, _fa_err = _load_espn_free_agents()
 
     if _fa_err:
         st.error(f"ESPN API: {_fa_err}")
