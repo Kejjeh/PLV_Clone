@@ -30,14 +30,14 @@ CUTOFF_W = 6
 TRAIN_YEARS = [2018, 2019, 2021, 2022, 2023]
 TEST_YEARS = [2024, 2025]
 
-PARK_FACTORS = {
-    'COL': 1.20, 'CIN': 1.10, 'BOS': 1.07, 'PHI': 1.05, 'TEX': 1.05,
-    'BAL': 1.04, 'TOR': 1.04, 'NYY': 1.04, 'CHC': 1.03, 'HOU': 1.03,
-    'ATL': 1.02, 'MIL': 1.02, 'WSH': 1.01, 'ARI': 1.01, 'MIN': 1.00,
-    'STL': 1.00, 'CWS': 1.00, 'CLE': 1.00, 'LAA': 1.00, 'NYM': 0.99,
-    'TB': 0.97, 'OAK': 0.97, 'ATH': 0.97, 'PIT': 0.97, 'KC': 0.96,
-    'SEA': 0.95, 'DET': 0.95, 'MIA': 0.94, 'SF': 0.94, 'SD': 0.92, 'LAD': 1.00,
-}
+# Park factors from the OWNER (audit 2026-07-04) — hand-typed dict was stale
+# (ATH 0.97 pitcher-friendly vs Sutter's ~1.05 hitter-friendly). VENUE_ERAS-aware.
+def _load_park_factors():
+    from lib.extra_lenses import _park_R_map
+    pf = dict(_park_R_map())
+    pf.setdefault('OAK', pf.get('ATH', 1.0))  # legacy code key
+    return pf
+PARK_FACTORS = _load_park_factors()
 
 
 def load_year_full(year):

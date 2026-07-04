@@ -89,6 +89,86 @@ def _default_http_get(url: str, **_: Any):
     return requests.get(url, timeout=15)
 
 
+# ── Probable-pitcher slate (OWNER — audit 2026-07-04) ─────────────────────────
+# The raw "every probable in a date window" fetch was re-implemented in 8+
+# modules (build_matchup_dashboard, extra_lenses, stream_the_stack,
+# weekly_schedule, lineup_optimizer, build_pitcher_schedule, the two
+# hitter_boom_stack builders, run_streamer_board) — and was rebuilt ad-hoc 4x
+# in one session. This is the single owner; callers must not re-implement the
+# schedule?hydrate=probablePitcher dance. Distinct from fetch_week_probables
+# (roster-scoped cap math with rotation-gap predictions).
+
+_TEAM_ABBR_CACHE: dict[int, str] = {}
+_PROBABLES_CACHE: dict[tuple[str, str], list[dict]] = {}
+
+
+def _team_abbr_map(http_get: Callable[..., Any] = _default_http_get) -> dict[int, str]:
+    if not _TEAM_ABBR_CACHE:
+        try:
+            j = http_get(f"{_STATSAPI}/teams?sportId=1").json()
+            for t in j.get("teams", []):
+                _TEAM_ABBR_CACHE[int(t["id"])] = t.get("abbreviation", "?")
+        except Exception:
+            pass
+    return _TEAM_ABBR_CACHE
+
+
+def get_probables(
+    start_date: date | str,
+    end_date: date | str,
+    *,
+    http_get: Callable[..., Any] = _default_http_get,
+    use_cache: bool = True,
+) -> list[dict]:
+    """Every probable-pitcher slot in [start_date, end_date], one dict per
+    (game, side):
+
+        {date, pitcher_id, pitcher_name, team_abbr, opp_abbr, park_abbr,
+         game_pk, game_state}   # game_state: Preview/Live/Final
+
+    park_abbr is the HOME team (feed straight into extra_lenses.park_fp_adj).
+    Cached per (start, end) within the process; pass use_cache=False to force.
+    """
+    s = start_date.isoformat() if isinstance(start_date, date) else str(start_date)
+    e = end_date.isoformat() if isinstance(end_date, date) else str(end_date)
+    key = (s, e)
+    if use_cache and key in _PROBABLES_CACHE:
+        return _PROBABLES_CACHE[key]
+    abbr = _team_abbr_map(http_get)
+    url = (f"{_STATSAPI}/schedule?sportId=1&startDate={s}&endDate={e}"
+           f"&hydrate=probablePitcher,team")
+    try:
+        sched = http_get(url).json()
+    except Exception:
+        sched = {"dates": []}
+    out: list[dict] = []
+    for d in sched.get("dates", []):
+        for g in d.get("games", []):
+            teams = g.get("teams", {})
+            home = teams.get("home", {}).get("team", {}) or {}
+            away = teams.get("away", {}).get("team", {}) or {}
+            hab = home.get("abbreviation") or abbr.get(int(home.get("id", -1)), "?")
+            aab = away.get("abbreviation") or abbr.get(int(away.get("id", -1)), "?")
+            state = g.get("status", {}).get("abstractGameState", "")
+            for side, own_ab, opp_ab in (("home", hab, aab), ("away", aab, hab)):
+                pp = teams.get(side, {}).get("probablePitcher", {}) or {}
+                if not pp.get("id"):
+                    continue
+                out.append({
+                    "date": d.get("date"),
+                    "pitcher_id": int(pp["id"]),
+                    "pitcher_name": pp.get("fullName", ""),
+                    "team_abbr": own_ab,
+                    "opp_abbr": opp_ab,
+                    "park_abbr": hab,
+                    "game_pk": g.get("gamePk"),
+                    "game_state": state,
+                })
+    if use_cache:
+        _PROBABLES_CACHE[key] = out
+    return out
+
+
 def resolve_mlbam(
     names: Iterable[str],
     *,

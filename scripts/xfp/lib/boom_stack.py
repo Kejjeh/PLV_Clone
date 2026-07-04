@@ -56,6 +56,11 @@ _PARK_FACTORS = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'park_
 # park_friendly uses PRIOR-year park factor (strict pre-cutoff per validation
 # spec: 2026 in-season starts use 2025 pf_wOBA). See
 # data/research/validation_runs/park_factor_boom_modifier.md.
+# VENUE-SAFETY NOTE (audit 2026-07-04): this module deliberately reads the raw
+# per-year CSV rather than extra_lenses._park_R_map — the single PRIOR-year
+# value IS venue-correct (2025 ATH = Sutter Health), and the pre-registered
+# validation framing is prior-year pf_wOBA tertiles, which the multi-year
+# blend owner would break. Do NOT "fix" this onto the blend owner.
 _PARK_PF_YEAR = 2025
 
 # Expected boom rate / mean FP by bucket (legacy, streamer-pool calibration

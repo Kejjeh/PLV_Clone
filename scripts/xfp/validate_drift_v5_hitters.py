@@ -36,15 +36,17 @@ TEST_YEARS = [2024, 2025]
 METRICS = ['k_pct', 'bb_pct', 'whiff_per_swing', 'ev_mean', 'ev_p90',
             'hard_hit_pct', 'barrel_pct']
 
-# Static park factors (FP-impact approximation; 1.00 = neutral)
-PARK_FACTORS = {
-    'COL': 1.20, 'CIN': 1.10, 'BOS': 1.07, 'PHI': 1.05, 'TEX': 1.05,
-    'BAL': 1.04, 'TOR': 1.04, 'NYY': 1.04, 'CHC': 1.03, 'HOU': 1.03,
-    'ATL': 1.02, 'MIL': 1.02, 'WSH': 1.01, 'ARI': 1.01, 'MIN': 1.00,
-    'STL': 1.00, 'CWS': 1.00, 'CLE': 1.00, 'LAA': 1.00, 'NYM': 0.99,
-    'TB': 0.97, 'OAK': 0.97, 'ATH': 0.97, 'PIT': 0.97, 'KC': 0.96,
-    'SEA': 0.95, 'DET': 0.95, 'MIA': 0.94, 'SF': 0.94, 'SD': 0.92, 'LAD': 1.00,
-}
+# Park factors from the OWNER (audit 2026-07-04): the hand-typed dict here
+# was stale — ATH 0.97 (pitcher-friendly) when Sutter Health plays ~1.05
+# HITTER-friendly post-2025 move. _park_R_map is PA-weighted, VENUE_ERAS-aware.
+def _load_park_factors():
+    import sys as _s, os as _o
+    _s.path.insert(0, _o.path.join(_o.path.dirname(__file__), 'lib')) if False else None
+    from lib.extra_lenses import _park_R_map
+    pf = dict(_park_R_map())
+    pf.setdefault('OAK', pf.get('ATH', 1.0))  # legacy code key
+    return pf
+PARK_FACTORS = _load_park_factors()
 
 FB_TYPES = {'FF', 'SI', 'FC', 'FT', 'FA'}
 BR_TYPES = {'SL', 'CU', 'KC', 'ST', 'SV', 'CS'}
