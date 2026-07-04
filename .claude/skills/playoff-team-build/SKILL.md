@@ -115,7 +115,7 @@ acting BEFORE their peak day, NOT on it.
 - DON'T forget `/roster-verify` first — labeling current roster wrong wastes the analysis
 - DON'T use raw rp3/rh3 per_start — use blended xFP (incorporates archetype + PL + new features per Phase 3 backtest validation)
 - DON'T ignore the timing-of-claim guidance from opponent_profiler — for IL stashes specifically, claim BEFORE PL Monday refresh
-- DON'T overcount your hitters — confirm the lineup slot count (12 active hitters in BrownU per the league rules memory)
+- DON'T overcount your hitters — confirm the lineup slot count (13 active hitters in BrownU per the league rules memory)
 
 ## Related
 

@@ -38,7 +38,7 @@ For each scheduled SP start in the window:
 | **Process panel composite** | PR 8 L30/STD/PriorYr SP marker decomposition (swstr / c_plus_swstr / o_swing / k_pct / bb_pct / hard_hit / barrel / xwoba_contact) with direction-adjusted z-score + level_pct | `data/outputs/sp_process_panel.csv` keyed on `pitcher` (MLBAM). Show as one composite score; full breakdown deferred to deep-dive | file |
 | **PL Top 100** | Pitcher List weekly SP rank | `data/research/pl_cache/pl_sps_top100.json` | file |
 | **PL streamer** | Daily streamer rank + tier (Auto / Probably / Questionable / DNS) + opp | `data/research/pl_cache/pl_sp_streamers_<DATE>.json` — **auto-refetch via WebSearch + WebFetch when cache is >2d stale**, with paywall-fallback to nearest cached date | file or WebFetch |
-| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥20 / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
+| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥17 (lib.boom_bust.SP_BOOM) / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
 | **sp-decline tier** | RoS DECLINE-RISK / RISING / STABLE — flags whose results are propped above their whiff/K stuff LEVEL and will regress DOWN (the ERA-trap guard). Render as a compact `decline` column: `⚠DEC` (DECLINE-RISK) / `RIS` (RISING) / blank. Risk/context flag ONLY — never moves the headline (CLAUDE.md #13). | `sp_decline_model.build()` keyed on MLBAM (`mlb_id`) | compute |
 
 **Performance budget**: ~10 file joins (cheap, <1s) + triangulate calls capped at top-10 FAs by Blended xFP + shadow_scout only for rows with no rp3. Total skill runtime ~30-60s.
@@ -885,7 +885,7 @@ without rebuilding). Save the joined CSV to
 - `/boom-bust-history` — **variance lens companion**. When the model
   layer (rp3 + Blended xFP + archetype) gives a verdict but you want
   hard evidence of recent form, invoke `/boom-bust-history --names
-  "X,Y"` for the L8-starts decomposition (boom% ≥20 FP, bust% <5 FP,
+  "X,Y"` for the L8-starts decomposition (boom% ≥17 (lib.boom_bust.SP_BOOM) FP, bust% <5 FP,
   std, trend arrow). Canonical case: Bradish blend 5.98 vs L5 actuals
   17.88 — boom-bust history reveals the model is 12 FP behind reality.
   Especially useful before drop/keep decisions and when surveying

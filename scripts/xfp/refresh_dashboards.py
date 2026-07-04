@@ -487,16 +487,24 @@ def main():
         print('  ⚠ decision settlement failed — continuing (non-gating)')
 
     if not args.no_push:
-        if not ok_profiles:
-            print('\n  ⚠ player_profiles build failed — skipping publish to avoid stale docs')
-            return
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
             return
+        # Dynamic publish list (audit 2026-07-04): one failed page must not
+        # block the other five dashboards from publishing — withhold ONLY the
+        # failed artifact. (--allow-empty dropped: a no-change day should not
+        # mint an empty commit into xfp-model's already-heavy history.)
+        pages = ['docs/index.html', 'docs/matchup.html', 'docs/live_dashboard.html',
+                 'docs/triangulate.html', 'docs/xfp_board.html']
+        if ok_profiles:
+            pages += ['docs/player_profiles.html', 'docs/player_profiles_data.js']
+        else:
+            print('\n  ⚠ player_profiles build failed — WITHHOLDING profiles from '
+                  'the publish; other dashboards still ship')
         timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
         commit_cmd = (
-            'git add docs/index.html docs/matchup.html docs/live_dashboard.html docs/player_profiles.html docs/player_profiles_data.js docs/triangulate.html docs/xfp_board.html && '
-            f'git commit -m "refresh: {timestamp} dashboards" --allow-empty'
+            f'git add {" ".join(pages)} && '
+            f'git commit -m "refresh: {timestamp} dashboards"'
         )
         run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)
         # Pull-before-push: the cloud live-matchup job also pushes to xfp-model

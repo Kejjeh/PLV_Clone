@@ -46,6 +46,9 @@ STAGES = [
     ('RP3 SP RoS pipeline',                      'xfp_rp3_pipeline.py',           None),
     ('RP-S1 RP cross-year',                      'xfp_rps1_pipeline.py',          None),
     ('RP-RS2 RP RoS pipeline',                   'xfp_rprs2_pipeline.py',         None),
+    # Weekly-FP substrate (audit 2026-07-04: existed but was never wired in —
+    # consumers read a stale file whenever it wasn't run by hand)
+    ('Weekly FP substrate',                      'build_weekly_fp_substrate.py',  None),
     # Dashboard
     ('Dashboard build',                          'build_v11_dashboard_v2.py',     None),
 ]

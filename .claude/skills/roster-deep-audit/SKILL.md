@@ -138,7 +138,7 @@ lens, and the mandatory Tier 3 xwOBA gate shipped on 2026-06-06.
    is mandatory (Max Muncy LAD-vs-ATH).
 3. **Step 3 — `/boom-bust-history`** — variance + actuals lens across the
    full roster + the top FA candidates surfaced by Steps 1-2. Empirically
-   calibrated thresholds: SP boom ≥20 / bust <5, hitter boom ≥5 / bust <0,
+   calibrated thresholds: SP boom ≥17 (lib.boom_bust.SP_BOOM) / bust <5, hitter boom ≥5 / bust <0,
    RP boom ≥6 / bust <0. Catches the Bradish-pattern (model 12 FP behind
    live actuals) and Valdez-pattern (high projection, 0% boom 25% bust).
 4. **Step 4 — Tier 3 gate (mandatory, per `reference_xwoba_l21d_vs_2025_diagnostic.md`)** —
