@@ -100,7 +100,11 @@ CANONICAL_CASES = [
     # way. Locking a boundary verdict invites data-driven flip-flops, so this is a
     # bucket-only lock — resolution + H bucket stay enforced.
     ("Trea Turner",     None,                      "H",  None,    None),
-    ("Framber Valdez",  "FADE — PL chasing outcomes", "SP", "FADE", None),
+    # 2026-07-04 (late): Framber sits ON the FADE/CAUTION boundary — the ros
+    # schedule-strength revival legitimately moved rp3 ranks and flipped him
+    # CAUTION<->FADE (both bearish; STUFF-DECLINE read unchanged). Bucket-only
+    # lock per the Turner/Nelson convention — boundary verdicts flip with data.
+    ("Framber Valdez",  None,                      "SP", None,     None),
     # Bucket-only locks (verdict varies, just confirm resolution + bucket):
     ("Jhoan Duran",     None,                     "RP", None,      None),
 ]
