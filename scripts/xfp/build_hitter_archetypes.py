@@ -421,6 +421,16 @@ def build_ratings_panel(current_year=2026):
     # serialization converts NaN to null which is correct for the frontend.
     qual['lineup_role_tier'] = qual['lineup_role_tier'].fillna('UNKNOWN')
 
+    # ROLE+AGE annual-value construct (VALIDATED PASS 2026-07-04,
+    # validate_hitter_role_age.py: partial +0.164 train / +0.151 holdout beyond
+    # fp_total+OVERALL+t1_proj, survivorship-honest). Within-year z, exactly the
+    # validated formula. ADDITIVE column — the blend reads OVERALL/slope/traj
+    # only. ANNUAL/keeper/trade horizon ONLY (in-season null vs rh3, Rule 13).
+    def _wyz(col):
+        return qual.groupby('year')[col].transform(
+            lambda s: (s - s.mean()) / (s.std() or 1.0))
+    qual['role_age'] = (-0.5 * _wyz('mean_lineup_spot') - 0.5 * _wyz('age')).round(3)
+
     # T+1 FP/PA projection — linear OLS on the 12 sub-domain ratings + age +
     # mean_lineup_spot. Refit 2026-05-30 to include mean_lineup_spot as
     # orthogonal context (higher spot # = lower in order → mechanically less
@@ -620,6 +630,7 @@ def main():
         # analog). Positioned near team/pa as a usage/context field; never
         # feeds the rated CONTACT/POWER/DISCIPLINE/SB domains.
         'mean_lineup_spot','top5_share','lineup_role_tier','lineup_spot_entropy',
+        'role_age',  # VALIDATED annual-value construct (PASS 2026-07-04) — keeper/trade lens
         'OVERALL','OVERALL_slope_3yr','OVERALL_career_pct','traj_flag',
         'CONTACT','POWER','DISCIPLINE','SB',
         'Z_CONTACT','O_CONTACT','K_AVOIDANCE','CONTACT_QUALITY','SPRAY_PROFILE',
