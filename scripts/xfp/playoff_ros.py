@@ -34,7 +34,7 @@ OUT = ROOT / 'data' / 'outputs'
 
 PLAYOFF_WEEKS = 6        # last 6 weeks of MLB regular season
 RoS_WEEKS_TOTAL = 20     # approximate weeks remaining at start of season
-HEALTHY_SP_STARTS_PER_WEEK = 1.19
+from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as HEALTHY_SP_STARTS_PER_WEEK  # owner (audit 2026-07-04)
 
 
 def main():

@@ -69,7 +69,8 @@ PLAYOFF_START = date(2026, 8, 17)
 PLAYOFF_DAYS = max(1, (SEASON_END - PLAYOFF_START).days)
 
 # SP window math
-RATE = 1.19 / 7.0          # empirical SP starts per active SP per day
+from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as _SPW  # owner (audit 2026-07-04)
+RATE = _SPW / 7.0          # empirical SP starts per active SP per day
 PLAYOFF_FULL = 3.6         # full-availability playoff starts
 
 # Hitter window math

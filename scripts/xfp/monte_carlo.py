@@ -38,7 +38,7 @@ PLAYOFF_TEAMS = 6  # BrownU
 IL_STATES = {'OUT', 'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
              'TEN_DAY_IL', 'FIFTEEN_DAY_IL', 'SIXTY_DAY_IL'}
 H_GAMES_WK = 6.5      # hitter games per scoring week
-SP_STARTS_WK = 1.19   # empirical SP starts per active SP per week (league rule)
+from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as SP_STARTS_WK  # owner (audit 2026-07-04)
 PLAYOFF_SIGMA_MULT = 1.4   # multi-week playoff rounds are wider
 IL_FLOOR_FRAC = 0.6        # a team's phased mean can't fall below 60% of full strength
 

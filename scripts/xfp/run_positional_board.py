@@ -34,10 +34,11 @@ SNAPSHOTS = ROOT / "data" / "research" / "fa_snapshots"
 PL_CACHE = ROOT / "data" / "research" / "pl_cache"
 
 PLAYOFF_SHARE = 6 / 20         # last 6 of ~20 remaining weeks
-PLAYOFF_SP_STARTS = round(1.19 * 6, 1)   # ~7.1 playoff starts per healthy SP
+from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as _SPW  # owner (audit 2026-07-04)
+PLAYOFF_SP_STARTS = round(_SPW * 6, 1)   # ~7.1 playoff starts per healthy SP
 # Weeks remaining in regular season (June 15 → ~Sep 28)
 WEEKS_REMAINING = 15.5
-SP_STARTS_REMAINING = round(1.19 * WEEKS_REMAINING, 1)  # ~18.4
+SP_STARTS_REMAINING = round(_SPW * WEEKS_REMAINING, 1)  # ~18.4
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Data loaders

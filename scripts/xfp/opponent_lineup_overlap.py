@@ -81,7 +81,7 @@ DISPLAY_ORDER = ['C', '1B', '2B', '3B', 'SS', 'MI (2B/SS)', 'CI (1B/3B)',
 # Empirical 2024-2025 finding: league-average SP makes 1.19 starts per active
 # week (NOT 2). 82.2% of SP-weeks have 1 start, only 17.8% have 2.
 # So SP_REMAINING_STARTS scales dynamically with weeks left in season.
-HEALTHY_SP_STARTS_PER_WEEK = 1.19  # empirical, from starts_per_week_analysis.py
+from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as HEALTHY_SP_STARTS_PER_WEEK  # owner (audit 2026-07-04)
 SEASON_END_DATE = '2026-09-28'  # approximate MLB regular season end
 
 

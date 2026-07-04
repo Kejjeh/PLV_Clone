@@ -137,7 +137,8 @@ def main():
         (roster['lineup_slot'] != 'IL') &
         (~roster['injured'])
     ).sum()
-    projected_starts = healthy_sp_count * 1.19
+    from plv_clone.cap_math import projected_starts as _cap_proj
+    projected_starts = _cap_proj(healthy_sp_count)
 
     hitters = roster[~roster['position'].isin(['SP', 'RP', 'P'])].copy()
     hitters['proj'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[0])
@@ -236,7 +237,8 @@ def main():
     running = healthy_sp_count
     for _, r in il_df[il_df['position'] == 'SP'].sort_values('days_until_return').iterrows():
         running += 1
-        proj = running * 1.19
+        from plv_clone.cap_math import projected_starts as _cap_proj2
+        proj = _cap_proj2(running)
         g = 10 - proj
         note = "⚠ FORCED DROP" if g < -0.5 else ("streaming still OK" if g > 0.5 else "at cap")
         print(f"  - {r['return_date']} (+{int(r['days_until_return'])}d): {r['player_name']} → {running} SPs → {proj:.1f}/wk ({note})")
