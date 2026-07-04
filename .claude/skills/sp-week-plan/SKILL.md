@@ -34,20 +34,35 @@ even if the user didn't ask explicitly.
 
 ```python
 from app.espn_connector import get_my_roster_with_injuries
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role     # OWNER: SP/RP role
+from plv_clone.cap_math import SP_CAP, projected_starts, gap_to_cap  # OWNER: cap + 1.19
+
 roster = get_my_roster_with_injuries()
 pitchers = roster[roster['eligible_slots'].apply(
-    lambda s: any(p in s for p in ['SP','RP','P']) if isinstance(s,list) else False
-)]
-sps_healthy = pitchers[(pitchers['position']=='SP') & (pitchers['lineup_slot'] != 'IL') & (~pitchers['injured'])]
-sps_injured = pitchers[(pitchers['position']=='SP') & (pitchers['injured'])]
+    lambda s: any(p in str(s) for p in ('SP','RP','P')))].copy()
+# Bucket by ACTUAL role, NEVER the raw ESPN position tag: a dual-eligible starter
+# (Detmers 2026 — position='RP' but eligible 'SP' and starting) is an SP against the
+# cap. detect_pitcher_role self-resolves mlbam + checks gamesStarted (gotcha #8).
+pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
+sps = pitchers[pitchers['role'] == 'SP']
+# Capacity is a SLOT fact: lineup_slot=='IL', NOT injured==True — a player can be IL'd
+# while in a starting slot (Langford) or on BE (Helsley). feedback_il_slot_vs_il_status.md
+sps_healthy = sps[(sps['lineup_slot'] != 'IL') & (~sps['injured'].fillna(False))]
+sps_injured = sps[sps['lineup_slot'] == 'IL']
+
+n = len(sps_healthy)
+print(f"{n} healthy SPs -> {projected_starts(n):.2f} starts/wk vs {SP_CAP} cap "
+      f"(gap {gap_to_cap(n):+.2f})")
 ```
 
-Critical: distinguish `position=='SP'` from `lineup_slot=='SP'`. SPs
-on bench (`lineup_slot=='BE'`) still pitch their normal rotation; they
-just need to be moved to a `P` slot on start day.
-
-Also flag injured SPs sitting on `BE` instead of `IL` (e.g., Helsley
-today — counts as a BE-slot drag, not an IL stash).
+Critical, and now enforced by the owner modules:
+- **Role, not the position tag** — bucket via `detect_pitcher_role`, or a dual-eligible
+  SP (Detmers) gets silently dropped from the cap count.
+- **`lineup_slot`, not `position`, for the slot** — SPs on `BE` still pitch their normal
+  rotation; they just need moving to a `P` slot on start day. Flag injured SPs sitting on
+  `BE` instead of `IL` (a BE-slot drag, not an IL stash).
+- **Cap math from `cap_math`** — `SP_CAP` (10) and the 1.19 rate live in the owner; never
+  re-type them here.
 
 ---
 

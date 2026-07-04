@@ -120,9 +120,16 @@ vs LAD 2026-06-07 (only Sunday SP for Ligers, Bettsing has zero SPs).
 import requests
 from app.espn_connector import get_my_roster_with_injuries
 
-# My roster SPs
+# My roster SPs — bucket by ACTUAL role (detect_pitcher_role), never position=='SP'
+# (Detmers 2026: position='RP' but a starter). A BE-slot SP still starts today; only
+# lineup_slot=='IL' / injured zeros him (feedback_il_slot_vs_il_status.md, gotcha #8).
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role
 roster = get_my_roster_with_injuries()
-my_sps = roster[(roster['position']=='SP') & (~roster['injured'] | (roster['lineup_slot']=='BE'))]
+pitchers = roster[roster['eligible_slots'].apply(
+    lambda s: any(p in str(s) for p in ('SP','RP','P')))].copy()
+pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
+my_sps = pitchers[(pitchers['role']=='SP') & (pitchers['lineup_slot'] != 'IL')
+                  & (~pitchers['injured'].fillna(False))]
 my_sp_ids = set(my_sps['player_id'].dropna().astype(int).tolist())
 
 # Today's probables
@@ -131,8 +138,10 @@ url = f'https://statsapi.mlb.com/api/v1/schedule?sportId=1&date={today}&hydrate=
 r = requests.get(url, timeout=20).json()
 ```
 
-**Note**: ESPN's `player_id` ≠ MLBAM. Resolve via name match against
-`rp3` projections file. Use `resolve_pitcher_id` if available.
+**Resolving today's probables to my SPs**: ESPN `player_id` ≠ MLBAM. Join by MLBAM
+via `plv_clone.utils.name_match.resolve_pitcher_id(name, team=..., role='SP')` — the
+collision-safe owner — **never** a bare name or `str.contains` substring match
+(gotcha #10: Will vs Austin Warren).
 
 ## Step 1.5: Load boxscore bridge for recent SP actuals
 
