@@ -105,12 +105,19 @@ def main():
     df['park_team'] = df.apply(
         lambda r: r['team_abbrev'] if r['is_home'] == 1 else r['opp_team_abbrev'], axis=1)
     # Park factor
-    pf_path = ROOT / 'data' / 'research' / 'xfp_cache' / 'park_factors.csv'
-    if pf_path.exists():
-        pf = pd.read_csv(pf_path)
-        pf_map = dict(zip(pf['team_abbr'], pf['park_factor']))
+    # Park factor from the OWNER (audit 2026-07-04): the pooled CSV blended
+    # Coliseum years into ATH / the Trop into TB. _park_R_map is PA-weighted
+    # pf_R with the VENUE_ERAS clamp. Semantic note: pf_R (run factor) replaces
+    # the legacy park_factor column; both are relative multipliers around 1.0.
+    try:
+        import sys as _sys
+        _lib = str(ROOT / 'scripts' / 'xfp')
+        if _lib not in _sys.path:
+            _sys.path.insert(0, _lib)
+        from lib.extra_lenses import _park_R_map
+        pf_map = _park_R_map()
         df['park_factor'] = df['park_team'].map(pf_map).fillna(1.0)
-    else:
+    except Exception:
         df['park_factor'] = 1.0
 
     # Platoon factor: pitcher's expected xwOBA vs THIS opponent's L/R lineup mix,

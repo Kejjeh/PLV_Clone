@@ -187,8 +187,12 @@ def compute_pregame_tags(roster: list[dict]) -> dict[int, dict]:
 
 USER_AGENT = 'Mozilla/5.0 (live-monitor)'
 
-TEAM_ALIASES = {'CWS': 'CHW', 'ATH': 'OAK', 'WSN': 'WSH', 'KCR': 'KC',
-                 'TBR': 'TB', 'SFG': 'SF', 'SDP': 'SD'}
+# ESPN pro_team code -> MLB StatsAPI schedule abbreviation. Lookup direction at
+# the liger_team_to_games consumer is ESPN -> MLB, so ESPN codes are the KEYS.
+# (audit 2026-07-04: previous map was inverted and missing ARI — Diamondbacks,
+# Athletics and White Sox players silently vanished from live totals.)
+TEAM_ALIASES = {'ARI': 'AZ', 'OAK': 'ATH', 'CHW': 'CWS', 'WSN': 'WSH',
+                'KCR': 'KC', 'TBR': 'TB', 'SFG': 'SF', 'SDP': 'SD'}
 
 
 def _norm(s):
@@ -379,15 +383,25 @@ def build_team_id_map(team):
                     pid = sp_lookup.get(nk) or rp_lookup.get(nk)
                     if pid is None:
                         pid = resolve_pitcher_id(name, team=proTeam, role=role_hint)
-                # Role label: based on which cache holds this id.
+                # Role via the OWNER (gotcha #8, audit 2026-07-04): converted
+                # relievers were scored with the SP formula (SV/HLD dropped)
+                # because cache membership decided the role. detect_pitcher_role
+                # checks eligible_slots + real gamesStarted.
                 if pid is not None:
-                    if pid in sp_lookup.values() or nk in sp_lookup:
-                        role = 'SP'
-                    elif pid in rp_lookup.values() or nk in rp_lookup:
-                        role = 'RP'
-                    else:
-                        # Fell through resolver — infer from role_hint or default SP.
-                        role = role_hint or 'SP'
+                    try:
+                        from lib.pitcher_role import detect_pitcher_role
+                        role = detect_pitcher_role(
+                            {'player_name': name, 'eligible_slots': slots,
+                             'pro_team': proTeam, 'position': role_hint or ''},
+                            mlbam_id=int(pid))
+                    except Exception:
+                        # fallback: legacy cache-membership heuristic
+                        if pid in sp_lookup.values() or nk in sp_lookup:
+                            role = 'SP'
+                        elif pid in rp_lookup.values() or nk in rp_lookup:
+                            role = 'RP'
+                        else:
+                            role = role_hint or 'SP'
         except Exception as e:
             print(f'  WARN: resolver error for {name} ({proTeam}): {e}; skipping')
             continue
@@ -422,7 +436,9 @@ def get_my_team_and_opponent():
     return my_team, opponent, period
 
 
-def render_team_lines(team_roster, games, pregame_tags=None):
+def render_team_lines(team_roster, games, pregame_tags=None, box_cache=None):
+    if box_cache is None:
+        box_cache = {}
     """Walk roster, find each player's live boxscore stats, return rows."""
     pregame_tags = pregame_tags or {}
     liger_team_to_games = {}
@@ -437,7 +453,10 @@ def render_team_lines(team_roster, games, pregame_tags=None):
             TEAM_ALIASES.get(team, team))
         if g is None: continue
         try:
-            box = get_boxscore(g['game_pk'])
+            pk_key = g['game_pk']
+            if pk_key not in box_cache:
+                box_cache[pk_key] = get_boxscore(pk_key)
+            box = box_cache[pk_key]
         except Exception:
             continue
         all_players = {**box['teams']['away']['players'],
@@ -633,7 +652,8 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
     opp_total = sum(r['fp'] for r in opp_rows)
     gap = my_total - opp_total
 
-    now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    from zoneinfo import ZoneInfo
+    now = datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M:%S') + ' ET'
     html = f'''<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -837,8 +857,9 @@ def main():
     while True:
         try:
             games = get_today_schedule(args.date)
-            my_rows = render_team_lines(my_roster, games, pregame_tags)
-            opp_rows = render_team_lines(opp_roster, games, pregame_tags) if opp_roster else []
+            _box_cache = {}   # fresh per cycle — ~58 fetches -> <=15 unique games
+            my_rows = render_team_lines(my_roster, games, pregame_tags, box_cache=_box_cache)
+            opp_rows = render_team_lines(opp_roster, games, pregame_tags, box_cache=_box_cache) if opp_roster else []
             opp_name = opponent.team_name if opponent else 'Opponent'
             render_console(args.date, games, my_rows, opp_rows, opp_name)
             if args.dashboard:

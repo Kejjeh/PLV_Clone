@@ -576,11 +576,13 @@ def _todays_team_to_opp_sp(today_iso: str) -> dict[str, int]:
     return result
 
 
-# MLB Stats API uses 'AZ'->'AZ', 'ATH'->'OAK' historically, etc.
 # Normalize ESPN/rh3 team strings to MLB Stats API abbrevs.
+# (audit 2026-07-04: 'ATH'->'OAK' was backwards for 2026 — the StatsAPI uses
+# ATH post-move, so Athletics hitters never matched a scheduled opponent and
+# never received an opp-SP boom component.)
 _TEAM_ABBR_MAP = {
     'AZ': 'AZ', 'ARI': 'AZ',
-    'ATH': 'OAK',
+    'ATH': 'ATH', 'OAK': 'ATH',
     'CWS': 'CWS', 'CHW': 'CWS',
     'WSH': 'WSH', 'WAS': 'WSH',
     'SF': 'SF', 'SFG': 'SF',

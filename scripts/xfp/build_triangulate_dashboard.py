@@ -34,7 +34,32 @@ OUT = ROOT / 'data' / 'outputs'
 # writing these). The dashboard READS them to surface the ~40 already-computed
 # lens columns that the live triangulate_player() result does not carry. All
 # CONTEXT-ONLY (CLAUDE.md #13) — never moves the rh3/rp3/rprs2/blended headline.
-_BATCH_JSON = ROOT / 'data' / 'research' / '.tri_team_fa_out.json'
+#
+# Source repoint (audit 2026-07-04): the hidden .tri_* files were written by a
+# MANUAL run and froze on 2026-06-22 — published cards mixed a fresh verdict
+# with 12-day-old boom%/bust%/trajectory. Read the freshest NIGHTLY batch
+# instead (shape-compatible, ~592 players incl. floor fields), falling back to
+# the legacy manual file only when no nightly exists.
+
+
+def _freshest_nightly():
+    import glob as _glob
+    import os as _os
+    import time as _time
+    cands = _glob.glob(str(ROOT / 'data' / 'research' / 'triangulate_universe'
+                           / 'triangulate_nightly_*.json'))
+    if not cands:
+        return None
+    newest = max(cands, key=_os.path.getmtime)
+    age_h = (_time.time() - _os.path.getmtime(newest)) / 3600.0
+    if age_h > 48:
+        print(f'  ⚠ freshest nightly batch is {age_h:.0f}h old ({newest}) — '
+              'enrichment may be stale')
+    from pathlib import Path as _P
+    return _P(newest)
+
+
+_BATCH_JSON = _freshest_nightly() or (ROOT / 'data' / 'research' / '.tri_team_fa_out.json')
 _BATCH_CSV = ROOT / 'data' / 'research' / '.tri_grouped.csv'
 
 # Group display labels (canonical taxonomy) + the order_groups()-driven ordering.

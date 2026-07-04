@@ -61,7 +61,13 @@ _PARK_FACTORS = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'park_
 # value IS venue-correct (2025 ATH = Sutter Health), and the pre-registered
 # validation framing is prior-year pf_wOBA tertiles, which the multi-year
 # blend owner would break. Do NOT "fix" this onto the blend owner.
-_PARK_PF_YEAR = 2025
+# Derived, not hardcoded (audit 2026-07-04): the literal 2025 would silently go
+# stale at the season rollover, re-creating the frozen-input bug class.
+def _current_season() -> int:
+    from datetime import date as _d
+    t = _d.today()
+    return t.year if t.month >= 3 else t.year - 1
+_PARK_PF_YEAR = _current_season() - 1
 
 # Expected boom rate / mean FP by bucket (legacy, streamer-pool calibration
 # from `streamer_boom_stack_v1_2026-06-03.md`). Kept for backwards-compat with
@@ -263,11 +269,32 @@ def _load_park_friendly_set() -> tuple[frozenset, float, int]:
     """
     pf = pd.read_csv(_PARK_FACTORS)
     pf = pf[pf['year'] == _PARK_PF_YEAR].copy()
+    # VENUE-ERA GUARD (audit 2026-07-04): a team whose current venue era began
+    # AFTER the prior year has no valid prior-year park read — exclude it from
+    # the friendly set rather than rate the WRONG park (the ATH-class bug).
+    try:
+        from lib.extra_lenses import VENUE_ERAS
+        moved = {t for t, y0 in VENUE_ERAS.items() if y0 > _PARK_PF_YEAR}
+        if moved:
+            pf = pf[~pf['team_abbr'].isin(moved)]
+    except Exception:
+        pass
     if pf.empty:
         return frozenset(), float('nan'), _PARK_PF_YEAR
     p33 = float(np.percentile(pf['pf_wOBA'].values, 100.0 / 3.0))
     friendly = frozenset(pf.loc[pf['pf_wOBA'] <= p33, 'team_abbr'].astype(str).tolist())
     return friendly, p33, _PARK_PF_YEAR
+
+
+@lru_cache(maxsize=1)
+def _pf_woba_map() -> dict:
+    """(year, team_abbr) -> pf_wOBA, parsed once per process."""
+    try:
+        pf = pd.read_csv(_PARK_FACTORS)
+        return {(int(r['year']), str(r['team_abbr'])): float(r['pf_wOBA'])
+                for _, r in pf.iterrows()}
+    except Exception:
+        return {}
 
 
 @lru_cache(maxsize=1)
@@ -325,11 +352,9 @@ def _component_park_friendly(pitcher_id: int) -> tuple[int, dict]:
     detail['park_team'] = park_team
     detail['p33_threshold'] = p33
     detail['pf_year'] = ref_year
-    # Pull this park's actual pf_wOBA for transparency.
-    pf = pd.read_csv(_PARK_FACTORS)
-    row = pf[(pf['year'] == ref_year) & (pf['team_abbr'] == park_team)]
-    if not row.empty:
-        detail['pf_wOBA'] = float(row.iloc[0]['pf_wOBA'])
+    # Pull this park's actual pf_wOBA for transparency (cached — this ran a
+    # full pd.read_csv PER PITCHER, ~300 parses per refresh; audit 2026-07-04).
+    detail['pf_wOBA'] = _pf_woba_map().get((ref_year, park_team))
     fired = int(park_team in friendly)
     if not fired:
         detail['reason'] = 'park_not_in_friendly_tertile'

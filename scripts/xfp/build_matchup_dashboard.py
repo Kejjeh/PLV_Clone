@@ -802,6 +802,12 @@ def fetch_espn_week_schedule(league, week_start, week_end):
                 is_home = (espn_id == home_id)
                 opp_espn_id = away_id if is_home else home_id
                 opp_abbr = espn_id_to_abbr.get(opp_espn_id, '?')
+                # ESPN -> MLB StatsAPI abbr normalization (audit 2026-07-04):
+                # downstream ts_map / pf_map are keyed on MLB abbrs, so an
+                # un-normalized 'ARI'/'CHW'/'OAK' silently reads neutral 1.0.
+                _E2M = {'ARI': 'AZ', 'CHW': 'CWS', 'OAK': 'ATH', 'WSN': 'WSH',
+                        'KCR': 'KC', 'TBR': 'TB', 'SFG': 'SF', 'SDP': 'SD'}
+                opp_abbr = _E2M.get(opp_abbr, opp_abbr)
                 games.append({
                     'date': cal.isoformat(),
                     'is_home': is_home,
@@ -1718,10 +1724,17 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         pf_path = CACHE / 'park_factors_2018_2026.csv'
         ts_path = CACHE / 'team_strength_2026.csv'
         pf_map = {}
-        if pf_path.exists():
-            pf_df = pd.read_csv(pf_path)
-            pf_cur = pf_df[pf_df['year'] == pf_df['year'].max()]
-            pf_map = dict(zip(pf_cur['team_abbr'].str.upper(), pf_cur['pf_wOBA']))
+        try:
+            # OWNER (audit 2026-07-04): multi-year VENUE_ERAS-aware pf_R replaces
+            # the single-current-year pf_wOBA read (half-season noise — Coors
+            # streamers were docked only ~-0.8% vs the validated -3.2 FP).
+            from lib.extra_lenses import _park_R_map
+            pf_map = {k.upper(): v for k, v in _park_R_map().items()}
+        except Exception:
+            if pf_path.exists():
+                pf_df = pd.read_csv(pf_path)
+                pf_cur = pf_df[pf_df['year'] == pf_df['year'].max()]
+                pf_map = dict(zip(pf_cur['team_abbr'].str.upper(), pf_cur['pf_wOBA']))
         ts_map_local = {}
         if ts_path.exists():
             ts_df = pd.read_csv(ts_path)
