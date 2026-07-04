@@ -110,3 +110,11 @@ starting <year Y>.
 | 2026-05-16 | xwoba_gap_to (re-audit) | rh3 | MARGINAL → research-stage recommended | Marginal lift now -0.0003 vs full baseline; career_stage carries the v2 joint lift |
 
 | sp_subs_fp_composite | rp3 | 2026-07-04 | REJECTED | gain -0.0024 vs full baseline (bar +0.005); holdout +0.0001; negative at all 5 cutoffs; algebraic redundancy — all constituents' shrunk split-day substrates already free Ridge params. Closes rating_reimagine queue #1 / the confounded +.434. |
+
+| low_fb_reliance | rp3 | 2026-07-04 | REJECTED | +0.0019 raw (< bar, < Bonferroni N=3), HOLDOUT REVERSAL -0.0013; research n=118 partial did not survive the full harness |
+| stuff_x_control | rp3 | 2026-07-04 | REJECTED | -0.0008; interaction does not survive full baseline (research baseline was FP-level only) |
+| prior_k_per_start | rp3 | 2026-07-04 | MARGINAL | +0.0010, holdout +0.0003; k_pct_to_sh + priors span it; not promoted |
+| hitter_role_age | research-only (annual) | 2026-07-04 | PASS | partial +0.164 train / +0.151 holdout beyond fp_total+OVERALL+t1_proj; survivorship-honest +0.165/+0.155; annual/keeper layer ONLY (in-season null vs rh3 pre-declared) |
+| rp_role_first_rating | research-only | 2026-07-04 | RESEARCH-ONLY | shipped as RP OVERALL_FP display; sv_pre-vs-rprs2 deferred to ~Aug 2026 |
+| hitter_overall_reweight | research-only | 2026-07-04 | RESEARCH-ONLY | shipped as hitter OVERALL_FP display; in-season null vs rh3 |
+| april_prior_process_anchor | rp3 | 2026-07-04 | RESEARCH-ONLY | deferred to 2027-04 (needs April logged rp3 snapshot) |

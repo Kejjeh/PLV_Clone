@@ -64,9 +64,18 @@ CANONICAL_CASES = [
     # On the 60-day IL (2026-06): PL-unranked + elite model/archetype would read
     # as a naked BUY, so the engine caveats it. Verdict-top intentionally not
     # locked for an injured player (talent-only, secondary). See _CANONICAL_IL.
+    # 2026-07-04 (option b) — the SP-multiyr staleness fix (separate session)
+    #   un-froze TWO MONTHS of 2026 SP archetype input (frozen 2026-05-04 ->
+    #   current). All five shifts below are SPs and each is directionally
+    #   consistent with independently-known reads: Detmers BUY->MIXED (velo
+    #   -1.7mph decline now visible in ratings), Weathers MIXED->BUY (SAFE-FLOOR
+    #   / K-pctl-88 profile strengthened), Woo HOLD->STRONG HOLD/BUY, Bradish
+    #   post-TJ-ramp override no longer fires (sample grew) -> CAUTION, Framber
+    #   CAUTION->FADE (the canonical STUFF-DECLINE deepened). Data-driven, not a
+    #   code change. Bradish/Woo override tags unlocked (None) pending re-derive.
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
-    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
-    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
+    ("Reid Detmers",    "MIXED — see profile",     "SP", "MIXED",   None),
+    ("Ryan Weathers",   "BUY — archetype breakout", "SP", "BUY",    None),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
     # model #133, archetype OVR 36 TRENDING_DOWN) the gap rule can't fire and he reads
@@ -82,8 +91,8 @@ CANONICAL_CASES = [
     #   process-upgrade (rh3/archetype data shift; still BUY top). Data-driven.
     ("Casey Schmitt",   "BUY — process upgrade",      "H",  "BUY",   None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
-    ("Bryan Woo",       "HOLD — process intact",   "SP", "HOLD",    "PROCESS_INTACT"),
-    ("Kyle Bradish",    "HOLD — post-TJ ramp",     "SP", "HOLD",    "POST_TJ_RAMP"),
+    ("Bryan Woo",       "STRONG HOLD/BUY",         "SP", None,      None),
+    ("Kyle Bradish",    "CAUTION",                 "SP", "CAUTION", None),
     # Trea Turner sits ON the FADE/MIXED boundary: the FADE rule needs model−PL
     # gap > 60, and his gap swings across 60 with small model-rank moves on each
     # data refresh (2026-06-19 gap 86 → FADE; 2026-06-22 statcast/archetype rebuild
@@ -91,7 +100,7 @@ CANONICAL_CASES = [
     # way. Locking a boundary verdict invites data-driven flip-flops, so this is a
     # bucket-only lock — resolution + H bucket stay enforced.
     ("Trea Turner",     None,                      "H",  None,    None),
-    ("Framber Valdez",  "CAUTION",                "SP", "CAUTION", None),
+    ("Framber Valdez",  "FADE — PL chasing outcomes", "SP", "FADE", None),
     # Bucket-only locks (verdict varies, just confirm resolution + bucket):
     ("Jhoan Duran",     None,                     "RP", None,      None),
 ]
