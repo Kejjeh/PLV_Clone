@@ -100,9 +100,12 @@ def main():
     from plv_clone.league_state import LeagueState
     from scripts.xfp.opponent_lineup_overlap import (
         load_projections, build_team_players, fill_slots, _norm)
-    from app.espn_connector import get_all_teams, get_injury_details
+    # league_state migration 2026-07-04
+    _state = LeagueState()
+    get_all_teams = _state.all_teams
+    get_injury_details = _state.injury_details
 
-    lg = LeagueState()._get_league()
+    lg = _state._get_league()
     cur = lg.currentMatchupPeriod
     reg_end = getattr(lg.settings, 'reg_season_count', 20)
     cur_monday = current_period_monday()

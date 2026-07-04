@@ -67,6 +67,15 @@ def identify_team_prior_closer(multiyr: pd.DataFrame, year: int,
 def main():
     print('=== enrich_rolling_relievers ===')
     rolling = pd.read_csv(OUT)
+    # IDEMPOTENCY (audit 2026-07-04): re-running on an already-enriched CSV
+    # collided merge suffixes / duplicated columns. Drop everything this script
+    # adds before re-adding (list derived empirically: builder output vs
+    # enriched output column diff).
+    _ENRICH_ADDED = ['team_abbr', 'prior_closer_on_il', 'is_team_prior_closer', 'prior_closer_returned_recently', 'prior_closer_days_since_return', 'sv_per_g_lag1', 'hld_per_g_lag1']
+    _pre = [c for c in _ENRICH_ADDED if c in rolling.columns]
+    if _pre:
+        print(f'  idempotency: dropping {len(_pre)} pre-existing enrich cols')
+        rolling = rolling.drop(columns=_pre)
     print(f'rolling rows: {len(rolling)}')
     multiyr = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv')
 

@@ -53,6 +53,13 @@ _TEAM_STRENGTH = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'team
 _PITCHER_SCHEDULE = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'pitcher_schedule_2026.csv')
 _PARK_FACTORS = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'park_factors_2018_2026.csv')
 
+
+def _warn(section: str, exc: BaseException) -> None:
+    """One-line stderr breadcrumb for fail-soft handlers (audit 2026-07-04:
+    silent excepts hide dead components for weeks). Semantics unchanged — loud only."""
+    import sys
+    print(f"  ⚠ [boom_stack.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+
 # park_friendly uses PRIOR-year park factor (strict pre-cutoff per validation
 # spec: 2026 in-season starts use 2025 pf_wOBA). See
 # data/research/validation_runs/park_factor_boom_modifier.md.
@@ -277,8 +284,8 @@ def _load_park_friendly_set() -> tuple[frozenset, float, int]:
         moved = {t for t, y0 in VENUE_ERAS.items() if y0 > _PARK_PF_YEAR}
         if moved:
             pf = pf[~pf['team_abbr'].isin(moved)]
-    except Exception:
-        pass
+    except Exception as e:
+        _warn("park_friendly.venue_era_guard", e)
     if pf.empty:
         return frozenset(), float('nan'), _PARK_PF_YEAR
     p33 = float(np.percentile(pf['pf_wOBA'].values, 100.0 / 3.0))
@@ -293,7 +300,8 @@ def _pf_woba_map() -> dict:
         pf = pd.read_csv(_PARK_FACTORS)
         return {(int(r['year']), str(r['team_abbr'])): float(r['pf_wOBA'])
                 for _, r in pf.iterrows()}
-    except Exception:
+    except Exception as e:
+        _warn("pf_woba_map", e)
         return {}
 
 

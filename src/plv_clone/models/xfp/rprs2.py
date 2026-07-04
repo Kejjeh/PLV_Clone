@@ -145,6 +145,22 @@ def _dump_coefs(pipe, feats: list[str], fit_type: str, n_train: int,
         print(f'  [dump_coefs] error {fit_type}: {e}')
 
 
+_FIT_FP_VERSION = 1
+
+
+def _fit_fingerprint(rolling: pd.DataFrame, feats: list[str]) -> str:
+    """Content hash of the fit stage inputs (train-year slice + FEATS). Same
+    fingerprint => byte-identical fit artifacts (warm-skip; gates re-run
+    exactly when this changes)."""
+    import hashlib
+    sub = rolling[rolling['year'].isin(TRAIN_YEARS)]
+    cols = [c for c in sorted(set(feats + [TARGET, 'year', 'split_day'])) if c in sub.columns]
+    h = hashlib.md5()
+    h.update(pd.util.hash_pandas_object(sub[cols].reset_index(drop=True), index=False).values.tobytes())
+    h.update(repr((sorted(feats), TARGET, sorted(TRAIN_YEARS), _FIT_FP_VERSION)).encode())
+    return h.hexdigest()
+
+
 def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None,
                     dump_coefs_tag: str | None = None):
     from sklearn.pipeline import Pipeline
@@ -171,20 +187,30 @@ def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None,
         preds_all.extend(preds.tolist())
         acts_all.extend(test[TARGET].tolist())
         test_indices.extend(test.index.tolist())
+    detail = pd.DataFrame({'pred': preds_all,
+                           'actual': acts_all,
+                           'split_day': df.loc[test_indices, 'split_day'].values},
+                          index=test_indices)
+    detail['resid'] = detail['actual'] - detail['pred']
     if subset_mask is not None:
-        preds_arr = np.array(preds_all); acts_arr = np.array(acts_all)
-        idx_arr = np.array(test_indices)
-        keep = subset_mask.reindex(idx_arr).fillna(False).values
-        preds_arr = preds_arr[keep]; acts_arr = acts_arr[keep]
-        if len(preds_arr) < 30:
-            return per_year, {'r': np.nan, 'mae': np.nan, 'n': len(preds_arr)}
-        r = float(np.corrcoef(preds_arr, acts_arr)[0, 1])
-        mae = float(np.mean(np.abs(preds_arr - acts_arr)))
-        return per_year, {'r': round(r, 4), 'mae': round(mae, 2), 'n': len(preds_arr)}
+        return per_year, _masked_overall(detail, subset_mask), detail
     overall_r = float(np.corrcoef(preds_all, acts_all)[0, 1]) if preds_all else np.nan
     overall_mae = float(np.mean(np.abs(np.array(preds_all) - np.array(acts_all))))
     return per_year, {'r': round(overall_r, 4), 'mae': round(overall_mae, 2),
-                      'n': len(preds_all)}
+                      'n': len(preds_all)}, detail
+
+
+def _masked_overall(detail: pd.DataFrame, subset_mask) -> dict:
+    """Subset metrics from an ALREADY-FIT detail frame — this used to refit the
+    entire LOO just to score a subset (audit 2026-07-04, ~18s/run duplicate)."""
+    keep = subset_mask.reindex(detail.index).fillna(False).values
+    preds_arr = detail['pred'].values[keep]
+    acts_arr = detail['actual'].values[keep]
+    if len(preds_arr) < 30:
+        return {'r': np.nan, 'mae': np.nan, 'n': len(preds_arr)}
+    r = float(np.corrcoef(preds_arr, acts_arr)[0, 1])
+    mae = float(np.mean(np.abs(preds_arr - acts_arr)))
+    return {'r': round(r, 4), 'mae': round(mae, 2), 'n': len(preds_arr)}
 
 
 def role_change_mask(df: pd.DataFrame) -> pd.Series:
@@ -199,13 +225,18 @@ def role_change_mask(df: pd.DataFrame) -> pd.Series:
     return (gap > 0.10) & has_lag
 
 
-def fit_residual_ci(df, feats):
-    sub = df.dropna(subset=feats + [TARGET]).copy()
-    sub = sub[sub['year'].isin(TRAIN_YEARS) & (sub['g_to'] >= EVAL_G_MIN)]
-    res = _engine.train_residual_table(
-        df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
-        min_train=100, min_test=30,
-    )
+def fit_residual_ci(df, feats, resid=None):
+    # `resid`: detail frame from cross_year_eval — identical fits (same filters,
+    # 100/30 mins verified); the second LOO pass was pure duplication.
+    if resid is not None and len(resid):
+        res = resid
+    else:
+        sub = df.dropna(subset=feats + [TARGET]).copy()
+        sub = sub[sub['year'].isin(TRAIN_YEARS) & (sub['g_to'] >= EVAL_G_MIN)]
+        res = _engine.train_residual_table(
+            df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
+            min_train=100, min_test=30,
+        )
     out: dict[tuple[int, int], float] = {}
     for split in sorted(res['split_day'].unique()):
         sub2 = res[res['split_day'] == split]
@@ -241,57 +272,84 @@ def main():
     rc_mask = role_change_mask(rolling)
     print(f'\nRole-change subset (|sv/g_now − sv/g_lag1| > 0.10 AND has lag): {rc_mask.sum()} rows')
 
-    # Baseline RP-RS1: BASE_FEATS only
-    print('\n--- BASELINE RP-RS1 (BASE_FEATS only) ---')
-    _per, baseline_overall = cross_year_eval(rolling, BASE_FEATS)
-    _per, baseline_rc = cross_year_eval(rolling, BASE_FEATS, subset_mask=rc_mask)
-    print(f'  Overall:        r={baseline_overall["r"]}  mae={baseline_overall["mae"]}  n={baseline_overall["n"]}')
-    print(f'  Role-change:    r={baseline_rc["r"]}       mae={baseline_rc["mae"]}      n={baseline_rc["n"]}')
+    # ── Fingerprint warm-skip (audit 2026-07-04): both gates re-run exactly
+    # when the train slice or FEATS change; on a match the prior PASS stands.
+    _fp = _fit_fingerprint(rolling, FEATS_RPRS2)
+    _warm = None
+    if MODEL_PKL.exists():
+        try:
+            _b = joblib.load(MODEL_PKL)
+            if _b.get('fit_fingerprint') == _fp:
+                _warm = _b
+        except Exception:
+            _warm = None
+    if _warm is not None:
+        print('\n[warm-fit] fingerprint match — LOO evals / gates / CI / final fit '
+              'loaded from bundle (re-run whenever train data or FEATS change)')
+        per_year = _warm['per_year_r']
+        overall = {'r': _warm['cross_year_r'], 'mae': _warm['cross_year_mae'], 'n': None}
+        baseline_overall = {'r': _warm['baseline_rprs1_r']}
+        overall_rc = {'r': _warm['role_change_subset_r']}
+        baseline_rc = {'r': _warm['role_change_subset_baseline_r']}
+        delta_overall = _warm['delta_overall']
+        delta_rc = _warm['delta_role_change']
+        ci_table = _warm['ci_table']
+        overall_sigma = _warm['overall_sigma']
+        pipe = _warm['pipeline']
+        n_train = _warm['n_train']
+    else:
+        # Baseline RP-RS1: BASE_FEATS only
+        print('\n--- BASELINE RP-RS1 (BASE_FEATS only) ---')
+        _per, baseline_overall, _detB = cross_year_eval(rolling, BASE_FEATS)
+        baseline_rc = _masked_overall(_detB, rc_mask)   # from the SAME fit (was a full re-fit)
+        print(f'  Overall:        r={baseline_overall["r"]}  mae={baseline_overall["mae"]}  n={baseline_overall["n"]}')
+        print(f'  Role-change:    r={baseline_rc["r"]}       mae={baseline_rc["mae"]}      n={baseline_rc["n"]}')
 
-    # RP-RS2: BASE + NEW
-    print('\n--- RP-RS2 (BASE + role-usage features) ---')
-    per_year, overall = cross_year_eval(rolling, FEATS_RPRS2, dump_coefs_tag='rprs2')
-    _per, overall_rc = cross_year_eval(rolling, FEATS_RPRS2, subset_mask=rc_mask)
-    for y, m in sorted(per_year.items()):
-        print(f'  {y}: r={m["r"]:.4f}  mae={m["mae"]:.2f}  n={m["n"]}')
-    print(f'  Overall:        r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
-    print(f'  Role-change:    r={overall_rc["r"]}       mae={overall_rc["mae"]}      n={overall_rc["n"]}')
+        # RP-RS2: BASE + NEW
+        print('\n--- RP-RS2 (BASE + role-usage features) ---')
+        per_year, overall, _detF = cross_year_eval(rolling, FEATS_RPRS2, dump_coefs_tag='rprs2')
+        overall_rc = _masked_overall(_detF, rc_mask)    # from the SAME fit (was a full re-fit)
+        for y, m in sorted(per_year.items()):
+            print(f'  {y}: r={m["r"]:.4f}  mae={m["mae"]:.2f}  n={m["n"]}')
+        print(f'  Overall:        r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
+        print(f'  Role-change:    r={overall_rc["r"]}       mae={overall_rc["mae"]}      n={overall_rc["n"]}')
 
-    delta_overall = overall['r'] - baseline_overall['r']
-    delta_rc      = overall_rc['r'] - baseline_rc['r']
-    print(f'\n--- GATE EVALUATION ---')
-    print(f'  Δr overall (gate ≥ 0.0):       {delta_overall:+.4f}  '
-          f'{"PASS" if delta_overall >= 0.0 else "FAIL"}')
-    print(f'  Δr role-change (gate ≥ +0.05): {delta_rc:+.4f}  '
-          f'{"PASS" if delta_rc >= 0.05 else "FAIL"}')
+        delta_overall = overall['r'] - baseline_overall['r']
+        delta_rc      = overall_rc['r'] - baseline_rc['r']
+        print(f'\n--- GATE EVALUATION ---')
+        print(f'  Δr overall (gate ≥ 0.0):       {delta_overall:+.4f}  '
+              f'{"PASS" if delta_overall >= 0.0 else "FAIL"}')
+        print(f'  Δr role-change (gate ≥ +0.05): {delta_rc:+.4f}  '
+              f'{"PASS" if delta_rc >= 0.05 else "FAIL"}')
 
-    overall_pass = (delta_overall >= 0.0)
-    rc_pass = (delta_rc >= 0.05)
-    if not overall_pass:
-        print('\nOVERALL r REGRESSED — rejecting RP-RS2 (would degrade general accuracy).')
-        raise SystemExit(1)   # audit 2026-07-04: exiting 0 silently served a STALE projections CSV
-    if not rc_pass:
-        print('\nROLE-CHANGE subset DID NOT IMPROVE — features have no signal where it matters.')
-        print('Documenting negative result; not promoting.')
-        raise SystemExit(1)   # ditto — gate failure must be loud, not a stale-serve
+        overall_pass = (delta_overall >= 0.0)
+        rc_pass = (delta_rc >= 0.05)
+        if not overall_pass:
+            print('\nOVERALL r REGRESSED — rejecting RP-RS2 (would degrade general accuracy).')
+            raise SystemExit(1)   # audit 2026-07-04: exiting 0 silently served a STALE projections CSV
+        if not rc_pass:
+            print('\nROLE-CHANGE subset DID NOT IMPROVE — features have no signal where it matters.')
+            print('Documenting negative result; not promoting.')
+            raise SystemExit(1)   # ditto — gate failure must be loud, not a stale-serve
 
-    print('\n[BOTH GATES PASSED] Promoting RP-RS2 to production.')
+        print('\n[BOTH GATES PASSED] Promoting RP-RS2 to production.')
 
-    # Residual CI + final train
-    ci_table, overall_sigma = fit_residual_ci(rolling, FEATS_RPRS2)
-    pipe, n_train = train_final(rolling, FEATS_RPRS2)
-    # Persist final-fit coefficients (diagnostic; latest pointer).
-    _dump_coefs(pipe, FEATS_RPRS2, fit_type='full_fit', n_train=n_train, is_latest=True)
-    coefs = pipe.named_steps['r'].coef_
-    print(f'\n--- Final RP-RS2 (n={n_train}, alpha={pipe.named_steps["r"].alpha_:.1f}, '
-          f'{len(FEATS_RPRS2)} features) ---')
-    print('  Top 12 coefficients:')
-    for f, c in sorted(zip(FEATS_RPRS2, coefs), key=lambda x: -abs(x[1]))[:12]:
-        print(f'    {f:<22s} {c:+.4f}')
-    print('  NEW feature coefficients:')
-    for f, c in zip(FEATS_RPRS2, coefs):
-        if f in NEW_FEATS:
+        # Residual CI + final train
+        ci_table, overall_sigma = fit_residual_ci(rolling, FEATS_RPRS2, resid=_detF)
+        pipe, n_train = train_final(rolling, FEATS_RPRS2)
+        # Persist final-fit coefficients (diagnostic; latest pointer).
+        _dump_coefs(pipe, FEATS_RPRS2, fit_type='full_fit', n_train=n_train, is_latest=True)
+        coefs = pipe.named_steps['r'].coef_
+        print(f'\n--- Final RP-RS2 (n={n_train}, alpha={pipe.named_steps["r"].alpha_:.1f}, '
+              f'{len(FEATS_RPRS2)} features) ---')
+        print('  Top 12 coefficients:')
+        for f, c in sorted(zip(FEATS_RPRS2, coefs), key=lambda x: -abs(x[1]))[:12]:
             print(f'    {f:<22s} {c:+.4f}')
+        print('  NEW feature coefficients:')
+        for f, c in zip(FEATS_RPRS2, coefs):
+            if f in NEW_FEATS:
+                print(f'    {f:<22s} {c:+.4f}')
+
 
     # Project 2026
     df_26 = rolling[rolling['year'] == 2026].copy()
@@ -395,6 +453,7 @@ def main():
         'replacement_rank': REPLACEMENT_RANK_RP,
         'gate_overall': 0.0,
         'gate_role_change': 0.05,
+        'fit_fingerprint': _fp,
         'trained_date': str(date.today()),
         'n_train': n_train,
         'version': 'rprs2',

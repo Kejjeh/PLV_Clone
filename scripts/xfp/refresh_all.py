@@ -50,7 +50,7 @@ STAGES = [
     # consumers read a stale file whenever it wasn't run by hand)
     ('Weekly FP substrate',                      'build_weekly_fp_substrate.py',  None),
     # Dashboard
-    ('Dashboard build',                          'build_v11_dashboard_v2.py',     None),
+    ('Dashboard build',                          'build_index_dashboard.py',     None),
 ]
 
 

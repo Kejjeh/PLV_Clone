@@ -38,6 +38,17 @@ from plv_clone.utils.name_match import (  # noqa: E402
 )
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 
+
+def _warn_except(section: str, exc: BaseException) -> None:
+    """One-line stderr breadcrumb for fail-soft exception handlers.
+
+    Audit 2026-07-04: 62% of production exception handlers emitted nothing —
+    a dead section/lens becomes months of silently wrong numbers. This keeps
+    fail-soft SEMANTICS unchanged (caller still returns its fallback) but
+    makes the suppression visible in the build log.
+    """
+    print(f'  ⚠ [{section}] suppressed {type(exc).__name__}: {exc}', file=sys.stderr)
+
 # Layered display-tag library (validated 2026-06-03). All defensive — every
 # compute_* call returns sentinel-tagged dicts on failure so the dashboard
 # can never break on a tag compute error.
@@ -103,7 +114,8 @@ def _load_bs_week_actuals(week_start: date, yesterday: date) -> dict[str, dict]:
                 'fp': float(row['fp_sp']),
             })
         return out
-    except Exception:
+    except Exception as e:
+        _warn_except('bs_week_actuals', e)
         return {}
 
 
@@ -131,7 +143,8 @@ def _load_bs_week_hitter_actuals(week_start: date, yesterday: date) -> dict[str,
                 'fp':  float(row['fp_h']),
             })
         return out
-    except Exception:
+    except Exception as e:
+        _warn_except('bs_week_hitter_actuals', e)
         return {}
 
 
@@ -363,7 +376,8 @@ def load_rp_appearance_rates(n_days: int = 21) -> dict:
     ALPHA = 8
     try:
         bp = pd.read_parquet(CACHE / 'boxscore_pitchers.parquet')
-    except Exception:
+    except Exception as e:
+        _warn_except('rp_appearance_rates.boxscore', e)
         return {}
     bp['game_date'] = pd.to_datetime(bp['game_date'])
     cutoff = pd.Timestamp.today() - pd.Timedelta(days=n_days)
@@ -376,7 +390,8 @@ def load_rp_appearance_rates(n_days: int = 21) -> dict:
         rp_df = pd.read_csv(ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv',
                             usecols=['pitcher', 'role_lag1'])
         mlbam_to_role = dict(zip(rp_df['pitcher'].astype(int), rp_df['role_lag1']))
-    except Exception:
+    except Exception as e:
+        _warn_except('rp_appearance_rates.role_map', e)
         mlbam_to_role = {}
 
     appears = bp.groupby(['team_id', 'mlbam_id'])['game_pk'].nunique().reset_index()
@@ -524,13 +539,15 @@ def load_live_blend_map():
         return {}
     try:
         df = pd.read_csv(path)
-    except Exception:
+    except Exception as e:
+        _warn_except('live_blend_map', e)
         return {}
     out = {}
     for _, r in df.iterrows():
         try:
             mid = int(r['mlbam_id'])
-        except Exception:
+        except Exception as e:
+            _warn_except('live_blend_map.row', e)
             continue
         out[mid] = {
             'value': float(r['live_blend_xfp']) if pd.notna(r['live_blend_xfp']) else None,
@@ -599,7 +616,8 @@ def load_lineup_map():
     parq = CACHE / 'hitter_lineup_appearances_2026.parquet'
     try:
         df = pd.read_parquet(parq)
-    except Exception:
+    except Exception as e:
+        _warn_except('lineup_map', e)
         return {}
     today = _today_et()
     cutoff_21 = today - timedelta(days=21)
@@ -683,7 +701,8 @@ def load_bat_side_map():
         # Modal stand per batter
         df = df.sort_values('n', ascending=False).drop_duplicates('batter', keep='first')
         return df.set_index('batter')['stand'].to_dict()
-    except Exception:
+    except Exception as e:
+        _warn_except('bat_side_map', e)
         return {}
 
 
@@ -697,7 +716,8 @@ def load_il_returns(mu):
     try:
         from plv_clone.league_state import LeagueState as _LS_inj
         get_injury_details = _LS_inj().injury_details
-    except Exception:
+    except Exception as e:
+        _warn_except('il_returns.league_state', e)
         return {}
     il_ids = []
     for p in (mu.get('my_lineup') or []) + (mu.get('opp_lineup') or []):
@@ -736,7 +756,8 @@ def load_calibration_scalar():
         if not d.get('safe_to_consume', False):
             return 1.0
         return float(d['scalar_correction'])
-    except Exception:
+    except Exception as e:
+        _warn_except('calibration_scalar', e)
         return 1.0
 
 
@@ -779,7 +800,8 @@ def fetch_espn_week_schedule(league, week_start, week_end):
     """
     try:
         raw = league.espn_request.get_pro_schedule()
-    except Exception:
+    except Exception as e:
+        _warn_except('espn_week_schedule', e)
         return {}
 
     # ESPN internal team_id → uppercase abbreviation  (e.g. 11 → 'ATH')
@@ -856,7 +878,8 @@ def fetch_schedules_by_team(team_ids, start_date, end_date):
            f'&hydrate=probablePitcher,team')
     try:
         data = _fetch_json(url)
-    except Exception:
+    except Exception as e:
+        _warn_except('mlb_schedule_fallback', e)
         return {tid: [] for tid in team_ids}
     by_team = {tid: [] for tid in team_ids}
     for d_block in data.get('dates', []):
@@ -905,8 +928,8 @@ def player_mlbam_lookup(name, cache={}):
                 df['_nk'] = df[ncol].map(_norm)
                 for _, r in df.drop_duplicates('_nk').iterrows():
                     cache.setdefault(r['_nk'], int(r[col]))
-            except Exception:
-                pass
+            except Exception as e:
+                _warn_except('mlbam_csv_cache', e)
     return cache.get(_norm(name))
 
 
@@ -920,7 +943,8 @@ def _resolve_mlbam_via_api(name, cache={}):
         return cache[name]
     try:
         result = resolve_mlbam([name])
-    except Exception:
+    except Exception as e:
+        _warn_except('resolve_mlbam_api', e)
         result = {}
     pid = result.get(name)
     cache[name] = pid
@@ -969,7 +993,8 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
             week_start=week_start, week_end=week_end,
             pitcher_ids=pid_set,
         )
-    except Exception:
+    except Exception as e:
+        _warn_except('week_probables', e)
         return {pid: [] for pid in pid_set}
 
     # Index team schedules by date for quick per-pitcher lookup. The pitcher's
@@ -1572,7 +1597,8 @@ def render_trend_watch(my_lineup):
             out.append(f'<tr><td>{h(name)}</td><td class="{cls}">{h(tag)}</td></tr>')
         out.append('</tbody></table>')
         return '\n'.join(out)
-    except Exception:
+    except Exception as e:
+        _warn_except('trend_watch', e)
         return ''
 
 
@@ -1622,16 +1648,21 @@ def render_power_rankings():
         return f'<h2>🏆 League Power Rankings</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def render_drop_pickup_suggestions(my_lineup, rh3_map):
-    """Find your lowest-RoS Ligers + matching FA upgrades."""
+def render_drop_pickup_suggestions(my_lineup, rh3_map, fas=None, rostered=None):
+    """Find your lowest-RoS Ligers + matching FA upgrades.
+
+    `fas` / `rostered` are threaded in from main()'s single FA fetch (network
+    diet, audit 2026-07-04). Falls back to a local fetch when not provided.
+    """
     try:
-        from plv_clone.league_state import LeagueState
-        league = LeagueState()._get_league()
-        rostered = set()
-        for t in league.teams:
-            for p in t.roster:
-                rostered.add(_norm(p.name))
-        fas = league.free_agents(size=2000)  # never <2000: size<2000 silently drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md)
+        if fas is None or rostered is None:
+            from plv_clone.league_state import LeagueState
+            league = LeagueState()._get_league()
+            rostered = set()
+            for t in league.teams:
+                for p in t.roster:
+                    rostered.add(_norm(p.name))
+            fas = league.free_agents(size=2000)  # never <2000: size<2000 silently drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md)
         rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
         rh3['nk'] = rh3['player_name'].map(_norm)
         rh3_lkup = rh3.set_index('nk').to_dict('index')
@@ -1692,7 +1723,8 @@ def render_drop_pickup_suggestions(my_lineup, rh3_map):
         return f'<h2>🔄 Drop / Pickup Suggestions</h2><p class="muted">error: {h(str(e))}</p>'
 
 
-def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
+def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
+                       fas=None, rostered=None):
     """Streamer targets ranked by next-start expected FP, augmented with
     the layered display-tag stack (boom_stack, HIGH-K ARM, catcher framing,
     IL_RETURN, anti-predictive).
@@ -1717,12 +1749,16 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
     check FIRST so the audit trail is unambiguous.
     """
     try:
-        from plv_clone.league_state import LeagueState
-        league = LeagueState()._get_league()
-        rostered = set()
-        for t in league.teams:
-            for p in t.roster:
-                rostered.add(_norm(p.name))
+        if fas is None or rostered is None:
+            # Fallback fetch — main() normally threads fas/rostered in
+            # (network diet, audit 2026-07-04).
+            from plv_clone.league_state import LeagueState
+            league = LeagueState()._get_league()
+            rostered = set()
+            for t in league.teams:
+                for p in t.roster:
+                    rostered.add(_norm(p.name))
+            fas = league.free_agents(size=2000)  # full pool — avoid silent truncation
         from plv_clone.projections import PROJECTIONS as _PROJ
         rp3 = _PROJ.rp3(live_il=True).drop_duplicates('player_name')
         rp3['nk'] = rp3['player_name'].map(_norm)
@@ -1740,7 +1776,8 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
             # streamers were docked only ~-0.8% vs the validated -3.2 FP).
             from lib.extra_lenses import _park_R_map
             pf_map = {k.upper(): v for k, v in _park_R_map().items()}
-        except Exception:
+        except Exception as e:
+            _warn_except('streamers.park_R_map', e)
             if pf_path.exists():
                 pf_df = pd.read_csv(pf_path)
                 pf_cur = pf_df[pf_df['year'] == pf_df['year'].max()]
@@ -1756,7 +1793,6 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None):
         # Collect candidate FAs with baseline projection
         candidates = []
         n_il_excluded = 0
-        fas = league.free_agents(size=2000)  # full pool — avoid silent truncation
         for fa in fas:
             if detect_pitcher_role(fa) != 'SP':
                 continue
@@ -2009,7 +2045,8 @@ def _get_player_add_dates(league, team_name, since_date):
                     if 'ADDED' in action_norm or 'TRADED' in action_norm:
                         if player_name not in add_dates:
                             add_dates[player_name] = act_date
-            except Exception:
+            except Exception as e:
+                _warn_except('add_dates.activity_row', e)
                 continue
     except Exception as e:
         print(f'  ⚠ recent_activity fetch failed: {e}')
@@ -2026,12 +2063,17 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
 
     Critical for accurate cap math — render_cap_status was only counting
     forward-looking (today + future) starts before the prior fix.
+
+    NETWORK DIET (audit 2026-07-04): rewritten to a single local read of
+    boxscore_pitchers.parquet (mlbam_id, gs==1, game_date in window) instead
+    of ~8-10 SEQUENTIAL per-pitcher MLB gameLog HTTP requests. Same return
+    shape. Falls back to the old HTTP path if the parquet is missing/unreadable.
     """
-    import requests
     if today <= week_start:
         return 0
     add_dates = add_dates or {}
-    past = 0
+    # Per-pitcher counting window: {mlbam_id: window_start_date}
+    windows = {}
     for p in my_lineup:
         if detect_pitcher_role(p) != 'SP':
             continue
@@ -2045,9 +2087,40 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
         added_on = add_dates.get(p.name)
         if added_on and added_on > week_start:
             per_player_start = added_on
+        windows[int(pid)] = per_player_start
+    if not windows:
+        return 0
+
+    bs_path = CACHE / 'boxscore_pitchers.parquet'
+    if bs_path.exists():
+        try:
+            bp = pd.read_parquet(bs_path, columns=['mlbam_id', 'game_date', 'gs'])
+            bp = bp[(bp['gs'] > 0) & (bp['mlbam_id'].isin(windows.keys()))]
+            past = 0
+            for _, r in bp.iterrows():
+                game_date = datetime.strptime(str(r['game_date'])[:10], '%Y-%m-%d').date()
+                if windows[int(r['mlbam_id'])] <= game_date < today:
+                    past += 1
+            return past
+        except Exception as e:
+            _warn_except('past_sp_starts.parquet', e)
+    else:
+        print('  ⚠ [past_sp_starts] boxscore_pitchers.parquet missing — falling back to per-pitcher gameLog HTTP', file=sys.stderr)
+    return _count_past_sp_starts_http(windows, today)
+
+
+def _count_past_sp_starts_http(windows, today):
+    """Legacy fallback: sequential per-pitcher MLB Stats API gameLog requests.
+
+    `windows` = {mlbam_id: window_start_date}. Only used when the boxscore
+    parquet is unavailable (pre-2026-07-04 this was the primary path).
+    """
+    import requests
+    past = 0
+    for pid, per_player_start in windows.items():
         try:
             url = (f"https://statsapi.mlb.com/api/v1/people/{pid}/stats"
-                   f"?stats=gameLog&group=pitching&season={week_start.year}")
+                   f"?stats=gameLog&group=pitching&season={per_player_start.year}")
             r = requests.get(url, timeout=10).json()
             splits = r.get('stats', [{}])[0].get('splits', [])
             for s in splits:
@@ -2058,7 +2131,8 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
                 if per_player_start <= game_date < today:
                     if int(s.get('stat', {}).get('gamesStarted', 0)) > 0:
                         past += 1
-        except Exception:
+        except Exception as e:
+            _warn_except(f'past_sp_starts.http.{pid}', e)
             continue
     return past
 
@@ -2136,7 +2210,8 @@ def _render_closer_tracker_simple():
                 out.append(f'<tr><td>{h(str(r.get(team_col, "?")))}</td>'
                            f'<td>{h(str(r.get(name_col, "?")))}</td>'
                            f'<td>{r.get(sv_col, "—")}</td></tr>')
-            except Exception:
+            except Exception as e:
+                _warn_except('closer_tracker_simple.row', e)
                 continue
         out.append('</tbody></table>')
         return '\n'.join(out)
@@ -2182,7 +2257,8 @@ def _fetch_team_leaders(team_id, category, limit=5):
            f'leaderCategories={category}&season=2026&limit={limit}')
     try:
         data = _fetch_json(url)
-    except Exception:
+    except Exception as e:
+        _warn_except('team_leaders_fetch', e)
         return []
     out = []
     for cat in data.get('teamLeaders', []):
@@ -2209,8 +2285,8 @@ def _load_closer_leaders_cache():
         try:
             with open(cache_path, 'r', encoding='utf-8') as f:
                 return json.load(f)
-        except Exception:
-            pass
+        except Exception as e:
+            _warn_except('closer_leaders.cache_read', e)
     cache = {}
     for mlb_id, abbr in _MLB_TO_ABBR.items():
         saves = _fetch_team_leaders(mlb_id, 'saves', limit=3)
@@ -2219,8 +2295,8 @@ def _load_closer_leaders_cache():
     try:
         with open(cache_path, 'w', encoding='utf-8') as f:
             json.dump(cache, f, separators=(',', ':'))
-    except Exception:
-        pass
+    except Exception as e:
+        _warn_except('closer_leaders.cache_write', e)
     return cache
 
 
@@ -2722,7 +2798,8 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
                 hbs = compute_hitter_boom_stack(
                     batter_id=ht['mlbam'], opp_sp_id=None,
                     team=ht['team']) or {}
-            except Exception:
+            except Exception as e:
+                _warn_except(f'boom_scan.hitter_stack.{ht.get("name", "?")}', e)
                 hbs = {}
             h_rows.append({**ht,
                 'boom_stack': hbs.get('boom_stack'),
@@ -3219,8 +3296,22 @@ def main():
     # ---- ADDITIONAL ENHANCEMENT SECTIONS ----
     print('  building enhancement sections...')
     power_block = render_power_rankings()
-    drop_pickup_block = render_drop_pickup_suggestions(mu['my_lineup'], rh3_map)
-    streamer_block = render_2start_gems(schedules_by_team, today, week_end)
+    # NETWORK DIET (audit 2026-07-04): ONE free_agents(size=2000) fetch + ONE
+    # rostered-name walk, threaded into both FA consumers below (was two
+    # independent 2000-player fetches + repeated league.teams walks).
+    fa_pool, rostered_names = None, None
+    try:
+        rostered_names = {_norm(p.name)
+                          for t in mu['league_obj'].teams for p in t.roster}
+        fa_pool = mu['league_obj'].free_agents(size=2000)  # never <2000 (feedback_fa_pool_size_cap.md)
+        print(f'  FA pool fetched once: {len(fa_pool)} FAs · {len(rostered_names)} rostered names')
+    except Exception as e:
+        _warn_except('main.fa_pool_fetch', e)
+        fa_pool, rostered_names = None, None  # consumers fall back to their own fetch
+    drop_pickup_block = render_drop_pickup_suggestions(
+        mu['my_lineup'], rh3_map, fas=fa_pool, rostered=rostered_names)
+    streamer_block = render_2start_gems(schedules_by_team, today, week_end,
+                                        fas=fa_pool, rostered=rostered_names)
     boom_bust_block = render_boom_bust_scan(mu['my_lineup'], mu['opp_lineup'])
     cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today,
                                     league=mu['league_obj'],

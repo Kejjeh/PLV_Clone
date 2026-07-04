@@ -23,7 +23,7 @@ dependencies = [
     "plotly>=5.0",
     "matplotlib>=3.8",
     "requests>=2.31",
-    "espn-api>=0.35",
+    "espn-api>=0.35,<0.47",
     "ipykernel>=6.0",
 ]
 
@@ -44,10 +44,22 @@ packages = ["src/plv_clone"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-r sxX --cov=plv_clone --cov-report=term-missing -v"
+addopts = "-r sxX --cov --cov-report=term-missing -v"
 markers = [
     "slow: end-to-end tests that run the real triangulate subprocess (deselect with -m 'not slow')",
 ]
+
+[tool.coverage.run]
+# Measure the whole production surface, not just the installed package —
+# --cov=plv_clone alone covered ~11% of the codebase (the "~1% coverage" illusion).
+source = ["plv_clone", "lib", "app"]
+
+[tool.coverage.paths]
+# Alias the import identities so `lib.*` (scripts/xfp on sys.path) and
+# `plv_clone.*` (src layout / installed -e) each map to one canonical path.
+plv_clone = ["src/plv_clone", "*/plv_clone"]
+lib = ["scripts/xfp/lib", "*/xfp/lib"]
+app = ["app", "*/app"]
 
 [tool.ruff]
 line-length = 100

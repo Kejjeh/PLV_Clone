@@ -29,6 +29,13 @@ def _norm(s) -> str:
     return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
 
 
+def _warn(section: str, exc: BaseException) -> None:
+    """One-line stderr breadcrumb for fail-soft handlers (audit 2026-07-04:
+    silent excepts hide dead lenses for weeks). Semantics unchanged — loud only."""
+    import sys
+    print(f"  ⚠ [extra_lenses.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+
+
 # --------------------------------------------------------------------------
 # Stuff+ and SP-floor share the FanGraphs 2026 SP frame (one fit, cached)
 # --------------------------------------------------------------------------
@@ -44,7 +51,8 @@ def _stuff_frame():
             sys.path.insert(0, _xfp)
         from sp_stuff_model import build as _build
         d, _ = _build()
-    except Exception:
+    except Exception as e:
+        _warn("stuff_frame", e)
         return {}
     out = {}
     for _, r in d.iterrows():
@@ -90,7 +98,8 @@ def floor_lens(name: str) -> dict | None:
             bb /= 100.0
         probs, tiers = floor_for(k, bb)
         return {"bust_prob": round(float(probs[0]) * 100), "tier": tiers[0]}
-    except Exception:
+    except Exception as e:
+        _warn("floor_lens", e)
         return None
 
 
@@ -103,7 +112,8 @@ def trend_lens(mlbam, role: str) -> dict | None:
     try:
         from lib.trend_signal import trend_for_mlbam
         tag, row = trend_for_mlbam(int(mlbam), role)
-    except Exception:
+    except Exception as e:
+        _warn("trend_lens", e)
         return None
     if not tag:
         return None
@@ -121,7 +131,8 @@ def shadow_lens(name: str) -> dict | None:
     try:
         from lib.shadow_scout import shadow_scout
         res = shadow_scout([name])
-    except Exception:
+    except Exception as e:
+        _warn("shadow_lens", e)
         return None
     if not res:
         return None
@@ -226,7 +237,8 @@ def _yoy_swstr_lookup():
         for _, r in last.iterrows():
             out.setdefault(int(r['pitcher']), {})[int(r['year'])] = (float(r['swstr_pct_to']), float(r['gs_to']))
         return out
-    except Exception:
+    except Exception as e:
+        _warn("swstr_yoy_map", e)
         return {}
 
 
@@ -239,7 +251,8 @@ def _statcast_2026_pitch():
             return None
         return pd.read_parquet(p, columns=['pitcher', 'game_date', 'pitch_type',
                                            'release_speed', 'description', 'events', 'zone'])
-    except Exception:
+    except Exception as e:
+        _warn("statcast_2026_pitch", e)
         return None
 
 
@@ -254,7 +267,8 @@ def stuff_command_lens(mlbam, season=2026):
     try:
         import pandas as pd
         d = df[df['pitcher'] == int(mlbam)].sort_values('game_date')
-    except Exception:
+    except Exception as e:
+        _warn("stuff_command_lens.slice", e)
         return None
     if len(d) < 300:
         return None
@@ -361,7 +375,8 @@ def _park_R_map():
         df = pd.read_csv(p)
         df = df[df.apply(lambda r: r.year >= VENUE_ERAS.get(r.team_abbr, 2022), axis=1)]
         return {t: float(np.average(g.pf_R, weights=g.n_pa)) for t, g in df.groupby('team_abbr')}
-    except Exception:
+    except Exception as e:
+        _warn("park_R_map", e)
         return {}
 
 
@@ -392,7 +407,8 @@ def _opp_bat_map():
         p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'team_strength_2026.csv'
         df = pd.read_csv(p)
         return dict(zip(df.team, df.bat_index))
-    except Exception:
+    except Exception as e:
+        _warn("opp_bat_map", e)
         return {}
 
 
@@ -421,7 +437,8 @@ def _upcoming_schedule():
                 ap = (g['teams']['away'].get('probablePitcher') or {}).get('id')
                 out.append((dd['date'], _TEAM_ABBR.get(h, h), _TEAM_ABBR.get(a, a), hp, ap))
         return tuple(out)
-    except Exception:
+    except Exception as e:
+        _warn("probables_schedule", e)
         return ()
 
 

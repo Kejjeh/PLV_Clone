@@ -132,7 +132,7 @@ def main():
         for p in t.roster:
             rostered.add(_norm(p.name))
 
-    fas = league.free_agents(size=500)
+    fas = league.free_agents(size=2000)
     fa_rows = []
     for fa in fas:
         nk = _norm(fa.name)

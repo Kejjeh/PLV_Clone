@@ -202,6 +202,26 @@ def apply_shrinkage(df: pd.DataFrame, pop_means: dict, spec: dict) -> pd.DataFra
     return _engine.apply_shrinkage(_ensure_derived_denoms(df.copy()), pop_means, spec)
 
 
+# Bump to force a cold fit when fit-stage LOGIC changes (data/FEATS changes are
+# caught automatically by the content hash).
+_FIT_FP_VERSION = 1
+
+
+def _fit_fingerprint(rolling: pd.DataFrame, feats: list[str]) -> str:
+    """Content hash of everything the fit stage depends on: the TRAIN-YEAR rows
+    (immutable slice — the rolling CSV legitimately changes daily via
+    in-progress-season rows), the feature list, target/filter constants.
+    Warm-skip is exact: same fingerprint => byte-identical fit artifacts."""
+    import hashlib
+    sub = rolling[rolling['year'].isin(TRAIN_YEARS)]
+    cols = [c for c in sorted(set(feats + [TARGET, 'year', 'split_day'])) if c in sub.columns]
+    h = hashlib.md5()
+    h.update(pd.util.hash_pandas_object(sub[cols].reset_index(drop=True), index=False).values.tobytes())
+    h.update(repr((sorted(feats), TARGET, EVAL_PA_MIN, ROS_PA_MIN,
+                   sorted(TRAIN_YEARS), _FIT_FP_VERSION)).encode())
+    return h.hexdigest()
+
+
 def cross_year_eval(df: pd.DataFrame, feats: list[str]):
     from sklearn.pipeline import Pipeline
     from sklearn.preprocessing import StandardScaler
@@ -209,6 +229,7 @@ def cross_year_eval(df: pd.DataFrame, feats: list[str]):
     df = df.dropna(subset=feats + [TARGET]).copy()
     df = df[(df['pa_to'] >= EVAL_PA_MIN) & (df['ros_pa'] >= ROS_PA_MIN) & (df['year'] != 2020)]
     per_year, preds_all, acts_all = {}, [], []
+    _details = []
     for held in TRAIN_YEARS:
         train = df[df['year'] != held]; test = df[df['year'] == held]
         if len(train) < 100 or len(test) < 30:
@@ -221,21 +242,34 @@ def cross_year_eval(df: pd.DataFrame, feats: list[str]):
         mae = float(np.mean(np.abs(preds - test[TARGET].values)))
         per_year[held] = {'r': round(r, 4), 'mae': round(mae, 4), 'n': len(test)}
         preds_all.extend(preds.tolist()); acts_all.extend(test[TARGET].tolist())
+        _details.append(pd.DataFrame({'pred': preds, 'actual': test[TARGET].values,
+                                      'split_day': test['split_day'].values}))
     overall_r = float(np.corrcoef(preds_all, acts_all)[0, 1]) if preds_all else np.nan
     overall_mae = float(np.mean(np.abs(np.array(preds_all) - np.array(acts_all))))
+    detail = (pd.concat(_details, ignore_index=True) if _details
+              else pd.DataFrame(columns=['pred', 'actual', 'split_day']))
+    detail['resid'] = detail['actual'] - detail['pred']
     return per_year, {'r': round(overall_r, 4), 'mae': round(overall_mae, 4),
-                      'n': len(preds_all)}
+                      'n': len(preds_all)}, detail
 
 
-def fit_residual_ci(df: pd.DataFrame, feats: list[str]):
-    """Residual-based CI table: (split_day, predicted_quartile) -> sigma."""
-    sub = df.dropna(subset=feats + [TARGET]).copy()
-    sub = sub[(sub['pa_to'] >= EVAL_PA_MIN) & (sub['ros_pa'] >= ROS_PA_MIN)
-              & (sub['year'] != 2020)]
-    res = _engine.train_residual_table(
-        df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
-        min_train=100, min_test=30,
-    )
+def fit_residual_ci(df: pd.DataFrame, feats: list[str], resid: pd.DataFrame | None = None):
+    """Residual-based CI table: (split_day, predicted_quartile) -> sigma.
+
+    `resid`: the per-row detail frame cross_year_eval already produced — the
+    second LOO pass here was fit-for-fit IDENTICAL to it (same filters, same
+    alphas, same folds; audit 2026-07-04, 46.2s/day of duplicate fitting).
+    Falls back to the old independent pass when not supplied."""
+    if resid is not None and len(resid):
+        res = resid
+    else:
+        sub = df.dropna(subset=feats + [TARGET]).copy()
+        sub = sub[(sub['pa_to'] >= EVAL_PA_MIN) & (sub['ros_pa'] >= ROS_PA_MIN)
+                  & (sub['year'] != 2020)]
+        res = _engine.train_residual_table(
+            df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
+            min_train=100, min_test=30,
+        )
     out: dict[tuple[int, int], float] = {}
     for split in sorted(res['split_day'].unique()):
         sub2 = res[res['split_day'] == split]
@@ -375,51 +409,78 @@ def main():
 
     # Cross-year (RH3)
     print('\n--- LOO cross-year eval (RH3) ---')
-    per_year, overall = cross_year_eval(rolling, RH3_FEATS)
-    for y, r in sorted(per_year.items()):
-        print(f'  {y}: r={r["r"]:.4f}  mae={r["mae"]:.4f}  n={r["n"]}')
-    print(f'  Overall: r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
+    # ── Fingerprint warm-skip (audit 2026-07-04): the entire fit stage is a
+    # deterministic function of the immutable train-year slice + FEATS. On a
+    # fingerprint match, load the fitted bundle and jump to projection
+    # (~34s -> ~2s). The Rule-9 gate re-runs EXACTLY when it is meaningful —
+    # whenever the fingerprint (data or features) changes.
+    _fp = _fit_fingerprint(rolling, RH3_FEATS)
+    _warm = None
+    if MODEL_PKL.exists():
+        try:
+            _b = joblib.load(MODEL_PKL)
+            if _b.get('fit_fingerprint') == _fp:
+                _warm = _b
+        except Exception:
+            _warm = None
+    if _warm is not None:
+        print('\n[warm-fit] fingerprint match — LOO eval / Rule-9 gate / CI / final '
+              'fit loaded from bundle (they re-run whenever train data or FEATS change)')
+        per_year = _warm['per_year_r']
+        overall = {'r': _warm['cross_year_r'], 'mae': _warm['cross_year_mae'], 'n': None}
+        baseline = {'r': _warm['baseline_rh2_r']}
+        delta = _warm['delta_r_vs_rh2']
+        ci_table = _warm['ci_table']
+        overall_sigma = _warm['overall_sigma']
+        pipe = _warm['pipeline']
+        n_train = _warm['n_train']
+    else:
+        per_year, overall, _resid_full = cross_year_eval(rolling, RH3_FEATS)
+        for y, r in sorted(per_year.items()):
+            print(f'  {y}: r={r["r"]:.4f}  mae={r["mae"]:.4f}  n={r["n"]}')
+        print(f'  Overall: r={overall["r"]}  mae={overall["mae"]}  n={overall["n"]}')
 
-    # v2 baseline: drop the v2-added features (xwoba_gap_to + career_stage)
-    # AND any _last21 features (legacy gate). This is the actual rh1/rh2-style
-    # baseline that v2 should be beating, not "drop last21" alone (which is
-    # vacuous when current RH3_FEATS already has no last21 features).
-    # Rule 9 hard gate: any feature in v2_added must collectively lift the
-    # cross-year r by ≥ +0.005 vs a baseline that drops them. 2026-05-23:
-    # xwoba_gap_to removed (verdict MARGINAL re-audit), career_stage demoted
-    # to baseline (joint lift below gate). v2_added now empty — gate is
-    # vacuous until the next claimed lift lands. ADR-0003.
-    # 2026-05-24: promoted ros_opp_sp_xwoba_weighted (rh3 v3). Validation
-    # data/research/validation_runs/ros_opp_sp_xwoba_weighted_2026-05-24.md
-    # showed Δr +0.0137 vs full rh3 v2 baseline, 7/7 per-year positives,
-    # holdout 2/2. Rule 9 hard assert now FIRES meaningfully against the
-    # full prior-production baseline (RH3_FEATS minus this one feature).
-    v2_added: set[str] = {"ros_opp_sp_xwoba_weighted"}
-    baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
-    _ , baseline = cross_year_eval(rolling, baseline_feats)
-    delta = overall['r'] - baseline['r']
-    print(f'\n--- Baseline (drops v2 features {sorted(v2_added)} + last21) ---')
-    print(f'  Overall: r={baseline["r"]}')
-    print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
-    if v2_added and delta < 0.005:
-        # RuntimeError, not assert (audit 2026-07-04): assert vanishes under
-        # python -O, silently disabling the Rule-9 promotion gate.
-        raise RuntimeError(
-            f"Rule 9 gate: Δr={delta:+.4f} below +0.005 for v2 features "
-            f"{sorted(v2_added)}. Revert or re-validate.")
+        # v2 baseline: drop the v2-added features (xwoba_gap_to + career_stage)
+        # AND any _last21 features (legacy gate). This is the actual rh1/rh2-style
+        # baseline that v2 should be beating, not "drop last21" alone (which is
+        # vacuous when current RH3_FEATS already has no last21 features).
+        # Rule 9 hard gate: any feature in v2_added must collectively lift the
+        # cross-year r by ≥ +0.005 vs a baseline that drops them. 2026-05-23:
+        # xwoba_gap_to removed (verdict MARGINAL re-audit), career_stage demoted
+        # to baseline (joint lift below gate). v2_added now empty — gate is
+        # vacuous until the next claimed lift lands. ADR-0003.
+        # 2026-05-24: promoted ros_opp_sp_xwoba_weighted (rh3 v3). Validation
+        # data/research/validation_runs/ros_opp_sp_xwoba_weighted_2026-05-24.md
+        # showed Δr +0.0137 vs full rh3 v2 baseline, 7/7 per-year positives,
+        # holdout 2/2. Rule 9 hard assert now FIRES meaningfully against the
+        # full prior-production baseline (RH3_FEATS minus this one feature).
+        v2_added: set[str] = {"ros_opp_sp_xwoba_weighted"}
+        baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
+        _ , baseline, _ = cross_year_eval(rolling, baseline_feats)
+        delta = overall['r'] - baseline['r']
+        print(f'\n--- Baseline (drops v2 features {sorted(v2_added)} + last21) ---')
+        print(f'  Overall: r={baseline["r"]}')
+        print(f'  Δr (RH3 v2 − baseline) = {delta:+.4f}  (gate: ≥ +0.005)')
+        if v2_added and delta < 0.005:
+            # RuntimeError, not assert (audit 2026-07-04): assert vanishes under
+            # python -O, silently disabling the Rule-9 promotion gate.
+            raise RuntimeError(
+                f"Rule 9 gate: Δr={delta:+.4f} below +0.005 for v2 features "
+                f"{sorted(v2_added)}. Revert or re-validate.")
 
-    # Confidence interval table
-    print('\n--- Building residual-based CI table ---')
-    ci_table, overall_sigma = fit_residual_ci(rolling, RH3_FEATS)
-    print(f'  overall sigma = {overall_sigma:.4f} FP/PA')
+        # Confidence interval table
+        print('\n--- Building residual-based CI table ---')
+        ci_table, overall_sigma = fit_residual_ci(rolling, RH3_FEATS, resid=_resid_full)
+        print(f'  overall sigma = {overall_sigma:.4f} FP/PA')
 
-    # Train final + project 2026
-    pipe, n_train = train_final(rolling, RH3_FEATS)
-    coefs = pipe.named_steps['r'].coef_
-    print(f'\n--- Final RH3 pipeline (n_train={n_train}, alpha={pipe.named_steps["r"].alpha_:.1f}) ---')
-    print('  Top coefficients:')
-    for f, c in sorted(zip(RH3_FEATS, coefs), key=lambda x: -abs(x[1]))[:12]:
-        print(f'    {f:<26s} {c:+.4f}')
+        # Train final + project 2026
+        pipe, n_train = train_final(rolling, RH3_FEATS)
+        coefs = pipe.named_steps['r'].coef_
+        print(f'\n--- Final RH3 pipeline (n_train={n_train}, alpha={pipe.named_steps["r"].alpha_:.1f}) ---')
+        print('  Top coefficients:')
+        for f, c in sorted(zip(RH3_FEATS, coefs), key=lambda x: -abs(x[1]))[:12]:
+            print(f'    {f:<26s} {c:+.4f}')
+
 
     # Projection for 2026
     df_26 = rolling[rolling['year'] == 2026].copy()
@@ -558,6 +619,7 @@ def main():
         'pa_per_game_league': PA_PER_GAME_LEAGUE,
         'season_games': SEASON_GAMES,
         'replacement_rank': REPLACEMENT_RANK,
+        'fit_fingerprint': _fp,
         'trained_date': str(date.today()),
         'n_train': n_train,
         'version': 'rh3',

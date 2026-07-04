@@ -108,6 +108,8 @@ scripts/xfp/archive/
 scripts/xfp/research/
 scripts/xfp/_research/
 scripts/_oneoff/
+scripts/xfp/_attic/
+scripts/_attic/
 
 # IDE / OS
 .idea/

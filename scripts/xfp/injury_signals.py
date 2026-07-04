@@ -341,9 +341,9 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.WARNING)
 
     print("Fetching all-team roster from ESPN...")
-    from app.espn_connector import get_all_teams
+    from plv_clone.league_state import default_state
 
-    all_teams = get_all_teams()
+    all_teams = default_state().all_teams()
     hitters = all_teams[~all_teams["position"].isin(["SP", "RP", "P"])].copy()
 
     pid_col_ok = "player_id" in hitters.columns

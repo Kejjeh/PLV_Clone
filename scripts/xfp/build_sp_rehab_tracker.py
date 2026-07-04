@@ -18,7 +18,13 @@ pd.set_option('display.max_columns', 40)
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
-from app.espn_connector import get_all_teams, get_my_roster_with_injuries
+# league_state migration 2026-07-04: get_my_roster_with_injuries was imported
+# but never used; all_teams() is now a schema superset of get_all_teams().
+from plv_clone.league_state import default_state
+
+
+def get_all_teams():
+    return default_state().all_teams()
 
 SP_MULTIYR  = 'data/research/xfp_cache/sp_multiyr_2015_2025.csv'
 MLBAM_CACHE = 'data/research/xfp_cache/sp_mlbam_resolved.csv'

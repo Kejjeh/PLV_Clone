@@ -61,7 +61,7 @@ def main():
             slot = getattr(p, 'lineupSlot', '?')
             injury_map[_norm(p.name)] = (injury, slot, 'rostered')
 
-    fas = league.free_agents(size=1500)
+    fas = league.free_agents(size=2000)
     for fa in fas:
         nk = _norm(fa.name)
         if nk not in injury_map:

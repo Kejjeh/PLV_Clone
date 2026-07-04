@@ -50,7 +50,7 @@ from pathlib import Path
 
 import pandas as pd
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 OUT_DIR = ROOT / 'data' / 'outputs'
 PANEL = ROOT / 'data' / 'research' / 'boom_stack_history_panel.parquet'
 

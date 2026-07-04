@@ -21,7 +21,9 @@ from plv_clone.league_state import LeagueState
 OUT_DIR = 'data/research/triangulate_universe'
 os.makedirs(OUT_DIR, exist_ok=True)
 
-def _norm(s): return unicodedata.normalize('NFKD', str(s)).encode('ascii','ignore').decode('ascii').lower().strip()
+# Canonical join-key normalizer (order-independent, accent/punct-safe); keys are
+# produced and consumed only within this module, so the swap is join-preserving.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 def classify_bucket(pos):
     p = str(pos).upper()

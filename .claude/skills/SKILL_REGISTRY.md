@@ -20,7 +20,7 @@
 | **Park → FP adj** (VENUE_ERAS ATH/TB 2025 guard) | `scripts/xfp/lib/extra_lenses.py` | `park_fp_adj(team)` · `_park_R_map()` · `park_env()` | ✅ **shipped 2026-07-03** (+ `test_park_factors.py`) |
 | **Opp bat-index tier** (soft ≤0.97 / tough ≥1.03) | `scripts/xfp/lib/extra_lenses.py` | `opp_env(bat_index)` | violators: build_matchup_dashboard:1160, boom_stack:239/377 |
 | **Floor-adjusted xFP** + decline type | `scripts/xfp/lib/extra_lenses.py` | `floor_adjusted_xfp(mean, bust%)` · `stuff_command_lens` · `next_start_lens` | ✅ clean (triangulate + sp-floor import it) |
-| **Probables fetch** (schedule?hydrate=probablePitcher) | `src/plv_clone/mlb_stats.py:142` | `fetch_week_probables()` — add `get_probables(start,end)` seam | ⚠️ 8 modules re-implement (rebuilt 4× this session) |
+| **Probables fetch** (schedule?hydrate=probablePitcher) | `src/plv_clone/mlb_stats.py:129` | `get_probables(start,end)` · `fetch_week_probables()` | ✅ **owner seam shipped 2026-07-04** (consolidation landed; sweep any residual re-implementers as found) |
 | **Live roster truth** (is-mine) | `app/espn_connector.py` | `get_my_roster_with_injuries()` · `my_tag()` | pre-condition (see `/roster-verify`) |
 | **Pitcher role** (SP/RP, dual-elig Detmers) | `scripts/xfp/lib/pitcher_role.py` | `detect_pitcher_role(row)` | ✅ fixed 2026-07-03; violators: sp-week-plan:41, pregame-check:125 |
 | **Name → mlbam + normalizer** | `src/plv_clone/utils/name_match.py` | `resolve_batter_id/resolve_pitcher_id` · `join_key` · `KNOWN_COLLISIONS` | ⚠️ 73 files re-define `_norm` (241 occ, 2 incompatible variants) |
@@ -32,7 +32,8 @@
 
 **Migration frontier:** `cap_math` and the new `park_fp_adj`/boom-bust consts are now clean owners.
 The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring.py`,
-`name_match`, `mlb_stats` probables, and `league_state.available_fa()`.
+`name_match`, and `league_state.available_fa()` (probables now owned by
+`mlb_stats.get_probables()`, shipped 2026-07-04).
 
 ---
 
@@ -81,9 +82,9 @@ The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring
 | 2 | 🔴 CRIT | FA-pool size<2000 → `available_fa()` | ✅ **done** (dashboard default 2000 + matchup:1618) |
 | 3 | 🟠 HIGH | Delete 2 inline `PARK_FACTORS` dicts; point `boom_stack:54` at `extra_lenses` | ⬜ pending (validate_drift_v5_*, boom_stack) |
 | 4 | 🟠 HIGH | Collapse 73 name-normalizer copies → `name_match`; kill NFKD-ascii first | ⬜ pending (mechanical sweep — do as isolated workflow) |
-| 5 | 🟠 HIGH | One `get_probables()` for the 8 duplicated fetches | ⬜ pending (owner `mlb_stats.py`) |
+| 5 | 🟠 HIGH | One `get_probables()` for the 8 duplicated fetches | ✅ **done 2026-07-04** (`mlb_stats.get_probables()` owner shipped + consumers consolidated) |
 | 6 | 🟠 HIGH | boom/bust named consts + fix stale `boom>=20` | ✅ **done** (consts + build_sp_pl_board + hitter-slate-grid doc) |
-| 7 | 🟠 HIGH | `STARTS_PER_SP_PER_WEEK` owner + route consumers | ✅ **owner done**; sp-week-plan routed; ~7 engines pending |
+| 7 | 🟠 HIGH | `STARTS_PER_SP_PER_WEEK` owner + route consumers | ✅ **partial 2026-07-04**: owner done; sp-week-plan + pregame-check routed (8fd4797); opponent_scouting.py CAP_AWARE_* now derived from cap_math; remaining engines pending |
 | 8 | 🟠 HIGH | role/resolve in sp-week-plan + pregame-check + fa-rp-pool | ✅ **done** (all three) |
 | — | 🟡 MED | fa-monitor signal-count doc (3/6 → 11) | ✅ **done** |
 

@@ -29,11 +29,11 @@ from plv_clone.league_state import LeagueState
 @dataclass
 class _FakePlayer:
     name: str
-    playerId: int = 0
+    playerId: int = 1
     position: str = ""
     proTeam: str = ""
     eligibleSlots: list[str] = field(default_factory=list)
-    lineupSlot: str = ""
+    lineupSlot: str = "BE"  # nonempty default so the schema sentinel passes
     injured: bool = False
     injuryStatus: str = ""
     percent_owned: float = 0.0
@@ -59,10 +59,22 @@ class _FakeLeague:
         self.teams = teams
         self._fas = free_agents
         self.free_agents_size_arg: int | None = None
+        self.free_agents_call_count: int = 0
 
     def free_agents(self, size: int = 50, **_: Any) -> list[_FakePlayer]:
         self.free_agents_size_arg = size
+        self.free_agents_call_count += 1
         return list(self._fas)
+
+
+@pytest.fixture(autouse=True)
+def _clean_ttl_cache():
+    """Isolate the per-process TTL cache between tests (id() reuse guard)."""
+    from plv_clone.league_state import clear_ttl_cache
+
+    clear_ttl_cache()
+    yield
+    clear_ttl_cache()
 
 
 # ── Tests ────────────────────────────────────────────────────────────────
@@ -324,6 +336,122 @@ def test_constants_exposed_for_callers():
     assert SP_CAP == 10
     assert RP_SLOT_CAP == 4
     assert IL_SLOT_COUNT == 3
+
+
+# ── TTL cache (2026-07-04 audit) ─────────────────────────────────────────
+
+def _one_team_league(fa_names=("FA One",)):
+    my_team = _FakeTeam(
+        team_id=1,
+        team_name="New York Ligers",
+        owner="josh",
+        roster=[_FakePlayer(name="Rostered Guy", playerId=7, position="OF")],
+    )
+    fas = [_FakePlayer(name=n, position="SP") for n in fa_names]
+    return _FakeLeague(teams=[my_team], free_agents=fas)
+
+
+def test_ttl_cache_dedups_fa_pool_pull():
+    """Two available_fa() calls within TTL → ONE league.free_agents() hit,
+    even across different position filters (the run_roster_audit pattern)."""
+    league = _one_team_league()
+    state = LeagueState(league=league)
+
+    a = state.available_fa()
+    b = state.available_fa(position="SP")
+
+    assert league.free_agents_call_count == 1
+    assert not a.empty and not b.empty
+
+
+def test_ttl_cache_expiry_refetches(monkeypatch):
+    """An entry older than the TTL is a miss → second roundtrip."""
+    import plv_clone.league_state as ls
+
+    league = _one_team_league()
+    state = LeagueState(league=league)
+    state.available_fa()
+
+    # Age every cache entry past the TTL.
+    for k, (ts, val) in list(ls._TTL_CACHE.items()):
+        ls._TTL_CACHE[k] = (ts - ls.CACHE_TTL_SECONDS - 1, val)
+
+    state.available_fa()
+    assert league.free_agents_call_count == 2
+
+
+def test_fresh_param_bypasses_cache():
+    league = _one_team_league()
+    state = LeagueState(league=league)
+    state.available_fa()
+    state.available_fa(fresh=True)
+    assert league.free_agents_call_count == 2
+
+
+def test_ttl_cache_returns_defensive_copy():
+    """Mutating a returned frame must not poison later cache hits."""
+    league = _one_team_league()
+    state = LeagueState(league=league)
+    first = state.all_teams()
+    first["player_name"] = "MUTATED"
+    second = state.all_teams()
+    assert second["player_name"].tolist() == ["Rostered Guy"]
+
+
+# ── all_teams schema superset (2026-07-04 audit) ─────────────────────────
+
+def test_all_teams_is_schema_superset_of_espn_connector():
+    """all_teams() must carry every column app.espn_connector.get_all_teams()
+    returns, so importers can migrate without column surprises."""
+    espn_connector_cols = {
+        "team_name", "owner", "team_id", "player_name", "player_id",
+        "position", "pro_team", "lineup_slot", "injured", "injury_status",
+    }
+    league = _one_team_league()
+    state = LeagueState(league=league)
+    df = state.all_teams()
+    missing = espn_connector_cols - set(df.columns)
+    assert not missing, f"all_teams() missing columns: {missing}"
+    row = df.iloc[0]
+    assert row["player_id"] == 7
+    assert row["lineup_slot"] == "BE"
+    assert row["injured"] is False or row["injured"] == False  # noqa: E712
+    assert row["injury_status"] == ""
+
+
+# ── espn-api schema-drift sentinel (2026-07-04 audit) ────────────────────
+
+def test_sentinel_trips_on_all_empty_lineup_slots():
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh",
+        roster=[
+            _FakePlayer(name="A", playerId=1, lineupSlot=""),
+            _FakePlayer(name="B", playerId=2, lineupSlot=""),
+        ],
+    )
+    state = LeagueState(league=_FakeLeague(teams=[my_team], free_agents=[]))
+    with pytest.raises(RuntimeError, match="espn-api schema drift"):
+        state.all_teams()
+
+
+def test_sentinel_trips_on_null_player_ids():
+    roster = [
+        _FakePlayer(name=f"P{i}", playerId=None, lineupSlot="BE")
+        for i in range(9)
+    ] + [_FakePlayer(name="OK", playerId=5, lineupSlot="BE")]
+    my_team = _FakeTeam(
+        team_id=1, team_name="New York Ligers", owner="josh", roster=roster,
+    )
+    state = LeagueState(league=_FakeLeague(teams=[my_team], free_agents=[]))
+    with pytest.raises(RuntimeError, match="espn-api schema drift"):
+        state.my_roster()
+
+
+def test_sentinel_passes_on_healthy_schema():
+    league = _one_team_league()
+    state = LeagueState(league=league)
+    assert not state.all_teams().empty
+    assert not state.my_roster().empty
 
 
 # ── name_match utility tests ─────────────────────────────────────────────

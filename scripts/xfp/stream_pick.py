@@ -85,7 +85,7 @@ def main():
     print(f'Probable starts in window: {len(sched_window)} from {sched_window["pitcher"].nunique()} pitchers\n')
 
     # Pull FAs
-    fa = get_free_agents(size=400)
+    fa = get_free_agents()  # LeagueState.available_fa bakes size=2000
     fa_sp = fa[fa['position'].isin(['SP','P'])].copy()
 
     # Build candidates: FAs with a scheduled start in the window AND a model projection

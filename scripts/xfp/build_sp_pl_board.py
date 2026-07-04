@@ -27,7 +27,11 @@ sys.path.insert(0, '.'); sys.path.insert(0, 'src')
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from app.espn_connector import get_all_teams
+from plv_clone.league_state import default_state
+
+
+def get_all_teams():  # league_state migration 2026-07-04 (schema superset)
+    return default_state().all_teams()
 from lib.boom_bust import SP_BOOM, SP_BUST  # OWNER: boom/bust cutoffs (never re-type 17/5)
 
 MY = 'New York Ligers'

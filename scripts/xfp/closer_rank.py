@@ -134,7 +134,7 @@ def main():
         for p in t.roster:
             rostered.add(_norm(p.name))
 
-    fas = league.free_agents(size=500)
+    fas = league.free_agents(size=2000)
     rprs2_lkup = rprs2.set_index('name_api').to_dict('index')
 
     fa_rows = []

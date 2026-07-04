@@ -159,10 +159,12 @@ the printed full-log path when the summary doesn't have enough detail.
 - `/refresh-and-commit-and-push` — daily refresh ritual wrapped end-to-end.
 - `/fa-pickup-deep-dive` — single-player deep dive: model projection
   + recent Statcast + injury + ownership + recommendation.
-- `/fa-monitor` — proactive weekly scan across 6 signals (SP first-start
-  fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-
-  then-dropped comeback, IL return timing, role-change RP). Run Monday
-  mornings. Script: `scripts/xfp/run_fa_monitor.py`.
+- `/fa-monitor` — proactive weekly scan across 12 signal types (A-F +
+  J-O: SP first-start fp_proxy, RP closer/setup opportunity, hitter
+  sustained xwOBA, drafted-then-dropped comeback, IL return timing,
+  role-change RP, plus leverage-rise / new-closer / fireman-breakout /
+  velo-spike / MiB-value / rating-arc). Run Monday mornings.
+  Script: `scripts/xfp/run_fa_monitor.py`.
 - `/fa-replacement-pool` — broad scan: given a player to drop, returns
   ranked FA replacement candidates above a season-FP threshold with
   rh3 join, Δ vs drop target, and positional-flex match. Uses the
@@ -384,6 +386,11 @@ the printed full-log path when the summary doesn't have enough detail.
   Engine `scripts/xfp/lib/trend_signal.py`, runner `scripts/xfp/run_trending.py`.
   Validation `early_season_bat_speed_2026-06-16.md`. Rejected forward-ranker
   promotion (sample-blocked to 2027) — `bat_tracking_fp_family_2026-06-16.md`.
+
+This list is NOT exhaustive — more repo-level skills exist than are
+described above. The canonical index (ownership seams + backlog) is
+`.claude/skills/SKILL_REGISTRY.md`; check it before concluding a skill
+doesn't exist.
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,

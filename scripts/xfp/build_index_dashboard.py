@@ -2689,7 +2689,7 @@ python scripts/xfp/build_sp_multiyr.py
 
 # 3. Re-blend, re-project, rebuild dashboard
 python scripts/xfp/xfp_v11_lock.py
-python scripts/xfp/build_v11_dashboard_v2.py
+python scripts/xfp/build_index_dashboard.py
 
 # 4. Push to refresh GitHub Pages
 git -C xfp-model add docs/index.html

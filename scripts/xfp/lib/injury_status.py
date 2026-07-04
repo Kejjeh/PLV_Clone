@@ -61,9 +61,9 @@ def refresh_il_cache(path: Path | str = INJURY_CACHE) -> int:
     pipeline, not in tests.
     """
     import datetime
-    from app.espn_connector import get_all_teams
+    from plv_clone.league_state import default_state
 
-    teams = get_all_teams()
+    teams = default_state().all_teams()
     il: dict[str, str] = {}
     for _, row in teams.iterrows():
         status = str(row.get("injury_status") or "").upper()

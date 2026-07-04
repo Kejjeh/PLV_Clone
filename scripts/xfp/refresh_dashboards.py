@@ -231,6 +231,18 @@ def main():
         'python -X utf8 scripts/xfp/build_rp_archetypes.py',
         timeout=120)
 
+    # 2.85. PL cache auto-pull. Cadence-gated (lib/pl_cache._cache_is_stale) —
+    # only WebFetches editions that have actually published since the cached
+    # snapshot (Top 100 SP Mon, closers ~Tue, Top 150 hitters ~Wed, streamers
+    # rolling). Fail-soft: consumers (triangulate, sp-slate-grid, sp-pl-board)
+    # fall back to the existing cached snapshots.
+    ok_pl = run('2.85. PL cache auto-pull',
+                'python -X utf8 scripts/xfp/build_pl_cache.py',
+                timeout=120)
+    if not ok_pl:
+        print('  ⚠ PL cache auto-pull failed — consumers will use existing '
+              'cached PL snapshots')
+
     # 2.9. Refresh pitcher probable-starts schedule (next 14 days via MLB Stats
     # API). Consumed by build_matchup_dashboard.py and
     # build_sp_boom_stack_full_pool.py (via lib/boom_stack.py

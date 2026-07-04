@@ -64,7 +64,7 @@ for team in league.teams:
     for p in team.roster:
         all_players[p.name] = {"team": team.team_name, "pos": getattr(p, "position", "?")}
 
-fas = league.free_agents(size=500)
+fas = league.free_agents(size=2000)
 for p in fas:
     if p.name not in all_players:
         all_players[p.name] = {"team": "FA", "pos": getattr(p, "position", "?")}

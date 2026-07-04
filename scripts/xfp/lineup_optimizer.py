@@ -62,33 +62,32 @@ def _norm(s):
 
 
 def fetch_week_schedule(days_ahead: int = 7) -> pd.DataFrame:
+    """Adapter over the plv_clone.mlb_stats.get_probables owner.
+
+    Rebuilds the historical one-row-per-game frame (home/away probable
+    columns) by pairing get_probables' per-slot rows on game_pk. Games with
+    no confirmed probable on either side are dropped — downstream only
+    matches on probable names, so those rows were never consumed.
+    """
+    from plv_clone.mlb_stats import get_probables
     today = date.today()
     end = today + timedelta(days=days_ahead - 1)
-    url = (f'https://statsapi.mlb.com/api/v1/schedule?'
-           f'sportId=1&startDate={today}&endDate={end}'
-           f'&hydrate=probablePitcher')
-    r = requests.get(url, timeout=20)
-    r.raise_for_status()
-    rows = []
-    for d in r.json().get('dates', []):
-        for g in d.get('games', []):
-            if g.get('gameType') != 'R':
-                continue
-            home = g['teams']['home']['team']
-            away = g['teams']['away']['team']
-            home_prob = g['teams']['home'].get('probablePitcher') or {}
-            away_prob = g['teams']['away'].get('probablePitcher') or {}
-            rows.append({
-                'date': d['date'],
-                'gamePk': g['gamePk'],
-                'home_id': home['id'], 'home_abbr': TEAM_ID_TO_ABBR.get(home['id']),
-                'away_id': away['id'], 'away_abbr': TEAM_ID_TO_ABBR.get(away['id']),
-                'home_probable_id': home_prob.get('id'),
-                'home_probable_name': home_prob.get('fullName'),
-                'away_probable_id': away_prob.get('id'),
-                'away_probable_name': away_prob.get('fullName'),
-            })
-    return pd.DataFrame(rows)
+    games: dict = {}
+    for r in get_probables(today, end):
+        g = games.setdefault(r['game_pk'], {
+            'date': r['date'],
+            'gamePk': r['game_pk'],
+            'home_id': None, 'home_abbr': r['park_abbr'],
+            'away_id': None, 'away_abbr': None,
+            'home_probable_id': None, 'home_probable_name': None,
+            'away_probable_id': None, 'away_probable_name': None,
+        })
+        side = 'home' if r['team_abbr'] == r['park_abbr'] else 'away'
+        g[f'{side}_abbr'] = r['team_abbr']
+        g[f'{"away" if side == "home" else "home"}_abbr'] = r['opp_abbr']
+        g[f'{side}_probable_id'] = r['pitcher_id']
+        g[f'{side}_probable_name'] = r['pitcher_name']
+    return pd.DataFrame(list(games.values()))
 
 
 def main():

@@ -68,45 +68,34 @@ def fetch_confirmed_probables(start_d: date, end_d: date) -> list[dict]:
     Only pitchers with a *confirmed* probablePitcher entry are returned. Rotation-gap
     predictions are intentionally NOT used here — streaming decisions need confirmed
     starts, not maybes.
+
+    Thin adapter over the plv_clone.mlb_stats.get_probables owner (retry +
+    success-only caching live there); preserves this module's historical shape.
     """
-    url = (
-        f'{_STATSAPI}/schedule?sportId=1'
-        f'&startDate={start_d.isoformat()}&endDate={end_d.isoformat()}'
-        f'&hydrate=probablePitcher,team'
-    )
+    from plv_clone.mlb_stats import get_probables
     try:
-        data = requests.get(url, timeout=20).json()
+        rows_raw = get_probables(start_d, end_d)
     except Exception as e:
         print(f'  ! MLB Stats API fetch failed: {e}', file=sys.stderr)
         return []
 
     rows: list[dict] = []
-    for d_block in data.get('dates', []):
-        for game in d_block.get('games', []):
-            game_date_str = game.get('gameDate', '')[:10]
-            try:
-                gd = datetime.fromisoformat(game_date_str).date()
-            except Exception:
-                continue
-            if not (start_d <= gd <= end_d):
-                continue
-            home = (game.get('teams') or {}).get('home') or {}
-            away = (game.get('teams') or {}).get('away') or {}
-            home_abbr = ((home.get('team') or {}).get('abbreviation') or '?').upper()
-            away_abbr = ((away.get('team') or {}).get('abbreviation') or '?').upper()
-            for side, opp_abbr, is_home in ((home, away_abbr, True), (away, home_abbr, False)):
-                p = side.get('probablePitcher') or {}
-                pid = p.get('id')
-                if not pid:
-                    continue
-                rows.append({
-                    'pitcher_id': int(pid),
-                    'pitcher_name': p.get('fullName') or '',
-                    'team_abbr': ((side.get('team') or {}).get('abbreviation') or '?').upper(),
-                    'opp_abbr': opp_abbr,
-                    'game_date': gd.isoformat(),
-                    'is_home': is_home,
-                })
+    for r in rows_raw:
+        gd_str = r.get('date') or ''
+        try:
+            gd = datetime.fromisoformat(gd_str).date()
+        except Exception:
+            continue
+        if not (start_d <= gd <= end_d):
+            continue
+        rows.append({
+            'pitcher_id': int(r['pitcher_id']),
+            'pitcher_name': r.get('pitcher_name') or '',
+            'team_abbr': (r.get('team_abbr') or '?').upper(),
+            'opp_abbr': (r.get('opp_abbr') or '?').upper(),
+            'game_date': gd.isoformat(),
+            'is_home': r.get('team_abbr') == r.get('park_abbr'),
+        })
     return rows
 
 

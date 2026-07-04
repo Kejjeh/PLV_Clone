@@ -41,12 +41,15 @@ ROSTER_SLOTS = {'C': 1, '1B': 1, '2B': 1, '3B': 1, 'SS': 1,
                 'SP': 5, 'RP': 4}
 
 # Cap-aware aggregation for SP value. BrownU has NO per-day SP slot count —
-# the only constraint is 10 SP starts/week scoring cap. So total team
-# SP-starts can go up to ~200 over RoS (10 × ~20 weeks). Each SP averages
-# ~1.19 × weeks_remaining ≈ 24 RoS starts. Optimal SP count = 200 / 24 ≈ 8.4
-# (8-9 SPs). Above that, marginal SPs lose value as their starts get capped.
-CAP_AWARE_TEAM_SP_STARTS = 200  # 10 starts/week × ~20 RoS weeks
-CAP_AWARE_PER_SP_STARTS = 24    # ~1.19 starts/week × 20 weeks
+# the only constraint is the SP_CAP (10) starts/week scoring cap. So total
+# team SP-starts can go up to SP_CAP × ~20 RoS weeks. Each SP averages
+# STARTS_PER_SP_PER_WEEK (~1.19, cap_math owner) × weeks_remaining ≈ 24 RoS
+# starts. Optimal SP count ≈ team starts / per-SP starts ≈ 8.4 (8-9 SPs).
+# Above that, marginal SPs lose value as their starts get capped.
+from plv_clone.cap_math import SP_CAP, STARTS_PER_SP_PER_WEEK
+_ROS_WEEKS = 20
+CAP_AWARE_TEAM_SP_STARTS = SP_CAP * _ROS_WEEKS                       # 200
+CAP_AWARE_PER_SP_STARTS = round(STARTS_PER_SP_PER_WEEK * _ROS_WEEKS)  # ~24
 CAP_AWARE_RP_STARTERS = 4
 CAP_AWARE_RP_RoS_GAMES = 25
 # 13 hitter slots in BrownU; deeper bench doesn't add weekly score

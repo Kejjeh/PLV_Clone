@@ -69,6 +69,13 @@ _BOXSCORE_H = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'boxscor
 _RP3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rp3_projections.csv')
 _RH3_PROJ = os.path.join(_REPO_ROOT, 'data', 'outputs', 'xfp_rh3_projections.csv')
 
+
+def _warn(section: str, exc: BaseException) -> None:
+    """One-line stderr breadcrumb for fail-soft handlers (audit 2026-07-04:
+    silent excepts hide dead components for weeks). Semantics unchanged — loud only."""
+    import sys
+    print(f"  ⚠ [hitter_boom_stack.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+
 # Expected boom/bust by stack (from hitter validation report, 2026-06-03).
 # stack=4 is EXTRAPOLATED — no direct cell exists in the validation panel
 # because lineup_amp was not part of the original 3-component stack. We
@@ -346,7 +353,8 @@ def _todays_team_to_lineup(today_iso: str) -> dict[str, list[int]]:
                f'&hydrate=lineups,team')
         with urllib.request.urlopen(url, timeout=10) as resp:
             data = json.loads(resp.read())
-    except Exception:
+    except Exception as e:
+        _warn("lineups_fetch", e)
         return {}
     out: dict[str, list[int]] = {}
     for d_block in data.get('dates', []):
@@ -397,7 +405,8 @@ def _resolve_team_expected_lineup(team: Optional[str],
             return []
         top9 = candidates.nlargest(9, 'xfp_rh3_per_game')
         return [int(x) for x in top9['batter'].tolist()]
-    except Exception:
+    except Exception as e:
+        _warn("proj_top9", e)
         return []
 
 
@@ -410,7 +419,8 @@ def _lookup_team_for_batter(batter_id: int) -> Optional[str]:
             return None
         t = row.iloc[0]['team']
         return str(t) if isinstance(t, str) else None
-    except Exception:
+    except Exception as e:
+        _warn("team_for_batter", e)
         return None
 
 
@@ -451,7 +461,8 @@ def _component_lineup_amp_hitter(
             )
             if sub.get('boom_stack', 0) >= 1:
                 n_teammates_lit += 1
-        except Exception:
+        except Exception as e:
+            _warn(f"lineup_amp.teammate_{tid}", e)
             continue
     detail.update({
         'teammates_checked': teammates_checked,
@@ -565,7 +576,8 @@ def _todays_team_to_opp_sp(today_iso: str) -> dict[str, int]:
                f'&hydrate=probablePitcher,team')
         with urllib.request.urlopen(url, timeout=10) as resp:
             data = json.loads(resp.read())
-    except Exception:
+    except Exception as e:
+        _warn("probables_fetch", e)
         return {}
     result: dict[str, int] = {}
     for d_block in data.get('dates', []):

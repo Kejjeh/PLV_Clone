@@ -86,8 +86,8 @@ def main():
     print(f'═══ TEAM EVAL — {team["teamName"]} vs ESPN free agents ═══\n')
 
     # Pull free agents from ESPN
-    print('Fetching ESPN free agents (size=400)...')
-    fa = get_free_agents(size=400)
+    print('Fetching ESPN free agents (size=2000)...')
+    fa = get_free_agents(size=2000)
     print(f'  got {len(fa)} free agents\n')
     fa_pitchers = fa[fa['position'].isin(['SP','RP','P'])]
     fa_hitters = fa[~fa['position'].isin(['SP','RP','P'])]

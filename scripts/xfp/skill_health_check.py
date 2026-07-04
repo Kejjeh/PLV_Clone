@@ -25,7 +25,7 @@ import pandas as pd
 from plv_clone.projections import PROJECTIONS
 import numpy as np
 
-ROOT = Path('c:/Users/Joshua/plv_clone')
+from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 RES = ROOT / 'data' / 'research'

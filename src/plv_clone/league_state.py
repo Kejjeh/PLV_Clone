@@ -27,6 +27,7 @@ window.
 from __future__ import annotations
 
 import logging
+import time
 from typing import Optional
 
 import pandas as pd
@@ -56,6 +57,64 @@ ESPN's per-position filter returns at most ``size`` candidates ranked by
 ownership %, so low-owned high-FP candidates get silently dropped if a
 smaller cap is used. See `feedback_fa_pool_size_cap.md`.
 """
+
+# ── Per-process TTL cache (2026-07-04 audit: 4→1 ESPN roundtrips) ────────
+#
+# Keyed by (frame_name, id(league)) so injected test doubles never share
+# entries with the real league (or with each other). Values are
+# (monotonic_timestamp, DataFrame). Callers get a defensive .copy() so
+# cached frames can't be mutated in place.
+
+CACHE_TTL_SECONDS: float = 300.0
+_TTL_CACHE: dict[tuple[str, int], tuple[float, pd.DataFrame]] = {}
+
+
+def _cache_get(key: tuple[str, int]) -> pd.DataFrame | None:
+    hit = _TTL_CACHE.get(key)
+    if hit is None:
+        return None
+    ts, val = hit
+    if time.monotonic() - ts > CACHE_TTL_SECONDS:
+        _TTL_CACHE.pop(key, None)
+        return None
+    return val.copy()
+
+
+def _cache_put(key: tuple[str, int], val: pd.DataFrame) -> None:
+    _TTL_CACHE[key] = (time.monotonic(), val.copy())
+
+
+def clear_ttl_cache() -> None:
+    """Drop every cached frame (tests / force-refresh flows)."""
+    _TTL_CACHE.clear()
+
+
+def _schema_sentinel(df: pd.DataFrame) -> None:
+    """espn-api schema-drift tripwire (audit 2026-07-04, quick win #9).
+
+    After a roster walk, if NO player carries a nonempty ``lineup_slot``
+    OR >10% of players have a null ``player_id``, the installed espn-api
+    version has almost certainly renamed/moved the underlying attributes
+    (``lineupSlot`` / ``playerId``) — every downstream IL-slot count and
+    injury join would silently degrade. Fail loud instead.
+    """
+    if df.empty:
+        return
+    slots = df.get("lineup_slot")
+    any_slot = bool(
+        slots is not None and slots.astype(str).str.strip().ne("").any()
+    )
+    ids = df.get("player_id")
+    null_id_frac = float(ids.isna().mean()) if ids is not None else 1.0
+    if (not any_slot) or null_id_frac > 0.10:
+        raise RuntimeError(
+            "espn-api schema drift: roster walk returned "
+            f"{'no nonempty lineup_slot values' if not any_slot else ''}"
+            f"{' and ' if (not any_slot) and null_id_frac > 0.10 else ''}"
+            f"{f'{null_id_frac:.0%} null player_id' if null_id_frac > 0.10 else ''}"
+            " — check the installed espn-api version against the "
+            "'espn-api>=0.35,<0.47' pin in pyproject.toml."
+        )
 
 
 class LeagueState:
@@ -106,7 +165,7 @@ class LeagueState:
 
     # ── Rosters ──────────────────────────────────────────────────────────
 
-    def my_roster(self) -> pd.DataFrame:
+    def my_roster(self, *, fresh: bool = False) -> pd.DataFrame:
         """DataFrame of players on the user's team.
 
         Columns: ``player_name``, ``player_id``, ``position``, ``pro_team``,
@@ -116,7 +175,15 @@ class LeagueState:
         Callers who want only the injured subset filter ``injured==True``
         themselves. There is NO ``injured_players()`` convenience — see
         ADR-0004 for why the absence is the enforcement mechanism.
+
+        Results are cached per-process for ``CACHE_TTL_SECONDS``; pass
+        ``fresh=True`` to bypass and refresh the cache.
         """
+        key = ("my_roster", id(self._get_league()))
+        if not fresh:
+            cached = _cache_get(key)
+            if cached is not None:
+                return cached
         my_team = self._find_my_team()
         rows = []
         for player in my_team.roster:
@@ -131,7 +198,10 @@ class LeagueState:
                 "injury_status": getattr(player, "injuryStatus", "") or "",
                 "on_team_name": getattr(my_team, "team_name", ""),
             })
-        return pd.DataFrame(rows)
+        df = pd.DataFrame(rows)
+        _schema_sentinel(df)
+        _cache_put(key, df)
+        return df
 
     def my_roster_with_injuries(self) -> pd.DataFrame:
         """``my_roster()`` + ESPN injury details merged on ``player_id``.
@@ -151,14 +221,26 @@ class LeagueState:
             return roster
         return roster.merge(inj_df, on="player_id", how="left")
 
-    def all_teams(self) -> pd.DataFrame:
+    def all_teams(self, *, fresh: bool = False) -> pd.DataFrame:
         """DataFrame of every team + roster across the league.
 
         Columns: ``team_name``, ``owner``, ``team_id``, ``player_name``,
-        ``position``, ``pro_team``. Used internally by ``available_fa``
-        to verify that ESPN's free-agent endpoint hasn't lagged.
+        ``player_id``, ``position``, ``pro_team``, ``lineup_slot``,
+        ``injured``, ``injury_status`` — a schema SUPERSET of
+        ``app.espn_connector.get_all_teams()`` so importers can migrate
+        without column-availability surprises (audit 2026-07-04). Used
+        internally by ``available_fa`` to verify that ESPN's free-agent
+        endpoint hasn't lagged.
+
+        Results are cached per-process for ``CACHE_TTL_SECONDS``; pass
+        ``fresh=True`` to bypass and refresh the cache.
         """
         league = self._get_league()
+        key = ("all_teams", id(league))
+        if not fresh:
+            cached = _cache_get(key)
+            if cached is not None:
+                return cached
         rows = []
         for team in league.teams:
             for player in team.roster:
@@ -167,10 +249,17 @@ class LeagueState:
                     "owner": getattr(team, "owner", ""),
                     "team_id": team.team_id,
                     "player_name": player.name,
+                    "player_id": getattr(player, "playerId", None),
                     "position": getattr(player, "position", ""),
                     "pro_team": getattr(player, "proTeam", ""),
+                    "lineup_slot": getattr(player, "lineupSlot", ""),
+                    "injured": bool(getattr(player, "injured", False)),
+                    "injury_status": getattr(player, "injuryStatus", "") or "",
                 })
-        return pd.DataFrame(rows)
+        df = pd.DataFrame(rows)
+        _schema_sentinel(df)
+        _cache_put(key, df)
+        return df
 
     # ── IL accounting (slot, not status) ────────────────────────────────
 
@@ -195,7 +284,9 @@ class LeagueState:
 
     # ── Free agents (size baked in, cross-team verified) ────────────────
 
-    def available_fa(self, position: Optional[str] = None) -> pd.DataFrame:
+    def available_fa(
+        self, position: Optional[str] = None, *, fresh: bool = False
+    ) -> pd.DataFrame:
         """Free agents *actually* available in the BrownU league.
 
         Pulls the unfiltered FA pool (``size=2000`` — internal default,
@@ -211,43 +302,51 @@ class LeagueState:
                 etc.) to filter the unfiltered pool down to. ``None``
                 returns all positions.
 
+        The raw size=2000 pull is cached per-process for
+        ``CACHE_TTL_SECONDS`` (position filtering and cross-team
+        verification always run on top of the cached raw pool). Pass
+        ``fresh=True`` to bypass and refresh the cache.
+
         Returns:
             DataFrame with columns ``player_name``, ``position``,
             ``pro_team``, ``percent_owned``.
         """
         league = self._get_league()
+        key = ("fa_pool_raw", id(league))
+        raw_df = None if fresh else _cache_get(key)
 
-        # Always pull the full size=2000 pool. Position is applied as a
-        # manual post-filter — never via per-position size=N calls,
-        # because those silently truncate (feedback_fa_pool_size_cap.md).
-        try:
-            fas = league.free_agents(size=_FA_POOL_SIZE)
-        except TypeError:
-            # Old espn-api shim: drop the kwarg form
-            fas = league.free_agents(_FA_POOL_SIZE)
+        if raw_df is None:
+            # Always pull the full size=2000 pool. Position is applied as a
+            # manual post-filter — never via per-position size=N calls,
+            # because those silently truncate (feedback_fa_pool_size_cap.md).
+            try:
+                fas = league.free_agents(size=_FA_POOL_SIZE)
+            except TypeError:
+                # Old espn-api shim: drop the kwarg form
+                fas = league.free_agents(_FA_POOL_SIZE)
+
+            rows = []
+            for player in fas:
+                rows.append({
+                    "player_name": player.name,
+                    "position": getattr(player, "position", "") or "",
+                    "pro_team": getattr(player, "proTeam", ""),
+                    "percent_owned": getattr(player, "percent_owned", 0.0),
+                })
+            raw_df = pd.DataFrame(rows)
+            _cache_put(key, raw_df)
 
         wanted_pos = position.upper() if position else None
-
-        rows = []
-        for player in fas:
-            pos = getattr(player, "position", "") or ""
-            if wanted_pos is not None and pos != wanted_pos:
-                continue
-            rows.append({
-                "player_name": player.name,
-                "position": pos,
-                "pro_team": getattr(player, "proTeam", ""),
-                "percent_owned": getattr(player, "percent_owned", 0.0),
-            })
-
-        fa_df = pd.DataFrame(rows)
+        fa_df = raw_df
+        if wanted_pos is not None and not fa_df.empty:
+            fa_df = fa_df[fa_df["position"] == wanted_pos].reset_index(drop=True)
         if fa_df.empty:
             return fa_df
 
         # Cross-team verification — drop any name that's actually rostered.
         # Without this, ESPN's FA endpoint can lag and surface "available"
         # players that another team already grabbed.
-        rostered = self.all_teams()
+        rostered = self.all_teams(fresh=fresh)
         if not rostered.empty and "player_name" in rostered.columns:
             rostered_names = set(rostered["player_name"].dropna().tolist())
             fa_df = fa_df[~fa_df["player_name"].isin(rostered_names)].reset_index(
@@ -515,8 +614,28 @@ class LeagueState:
         return pd.DataFrame(rows)
 
 
+_DEFAULT_STATE: LeagueState | None = None
+
+
+def default_state() -> LeagueState:
+    """Shared per-process ``LeagueState`` for script call-sites.
+
+    Scripts migrating off ``app.espn_connector`` should use this instead
+    of constructing ad-hoc instances, so the TTL cache and the lazily
+    authenticated league handle are shared across every call-site in the
+    process.
+    """
+    global _DEFAULT_STATE
+    if _DEFAULT_STATE is None:
+        _DEFAULT_STATE = LeagueState()
+    return _DEFAULT_STATE
+
+
 __all__ = [
     "LeagueState",
+    "default_state",
+    "clear_ttl_cache",
+    "CACHE_TTL_SECONDS",
     "fuzzy_match_name",
     "merge_with_model",
     "IL_SLOT_COUNT",
