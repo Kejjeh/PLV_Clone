@@ -73,17 +73,21 @@ The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring
 
 ---
 
-## 4. Fix backlog (ranked; see audit 2026-07-03)
+## 4. Fix backlog (ranked; audit 2026-07-03, progress 2026-07-04)
 
-| # | Sev | Fix | Where |
+| # | Sev | Fix | Status |
 |---|---|---|---|
-| 1 | 🔴 CRIT | Migrate scoring formula off ~30 inline copies — **start with LIVE producer** `refresh_boxscores.py` + `lib/boom_bust.py` (needs value-parity validation) | owner `fantasy/scoring.py` |
-| 2 | 🔴 CRIT | FA-pool size<2000 → `available_fa()` | dashboard.py, matchup:1618 |
-| 3 | 🟠 HIGH | Delete 2 inline `PARK_FACTORS` dicts; point `boom_stack:54` at `extra_lenses` | validate_drift_v5_* |
-| 4 | 🟠 HIGH | Collapse 73 name-normalizer copies → `name_match`; kill NFKD-ascii variants first | scripts/xfp |
-| 5 | 🟠 HIGH | One `get_probables()` for the 8 duplicated fetches | owner `mlb_stats.py` |
-| 6 | 🟠 HIGH | ✅ boom/bust named consts done — now fix stale `boom>=20` doc | hitter-slate-grid:788 |
-| 7 | 🟠 HIGH | ✅ `STARTS_PER_SP_PER_WEEK` done — now route 8 aliases + 4 skills | cap_math |
-| 8 | 🟠 HIGH | `detect_pitcher_role` in sp-week-plan + pregame-check; `resolve_pitcher_id` in fa-rp-pool (str.contains) | 3 skills |
+| 1 | 🔴 CRIT | Scoring formula → `fantasy/scoring.py` | ✅ **lib/boom_bust (4 sites) migrated** w/ parity gate; refresh_boxscores was already on the seam (audit false-positive). ~25 research scripts remain (mechanical) |
+| 2 | 🔴 CRIT | FA-pool size<2000 → `available_fa()` | ✅ **done** (dashboard default 2000 + matchup:1618) |
+| 3 | 🟠 HIGH | Delete 2 inline `PARK_FACTORS` dicts; point `boom_stack:54` at `extra_lenses` | ⬜ pending (validate_drift_v5_*, boom_stack) |
+| 4 | 🟠 HIGH | Collapse 73 name-normalizer copies → `name_match`; kill NFKD-ascii first | ⬜ pending (mechanical sweep — do as isolated workflow) |
+| 5 | 🟠 HIGH | One `get_probables()` for the 8 duplicated fetches | ⬜ pending (owner `mlb_stats.py`) |
+| 6 | 🟠 HIGH | boom/bust named consts + fix stale `boom>=20` | ✅ **done** (consts + build_sp_pl_board + hitter-slate-grid doc) |
+| 7 | 🟠 HIGH | `STARTS_PER_SP_PER_WEEK` owner + route consumers | ✅ **owner done**; sp-week-plan routed; ~7 engines pending |
+| 8 | 🟠 HIGH | role/resolve in sp-week-plan + pregame-check + fa-rp-pool | ✅ **done** (all three) |
+| — | 🟡 MED | fa-monitor signal-count doc (3/6 → 11) | ✅ **done** |
 
-**Legend:** ✅ shipped · ⚠️ owner exists, adopt it · 🔴 needs careful validated migration.
+**Merges (structural — dedicated follow-ups, NOT rushed):** `sp-slate-grid`+`sp-pl-board`→`sp-board`;
+`fa-sp-pool`+`fa-rp-pool`→`fa-pitcher-pool`; absorb `boom-stack-explain`. **New skill pending:** `buy-low-sell-high-scan`.
+
+**Legend:** ✅ shipped · ⬜ pending · 🔴 needs validated migration.

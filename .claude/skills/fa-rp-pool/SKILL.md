@@ -65,12 +65,23 @@ external source:
 
 ```python
 from app.espn_connector import get_all_teams
-teams = get_all_teams()
+from plv_clone.utils.name_match import resolve_pitcher_id, join_key
 
-for name in candidates_of_interest:
-    on_roster = teams[teams['player_name'].str.contains(name, case=False, na=False)]
-    if len(on_roster):
-        print(f"ROSTERED: {name} on {on_roster.iloc[0]['team_name']} — NOT FA")
+teams = get_all_teams()
+# Resolve every rostered pitcher to MLBAM once (collision-safe owner). NEVER use
+# str.contains(name) — a surname substring grabs the wrong same-name pitcher
+# (Will vs Austin Warren; the Garcias). gotcha #10.
+rostered_ids = {resolve_pitcher_id(n, team=t): tm
+                for n, t, tm in zip(teams['player_name'], teams['pro_team'], teams['team_name'])}
+rostered_ids.pop(None, None)
+rostered_norm = {join_key(n) for n in teams['player_name']}  # fallback for unresolved
+
+for name, team_hint in candidates_of_interest:   # (name, pro_team) tuples
+    pid = resolve_pitcher_id(name, team=team_hint, role='RP')
+    hit = (pid in rostered_ids) or (join_key(name) in rostered_norm)
+    if hit:
+        owner = rostered_ids.get(pid, '?')
+        print(f"ROSTERED: {name} on {owner} — NOT FA")
 ```
 
 Run this BEFORE recommending any PL-ranked RP as a pickup.
