@@ -1174,6 +1174,15 @@ from _player_profiles_template import render_page  # noqa: E402
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--payload-only', action='store_true',
+                    help='rewrite only the data file (daily refresh path); '
+                         'skip regenerating the shell HTML')
+    ap.add_argument('--embed', action='store_true',
+                    help='legacy single-file build (payload inline in the HTML)')
+    args = ap.parse_args()
+
     print('Building Player Profiles dashboard...', flush=True)
     payload = build_payload()
     print(f'  payload: {len(payload["hitters"])} hitter-years, '
@@ -1181,21 +1190,46 @@ def main():
           f'{len(payload.get("rps", []))} RP-years, years '
           f'{payload["years"][0]}-{payload["years"][-1]}', flush=True)
 
-    html = render_page(payload)
-
     OUT_LOCAL.parent.mkdir(parents=True, exist_ok=True)
-    OUT_LOCAL.write_text(html, encoding='utf-8')
-    print(f'  wrote {OUT_LOCAL}  ({len(html):,} bytes)', flush=True)
+    DATA_NAME = 'player_profiles_data.js'
+    data_local = OUT_LOCAL.parent / DATA_NAME
+    data_pub = OUT_PUB.parent / DATA_NAME
 
-    if OUT_PUB.parent.exists():
-        shutil.copy2(OUT_LOCAL, OUT_PUB)
-        sz = OUT_PUB.stat().st_size
-        if sz < 50_000:
-            _fail(f'published file unexpectedly small: {sz} bytes')
-        print(f'  mirrored to {OUT_PUB}  ({sz:,} bytes)', flush=True)
-    else:
-        print(f'  ⚠ xfp-model/docs not found at {OUT_PUB.parent} — skipped mirror',
-              flush=True)
+    def _publish(src, dst, floor):
+        if dst.parent.exists():
+            shutil.copy2(src, dst)
+            sz = dst.stat().st_size
+            if sz < floor:
+                _fail(f'published file unexpectedly small: {dst} {sz} bytes')
+            print(f'  mirrored to {dst}  ({sz:,} bytes)', flush=True)
+        else:
+            print(f'  ⚠ {dst.parent} not found — skipped mirror', flush=True)
+
+    if args.embed:
+        # Legacy single-file build.
+        html = render_page(payload)
+        OUT_LOCAL.write_text(html, encoding='utf-8')
+        print(f'  wrote {OUT_LOCAL}  ({len(html):,} bytes, embedded)', flush=True)
+        _publish(OUT_LOCAL, OUT_PUB, 50_000)
+        print('Done.', flush=True)
+        return
+
+    # Split build (default 2026-07-04): data file always; shell unless --payload-only.
+    from _player_profiles_template import render_data_js
+    data_js = render_data_js(payload)
+    data_local.write_text(data_js, encoding='utf-8')
+    print(f'  wrote {data_local}  ({len(data_js):,} bytes)', flush=True)
+
+    if not args.payload_only:
+        html = render_page(payload, external_data_src=DATA_NAME)
+        OUT_LOCAL.write_text(html, encoding='utf-8')
+        print(f'  wrote {OUT_LOCAL}  ({len(html):,} bytes shell)', flush=True)
+    elif not OUT_LOCAL.exists():
+        _fail('--payload-only but no existing shell HTML — run a full build first')
+
+    if not args.payload_only:
+        _publish(OUT_LOCAL, OUT_PUB, 50_000)
+    _publish(data_local, data_pub, 1_000_000)
 
     print('Done.', flush=True)
 

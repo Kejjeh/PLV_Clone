@@ -1,11 +1,11 @@
 ---
 name: fa-monitor
-description: Proactive weekly scan of the FA pool across 11 signal types — 6 core (SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) + 5 RP-leverage (leverage-rise, new-closer, fireman-breakout, velo-spike, multi-inning value) — outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
+description: Proactive weekly scan of the FA pool across 12 signal types — 6 core (SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) + 5 RP-leverage (leverage-rise, new-closer, fireman-breakout, velo-spike, multi-inning value) — outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
 ---
 
 # fa-monitor
 
-Proactive weekly scan of the FA pool across 11 signal types (6 core — SP early-start
+Proactive weekly scan of the FA pool across 12 signal types (6 core — SP early-start
 performance, RP closer opportunity, hitter sustained xwOBA, drafted-then-dropped, IL
 return, role-change RP; + 5 RP-leverage — leverage-rise, new-closer, fireman-breakout,
 velo-spike, multi-inning value) — to surface
@@ -23,7 +23,7 @@ Monday-morning routine alongside `/roster-audit`.
 ## Common one-liners
 
 ```bash
-# Full Monday-morning scan (all 14 signals, A-N)
+# Full Monday-morning scan (all 12 signals, A-O)
 python scripts/xfp/run_fa_monitor.py
 
 # HIGH alerts only, JSON output for downstream consumers
@@ -43,7 +43,7 @@ into final adds, use `/fa-signal-to-decision`.
 
 ## Lens framing (Pattern A — independent signals with named failure modes)
 
-The 14 signals are **independent lenses** with different anchors and different
+The 12 signals are **independent lenses** with different anchors and different
 blind spots. The diagnostic value is in *which* lens fired (and which didn't).
 
 | Signal | Anchor | Failure mode |
@@ -89,6 +89,7 @@ All signals live here. Add new signals to this table when validated.
 | L | FIREMAN_BREAKOUT | RP | FIREMAN tag True in 2026 AND False in 2025 (IS% ≥ 80, IR ≥ 20) | HIGH if rprs2 rank ≤ 60 AND gmLI ≥ 1.3; MED otherwise | 2026-05-30 |
 | M | VELO_SPIKE_RP | RP | VELO rating (20-80 scale) +5 vs 2025 AND swstr_pct +0.5pp vs 2025 | HIGH if VELO Δ ≥ 8 AND swstr Δ ≥ 1.5pp; MED if VELO Δ ≥ 5 AND swstr Δ ≥ 1.0pp; LOW otherwise | 2026-05-30 |
 | N | MULTI_INNING_BULK_VALUE | RP | MULTI_INNING_BULK_26 True AND rprs2 rank ≤ 80 | HIGH if rprs2 ≤ 50 + gmLI ≥ 1.2 OR new MIB role; MED if rank ≤ 60; LOW otherwise | 2026-05-30 |
+| O | RATING_ARC_RISER | SP/H | FA whose validated key pillar (SP STUFF / hitter CONTACT) rose ≥ +5 rating pts over ~4wks (lib/rating_arc owner) | HIGH if Δ ≥ +8; MONITOR if ≥ +5. Rule 13: triggers /triangulate, never ranks | 2026-07-04 |
 
 ---
 

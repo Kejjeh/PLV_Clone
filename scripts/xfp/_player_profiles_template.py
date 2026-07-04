@@ -4485,8 +4485,25 @@ CLOSE = """
 """
 
 
-def render_page(payload: dict) -> str:
-    payload_json = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+def render_data_js(payload: dict) -> str:
+    """The payload as a standalone JS file (window.PROFILES_DATA = ...).
+
+    Split from the shell (2026-07-04) so the daily refresh rewrites a data file
+    while the ~1MB shell stays byte-stable — smaller diffs in xfp-model, browser
+    caches the shell, and template changes no longer re-serialize 40MB of data."""
+    return ('window.PROFILES_DATA = '
+            + json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+            + ';\n')
+
+
+def render_page(payload: dict, external_data_src: str | None = None) -> str:
+    """Full page. With external_data_src, the payload is NOT embedded — the shell
+    loads it via <script src> (must be emitted alongside via render_data_js)."""
+    if external_data_src:
+        data_script = f'<script src="{external_data_src}"></script>\n'
+    else:
+        payload_json = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+        data_script = f'<script>window.PROFILES_DATA = {payload_json};</script>\n'
     meta = (f'<div class="meta">Generated {payload["last_refresh"]} · '
             f'{len(payload["hitters"])} hitter-years · '
             f'{len(payload["sps"])} SP-years · '
@@ -4502,6 +4519,6 @@ def render_page(payload: dict) -> str:
             + MODAL_HTML
             + meta
             + CLOSE
-            + f'<script>window.PROFILES_DATA = {payload_json};</script>\n'
+            + data_script
             + JS
             + '</body>\n</html>\n')

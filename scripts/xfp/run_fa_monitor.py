@@ -1,5 +1,5 @@
 """
-FA Monitor — weekly scan across 11 signals to surface high-value pickups.
+FA Monitor — weekly scan across 12 signals to surface high-value pickups.
 
 Signals:
   A - SP First-Start Alert (strong early fp_proxy, pre-claim window)
@@ -15,6 +15,10 @@ RP archetype-layer signals (added 2026-05-30):
   L - FIREMAN_BREAKOUT    (FIREMAN_26 True, FIREMAN_25 False)
   M - VELO_SPIKE_RP       (VELO rating +5 vs 2025 AND swstr_pct +0.5pp)
   N - MULTI_INNING_BULK_VALUE (MIB tag in 2026, rprs2 per-game rate at replacement closer)
+
+Rating-arc signal (added 2026-07-04, lib/rating_arc owner):
+  O - RATING_ARC_RISER (FA whose validated key pillar — SP STUFF / hitter CONTACT —
+      rose >= +5 rating points over ~4 weeks; process moves before results)
 
 Usage:
   python scripts/xfp/run_fa_monitor.py
@@ -791,6 +795,49 @@ def signal_n_mib_value(fa_rps, rp_join, rprs2):
 # Output
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Signal O — Rating-arc riser (in-season STUFF/CONTACT arc, lib/rating_arc owner)
+# ---------------------------------------------------------------------------
+
+def signal_o_rating_arc(fa_sps, fa_hits):
+    """FA players whose load-bearing rating pillar (SP STUFF / hitter CONTACT —
+    the 2026-07-04 validated forward carriers) rose >= +5 points over ~4 weeks.
+    Process moves before results — the early-add window. Rule 13: the arc is
+    context; the alert exists to trigger a /triangulate, not to rank."""
+    from lib.rating_arc import rating_arcs
+    fa_names = {_norm(p.name) for p in fa_sps} | {_norm(p.name) for p in fa_hits}
+    results = []
+    for role in ("sp", "hitter"):
+        try:
+            df = rating_arcs(role)
+        except Exception as e:
+            print(f"  (signal O: {role} arcs unavailable — {e})")
+            continue
+        if not len(df):
+            continue
+        df = df[df["player_name"].notna()]
+        risers = df[(df["arc"] == "RISER")]
+        for _, r in risers.iterrows():
+            if _norm(r["player_name"]) not in fa_names:
+                continue
+            d = int(r["key_delta"])
+            results.append({
+                "signal": "O",
+                "player": r["player_name"],
+                "role": role.upper(),
+                "pillar": r["key_pillar"],
+                "arc": f"{r[r['key_pillar'].lower() + '_then']}->{r[r['key_pillar'].lower() + '_now']}",
+                "delta": d,
+                "window": f"{r['date_then']}..{r['date_now']}",
+                "priority": "HIGH" if d >= 8 else "MONITOR",
+                "note": (f"{r['key_pillar']} {r[r['key_pillar'].lower() + '_then']}->"
+                         f"{r[r['key_pillar'].lower() + '_now']} ({d:+d}) over "
+                         f"{r['gap_days']}d — process riser, cross-check /triangulate"),
+            })
+    results.sort(key=lambda x: -x["delta"])
+    return results
+
+
 _SIG_LABELS = {
     "A": "SP first-start",
     "B": "RP closer/setup",
@@ -803,6 +850,7 @@ _SIG_LABELS = {
     "L": "FIREMAN_BREAKOUT",
     "M": "VELO_SPIKE_RP",
     "N": "MULTI_INNING_BULK_VALUE",
+    "O": "RATING_ARC_RISER",
 }
 
 _RP_NEW_SIGS = {"J", "K", "L", "M", "N"}
@@ -882,7 +930,7 @@ def print_results(all_results: list[dict]):
 
 def main():
     parser = argparse.ArgumentParser(description="Weekly FA monitor — 11 signals")
-    parser.add_argument("--signals", default="A,B,C,D,E,F,J,K,L,M,N",
+    parser.add_argument("--signals", default="A,B,C,D,E,F,J,K,L,M,N,O",
                         help="Comma-separated list of signals to run (default: all)")
     args = parser.parse_args()
 
@@ -947,6 +995,10 @@ def main():
     if "N" in active:
         print("Running Signal N (MULTI_INNING_BULK_VALUE)...")
         all_results += signal_n_mib_value(fa_rps, rp_join, rprs2)
+
+    if "O" in active:
+        print("Running Signal O (RATING_ARC_RISER — in-season STUFF/CONTACT arc)...")
+        all_results += signal_o_rating_arc(fa_sps, fa_hits)
 
     print_results(all_results)
 

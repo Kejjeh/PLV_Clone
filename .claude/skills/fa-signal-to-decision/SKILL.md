@@ -7,7 +7,7 @@ description: Meta-skill that chains fa-monitor (HIGH alerts only) → fa-pickup-
 
 Chains two skills that are almost always used sequentially:
 
-1. **fa-monitor** → pull HIGH-priority alerts across all 11 signals
+1. **fa-monitor** → pull HIGH-priority alerts across all 12 signals
 2. **fa-pickup-deep-dive** → run full deep-dive on each HIGH hit (cap at 3)
 3. **Rank and recommend** → final add/pass decision with comparative context
 
