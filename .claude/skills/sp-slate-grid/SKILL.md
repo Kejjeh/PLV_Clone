@@ -220,6 +220,24 @@ try:
 except Exception:
     decline_lookup = {}   # fail-soft: column renders blank if FG cache offline
 
+# ── Layer 5c: Floor + Conviction context columns (item 1) ──────────────
+# Both display-only (Rule 13) — never move Blended xFP / rp3 / the ranking.
+#   Floor: K-BB bust risk -> FLOOR-RISK (RISKY tier the mean hides, red) /
+#          SAFE-FLOOR (SAFE tier the mean under-credits, green) / blank.
+#   Conv : model-vs-process divergence -> PROCESS>MODEL (buy-low) /
+#          MODEL>PROCESS (sell-high) / blank.
+from lib.extra_lenses import floor_lens, floor_adjusted_xfp, floor_flag
+from run_conviction_scan import scan as _conv_scan
+_conv = {int(m): t for m, t in zip(*[_conv_scan('sp')[c] for c in ('mlbam', 'tag')]) if isinstance(t, str) and t}
+def floor_col(name, per_start):
+    fl = floor_lens(name)
+    if not fl or fl.get('bust_prob') is None:
+        return None
+    _, pen = floor_adjusted_xfp(per_start, fl['bust_prob'])
+    return floor_flag(pen, fl.get('tier'))      # FLOOR-RISK / SAFE-FLOOR / None
+def conv_col(mlbam):
+    return _conv.get(int(mlbam)) if mlbam else None
+
 # ── Layer 7: PL daily streamer ranks — see Step 4 for freshness gating ─
 # (auto-fetch if cache >2d stale; paywall fallback to nearest cached date)
 

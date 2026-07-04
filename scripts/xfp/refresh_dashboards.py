@@ -424,8 +424,15 @@ def main():
         print('  ⚠ sp_boom_stack_full_pool failed — continuing (non-gating)')
 
     # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
+    # --payload-only (item 16, 2026-07-04): the shell is now BYTE-STABLE (meta line
+    # renders client-side from the payload), so the daily refresh only rewrites the
+    # ~40MB data.js and skips re-emitting the ~1MB shell. First build (no shell yet)
+    # OR a template change (delete the shell / run without the flag once) does a full
+    # build to republish the shell.
+    _pp_shell = os.path.join(ROOT, 'data', 'outputs', 'player_profiles.html')
+    _pp_flag = ' --payload-only' if os.path.exists(_pp_shell) else ''
     ok_profiles = run('4.5. Build player_profiles.html (archetype browser)',
-                      'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py',
+                      f'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py{_pp_flag}',
                       timeout=420)   # 40MB embed reads the big rolling CSVs; 120s timed
                       # out on the self-hosted runner and killed the whole refresh.
 

@@ -151,6 +151,18 @@ bs_lookup = {c['batter_id']: c for c in bs_data['candidates']}
 # Layer 6: PL Top 150 — keyed on name (resolve to MLBAM via name_match)
 with open('data/research/pl_cache/pl_hitters_top150.json') as f:
     pl_top = json.load(f).get('ranks', {})
+
+# Layer 7: Conviction context column (item 1) — model-vs-process divergence.
+# Display-only (Rule 13): never moves rh3 / Blended xFP / the ranking.
+#   Conv: PROCESS>MODEL (CONTACT pct > model pct) / MODEL>PROCESS / blank.
+# CAVEAT — the hitter buy-low flavor (PROCESS>MODEL) was REJECTED as an
+# additive signal (-0.069 FP/PA, 705defc); show it for CONTEXT/conflict only,
+# NOT as an acquisition signal. NOTE: the SP-only `Floor` column (K-BB bust
+# risk) does NOT apply to hitters — leave it out of the hitter grid.
+from run_conviction_scan import scan as _conv_scan
+_conv = {int(m): t for m, t in zip(*[_conv_scan('hitter')[c] for c in ('mlbam', 'tag')]) if isinstance(t, str) and t}
+def conv_col(mlbam):
+    return _conv.get(int(mlbam)) if mlbam else None   # CONTEXT ONLY for hitters
 ```
 
 ## Step 4 — Compute on-demand layers for top-15 FAs by Blended xFP

@@ -4508,11 +4508,19 @@ def render_page(payload: dict, external_data_src: str | None = None) -> str:
     else:
         payload_json = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
         data_script = f'<script>window.PROFILES_DATA = {payload_json};</script>\n'
-    meta = (f'<div class="meta">Generated {payload["last_refresh"]} · '
-            f'{len(payload["hitters"])} hitter-years · '
-            f'{len(payload["sps"])} SP-years · '
-            f'{len(payload.get("rps", []))} RP-years · '
-            f'years {payload["years"][0]}–{payload["years"][-1]}</div>')
+    # Meta line is rendered CLIENT-SIDE from PROFILES_DATA (item 16, 2026-07-04)
+    # so the shell is BYTE-STABLE day-to-day: the daily-changing timestamp AND
+    # counts live in the data payload, letting the refresh use --payload-only and
+    # skip re-emitting the ~1MB shell. Populated on DOMContentLoaded, after the
+    # (blocking) data script has defined window.PROFILES_DATA.
+    meta = ('<div class="meta" id="pp-meta"></div>'
+            '<script>window.addEventListener("DOMContentLoaded",function(){'
+            'var d=window.PROFILES_DATA;var m=document.getElementById("pp-meta");'
+            'if(!m||!d||!d.years)return;'
+            'm.textContent="Generated "+d.last_refresh+" \\u00b7 "+d.hitters.length'
+            '+" hitter-years \\u00b7 "+d.sps.length+" SP-years \\u00b7 "'
+            '+((d.rps&&d.rps.length)||0)+" RP-years \\u00b7 years "+d.years[0]'
+            '+"\\u2013"+d.years[d.years.length-1];});</script>')
     return (HEAD
             + '<body>\n'
             + BODY_HEADER

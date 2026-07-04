@@ -1766,6 +1766,25 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
         # Display-only suffix appended to each streamer's projection band.
         live_blend = load_live_blend_map()
 
+        # Floor + conviction context lenses (item 1, 2026-07-04). Both display-
+        # only (Rule 13) — they NEVER move the rp3/exp_fp ranking.
+        #  - floor: floor_adjusted_xfp / floor_flag (K-BB bust risk) keyed by name
+        #  - conviction: run_conviction_scan divergence tag keyed by mlbam
+        try:
+            from lib.extra_lenses import floor_lens, floor_adjusted_xfp, floor_flag
+        except Exception as e:
+            _warn_except('streamers.floor_import', e)
+            floor_lens = floor_adjusted_xfp = floor_flag = None
+        conv_by_mlbam = {}
+        try:
+            from run_conviction_scan import scan as _conv_scan
+            _cdf = _conv_scan('sp')
+            if _cdf is not None and len(_cdf):
+                conv_by_mlbam = {int(m): t for m, t in zip(_cdf['mlbam'], _cdf['tag'])
+                                 if isinstance(t, str) and t}
+        except Exception as e:
+            _warn_except('streamers.conviction_scan', e)
+
         # Validated multipliers
         pf_path = CACHE / 'park_factors_2018_2026.csv'
         ts_path = CACHE / 'team_strength_2026.csv'
@@ -1914,6 +1933,19 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
             # Matchup-tier from opp_idx (mirrors stream_the_stack soft/avg/tough).
             c['matchup_tier'] = _mproj.matchup_tier(opp_idx)
 
+            # Floor lens (item 1) — K-BB bust risk on the per_start mean.
+            # Display-only (Rule 13): does NOT change exp_fp or the ranking.
+            c['floor_flag'] = None
+            if floor_lens is not None:
+                fl = floor_lens(c['name'])
+                if fl and fl.get('bust_prob') is not None:
+                    _fadj, _pen = floor_adjusted_xfp(c['per_start'], fl['bust_prob'])
+                    c['floor_flag'] = floor_flag(_pen, fl.get('tier'))
+                    c['floor_tier'] = fl.get('tier')
+                    c['floor_bust'] = fl.get('bust_prob')
+            # Conviction lens (item 1) — model-vs-process divergence tag.
+            c['conv'] = conv_by_mlbam.get(c['mlbam']) if c.get('mlbam') else None
+
         # Composite ranking: exp_fp DESC, then boom_stack DESC, then
         # matchup_tier (soft > avg > tough), then pct_owned ASC.
         _tier_rank = {'soft': 0, 'avg': 1, 'tough': 2}
@@ -1941,6 +1973,8 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
             '<th>Tier</th>'
             '<th>rp3 (p25–p75)</th>'
             '<th>boom_stack</th>'
+            '<th title="K-BB floor: FLOOR-RISK = RISKY-tier bust the mean hides; SAFE-FLOOR = SAFE-tier mean under-credits (context only)">Floor</th>'
+            '<th title="Model-vs-process divergence: PROCESS&gt;MODEL buy-low / MODEL&gt;PROCESS sell-high (context only)">Conv</th>'
             '<th>Tags</th>'
             '<th>Exp FP</th>'
             '</tr></thead><tbody>',
@@ -1999,6 +2033,25 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
             # Matchup tier color
             tier_cls = {'soft': 'pos', 'tough': 'neg', 'avg': 'muted'}.get(g['matchup_tier'], 'muted')
 
+            # Floor cell (item 1) — red FLOOR-RISK / green SAFE-FLOOR / muted dash
+            ff = g.get('floor_flag')
+            if ff == 'FLOOR-RISK':
+                _tip = f"RISKY floor (bust≈{g.get('floor_bust','?')}%) the mean hides"
+                floor_cell = f'<td class="neg" title="{h(_tip)}">FLOOR-RISK</td>'
+            elif ff == 'SAFE-FLOOR':
+                _tip = f"SAFE floor (bust≈{g.get('floor_bust','?')}%) the mean under-credits"
+                floor_cell = f'<td class="pos" title="{h(_tip)}">SAFE-FLOOR</td>'
+            else:
+                floor_cell = '<td class="muted">·</td>'
+            # Conv cell (item 1) — buy-low / sell-high divergence
+            cv = g.get('conv')
+            if cv == 'PROCESS>MODEL':
+                conv_cell = '<td class="pos" title="STUFF pct &gt; model pct — buy-low watch">PROCESS&gt;MODEL</td>'
+            elif cv == 'MODEL>PROCESS':
+                conv_cell = '<td class="neg" title="model pct &gt; STUFF pct — sell-high watch">MODEL&gt;PROCESS</td>'
+            else:
+                conv_cell = '<td class="muted">·</td>'
+
             out.append(
                 f'<tr>'
                 f'<td>{player_link(g["name"], mlbam=g.get("mlbam"))}</td>'
@@ -2009,6 +2062,8 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
                 f'<td class="{tier_cls}">{g["matchup_tier"]}</td>'
                 f'<td>{band}</td>'
                 f'<td>{bs_cell}</td>'
+                f'{floor_cell}'
+                f'{conv_cell}'
                 f'<td>{chips_html}</td>'
                 f'<td><b>{g["exp_fp"]:.1f}</b> '
                 f'<small class="{adj_class}">({adj_pct:+.0f}%)</small></td>'
