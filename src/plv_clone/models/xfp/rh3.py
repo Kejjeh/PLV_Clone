@@ -333,6 +333,20 @@ def main():
         ]
         rolling = rolling.merge(opp_sp, on=['batter', 'year', 'split_day'], how='left')
         n_missing = int(rolling['ros_opp_sp_xwoba_weighted'].isna().sum())
+        # HARD GUARD (audit 2026-07-04): the cache froze at split 58 for ~6 weeks
+        # and this fillna silently constant-filled 100% of projection rows —
+        # a VALIDATED feature served a year-mean while looking alive. If the
+        # majority of CURRENT-SEASON rows are NaN pre-fill, the cache is frozen
+        # again: fail loudly (refresh step 1.9 rebuilds it daily).
+        _cur_yr = int(rolling['year'].max())
+        _cur = rolling[rolling['year'] == _cur_yr]
+        _cur_nan = float(_cur['ros_opp_sp_xwoba_weighted'].isna().mean()) if len(_cur) else 0.0
+        if _cur_nan > 0.50:
+            raise RuntimeError(
+                f"ros_opp_sp_xwoba_weighted: {_cur_nan:.0%} of {_cur_yr} rows are NaN pre-fill — "
+                "the ros schedule-strength cache looks FROZEN (see "
+                "build_ros_schedule caches / refresh step 1.9). Refusing to "
+                "silently constant-fill a validated feature.")
         year_means = rolling.groupby('year')['ros_opp_sp_xwoba_weighted'].transform('mean')
         rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(year_means)
         rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(

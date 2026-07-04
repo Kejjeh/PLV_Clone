@@ -324,6 +324,11 @@ def attach_lag_and_target(df: pd.DataFrame, multiyr: pd.DataFrame) -> pd.DataFra
     return df
 
 
+# Bump when build_year logic changes (invalidates the per-year immutable cache).
+# NOTE: attach_lag_and_target (multiyr-dependent) runs POST-concat and is never cached.
+BUILDER_VERSION = 1
+
+
 def main():
     print('=== build_rolling_relievers ===')
     if not (CACHE / 'relievers_multiyr_2018_2026.csv').exists():
@@ -332,9 +337,15 @@ def main():
     multiyr = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv')
     print(f'multiyr substrate: {len(multiyr)} rows')
 
+    from lib.disk_cache import year_cached_frame
     frames = []
     for yr in YEARS:
-        sub = build_year(yr)
+        sub = year_cached_frame(
+            'rolling_relievers', yr,
+            lambda yr=yr: build_year(yr),
+            dep_paths=[str(CACHE / f'statcast_{yr}.parquet'),
+                       str(CACHE / f'role_usage_appearances_{yr}.parquet')],
+            version=BUILDER_VERSION)
         if not sub.empty:
             print(f'  [{yr}] {len(sub)} (RP, split) rows')
             frames.append(sub)

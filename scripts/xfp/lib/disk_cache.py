@@ -70,3 +70,25 @@ def disk_cached(name: str, builder, dep_paths, version: int = 1):
     except Exception:
         pass  # caching is best-effort; never fail the build over a cache write
     return val
+
+
+def _current_season() -> int:
+    from datetime import date
+    t = date.today()
+    return t.year if t.month >= 3 else t.year - 1
+
+
+def year_cached_frame(name: str, year: int, builder, dep_paths, version: int = 1):
+    """Per-year immutable frame cache for the rolling builders (audit 2026-07-04:
+    92-95% of each ~345s trio pass recomputed byte-identical 2018-2025 rows daily).
+
+    - IN-PROGRESS season (year >= current): ALWAYS rebuilt, never cached.
+    - Completed years: pickle-cached via disk_cached keyed on (version,
+      dep-file mtime/size signature) — pickle (not parquet) so the cached
+      frame is byte-EXACT (no dtype round-trip; the rows feed rh3/rp3/rprs2
+      training and must reproduce the uncached to_csv byte-for-byte).
+    Bump the caller's BUILDER_VERSION when build_year logic changes.
+    """
+    if year >= _current_season():
+        return builder()
+    return disk_cached(f"{name}_{year}", builder, dep_paths, version=version)

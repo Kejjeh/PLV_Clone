@@ -250,6 +250,10 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     return pd.concat(rows, ignore_index=True) if rows else pd.DataFrame()
 
 
+# Bump when build_year logic changes (invalidates the per-year immutable cache).
+BUILDER_VERSION = 1
+
+
 def main():
     season_starts = {
         2018: '2018-03-29', 2019: '2019-03-20',
@@ -258,9 +262,14 @@ def main():
         2025: '2025-03-27', 2026: '2026-03-26',
     }
     print('=== build_rolling_pitchers ===', flush=True)
+    from lib.disk_cache import year_cached_frame
     frames = []
     for yr, start in season_starts.items():
-        out = build_year(yr, pd.Timestamp(start))
+        out = year_cached_frame(
+            'rolling_pitchers', yr,
+            lambda yr=yr, start=start: build_year(yr, pd.Timestamp(start)),
+            dep_paths=[str(CACHE / f'statcast_{yr}.parquet')],
+            version=BUILDER_VERSION)
         if not out.empty:
             print(f'  [{yr}] {len(out)} (pitcher, split) rows', flush=True)
             frames.append(out)

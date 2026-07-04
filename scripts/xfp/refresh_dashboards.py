@@ -148,6 +148,18 @@ def main():
             'python -X utf8 scripts/xfp/build_rolling_relievers.py',
             timeout=300)
 
+    # 1.9. RoS schedule-strength caches (audit 2026-07-04): these VALIDATED
+    # features (ros_opp_xwoba_weighted, rp3 +0.0145) froze at split 58 for ~6
+    # weeks and silently constant-filled 100% of projection rows. Rebuild the
+    # in-season grid daily, BEFORE the model rebuild consumes them. Fail-soft:
+    # the pipelines' >50%-NaN guard (rh3/rp3) now catches a re-freeze loudly.
+    ok_ros = run('1.9. Rebuild RoS schedule-strength caches',
+                 'python -X utf8 scripts/xfp/build_ros_schedule_features.py && '
+                 'python -X utf8 scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py',
+                 timeout=600)
+    if not ok_ros:
+        print('  ⚠ ros schedule-strength rebuild failed — pipelines may trip the NaN guard')
+
     if not args.no_models:
         # --skip-schedule: build_pitcher_schedule already ran as its own step
         # here (dead duplicate probables pull inside refresh_all otherwise).
