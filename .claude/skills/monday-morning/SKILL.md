@@ -80,11 +80,19 @@ be_used  = (roster['lineup_slot'] == 'BE').sum()
 # Injured not in IL slot — cleanup opportunities
 injured_not_il = roster[(roster['injured']==True) & (roster['lineup_slot']!='IL')]
 
-# SP cap math
-sps_healthy = roster[(roster['position']=='SP') & (roster['lineup_slot']!='IL') & (~roster['injured'])]
+# SP cap math — role + cap from the OWNERS (gotcha #8 + audit 2026-07-04):
+# raw position=='SP' misses dual-eligible starters (Detmers), and hand-typed
+# 1.19/10 forked the cap math.
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role
+from plv_clone.cap_math import SP_CAP, projected_starts, gap_to_cap as cap_gap
+pitchers = roster[roster['eligible_slots'].apply(
+    lambda sl: any(p in str(sl) for p in ('SP', 'RP', 'P')))].copy()
+pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
+sps = pitchers[pitchers['role'] == 'SP']
+sps_healthy = sps[(sps['lineup_slot'] != 'IL') & (~sps['injured'].fillna(False))]
 n_healthy_sp = len(sps_healthy)
-proj_starts  = n_healthy_sp * 1.19
-gap_to_cap   = 10 - proj_starts
+proj_starts  = projected_starts(n_healthy_sp)
+gap_to_cap   = cap_gap(n_healthy_sp)
 
 # IL returns sorted by days
 il_returns = roster[roster['injured']==True].sort_values('days_until_return')
@@ -106,9 +114,10 @@ Using `sps_healthy` from Step 2, run the start projection:
 **Forward-looking forced-drop date** (carry from roster-audit):
 
 ```python
-for _, r in il_returns[il_returns['position']=='SP'].iterrows():
-    projected = (n_healthy_sp + 1) * 1.19
-    if projected >= 10:
+il_sps = il_returns[il_returns.apply(detect_pitcher_role, axis=1) == 'SP']
+for _, r in il_sps.iterrows():
+    projected = projected_starts(n_healthy_sp + 1)
+    if projected >= SP_CAP:
         print(f"FORCED DROP DEADLINE: {r['return_date']} — {r['player_name']} activates → {n_healthy_sp+1} SPs → {projected:.1f}/wk")
         break
 ```

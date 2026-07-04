@@ -47,7 +47,13 @@ roster verification is mandatory.
 from app.espn_connector import _get_league
 league = _get_league()
 fas = league.free_agents(size=2000)   # single unfiltered call
-sps = [p for p in fas if p.position == 'SP']
+# Bucket by ACTUAL role, never the raw ESPN position tag (gotcha #8 — the
+# Detmers dual-eligible bug: position='RP' but a starter). eligible_slots
+# pre-filter keeps the detect_pitcher_role calls cheap.
+from scripts.xfp.lib.pitcher_role import detect_pitcher_role
+sps = [p for p in fas
+       if 'SP' in str(getattr(p, 'eligibleSlots', []))
+       and detect_pitcher_role(p) == 'SP']
 ```
 
 **Do NOT use** `get_free_agents(position='SP', size=300)` — per

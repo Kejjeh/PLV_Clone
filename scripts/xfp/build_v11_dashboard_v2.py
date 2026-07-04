@@ -180,7 +180,7 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
                     'next_opp_team', 'next2_avg_bat_index',
                     'xfp_rp3_per_start_sched', 'is_on_il_at_split',
                     'replacement_xfp_per_start', 'replacement_delta', 'signal',
-                    'prior_source', 'player_name',
+                    'prior_source', 'data_quality_tag', 'player_name',
                     'slump_pct_rank', 'slump_n_comparable', 'slump_bounce_pct',
                     'slump_next_rate', 'slump_delta']
         rp1_keep = [c for c in rp1_keep if c in rp1.columns]
@@ -244,6 +244,7 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
         on_il = bool(int(_il_val)) if pd.notna(_il_val) else False
         signal = r.get('signal') if pd.notna(r.get('signal')) else 'hold'
         prior_source = r.get('prior_source') if pd.notna(r.get('prior_source')) else None
+        dq_tag = r.get('data_quality_tag') if pd.notna(r.get('data_quality_tag')) else None
         slump_pct = num(r.get('slump_pct_rank'), 1)
         slump_n = int(r['slump_n_comparable']) if pd.notna(r.get('slump_n_comparable')) else None
         slump_bounce = num(r.get('slump_bounce_pct'), 1)
@@ -267,6 +268,7 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
             'replDelta': ros_repl_delta,
             'signal': signal,
             'priorSource': prior_source,    # 'mlb_lag' | 'milb_translation' | 'league_mean'
+            'dataQualityTag': dq_tag,       # 'marcel_il' etc — LOW-CONF badge (gotcha #1)
             'slumpPct': slump_pct,          # 0-100; lower = rarer in own career
             'slumpN': slump_n,
             'slumpBouncePct': slump_bounce,
@@ -989,6 +991,12 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                                color: p.rank <= 3 ? colors.accent : colors.dim }}>{p.rank}</td>
                   <td style={{ padding:'7px 8px', whiteSpace:'nowrap' }}>
                     <span style={{ fontSize:14, fontWeight:500 }}>{p.name}</span>
+                    {p.dataQualityTag && String(p.dataQualityTag).startsWith('marcel') && (
+                      <span title="Suppressed Marcel prior (IL / no recent sample) — NOT a real projection; rank by Stuff+ instead (gotcha #1)"
+                            style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,
+                                     padding:'1px 4px', border:`1px solid ${colors.faint}`,
+                                     color:colors.faint, borderRadius:2 }}>LOW-CONF</span>
+                    )}
                     {p.priorSource === 'milb_translation' && (
                       <span title="Prior derived from AAA stats (no recent MLB sample)"
                             style={{ marginLeft:6, fontSize:9, fontFamily:MONO, letterSpacing:1,

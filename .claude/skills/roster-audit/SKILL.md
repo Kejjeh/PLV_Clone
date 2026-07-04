@@ -103,13 +103,14 @@ Then summarize:
 Hard-coded league constants (BrownU, per
 `memory/reference_league_rules.md`):
 - 10-SP-start-per-week cap (only first 10 count)
-- ~1.19 SP starts per active SP per week (empirical)
+- ~1.19 SP starts per active SP per week (empirical — owner: `cap_math.STARTS_PER_SP_PER_WEEK`)
 
 Compute:
 ```
 healthy_sp = count(roster[pos=='SP' AND lineup_slot != 'IL' AND NOT injured])
-projected_starts = healthy_sp * 1.19
-gap_to_cap = 10 - projected_starts
+from plv_clone.cap_math import projected_starts as _proj, gap_to_cap as _gap
+projected_starts = _proj(healthy_sp)   # OWNER (cap_math) — never re-type 1.19/10
+gap_to_cap = _gap(healthy_sp)
 ```
 
 Report:

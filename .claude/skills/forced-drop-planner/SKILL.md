@@ -69,11 +69,12 @@ pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
 sps = pitchers[pitchers['role'] == 'SP']
 
 sps_healthy = sps[(sps['lineup_slot'] != 'IL') & (~sps['injured'])]
+from plv_clone.cap_math import SP_CAP, projected_starts, gap_to_cap
 n_healthy = len(sps_healthy)
-proj_starts = n_healthy * 1.19
+proj_starts = projected_starts(n_healthy)   # OWNER — never re-type 1.19
 
-print(f"Current: {n_healthy} healthy SPs → {proj_starts:.2f} starts/wk vs 10 cap")
-print(f"Gap: {10 - proj_starts:+.2f}")
+print(f"Current: {n_healthy} healthy SPs → {proj_starts:.2f} starts/wk vs {SP_CAP} cap")
+print(f"Gap: {gap_to_cap(n_healthy):+.2f}")
 ```
 
 ---
@@ -90,8 +91,8 @@ events = []
 
 for _, r in il_sps.iterrows():
     cumulative_healthy += 1
-    proj = cumulative_healthy * 1.19
-    over = proj >= 10
+    proj = projected_starts(cumulative_healthy)
+    over = proj >= SP_CAP
     events.append({
         'player': r['player_name'],
         'return_date': r['return_date'],
