@@ -38,6 +38,15 @@ _ROOT = Path(__file__).resolve().parents[3]
 _BOX_PITCHERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_pitchers.parquet"
 _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.parquet"
 
+# The BrownU scoring formula has ONE owner (audit 2026-07-03). Bootstrap src/ so the
+# import works regardless of caller path setup. Proven identical to the old inline
+# formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
+import sys as _sys
+_SRC = _ROOT / "src"
+if str(_SRC) not in _sys.path:
+    _sys.path.insert(0, str(_SRC))
+from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+
 
 def boom_bust_summary(fp_values, *, boom_thr, bust_thr) -> dict | None:
     """Pure: mean/std/min/max/boom%/bust%/trend over realized FP values."""
@@ -101,15 +110,19 @@ def _series_from_box(df, mlbam, bucket: str):
             return None
         sub = sub.sort_values(["game_date", "game_pk"])
         ip = sub["ip"].astype(float)
-        fp = (sub["so"] + ip * 3.3 - sub["h_allowed"] - 2 * sub["er"]
-              - sub["bb_allowed"] - sub["hbp_allowed"])
+        # pitcher_fp is element-wise over Series; SV/HLD default 0 for SP.
         if bucket == "RP":
-            fp = fp + 5 * sub["sv"] + 2 * sub["hld"]
+            fp = pitcher_fp(k=sub["so"], ip=ip, h=sub["h_allowed"], er=sub["er"],
+                            bb=sub["bb_allowed"], hbp=sub["hbp_allowed"],
+                            sv=sub["sv"], hld=sub["hld"])
+        else:
+            fp = pitcher_fp(k=sub["so"], ip=ip, h=sub["h_allowed"], er=sub["er"],
+                            bb=sub["bb_allowed"], hbp=sub["hbp_allowed"])
         return [float(x) for x in fp.tolist()]
     # hitter
     sub = sub.sort_values(["game_date", "game_pk"])
-    fp = (sub["r"] + sub["tb"] + sub["rbi"] + sub["bb"]
-          + sub["hbp"] + sub["sb"] - sub["k"])
+    fp = hitter_fp(r=sub["r"], tb=sub["tb"], rbi=sub["rbi"], bb=sub["bb"],
+                   hbp=sub["hbp"], sb=sub["sb"], k=sub["k"])
     return [float(x) for x in fp.tolist()]
 
 
@@ -166,9 +179,9 @@ def _sp_fp(s) -> float | None:
     ip = _ip_to_float(s.get("inningsPitched", 0) or 0)
     if _is_phantom(s, ip):
         return None
-    return (int(s.get("strikeOuts", 0)) + ip * 3.3 - int(s.get("hits", 0))
-            - 2 * int(s.get("earnedRuns", 0)) - int(s.get("baseOnBalls", 0))
-            - int(s.get("hitBatsmen", 0)))
+    return pitcher_fp(k=int(s.get("strikeOuts", 0)), ip=ip, h=int(s.get("hits", 0)),
+                      er=int(s.get("earnedRuns", 0)), bb=int(s.get("baseOnBalls", 0)),
+                      hbp=int(s.get("hitBatsmen", 0)))
 
 
 def _rp_fp(s) -> float | None:
@@ -177,18 +190,19 @@ def _rp_fp(s) -> float | None:
     ip = _ip_to_float(s.get("inningsPitched", 0) or 0)
     if _is_phantom(s, ip):
         return None
-    return (int(s.get("strikeOuts", 0)) + ip * 3.3 - int(s.get("hits", 0))
-            - 2 * int(s.get("earnedRuns", 0)) - int(s.get("baseOnBalls", 0))
-            - int(s.get("hitBatsmen", 0)) + 5 * int(s.get("saves", 0))
-            + 2 * int(s.get("holds", 0)))
+    return pitcher_fp(k=int(s.get("strikeOuts", 0)), ip=ip, h=int(s.get("hits", 0)),
+                      er=int(s.get("earnedRuns", 0)), bb=int(s.get("baseOnBalls", 0)),
+                      hbp=int(s.get("hitBatsmen", 0)), sv=int(s.get("saves", 0)),
+                      hld=int(s.get("holds", 0)))
 
 
 def _h_fp(s) -> float | None:
     if int(s.get("plateAppearances", 0)) < 1:
         return None
-    tb = int(s.get("totalBases", 0))
-    return (int(s.get("runs", 0)) + tb + int(s.get("rbi", 0)) + int(s.get("baseOnBalls", 0))
-            + int(s.get("hitByPitch", 0)) + int(s.get("stolenBases", 0)) - int(s.get("strikeOuts", 0)))
+    return hitter_fp(r=int(s.get("runs", 0)), tb=int(s.get("totalBases", 0)),
+                     rbi=int(s.get("rbi", 0)), bb=int(s.get("baseOnBalls", 0)),
+                     hbp=int(s.get("hitByPitch", 0)), sb=int(s.get("stolenBases", 0)),
+                     k=int(s.get("strikeOuts", 0)))
 
 
 def _live_series(mlbam, bucket: str, season: int = 2026):
