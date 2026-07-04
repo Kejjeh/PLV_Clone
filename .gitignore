@@ -130,3 +130,25 @@ data/research/xfp_cache/rolling_relievers_2018_2026.csv
 data/research/xfp_cache/rolling_pitchers_2018_2026.csv
 data/outputs/player_profiles.html
 data/outputs/player_profiles_data.js
+
+# Auto-created refresh backups — never hand-edited; the refresh writes fresh
+# each run. Untracked 2026-07-04 (item 17) to stop permanent git growth.
+data/outputs/*.bak*
+
+# Dated daily snapshot files — consumers only read the LATEST (sorted(glob)[-1])
+# or the *_latest companion; boom_stack history is archived to parquet. The
+# per-day copies are pure redundancy (~1.5MB/day of permanent git growth).
+# Untracked 2026-07-04 (item 17); the non-dated *_latest files stay tracked.
+data/outputs/closer_leaders_2*.json
+data/outputs/sp_boom_stack_full_pool_2*.json
+data/outputs/sp_boom_stack_full_pool_2*.md
+data/outputs/stream_the_stack_2*.json
+data/outputs/stream_the_stack_2*.md
+data/outputs/live_blend_xfp_2*.csv
+data/outputs/hitter_boom_stack_2*.json
+data/outputs/hitter_boom_stack_2*.md
+data/outputs/streamer_decision_2*.md
+
+# Weekly FP substrate — 31MB; its producer is now a staged refresh step, kept
+# on disk but untracked 2026-07-04 (item 17).
+data/research/week_level_substrate.csv
