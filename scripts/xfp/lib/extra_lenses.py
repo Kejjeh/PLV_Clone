@@ -341,18 +341,48 @@ def opp_env(bat_index):
     return 'avg'
 
 
+# Venue eras: first season at the CURRENT venue. A multi-year blend is only valid
+# while the team plays in the same park — ATH moved to Sutter Health Park in 2025
+# (pf_R 1.044/1.096, pf_HR 1.05/1.16 vs Coliseum ~0.95-1.00 / 0.76-0.87) and TB's
+# 2026 factor (1.030) matches 2025 Steinbrenner (1.024), not the Trop (~0.93-0.96).
+# Blending across the move called Sutter "neutral" (1.001) when it plays HITTER —
+# caught 2026-07-03 when a streamer board credited a visiting SP +0.9 there.
+VENUE_ERAS = {'ATH': 2025, 'TB': 2025}
+
+
 @functools.lru_cache(maxsize=1)
 def _park_R_map():
-    """Multi-year-stable pf_R per team abbr (PA-weighted mean 2022-2026) — single-year
-    park factors are half-season-noisy (2026 Coors pf_wOBA=1.0165)."""
+    """Multi-year-stable pf_R per team abbr (PA-weighted mean, 2022+ but never earlier
+    than the team's VENUE_ERAS start) — single-year park factors are half-season-noisy
+    (2026 Coors pf_wOBA=1.0165), but blending across a VENUE CHANGE is worse."""
     try:
         import pandas as pd, numpy as np
         p = Path(__file__).resolve().parents[3] / 'data' / 'research' / 'xfp_cache' / 'park_factors_2018_2026.csv'
         df = pd.read_csv(p)
-        df = df[df.year >= 2022]
+        df = df[df.apply(lambda r: r.year >= VENUE_ERAS.get(r.team_abbr, 2022), axis=1)]
         return {t: float(np.average(g.pf_R, weights=g.n_pa)) for t, g in df.groupby('team_abbr')}
     except Exception:
         return {}
+
+
+# Empirical BrownU-FP conversion, derived 2026-07-03 from our own boxscore store:
+# mean SP FP/start by venue (n=2,492 starts, 30 venues) regressed on venue-era pf_R
+# gives slope -15.9 FP per pf_R unit (weighted fit, corr -0.61). Slope-based (not
+# raw venue means) because raw means confound the home staff's quality — e.g. ATH
+# observed -2.8 FP vs league includes the A's own arms; the causal visitor read is
+# slope*(pf_R-1) = -0.9.
+PARK_FP_SLOPE = -15.9
+
+
+def park_fp_adj(team_abbr):
+    """SP FP/start park adjustment for a start AT this team's venue (+ = pitcher-
+    friendly, - = hitter-friendly). THE single owner of park->FP conversion: boards
+    must call this instead of hand-typing park tables (the 2026-07-03 ATH bug).
+    Returns 0.0 for unknown abbreviations — never invents a number."""
+    pf = _park_R_map().get(str(team_abbr).upper())
+    if pf is None:
+        return 0.0
+    return round(PARK_FP_SLOPE * (pf - 1.0), 1)
 
 
 @functools.lru_cache(maxsize=1)

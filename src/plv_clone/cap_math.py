@@ -12,7 +12,27 @@ SP_CAP = 10
 RP_SLOT_CAP = 4
 IL_SLOT_COUNT = 3
 
+# Empirical rate: starts per active (healthy) SP per scoring week. Owner for what
+# was a floating 1.19 literal re-declared under 6 different names across 8+ modules
+# (SP_STARTS_WK / HEALTHY_SP_STARTS_PER_WEEK / RATE / inline 1.19) + 4 skills.
+# Every cap-projection consumer imports THIS, never re-types it (audit 2026-07-03).
+STARTS_PER_SP_PER_WEEK = 1.19
+
 IL_STATUSES = frozenset({"TEN_DAY_DL", "FIFTEEN_DAY_DL", "SIXTY_DAY_DL"})
+
+
+def projected_starts(n_healthy_sps: int, *, rate: float = STARTS_PER_SP_PER_WEEK) -> float:
+    """Expected SP starts this week from ``n_healthy_sps`` active SPs. The single
+    owner of the 1.19 projection — forced-drop-planner / sp-week-plan / roster-audit
+    / monday-morning / playoff-team-build all call this instead of ``n * 1.19``."""
+    return n_healthy_sps * rate
+
+
+def gap_to_cap(n_healthy_sps: int, *, cap: int = SP_CAP,
+               rate: float = STARTS_PER_SP_PER_WEEK) -> float:
+    """Signed slack vs the weekly start cap: >0 = under cap (need streamers to fill),
+    <0 = over cap (a forced drop is coming). ``gap_to_cap(6) -> +2.86``."""
+    return cap - projected_starts(n_healthy_sps, rate=rate)
 
 
 @dataclass(frozen=True)

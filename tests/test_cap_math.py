@@ -175,3 +175,18 @@ def test_cap_excess_starts_ties_keep_input_order():
     # matching the matchup's prior stable sort-by-fp behaviour.
     from plv_clone.cap_math import cap_excess_starts
     assert cap_excess_starts([5.0, 5.0, 5.0, 5.0], cap=2) == {2, 3}
+
+
+def test_starts_per_sp_owner_constant():
+    """The 1.19 rate now has ONE owner (was 8+ inline copies under 6 names)."""
+    from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK
+    assert STARTS_PER_SP_PER_WEEK == 1.19
+
+
+def test_projected_starts_and_gap_reproduce_session_cap_math():
+    """Reproduces the 2026-07-03 forced-drop cascade numbers exactly."""
+    from plv_clone.cap_math import projected_starts, gap_to_cap
+    assert round(projected_starts(6), 2) == 7.14   # 6 healthy SPs
+    assert round(gap_to_cap(6), 2) == 2.86         # under cap -> need streamers
+    assert round(gap_to_cap(9), 2) == -0.71        # Fried return -> FORCED DROP
+    assert gap_to_cap(8) > 0 > gap_to_cap(9)       # cap breaches between 8 and 9 SPs

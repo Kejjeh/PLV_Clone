@@ -233,16 +233,24 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
 # philosophy (old fp>=10 was a top-3% mismatch). The SP display boom (fp>=17 ~ top
 # quartile, so a 17.7 start counts) is looser than the boom_stack 20 by design —
 # the display already differed on bust (5 vs 0), so the two lenses are separate tools.
+# Named constants so callers stop re-typing the magic numbers (audit 2026-07-03:
+# build_sp_pl_board hardcoded 17/5 inline, hitter-slate-grid doc still said the
+# pre-recalibration 20). Import these — never re-type. (recalibrated 2026-06-28.)
+SP_BOOM, SP_BUST = 17, 5     # per-start FP: ~top-quartile / replacement floor
+RP_BOOM, RP_BUST = 6, 0      # per-appearance FP
+H_BOOM, H_BUST = 5, 0        # per-game FP: ~top-quintile / negative day
+
+
 def sp_boom_bust(mlbam, n: int = 8, season: int = 2026) -> dict | None:
     fp = _fp_series(mlbam, "SP", season)[-n:]
-    return boom_bust_summary(fp, boom_thr=17, bust_thr=5)
+    return boom_bust_summary(fp, boom_thr=SP_BOOM, bust_thr=SP_BUST)
 
 
 def rp_boom_bust(mlbam, n: int = 15, season: int = 2026) -> dict | None:
     fp = _fp_series(mlbam, "RP", season)[-n:]
-    return boom_bust_summary(fp, boom_thr=6, bust_thr=0)
+    return boom_bust_summary(fp, boom_thr=RP_BOOM, bust_thr=RP_BUST)
 
 
 def hitter_boom_bust(mlbam, n: int = 21, season: int = 2026) -> dict | None:
     fp = _fp_series(mlbam, "H", season)[-n:]
-    return boom_bust_summary(fp, boom_thr=5, bust_thr=0)
+    return boom_bust_summary(fp, boom_thr=H_BOOM, bust_thr=H_BUST)
