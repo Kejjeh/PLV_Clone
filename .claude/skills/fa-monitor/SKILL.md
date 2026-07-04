@@ -1,12 +1,14 @@
 ---
 name: fa-monitor
-description: Proactive weekly scan of the FA pool across 6 signal types (SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
+description: Proactive weekly scan of the FA pool across 11 signal types — 6 core (SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) + 5 RP-leverage (leverage-rise, new-closer, fireman-breakout, velo-spike, multi-inning value) — outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
 ---
 
 # fa-monitor
 
-Proactive weekly scan of the FA pool across three signal types — SP early-start
-performance, RP closer opportunity, and hitter sustained xwOBA — to surface
+Proactive weekly scan of the FA pool across 11 signal types (6 core — SP early-start
+performance, RP closer opportunity, hitter sustained xwOBA, drafted-then-dropped, IL
+return, role-change RP; + 5 RP-leverage — leverage-rise, new-closer, fireman-breakout,
+velo-spike, multi-inning value) — to surface
 high-value pickups before opponents act. Designed to catch the gaps identified
 in the 2026 retroactive analysis: Paul Sewald (RP, +0.133 fp_proxy ignored for
 weeks), JJ Bleday (0.408 xwOBA for 2 months on wire), Kyle Harrison (first-start

@@ -59,7 +59,7 @@ drop-target comparison):
 | **PL Top 150** | Pitcher List weekly hitter rank | `data/research/pl_cache/pl_hitters_top150.json` | file |
 | **Lineup spot + park + vs LHP/RHP** | Today's batting-order spot (if confirmed) + park factor (run wOBA) + opposing-SP handedness with the batter's career split | MLB API hydrate + cached park factors + Statcast splits | net |
 | **Same-name collision check** | KNOWN_COLLISIONS gate via `plv_clone.utils.name_match.resolve_batter_id(name, team=…, position=…)` — REQUIRED before any dict-keyed lookup | `src/plv_clone/utils/name_match.py::KNOWN_COLLISIONS` (Max Muncy LAD 3B vs ATH C; Luis García Jr. WSH/HOU/PHI; Logan Allen LHP-twins for pitchers) | file |
-| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥20 / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
+| **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (recalibrated 2026-06-28 — SP: boom ≥17 / bust <5; hitter: boom ≥5 / bust <0). Import cutoffs from `lib.boom_bust` (`SP_BOOM`/`H_BOOM`/…) — never re-type (the old SP ≥20 missed top-quartile starts). | MLB Stats API gameLog | compute |
 
 **Performance budget:** ~9 file joins (cheap, <2s for ~500 FAs). On-demand
 compute layers (Triangulate / Sustainability / xwOBA-L21d / xwOBACON-YoY)

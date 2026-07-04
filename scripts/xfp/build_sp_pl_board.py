@@ -28,6 +28,7 @@ import pandas as pd
 import numpy as np
 from pathlib import Path
 from app.espn_connector import get_all_teams
+from lib.boom_bust import SP_BOOM, SP_BUST  # OWNER: boom/bust cutoffs (never re-type 17/5)
 
 MY = 'New York Ligers'
 C = Path('data/research/xfp_cache')
@@ -50,7 +51,9 @@ def main():
     top = json.load(open(f'data/research/pl_cache/pl_top100_{d}.json', encoding='utf-8'))['ranks']
     NEWPL = {_nm(k): v for k, v in top.items()}
     sent = json.load(open(f'{UNI}/nick_sentiment_{d}.json', encoding='utf-8'))['sentiment']
-    res = pd.read_csv(f'{UNI}/results_2026-06-29.csv')
+    _res_cands = [Path(UNI) / f'results_{d}.csv', Path(UNI) / f'triangulate_nightly_{d}.csv']
+    _res_path = next((p for p in _res_cands if p.exists()), _res_cands[-1])
+    res = pd.read_csv(_res_path)
     res['k'] = res['player_name'].apply(_nm)
     R = {r['k']: r for _, r in res[res['bucket'] == 'SP'].iterrows()}
 
@@ -83,7 +86,7 @@ def main():
             return {}
         m = lambda n: round(np.mean(f[-n:]), 1)
         return dict(L1=round(f[-1], 1), L3=m(3), L5=m(5), L8=m(8), season=round(np.mean(f), 1), n=len(f),
-                    boom_pct=round(100 * np.mean([x >= 17 for x in f])), bust_pct=round(100 * np.mean([x < 5 for x in f])))
+                    boom_pct=round(100 * np.mean([x >= SP_BOOM for x in f])), bust_pct=round(100 * np.mean([x < SP_BUST for x in f])))
 
     rows = []
     for k, npl in NEWPL.items():
