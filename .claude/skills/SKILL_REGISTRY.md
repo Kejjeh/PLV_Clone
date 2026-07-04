@@ -67,10 +67,10 @@ The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring
 
 | Bundle | When | Chain | Data passed between steps |
 |---|---|---|---|
-| **daily-edge** | game-day AM before lock | roster-verify → pregame-check → **streamer-precision-board** → stream-the-stack | `my_tag` set → probables/FA pool pulled once → FA boom filter over same pool |
-| **monday-full** | Monday / post-IL txn | roster-verify → roster-audit → sp-week-plan(cap_math) → fa-monitor → buy-low-sell-high-scan | one roster/FA pull threaded through (the monday-morning contract) |
-| **trade-deadline** | trade eval / sell-high | league-deep-audit → buy-low-sell-high-scan → opp-watch → trade-target-scan | 11-layer panel → divergence → PROFILES → pitch templates |
-| **playoff-war-room** | quarterly, periods 18+ | roster-verify → playoff-team-build → sp-stash-finder → sp-rehab-tracker → forced-drop-planner(cap_math) | playoff-window mult from cap_math; shared FA + injury-return helper |
+| **daily-edge** ✅ built 2026-07-04 | game-day AM before lock | roster-verify → pregame-check → **streamer-precision-board** → stream-the-stack | `my_tag` set → probables/FA pool pulled once → FA boom filter over same pool |
+| **monday-full** (=/monday-morning) | Monday / post-IL txn | roster-verify → roster-audit → sp-week-plan(cap_math) → fa-monitor → buy-low-sell-high-scan | one roster/FA pull threaded through (the monday-morning contract) |
+| **trade-deadline** ✅ built 2026-07-04 | trade eval / sell-high | league-deep-audit → **conviction-scan** (buy-low/sell-high surface until dedicated skill ships) → opp-watch → trade-target-scan | 11-layer panel → divergence → PROFILES → pitch templates |
+| **playoff-war-room** ✅ built 2026-07-04 | quarterly, periods 18+ | roster-verify → playoff-team-build → sp-stash-finder → sp-rehab-tracker → forced-drop-planner(cap_math) | playoff-window mult from cap_math; shared FA + injury-return helper |
 
 ---
 

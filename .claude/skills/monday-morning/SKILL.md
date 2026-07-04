@@ -1,6 +1,6 @@
 ---
 name: monday-morning
-description: Meta-skill that chains roster-verify → roster-audit (full) → sp-week-plan → fa-monitor into a single Monday workflow. Replaces 3-4 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
+description: Meta-skill that chains roster-verify → roster-audit (full) → sp-week-plan → fa-monitor → conviction-scan into a single Monday workflow. Replaces 3-5 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
 ---
 
 # monday-morning
@@ -11,7 +11,8 @@ Runs the full Monday decision workflow in one pass:
 2. **roster-audit** — slot occupancy, IL returns, SP cap math, drop candidates, FA adds
 3. **roster-health** — signal-driven alerts (TRENDING_DOWN, ARCHETYPE_DOWNGRADE, COLD_BABIP, etc.) layered on top of the slot/cap view from step 2
 4. **sp-week-plan** — project this week's starts against the 10-cap, rank, bench recommendation
-5. **fa-monitor** — pull HIGH-priority alerts from all 6 signals
+5. **fa-monitor** — pull HIGH-priority alerts from all signals
+6. **conviction-scan** — league-wide model-vs-process divergence watch (buy-low / sell-high conviction; Rule 13 context only)
 
 For any specific player flagged in steps 2-5, optionally run `/triangulate <name>` to get the full 3-lens verdict + confidence + watch-list before making the move.
 
@@ -137,6 +138,23 @@ Key signals:
 
 ---
 
+## Step 5 — conviction-scan (Conviction watch)
+
+Run the league-wide model-vs-process divergence board once, then surface the
+top disagreements as a watch list. Buy-low = the rating (validated pillar: SP
+STUFF / hitter CONTACT) is well above the model; sell-high = the reverse.
+
+```python
+# Engine: scripts/xfp/run_conviction_scan.py — prints MINE/FA/opp tagged board
+python scripts/xfp/run_conviction_scan.py --top 8
+```
+
+**Rule 13:** divergence NEVER moves rh3/rp3 and never re-ranks — it sets
+conviction and routes to `/triangulate`. Hitter buy-low was REJECTED as an
+additive signal (−0.069 FP/PA) — treat the hitter flavor as CONTEXT ONLY.
+
+---
+
 ## Output format
 
 ```markdown
@@ -166,6 +184,12 @@ Pre-identified cut: <weakest SP by rp3>
 ### Signal H (SP upgrade)
 <table>
 ### Signal I (hitter upgrade)
+<table>
+
+## Conviction watch (context only — buy-low / sell-high)
+### PROCESS>MODEL (patience / buy-low WATCH)
+<table — SP flavor validated; hitter flavor CONTEXT ONLY>
+### MODEL>PROCESS (distrust / sell-high WATCH)
 <table>
 
 ## Recommended moves (≤5, sequenced)

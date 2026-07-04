@@ -89,8 +89,19 @@ def main():
         if not f:
             return {}
         m = lambda n: round(np.mean(f[-n:]), 1)
+        # K-composition (rating_reimagine memo): the K-fed part of SP FP repeats
+        # (r=.59) while the IP-fed part fades (r=-.14). k_share = K / (K + 3.3*IP)
+        # is the fraction of the positive FP base that comes from strikeouts.
+        # K-FED (high k_share) = stickier production; IP-FED = more likely to fade.
+        # Display/context ONLY (Rule 13) — never moves the rp3 headline.
+        k_tot = float(g['so'].sum()); ip_tot = float(g['ip'].sum())
+        base = k_tot + 3.3 * ip_tot
+        k_share = round(k_tot / base, 2) if base > 0 else None
+        k_per_st = round(k_tot / len(g), 1) if len(g) else None
+        k_src = None if k_share is None else ('K-FED' if k_share >= 0.30 else 'IP-FED')
         return dict(L1=round(f[-1], 1), L3=m(3), L5=m(5), L8=m(8), season=round(np.mean(f), 1), n=len(f),
-                    boom_pct=round(100 * np.mean([x >= SP_BOOM for x in f])), bust_pct=round(100 * np.mean([x < SP_BUST for x in f])))
+                    boom_pct=round(100 * np.mean([x >= SP_BOOM for x in f])), bust_pct=round(100 * np.mean([x < SP_BUST for x in f])),
+                    k_per_st=k_per_st, k_share=k_share, k_src=k_src)
 
     rows = []
     for k, npl in NEWPL.items():
@@ -152,6 +163,11 @@ def main():
             'boom/bust(net)': bb,
             'HR 26/car': f"{g(r['hr9_2026'])}/{g(r['hr9_career'])}",
             'K%': g(r['k_pct']),
+            # K-composition: K/start + K-FED/IP-FED source (K-fed FP repeats
+            # r=.59, IP-fed fades -.14 — rating_reimagine memo; context only).
+            'K/st (src)': ('—' if pd.isna(r.get('k_per_st')) else
+                           f"{g(r['k_per_st'], 1)} {r['k_src']}" if isinstance(r.get('k_src'), str)
+                           else g(r['k_per_st'], 1)),
             'flags': r['flags'] or '',
             'Nick sentiment': r['nick_sentiment'],
         })

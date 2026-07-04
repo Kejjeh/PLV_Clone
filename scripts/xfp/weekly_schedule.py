@@ -11,8 +11,8 @@ from datetime import date, timedelta
 from pathlib import Path
 import argparse
 import json
-import requests
 
+from plv_clone.mlb_stats import get_schedule
 from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 
@@ -26,37 +26,34 @@ MLB_TEAM_ID_TO_ABBR = {
 
 
 def fetch_schedule(start: date, end: date) -> dict:
-    """Per-team list of games + probables in [start, end]."""
-    url = (f'https://statsapi.mlb.com/api/v1/schedule?'
-           f'sportId=1&startDate={start}&endDate={end}'
-           f'&hydrate=probablePitcher')
-    r = requests.get(url, timeout=30)
-    r.raise_for_status()
+    """Per-team list of games + probables in [start, end].
+
+    Delegates the raw fetch to the mlb_stats.get_schedule owner (item 9,
+    2026-07-04) and maps team ids via this module's own MLB_TEAM_ID_TO_ABBR so
+    the JSON output (consumed by playoff_ros / two_start_alerts / punt_detector)
+    is unchanged. Regular-season games only (gameType 'R').
+    """
+    games = get_schedule(start, end)
 
     by_team = {abbr: [] for abbr in MLB_TEAM_ID_TO_ABBR.values()}
-    for d in r.json().get('dates', []):
-        for g in d.get('games', []):
-            if g.get('gameType') != 'R':
-                continue
-            home_id = g['teams']['home']['team']['id']
-            away_id = g['teams']['away']['team']['id']
-            home_abbr = MLB_TEAM_ID_TO_ABBR.get(home_id)
-            away_abbr = MLB_TEAM_ID_TO_ABBR.get(away_id)
-            home_prob = (g['teams']['home'].get('probablePitcher') or {})
-            away_prob = (g['teams']['away'].get('probablePitcher') or {})
-            game_rec = {
-                'date': d['date'], 'gamePk': g['gamePk'],
-                'venue': (g.get('venue') or {}).get('name'),
-                'home': home_abbr, 'away': away_abbr,
-                'home_probable_id': home_prob.get('id'),
-                'home_probable_name': home_prob.get('fullName'),
-                'away_probable_id': away_prob.get('id'),
-                'away_probable_name': away_prob.get('fullName'),
-            }
-            if home_abbr:
-                by_team[home_abbr].append({**game_rec, 'is_home': True})
-            if away_abbr:
-                by_team[away_abbr].append({**game_rec, 'is_home': False})
+    for g in games:
+        if g.get('game_type') != 'R':
+            continue
+        home_abbr = MLB_TEAM_ID_TO_ABBR.get(g.get('home_id'))
+        away_abbr = MLB_TEAM_ID_TO_ABBR.get(g.get('away_id'))
+        game_rec = {
+            'date': g['date'], 'gamePk': g['game_pk'],
+            'venue': g.get('venue_name'),
+            'home': home_abbr, 'away': away_abbr,
+            'home_probable_id': g.get('home_probable_id'),
+            'home_probable_name': g.get('home_probable_name'),
+            'away_probable_id': g.get('away_probable_id'),
+            'away_probable_name': g.get('away_probable_name'),
+        }
+        if home_abbr:
+            by_team[home_abbr].append({**game_rec, 'is_home': True})
+        if away_abbr:
+            by_team[away_abbr].append({**game_rec, 'is_home': False})
     return by_team
 
 

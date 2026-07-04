@@ -44,6 +44,21 @@ Stop here. Do NOT run deep-dives on MONITOR alerts.
 If > 3 HIGH alerts: surface all in a summary table, then deep-dive only the
 top 3 by signal strength (fpp gap for A, xwOBA gap for I, role certainty for RP).
 
+**Signal O (rating-arc) tiebreak:** when two alerts are otherwise close, break
+the tie with the **rating-arc Δ** — the in-season trajectory of the validated
+pillar (SP STUFF / hitter CONTACT) from `scripts/xfp/lib/rating_arc.py`. A
+steeper positive arc Δ (rating climbing) wins the last deep-dive slot over a
+flat one. **Rule 13:** rating-arc is CONTEXT only — it breaks ties between
+alerts, it does NOT create an alert or move a model rank.
+
+```python
+from lib.rating_arc import rating_arcs  # OWNER of arc computation (context lens)
+arcs = rating_arcs('sp')            # or 'hitter' — DataFrame per mlbam
+# each row: arc in {RISER, FLAT, FALLER} + dk (the pillar delta over lookback).
+# tiebreak when |score_a - score_b| is within noise: prefer the larger `dk`
+# (RISER > FLAT > FALLER).
+```
+
 ---
 
 ## Step 2 — fa-pickup-deep-dive (per HIGH alert, ≤3)

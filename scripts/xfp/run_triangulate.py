@@ -459,6 +459,21 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         if arche.get('sb_rating') is not None:   # hitter speed overlay (not a pillar)
             rstr += f" / SB={arche['sb_rating']}"
         ar_h = f"OVERALL {arche['overall']} ({arche['archetype']} / {arche['cell']})"
+        # FPwt (item 3): FP-faithful parallel composite from the ONE owner. Shown
+        # beside the shipped OVERALL for H/SP; display/context only (Rule 13) —
+        # never moves rh3/rp3. RP FPwt is population-relative so skipped per-card.
+        try:
+            from lib.rating_weights import overall_fp as _overall_fp
+            _fpw_role = {'H': 'hitter', 'SP': 'sp'}.get(bucket)
+            if _fpw_role:
+                _fpw_row = dict(arche['ratings'])
+                if arche.get('sb_rating') is not None:
+                    _fpw_row['SB'] = arche['sb_rating']
+                _fpw = _overall_fp(_fpw_role, _fpw_row)
+                if _fpw is not None:
+                    ar_h += f", FPwt {_fpw}"
+        except Exception:
+            pass
         cp = arche.get('career_pct')
         cpstr = f", career-pct {cp*100:.0f}%" if cp is not None and pd.notna(cp) else ''
         sl = arche.get('slope_3yr')

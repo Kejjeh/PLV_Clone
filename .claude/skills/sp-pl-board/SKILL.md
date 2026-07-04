@@ -129,6 +129,7 @@ Show **every PL-ranked MINE/FA pitcher (all rows — never a "decision-relevant 
 | `boom/bust(net)` | boom% / bust% (net), e.g. `41/18 (+23)` |
 | `HR 26/car` | hr9_2026 / hr9_career, e.g. `1.92/1.81` |
 | `K%` | k_pct |
+| `K/st (src)` | K per start + **K-FED / IP-FED** source, e.g. `6.8 K-FED`. `k_share = K/(K+3.3·IP)` = the fraction of the positive FP base that comes from strikeouts. **K-FED** (k_share ≥ 0.30) production repeats (r=.59); **IP-FED** fades (r=−.14) — rating_reimagine memo. Context only (Rule 13): never moves the rp3 headline; a high-FP line propped by innings (low k_share) is a fade-risk vs a K-fed line at the same FP. |
 | `flags` | velo SEVERE/LOW-VELO, DECLINE-RISK, RISING |
 | `Nick sentiment` | the chronological 🟢/🟡/🔴 + arrow + phrase |
 

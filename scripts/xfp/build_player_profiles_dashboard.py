@@ -1059,59 +1059,11 @@ def annotate_context_lenses(records: list[dict], role: str, current_year: int) -
 # FP-faithful parallel composite (rating_reimagine study 2026-07-04). DISPLAY
 # LAYER ONLY — the shipped OVERALL is untouched because arche_overall_prior
 # feeds Blended xFP (changing its construction requires /validate-feature;
-# queue items #1/#7). Weights cite the study's CV-by-year refits:
-#   hitter .58C/.17P/.17SB/.08D (fwd .515 vs shipped .477 — shipped OVERALL
-#   forward-predicts worse than carrying last year's FP)
-#   SP .76 STUFF/.14 MOV/.10 CTRL (fwd .577 vs shipped .551)
-#   RP role-first: .55 z(SV)+.35 STUFF+.10 z(FP/g) (r .558 vs FP-carry .508;
-#   CONTROL/BATTED_BALL fwd ~0 and holds anti-signal -> excluded)
-_FP_W = {
-    "hitter": [("CONTACT", .58), ("POWER", .17), ("SB", .17), ("DISCIPLINE", .08)],
-    "sp": [("STUFF", .76), ("MOVEMENT", .14), ("CONTROL", .10)],
-}
-
-
-def annotate_overall_fp(records: list[dict], role: str) -> None:
-    """Attach OVERALL_FP (20-80) to each record. Never invents: any missing
-    input pillar -> None for that row."""
-    if role in _FP_W:
-        for r in records:
-            vals = [(r.get(k), w) for k, w in _FP_W[role]]
-            if any(v is None for v, _ in vals):
-                r["OVERALL_FP"] = None
-            else:
-                r["OVERALL_FP"] = int(round(sum(v * w for v, w in vals)))
-        return
-    # RP: role-first — z of saves + STUFF + z of FP level, z within YEAR so the
-    # 20-80 units match the pillar convention (mean 50 / sd 10, clipped).
-    import statistics
-    by_year: dict[int, list[dict]] = {}
-    for r in records:
-        if r.get("year") is not None:
-            by_year.setdefault(int(r["year"]), []).append(r)
-
-    def _z_rating(v, mean, sd):
-        if v is None or sd == 0:
-            return None
-        return max(20.0, min(80.0, 50.0 + 10.0 * (float(v) - mean) / sd))
-
-    for _, rows in by_year.items():
-        svs = [float(r["sv"]) for r in rows if r.get("sv") is not None]
-        fps = [float(r["fp_per_g"]) for r in rows if r.get("fp_per_g") is not None]
-        if len(svs) < 5 or len(fps) < 5:
-            for r in rows:
-                r["OVERALL_FP"] = None
-            continue
-        sv_m, sv_s = statistics.mean(svs), statistics.pstdev(svs) or 1.0
-        fp_m, fp_s = statistics.mean(fps), statistics.pstdev(fps) or 1.0
-        for r in rows:
-            role_r = _z_rating(r.get("sv"), sv_m, sv_s)
-            fp_r = _z_rating(r.get("fp_per_g"), fp_m, fp_s)
-            stuff = r.get("STUFF")
-            if None in (role_r, fp_r, stuff):
-                r["OVERALL_FP"] = None
-            else:
-                r["OVERALL_FP"] = int(round(.55 * role_r + .35 * float(stuff) + .10 * fp_r))
+# queue items #1/#7). The weights + annotate logic now live in the ONE owner
+# module lib/rating_weights.py (item 3, 2026-07-04) so /triangulate,
+# /scouting-report and /fa-pickup-deep-dive share them instead of re-deriving.
+# Re-exported here (`_FP_W`, `annotate_overall_fp`) for backward compatibility.
+from lib.rating_weights import WEIGHTS as _FP_W, annotate_overall_fp  # noqa: E402,F401
 
 
 def build_payload():

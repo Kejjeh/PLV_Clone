@@ -35,6 +35,27 @@ Per-position playoff_xfp = blended_xfp × playoff_PA_or_starts:
 - **SPs:** blended_per_start × 3.6 (1.19 starts/wk × 3 weeks)
 - **RPs:** blended_per_g × ~10 appearances (3 weeks)
 
+**ROLE+AGE keeper lens (context only, item 2, 2026-07-04):** for hitters, also
+surface `role_age` from `data/research/hitter_ratings_master.csv` (latest year,
+keyed by MLBAM `batter`) as an annual-value tiebreak between two similar
+playoff_xfp holds — a younger, higher-lineup-role bat is the better long-term
+keep. It is the only hitter construct validated to beat the raw-FP baseline for
+forward ANNUAL value (+.164/+.151, 5/5 years). **Rule 13:** ANNUAL horizon only
+— it NEVER moves the blended_xfp playoff ranking (which is the weekly-window
+number). Render as `annual-value (ROLE+AGE z): +x.xx — keeper lens` beside the
+hitter row; do not fold it into playoff_xfp.
+
+```python
+import pandas as pd
+from plv_clone.paths import ROOT
+_m = pd.read_csv(ROOT / 'data' / 'research' / 'hitter_ratings_master.csv')
+_m = _m[_m['year'] == _m['year'].max()]
+role_age = {int(r['batter']): float(r['role_age'])
+            for _, r in _m.iterrows()
+            if pd.notna(r.get('batter')) and pd.notna(r.get('role_age'))}
+# annual-value tiebreak only — never added to playoff_xfp
+```
+
 ### Step 3 — Scan FA pool for playoff upgrades at each position
 
 For each lineup slot (C, 1B, 2B, 3B, SS, MI, CI, OF×4, UTIL, P×9), compute

@@ -189,6 +189,83 @@ def get_probables(
     return out
 
 
+_SCHEDULE_CACHE: dict[tuple[str, str], list[dict]] = {}
+
+
+def get_schedule(
+    start_date: date | str,
+    end_date: date | str,
+    *,
+    http_get: Callable[..., Any] = _default_http_get,
+    use_cache: bool = True,
+) -> list[dict]:
+    """Every scheduled game in [start_date, end_date] — INCLUDING games with no
+    posted probable pitcher — one dict per game:
+
+        {date, game_pk, game_type, game_state, venue_name,
+         home_id, away_id, home_abbr, away_abbr,
+         home_probable_id, home_probable_name,
+         away_probable_id, away_probable_name}
+
+    Companion to :func:`get_probables` (which emits one row per *probable* and
+    skips games/sides with no probable). This is the owner for the "all games,
+    incl. no-probable, with venue/team names" fetch that weekly_schedule,
+    build_pitcher_schedule, extra_lenses._upcoming_schedule and the two
+    hitter_boom_stack builders each re-implemented. game_type is the raw MLB
+    code ('R' regular, 'F'/'D'/'L'/'W' postseason, 'S' spring) — callers filter.
+    Cached per (start, end) within the process; only successful fetches cache.
+    """
+    s = start_date.isoformat() if isinstance(start_date, date) else str(start_date)
+    e = end_date.isoformat() if isinstance(end_date, date) else str(end_date)
+    key = (s, e)
+    if use_cache and key in _SCHEDULE_CACHE:
+        return _SCHEDULE_CACHE[key]
+    abbr = _team_abbr_map(http_get)
+    url = (f"{_STATSAPI}/schedule?sportId=1&startDate={s}&endDate={e}"
+           f"&hydrate=probablePitcher,team,venue")
+    fetched_ok = True
+    try:
+        sched = http_get(url).json()
+    except Exception as exc:  # fail-soft, but LOUD and UNCACHED
+        import sys as _sys
+        print(f"WARN get_schedule({s}..{e}): fetch failed after retries — {exc}; "
+              "returning empty schedule (NOT cached)", file=_sys.stderr)
+        sched = {"dates": []}
+        fetched_ok = False
+    out: list[dict] = []
+    for d in sched.get("dates", []):
+        for g in d.get("games", []):
+            teams = g.get("teams", {})
+            home = teams.get("home", {}) or {}
+            away = teams.get("away", {}) or {}
+            home_t = home.get("team", {}) or {}
+            away_t = away.get("team", {}) or {}
+            home_id = home_t.get("id")
+            away_id = away_t.get("id")
+            hab = home_t.get("abbreviation") or abbr.get(int(home_id) if home_id else -1, "?")
+            aab = away_t.get("abbreviation") or abbr.get(int(away_id) if away_id else -1, "?")
+            hp = home.get("probablePitcher") or {}
+            ap = away.get("probablePitcher") or {}
+            out.append({
+                "date": d.get("date"),
+                "game_pk": g.get("gamePk"),
+                "game_type": g.get("gameType"),
+                "game_state": g.get("status", {}).get("abstractGameState", ""),
+                "venue_name": (g.get("venue") or {}).get("name"),
+                "home_id": int(home_id) if home_id else None,
+                "away_id": int(away_id) if away_id else None,
+                "home_abbr": hab,
+                "away_abbr": aab,
+                "home_probable_id": int(hp["id"]) if hp.get("id") else None,
+                "home_probable_name": hp.get("fullName"),
+                "away_probable_id": int(ap["id"]) if ap.get("id") else None,
+                "away_probable_name": ap.get("fullName"),
+            })
+    if use_cache and fetched_ok:
+        _SCHEDULE_CACHE[key] = out
+    return out
+
+
 def resolve_mlbam(
     names: Iterable[str],
     *,

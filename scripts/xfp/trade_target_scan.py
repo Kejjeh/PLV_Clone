@@ -162,6 +162,35 @@ def get_blend(name: str, ptype: str, mlbam_id: int) -> dict | None:
     return _BLEND_CACHE[key]
 
 
+# ---------- ROLE+AGE keeper/trade lens (item 2, 2026-07-04) --------------
+# role_age (validated PASS, ANNUAL horizon only) ships in hitter_ratings_master.
+# It is the only hitter construct validated to BEAT the raw-FP baseline for
+# forward ANNUAL value (+.164/+.151, 5/5 years). Rule 13: it is a CONTEXT lens
+# for keeper/trade horizons — it NEVER moves rh3 or any weekly/live rank, and it
+# is NULL in-season for weekly decisions (pre-declared). Keyed by MLBAM batter.
+_ROLE_AGE_MAP: dict[int, float] | None = None
+
+
+def role_age_map() -> dict[int, float]:
+    """{mlbam batter -> role_age z} for the latest year in hitter master.
+    Cached; returns {} if the column is absent (never invents)."""
+    global _ROLE_AGE_MAP
+    if _ROLE_AGE_MAP is None:
+        _ROLE_AGE_MAP = {}
+        try:
+            import pandas as pd
+            from plv_clone.paths import ROOT as _R
+            m = pd.read_csv(_R / 'data' / 'research' / 'hitter_ratings_master.csv')
+            if 'role_age' in m.columns and 'batter' in m.columns:
+                m = m[m['year'] == m['year'].max()]
+                for _, r in m.iterrows():
+                    if pd.notna(r.get('batter')) and pd.notna(r.get('role_age')):
+                        _ROLE_AGE_MAP[int(r['batter'])] = float(r['role_age'])
+        except Exception:
+            pass
+    return _ROLE_AGE_MAP
+
+
 # ---------- Behavioral profile lookup -----------------------------------
 
 def get_team_profiles() -> dict[str, dict]:
@@ -256,6 +285,9 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
             'blended': b.get('blended_xfp'),
             'display_unit': b.get('display_unit') or '',
             'rp_decline': (rpd or {}).get('tier'),
+            # ROLE+AGE keeper/trade lens (item 2) — hitters only, ANNUAL horizon,
+            # context-only (Rule 13). None for pitchers / unmatched.
+            'role_age': role_age_map().get(int(mlbam)) if ptype == 'H' else None,
         }
         # SELL-HIGH surface: a ROLE-RISK reliever that still HAS a role to lose is
         # an arm whose owner should be selling while saves/holds are still landing.
@@ -324,6 +356,20 @@ def opponent_block(opp_name: str, opp_roster: list[dict], profile: dict,
             mb = r.get('my_best_at_pos')
             mb_s = f'{mb:.1f}' if isinstance(mb, (int, float)) else 'none'
             out.append(f'  | {r["name"][:25]:<25} | {r["pos"]:<4} | {r["live_marginal"]:>9.1f} | {r["tier"]:<14} | {mb_s:>7} |')
+
+    # ROLE+AGE keeper/trade lens (item 2) — annual-value context on the hitter
+    # targets above. Rule 13: context only, ANNUAL horizon; NOT a weekly rank.
+    ra_rows = [r for r in (trade_ask[:6] + sell_bait[:8])
+               if r.get('role_age') is not None]
+    if ra_rows:
+        seen = set()
+        out.append('')
+        out.append('  ROLE+AGE keeper/trade lens (annual-value z; context only, never weekly rank):')
+        for r in ra_rows:
+            if r['name'] in seen:
+                continue
+            seen.add(r['name'])
+            out.append(f'    - {r["name"][:25]}: annual-value (ROLE+AGE z): {r["role_age"]:+.2f} — keeper/trade horizon')
 
     # Pitch template.
     out.append('')

@@ -29,6 +29,15 @@ data/research/sp_ratings_master.csv       — SP same
 data/research/rp_ratings_master.csv       — RP same + leverage_tier + CLOSER + role
 ```
 
+**FPwt vs OVERALL (item 3):** when ranking hitters, prefer the FP-faithful
+composite `FPwt` (from the ONE owner `scripts/xfp/lib/rating_weights.py::overall_fp`)
+over the archetype `OVERALL` — the shipped OVERALL forward-predicts hitter FP
+*worse* than carrying last year's FP, while FPwt (hitter .58C/.17P/.17SB/.08D)
+was validated to beat it. `from lib.rating_weights import overall_fp; overall_fp('hitter', row)`.
+**Rule 13:** display/context only — never a projection number. **ANTI-signal
+caveat:** a large hitter *rating jump* (BREAKOUT_PROCESS §5) is a SELL-HIGH
+context flag, NOT an acquisition signal — do not treat a rating spike as buy.
+
 Roster ownership: `app.espn_connector.get_all_teams()` — iterate, pull every roster, build a `name → team_name` map across all 8 teams. Use `plv_clone.utils.name_match.resolve_batter_id` semantics for collision-safe matching where possible; otherwise a normalized lower-case strip is acceptable for this surface (Connelly / Muncy gotchas don't apply here because output is annotated by team, not filtered to "mine vs not-mine").
 
 Filter every CSV to `year == 2026` before classifying.

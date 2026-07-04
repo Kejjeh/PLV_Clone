@@ -336,6 +336,21 @@ Read the relevant current-year row from the master CSV:
 | SP | `data/research/sp_ratings_master.csv` | `archetype`, `stuff_subtype`, `velo_tier`, `pitch_archetype`, `primary_group`, `STUFF`, `MOVEMENT`, `CONTROL`, `velo_rating`, `SWING_MISS`, `CALLED_STRIKE`, `DAMAGE_SUPP`, `GB_TENDENCY`, `WALK_AVOID`, `age_tier`, `boundary_tier`, `t1_fp_projection`, `t2_fp_projection`, `fp_per_start` |
 | RP | `data/research/rp_ratings_master.csv` | `archetype`, `stuff_subtype`, `STUFF`, `CONTROL`, `BATTED_BALL`, `VELO` (rating), `SWING_MISS`, `CALLED_STRIKE`, `WALK_AVOID`, `GB_TENDENCY`, `BULK_IP`, `age_tier`, `boundary_tier`, `CLOSER`, `leverage_tier`, `HIGH_LEVERAGE`, `MULTI_INNING_BULK`, `FIREMAN` (may be absent — gracefully handle), `gmli`, `t1_fp_projection`, `t2_fp_projection`, `fp_per_g` |
 
+**FPwt (FP-faithful composite, item 3):** alongside the shipped `OVERALL`,
+compute `FPwt` from the ONE owner `scripts/xfp/lib/rating_weights.py`:
+
+```python
+from lib.rating_weights import overall_fp   # hitter/SP per-row (RP needs pop)
+fpw = overall_fp('hitter', row)   # or 'sp' — the pillar-weighted FP composite
+```
+
+FPwt weights the pillars toward forward FP (hitter .58C/.17P/.17SB/.08D; SP
+.76STUFF/.14MOV/.10CTRL — validated to forward-predict better than the shipped
+OVERALL). **Rule 13:** display/context only — it never moves the rh3/rp3
+headline; use it to flag when a player's FP-relevant tools outrun (or lag) their
+archetype OVERALL. RP FPwt is population-relative — read the precomputed
+`OVERALL_FP` column from the profiles payload rather than per-row.
+
 If the player has no current-year row in the master (rookie, low PA/IP),
 note that and skip this section.
 
