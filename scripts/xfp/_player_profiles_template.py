@@ -242,6 +242,39 @@ table.alltable th { padding: 1em 1.1em; font-size: .9em; }
    `overflow: visible` (the default). */
 table.alltable td:not(.domain-cell) { overflow: hidden; text-overflow: ellipsis; }
 table.alltable th { overflow: visible; }
+
+/* Sticky header row — survives page scroll (Core view) and wrapper scroll (Full). */
+table.alltable thead th { position: sticky; top: 0; background: var(--panel); z-index: 6; }
+
+/* Full-columns view: the table scrolls horizontally inside its wrapper instead of
+   squeezing 22-26 columns into 100% and clipping the header labels mid-word
+   ("STUFF SL", "PITCH ARCH" — 2026-07-04 readability feedback). min-width gives
+   every column enough room for full-word headers. */
+.table-scroll.cols-full,
+.table-scroll.cols-full:has(table.alltable) { overflow-x: auto; }
+table.alltable.cols-full { min-width: 1900px; }
+
+/* 20-80 rating chips — color-banded so a 74 reads as elite at a glance.
+   Bands follow the scouting scale: 70+ plus-plus, 60 plus, 50 average,
+   40 below, 30- poor. Tints tuned for the dark panel background. */
+.rchip { display: inline-block; min-width: 2.4em; padding: .08em .38em; border-radius: 4px;
+         text-align: center; font-weight: 600; font-variant-numeric: tabular-nums; }
+.rchip.r80 { background: rgba( 64,196,255,.30); color: #bfe9ff; }
+.rchip.r70 { background: rgba( 61,213,152,.28); color: #bef4dc; }
+.rchip.r60 { background: rgba(147,205, 90,.22); color: #dcedbf; }
+.rchip.r50 { background: rgba(255,255,255,.07); color: var(--text); }
+.rchip.r40 { background: rgba(255,171, 84,.18); color: #f4d4a4; }
+.rchip.r30 { background: rgba(255,116, 92,.22); color: #f7bcb0; }
+.rchip.r20 { background: rgba(255, 72, 72,.28); color: #ffb9b9; }
+
+/* Columns-view toggle (Core / All columns) next to the table count. */
+.colview-toggle { display: inline-flex; gap: .4em; margin-left: 1em; vertical-align: middle; }
+.colview-toggle button { background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 999px; padding: .25em .8em;
+    font-family: 'IBM Plex Mono', monospace; font-size: .85em; cursor: pointer; }
+.colview-toggle button:hover { color: var(--accent); border-color: var(--accent); }
+.colview-toggle button.active { background: var(--accent); color: var(--bg);
+    border-color: var(--accent); font-weight: 600; }
 /* Header is a flex row so the sort-label and the filter button sit side by side
    without the filter button being treated as part of the click-to-sort target. */
 table.alltable th { user-select: none; position: relative; }
@@ -1338,6 +1371,9 @@ const state = {
   hTblSort:  { col: 'OVERALL', dir: 'desc' },
   sTblSort:  { col: 'OVERALL', dir: 'desc' },
   rpTblSort: { col: 'OVERALL', dir: 'desc' },
+  // Column view per role: 'core' (curated decision columns, fits viewport) or
+  // 'full' (every column; table scrolls horizontally so headers never clip).
+  colView: { hitter: 'core', sp: 'core', rp: 'core' },
   hTblQuery: '',
   sTblQuery: '',
   rpTblQuery: '',
@@ -3064,27 +3100,27 @@ const COL_TOOLTIPS = {
 };
 
 const H_TBL_COLS = [
-  { key: 'player_name', label: 'Player', text: true, w: 14 },
-  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
-  { key: 'lineup_role_tier', label: 'Lineup', text: true, cat: true, pretty: true, w: 5 },
+  { key: 'player_name', label: 'Player', text: true, w: 14, core: true },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4, core: true },
+  { key: 'lineup_role_tier', label: 'Lineup', text: true, cat: true, pretty: true, w: 5, core: true },
   { key: 'mean_lineup_spot', label: 'Spot', num: true, w: 3, fmt: v => (v == null ? '' : (+v).toFixed(1)) },
-  { key: 'year',        label: 'Yr',  num: true, w: 2 },
-  { key: 'pa',          label: 'PA',  num: true, w: 2 },
-  { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
-  { key: 't1_fp_projection', label: 'T+1', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 'year',        label: 'Yr',  num: true, w: 2, core: true },
+  { key: 'pa',          label: 'PA',  num: true, w: 2, core: true },
+  { key: 'fp_per_pa',   label: 'FP/PA', num: true, w: 4, core: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
+  { key: 't1_fp_projection', label: 'T+1', num: true, w: 4, core: true, fmt: v => (v == null ? '' : v.toFixed(3)) },
   { key: 't2_fp_projection', label: 'T+2', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
-  { key: 'CONTACT',     label: 'C',   num: true, w: 3 },
-  { key: 'POWER',       label: 'P',   num: true, w: 3 },
-  { key: 'DISCIPLINE',  label: 'D',   num: true, w: 3 },
-  { key: 'SB',          label: 'SB',  num: true, w: 3 },
-  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4, core: true },
+  { key: 'CONTACT',     label: 'C',   labelFull: 'Contact', num: true, w: 3, core: true },
+  { key: 'POWER',       label: 'P',   labelFull: 'Power', num: true, w: 3, core: true },
+  { key: 'DISCIPLINE',  label: 'D',   labelFull: 'Disc', num: true, w: 3, core: true },
+  { key: 'SB',          label: 'SB',  labelFull: 'Speed', num: true, w: 3, core: true },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14, core: true },
   { key: 'contact_subtype',     label: 'Contact sub', text: true, cat: true, pretty: true, w: 6 },
   { key: 'power_subtype',       label: 'Power sub',   text: true, cat: true, pretty: true, w: 6 },
   { key: 'discipline_subtype',  label: 'Disc sub',    text: true, cat: true, pretty: true, w: 5 },
   { key: 'sb_tier',             label: 'SB tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'spray_archetype',     label: 'Spray',   text: true, cat: true, pretty: true, w: 4 },
-  { key: 'age',                 label: 'Age', num: true, w: 2 },
+  { key: 'age',                 label: 'Age', num: true, w: 2, core: true },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 5 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
   { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 3 },
@@ -3092,22 +3128,22 @@ const H_TBL_COLS = [
 ];
 
 const S_TBL_COLS = [
-  { key: 'player_name', label: 'Pitcher', text: true, w: 14 },
-  { key: 'year',        label: 'Yr',  num: true, w: 2 },
-  { key: 'gs',          label: 'GS',  num: true, w: 3 },
+  { key: 'player_name', label: 'Pitcher', text: true, w: 14, core: true },
+  { key: 'year',        label: 'Yr',  num: true, w: 2, core: true },
+  { key: 'gs',          label: 'GS',  num: true, w: 3, core: true },
   { key: 'tbf',         label: 'TBF', num: true, w: 3 },
-  { key: 'fp_per_start', label: 'FP/start', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(2)) },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
-  { key: 'STUFF',       label: 'S',   num: true, w: 3 },
-  { key: 'MOVEMENT',    label: 'M',   num: true, w: 3 },
-  { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
-  { key: 'velo_rating', label: 'Velo', num: true, w: 4 },
-  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
+  { key: 'fp_per_start', label: 'FP/start', num: true, w: 4, core: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4, core: true },
+  { key: 'STUFF',       label: 'S',   labelFull: 'Stuff', num: true, w: 3, core: true },
+  { key: 'MOVEMENT',    label: 'M',   labelFull: 'Move', num: true, w: 3, core: true },
+  { key: 'CONTROL',     label: 'C',   labelFull: 'Ctrl', num: true, w: 3, core: true },
+  { key: 'velo_rating', label: 'Velo', num: true, w: 4, core: true },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14, core: true },
   { key: 'stuff_subtype',       label: 'Stuff sub', text: true, cat: true, pretty: true, w: 6 },
   { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
   { key: 'pitch_archetype',     label: 'Pitch arch', text: true, cat: true, pretty: true, w: 8 },
   { key: 'primary_group',       label: 'Primary', text: true, cat: true, pretty: true, w: 5 },
-  { key: 'age',                 label: 'Age', num: true, w: 2 },
+  { key: 'age',                 label: 'Age', num: true, w: 2, core: true },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
   { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 2 },
@@ -3121,28 +3157,28 @@ const S_TBL_COLS = [
 // (MOVEMENT ← BATTED_BALL, gs ← g, fp_per_start ← fp_per_g), build_rp_records
 // can drop them entirely; this table no longer reads them.
 const RP_TBL_COLS = [
-  { key: 'player_name', label: 'Reliever', text: true, w: 14 },
-  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4 },
-  { key: 'year',        label: 'Yr',  num: true, w: 2 },
-  { key: 'g',           label: 'G',   num: true, w: 2 },
-  { key: 'sv',          label: 'SV',  num: true, w: 2 },
-  { key: 'hld',         label: 'HLD', num: true, w: 2 },
+  { key: 'player_name', label: 'Reliever', text: true, w: 14, core: true },
+  { key: 'team',        label: 'Tm', text: true, cat: true, w: 4, core: true },
+  { key: 'year',        label: 'Yr',  num: true, w: 2, core: true },
+  { key: 'g',           label: 'G',   num: true, w: 2, core: true },
+  { key: 'sv',          label: 'SV',  num: true, w: 2, core: true },
+  { key: 'hld',         label: 'HLD', num: true, w: 2, core: true },
   { key: 'ip_per_appearance', label: 'IP/g', num: true, w: 3, fmt: v => (v == null ? '' : (+v).toFixed(2)) },
-  { key: 'fp_per_g',    label: 'FP/g', num: true, w: 4, fmt: v => (v == null ? '' : (+v).toFixed(2)) },
-  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4 },
-  { key: 'STUFF',       label: 'S',   num: true, w: 3 },
-  { key: 'CONTROL',     label: 'C',   num: true, w: 3 },
-  { key: 'BATTED_BALL', label: 'Btd-Ball', num: true, w: 4 },
+  { key: 'fp_per_g',    label: 'FP/g', num: true, w: 4, core: true, fmt: v => (v == null ? '' : (+v).toFixed(2)) },
+  { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4, core: true },
+  { key: 'STUFF',       label: 'S',   labelFull: 'Stuff', num: true, w: 3, core: true },
+  { key: 'CONTROL',     label: 'C',   labelFull: 'Ctrl', num: true, w: 3, core: true },
+  { key: 'BATTED_BALL', label: 'Btd-Ball', num: true, w: 4, core: true },
   { key: 'velo_rating', label: 'Velo', num: true, w: 3 },
-  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14 },
+  { key: 'archetype',           label: 'Archetype', text: true, cat: true, pretty: true, w: 14, core: true },
   { key: 'stuff_subtype',       label: 'Stuff sub', text: true, cat: true, pretty: true, w: 6 },
   { key: 'velo_tier',           label: 'Velo tier', text: true, cat: true, pretty: true, w: 5 },
-  { key: 'leverage_tier',       label: 'Lev', text: true, cat: true, pretty: true, w: 4 },
-  { key: 'CLOSER',              label: 'Closer', text: true, cat: true, w: 3 },
+  { key: 'leverage_tier',       label: 'Lev', text: true, cat: true, pretty: true, w: 4, core: true },
+  { key: 'CLOSER',              label: 'Closer', text: true, cat: true, w: 3, core: true },
   { key: 'FIREMAN',             label: 'Fire', text: true, cat: true, w: 3 },
   { key: 'inherited_stranded_pct', label: 'IR-S%', num: true, w: 4, fmt: v => (v == null ? '' : (+v).toFixed(0)) },
   { key: 'MULTI_INNING_BULK',   label: 'Bulk', text: true, cat: true, w: 3 },
-  { key: 'age',                 label: 'Age', num: true, w: 2 },
+  { key: 'age',                 label: 'Age', num: true, w: 2, core: true },
   { key: 'age_tier',            label: 'Age tier', text: true, cat: true, pretty: true, w: 4 },
   { key: 'boundary_tier',       label: 'Bnd', text: true, cat: true, pretty: true, w: 3 },
   { key: 'data_tier',           label: 'Tier', text: true, cat: true, pretty: true, w: 2 },
@@ -3584,11 +3620,36 @@ function tblSortRows(rows, sort, cols) {
   });
 }
 
+// 20-80 rating chip helpers — every rating cell renders as a color-banded chip
+// so a 74 reads as elite at a glance (2026-07-04 readability feedback).
+const RATING_CHIP_KEYS = new Set([
+  'OVERALL', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'STUFF', 'MOVEMENT', 'CONTROL',
+  'BATTED_BALL', 'velo_rating', 'VELO', 'SWING_MISS', 'CALLED_STRIKE', 'WALK_AVOID',
+  'STRIKE_THROWING', 'DAMAGE_SUPP', 'GB_TENDENCY', 'BULK_IP', 'Z_CONTACT', 'O_CONTACT',
+  'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE', 'RAW_POWER', 'LAUNCH_OPTIM',
+  'DAMAGE_PROD', 'PATIENCE', 'AGGRESSION', 'SPEED_TOOL', 'SB_CONVERSION',
+]);
+function ratingClass(v) {
+  v = +v;
+  if (!isFinite(v)) return 'r50';
+  const band = Math.max(20, Math.min(80, Math.round(v / 10) * 10));
+  return 'r' + band;
+}
+
 function renderAllTable(rows, role, kind) {
   const isSub = kind === 'sub';
-  const cols = role === 'hitter' ? (isSub ? H_SUB_COLS : H_TBL_COLS)
-             : role === 'rp'     ? (isSub ? RP_SUB_COLS : RP_TBL_COLS)
-             :                     (isSub ? S_SUB_COLS : S_TBL_COLS);
+  const allCols = role === 'hitter' ? (isSub ? H_SUB_COLS : H_TBL_COLS)
+                : role === 'rp'     ? (isSub ? RP_SUB_COLS : RP_TBL_COLS)
+                :                     (isSub ? S_SUB_COLS : S_TBL_COLS);
+  // Column view: 'core' = curated decision columns normalized to fit the viewport;
+  // 'full' = every column, table scrolls horizontally (min-width) so headers never
+  // clip. Sub-domain tables are already curated rating sets -> always full layout.
+  const view = isSub ? 'full' : (state.colView[role] || 'core');
+  const cols = (view === 'core') ? allCols.filter(c => c.core) : allCols;
+  const fullLayout = (view === 'full') || isSub;
+  // Re-normalize widths for whichever subset is showing (fixed layout honors %).
+  const wSum = cols.reduce((s, c) => s + (c.w || 4), 0);
+  const wScale = 97 / wSum;
   const tblId = role === 'hitter' ? (isSub ? 'h-subtable' : 'h-alltable')
               : role === 'rp'     ? (isSub ? 'rp-subtable' : 'rp-alltable')
               :                     (isSub ? 's-subtable' : 's-alltable');
@@ -3659,26 +3720,31 @@ function renderAllTable(rows, role, kind) {
   // Render chips above table reflecting current filter state
   renderFilterChips(role, isSub);
 
-  // Build colgroup so table-layout: fixed has explicit widths to honor
+  // Build colgroup so table-layout: fixed has explicit widths to honor.
+  // Core view re-normalizes the subset to ~100%; Full view keeps authored widths
+  // (they sum to 100% of the table's min-width, which scrolls).
   let h = '<colgroup>';
   h += '<col style="width:3%">';
   cols.forEach(c => {
-    const w = (c.w != null) ? `${c.w}%` : 'auto';
+    const raw = (c.w != null) ? c.w : 4;
+    const w = fullLayout ? `${raw}%` : `${(raw * wScale).toFixed(2)}%`;
     h += `<col style="width:${w}">`;
   });
   h += '</colgroup>';
 
-  // Build header
+  // Build header — full-word labels (labelFull) wherever defined; the layout
+  // now guarantees room (core = few columns, full = horizontal scroll).
   h += '<thead><tr>';
   h += '<th class="num"><div class="th-inner"><span class="th-label" title="Row number within current sort/filter">#</span></div></th>';
   cols.forEach(c => {
     const cls = (c.num ? 'num ' : '') + (sort.col === c.key ? `sort-${sort.dir}` : '');
     const isFilterable = !!(c.cat || c.num);
     const hasFilter = !!filters[c.key];
-    const tipText = (COL_TOOLTIPS[c.key] || c.label).replace(/"/g, '&quot;');
-    let inner = `<span class="th-label" data-col="${c.key}" title="${tipText}">${c.label}</span>`;
+    const lbl = c.labelFull || c.label;
+    const tipText = (COL_TOOLTIPS[c.key] || lbl).replace(/"/g, '&quot;');
+    let inner = `<span class="th-label" data-col="${c.key}" title="${tipText}">${lbl}</span>`;
     if (isFilterable) {
-      inner += `<button class="th-filter${hasFilter ? ' active' : ''}" data-filter-col="${c.key}" title="Filter ${c.label}">▾</button>`;
+      inner += `<button class="th-filter${hasFilter ? ' active' : ''}" data-filter-col="${c.key}" title="Filter ${lbl}">▾</button>`;
     }
     h += `<th class="${cls.trim()}"><div class="th-inner">${inner}</div></th>`;
   });
@@ -3697,7 +3763,12 @@ function renderAllTable(rows, role, kind) {
       else if (v == null) v = '';
       const cellCls = (c.num ? 'num' : '') + (c.key === 'player_name' ? ' player' : '');
       const tier = r.data_tier === 'PARTIAL' && c.key === 'player_name' ? partialBadge(r) : '';
-      const display = c.bold ? `<b>${v}</b>` : v;
+      let display = c.bold ? `<b>${v}</b>` : v;
+      // 20-80 ratings render as color-banded chips (band from the RAW value,
+      // not the formatted string, so fmt'd columns still band correctly).
+      if (RATING_CHIP_KEYS.has(c.key) && v !== '' && r[c.key] != null) {
+        display = `<span class="rchip ${ratingClass(r[c.key])}">${v}</span>`;
+      }
       if (c.key === 'player_name') {
         h += `<td class="${cellCls.trim()}" data-role="${role}" data-id="${r[idKey]}">${display}${tier}</td>`;
         return;
@@ -3723,6 +3794,34 @@ function renderAllTable(rows, role, kind) {
   }
   const tbl = document.getElementById(tblId);
   tbl.innerHTML = h;
+
+  // Full layout scrolls horizontally inside its wrapper instead of clipping.
+  tbl.classList.toggle('cols-full', fullLayout);
+  const wrap = tbl.closest('.table-scroll');
+  if (wrap) wrap.classList.toggle('cols-full', fullLayout);
+
+  // Columns-view toggle (Core / All columns) — injected once next to the row
+  // count, main tables only (sub tables are always the curated full set).
+  if (!isSub) {
+    let tgl = document.getElementById(tblId + '-colview');
+    if (!tgl && cntEl && cntEl.parentNode) {
+      tgl = document.createElement('span');
+      tgl.id = tblId + '-colview';
+      tgl.className = 'colview-toggle';
+      tgl.innerHTML = `<button data-view="core">Core</button>` +
+                      `<button data-view="full">All columns</button>`;
+      cntEl.parentNode.insertBefore(tgl, cntEl.nextSibling);
+      tgl.querySelectorAll('button').forEach(b => {
+        b.addEventListener('click', () => {
+          if (state.colView[role] === b.dataset.view) return;
+          state.colView[role] = b.dataset.view;
+          renderAllTable(allTableRows(role), role, kind);
+        });
+      });
+    }
+    if (tgl) tgl.querySelectorAll('button').forEach(b =>
+      b.classList.toggle('active', b.dataset.view === view));
+  }
 
   // Wire header label click → sort (filter button has its own handler below)
   tbl.querySelectorAll('thead .th-label[data-col]').forEach(lbl => {
