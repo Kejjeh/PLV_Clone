@@ -51,6 +51,10 @@ _RH3_CSV = _REPO_ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'
 _OUT_DIR = _REPO_ROOT / 'data' / 'outputs'
 
 
+def _warn(section, exc):
+    print(f"WARN {section}: {exc}", file=sys.stderr)
+
+
 # ---------------------------------------------------------------------------
 # MLB Stats API: today's games + lineups (or fallback set)
 # ---------------------------------------------------------------------------
@@ -78,7 +82,8 @@ def fetch_games_and_lineups(start_d: date, end_d: date) -> list[dict]:
             game_date_str = game.get('gameDate', '')[:10]
             try:
                 gd = datetime.fromisoformat(game_date_str).date()
-            except Exception:
+            except Exception as e:
+                _warn(f'game_date_parse({game_date_str!r})', e)
                 continue
             if not (start_d <= gd <= end_d):
                 continue
@@ -303,7 +308,8 @@ def assemble_candidates(days: int) -> tuple[list[dict], dict]:
                 if opp_for_batter is None:
                     try:
                         opp_for_batter = resolve_opp_sp_id_for_today(team_abbr, today)
-                    except Exception:
+                    except Exception as e:
+                        _warn(f'resolve_opp_sp({team_abbr})', e)
                         opp_for_batter = None
                 cand = build_candidate(
                     batter_id=int(bid),

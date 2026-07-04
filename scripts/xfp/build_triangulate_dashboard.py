@@ -30,6 +30,10 @@ from plv_clone.positions import (  # noqa: E402
 
 OUT = ROOT / 'data' / 'outputs'
 
+
+def _warn(section, exc):
+    print(f"WARN build_triangulate_dashboard.{section}: {exc}", file=sys.stderr)
+
 # Batch artifacts the canonical triangulate builder persists (another step owns
 # writing these). The dashboard READS them to surface the ~40 already-computed
 # lens columns that the live triangulate_player() result does not carry. All
@@ -274,7 +278,8 @@ def load_batch_lens() -> dict:
                 nm = p.get('name')
                 if nm:
                     jrec[str(nm)] = p
-    except Exception:
+    except Exception as e:
+        _warn('load_batch_lens.json', e)
         jrec = {}
     crows: dict[str, dict] = {}
     try:
@@ -285,7 +290,8 @@ def load_batch_lens() -> dict:
                     nm = row.get('player_name')
                     if nm:
                         crows[str(nm)] = row
-    except Exception:
+    except Exception as e:
+        _warn('load_batch_lens.csv', e)
         crows = {}
 
     for nm in set(jrec) | set(crows):
@@ -377,7 +383,8 @@ def _group_from_seam(name, bucket, jrec, crow) -> str:
     seam_bucket = 'SP' if b == 'SP' else ('RP' if b == 'RP' else 'H')
     try:
         return position_group(pl, bucket=seam_bucket, rp_row=pl)
-    except Exception:
+    except Exception as e:
+        _warn(f'group_from_seam({name})', e)
         return {'SP': 'SP', 'RP': 'SETUP'}.get(b, 'UTIL')
 
 
@@ -417,7 +424,8 @@ def collect_cards(names: list[str]) -> list[dict]:
     for name in names:
         try:
             res = triangulate_player(name, il_status=il_status_for(name, il_map))
-        except Exception:
+        except Exception as e:
+            _warn(f'triangulate_player({name})', e)
             res = None
         if not res:
             continue

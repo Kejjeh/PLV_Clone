@@ -19,6 +19,10 @@ import pandas as pd
 
 warnings.filterwarnings('ignore')
 
+import sys as _sys
+def _warn(section, exc):
+    print(f"WARN {section}: {exc}", file=_sys.stderr)
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = CACHE / 'pitcher_schedule_2026.csv'
@@ -117,7 +121,8 @@ def main():
         from lib.extra_lenses import _park_R_map
         pf_map = _park_R_map()
         df['park_factor'] = df['park_team'].map(pf_map).fillna(1.0)
-    except Exception:
+    except Exception as e:
+        _warn('park_factor_map', e)
         df['park_factor'] = 1.0
 
     # Platoon factor: pitcher's expected xwOBA vs THIS opponent's L/R lineup mix,

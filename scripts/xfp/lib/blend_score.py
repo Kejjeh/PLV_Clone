@@ -94,6 +94,10 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+import sys as _sys
+def _warn(section, exc):
+    print(f"WARN blend_score.{section}: {exc}", file=_sys.stderr)
+
 # Paths -----------------------------------------------------------------
 
 _THIS_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -329,7 +333,8 @@ def _load_pl_panel() -> Optional[pd.DataFrame]:
         return None
     try:
         return pd.read_parquet(_PL_PANEL)
-    except Exception:
+    except Exception as e:
+        _warn('load_pl_panel', e)
         return None
 
 
@@ -404,7 +409,8 @@ def _load_projection_csv(bucket: str) -> Optional[pd.DataFrame]:
         if os.path.exists(path):
             try:
                 return pd.read_csv(path)
-            except Exception:
+            except Exception as e:
+                _warn(f'load_projection_csv({os.path.basename(path)})', e)
                 continue
     return None
 
@@ -423,7 +429,8 @@ def _load_master_panel_lookup() -> Optional[pd.DataFrame]:
         # so we want the row where year == max(year) per player.
         df = df.sort_values('year').drop_duplicates('mlbam_id', keep='last')
         return df
-    except Exception:
+    except Exception as e:
+        _warn('load_master_panel_lookup', e)
         return None
 
 
@@ -835,7 +842,8 @@ def _load_fa_snapshot_rp() -> Optional[pd.DataFrame]:
         return None
     try:
         return pd.read_parquet(_FA_SNAPSHOT_LATEST)
-    except Exception:
+    except Exception as e:
+        _warn('load_fa_snapshot_rp', e)
         return None
 
 
@@ -845,7 +853,8 @@ def _load_fa_snapshot_h() -> Optional[pd.DataFrame]:
         return None
     try:
         return pd.read_parquet(_FA_SNAPSHOT_H_LATEST)
-    except Exception:
+    except Exception as e:
+        _warn('load_fa_snapshot_h', e)
         return None
 
 
@@ -855,7 +864,8 @@ def _load_fa_snapshot_sp() -> Optional[pd.DataFrame]:
         return None
     try:
         return pd.read_parquet(_FA_SNAPSHOT_SP_LATEST)
-    except Exception:
+    except Exception as e:
+        _warn('load_fa_snapshot_sp', e)
         return None
 
 

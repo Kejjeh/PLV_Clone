@@ -186,7 +186,8 @@ def _load_batter_games_2026() -> pd.DataFrame:
         if g['SB'].sum() == 0:  # file read OK but 0 matched => key bug, not a real 0; surface it
             import warnings
             warnings.warn("hitter_boom_stack: SB merge matched 0 rows — possible key dtype mismatch")
-    except Exception:
+    except Exception as e:
+        _warn("sb_merge", e)
         g['SB'] = 0  # boxscore absent (legit fallback) -> components fall back to no-SB fp_proxy
     g['fp_proxy'] = g['TB'] + g['BB'] + g['HBP'] + g['SB'] - g['K']
     g['xwoba_pg'] = g['xwoba_sum'] / g['xwoba_n'].replace(0, np.nan)

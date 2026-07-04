@@ -77,3 +77,46 @@ def test_annotate_rp_too_few_samples_none():
 def test_overall_fp_rp_per_row_needs_pop_returns_none():
     # Single-row RP FPwt cannot be computed without a population -> None (never invents).
     assert rw.overall_fp("rp", {"sv": 30, "fp_per_g": 10, "STUFF": 50}) is None
+
+
+# ── Sub-rating FPwt (item 7) ──────────────────────────────────────────────
+
+def _sp_sub_row(**over):
+    row = {"SWING_MISS": 50, "velo_rating": 50, "DAMAGE_SUPP": 50,
+           "WALK_AVOID": 50, "STRIKE_THROWING": 50, "CALLED_STRIKE": 50,
+           "GB_TENDENCY": 50}
+    row.update(over)
+    return row
+
+
+def test_overall_fp_sub_sp_all_50_is_50():
+    assert rw.overall_fp_sub("sp", _sp_sub_row()) == 50
+
+
+def test_overall_fp_sub_sp_swing_miss_dominant():
+    # SWING_MISS carries ~55% of the normalized weight -> moving it dominates.
+    hi = rw.overall_fp_sub("sp", _sp_sub_row(SWING_MISS=80))
+    lo = rw.overall_fp_sub("sp", _sp_sub_row(GB_TENDENCY=80))
+    assert hi > lo  # a +30 on SWING_MISS beats a +30 on GB_TENDENCY
+
+
+def test_overall_fp_sub_missing_returns_none():
+    row = _sp_sub_row()
+    del row["SWING_MISS"]
+    assert rw.overall_fp_sub("sp", row) is None
+
+
+def test_overall_fp_sub_hitter():
+    assert rw.overall_fp_sub("hitter", {"RAW_POWER": 60, "K_AVOIDANCE": 40}) is not None
+    assert rw.overall_fp_sub("hitter", {"RAW_POWER": 60}) is None  # missing K_AVOIDANCE
+
+
+def test_overall_fp_sub_rp_none():
+    assert rw.overall_fp_sub("rp", {"STUFF": 60}) is None
+
+
+def test_annotate_overall_fp_sub_in_place():
+    recs = [_sp_sub_row(), _sp_sub_row(SWING_MISS=80)]
+    rw.annotate_overall_fp_sub(recs, "sp")
+    assert recs[0]["OVERALL_FP_SUB"] == 50
+    assert recs[1]["OVERALL_FP_SUB"] > 50

@@ -32,6 +32,44 @@ WEIGHTS: dict[str, list[tuple[str, float]]] = {
 }
 
 
+# Sub-rating-level FPwt (item 7, optional display variant). The rating_reimagine
+# study found refit SUB-ratings forward-predict slightly better than the pillar
+# composite (SP subs .590 vs pillars .577; hitter subs .548 vs pillars .515).
+# Ridge sub-weights from the memo — SP is SWING_MISS-dominant; hitter keeps only
+# the positive-signal leads (RAW_POWER, K_AVOIDANCE) and drops CONTACT_QUALITY
+# (~-.001) / SPRAY_PROFILE (~0) as noise. Weights are normalized to sum 1 within
+# each role so the output stays on the 20-80 pillar scale. Display/context only
+# (Rule 13) — a diagnostic variant beside OVERALL_FP, never a projection number.
+SUB_WEIGHTS: dict[str, list[tuple[str, float]]] = {
+    "sp": [("SWING_MISS", .174), ("velo_rating", .036), ("DAMAGE_SUPP", .034),
+           ("WALK_AVOID", .026), ("STRIKE_THROWING", .021), ("CALLED_STRIKE", .018),
+           ("GB_TENDENCY", .010)],
+    "hitter": [("RAW_POWER", .007), ("K_AVOIDANCE", .005)],
+}
+
+
+def overall_fp_sub(role: str, row) -> int | None:
+    """Sub-rating FPwt (20-80) for a single hitter/SP row, from the reweighted
+    sub-ratings (item 7). Returns None if any required sub-rating is missing
+    (never invents). Weights are normalized to sum 1."""
+    weights = SUB_WEIGHTS.get(role)
+    if not weights:
+        return None
+    vals = [(row.get(k), w) for k, w in weights]
+    if any(v is None for v, _ in vals):
+        return None
+    wsum = sum(w for _, w in weights) or 1.0
+    return int(round(sum(v * w for v, w in vals) / wsum))
+
+
+def annotate_overall_fp_sub(records: list[dict], role: str) -> None:
+    """Attach OVERALL_FP_SUB (20-80) to each hitter/SP record in place (item 7).
+    None for any record missing a required sub-rating, or for roles without a
+    defined sub set (e.g. RP)."""
+    for r in records:
+        r["OVERALL_FP_SUB"] = overall_fp_sub(role, r)
+
+
 def overall_fp(role: str, row) -> int | None:
     """FPwt (20-80) for a single hitter/SP row. Returns None if any input
     pillar is missing (never invents a number). RP FPwt is population-relative

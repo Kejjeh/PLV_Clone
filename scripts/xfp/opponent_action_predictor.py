@@ -4,15 +4,27 @@ Two-stage:
   1. TRIGGER — P(team T transacts in next 24-48h), using day-of-week + time-since-last-tx.
   2. TARGET — given trigger, score rostered players for DROP and FAs for ADD.
 
-v1 LIMITATION (2026-06-04): the projection-history + PL-history panels just
-started accumulating today. Δ-rank features require ≥2 dated snapshots and
-will come online ~2026-06-11. Until then we use **per-opponent behavioral
-profiles** — hardcoded feature weights derived from the manager-rating
-audit (see plan: hidden-percolating-harp.md). Each profile reflects what
-that manager appears to value (PL rank vs raw outcomes vs trajectory).
+v1 (2026-06-04): per-opponent behavioral profiles — hardcoded feature weights
+derived from the manager-rating audit (see plan: hidden-percolating-harp.md).
+Each profile reflects what that manager appears to value (PL rank vs raw
+outcomes vs trajectory). Validated to surface Late-Night-Bettsing's actual
+archetype_breakout adds (Max Meyer, Weathers, Ashcraft) in the top-12.
 
-Once the panels have 2+ weeks of data, swap _hardcoded_profile() for a
-logistic / ranker fit from the panel. The CLI surface stays the same.
+PANEL REFIT — DEFERRED, gate NOT clearable yet (checked 2026-07-04, item 5):
+The projection-history panel (`player_projection_history.parquet`) now holds 20
+snapshots (2026-06-04 → 06-29) and 22 dated pl_cache files, so Δ-rank features
+ARE computable in principle. HOWEVER the pre-registered swap gate — "swap only
+if the panel refit backtests at least as well on the LNB canonical adds" — is
+UNCLEARABLE because those canonical adds (Weathers + Ashcraft 2026-05-04, Max
+Meyer 05-25) ALL PREDATE the panel's first snapshot (06-04): there is no
+before-the-add snapshot to compute the Δ-rank features the refit needs, so the
+refit cannot be scored on the pre-registered test. The only in-window LNB adds
+(E. Rodríguez, Ben Brown, both 06-04) sit AT the panel edge (no clean prior
+snapshot) and are n=2 — far too thin and off-pre-registration to substitute.
+=> v1 hardcoded PROFILES RETAINED. Re-run the refit + backtest once ≥4 weeks of
+post-06-04 LNB adds have accumulated (each with a clean prior snapshot), or
+re-anchor the canonical add set to in-panel-window adds and re-pre-register.
+Do NOT swap weights before the gate clears. The CLI surface stays the same.
 
 Usage:
   python scripts/xfp/opponent_action_predictor.py --team "Late Night Bettsing"

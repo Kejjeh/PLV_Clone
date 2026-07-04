@@ -3033,6 +3033,7 @@ const COL_TOOLTIPS = {
   t2_fp_projection: 'Two-year-out FP rate projection (T+2). Hitters: R²=0.28 on n=531 pairs (age coefficient sharper than T+1). SP R²=0.39. RP R²=0.26. Directional for dynasty/keeper.',
   OVERALL: 'Composite 20-80 rating: 0.55*CONTACT + 0.35*POWER + 0.10*DISCIPLINE (hitters) or empirical weights (pitchers). CAVEAT (2026-07-04 study): these weights describe SKILL, not fantasy value — the hitter version forward-predicts FP worse than last year FP alone. For FP-faithful weighting see FPwt. Feeds Blended xFP as a fitted prior — construction frozen pending /validate-feature.',
   OVERALL_FP: 'FP-faithful parallel composite (display-only, rating_reimagine 2026-07-04). Hitters .58*CONTACT+.17*POWER+.17*SB+.08*DISC (fwd r .515 vs OVERALL .477). SP .76*STUFF+.14*MOVE+.10*CTRL (fwd .577 vs .551). RP role-first .55*z(SV)+.35*STUFF+.10*z(FP/g) — CONTROL/BATTED_BALL carry zero forward FP and holds are anti-signal. Rule 13: context lens, never a ranker; rp3/rh3/rprs2 stay the headline.',
+  OVERALL_FP_SUB: 'EXPERIMENTAL sub-rating FPwt variant (item 7, display-only). Reweights the finer SUB-ratings instead of the pillars — SP is SWING_MISS-dominant (fwd r .590 vs FPwt-pillars .577); hitter uses RAW_POWER+K_AVOIDANCE leads (fwd .548 vs .515). A DIAGNOSTIC beside FPwt: when it disagrees with FPwt the sub-tools and the pillar rollup are telling different stories. Rule 13: context only, never a ranker. (No RP variant — RP FP is job-security-driven.)',
   CONTACT: 'Contact domain 20-80 rating — within-year z-score of (Z-contact + Chase-contact + K-avoid + Quality + Spray). Higher = better. THE load-bearing hitter pillar for FP (fwd r .47; carries ~58% of FP-faithful weight).',
   POWER: 'Power domain 20-80 rating — within-year z-score of (Raw EV + Launch + Damage production). Higher = better. FP-faithful weight ~17% (fwd r .25 — half its shipped weight); not rescued by high contact (interaction dead).',
   DISCIPLINE: 'Discipline domain 20-80 rating — within-year z-score of (Patience + Aggression). Higher = better. Near-zero forward FP weight for BrownU points (~8% FP-faithful) — skill descriptor, not a fantasy driver.',
@@ -3112,6 +3113,7 @@ const H_TBL_COLS = [
   { key: 't2_fp_projection', label: 'T+2', num: true, w: 4, fmt: v => (v == null ? '' : v.toFixed(3)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4, core: true },
   { key: 'OVERALL_FP',  label: 'FPwt', num: true, w: 4, core: true },
+  { key: 'OVERALL_FP_SUB', label: 'FPwt·s', num: true, w: 4 },
   { key: 'CONTACT',     label: 'C',   labelFull: 'Contact', num: true, w: 3, core: true },
   { key: 'POWER',       label: 'P',   labelFull: 'Power', num: true, w: 3, core: true },
   { key: 'DISCIPLINE',  label: 'D',   labelFull: 'Disc', num: true, w: 3, core: true },
@@ -3137,6 +3139,7 @@ const S_TBL_COLS = [
   { key: 'fp_per_start', label: 'FP/start', num: true, w: 4, core: true, fmt: v => (v == null ? '' : v.toFixed(2)) },
   { key: 'OVERALL',     label: 'Overall', num: true, bold: true, w: 4, core: true },
   { key: 'OVERALL_FP',  label: 'FPwt', num: true, w: 4, core: true },
+  { key: 'OVERALL_FP_SUB', label: 'FPwt·s', num: true, w: 4 },
   { key: 'STUFF',       label: 'S',   labelFull: 'Stuff', num: true, w: 3, core: true },
   { key: 'MOVEMENT',    label: 'M',   labelFull: 'Move', num: true, w: 3, core: true },
   { key: 'CONTROL',     label: 'C',   labelFull: 'Ctrl', num: true, w: 3, core: true },
@@ -3627,7 +3630,7 @@ function tblSortRows(rows, sort, cols) {
 // 20-80 rating chip helpers — every rating cell renders as a color-banded chip
 // so a 74 reads as elite at a glance (2026-07-04 readability feedback).
 const RATING_CHIP_KEYS = new Set([
-  'OVERALL', 'OVERALL_FP', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'STUFF', 'MOVEMENT', 'CONTROL',
+  'OVERALL', 'OVERALL_FP', 'OVERALL_FP_SUB', 'CONTACT', 'POWER', 'DISCIPLINE', 'SB', 'STUFF', 'MOVEMENT', 'CONTROL',
   'BATTED_BALL', 'velo_rating', 'VELO', 'SWING_MISS', 'CALLED_STRIKE', 'WALK_AVOID',
   'STRIKE_THROWING', 'DAMAGE_SUPP', 'GB_TENDENCY', 'BULK_IP', 'Z_CONTACT', 'O_CONTACT',
   'K_AVOIDANCE', 'CONTACT_QUALITY', 'SPRAY_PROFILE', 'RAW_POWER', 'LAUNCH_OPTIM',

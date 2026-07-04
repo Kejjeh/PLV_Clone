@@ -1063,7 +1063,8 @@ def annotate_context_lenses(records: list[dict], role: str, current_year: int) -
 # module lib/rating_weights.py (item 3, 2026-07-04) so /triangulate,
 # /scouting-report and /fa-pickup-deep-dive share them instead of re-deriving.
 # Re-exported here (`_FP_W`, `annotate_overall_fp`) for backward compatibility.
-from lib.rating_weights import WEIGHTS as _FP_W, annotate_overall_fp  # noqa: E402,F401
+from lib.rating_weights import (  # noqa: E402,F401
+    WEIGHTS as _FP_W, annotate_overall_fp, annotate_overall_fp_sub)
 
 
 def build_payload():
@@ -1098,6 +1099,10 @@ def build_payload():
     annotate_overall_fp(hitter_records, 'hitter')
     annotate_overall_fp(sp_records, 'sp')
     annotate_overall_fp(rp_records, 'rp')
+    # OVERALL_FP_SUB (item 7) — optional sub-rating FPwt variant, tooltip-flagged
+    # in the UI. Display/context only (Rule 13); RP has no defined sub set.
+    annotate_overall_fp_sub(hitter_records, 'hitter')
+    annotate_overall_fp_sub(sp_records, 'sp')
 
     print('Fetching ESPN roster map (once)...', flush=True)
     roster_map = fetch_espn_roster_map()

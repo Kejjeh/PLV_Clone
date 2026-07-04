@@ -20,8 +20,13 @@ Role detection priority:
 from __future__ import annotations
 
 import ast
+import sys as _sys
 import requests
 from functools import lru_cache
+
+
+def _warn(section, exc):
+    print(f"WARN pitcher_role.{section}: {exc}", file=_sys.stderr)
 
 
 # ── internal helpers ──────────────────────────────────────────────────────────
@@ -37,7 +42,8 @@ def _elig_set(player_or_row) -> set[str]:
     if isinstance(elig, str):
         try:
             elig = ast.literal_eval(elig)
-        except Exception:
+        except Exception as e:
+            _warn('elig_parse', e)
             elig = []
     return set(elig) if elig else set()
 
@@ -58,7 +64,8 @@ def _role_from_mlb_stats(mlbam_id: int, season: int = 2026) -> str:
         gs = int(stat.get('gamesStarted', 0))
         gp = max(int(stat.get('gamesPlayed', 1)), 1)
         return 'SP' if gs / gp >= 0.4 else 'RP'
-    except Exception:
+    except Exception as e:
+        _warn(f'role_from_mlb_stats({mlbam_id})', e)
         return 'SP'  # default: assume starter if API unavailable
 
 
@@ -114,13 +121,14 @@ def _resolve_pitcher_mlbam(name: str, team: str | None) -> int | None:
         pid = resolve_pitcher_id(name, team=team)
         if pid:
             return int(pid)
-    except Exception:
-        pass
+    except Exception as e:
+        _warn(f'resolve_pitcher_id({name})', e)
     try:
         from plv_clone.mlb_stats import resolve_mlbam
         pid = resolve_mlbam([name]).get(name)
         return int(pid) if pid else None
-    except Exception:
+    except Exception as e:
+        _warn(f'resolve_mlbam({name})', e)
         return None
 
 

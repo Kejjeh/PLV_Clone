@@ -110,7 +110,8 @@ def _warn_stale_caches():
         try:
             with open(path, 'r', encoding='utf-8') as f:
                 cache = json.load(f)
-        except Exception:
+        except Exception as e:
+            print(f"WARN {fname} is UNREADABLE — {e}", file=sys.stderr)
             continue
         fetched = cache.get('fetched')
         if not fetched:

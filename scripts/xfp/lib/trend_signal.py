@@ -13,9 +13,15 @@ leaderboard date-param ambiguity.
 """
 from __future__ import annotations
 from functools import lru_cache
+import sys as _sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
+
+
+def _warn(section, exc):
+    print(f"WARN trend_signal.{section}: {exc}", file=_sys.stderr)
+
 
 ROOT = Path(__file__).resolve().parents[3]
 C = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -108,7 +114,8 @@ def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
         l30['sb_g_l30'] = np.where(l30['g'] >= 8, l30['sb'] / l30['g'].clip(lower=1), np.nan)
         t = t.join(seas['sb_g']).join(l30['sb_g_l30'])
         t['sb_recent'] = t['sb_g_l30'] - t['sb_g']
-    except Exception:
+    except Exception as e:
+        _warn('sb_recent_overlay', e)
         t['sb_g'] = np.nan
         t['sb_g_l30'] = np.nan
         t['sb_recent'] = np.nan
@@ -271,7 +278,8 @@ def trend_line(name, *, team=None, position=None, role=None, hit_tbl=None, pit_t
             pid = resolve_pitcher_id(name, team=team, role=r)
         else:
             pid = resolve_batter_id(name, team=team, position=position)
-    except Exception:
+    except Exception as e:
+        _warn(f'resolve_id({name})', e)
         return None
     if pid is None:
         return None
