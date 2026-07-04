@@ -186,7 +186,9 @@ def build_sp_board() -> pd.DataFrame:
 
     # ---- FA pool ----
     ls = LeagueState(); lg = ls._get_league()
-    fas = [p for p in lg.free_agents(size=1500, position="SP")
+    # size=2000 UNFILTERED, position post-filtered — per-position size<2000 silently
+    # drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md; audit 2026-07-04).
+    fas = [p for p in lg.free_agents(size=2000)
            if getattr(p, "position", None) == "SP"]
     inj_ids = [int(p.playerId) for p in fas if getattr(p, "injured", False)]
     ret_map = {}
@@ -366,21 +368,23 @@ def build_hitter_board() -> pd.DataFrame:
             xfp_po=None if per_game is None else round(per_game * pg, 0),
         ))
 
-    # ── FA pool: pull across every hitter position, dedupe by playerId ──
+    # ── FA pool: ONE unfiltered size=2000 pull, hitter-eligibility post-filter ──
+    # (was 7 per-position size=1500 pulls — per-position fetches silently drop
+    # low-owned high-FP FAs AND cost 7x the API calls. feedback_fa_pool_size_cap.md;
+    # audit 2026-07-04.)
     ls = LeagueState(); lg = ls._get_league()
     seen, fa_players = set(), []
-    for fa_pos in ["C", "1B", "2B", "3B", "SS", "OF", "DH"]:
-        try:
-            for pl in lg.free_agents(size=1500, position=fa_pos):
-                pid = int(pl.playerId)
-                if pid in seen:
-                    continue
-                if not _is_hitter_slots(getattr(pl, "eligibleSlots", [])):
-                    continue
-                seen.add(pid)
-                fa_players.append(pl)
-        except Exception as e:
-            print(f"[free_agents pos={fa_pos}] {type(e).__name__}: {e}")
+    try:
+        for pl in lg.free_agents(size=2000):
+            pid = int(pl.playerId)
+            if pid in seen:
+                continue
+            if not _is_hitter_slots(getattr(pl, "eligibleSlots", [])):
+                continue
+            seen.add(pid)
+            fa_players.append(pl)
+    except Exception as e:
+        print(f"[free_agents unfiltered] {type(e).__name__}: {e}")
 
     inj_ids = [int(p.playerId) for p in fa_players if getattr(p, "injured", False)]
     ret_map = {}
