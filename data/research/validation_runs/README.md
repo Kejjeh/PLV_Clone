@@ -108,3 +108,5 @@ starting <year Y>.
 | 2026-05-16 | squared_up_rate_delta_prior_year | rh3 (component) | REJECTED — sample-size | Defer to 2028 |
 | 2026-05-16 | bat_speed_delta_prior_year | rh3 | REJECTED — sample-size | Defer to 2028 |
 | 2026-05-16 | xwoba_gap_to (re-audit) | rh3 | MARGINAL → research-stage recommended | Marginal lift now -0.0003 vs full baseline; career_stage carries the v2 joint lift |
+
+| sp_subs_fp_composite | rp3 | 2026-07-04 | REJECTED | gain -0.0024 vs full baseline (bar +0.005); holdout +0.0001; negative at all 5 cutoffs; algebraic redundancy — all constituents' shrunk split-day substrates already free Ridge params. Closes rating_reimagine queue #1 / the confounded +.434. |
