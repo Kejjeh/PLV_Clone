@@ -21,6 +21,7 @@ Caches per-year parquet under data/research/xfp_cache/statcast_{year}.parquet
 """
 from __future__ import annotations
 import os, sys, time, argparse, warnings
+from datetime import date, timedelta
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -54,7 +55,9 @@ SEASON_DATES = {
     2023: ('2023-03-30', '2023-10-01'),
     2024: ('2024-03-28', '2024-09-29'),
     2025: ('2025-03-27', '2025-10-05'),
-    2026: ('2026-03-26', '2026-05-04'),  # YTD only
+    # In-season year ends at yesterday so a from-scratch pull can't freeze at a
+    # hardcoded date (refresh_xfp_statcast.py appends the rest daily).
+    2026: ('2026-03-26', (date.today() - timedelta(days=1)).isoformat()),
 }
 
 def pull_year(year: int) -> pd.DataFrame:
@@ -311,11 +314,22 @@ def build():
 
     sp_all = pd.concat(season_frames, ignore_index=True)
     print(f'\nTotal SP-seasons: {len(sp_all)}', flush=True)
-    # If extended (>= 2020 inclusion), also write a separate extended file
-    if 2015 in YEARS or 2016 in YEARS or 2017 in YEARS or 2018 in YEARS or 2019 in YEARS or 2020 in YEARS:
-        ext_out = CACHE / 'sp_multiyr_2015_2025.csv'
-        sp_all.to_csv(ext_out, index=False)
-        print(f'Wrote extended {ext_out} ({len(sp_all)} rows)', flush=True)
+    # Extended history file — the input build_sp_archetypes.py, rp3, and most
+    # SP tools read. The daily default YEARS=[2021..2026] never recomputes
+    # 2015-2020, so replace only the years computed THIS run and keep the
+    # existing rows for every other year.
+    ext_out = CACHE / 'sp_multiyr_2015_2025.csv'
+    computed_years = sp_all['year'].unique()
+    if ext_out.exists():
+        prev = pd.read_csv(ext_out)
+        prev = prev[~prev['year'].isin(computed_years)]
+        sp_ext = pd.concat([prev, sp_all], ignore_index=True)
+    else:
+        sp_ext = sp_all
+    sp_ext = sp_ext.sort_values(['year', 'pitcher']).reset_index(drop=True)
+    sp_ext.to_csv(ext_out, index=False)
+    print(f'Wrote extended {ext_out} ({len(sp_ext)} rows; '
+          f'refreshed years {sorted(computed_years)})', flush=True)
     out_path = TMP / 'sp_multiyr.csv'
     sp_all.to_csv(out_path, index=False)
     print(f'Wrote {out_path} ({len(sp_all)} rows, {len(sp_all.columns)} cols)', flush=True)

@@ -191,6 +191,16 @@ def main():
         'python -X utf8 scripts/xfp/build_sp_alerts.py',
         timeout=120)
 
+    # 2.55. Refresh pitch_features parquets — the PLV research pipeline owns
+    # them, but step 2.6's pitch-mix/arsenal columns read year=<current>.
+    # Weekly cadence via the wrapper's staleness guard (no-op most days).
+    # Fail-soft: arsenal columns just stay at their last build.
+    ok_pf = run('2.55. Refresh pitch_features (arsenal source, weekly cadence)',
+                'python -X utf8 scripts/xfp/refresh_pitch_features.py',
+                timeout=1200)
+    if not ok_pf:
+        print('  ⚠ pitch_features refresh failed — arsenal columns stay stale')
+
     run('2.6. Build SP archetype ratings panel (20-80 + trajectories)',
         'python -X utf8 scripts/xfp/build_sp_archetypes.py',
         timeout=120)
