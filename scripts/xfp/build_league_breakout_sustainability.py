@@ -18,10 +18,9 @@ pd.set_option('display.max_columns', 40)
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
 from app.espn_connector import (
-    get_all_teams,
-    get_free_agents,
+    get_free_agents,  # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
 )
-from plv_clone.league_state import LeagueState
+from plv_clone.league_state import LeagueState, default_state
 
 MULTIYR = 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
 HITTER_POSITIONS = {'C','1B','2B','3B','SS','OF','DH','MI','CI','LF','CF','RF','UTIL'}
@@ -65,7 +64,7 @@ def pull_pools():
     mine_hit['percent_owned'] = 100.0
 
     print("Pulling all 8 team rosters...")
-    all_teams = get_all_teams()
+    all_teams = default_state().all_teams()
     print(f"  all_teams shape: {all_teams.shape}  cols: {list(all_teams.columns)[:12]}...")
     all_hit = all_teams[all_teams['position'].isin(HITTER_POSITIONS)].copy()
     my_ids = set(mine_hit['player_id'].tolist())

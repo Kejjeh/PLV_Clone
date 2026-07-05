@@ -143,8 +143,8 @@ def main():
           f"validated best simple forward indicator. rh3 = career-anchored model (headline).")
 
     if args.names:
-        from app.espn_connector import get_all_teams
-        allp = get_all_teams()
+        from plv_clone.league_state import default_state
+        allp = default_state().all_teams()
         print("\n=== LEVEL CARDS ===")
         for nm in [x.strip() for x in args.names.split(',') if x.strip()]:
             hit = allp[allp['player_name'] == nm]
@@ -157,6 +157,7 @@ def main():
                 print(f"  {nm:<22} — no qualifying 2026 sample (<{args.min_games}G / unresolved)")
         return
 
+    # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
     from app.espn_connector import get_my_roster, get_free_agents
     mine = get_my_roster()
     mine_ids = set()

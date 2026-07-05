@@ -26,6 +26,7 @@ def main():
     rel = rel[rel['ip_to'] >= 5]
 
     # Compute RP FP from raw stats (formula: K + IP*3.3 + SV*5 + HLD*2 - BB - 2*ER - H - HBP)
+    # item 13: vectorized — owner is scoring.pitcher_fp scalar; kept inline for perf
     rel['rp_fp_full'] = (
         rel['k_to'].fillna(0) + rel['ip_to'].fillna(0) * 3.3
         + rel['sv_to'].fillna(0) * 5 + rel['hld_to'].fillna(0) * 2

@@ -158,6 +158,7 @@ def pitcher_per_appearance(pitcher_id: int) -> pd.DataFrame:
         h=('h', 'sum'), outs=('outs', 'sum'), er=('er', 'sum'),
     )
     appearance['ip'] = appearance['outs'] / 3
+    # item 13: vectorized — owner is scoring.pitcher_fp scalar; kept inline for perf
     appearance['fp'] = (appearance['k'] + appearance['ip'] * 3.3
                         - appearance['h'] - 2 * appearance['er']
                         - appearance['bb'] - appearance['hbp'])

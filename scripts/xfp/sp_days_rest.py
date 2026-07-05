@@ -74,6 +74,7 @@ def sp_starts_with_fp(years=range(2018, 2026)) -> pd.DataFrame:
             k=('k','sum'), bb=('bb','sum'), hbp=('hbp','sum'),
             h=('h','sum'), outs=('outs','sum'), er=('er','sum'))
         per['ip'] = per['outs']/3
+        # item 13: vectorized — owner is scoring.pitcher_fp scalar; kept inline for perf
         per['fp'] = per['k'] + per['ip']*3.3 - per['h'] - 2*per['er'] - per['bb'] - per['hbp']
         per['game_date'] = pd.to_datetime(per['game_date'])
         per = per.sort_values(['pitcher','game_date'])

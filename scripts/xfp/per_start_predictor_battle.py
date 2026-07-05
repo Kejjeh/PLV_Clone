@@ -163,6 +163,7 @@ def main():
         per_start['ip'] = per_start['outs_est'] / 3.0
 
         # Approximate FP using ER ≈ runs_allowed (close enough for fantasy)
+        # item 13: vectorized — owner is scoring.pitcher_fp scalar; kept inline for perf
         per_start['actual_FP'] = (per_start['actual_K'] + per_start['ip'] * 3.3
                                   - per_start['actual_H'] - 2 * per_start['runs_allowed']
                                   - per_start['actual_BB'] - per_start['actual_HBP'])

@@ -70,8 +70,8 @@ def main():
         print("=== TREND CARDS ===")
         for nm in [x.strip() for x in args.names.split(',') if x.strip()]:
             # try to infer role/team from rostered-players table; else guess hitter then pitcher
-            from app.espn_connector import get_all_teams
-            allp = get_all_teams()
+            from plv_clone.league_state import default_state
+            allp = default_state().all_teams()
             hit_row = allp[allp['player_name'] == nm]
             if not hit_row.empty:
                 r = hit_row.iloc[0]
@@ -85,6 +85,7 @@ def main():
                     print(card(nm, 'SP', None))
         return
 
+    # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
     from app.espn_connector import get_my_roster, get_free_agents
     mine = get_my_roster()
     rows_h, rows_p, unres = [], [], []
