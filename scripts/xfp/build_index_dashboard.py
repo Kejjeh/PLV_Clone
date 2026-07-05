@@ -1132,6 +1132,13 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                                      letterSpacing:1, borderRadius:2, whiteSpace:'nowrap' }}>
                         ★ MINE
                       </span>
+                    ) : p.roster === 'taken' ? (
+                      <span title={p.taken_by_team ? `Rostered by ${p.taken_by_team}` : 'Rostered by another team'}
+                            style={{ color:colors.dim, fontFamily:MONO, fontSize:9, letterSpacing:0.5,
+                                     whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                                     display:'inline-block', maxWidth:64, verticalAlign:'bottom' }}>
+                        {p.taken_by_team || 'TAKEN'}
+                      </span>
                     ) : (
                       <span style={{ color:colors.faint, fontFamily:MONO, fontSize:9, letterSpacing:1 }}>—</span>
                     )}
@@ -2018,6 +2025,13 @@ function HittersTab({ hitters, colors, editorialHeat, favorites, toggleFavorite,
                       <span style={{ padding:'1px 6px', border:`1px solid ${colors.accent}`,
                                      color:colors.accent, fontFamily:MONO, fontSize:9,
                                      letterSpacing:1, borderRadius:2, whiteSpace:'nowrap' }}>★ MINE</span>
+                    ) : h.roster === 'taken' ? (
+                      <span title={h.taken_by_team ? `Rostered by ${h.taken_by_team}` : 'Rostered by another team'}
+                            style={{ color:colors.dim, fontFamily:MONO, fontSize:9, letterSpacing:0.5,
+                                     whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis',
+                                     display:'inline-block', maxWidth:64, verticalAlign:'bottom' }}>
+                        {h.taken_by_team || 'TAKEN'}
+                      </span>
                     ) : (
                       <span style={{ color:colors.faint, fontFamily:MONO, fontSize:9 }}>—</span>
                     )}
@@ -2067,7 +2081,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
   // Per-table sort state — each table can be sorted independently.
   const [rotSort, setRotSort]     = React.useState({ col: 'xfpV11',   dir: 'desc' });
   const [availSort, setAvailSort] = React.useState({ col: 'xfpV11',   dir: 'desc' });
-  const [bpSort, setBpSort]       = React.useState({ col: 'fpTotal',  dir: 'desc' });
+  const [bpSort, setBpSort]       = React.useState({ col: 'rpFullYear', dir: 'desc' });
 
   function makeSortHandler(state, setState) {
     return (col) => {
@@ -2176,6 +2190,11 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
       {/* Rotation table */}
       <SectionHeading num="I" label="My Rotation"
         right={`${rotation.length} SP · CLICK ANY HEADER TO SORT`} colors={colors} />
+      <div style={{ padding:'0 32px 6px', fontSize:11, color:colors.dim, fontStyle:'italic', lineHeight:1.45 }}>
+        League cap — only the first <b style={{ color:colors.text, fontStyle:'normal' }}>10 SP starts each week</b> score;
+        starts 11+ are zeros. At ~1.19 starts per active SP a deep rotation can overflow — when it does, bench the
+        lowest-EV <i>start</i>, not the lowest-ranked arm.
+      </div>
       <div style={{ padding:'0 32px 8px', overflow:'auto' }}>
         <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
           <thead>
@@ -2403,19 +2422,29 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
       {bullpen.length > 0 && (
         <>
           <SectionHeading num="IV" label="My Bullpen"
-            right={`${bullpen.length} RP · CLICK ANY HEADER TO SORT`} colors={colors} />
-          <div style={{ padding:'0 32px 24px' }}>
+            right={`${bullpen.length} RP · rprs2 MODEL · CLICK ANY HEADER TO SORT`} colors={colors} />
+          <div style={{ padding:'0 32px 6px', fontSize:11, color:colors.dim, fontStyle:'italic', lineHeight:1.45 }}>
+            Ranked by <b style={{ color:colors.text, fontStyle:'normal' }}>rprs2</b> full-season xFP total — the RP
+            model (saves + holds included), the same basis as its rank, Δ Repl and Sig — so add/drop calls here are
+            model-backed, not just ESPN totals. <b style={{ color:colors.text, fontStyle:'normal' }}>RoS</b> = remaining-season
+            total; <b style={{ color:colors.text, fontStyle:'normal' }}>Δ&nbsp;Repl</b> = FP above a replacement RP;
+            <b style={{ color:colors.text, fontStyle:'normal' }}> Sig</b> = the model's add/hold/drop call. “—” = outside rprs2 coverage.
+          </div>
+          <div style={{ padding:'0 32px 24px', overflow:'auto' }}>
             <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
               <thead>
                 <tr style={{ borderBottom:`2px solid ${colors.text}` }}>
                   <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
                                fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
-                  <SortTh col="name"      label="Pitcher"   align="l" width={170} sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
-                  <SortTh col="proTeam"   label="Team"      align="l" width={50}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
-                  <SortTh col="gp"        label="GS/G"      width={50}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
-                  <SortTh col="fpTotal"   label="ESPN FP"   width={64}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
-                  <SortTh col="fpPerGame" label="ESPN FP/G" width={72}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
-                  <SortTh col="pctOwned"  label="% Owned"   width={64}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="name"        label="Pitcher"   align="l" width={170} sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="proTeam"     label="Team"      align="l" width={44}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="rpFullYear"  label="Full-yr"   width={64}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="rpRoSFp"     label="RoS"       width={56}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="rpReplDelta" label="Δ Repl"    width={62}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="rpSignal"    label="Sig"       width={54}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="rpRolePrior" label="Role"      align="l" width={72}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="fpPerGame"   label="ESPN FP/G" width={72}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
+                  <SortTh col="pctOwned"    label="% Owned"   width={62}  sortCol={bpSort.col} sortDir={bpSort.dir} onSort={handleBpSort} colors={colors} />
                 </tr>
               </thead>
               <tbody>
@@ -2424,8 +2453,24 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
                     <td style={{ padding:'7px 8px', fontSize:13, fontFamily:SERIF, fontStyle:'italic', color:colors.dim }}>{idx + 1}</td>
                     <td style={{ padding:'7px 8px', fontSize:14, fontWeight:500 }}>{p.name}</td>
                     <td style={{ padding:'7px 8px', fontSize:11, color:colors.dim, fontFamily:MONO }}>{p.proTeam || '—'}</td>
-                    <td style={dataCell(colors, colors.dim)}>{p.gp ?? '—'}</td>
-                    <td style={dataCell(colors)}>{p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)}</td>
+                    <td style={dataCell(colors, p.rpFullYear == null ? colors.faint : colors.text)}>
+                      {p.rpFullYear == null ? '—' : fmt(p.rpFullYear, 0)}
+                    </td>
+                    <td style={dataCell(colors, colors.dim)}>
+                      {p.rpRoSFp == null ? '—' : fmt(p.rpRoSFp, 0)}
+                    </td>
+                    <td style={dataCell(colors, p.rpReplDelta == null ? colors.faint : (p.rpReplDelta >= 0 ? colors.pos : colors.neg))}>
+                      {p.rpReplDelta == null ? '—' : (p.rpReplDelta >= 0 ? '+' : '') + fmt(p.rpReplDelta, 0)}
+                    </td>
+                    <td style={{ padding:'7px 8px', textAlign:'center' }}>
+                      {p.rpSignal ? (
+                        <span style={{ fontFamily:MONO, fontSize:9, letterSpacing:1, fontWeight:600,
+                                       color: p.rpSignal === 'add' ? colors.pos : p.rpSignal === 'drop' ? colors.neg : colors.dim }}>
+                          {p.rpSignal.toUpperCase()}
+                        </span>
+                      ) : <span style={{ color:colors.faint }}>—</span>}
+                    </td>
+                    <td style={{ padding:'7px 8px', fontSize:10, color:colors.dim, fontFamily:MONO, textTransform:'uppercase' }}>{p.rpRolePrior || '—'}</td>
                     <td style={dataCell(colors)}>{p.fpPerGame == null ? '—' : fmt(p.fpPerGame, 2)}</td>
                     <td style={dataCell(colors, colors.dim)}>{p.pctOwned == null ? '—' : fmt(p.pctOwned, 1) + '%'}</td>
                   </tr>
