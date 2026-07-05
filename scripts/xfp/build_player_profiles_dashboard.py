@@ -1,5 +1,22 @@
 """
-build_player_profiles_dashboard.py — Player Profiles dashboard.
+build_player_profiles_dashboard.py — Player Profiles: the EXPECTED-performance dashboard.
+
+PURPOSE: surface talent-/process-level EXPECTED performance from Statcast, bat
+tracking, Stuff+, the 20-80 archetype ratings (Contact/Power/Discipline,
+Stuff/Movement/Control + sub-domains), archetype labels + trajectory, and the
+rh3/rp3/rprs2 model projections. This dashboard reads SKILL, NOT actual results:
+realized counting stats (HR/RBI/R, W/L, ERA, actual FP totals) are out of scope.
+The fp_per_* / rank_in_year / usage columns are retained only as clearly-tagged
+"· actual" validation/usage context (dimmed, grouped under "Validation — actual
+results"), and every table now defaults to sorting by the EXPECTED grade (OVERALL),
+not realized FP.
+
+DISTINCT FROM "the process view": there is no separate live process dashboard.
+The PR8 "process panel" (sp_process_panel.csv / hitter_process_panel.csv) is a
+narrow rolling L30-vs-season trend z-score consumed as one row inside the
+/sp-slate-grid & /hitter-slate-grid skills — not a page. The legacy PLV "Process
+Report" HTML is archived in scripts/_attic/. Profiles is the current, superseding
+expected-performance surface.
 
 Reads:
   data/research/hitter_ratings_master.csv       (after Fix A: includes `batter`)
