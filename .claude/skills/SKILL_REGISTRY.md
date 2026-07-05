@@ -41,14 +41,16 @@ The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring
 
 - **Reference impl:** `triangulate` — imports `detect_pitcher_role`, `pl_cache`, `boom_bust`,
   `extra_lenses(floor/park/opp/next_start)`. Every board copies this pattern.
-- **SP boards:** MERGE `sp-slate-grid` + `sp-pl-board` → `sp-board --scope {slate|roster}`
-  (preserve PL-sentiment + HR/9 lens). `stream-the-stack` stays thin (shares probables +
-  FA-pool helpers). `sp-stuff-board` (Stuff+) and `sp-floor` (K-BB floor) stay standalone
-  single-lens; sp-floor bust tiers are the single bench-priority source.
+- **SP boards:** ✅ MERGED 2026-07-04 → `sp-board --scope {slate|roster}` (PL-sentiment +
+  HR/9 preserved; old `sp-slate-grid`/`sp-pl-board` kept as delegating aliases).
+  `stream-the-stack` stays thin (shares probables + FA-pool helpers). `sp-stuff-board`
+  (Stuff+) and `sp-floor` (K-BB floor) stay standalone single-lens; sp-floor bust tiers
+  are the single bench-priority source.
 - **SP cap family:** `sp-week-plan` / `forced-drop-planner` / `pregame-check` / `sp-bench-mc`
   all DELEGATE to `cap_math` (forced-drop-planner's `detect_pitcher_role` + `lineup_slot=='IL'`
   math is canonical).
-- **FA pitcher pools:** MERGE `fa-sp-pool` + `fa-rp-pool` → `fa-pitcher-pool --role {sp|rp}`.
+- **FA pitcher pools:** ✅ MERGED 2026-07-04 → `fa-pitcher-pool --role {sp|rp}` (old
+  `fa-sp-pool`/`fa-rp-pool` kept as delegating aliases).
 - **Archetype trio:** `sp/hitter/rp-archetype` skills kept; ENGINE unified onto one template
   + per-position definitions JSON; matrix prose deleted from each SKILL.md.
 - **Hitter-form family:** `breakout-sustainability` / `slump-or-decline` / `hitter-sustainability`
@@ -56,8 +58,9 @@ The bypass hotspots are the `scripts/xfp` layer's re-implementations of `scoring
   SP mirror: `sp-breakout-signal` / `sp-decline` / `pitcher-sustainability` / `rp-decline`.
 - **Hitter boards:** `hitter-slate-grid` is the superset; `xfp-board`, `level-board`,
   `fa-replacement-pool`, `hitter-compare` → thin modes over one FA-board core.
-- **Absorb:** `boom-stack-explain` → `boom-bust-history --explain`.
-  **Deprecate:** `pl-cross-reference` → pl_cache escape hatch only.
+- **Absorb:** ✅ 2026-07-04 `boom-stack-explain` → `boom-bust-history --explain` (alias kept).
+  **`pl-cross-reference`:** RETAINED 2026-07-04 (only pure external-sanity surface) — reads
+  via the `lib/pl_cache` escape hatch instead of bare WebFetch. NOT deprecated.
 - **New:** `streamer-precision-board` (✅ built), `buy-low-sell-high-scan`, `cap-engine` (the
   `cap_math` helpers above, now the lib layer of it).
 

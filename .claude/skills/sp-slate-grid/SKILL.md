@@ -4,6 +4,11 @@ description: Full-slate SP scan over a date window (default today + tomorrow) jo
 maturity: legacy-lens-stack
 ---
 
+> **⚠ MERGED (item 15, 2026-07-04) → `/sp-board --scope slate`.** This SKILL is
+> the full slate-scan recipe and stays live as the delegate; new invocations
+> should prefer `/sp-board --scope slate`. Companion: `/sp-board --scope roster`
+> (the old /sp-pl-board).
+
 # sp-slate-grid
 
 You are rendering the **full SP slate** for a date window — every scheduled

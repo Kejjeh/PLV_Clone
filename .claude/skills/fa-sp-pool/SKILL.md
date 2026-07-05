@@ -4,6 +4,10 @@ description: Identify FA starting pitchers actually available in your ESPN leagu
 maturity: legacy-lens-stack
 ---
 
+> **⚠ MERGED (item 15, 2026-07-04) → `/fa-pitcher-pool --role sp`.** This SKILL
+> is the SP-pool recipe and stays live as the delegate; new invocations should
+> prefer `/fa-pitcher-pool --role sp`.
+
 # fa-sp-pool
 
 You are identifying which starting pitchers are ACTUALLY available

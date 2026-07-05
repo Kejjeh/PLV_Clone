@@ -3,6 +3,13 @@ name: pl-cross-reference
 description: Cross-reference our model picks against current Pitcher List rankings + recent article takes. Fetches the latest "Top 150 Hitters" or "Top 100 Starting Pitchers" via WebFetch, pulls per-player dedicated profile pages, and surfaces divergence (where PL disagrees with our model and why). Use whenever the user asks "what does Pitcher List say about X" or "how does PL rank these guys" or wants an external sanity check before committing to a pickup.
 ---
 
+> **Status (item 15, 2026-07-04): RETAINED, not deprecated.** This is the only
+> pure external-sanity-check surface (raw PL vs our model), so it stays. When you
+> fetch PL rankings here, READ them through the `scripts/xfp/lib/pl_cache.py`
+> owner (`load_pl_ranks()` + cadence-aware `cache_is_stale()`) rather than a bare
+> WebFetch — the cache is the escape hatch that avoids re-fetching a still-fresh
+> edition (Top 100 SP = Mon, closers ≈ Tue, Top 150 H ≈ Wed, streamers rolling).
+
 # pl-cross-reference
 
 ## ⚠ When `/triangulate` is the better choice (2026-05-30)

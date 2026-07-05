@@ -4,6 +4,10 @@ description: Identify FA relief pitchers actually available in your ESPN league,
 maturity: legacy-lens-stack
 ---
 
+> **⚠ MERGED (item 15, 2026-07-04) → `/fa-pitcher-pool --role rp`.** This SKILL
+> is the RP-pool recipe and stays live as the delegate; new invocations should
+> prefer `/fa-pitcher-pool --role rp`.
+
 # fa-rp-pool
 
 You are identifying which relief pitchers are ACTUALLY available

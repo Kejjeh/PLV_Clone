@@ -10,6 +10,29 @@ player set. This is the lens that complements `/sp-slate-grid`,
 `/hitter-slate-grid`, and `/triangulate` — those skills show what the
 model projects; this skill shows what's actually been happening.
 
+## `--explain <player>` mode (absorbs /boom-stack-explain, item 15)
+
+When invoked with `--explain <player>` (or when the user asks "why is X's
+boom_stack N/4", "what's driving this tag", "decompose this boom_stack"), do NOT
+render the roster actuals table — instead decompose that ONE player's current
+`boom_stack` tag into its component signals:
+
+1. Resolve the player to MLBAM (name flip + norm + KNOWN_COLLISIONS guard).
+2. Pull the live boom_stack record (SP: `data/outputs/sp_boom_stack_full_pool_<date>.json`;
+   hitter: `data/outputs/hitter_boom_stack_<date>.json`).
+3. For each of the 4 components (SP: skill_spike / recform_hot / opp_soft /
+   park_friendly; hitter: skill_spike_hitter / recform_hot_hitter /
+   opp_soft_hitter / lineup_amp_hitter): show **status (fired/not) · value ·
+   threshold · why**.
+4. Show the tier outcome lookup (boom%/bust%/E[FP] for this stack value at this
+   player's tier) from the validated tier table.
+5. **Verdict.** Explanatory ONLY — the headline number stays rp3/rh3, and
+   boom_stack is a context lens (Rule 13), never a ranker.
+
+This is the diagnostic companion to the roster-wide actuals view: the table
+shows *how variable* a player has been; `--explain` shows *why the model's
+boom tag is what it is* for one player.
+
 The skill exists because the model layers (Blended xFP, rp3, rh3,
 archetype) anchor on career-long signal. Recent actuals can diverge
 sharply — Bradish's blend says 5.98 (streamer tier) but his actual L5

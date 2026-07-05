@@ -3,6 +3,10 @@ name: boom-stack-explain
 description: Decompose any player's current boom_stack tag into components — explains WHY the stack value is what it is and what the user should do. Use when user asks "why is X's boom_stack 2/4" or "what's driving this tag" or "decompose this projection."
 ---
 
+> **⚠ ABSORBED (item 15, 2026-07-04) → `/boom-bust-history --explain <player>`.**
+> This decomposition now lives as the `--explain` mode of `/boom-bust-history`;
+> this SKILL stays as the alias. Behaviour is identical.
+
 # /boom-stack-explain
 
 ## Purpose

@@ -4,6 +4,12 @@ description: The master SP decision board for the BrownU roster + FA pool. One r
 maturity: models-actuals-hr-pl-sentiment
 ---
 
+> **⚠ MERGED (item 15, 2026-07-04) → `/sp-board --scope roster`.** This SKILL is
+> the roster+FA PL-board recipe and stays live as the delegate (engine
+> `build_sp_pl_board.py` unchanged, incl. the Nick-sentiment + HR/9 lenses); new
+> invocations should prefer `/sp-board --scope roster`. Companion:
+> `/sp-board --scope slate` (the old /sp-slate-grid).
+
 # sp-pl-board — master SP decision board (our models × actuals × HR × Pitcher List + Nick sentiment)
 
 > **One board, every lens.** This is the consolidated SP view: our *validated* rank
