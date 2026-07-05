@@ -1,24 +1,24 @@
 {
   "bucket": "H",
-  "confidence": 0.5,
+  "confidence": 1.0,
   "decision_id": "2026-07-05_max_muncy_H_001",
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 61,
     "archetype_traj": "STABLE",
-    "blended_xfp": 2.3452939900901386,
-    "live_marginal": 20.19999999999999,
-    "model_rank": 15,
+    "blended_xfp": 2.3448001214781318,
+    "live_marginal": -12.200000000000003,
+    "model_rank": 51,
     "override_tag": null,
-    "pl_rank": 83,
-    "proj_per": 2.35,
+    "pl_rank": 80,
+    "proj_per": 1.97,
     "replacement_delta": null
   },
   "mlbam_id": 571970,
   "player_name": "Max Muncy",
-  "reason_tag": "model_anchored",
+  "reason_tag": "no_convergence",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-05",
-  "verdict_top": "BUY"
+  "verdict_top": "MIXED"
 }

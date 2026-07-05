@@ -1,24 +1,24 @@
 {
   "bucket": "H",
-  "confidence": 0.75,
+  "confidence": 1.0,
   "decision_id": "2026-07-05_bo_bichette_H_001",
   "inputs": {
     "archetype_label": "AVG_HACKER",
     "archetype_overall": 54,
     "archetype_traj": "TRENDING_UP",
-    "blended_xfp": 2.494946075529105,
-    "live_marginal": 15.5,
-    "model_rank": 120,
+    "blended_xfp": 2.5005320044091097,
+    "live_marginal": 12.799999999999997,
+    "model_rank": 49,
     "override_tag": null,
-    "pl_rank": 68,
-    "proj_per": 1.85,
+    "pl_rank": 67,
+    "proj_per": 1.98,
     "replacement_delta": null
   },
   "mlbam_id": 666182,
   "player_name": "Bo Bichette",
-  "reason_tag": "archetype_breakout",
+  "reason_tag": "no_convergence",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-05",
-  "verdict_top": "BUY"
+  "verdict_top": "MIXED"
 }

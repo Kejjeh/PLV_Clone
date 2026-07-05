@@ -1,6 +1,6 @@
 {
   "bucket": "SP",
-  "confidence": 0.75,
+  "confidence": 1.0,
   "decision_id": "2026-07-05_hunter_greene_SP_001",
   "inputs": {
     "archetype_label": "PURE_STUFF",
@@ -8,15 +8,15 @@
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 15.445107226668831,
     "live_marginal": -13.71999999999997,
-    "model_rank": 37,
+    "model_rank": 31,
     "override_tag": null,
-    "pl_rank": null,
+    "pl_rank": 27,
     "proj_per": 12.27,
     "replacement_delta": null
   },
   "mlbam_id": 668881,
   "player_name": "Hunter Greene",
-  "reason_tag": "process_upgrade",
+  "reason_tag": "strong_hold",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-05",

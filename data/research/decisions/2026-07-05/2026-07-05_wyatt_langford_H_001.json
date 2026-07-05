@@ -1,17 +1,17 @@
 {
   "bucket": "H",
-  "confidence": 0.75,
+  "confidence": 0.5,
   "decision_id": "2026-07-05_wyatt_langford_H_001",
   "inputs": {
     "archetype_label": "AVERAGE_HITTER",
     "archetype_overall": 53,
     "archetype_traj": "CAREER_LOW",
-    "blended_xfp": 2.677429151667902,
+    "blended_xfp": 2.6787565732767216,
     "live_marginal": null,
-    "model_rank": 189,
+    "model_rank": 78,
     "override_tag": null,
-    "pl_rank": 47,
-    "proj_per": 1.67,
+    "pl_rank": null,
+    "proj_per": 1.9,
     "replacement_delta": null
   },
   "mlbam_id": 694671,

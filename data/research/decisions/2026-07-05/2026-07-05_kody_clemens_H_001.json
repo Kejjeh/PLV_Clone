@@ -1,24 +1,24 @@
 {
   "bucket": "H",
-  "confidence": 0.5,
+  "confidence": 1.0,
   "decision_id": "2026-07-05_kody_clemens_H_001",
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 62,
     "archetype_traj": "TRENDING_UP",
-    "blended_xfp": 1.9128338878500328,
-    "live_marginal": -28.60000000000001,
-    "model_rank": 214,
+    "blended_xfp": 1.9049715578106994,
+    "live_marginal": -25.900000000000006,
+    "model_rank": 85,
     "override_tag": null,
-    "pl_rank": 139,
-    "proj_per": 1.62,
+    "pl_rank": 106,
+    "proj_per": 1.88,
     "replacement_delta": null
   },
   "mlbam_id": 665019,
   "player_name": "Kody Clemens",
-  "reason_tag": "archetype_breakout",
+  "reason_tag": "no_convergence",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-05",
-  "verdict_top": "BUY"
+  "verdict_top": "MIXED"
 }
