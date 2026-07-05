@@ -11,12 +11,16 @@ The fp_per_* / rank_in_year / usage columns are retained only as clearly-tagged
 results"), and every table now defaults to sorting by the EXPECTED grade (OVERALL),
 not realized FP.
 
-DISTINCT FROM "the process view": there is no separate live process dashboard.
-The PR8 "process panel" (sp_process_panel.csv / hitter_process_panel.csv) is a
-narrow rolling L30-vs-season trend z-score consumed as one row inside the
-/sp-slate-grid & /hitter-slate-grid skills — not a page. The legacy PLV "Process
-Report" HTML is archived in scripts/_attic/. Profiles is the current, superseding
-expected-performance surface.
+DISTINCT FROM the xFP board (index.html — the "V12 PRODUCTION (V11 + IL) · SP xFP
+Model" page, built by build_index_dashboard.py). That board is the roster-DECISION
+surface: it ranks your team + the FA pool + league leaders by the model's PROJECTED
+fantasy points (rh3 hitters / rp3 SPs) across My-Team / Team Audit / Pitchers /
+Hitters / Analysis / Advisory tabs, to answer who-to-start/add/drop. Profiles is the
+SCOUTING layer beneath it: the 20-80 expected-skill ratings + archetype process that
+explain WHY a player projects the way they do. Same models, two altitudes — the xFP
+board is the bottom-line ranking; Profiles is the talent/process behind the number.
+(Note: the PR8 "process panel" — sp_process_panel.csv — is a different, narrow
+rolling-trend z-score consumed only inside the slate-grid skills, not a page.)
 
 Reads:
   data/research/hitter_ratings_master.csv       (after Fix A: includes `batter`)

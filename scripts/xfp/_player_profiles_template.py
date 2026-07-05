@@ -595,7 +595,7 @@ BODY_HEADER = """
   <div>
     <h1>Player Profiles <span class="page-tagline">Expected Performance</span></h1>
     <p class="page-subtitle">What a player's underlying skill says to <b>expect</b> — from Statcast, bat tracking, Stuff+, the 20-80 archetype ratings, and the rh3/rp3/rprs2 model projections.</p>
-    <p class="page-scopenote"><b>What this is:</b> talent &amp; process, forward-looking. &nbsp;<b>What this is NOT:</b> a box score — no realized HR/RBI/R, W/L, ERA, or actual FP totals. Columns tagged <span class="col-actual">· actual</span> appear only as validation / usage context. &nbsp;·&nbsp; <b>Distinct from the "process" view:</b> that's a narrow rolling L30-vs-season trend z-score used inside the <code>/sp-slate-grid</code> &amp; <code>/hitter-slate-grid</code> skills — not this page.</p>
+    <p class="page-scopenote"><b>What this is:</b> talent &amp; process, forward-looking. &nbsp;<b>What this is NOT:</b> a box score — no realized HR/RBI/R, W/L, ERA, or actual FP totals. Columns tagged <span class="col-actual">· actual</span> appear only as validation / usage context. &nbsp;·&nbsp; <b>Distinct from the xFP board</b> (<code>index.html</code> — "V12 · SP xFP Model"): that board <i>ranks</i> your roster + FAs + league by projected fantasy points for start / add / drop calls; this page is the <b>scouting layer beneath it</b> — the expected-skill ratings &amp; archetype process that explain why a player projects the way they do.</p>
     __TOPNAV__PROFILES__
   </div>
   <div class="search-wrap">
@@ -664,12 +664,15 @@ HOME_TAB = """
       and usage counts) are kept only so you can eyeball whether the expected grade
       tracks realized output — they never drive the default view (every table sorts
       by the expected Overall grade).</p>
-      <p><b>Distinct from the "process" view.</b> There is no separate live process
-      dashboard. The PR8 "process panel" is a narrow rolling L30-vs-season trend
-      z-score ("is the process getting better or worse lately") consumed as one row
-      inside the <code>/sp-slate-grid</code> &amp; <code>/hitter-slate-grid</code>
-      skills; the legacy PLV "Process Report" page is archived. This page is the
-      current, superseding expected-performance surface.</p>
+      <p><b>Distinct from the xFP board</b> (<code>index.html</code> — the
+      "V12 PRODUCTION (V11 + IL) · SP xFP Model" page). That board is the
+      <b>decision surface</b>: it ranks your roster, the FA pool, and league leaders
+      by the model's <b>projected fantasy points</b> (rh3 for hitters, rp3 for SPs),
+      with My-Team, Team Audit, Analysis and Advisory tabs — it answers "who to
+      start, add, or drop." This page is the <b>scouting layer beneath it</b>: the
+      20-80 expected-skill ratings and the archetype process that explain <i>why</i>
+      a player projects the way they do. Same models, two altitudes — the xFP board
+      is the bottom-line ranking; Profiles is the talent/process behind the number.</p>
       <p><b>20-80 scale.</b> 50 = league mean for that year, 10 points = 1 SD,
       capped to [20, 80]. PLUS = ≥60, AVG = 40–59, MINUS = &lt;40.</p>
       <p><b>27-cell archetype matrix.</b> Hitters: every combination of
