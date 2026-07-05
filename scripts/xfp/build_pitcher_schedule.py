@@ -52,7 +52,17 @@ TEAM_ABBREV = {
 
 
 def fetch_schedule(start: date, end: date) -> list[dict]:
-    """Pull MLB regular-season games + probablePitcher between dates."""
+    """Pull MLB regular-season games + probablePitcher between dates.
+
+    NOT migrated to mlb_stats.get_schedule (item 9-tail, checked 2026-07-04):
+    this fetch hydrates ONLY probablePitcher (no team), so it emits team NAMES
+    ("Washington Nationals") which main() then maps to abbrevs via TEAM_ABBREV
+    and writes to the `team`/`opp_team` columns of pitcher_schedule_2026.csv.
+    get_schedule hydrates team → returns ABBREVIATIONS, which would silently
+    change those cached columns (live-diffed: name vs abbr on every row). Left
+    as-is to keep the model-adjacent CSV byte-stable; revisit only with a
+    byte-diff of pitcher_schedule_2026.csv + a downstream-consumer audit.
+    """
     url = (
         'https://statsapi.mlb.com/api/v1/schedule'
         f'?sportId=1&startDate={start.isoformat()}&endDate={end.isoformat()}'

@@ -414,28 +414,27 @@ def _opp_bat_map():
 
 @functools.lru_cache(maxsize=1)
 def _upcoming_schedule():
-    """Next 9 days of MLB games with probable-pitcher ids + venue team. Cached once per
-    process; returns () on any failure so the lens degrades to None."""
+    """Next 9 days of MLB games with probable-pitcher ids + venue team abbr.
+    Cached once per process; returns () on any failure so the lens degrades to
+    None.
+
+    Delegates the raw fetch to the mlb_stats.get_schedule owner (item 9,
+    2026-07-04) — gains the 3-attempt retry + fail-soft caching, and drops the
+    hand-rolled schedule?hydrate=probablePitcher walk. Output is byte-identical
+    to the prior hand-mapped version (live-diffed 123/123 rows): get_schedule's
+    API abbreviations match the old _TEAM_ABBR name→abbr map exactly, and the
+    non-Final filter is preserved.
+    """
     try:
-        import requests
         from datetime import date, timedelta
+        from plv_clone.mlb_stats import get_schedule
         start = date.today(); end = start + timedelta(days=9)
-        url = ('https://statsapi.mlb.com/api/v1/schedule?sportId=1'
-               f'&startDate={start.isoformat()}&endDate={end.isoformat()}&hydrate=probablePitcher')
-        r = requests.get(url, timeout=15)
-        if r.status_code != 200:
-            return ()
         out = []
-        for dd in r.json().get('dates', []):
-            for g in dd.get('games', []):
-                # skip already-final games — "next start" must be upcoming
-                state = (g.get('status', {}) or {}).get('abstractGameState', '')
-                if state == 'Final':
-                    continue
-                h = g['teams']['home']['team']['name']; a = g['teams']['away']['team']['name']
-                hp = (g['teams']['home'].get('probablePitcher') or {}).get('id')
-                ap = (g['teams']['away'].get('probablePitcher') or {}).get('id')
-                out.append((dd['date'], _TEAM_ABBR.get(h, h), _TEAM_ABBR.get(a, a), hp, ap))
+        for g in get_schedule(start.isoformat(), end.isoformat()):
+            if g['game_state'] == 'Final':   # "next start" must be upcoming
+                continue
+            out.append((g['date'], g['home_abbr'], g['away_abbr'],
+                        g['home_probable_id'], g['away_probable_id']))
         return tuple(out)
     except Exception as e:
         _warn("probables_schedule", e)
