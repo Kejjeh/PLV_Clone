@@ -873,6 +873,15 @@ def fetch_schedules_by_team(team_ids, start_date, end_date):
 
     Returns a dict keyed by MLB team_id; missing teams default to empty list
     on lookup downstream.
+
+    NOT migrated to mlb_stats.get_schedule (item 9, checked 2026-07-04): shape
+    fits (same team-id keys, abbrevs, probables — live-diffed 224/224 rows), but
+    the `date` field differs — this uses gameDate[:10] (the UTC date, which rolls
+    to TOMORROW for evening ET games) while get_schedule uses the schedule BLOCK
+    date (the actual game day). The block date is more correct (get_schedule would
+    FIX a latent UTC-drift bug here), but this feeds cap-sensitive SP-start
+    counting, so the swap needs a deliberate cap-count regression check first.
+    Left as-is; revisit as a correctness fix with that verification.
     """
     url = (f'https://statsapi.mlb.com/api/v1/schedule?sportId=1'
            f'&startDate={start_date}&endDate={end_date}'

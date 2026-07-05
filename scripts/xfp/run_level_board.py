@@ -157,8 +157,8 @@ def main():
                 print(f"  {nm:<22} — no qualifying 2026 sample (<{args.min_games}G / unresolved)")
         return
 
-    # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
-    from app.espn_connector import get_my_roster, get_free_agents
+    from app.espn_connector import get_my_roster
+    from plv_clone.league_state import default_state  # item 11: FA pool owner
     mine = get_my_roster()
     mine_ids = set()
     print("\n=== MY HITTERS — by season-to-date LEVEL (validated best forward FP indicator) ===")
@@ -172,7 +172,7 @@ def main():
     for n, row in sorted(mrows, key=lambda x: -x[1]['level_pg']):
         print(fmt(row, n))
 
-    fa = get_free_agents(size=2000)
+    fa = default_state().available_fa()  # item 11: cross-team-verified FA pool
     farows = []
     for _, r in fa.iterrows():
         if str(r['position']).upper() in {'SP', 'RP', 'P'}:

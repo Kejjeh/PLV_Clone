@@ -65,6 +65,9 @@ def fetch_games_and_lineups(start_d: date, end_d: date) -> list[dict]:
     Lineups come from MLB Stats API `hydrate=lineups` when posted; empty list
     when not yet posted (caller will fallback to top-9-by-rh3).
     """
+    # NOT migrated to mlb_stats.get_schedule (item 9, 2026-07-04): this fetch
+    # needs the `lineups` hydrate (batter ids per side), which the probables-only
+    # get_schedule owner does not provide. A get_lineups owner would be its home.
     url = (
         f'{_STATSAPI}/schedule?sportId=1'
         f'&startDate={start_d.isoformat()}&endDate={end_d.isoformat()}'

@@ -569,33 +569,27 @@ def _todays_team_to_opp_sp(today_iso: str) -> dict[str, int]:
     Single MLB Stats API call per script invocation. Returns empty dict on
     failure (defensive — caller will fall back to no opp SP).
     """
+    # Probables via the mlb_stats.get_schedule owner (item 9, 2026-07-04) — gains
+    # retry + fail-soft caching; drops the hand-rolled schedule?hydrate walk.
+    # PROVEN byte-identical (live same-process diff: 30/30 keys) — get_schedule's
+    # API abbreviations match, and the opp-SP mapping logic is unchanged.
     try:
-        import json
-        import urllib.request
-        url = (f'https://statsapi.mlb.com/api/v1/schedule?sportId=1'
-               f'&startDate={today_iso}&endDate={today_iso}'
-               f'&hydrate=probablePitcher,team')
-        with urllib.request.urlopen(url, timeout=10) as resp:
-            data = json.loads(resp.read())
+        from plv_clone.mlb_stats import get_schedule
+        games = get_schedule(today_iso, today_iso)
     except Exception as e:
         _warn("probables_fetch", e)
         return {}
     result: dict[str, int] = {}
-    for d_block in data.get('dates', []):
-        for g in d_block.get('games', []):
-            home = g.get('teams', {}).get('home', {})
-            away = g.get('teams', {}).get('away', {})
-            home_abbr = (home.get('team', {}) or {}).get('abbreviation', '').upper()
-            away_abbr = (away.get('team', {}) or {}).get('abbreviation', '').upper()
-            home_p = home.get('probablePitcher') or {}
-            away_p = away.get('probablePitcher') or {}
-            home_pid = home_p.get('id')
-            away_pid = away_p.get('id')
-            # Hitter team -> OPPOSING SP id
-            if home_abbr and away_pid:
-                result[home_abbr] = int(away_pid)
-            if away_abbr and home_pid:
-                result[away_abbr] = int(home_pid)
+    for g in games:
+        home_abbr = (g['home_abbr'] or '').upper()
+        away_abbr = (g['away_abbr'] or '').upper()
+        home_pid = g['home_probable_id']
+        away_pid = g['away_probable_id']
+        # Hitter team -> OPPOSING SP id
+        if home_abbr and away_pid:
+            result[home_abbr] = int(away_pid)
+        if away_abbr and home_pid:
+            result[away_abbr] = int(home_pid)
     return result
 
 

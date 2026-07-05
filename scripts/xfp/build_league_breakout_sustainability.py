@@ -17,9 +17,6 @@ pd.set_option('display.max_columns', 40)
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
-from app.espn_connector import (
-    get_free_agents,  # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
-)
 from plv_clone.league_state import LeagueState, default_state
 
 MULTIYR = 'data/research/xfp_cache/hitters_multiyr_2015_2026.csv'
@@ -73,8 +70,8 @@ def pull_pools():
     other_hit['injured'] = other_hit.get('injured', False)
     other_hit['percent_owned'] = 100.0
 
-    print("Pulling FA pool (size=2000)...")
-    fa = get_free_agents(size=2000)
+    print("Pulling FA pool (size=2000, cross-team verified)...")
+    fa = default_state().available_fa()  # item 11: FA pool owner (already dedups rostered)
     fa_hit = fa[fa['position'].isin(HITTER_POSITIONS)].copy()
     # FA pool doesn't have player_id — dedupe by (name, position) against rostered names
     rostered_names = set(

@@ -309,7 +309,8 @@ class LeagueState:
 
         Returns:
             DataFrame with columns ``player_name``, ``position``,
-            ``pro_team``, ``percent_owned``.
+            ``pro_team``, ``percent_owned``, ``injured``, ``injury_status``
+            (a schema superset of the legacy get_free_agents DataFrame).
         """
         league = self._get_league()
         key = ("fa_pool_raw", id(league))
@@ -332,6 +333,11 @@ class LeagueState:
                     "position": getattr(player, "position", "") or "",
                     "pro_team": getattr(player, "proTeam", ""),
                     "percent_owned": getattr(player, "percent_owned", 0.0),
+                    # injured/injury_status (item 11, 2026-07-04): additive columns
+                    # so available_fa is a schema SUPERSET of the old get_free_agents
+                    # DataFrame — unblocks migrating the boards that read `injured`.
+                    "injured": bool(getattr(player, "injured", False)),
+                    "injury_status": getattr(player, "injuryStatus", "") or "",
                 })
             raw_df = pd.DataFrame(rows)
             _cache_put(key, raw_df)

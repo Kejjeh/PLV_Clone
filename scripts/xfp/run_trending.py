@@ -85,8 +85,8 @@ def main():
                     print(card(nm, 'SP', None))
         return
 
-    # TODO(item 11): get_free_agents -> available_fa() adds cross-team verification; verify before migrating
-    from app.espn_connector import get_my_roster, get_free_agents
+    from app.espn_connector import get_my_roster
+    from plv_clone.league_state import default_state  # item 11: FA pool owner
     mine = get_my_roster()
     rows_h, rows_p, unres = [], [], []
     for _, r in mine.iterrows():
@@ -109,7 +109,7 @@ def main():
     if unres:
         print(f"\n  (no read: {', '.join(unres)})")
 
-    fa = get_free_agents(size=2000)
+    fa = default_state().available_fa()  # item 11: cross-team-verified FA pool
     fa_h, fa_p = [], []
     for _, r in fa.iterrows():
         pid = rid(r['player_name'], r['position'], r.get('pro_team'))
