@@ -35,11 +35,10 @@ IL_STATUSES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
                 'PATERNITY'}
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# _norm was join_key's exact algorithm (NFD-Mn + sorted alpha tokens); routed to
+# the name_match owner (item 10, 2026-07-04). Proven byte-identical, so this is a
+# pure move even though the module writes IL flags.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def main():

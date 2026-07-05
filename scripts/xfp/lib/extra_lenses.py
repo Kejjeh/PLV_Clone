@@ -23,10 +23,12 @@ import unicodedata
 from pathlib import Path
 
 
-def _norm(s) -> str:
-    if not isinstance(s, str):
-        return ""
-    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
+# _stuff_frame() builds its lookup dict with this helper and the lens functions
+# (floor_lens, stuff_command_lens) look up with it — one shared source. join_key
+# is order-independent (a robustness gain); the triangulate golden test covers
+# the floor_lens path.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def _warn(section: str, exc: BaseException) -> None:

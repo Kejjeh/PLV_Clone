@@ -48,8 +48,9 @@ TX_PARQ = ROOT / 'data' / 'research' / 'transactions_history.parquet'
 PANEL = ROOT / 'data' / 'research' / 'player_projection_history.parquet'
 
 
-def _norm(s: str) -> str:
-    return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
+# the draft_map / rost dicts are built + looked up with this helper.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 # Per-opponent behavioral profiles (v1: hardcoded from manager-rating audit).

@@ -47,10 +47,11 @@ RPRS2 = REPO / "data/outputs/xfp_rprs2_projections.csv"
 RP_RATINGS = REPO / "data/research/rp_ratings_master.csv"
 
 
-def _norm(s: str) -> str:
-    s = unicodedata.normalize("NFD", str(s))
-    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
-    return re.sub(r"\s+", " ", s).strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
+# every use is a symmetric name comparison / roster-set membership. join_key is
+# order-independent, so the explicit "Last, First" fallback below (resolve_name)
+# becomes redundant but harmless — join_key already matches both orders.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def _fuzzy_in(name: str, pool: list[str]) -> str | None:
