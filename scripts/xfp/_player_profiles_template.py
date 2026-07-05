@@ -585,13 +585,7 @@ BODY_HEADER = """
 <div class="header-row">
   <div>
     <h1>Player Profiles</h1>
-    <nav class="topnav">
-      <a href="index.html">XFP</a>
-      <a href="matchup.html">Matchup</a>
-      <a href="live_dashboard.html">Live</a>
-      <a class="current">Profiles</a>
-      <a href="triangulate.html">Triangulate</a>
-    </nav>
+    __TOPNAV__PROFILES__
   </div>
   <div class="search-wrap">
     <input id="search-input" type="text" placeholder="Search any hitter or pitcher…" autocomplete="off">
@@ -4524,9 +4518,10 @@ def render_page(payload: dict, external_data_src: str | None = None) -> str:
             '+" hitter-years \\u00b7 "+d.sps.length+" SP-years \\u00b7 "'
             '+((d.rps&&d.rps.length)||0)+" RP-years \\u00b7 years "+d.years[0]'
             '+"\\u2013"+d.years[d.years.length-1];});</script>')
+    from lib.dashboard_chrome import topnav as _topnav
     return (HEAD
             + '<body>\n'
-            + BODY_HEADER
+            + BODY_HEADER.replace('__TOPNAV__PROFILES__', _topnav('player_profiles'))
             + HOME_TAB
             + HITTERS_TAB
             + SPS_TAB

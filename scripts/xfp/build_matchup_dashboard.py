@@ -37,6 +37,7 @@ from plv_clone.utils.name_match import (  # noqa: E402
     KNOWN_PITCHER_COLLISIONS as _KNOWN_PITCHER_COLLISIONS,
 )
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
+from scripts.xfp.lib.dashboard_chrome import topnav  # noqa: E402  (unified nav owner, item 8)
 
 
 def _warn_except(section: str, exc: BaseException) -> None:
@@ -3691,14 +3692,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
   <div class="header-row">
     <div>
       <h1>Ligers Weekly Matchup</h1>
-      <nav class="topnav">
-        <a href="live_dashboard.html">Live</a>
-        <a class="current">Matchup</a>
-        <a href="xfp_board.html">xFP Board</a>
-        <a href="player_profiles.html">Profiles</a>
-        <a href="triangulate.html">Triangulate</a>
-        <a href="index.html">XFP</a>
-      </nav>
+      {topnav("matchup")}
     </div>
   </div>
 </header>

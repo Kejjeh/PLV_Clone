@@ -654,6 +654,7 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
 
     from zoneinfo import ZoneInfo
     now = datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M:%S') + ' ET'
+    from lib.dashboard_chrome import topnav  # unified nav owner (item 8)
     html = f'''<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -791,13 +792,7 @@ tbody tr:hover td {{ background: var(--panel); }}
   <div class="header-row">
     <div>
       <h1>Ligers Live <span class="date-tag">{h(d)}</span></h1>
-      <nav class="topnav">
-        <a class="current">Live</a>
-        <a href="matchup.html">Matchup</a>
-        <a href="player_profiles.html">Profiles</a>
-        <a href="triangulate.html">Triangulate</a>
-        <a href="index.html">XFP</a>
-      </nav>
+      {topnav("live")}
     </div>
   </div>
 </header>

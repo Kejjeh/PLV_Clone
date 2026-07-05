@@ -796,17 +796,23 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<!-- JSX PRE-TRANSPILE — DEFERRED (item 8, 2026-07-04). The <script type="text/babel">
+     block below (~lines 812-3983) is transpiled in-browser by babel-standalone.
+     Pre-transpiling it (extract the block to index_app.jsx, `npx @babel/cli
+     --presets @babel/preset-react`, embed the compiled JS as a plain <script>,
+     and drop this babel-standalone tag) would remove the ~1s in-browser
+     transpile + the cdnjs babel dependency. It is TRACTABLE — the block is pure
+     JSX with NO Python-format interpolation (data is injected via the separate
+     window.XFP_* placeholder script above using .replace(), not .format()). It
+     was deferred because doing it correctly adds a per-refresh Node build step
+     (or a committed compiled asset with a freshness guard) to the daily PYTHON
+     refresh — a fragility tradeoff on the flagship dashboard not worth taking in
+     a broad sweep. Do it as a dedicated change with its own verification. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js" crossorigin></script>
 </head>
 <body>
 <div class="xfp-topnav-bar">
-  <nav class="topnav">
-    <a class="current">XFP</a>
-    <a href="matchup.html">Matchup</a>
-    <a href="live_dashboard.html">Live</a>
-    <a href="player_profiles.html">Profiles</a>
-    <a href="triangulate.html">Triangulate</a>
-  </nav>
+  __TOPNAV__
 </div>
 <div id="root"></div>
 <script type="text/babel">
@@ -4622,7 +4628,9 @@ def main():
     else:
         weekly_json = '{"weeks":{},"players":[]}'
 
+    from lib.dashboard_chrome import topnav as _topnav
     html = (HTML_TEMPLATE
+            .replace('__TOPNAV__', _topnav('index'))
             .replace('__PROJECTIONS_JSON__', proj_json)
             .replace('__META_JSON__', meta_json)
             .replace('__H2_META_JSON__', h2_meta_json)

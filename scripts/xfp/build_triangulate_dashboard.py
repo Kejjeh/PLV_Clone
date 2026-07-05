@@ -969,9 +969,8 @@ def _rail_html(cards: list[dict]) -> str:
     return '\n'.join(out)
 
 
-_NAV = ('<nav class="topnav"><a href="index.html">XFP</a>'
-        '<a href="matchup.html">Matchup</a><a href="live_dashboard.html">Live</a>'
-        '<a href="player_profiles.html">Profiles</a><a class="current">Triangulate</a></nav>')
+from lib.dashboard_chrome import topnav as _topnav  # noqa: E402
+_NAV = _topnav('triangulate')  # unified nav owner (item 8) — was hand-copied
 
 
 def render_page(cards: list[dict]) -> str:

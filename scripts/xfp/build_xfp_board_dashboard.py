@@ -149,6 +149,7 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
 
 
 def build_html() -> str:
+    from lib.dashboard_chrome import topnav as _topnav  # unified nav owner (item 8)
     sp = B.build_sp_board()
     hit = B.build_hitter_board()
     have = hit[hit["per_game"].notna()].copy()
@@ -264,6 +265,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 <body><div class="wrap">
 <header>
   <h1>Merged xFP Boards</h1>
+  {_topnav("xfp_board")}
   <div class="gen">Generated {h(gen)} · MINE + every FA · dual-ranked RoS / Playoffs</div>
 </header>
 <div class="note">{method}</div>
