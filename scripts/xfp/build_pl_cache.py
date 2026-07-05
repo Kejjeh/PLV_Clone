@@ -46,9 +46,31 @@ def _md(d: date) -> str:
     return f"{d.month}-{d.day}"
 
 
-def sp_url(monday: date) -> str:
+def _sp_url(slug_date: date, week: int) -> str:
     return (f"https://pitcherlist.com/top-100-starting-pitchers-for-{YEAR}-fantasy-baseball-"
-            f"{_md(monday)}-week-{_sp_week(monday)}-rankings/")
+            f"{_md(slug_date)}-week-{week}-rankings/")
+
+
+def sp_url(monday: date) -> str:
+    return _sp_url(monday, _sp_week(monday))
+
+
+def sp_url_candidates(latest_monday: date):
+    """Yield (url, edition_monday) candidates, newest-first, for the SP Top 100.
+
+    PL usually publishes on Monday, but occasionally slips to Tuesday on holiday
+    weeks — e.g. 6/30 (week 15, July 4th week) and 5/26 (week 10, Memorial Day)
+    are dated Tue, not the Monday our edition math computes — and it can skip or
+    lag a week entirely. So for each of the latest three weeks we try the Monday
+    slug AND the Tuesday (Monday+1) slug, and take the first that returns a full
+    list — instead of failing outright the moment the exact-Monday URL 404s
+    (which stranded the cache 13 days at week 14 when week 15 published as 6/30).
+    """
+    for wk_back in range(3):
+        mon = latest_monday - timedelta(days=7 * wk_back)
+        week = _sp_week(mon)
+        for day_off in (0, 1):  # Monday, then the holiday-shifted Tuesday
+            yield _sp_url(mon + timedelta(days=day_off), week), mon
 
 
 def closers_url(tuesday: date) -> str:
@@ -147,13 +169,20 @@ def refresh(force=False):
     cur = {f: _cache_fetched(f) for f in _VALID_MIN}
     # SP — Monday edition (global ranked table)
     if force or _stale("pl_sps_top100.json", cur, now):
-        mon = _latest_published_edition(now, 0)
-        html = _fetch(sp_url(mon))
-        if html:
+        latest_mon = _latest_published_edition(now, 0)
+        wrote, last_url = False, None
+        for url, edition in sp_url_candidates(latest_mon):
+            last_url = url
+            html = _fetch(url)
+            if not html:
+                continue
             ranks, _pos = parse_rank_table(html, 100)
-            _write_cache("pl_sps_top100.json", sp_url(mon), ranks, mon)
-        else:
-            print(f"  SP fetch failed: {sp_url(mon)}", file=sys.stderr)
+            if _write_cache("pl_sps_top100.json", url, ranks, edition):
+                wrote = True
+                break
+        if not wrote:
+            print(f"  SP fetch failed (tried Mon/Tue across 3 weeks); last: {last_url}",
+                  file=sys.stderr)
     else:
         print("  SP current — skip")
     # Closers — Tuesday edition (per-team role table -> role + save% + synthesized rank)

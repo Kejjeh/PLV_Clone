@@ -73,9 +73,17 @@ CANONICAL_CASES = [
     #   post-TJ-ramp override no longer fires (sample grew) -> CAUTION, Framber
     #   CAUTION->FADE (the canonical STUFF-DECLINE deepened). Data-driven, not a
     #   code change. Bradish/Woo override tags unlocked (None) pending re-derive.
+    # 2026-07-05 (PL fetch fix + cache refresh) — the build_pl_cache Tuesday/
+    #   holiday-slug fallback un-stranded the SP Top-100 (frozen 13d at Wk14 6-22
+    #   because Wk15 published as 6-30, not the computed Monday 6-29). Fresh Wk15
+    #   ranks Weathers #51; with a real mid-pack PL rank his archetype-breakout
+    #   BUY no longer fires -> MIXED (like Detmers). Nelson (bucket-only) and Ober
+    #   (CAUTION, still PL-unranked) re-lock and pass. Data-driven cache refresh,
+    #   not a code change. Weathers straddles the PL boundary like Nelson, so if
+    #   this churns again consider a bucket-only lock.
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
     ("Reid Detmers",    "MIXED — see profile",     "SP", "MIXED",   None),
-    ("Ryan Weathers",   "BUY — archetype breakout", "SP", "BUY",    None),
+    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
     # model #133, archetype OVR 36 TRENDING_DOWN) the gap rule can't fire and he reads
