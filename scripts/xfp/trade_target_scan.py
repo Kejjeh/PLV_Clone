@@ -86,6 +86,10 @@ PITCH_TEMPLATES = {
 
 
 def _norm(s: str) -> str:
+    # item 10 (2026-07-04): NOT routed to name_match.join_key — this looks up
+    # `rp_decline` whose keys are built by rp_decline_model (a DIFFERENT module).
+    # Swapping only here would desync the two sides; migrate both together or
+    # not at all. Left on the shared NFKD-ascii variant.
     return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
 
 

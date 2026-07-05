@@ -34,8 +34,9 @@ from plv_clone.paths import ROOT
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 
 
-def _norm(s: str) -> str:
-    return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
+# the `where` ownership dict is both built and looked up with this helper.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def load_data():

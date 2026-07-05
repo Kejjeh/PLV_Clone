@@ -33,6 +33,10 @@ MY_TEAM = "New York Ligers"
 
 
 def _norm(name: str) -> str:
+    # item 10 (2026-07-04): NOT routed to name_match.join_key — the output feeds
+    # _last_init_key(nm), a (last, first-initial) fallback that needs SPACE-
+    # separated, order-preserving tokens. join_key sorts + strips spaces, which
+    # would break that fallback (same reason build_xfp_boards._li_key stays local).
     import re, unicodedata
     s = unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode()
     s = re.sub(r"[^a-z ]", "", s.lower())
