@@ -54,7 +54,16 @@ HEADERS = {
 
 
 def _norm_name(s: str) -> str:
-    """Lowercase, strip accents/punct/whitespace for fuzzy name matching."""
+    """Lowercase, strip accents/punct/whitespace for fuzzy name matching.
+
+    item 10 (2026-07-04): NOT routed to name_match — this STRIPS SUFFIXES
+    (jr/sr/ii/iii) because BBRef attaches them and FanGraphs may not, so the
+    suffix strip is load-bearing for the bref<->fg merge. join_key keeps
+    suffixes (wrong owner here); the owner's _normalize strips them but differs
+    on edge cases (e.g. 'Cal Ripken III' -> _normalize 'cal ripken' vs this
+    fn's buggy 'cal ripkeni'). Migrating needs an output byte-diff of the
+    bref/fg IL merge first; left local with suffix-aware behavior.
+    """
     if not isinstance(s, str):
         return ''
     s = unicodedata.normalize('NFKD', s)

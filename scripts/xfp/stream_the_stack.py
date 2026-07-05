@@ -102,13 +102,13 @@ def fetch_confirmed_probables(start_d: date, end_d: date) -> list[dict]:
 # ---------------------------------------------------------------------------
 # ESPN FA pool + roster verification
 # ---------------------------------------------------------------------------
-def _norm_name(s: str) -> str:
-    """Match the normalization used across plv_clone: lowercase, strip accents/punct."""
-    import unicodedata
-    if not s:
-        return ''
-    s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii')
-    return ''.join(ch for ch in s.lower() if ch.isalnum())
+# _norm_name routed to the name_match owner (item 10, 2026-07-04). Self-consistent
+# (roster/FA sets + the pid map are keyed with this helper). join_key is order-
+# independent — it subsumes the explicit "flipped" pid entry added below (redundant
+# but harmless) and fixes cross-format under-matching (rp3/rprs2 use "Last, First").
+# Verified zero false-merge on the real name universe (every join_key collision is a
+# same-player flip — MLB has no distinct-player anagrams).
+from plv_clone.utils.name_match import join_key as _norm_name  # noqa: E402
 
 
 def load_fa_sp_pool() -> pd.DataFrame:

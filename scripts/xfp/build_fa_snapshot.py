@@ -65,10 +65,11 @@ _PA_PER_GAME = 3.85
 _GAMES_PER_SEASON = 162
 
 
-def _norm(s: str) -> str:
-    s = unicodedata.normalize("NFD", str(s))
-    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
-    return re.sub(r"\s+", " ", s).strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent
+# (roster set + the rprs2 lookup dict are built + looked up with this helper).
+# join_key is order-independent — strictly correct (zero false-merge), and fixes
+# cross-format RP matching (rprs2 uses "Last, First" vs ESPN "First Last").
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def _atomic_write_parquet(df: pd.DataFrame, path: Path) -> None:

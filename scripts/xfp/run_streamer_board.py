@@ -50,8 +50,10 @@ RP3_CSV = _ROOT / "data" / "outputs" / "xfp_rp3_projections.csv"
 BOX = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_pitchers.parquet"
 
 
-def _nrm(s: str) -> str:
-    return unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower().strip()
+# _nrm routed to the name_match owner (item 10, 2026-07-04). Self-consistent
+# ownership join (the `rost` dict is built + looked up with this helper). join_key
+# is order-independent — strictly correct (zero false-merge on the real universe).
+from plv_clone.utils.name_match import join_key as _nrm  # noqa: E402
 
 
 def build(start: str, end: str) -> pd.DataFrame:

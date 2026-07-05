@@ -40,10 +40,11 @@ PA_EVENTS = {
 }
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    return re.sub(r'[^a-z]+', '', s)
+# _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent
+# (ESPN/rh3/rp3 name keys all built with this helper). join_key adds sorted-token
+# order-independence — strictly correct (zero false-merge), and fixes cross-format
+# matching (rp3 player_name is "Last, First" vs ESPN/rh3 "First Last").
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def get_scope_player_ids() -> tuple[set[int], set[int], dict]:
