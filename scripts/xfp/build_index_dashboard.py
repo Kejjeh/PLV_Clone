@@ -1632,6 +1632,9 @@ function Dashboard({ dark }) {
           <h1 style={{ fontSize:32, fontWeight:400, margin:'2px 0 0', letterSpacing:-0.5, fontStyle:'italic', whiteSpace:'nowrap' }}>
             SP xFP Model
           </h1>
+          <div style={{ fontSize:12, color:colors.dim, fontStyle:'italic', margin:'5px 0 0', maxWidth:'72ch', lineHeight:1.45 }}>
+            Roster-decision board — ranks your team, the FA pool and the league by <b>projected fantasy points</b> (rh3 hitters · rp3 SPs) to call starts, adds and drops. The scouting layer behind these numbers — the 20-80 expected-skill ratings and archetype process — lives on <a href="player_profiles.html" style={{ color:colors.accent, textDecoration:'none' }}>Player Profiles</a>.
+          </div>
         </div>
         <div style={{ display:'flex', gap:10, alignItems:'center', fontFamily:MONO, fontSize:10,
                       letterSpacing:1.2, color:colors.dim, textTransform:'uppercase' }}>
