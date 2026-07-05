@@ -25,6 +25,11 @@ OUT = REPO / "data/outputs/sp_alerts.json"
 
 
 def _norm(s):
+    # item 10 (2026-07-04): NOT routed to name_match.join_key yet. This is a
+    # PRODUCER of sp_alerts.json (a consumed artifact); join_key is order-
+    # independent so it would change cross-format match results (more alerts).
+    # Self-consistent + same-format joins make it *probably* a no-op, but that
+    # needs a byte-diff of sp_alerts.json before swapping — left order-preserving.
     s = unicodedata.normalize("NFD", str(s))
     s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
     return re.sub(r"\s+", " ", s).strip()

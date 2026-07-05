@@ -14,8 +14,12 @@ PROJECTIONS = {
 }
 
 
-def _norm(s: str) -> str:
-    return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode('ascii').lower().strip()
+# _norm routed to the name_match owner (item 10, 2026-07-04). cached_data imports
+# THIS _norm to build the projection `_key` column and resolve_player() looks it
+# up with the same helper — one shared source, so the swap is self-consistent on
+# both sides. join_key is order-independent (makes SP _flip_lastfirst redundant
+# but harmless) and punctuation-robust.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def _flip_lastfirst(s: str) -> str:

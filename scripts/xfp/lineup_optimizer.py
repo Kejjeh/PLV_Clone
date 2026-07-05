@@ -53,12 +53,10 @@ def _strip_accents(s):
                    if unicodedata.category(c) != 'Mn')
 
 
-def _norm(s):
-    """Normalize a name to a sorted-words key so 'Last, First' == 'First Last'."""
-    s = _strip_accents(str(s)).lower()
-    s = re.sub(r'[,]+', ' ', s)
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# _norm was join_key's exact algorithm (accent-strip + sorted alpha tokens);
+# routed to the name_match owner (item 10, 2026-07-04). Proven byte-identical on
+# a diverse name set (accents, suffixes, "Last, First"), so this is a pure move.
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 def fetch_week_schedule(days_ahead: int = 7) -> pd.DataFrame:

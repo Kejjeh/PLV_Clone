@@ -262,7 +262,7 @@ def main():
         return t
     fa_pct_owned = {}
     try:
-        fa_lst = league.free_agents(size=500)
+        fa_lst = league.free_agents(size=2000)  # item 11: was size=500 (Sheehan-bug truncation)
         for fa in fa_lst:
             key = (_norm(fa.name), _team_norm(getattr(fa, 'proTeam', '')))
             fa_pct_owned[key] = float(getattr(fa, 'percent_owned', 0) or 0)

@@ -52,12 +52,10 @@ CFG = {
 DIVERGENCE_PP = 25
 
 
-def _nrm(s):
-    s = str(s)
-    if "," in s:  # SP master uses "Last, First" — flip before normalizing
-        last, first = s.split(",", 1)
-        s = f"{first.strip()} {last.strip()}"
-    return unicodedata.normalize("NFKD", s).encode("ascii", "ignore").decode().lower().strip()
+# _nrm routed to the name_match owner (item 10, 2026-07-04). Used only as a
+# symmetric ownership-join key (roster tag); join_key is order-independent so it
+# subsumes the old explicit "Last, First" flip natively.
+from plv_clone.utils.name_match import join_key as _nrm  # noqa: E402
 
 
 def scan(role: str) -> pd.DataFrame:

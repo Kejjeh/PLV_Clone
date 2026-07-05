@@ -29,8 +29,9 @@ for p in (_ROOT, _ROOT / "src", _ROOT / "scripts" / "xfp"):
 MY = "New York Ligers"
 
 
-def _nrm(s):
-    return unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode().lower().strip()
+# _nrm routed to the name_match owner (item 10, 2026-07-04) — symmetric ownership/
+# --names join key; join_key adds order/punctuation robustness.
+from plv_clone.utils.name_match import join_key as _nrm  # noqa: E402
 
 
 def _ownership():
