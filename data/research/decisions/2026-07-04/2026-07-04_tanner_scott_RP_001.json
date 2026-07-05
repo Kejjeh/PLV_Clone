@@ -4,15 +4,15 @@
   "decision_id": "2026-07-04_tanner_scott_RP_001",
   "inputs": {
     "archetype_label": "LATE_INNING_STUFF_CTRL",
-    "archetype_overall": 77,
+    "archetype_overall": 76,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 4.032229395551612,
-    "live_marginal": -2.9000000000000057,
-    "model_rank": 9,
+    "live_marginal": 8.599999999999994,
+    "model_rank": 7,
     "override_tag": null,
     "pl_rank": 26,
-    "proj_per": 108.3,
-    "replacement_delta": 90.2
+    "proj_per": 116.0,
+    "replacement_delta": 90.6
   },
   "mlbam_id": 656945,
   "player_name": "Tanner Scott",

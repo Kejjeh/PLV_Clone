@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_jordan_walker_H_001",
   "inputs": {
     "archetype_label": "POWER_HITTER",
-    "archetype_overall": 63,
+    "archetype_overall": 62,
     "archetype_traj": "TRENDING_UP",
-    "blended_xfp": 1.2475698123040713,
+    "blended_xfp": 1.2435099861093357,
     "live_marginal": null,
-    "model_rank": 92,
+    "model_rank": 114,
     "override_tag": null,
     "pl_rank": 21,
-    "proj_per": 1.89,
+    "proj_per": 1.83,
     "replacement_delta": null
   },
   "mlbam_id": 691023,

@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_freddy_peralta_SP_001",
   "inputs": {
     "archetype_label": "AVERAGE_4_5",
-    "archetype_overall": 58,
+    "archetype_overall": 52,
     "archetype_traj": "STABLE",
     "blended_xfp": 13.535335453446512,
-    "live_marginal": -134.30750950693334,
-    "model_rank": 57,
+    "live_marginal": -155.1012551888582,
+    "model_rank": 59,
     "override_tag": null,
     "pl_rank": 51,
-    "proj_per": 10.990412667606094,
+    "proj_per": 11.178804828782956,
     "replacement_delta": null
   },
   "mlbam_id": 642547,

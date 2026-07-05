@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.5,
+  "decision_id": "2026-07-05_parker_messick_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_MOVEMENT",
+    "archetype_overall": 60,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 11.111043053948396,
+    "live_marginal": -206.72888038480875,
+    "model_rank": 80,
+    "override_tag": null,
+    "pl_rank": 34,
+    "proj_per": 10.753651401085088,
+    "replacement_delta": null
+  },
+  "mlbam_id": 800048,
+  "player_name": "Parker Messick",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-05",
+  "verdict_top": "CAUTION"
+}

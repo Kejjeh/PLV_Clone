@@ -3,22 +3,22 @@
   "confidence": 1.0,
   "decision_id": "2026-07-04_jose_soriano_SP_001",
   "inputs": {
-    "archetype_label": "STUFF_PLUS_MOVE",
-    "archetype_overall": 66,
+    "archetype_label": "WILD_FIREBALLER",
+    "archetype_overall": 59,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 11.859575173157904,
-    "live_marginal": -133.67065025836132,
-    "model_rank": 34,
+    "live_marginal": -142.15541521322208,
+    "model_rank": 35,
     "override_tag": null,
     "pl_rank": 62,
-    "proj_per": 11.820932090190244,
+    "proj_per": 12.103507684185535,
     "replacement_delta": null
   },
   "mlbam_id": 667755,
   "player_name": "Jos\u00e9 Soriano",
-  "reason_tag": "process_upgrade",
+  "reason_tag": "no_convergence",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-04",
-  "verdict_top": "BUY"
+  "verdict_top": "MIXED"
 }

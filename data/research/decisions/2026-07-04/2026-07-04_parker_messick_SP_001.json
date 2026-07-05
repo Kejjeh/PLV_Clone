@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_parker_messick_SP_001",
   "inputs": {
     "archetype_label": "PURE_MOVEMENT",
-    "archetype_overall": 65,
+    "archetype_overall": 63,
     "archetype_traj": "CAREER_LOW",
     "blended_xfp": 11.107302784651965,
-    "live_marginal": -113.48517116137745,
-    "model_rank": 39,
+    "live_marginal": -130.0769244746494,
+    "model_rank": 36,
     "override_tag": null,
     "pl_rank": 34,
-    "proj_per": 11.604908022477955,
+    "proj_per": 12.101839887811346,
     "replacement_delta": null
   },
   "mlbam_id": 800048,

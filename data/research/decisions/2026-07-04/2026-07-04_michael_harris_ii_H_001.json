@@ -1,17 +1,17 @@
 {
   "bucket": "H",
-  "confidence": 1.0,
+  "confidence": 0.75,
   "decision_id": "2026-07-04_michael_harris_ii_H_001",
   "inputs": {
     "archetype_label": "AGGRESSIVE_STAR",
-    "archetype_overall": 64,
-    "archetype_traj": "TRENDING_UP",
-    "blended_xfp": 2.5508249501325584,
+    "archetype_overall": 63,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.5541947752040626,
     "live_marginal": null,
-    "model_rank": 19,
+    "model_rank": 21,
     "override_tag": null,
     "pl_rank": 25,
-    "proj_per": 2.2,
+    "proj_per": 2.17,
     "replacement_delta": null
   },
   "mlbam_id": 671739,

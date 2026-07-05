@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-07-05_pete_alonso_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 63,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.0038870189006524,
+    "live_marginal": 47.79999999999998,
+    "model_rank": 16,
+    "override_tag": null,
+    "pl_rank": 22,
+    "proj_per": 2.35,
+    "replacement_delta": null
+  },
+  "mlbam_id": 624413,
+  "player_name": "Pete Alonso",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-05",
+  "verdict_top": "BUY"
+}

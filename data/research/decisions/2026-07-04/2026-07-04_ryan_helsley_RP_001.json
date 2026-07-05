@@ -7,12 +7,12 @@
     "archetype_overall": 58,
     "archetype_traj": "STABLE",
     "blended_xfp": 3.9076440924123785,
-    "live_marginal": 14.899999999999991,
-    "model_rank": 38,
+    "live_marginal": 32.0,
+    "model_rank": 33,
     "override_tag": null,
     "pl_rank": 7,
-    "proj_per": 126.1,
-    "replacement_delta": -9.1
+    "proj_per": 139.4,
+    "replacement_delta": -3.1
   },
   "mlbam_id": 664854,
   "player_name": "Ryan Helsley",

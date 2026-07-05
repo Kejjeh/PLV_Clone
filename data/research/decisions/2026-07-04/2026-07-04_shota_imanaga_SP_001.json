@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_shota_imanaga_SP_001",
   "inputs": {
     "archetype_label": "PURE_STUFF",
-    "archetype_overall": 60,
+    "archetype_overall": 57,
     "archetype_traj": "STABLE",
     "blended_xfp": 9.50675637359494,
-    "live_marginal": -114.76660928659496,
+    "live_marginal": -123.82488113209854,
     "model_rank": 28,
     "override_tag": null,
     "pl_rank": 29,
-    "proj_per": 12.293139348961985,
+    "proj_per": 12.518642777314737,
     "replacement_delta": null
   },
   "mlbam_id": 684007,

@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-05_reid_detmers_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 62,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 14.578477957062335,
+    "live_marginal": -170.08882312096006,
+    "model_rank": 22,
+    "override_tag": null,
+    "pl_rank": 54,
+    "proj_per": 13.370798348502852,
+    "replacement_delta": null
+  },
+  "mlbam_id": 672282,
+  "player_name": "Reid Detmers",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-05",
+  "verdict_top": "MIXED"
+}

@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_emmet_sheehan_SP_001",
   "inputs": {
     "archetype_label": "PURE_STUFF",
-    "archetype_overall": 58,
+    "archetype_overall": 56,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 15.214865210625337,
-    "live_marginal": -102.93944270209738,
-    "model_rank": 43,
+    "live_marginal": -111.40044692902637,
+    "model_rank": 44,
     "override_tag": null,
     "pl_rank": 49,
-    "proj_per": 11.542603342289844,
+    "proj_per": 11.776710344870189,
     "replacement_delta": null
   },
   "mlbam_id": 686218,

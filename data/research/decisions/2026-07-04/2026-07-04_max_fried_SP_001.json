@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_max_fried_SP_001",
   "inputs": {
     "archetype_label": "PURE_MOVEMENT",
-    "archetype_overall": 60,
+    "archetype_overall": 61,
     "archetype_traj": "STABLE",
     "blended_xfp": 13.819858873852478,
-    "live_marginal": -33.450462823142686,
-    "model_rank": 42,
+    "live_marginal": -55.75768567435864,
+    "model_rank": 48,
     "override_tag": "DECLINE_VETO",
     "pl_rank": null,
-    "proj_per": 11.552749421647045,
+    "proj_per": 11.629401687157316,
     "replacement_delta": null
   },
   "mlbam_id": 608331,

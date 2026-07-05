@@ -4,14 +4,14 @@
   "decision_id": "2026-07-04_dominic_canzone_H_001",
   "inputs": {
     "archetype_label": "CONTACT_POWER",
-    "archetype_overall": 67,
+    "archetype_overall": 68,
     "archetype_traj": "TRENDING_UP",
-    "blended_xfp": 1.950252877959868,
+    "blended_xfp": 1.9573899186553394,
     "live_marginal": null,
     "model_rank": 79,
     "override_tag": null,
     "pl_rank": 121,
-    "proj_per": 1.92,
+    "proj_per": 1.89,
     "replacement_delta": null
   },
   "mlbam_id": 686527,
