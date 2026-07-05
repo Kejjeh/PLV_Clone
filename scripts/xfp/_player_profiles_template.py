@@ -687,6 +687,22 @@ HOME_TAB = """
       / Control 0.15 (n=1,205, R²=0.74).</i> Year-by-year weights vary by
       ±2-3pp. Overall correlates with realized FP rate at r=0.86 (hitters)
       and r=0.81 (SPs).</p>
+      <p><b>FPwt</b> (<code>Overall_FP</code>). A parallel, <i>FP-faithful</i>
+      reweighting of the same domains, tuned to forward-predict next-period
+      fantasy output rather than describe same-year skill. Weights: hitters
+      <i>0.58 Contact / 0.17 Power / 0.17 SB / 0.08 Discipline</i> — SB is
+      <i>included</i> here because steals score points, whereas the archetype
+      Overall treats SB as an overlay; SPs <i>0.76 Stuff / 0.14 Movement /
+      0.10 Control</i>; RPs <i>role-first</i> (0.55 z-saves + 0.35 Stuff +
+      0.10 z-FP/g). In the 2026 CV-by-year refit it forward-predicts modestly
+      better than the shipped Overall (hitters .515 vs .477, SPs .577 vs .551).
+      <b>FPwt·s</b> is the sub-rating-level variant (better still — SPs .590,
+      hitters .548). <b>Display/context only (Rule 13)</b> — a diagnostic beside
+      Overall, never a projection; the headline stays rh3/rp3/rprs2 / Blended xFP.</p>
+      <p><b>Reliever role tags.</b> CLOSER / SETUP / HIGH-LEVERAGE / FIREMAN /
+      MULTI-INNING-BULK describe how a reliever is <i>used</i> — derived from
+      saves, holds, leverage and innings-per-appearance. They contextualize
+      fantasy value (saves + holds score) but do not feed the 20-80 ratings.</p>
       <p><b>Sub-domains.</b> Each domain decomposes into conceptually distinct
       sub-ratings (all 20-80), shown in the per-player modal's Composition tab and the
       "Sub-domain ratings" section at the bottom of each tab.</p>
@@ -1713,6 +1729,23 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role, opts) {
 // text?, fmt?, domain?, idCol?, teamCol?}. `domain` flags a numeric domain
 // cell that should expose the existing hover tooltip showing sub-domain
 // component ratings (same UX as the alltable).
+// Compact trajectory chip for the archetype tables — surfaces the same
+// rising/falling read the modal hero shows (traj_flag) at table-scan level, so
+// the scouting story includes career DIRECTION, not just the current grade.
+// Display/context only (Rule 13); the arrow never re-ranks anything.
+function trajChip(v) {
+  if (!v || v === 'STABLE') return '<span style="color:var(--faint)">·</span>';
+  const up = v === 'TRENDING_UP' || v === 'CAREER_HIGH';
+  const dn = v === 'TRENDING_DOWN' || v === 'CAREER_LOW';
+  const arrow = up ? '▲' : dn ? '▼' : '·';
+  const col = up ? 'pos' : dn ? 'neg' : 'dim';
+  const tip = v === 'TRENDING_UP'   ? 'Trending up — 3-yr Overall slope ≥ +3/yr'
+            : v === 'TRENDING_DOWN' ? 'Trending down — 3-yr Overall slope ≤ -3/yr'
+            : v === 'CAREER_HIGH'   ? 'Career high — ≥90th career percentile'
+            : v === 'CAREER_LOW'    ? 'Career low — ≤10th career percentile' : '';
+  return `<span style="color:var(--${col})" title="${tip}">${arrow}</span>`;
+}
+
 const H_ARCH_COLS = [
   { key: '_n',            label: '#',        num: true, text: true },  // rank within block
   { key: 'player_name',   label: 'Player',   text: true, idCol: true },
@@ -1723,6 +1756,7 @@ const H_ARCH_COLS = [
   { key: 'DISCIPLINE',    label: 'D',        num: true, domain: 'DISCIPLINE' },
   { key: 'SB',            label: 'SB',       num: true, domain: 'SB' },
   { key: 'sb_tier',       label: 'SB tier',  text: true, pretty: true },
+  { key: 'traj_flag',     label: 'Trend',    text: true, fmt: trajChip },
   { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
   { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
   { key: 'fp_per_pa',     label: 'FP/PA·act', num: true, actual: true,
@@ -1739,6 +1773,7 @@ const S_ARCH_COLS = [
   { key: 'CONTROL',       label: 'C',        num: true, domain: 'CONTROL' },
   { key: 'velo_rating',   label: 'Velo',     num: true },
   { key: 'velo_tier',     label: 'Velo tier',text: true, pretty: true },
+  { key: 'traj_flag',     label: 'Trend',    text: true, fmt: trajChip },
   { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
   { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
   { key: 'fp_per_start',  label: 'FP/start·act', num: true, actual: true,
@@ -1755,6 +1790,7 @@ const RP_ARCH_COLS = [
   { key: 'BATTED_BALL',   label: 'BB',       num: true, domain: 'BATTED_BALL' },
   { key: 'velo_rating',   label: 'Velo',     num: true },
   { key: 'leverage_tier', label: 'Lev',      text: true, pretty: true },
+  { key: 'traj_flag',     label: 'Trend',    text: true, fmt: trajChip },
   { key: 'age_tier',      label: 'Age',      text: true, pretty: true },
   { key: 'boundary_tier', label: 'Bnd',      text: true, pretty: true },
   { key: 'fp_per_g',      label: 'FP/g·act', num: true, actual: true,
@@ -2009,11 +2045,18 @@ function renderLeaderboard(rows, role, targetId) {
               :                     'fp_per_start';
   const modalRole = role === 'hitter' ? 'hitter' : 'sp';
   const idKey = role === 'hitter' ? 'batter' : 'pitcher';
-  const top = rows.slice().sort((a,b) => (b[fpKey]||0) - (a[fpKey]||0)).slice(0, 15);
+  // Rank the leaderboard by the EXPECTED grade (Overall), not realized FP —
+  // this is the scouting/expected-performance surface. FP rate stays as a
+  // trailing ·act validation column so you can eyeball whether the grade tracks
+  // output. Tie-break by FP rate.
+  const top = rows.slice()
+    .sort((a,b) => (b.OVERALL||0) - (a.OVERALL||0) || (b[fpKey]||0) - (a[fpKey]||0))
+    .slice(0, 15);
+  const fpActLabel = role === 'hitter' ? 'FP/PA·act' : role === 'rp' ? 'FP/g·act' : 'FP/start·act';
   let html = '<table><thead><tr><th class="num">#</th><th>Player</th><th class="num">Overall</th><th class="num">T+1</th>';
-  if      (role === 'hitter') html += '<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num">FP/PA</th>';
-  else if (role === 'rp')     html += '<th class="num">S</th><th class="num">C</th><th class="num">BB</th><th>Archetype</th><th class="num">FP/g</th>';
-  else                        html += '<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num">FP/start</th>';
+  if      (role === 'hitter') html += `<th class="num">C</th><th class="num">P</th><th class="num">D</th><th class="num">SB</th><th>Archetype</th><th class="num col-actual" title="actual / realized — validation, not expected">${fpActLabel}</th>`;
+  else if (role === 'rp')     html += `<th class="num">S</th><th class="num">C</th><th class="num">BB</th><th>Archetype</th><th class="num col-actual" title="actual / realized — validation, not expected">${fpActLabel}</th>`;
+  else                        html += `<th class="num">S</th><th class="num">M</th><th class="num">C</th><th>Archetype</th><th class="num col-actual" title="actual / realized — validation, not expected">${fpActLabel}</th>`;
   html += '</tr></thead><tbody>';
   top.forEach((r, i) => {
     const t1 = r.t1_fp_projection;
@@ -2025,15 +2068,15 @@ function renderLeaderboard(rows, role, targetId) {
     if (role === 'hitter') {
       html += `<td class="num">${r.CONTACT}</td><td class="num">${r.POWER}</td>`
             + `<td class="num">${r.DISCIPLINE}</td><td class="num">${r.SB}</td>`
-            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_pa||0).toFixed(3)}</td>`;
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num col-actual">${(r.fp_per_pa||0).toFixed(3)}</td>`;
     } else if (role === 'rp') {
       html += `<td class="num">${r.STUFF}</td><td class="num">${r.CONTROL}</td>`
             + `<td class="num">${r.BATTED_BALL}</td>`
-            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_g||0).toFixed(2)}</td>`;
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num col-actual">${(r.fp_per_g||0).toFixed(2)}</td>`;
     } else {
       html += `<td class="num">${r.STUFF}</td><td class="num">${r.MOVEMENT}</td>`
             + `<td class="num">${r.CONTROL}</td>`
-            + `<td>${prettyLabel(r.archetype)}</td><td class="num">${(r.fp_per_start||0).toFixed(2)}</td>`;
+            + `<td>${prettyLabel(r.archetype)}</td><td class="num col-actual">${(r.fp_per_start||0).toFixed(2)}</td>`;
     }
     html += '</tr>';
   });
