@@ -7,9 +7,11 @@ import numpy as np
 import pandas as pd
 import pytest
 
+import math
+
 from scripts.xfp.lib.archetype_engine import (
     rating_20_80, bucket, boundary_distance, boundary_tier_label, age_tier,
-    rate_value, label_for_cell, rate_pillars,
+    rate_value, label_for_cell, rate_pillars, compute_stickiness,
 )
 
 
@@ -129,3 +131,90 @@ def test_age_tier_parametrized_peak_windows():
     # SP windows: PRE<=26, PEAK<=31 — 26 is PEAK for hitters but PRE for SPs
     assert age_tier(26, pre_max=26, peak_max=31) == 'PRE_PEAK'
     assert age_tier(np.nan, pre_max=25, peak_max=30) is None
+
+
+# ── compute_stickiness hoist (item 14): equivalence vs the 3 originals ────────
+def _ref_stickiness(qual, id_col, fp_col, ndigits, guard):
+    """Reference = the pre-hoist per-position logic, inline."""
+    careers = qual.sort_values([id_col, 'year']).reset_index(drop=True)
+    careers['next_arch'] = careers.groupby(id_col)['archetype'].shift(-1)
+    careers['next_year'] = careers.groupby(id_col)['year'].shift(-1)
+    careers['next_fp'] = careers.groupby(id_col)[fp_col].shift(-1)
+    careers['year_gap'] = careers['next_year'] - careers['year']
+    current_year = int(qual['year'].max())
+    trans = careers[(careers['year_gap'] == 1) & (careers['next_year'] != current_year)]
+    out = {}
+    for arch in qual['archetype'].unique():
+        sub = trans[trans['archetype'] == arch]
+        if len(sub) < 8:
+            continue
+        n_total = len(sub)
+        n_stick = int((sub['next_arch'] == arch).sum())
+        top_to = sub['next_arch'].value_counts().head(3).to_dict()
+
+        def _fp(mask):
+            if guard and not mask.any():
+                return None
+            return round(float(sub[mask]['next_fp'].mean()), ndigits)
+        entry = {
+            'n_total_transitions': n_total, 'n_stayed': n_stick,
+            'retention_pct': round(100 * n_stick / n_total, 1),
+            'top_destinations': [[k, int(v), round(100 * v / n_total, 1)] for k, v in top_to.items()],
+            'fp_if_stayed': _fp(sub['next_arch'] == arch),
+            'fp_if_left': _fp(sub['next_arch'] != arch),
+            'by_age_tier': {},
+        }
+        for tier in ['PRE_PEAK', 'PEAK', 'POST_PEAK']:
+            sub_t = sub[sub['age_tier'] == tier]
+            if len(sub_t) < 5:
+                continue
+            ret = float((sub_t['next_arch'] == arch).mean())
+            entry['by_age_tier'][tier] = {'n': int(len(sub_t)), 'retention_pct': round(100 * ret, 1)}
+        out[arch] = entry
+    return out
+
+
+def _panel(id_col, fp_col):
+    rows = []
+    tiers = ['PRE_PEAK', 'PEAK', 'POST_PEAK']
+    for i in range(12):                       # STICKY: never leaves -> empty 'left' subset
+        for yr in (2022, 2023, 2024):
+            rows.append({id_col: 1000 + i, 'year': yr, 'archetype': 'STICKY',
+                         fp_col: 5.0 + (i % 3), 'age_tier': tiers[i % 3]})
+    for i in range(14):                       # MOVERA/MOVERB churn
+        seq = ['MOVERA', 'MOVERB', 'MOVERA'] if i % 2 == 0 else ['MOVERB', 'MOVERA', 'MOVERB']
+        for j, yr in enumerate((2022, 2023, 2024)):
+            rows.append({id_col: 2000 + i, 'year': yr, 'archetype': seq[j],
+                         fp_col: 3.0 + (i % 4) * 0.5, 'age_tier': tiers[i % 3]})
+    return pd.DataFrame(rows)
+
+
+def _same(a, b):
+    assert a.keys() == b.keys()
+    for k in a:
+        va, vb = a[k], b[k]
+        if isinstance(va, dict):
+            _same(va, vb)
+        elif isinstance(va, float) and isinstance(vb, float) and math.isnan(va) and math.isnan(vb):
+            continue
+        else:
+            assert va == vb, f"{k}: {va!r} != {vb!r}"
+
+
+def test_stickiness_hitter_equivalence():
+    q = _panel('batter', 'fp_per_pa')
+    _same(compute_stickiness(q, id_col='batter', fp_col='fp_per_pa', ndigits=3),
+          _ref_stickiness(q, 'batter', 'fp_per_pa', 3, False))
+
+
+def test_stickiness_sp_equivalence():
+    q = _panel('pitcher', 'fp_per_start')
+    _same(compute_stickiness(q, id_col='pitcher', fp_col='fp_per_start', ndigits=2),
+          _ref_stickiness(q, 'pitcher', 'fp_per_start', 2, False))
+
+
+def test_stickiness_rp_equivalence_and_empty_guard():
+    q = _panel('pitcher', 'fp_per_g')
+    got = compute_stickiness(q, id_col='pitcher', fp_col='fp_per_g', ndigits=2, guard_empty=True)
+    _same(got, _ref_stickiness(q, 'pitcher', 'fp_per_g', 2, True))
+    assert got['STICKY']['fp_if_left'] is None   # RP guard: None, not NaN

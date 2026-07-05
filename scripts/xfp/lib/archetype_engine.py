@@ -126,3 +126,59 @@ def age_tier(age, *, pre_max: int, peak_max: int):
     if age <= peak_max:
         return 'PEAK'
     return 'POST_PEAK'
+
+
+def compute_stickiness(qual, *, id_col: str, fp_col: str, ndigits: int,
+                       guard_empty: bool = False):
+    """YoY archetype retention + per-age-tier breakdown (item 14 hoist).
+
+    Extracted verbatim-equivalent from the three archetype builders, which
+    differed only in the id column (``batter``/``pitcher``), the FP column
+    (``fp_per_pa``/``fp_per_start``/``fp_per_g``), the FP rounding (hitter 3dp,
+    SP/RP 2dp), and whether an empty next-arch subset yields ``None`` (RP) vs
+    ``NaN`` (H/SP) — all captured by the four parameters. Writes the
+    ``*_archetype_stickiness.json`` tables (NOT the ratings master, so it does
+    not touch the frozen Blended-xFP prior). Equivalence pinned by
+    tests/test_archetype_engine.py against reference copies of all three.
+    """
+    careers = qual.sort_values([id_col, 'year']).reset_index(drop=True)
+    careers['next_arch'] = careers.groupby(id_col)['archetype'].shift(-1)
+    careers['next_year'] = careers.groupby(id_col)['year'].shift(-1)
+    careers['next_fp'] = careers.groupby(id_col)[fp_col].shift(-1)
+    careers['year_gap'] = careers['next_year'] - careers['year']
+    current_year = int(qual['year'].max())
+    trans = careers[(careers['year_gap'] == 1) & (careers['next_year'] != current_year)]
+
+    def _fp(sub, mask):
+        if guard_empty and not mask.any():
+            return None
+        return round(float(sub[mask]['next_fp'].mean()), ndigits)
+
+    out = {}
+    for arch in qual['archetype'].unique():
+        sub = trans[trans['archetype'] == arch]
+        if len(sub) < 8:
+            continue
+        n_total = len(sub)
+        n_stick = int((sub['next_arch'] == arch).sum())
+        top_to = sub['next_arch'].value_counts().head(3).to_dict()
+        entry = {
+            'n_total_transitions': n_total,
+            'n_stayed': n_stick,
+            'retention_pct': round(100 * n_stick / n_total, 1),
+            'top_destinations': [[k, int(v), round(100 * v / n_total, 1)] for k, v in top_to.items()],
+            'fp_if_stayed': _fp(sub, sub['next_arch'] == arch),
+            'fp_if_left': _fp(sub, sub['next_arch'] != arch),
+            'by_age_tier': {},
+        }
+        for tier in ['PRE_PEAK', 'PEAK', 'POST_PEAK']:
+            sub_t = sub[sub['age_tier'] == tier]
+            if len(sub_t) < 5:
+                continue
+            ret = float((sub_t['next_arch'] == arch).mean())
+            entry['by_age_tier'][tier] = {
+                'n': int(len(sub_t)),
+                'retention_pct': round(100 * ret, 1),
+            }
+        out[arch] = entry
+    return out

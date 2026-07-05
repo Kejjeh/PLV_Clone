@@ -148,6 +148,7 @@ _sys.path.insert(0, str(REPO))
 from scripts.xfp.lib.archetype_engine import (  # noqa: E402
     rating_20_80, bucket, boundary_distance, boundary_tier_label,
     age_tier as _eng_age_tier,
+    compute_stickiness as _eng_stickiness,
 )
 
 
@@ -454,43 +455,12 @@ def build_ratings_panel():
 
 
 def compute_stickiness(qual):
-    """Year-over-year retention rate per archetype + age-tier breakdown."""
-    careers = qual.sort_values(['pitcher', 'year']).reset_index(drop=True)
-    careers['next_arch'] = careers.groupby('pitcher')['archetype'].shift(-1)
-    careers['next_year'] = careers.groupby('pitcher')['year'].shift(-1)
-    careers['next_fp']   = careers.groupby('pitcher')['fp_per_g'].shift(-1)
-    careers['year_gap']  = careers['next_year'] - careers['year']
-    current_year = int(qual['year'].max())
-    trans = careers[(careers['year_gap'] == 1) & (careers['next_year'] != current_year)]
-
-    out = {}
-    for arch in qual['archetype'].unique():
-        sub = trans[trans['archetype'] == arch]
-        if len(sub) < 8: continue
-        n_total = len(sub)
-        n_stick = int((sub['next_arch'] == arch).sum())
-        top_to = sub['next_arch'].value_counts().head(3).to_dict()
-        entry = {
-            'n_total_transitions': n_total,
-            'n_stayed': n_stick,
-            'retention_pct': round(100 * n_stick / n_total, 1),
-            'top_destinations': [[k, int(v), round(100 * v / n_total, 1)] for k, v in top_to.items()],
-            'fp_if_stayed': round(float(sub[sub['next_arch'] == arch]['next_fp'].mean()), 2)
-                            if (sub['next_arch'] == arch).any() else None,
-            'fp_if_left':   round(float(sub[sub['next_arch'] != arch]['next_fp'].mean()), 2)
-                            if (sub['next_arch'] != arch).any() else None,
-            'by_age_tier': {},
-        }
-        for tier in ['PRE_PEAK', 'PEAK', 'POST_PEAK']:
-            sub_t = sub[sub['age_tier'] == tier]
-            if len(sub_t) < 5: continue
-            ret = float((sub_t['next_arch'] == arch).mean())
-            entry['by_age_tier'][tier] = {
-                'n': int(len(sub_t)),
-                'retention_pct': round(100 * ret, 1),
-            }
-        out[arch] = entry
-    return out
+    """Year-over-year retention rate per archetype + age-tier breakdown.
+    Hoisted to lib/archetype_engine (item 14) — RP params: pitcher / fp_per_g /
+    2dp + empty-subset guard (None, not NaN). Equivalence pinned by
+    tests/test_archetype_engine.py."""
+    return _eng_stickiness(qual, id_col='pitcher', fp_col='fp_per_g', ndigits=2,
+                           guard_empty=True)
 
 
 def compute_decline_baselines(qual):
