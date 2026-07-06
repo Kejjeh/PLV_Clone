@@ -17,8 +17,17 @@
   "mlbam_id": 671739,
   "player_name": "Michael Harris II",
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-06",
+  "settlement": {
+    "actual_fp_per_unit": 0.375,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 56,
+    "proj_per": 2.2,
+    "residual": -1.8250000000000002,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "BUY"
 }

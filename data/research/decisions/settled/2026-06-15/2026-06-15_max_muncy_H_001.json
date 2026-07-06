@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-06-15_max_muncy_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 67,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.349763386271918,
+    "live_marginal": -15.300000000000011,
+    "model_rank": 33,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 2.09,
+    "replacement_delta": null
+  },
+  "mlbam_id": 571970,
+  "player_name": "Max Muncy",
+  "reason_tag": "under_the_radar",
+  "settled_at": "2026-07-06",
+  "settlement": {
+    "actual_fp_per_unit": 0.5384615384615384,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 65,
+    "proj_per": 2.09,
+    "residual": -1.5515384615384615,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-15",
+  "verdict_top": "BUY"
+}

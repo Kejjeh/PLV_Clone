@@ -1,0 +1,24 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-07-06_vladimir_guerrero_jr_H_001",
+  "inputs": {
+    "archetype_label": "PURE_HITTER",
+    "archetype_overall": 58,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.031968127087804,
+    "live_marginal": 6.0,
+    "model_rank": 38,
+    "override_tag": null,
+    "pl_rank": 71,
+    "proj_per": 2.01,
+    "replacement_delta": null
+  },
+  "mlbam_id": 665489,
+  "player_name": "Vladimir Guerrero Jr.",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-06",
+  "verdict_top": "MIXED"
+}

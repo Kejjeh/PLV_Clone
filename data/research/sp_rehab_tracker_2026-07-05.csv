@@ -1,0 +1,15 @@
+milb_pitches,outings,last_outing,fb_velo,fb_max,milb_k_pct,milb_bb_pct,milb_swstr,milb_csw,velo_delta,k_delta,bb_delta,swstr_delta,workload_curve,days_gap_max,verdict,name,pos,team,injury,mlbam,prior_year,prior_fb_velo,prior_k,prior_bb,prior_swstr,rehab_window
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Robert Suarez,RP,Boone's Bad Bullpen,FIFTEEN_DAY_DL,663158.0,2025.0,98.58,0.279,0.052,0.127,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Garrett Crochet,SP,Team Solomon,SIXTY_DAY_DL,676979.0,2025.0,96.28,0.312,0.056,0.143,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Blake Snell,SP,Team Solomon,SIXTY_DAY_DL,605483.0,2025.0,95.12,0.281,0.098,0.149,"filtered to post-2026-05-09 (pre-filter: 55, post-IL: 0)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Ben Brown,SP,Late Night Bettsing,FIFTEEN_DAY_DL,676962.0,2025.0,95.85,0.254,0.063,0.116,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Robert Garcia,RP,2015 Draft First Round,SIXTY_DAY_DL,676395.0,2025.0,94.44,0.253,0.074,0.143,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Jakob Junis,RP,2015 Draft First Round,FIFTEEN_DAY_DL,596001.0,2025.0,91.09,0.2,0.058,0.095,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Max Fried,SP,New York Ligers,FIFTEEN_DAY_DL,608331.0,2025.0,94.8,0.236,0.064,0.12,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Tyler Glasnow,SP,New York Ligers,SIXTY_DAY_DL,607192.0,2025.0,95.81,0.29,0.117,0.097,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Ryan Helsley,RP,New York Ligers,FIFTEEN_DAY_DL,664854.0,2025.0,99.31,0.249,0.087,0.138,"filtered to post-2026-06-27 (pre-filter: 28, post-IL: 0)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Carlos Rodon,SP,New York Ligers,FIFTEEN_DAY_DL,607074.0,2025.0,93.72,0.255,0.092,0.128,"filtered to post-2026-06-28 (pre-filter: 85, post-IL: 0)"
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Brandon Woodruff,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,605540.0,2025.0,92.96,0.323,0.054,0.138,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Connelly Early,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,813349.0,2025.0,93.72,0.367,0.051,0.17,
+0.0,0.0,,,,,,,,,,,,,,NO DATA,Jared Jones,SP,Frendy's Fantastic Team,DAY_TO_DAY,683003.0,2024.0,97.33,0.259,0.075,0.15,"filtered to post-2026-07-02 (pre-filter: 171, post-IL: 0)"
+,,,,,,,,,,,,,,,NO MLBAM,Edwin Diaz,RP,Treasure Island Mashers,SIXTY_DAY_DL,,,,,,,

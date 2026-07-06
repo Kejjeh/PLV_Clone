@@ -17,8 +17,17 @@
   "mlbam_id": 668715,
   "player_name": "Spencer Steer",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-06",
+  "settlement": {
+    "actual_fp_per_unit": 0.36065573770491804,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 61,
+    "proj_per": 1.96,
+    "residual": -1.599344262295082,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "MIXED"
 }

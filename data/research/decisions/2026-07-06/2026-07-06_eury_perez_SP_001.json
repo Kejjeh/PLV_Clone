@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.5,
+  "decision_id": "2026-07-06_eury_perez_SP_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_4_5",
+    "archetype_overall": 49,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 14.173782909025944,
+    "live_marginal": -153.08181484593885,
+    "model_rank": 39,
+    "override_tag": null,
+    "pl_rank": 68,
+    "proj_per": 12.01165795023889,
+    "replacement_delta": null
+  },
+  "mlbam_id": 691587,
+  "player_name": "Eury P\u00e9rez",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-06",
+  "verdict_top": "CAUTION"
+}
