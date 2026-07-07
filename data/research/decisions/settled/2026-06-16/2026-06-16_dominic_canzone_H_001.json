@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-16_dominic_canzone_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 68,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 1.9516561790648,
+    "live_marginal": null,
+    "model_rank": 71,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 1.89,
+    "replacement_delta": null
+  },
+  "mlbam_id": 686527,
+  "player_name": "Dominic Canzone",
+  "reason_tag": "process_upgrade",
+  "settled_at": "2026-07-07",
+  "settlement": {
+    "actual_fp_per_unit": 0.6274509803921569,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 51,
+    "proj_per": 1.89,
+    "residual": -1.262549019607843,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "BUY"
+}

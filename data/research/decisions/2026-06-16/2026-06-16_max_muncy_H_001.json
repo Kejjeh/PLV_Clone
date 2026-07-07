@@ -17,8 +17,17 @@
   "mlbam_id": 571970,
   "player_name": "Max Muncy",
   "reason_tag": "under_the_radar",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-07",
+  "settlement": {
+    "actual_fp_per_unit": 0.48484848484848486,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 66,
+    "proj_per": 2.09,
+    "residual": -1.605151515151515,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-16",
   "verdict_top": "BUY"
 }

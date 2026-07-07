@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-06-16_corbin_carroll_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 61,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.0976248006763765,
+    "live_marginal": null,
+    "model_rank": 6,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 2.34,
+    "replacement_delta": null
+  },
+  "mlbam_id": 682998,
+  "player_name": "Corbin Carroll",
+  "reason_tag": "under_the_radar",
+  "settled_at": "2026-07-07",
+  "settlement": {
+    "actual_fp_per_unit": 0.42105263157894735,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 76,
+    "proj_per": 2.34,
+    "residual": -1.9189473684210525,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-16",
+  "verdict_top": "BUY"
+}

@@ -17,8 +17,17 @@
   "mlbam_id": 696100,
   "player_name": "Hunter Goodman",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-07",
+  "settlement": {
+    "actual_fp_per_unit": 0.5945945945945946,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 74,
+    "proj_per": 1.87,
+    "residual": -1.2754054054054054,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-16",
   "verdict_top": "MIXED"
 }

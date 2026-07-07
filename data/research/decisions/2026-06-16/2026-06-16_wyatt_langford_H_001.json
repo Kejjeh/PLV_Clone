@@ -17,8 +17,17 @@
   "mlbam_id": 694671,
   "player_name": "Wyatt Langford",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-07",
+  "settlement": {
+    "actual_fp_per_unit": 1.0217391304347827,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 46,
+    "proj_per": 1.71,
+    "residual": -0.6882608695652173,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-16",
   "verdict_top": "MIXED"
 }
