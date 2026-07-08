@@ -17,8 +17,17 @@
   "mlbam_id": 607208,
   "player_name": "Trea Turner",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-08",
+  "settlement": {
+    "actual_fp_per_unit": 0.4588235294117647,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 85,
+    "proj_per": 1.72,
+    "residual": -1.2611764705882353,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-17",
   "verdict_top": "MIXED"
 }

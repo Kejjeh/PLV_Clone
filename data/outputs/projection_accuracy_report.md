@@ -1,8 +1,8 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-07-07  
+**Generated:** 2026-07-08  
 **Source:** `data/outputs/predictions_history.csv`  
-**Backfilled rows:** 398  
+**Backfilled rows:** 402  
 **Minimum N per bucket to trust:** 5
 
 ## 1. Periods covered
@@ -22,7 +22,7 @@
 | 12 | 81 | 406.5 | 479.2 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 13 | 35 | 603.7 | 512.6 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 14 | 37 | 563.1 | 429.5 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
-| 15 | 9 | 562.5 | 443.9 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
+| 15 | 13 | 562.5 | 443.9 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 16 | 7 | 790.5 | 712.3 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 17 | 7 | 349.7 | 680.9 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 18 | 7 | 540.4 | 408.2 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
@@ -37,10 +37,10 @@ Error = projected − actual. Bias > 0 means model over-projects.
 
 | Model | n | my MAE | my RMSE | my bias | opp MAE | opp RMSE | opp bias |
 |---|---|---|---|---|---|---|---|
-| `MA_v1` | 116 | 125.2 | 154.7 | +124.2 | 138.0 | 169.8 | +127.3 |
+| `MA_v1` | 118 | 127.8 | 157.5 | +126.8 | 141.2 | 173.7 | +130.6 |
 | `backfill_2024_bayes_shrink` | 84 | 74.4 | 133.3 | -43.5 | 72.4 | 135.2 | -53.2 |
 | `backfill_2025_bayes_shrink` | 57 | 70.9 | 104.2 | -30.9 | 74.0 | 104.2 | -45.2 |
-| `baseline` | 116 | 104.6 | 133.6 | +100.7 | 121.0 | 146.3 | +100.2 |
+| `baseline` | 118 | 107.0 | 136.2 | +103.2 | 123.6 | 149.5 | +103.2 |
 | `baseline_pre_versioning` | 25 | 37.1 | 44.3 | -33.0 | 39.2 | 44.6 | +12.4 |
 
 ## 3. Error metrics — latest snapshot per (period, model)
@@ -91,10 +91,10 @@ This is the "what the dashboard showed at end of week" view.
 | 14 | `backfill_2024_bayes_shrink` | 343.9 | 314.0 | +29.9 | 329.9 | 402.9 | -73.0 |
 | 14 | `backfill_2025_bayes_shrink` | 457.1 | 402.8 | +54.3 | 491.8 | 631.1 | -139.3 |
 | 14 | `baseline` | 311.9 | 306.5 | +5.4 | 365.0 | 362.3 | +2.7 |
-| 15 | `MA_v1` | 351.7 | 22.7 | +329.0 | 439.7 | 15.0 | +424.7 |
+| 15 | `MA_v1` | 356.4 | 70.8 | +285.6 | 426.9 | 94.3 | +332.6 |
 | 15 | `backfill_2024_bayes_shrink` | 331.1 | 412.4 | -81.3 | 320.4 | 236.9 | +83.5 |
 | 15 | `backfill_2025_bayes_shrink` | 510.6 | 527.3 | -16.6 | 500.1 | 548.3 | -48.2 |
-| 15 | `baseline` | 322.1 | 22.7 | +299.4 | 383.2 | 15.0 | +368.2 |
+| 15 | `baseline` | 323.6 | 70.8 | +252.8 | 382.4 | 94.3 | +288.1 |
 | 16 | `backfill_2024_bayes_shrink` | 332.0 | 426.7 | -94.7 | 318.8 | 484.2 | -165.4 |
 | 16 | `backfill_2025_bayes_shrink` | 511.9 | 950.3 | -438.4 | 529.6 | 666.4 | -136.8 |
 | 17 | `backfill_2024_bayes_shrink` | 363.5 | 403.0 | -39.5 | 328.9 | 315.0 | +13.9 |
@@ -112,11 +112,11 @@ This is the "what the dashboard showed at end of week" view.
 
 Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈ actual win rate. Buckets with N < 5 are flagged INSUFFICIENT.
 
-### `MA_v1` (n=116)
+### `MA_v1` (n=118)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 52 | 0.071 | 0.019 | 0.052 | OK |
+| 0.00-0.25 | 54 | 0.070 | 0.019 | 0.051 | OK |
 | 0.25-0.50 | 26 | 0.330 | 0.115 | 0.215 | OK |
 | 0.50-0.75 | 19 | 0.599 | 0.368 | 0.230 | OK |
 | 0.75-1.00 | 19 | 0.850 | 1.000 | 0.150 | OK |
@@ -139,11 +139,11 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 | 0.50-0.75 | 26 | 0.589 | 0.500 | 0.089 | OK |
 | 0.75-1.00 | 2 | 0.760 | 1.000 | 0.240 | INSUFFICIENT |
 
-### `baseline` (n=116)
+### `baseline` (n=118)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 52 | 0.087 | 0.019 | 0.068 | OK |
+| 0.00-0.25 | 54 | 0.086 | 0.019 | 0.068 | OK |
 | 0.25-0.50 | 23 | 0.360 | 0.000 | 0.360 | OK |
 | 0.50-0.75 | 24 | 0.613 | 0.500 | 0.113 | OK |
 | 0.75-1.00 | 17 | 0.832 | 1.000 | 0.168 | OK |

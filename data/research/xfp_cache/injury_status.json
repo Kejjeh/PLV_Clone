@@ -1,7 +1,8 @@
 {
-  "fetched": "2026-07-07",
+  "fetched": "2026-07-08",
   "il": {
     "Tyler Soderstrom": "TEN_DAY_DL",
+    "Konnor Griffin": "TEN_DAY_DL",
     "Angel Martinez": "TEN_DAY_DL",
     "Robert Suarez": "FIFTEEN_DAY_DL",
     "Corey Seager": "TEN_DAY_DL",
@@ -12,6 +13,7 @@
     "Gleyber Torres": "TEN_DAY_DL",
     "Ben Brown": "FIFTEEN_DAY_DL",
     "Ronald Acuna Jr.": "TEN_DAY_DL",
+    "Byron Buxton": "TEN_DAY_DL",
     "Will Smith": "TEN_DAY_DL",
     "Robert Garcia": "SIXTY_DAY_DL",
     "Jakob Junis": "FIFTEEN_DAY_DL",
@@ -25,7 +27,6 @@
     "Munetaka Murakami": "TEN_DAY_DL",
     "Roman Anthony": "SIXTY_DAY_DL",
     "Edwin Diaz": "SIXTY_DAY_DL",
-    "Oneil Cruz": "TEN_DAY_DL",
-    "Jacob Wilson": "TEN_DAY_DL"
+    "Oneil Cruz": "TEN_DAY_DL"
   }
 }

@@ -1,0 +1,9 @@
+metric,key,value
+classification,BUY_MISS,27
+classification,FADE_HIT,4
+classification,CAUTION_NEUTRAL,2
+classification,MIXED_NEUTRAL,25
+hit_rate_by_bucket,H,4/31 (13%)
+pending,total_pending,579
+pending,ripe_but_pending_events,10
+summary,settled_total,58

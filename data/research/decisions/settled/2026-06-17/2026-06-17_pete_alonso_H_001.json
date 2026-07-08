@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.5,
+  "decision_id": "2026-06-17_pete_alonso_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 64,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.003197708121316,
+    "live_marginal": 26.599999999999994,
+    "model_rank": 19,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 2.14,
+    "replacement_delta": null
+  },
+  "mlbam_id": 624413,
+  "player_name": "Pete Alonso",
+  "reason_tag": "under_the_radar",
+  "settled_at": "2026-07-08",
+  "settlement": {
+    "actual_fp_per_unit": 0.4805194805194805,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 77,
+    "proj_per": 2.14,
+    "residual": -1.6594805194805196,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-17",
+  "verdict_top": "BUY"
+}
