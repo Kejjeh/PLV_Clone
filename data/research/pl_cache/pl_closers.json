@@ -1,124 +1,124 @@
 {
-  "fetched": "2026-06-23",
-  "source_url": "https://pitcherlist.com/fantasy-reliever-rankings-closers-holds-solds-6-23/",
+  "fetched": "2026-07-07",
+  "source_url": "https://pitcherlist.com/fantasy-reliever-rankings-closers-holds-solds-7-7/",
   "ranks": {
     "Cade Smith": 1,
     "Jhoan Duran": 2,
     "Mason Miller": 3,
-    "Paul Sewald": 4,
-    "Josh Hader": 5,
-    "Jacob Latz": 6,
-    "Ryan Helsley": 7,
-    "Pete Fairbanks": 8,
-    "Devin Williams": 9,
-    "David Bednar": 10,
-    "Gregory Soto": 11,
-    "Andrés Muñoz": 12,
-    "Bryan Baker": 13,
-    "Louis Varland": 14,
-    "Raisel Iglesias": 15,
+    "Josh Hader": 4,
+    "Jacob Latz": 5,
+    "Paul Sewald": 6,
+    "David Bednar": 7,
+    "Andrés Muñoz": 8,
+    "Bryan Baker": 9,
+    "Louis Varland": 10,
+    "Raisel Iglesias": 11,
+    "Emilio Pagán": 12,
+    "Pete Fairbanks": 13,
+    "Devin Williams": 14,
+    "Caleb Kilian": 15,
     "Kenley Jansen": 16,
     "Riley O’Brien": 17,
-    "Aroldis Chapman": 18,
-    "Antonio Senzatela": 19,
-    "Jaden Hill": 20,
-    "Juan Mejia": 21,
-    "Victor Vodnik": 22,
-    "Gus Varland": 23,
-    "Brad Lord": 24,
-    "Orlando Ribalta": 25,
-    "Tanner Scott": 26,
-    "Jacob Webb": 27,
-    "Tony Santillan": 28,
-    "Caleb Kilian": 29,
-    "Alex Lange": 30,
-    "Yoendrys Gómez": 31,
-    "Elvis Alvarado": 32,
-    "Sam Bachman": 33,
-    "John Schreiber": 34,
-    "Hogan Harris": 35,
-    "Caleb Thielbar": 36,
-    "Will Vest": 37,
-    "Ryan Zeferjahn": 38,
-    "Andrew Morris": 39,
-    "Anthony Banda": 40,
-    "Robert Suarez": 41,
-    "Abner Uribe": 42,
-    "JoJo Romero": 43,
-    "George Soriano": 44,
-    "Rico Garcia": 45,
-    "Yennier Cano": 46,
-    "Garrett Whitlock": 47,
-    "Justin Slaten": 48,
-    "Phil Maton": 49,
-    "Bryan Hudson": 50,
-    "Brock Burke": 51,
-    "Tejay Antone": 52,
-    "Kyle Finnegan": 53,
-    "Daniel Lynch IV": 54,
-    "Chase Silseth": 55,
-    "Alex Vesia": 56,
-    "Anthony Bender": 57,
-    "Michael Petersen": 58,
-    "Aaron Ashby": 59,
-    "Luke Weaver": 60,
-    "Fernando Cruz": 61,
-    "Dylan Smith": 62,
-    "Erik Miller": 63,
-    "Gabe Speier": 64,
-    "Jose A. Ferrer": 65,
-    "Kevin Kelly": 66,
-    "Jakob Junis": 67,
-    "Tyler Rogers": 68,
-    "Jeff Hoffman": 69,
-    "Kevin Ginkel": 70,
-    "Juan Morillo": 71,
-    "Dylan Lee": 72,
-    "Colin Holderman": 73,
-    "Enyel De Los Santos": 74,
-    "Steven Okert": 75,
-    "Edgardo Henriquez": 76,
-    "A.J. Minter": 77,
-    "Brent Headrick": 78,
-    "Orion Kerkering": 79,
-    "José Alvarado": 80,
-    "Mason Montgomery": 81,
-    "Dennis Santana": 82,
-    "Adrian Morejon": 83,
-    "Jason Adam": 84,
-    "Garrett Cleavinger": 85,
-    "Cole Winn": 86,
-    "Justin Sterner": 87,
-    "Ryne Stanek": 88,
-    "Mason Barnett": 89,
-    "Ryan Rolison": 90,
-    "Caleb Ferguson": 91,
-    "Matt Strahm": 92,
-    "Kirby Yates": 93,
-    "Ryan Walker": 94,
-    "Taylor Clarke": 95,
-    "Didier Fuentes": 96,
-    "Andrew Kittredge": 97,
-    "Tyron Guerrero": 98,
-    "Chris Murphy": 99,
-    "Hunter Gaddis": 100,
-    "Drew Anderson": 101,
-    "Bryan King": 102,
-    "Kyle Hurt": 103,
-    "Calvin Faucher": 104,
-    "Joel Kuhnel": 105,
-    "Eric Orze": 106,
-    "Huascar Brazobán": 107,
-    "Camilo Doval": 108,
-    "Jonathan Bowlan": 109,
-    "Yohan Ramírez": 110,
-    "Yuki Matsui": 111,
-    "Eduard Bazardo": 112,
-    "Craig Kimbrel": 113,
-    "Peyton Gray": 114,
-    "Braydon Fisher": 115,
+    "Tyler Wells": 18,
+    "Aroldis Chapman": 19,
+    "Elvis Alvarado": 20,
+    "Mason Montgomery": 21,
+    "Hogan Harris": 22,
+    "Jordan Romano": 23,
+    "Gregory Soto": 24,
+    "Antonio Senzatela": 25,
+    "Juan Mejia": 26,
+    "Victor Vodnik": 27,
+    "Orlando Ribalta": 28,
+    "PJ Poulin": 29,
+    "Justin Lawrence": 30,
+    "Tanner Scott": 31,
+    "Jacob Webb": 32,
+    "Alex Lange": 33,
+    "Yoendrys Gómez": 34,
+    "Kirby Yates": 35,
+    "John Schreiber": 36,
+    "Andrew Morris": 37,
+    "Rico Garcia": 38,
+    "Caleb Thielbar": 39,
+    "Trent Thornton": 40,
+    "Kyle Finnegan": 41,
+    "Ryan Zeferjahn": 42,
+    "Sam Bachman": 43,
+    "Yennier Cano": 44,
+    "Abner Uribe": 45,
+    "Luke Weaver": 46,
+    "Dylan Smith": 47,
+    "JoJo Romero": 48,
+    "George Soriano": 49,
+    "Dylan Lee": 50,
+    "Didier Fuentes": 51,
+    "Garrett Whitlock": 52,
+    "Tyron Guerrero": 53,
+    "Brock Burke": 54,
+    "Tejay Antone": 55,
+    "Drew Anderson": 56,
+    "Daniel Lynch IV": 57,
+    "Alex Vesia": 58,
+    "Edgardo Henriquez": 59,
+    "Michael Petersen": 60,
+    "Calvin Faucher": 61,
+    "Aaron Ashby": 62,
+    "Taylor Rogers": 63,
+    "Fernando Cruz": 64,
+    "Adrian Morejon": 65,
+    "Erik Miller": 66,
+    "Gabe Speier": 67,
+    "Jose A. Ferrer": 68,
+    "Kevin Kelly": 69,
+    "Garrett Cleavinger": 70,
+    "Peyton Gray": 71,
+    "Jeff Hoffman": 72,
+    "Tyler Rogers": 73,
+    "Juan Morillo": 74,
+    "Jonathan Loáisiga": 75,
+    "Colin Holderman": 76,
+    "Steven Okert": 77,
+    "Bryan King": 78,
+    "Brooks Raley": 79,
+    "Brent Headrick": 80,
+    "Jonathan Bowlan": 81,
+    "Orion Kerkering": 82,
+    "Bradgley Rodriguez": 83,
+    "Tyler Alexander": 84,
+    "Justin Sterner": 85,
+    "Yuki Matsui": 86,
+    "Andrew Kittredge": 87,
+    "Luis Medina": 88,
+    "Ryan Rolison": 89,
+    "Steven Cruz": 90,
+    "José Fermín": 91,
+    "Evan Phillips": 92,
+    "Yohan Ramírez": 93,
+    "Ryne Stanek": 94,
+    "Kevin Ginkel": 95,
+    "Dylan Dodd": 96,
+    "Justin Slaten": 97,
+    "Caleb Ferguson": 98,
+    "Erik Sabrowski": 99,
+    "Tyler Holton": 100,
+    "Bryan Abreu": 101,
+    "John King": 102,
+    "Craig Yoho": 103,
+    "Eric Orze": 104,
+    "Huascar Brazobán": 105,
+    "Camilo Doval": 106,
+    "Brad Keller": 107,
+    "Sam Hentges": 108,
+    "Eduard Bazardo": 109,
+    "Craig Kimbrel": 110,
+    "Gavin Collyer": 111,
+    "Braydon Fisher": 112,
+    "Grant Taylor": 113,
+    "Sean Newcomb": 114,
+    "Bryan Hudson": 115,
     "Seranthony Domínguez": 116,
-    "Grant Taylor": 117
+    "Dennis Santana": 117
   },
   "roles": {
     "Cade Smith": {
@@ -133,10 +133,6 @@
       "role": "Closer",
       "save_pct": 85
     },
-    "Paul Sewald": {
-      "role": "Closer",
-      "save_pct": 80
-    },
     "Josh Hader": {
       "role": "Closer",
       "save_pct": 80
@@ -145,23 +141,11 @@
       "role": "Closer",
       "save_pct": 80
     },
-    "Ryan Helsley": {
-      "role": "Closer",
-      "save_pct": 75
-    },
-    "Pete Fairbanks": {
-      "role": "Closer",
-      "save_pct": 75
-    },
-    "Devin Williams": {
+    "Paul Sewald": {
       "role": "Closer",
       "save_pct": 75
     },
     "David Bednar": {
-      "role": "Closer",
-      "save_pct": 75
-    },
-    "Gregory Soto": {
       "role": "Closer",
       "save_pct": 75
     },
@@ -181,11 +165,31 @@
       "role": "Closer",
       "save_pct": 70
     },
+    "Emilio Pagán": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Pete Fairbanks": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Devin Williams": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Caleb Kilian": {
+      "role": "Closer",
+      "save_pct": 70
+    },
     "Kenley Jansen": {
       "role": "Closer",
       "save_pct": 60
     },
     "Riley O’Brien": {
+      "role": "Closer",
+      "save_pct": 60
+    },
+    "Tyler Wells": {
       "role": "Closer",
       "save_pct": 50
     },
@@ -193,11 +197,27 @@
       "role": "Closer",
       "save_pct": 0
     },
-    "Antonio Senzatela": {
+    "Elvis Alvarado": {
       "role": "Co-Closer",
-      "save_pct": 25
+      "save_pct": 40
     },
-    "Jaden Hill": {
+    "Mason Montgomery": {
+      "role": "Co-Closer",
+      "save_pct": 40
+    },
+    "Hogan Harris": {
+      "role": "Co-Closer",
+      "save_pct": 30
+    },
+    "Jordan Romano": {
+      "role": "Co-Closer",
+      "save_pct": 30
+    },
+    "Gregory Soto": {
+      "role": "Co-Closer",
+      "save_pct": 30
+    },
+    "Antonio Senzatela": {
       "role": "Co-Closer",
       "save_pct": 20
     },
@@ -209,33 +229,25 @@
       "role": "Co-Closer",
       "save_pct": 20
     },
-    "Gus Varland": {
-      "role": "Co-Closer",
-      "save_pct": 20
-    },
-    "Brad Lord": {
-      "role": "Co-Closer",
-      "save_pct": 20
-    },
     "Orlando Ribalta": {
       "role": "Co-Closer",
       "save_pct": 20
     },
+    "PJ Poulin": {
+      "role": "Co-Closer",
+      "save_pct": 10
+    },
+    "Justin Lawrence": {
+      "role": "Co-Closer",
+      "save_pct": 10
+    },
     "Tanner Scott": {
       "role": "Interim Closer",
-      "save_pct": 70
+      "save_pct": 60
     },
     "Jacob Webb": {
       "role": "Interim Closer",
       "save_pct": 50
-    },
-    "Tony Santillan": {
-      "role": "Interim Closer",
-      "save_pct": 50
-    },
-    "Caleb Kilian": {
-      "role": "Closer?",
-      "save_pct": 60
     },
     "Alex Lange": {
       "role": "Closer?",
@@ -243,13 +255,9 @@
     },
     "Yoendrys Gómez": {
       "role": "Closer?",
-      "save_pct": 45
+      "save_pct": 50
     },
-    "Elvis Alvarado": {
-      "role": "Closer?",
-      "save_pct": 40
-    },
-    "Sam Bachman": {
+    "Kirby Yates": {
       "role": "Closer?",
       "save_pct": 30
     },
@@ -257,7 +265,11 @@
       "role": "Setup Role",
       "save_pct": 25
     },
-    "Hogan Harris": {
+    "Andrew Morris": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "Rico Garcia": {
       "role": "Setup Role",
       "save_pct": 20
     },
@@ -265,7 +277,11 @@
       "role": "Setup Role",
       "save_pct": 20
     },
-    "Will Vest": {
+    "Trent Thornton": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Kyle Finnegan": {
       "role": "Setup Role",
       "save_pct": 20
     },
@@ -273,19 +289,23 @@
       "role": "Setup Role",
       "save_pct": 20
     },
-    "Andrew Morris": {
+    "Sam Bachman": {
       "role": "Setup Role",
       "save_pct": 20
     },
-    "Anthony Banda": {
-      "role": "Setup Role",
-      "save_pct": 20
-    },
-    "Robert Suarez": {
+    "Yennier Cano": {
       "role": "Setup Role",
       "save_pct": 15
     },
     "Abner Uribe": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Luke Weaver": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Dylan Smith": {
       "role": "Setup Role",
       "save_pct": 15
     },
@@ -297,11 +317,11 @@
       "role": "Setup Role",
       "save_pct": 15
     },
-    "Rico Garcia": {
+    "Dylan Lee": {
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Yennier Cano": {
+    "Didier Fuentes": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -309,15 +329,7 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Justin Slaten": {
-      "role": "Setup Role",
-      "save_pct": 10
-    },
-    "Phil Maton": {
-      "role": "Setup Role",
-      "save_pct": 10
-    },
-    "Bryan Hudson": {
+    "Tyron Guerrero": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -329,7 +341,7 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Kyle Finnegan": {
+    "Drew Anderson": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -337,15 +349,11 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Chase Silseth": {
-      "role": "Setup Role",
-      "save_pct": 10
-    },
     "Alex Vesia": {
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Anthony Bender": {
+    "Edgardo Henriquez": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -353,11 +361,15 @@
       "role": "Setup Role",
       "save_pct": 10
     },
+    "Calvin Faucher": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
     "Aaron Ashby": {
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Luke Weaver": {
+    "Taylor Rogers": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -365,7 +377,7 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Dylan Smith": {
+    "Adrian Morejon": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -385,11 +397,11 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Jakob Junis": {
+    "Garrett Cleavinger": {
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Tyler Rogers": {
+    "Peyton Gray": {
       "role": "Setup Role",
       "save_pct": 10
     },
@@ -397,15 +409,15 @@
       "role": "Setup Role",
       "save_pct": 10
     },
-    "Kevin Ginkel": {
+    "Tyler Rogers": {
       "role": "Setup Role",
-      "save_pct": 5
+      "save_pct": 10
     },
     "Juan Morillo": {
       "role": "Setup Role",
       "save_pct": 5
     },
-    "Dylan Lee": {
+    "Jonathan Loáisiga": {
       "role": "Setup Role",
       "save_pct": 5
     },
@@ -413,19 +425,15 @@
       "role": "Setup Role",
       "save_pct": 5
     },
-    "Enyel De Los Santos": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
     "Steven Okert": {
       "role": "Setup Role",
       "save_pct": 5
     },
-    "Edgardo Henriquez": {
+    "Bryan King": {
       "role": "Setup Role",
       "save_pct": 5
     },
-    "A.J. Minter": {
+    "Brooks Raley": {
       "role": "Setup Role",
       "save_pct": 5
     },
@@ -433,35 +441,19 @@
       "role": "Setup Role",
       "save_pct": 5
     },
+    "Jonathan Bowlan": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
     "Orion Kerkering": {
       "role": "Setup Role",
       "save_pct": 5
     },
-    "José Alvarado": {
+    "Bradgley Rodriguez": {
       "role": "Setup Role",
       "save_pct": 5
     },
-    "Mason Montgomery": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
-    "Dennis Santana": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
-    "Adrian Morejon": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
-    "Jason Adam": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
-    "Garrett Cleavinger": {
-      "role": "Setup Role",
-      "save_pct": 5
-    },
-    "Cole Winn": {
+    "Tyler Alexander": {
       "role": "Setup Role",
       "save_pct": 5
     },
@@ -469,11 +461,15 @@
       "role": "Setup Role",
       "save_pct": 0
     },
-    "Ryne Stanek": {
+    "Yuki Matsui": {
+      "role": "Middle Relief",
+      "save_pct": 8211
+    },
+    "Andrew Kittredge": {
       "role": "Middle Relief",
       "save_pct": 15
     },
-    "Mason Barnett": {
+    "Luis Medina": {
       "role": "Middle Relief",
       "save_pct": 10
     },
@@ -481,63 +477,59 @@
       "role": "Middle Relief",
       "save_pct": 10
     },
+    "Steven Cruz": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "José Fermín": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Evan Phillips": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Yohan Ramírez": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Ryne Stanek": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Kevin Ginkel": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Dylan Dodd": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Justin Slaten": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
     "Caleb Ferguson": {
       "role": "Middle Relief",
-      "save_pct": 10
+      "save_pct": 5
     },
-    "Matt Strahm": {
-      "role": "Middle Relief",
-      "save_pct": 10
-    },
-    "Kirby Yates": {
-      "role": "Middle Relief",
-      "save_pct": 10
-    },
-    "Ryan Walker": {
-      "role": "Middle Relief",
-      "save_pct": 10
-    },
-    "Taylor Clarke": {
+    "Erik Sabrowski": {
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Didier Fuentes": {
+    "Tyler Holton": {
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Andrew Kittredge": {
+    "Bryan Abreu": {
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Tyron Guerrero": {
+    "John King": {
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Chris Murphy": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Hunter Gaddis": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Drew Anderson": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Bryan King": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Kyle Hurt": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Calvin Faucher": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Joel Kuhnel": {
+    "Craig Yoho": {
       "role": "Middle Relief",
       "save_pct": 5
     },
@@ -553,15 +545,11 @@
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Jonathan Bowlan": {
+    "Brad Keller": {
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Yohan Ramírez": {
-      "role": "Middle Relief",
-      "save_pct": 5
-    },
-    "Yuki Matsui": {
+    "Sam Hentges": {
       "role": "Middle Relief",
       "save_pct": 5
     },
@@ -573,7 +561,7 @@
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Peyton Gray": {
+    "Gavin Collyer": {
       "role": "Middle Relief",
       "save_pct": 5
     },
@@ -581,13 +569,25 @@
       "role": "Middle Relief",
       "save_pct": 5
     },
-    "Seranthony Domínguez": {
-      "role": "Co-Closer?",
-      "save_pct": 40
-    },
     "Grant Taylor": {
       "role": "Co-Closer?",
       "save_pct": 40
+    },
+    "Sean Newcomb": {
+      "role": "Co-Closer?",
+      "save_pct": 25
+    },
+    "Bryan Hudson": {
+      "role": "Co-Closer?",
+      "save_pct": 15
+    },
+    "Seranthony Domínguez": {
+      "role": "Co-Closer?",
+      "save_pct": 10
+    },
+    "Dennis Santana": {
+      "role": "Setup Role?",
+      "save_pct": 10
     }
   }
 }
