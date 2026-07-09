@@ -17,8 +17,17 @@
   "mlbam_id": 624413,
   "player_name": "Pete Alonso",
   "reason_tag": "under_the_radar",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-09",
+  "settlement": {
+    "actual_fp_per_unit": 0.5,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 78,
+    "proj_per": 2.14,
+    "residual": -1.6400000000000001,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-18",
   "verdict_top": "BUY"
 }

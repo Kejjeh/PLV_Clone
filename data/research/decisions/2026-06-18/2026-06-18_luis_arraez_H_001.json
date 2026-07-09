@@ -17,8 +17,17 @@
   "mlbam_id": 650333,
   "player_name": "Luis Arraez",
   "reason_tag": "process_red_flag",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-09",
+  "settlement": {
+    "actual_fp_per_unit": 0.5441176470588235,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 68,
+    "proj_per": 1.93,
+    "residual": -1.3858823529411763,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-18",
   "verdict_top": "CAUTION"
 }

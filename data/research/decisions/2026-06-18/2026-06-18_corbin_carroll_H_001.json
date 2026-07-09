@@ -17,8 +17,17 @@
   "mlbam_id": 682998,
   "player_name": "Corbin Carroll",
   "reason_tag": "under_the_radar",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-09",
+  "settlement": {
+    "actual_fp_per_unit": 0.24,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 75,
+    "proj_per": 2.34,
+    "residual": -2.0999999999999996,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-18",
   "verdict_top": "BUY"
 }

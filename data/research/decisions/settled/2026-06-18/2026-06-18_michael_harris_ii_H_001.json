@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-18_michael_harris_ii_H_001",
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_STAR",
+    "archetype_overall": 65,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 2.5564366504565754,
+    "live_marginal": null,
+    "model_rank": 15,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 2.2,
+    "replacement_delta": null
+  },
+  "mlbam_id": 671739,
+  "player_name": "Michael Harris II",
+  "reason_tag": "process_upgrade",
+  "settled_at": "2026-07-09",
+  "settlement": {
+    "actual_fp_per_unit": 0.5866666666666667,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 75,
+    "proj_per": 2.2,
+    "residual": -1.6133333333333335,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-18",
+  "verdict_top": "BUY"
+}

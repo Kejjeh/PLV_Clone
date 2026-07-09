@@ -1,0 +1,33 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-18_jordan_walker_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 64,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 1.2478425004463978,
+    "live_marginal": null,
+    "model_rank": 57,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 1.93,
+    "replacement_delta": null
+  },
+  "mlbam_id": 691023,
+  "player_name": "Jordan Walker",
+  "reason_tag": "process_upgrade",
+  "settled_at": "2026-07-09",
+  "settlement": {
+    "actual_fp_per_unit": 0.7066666666666667,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 75,
+    "proj_per": 1.93,
+    "residual": -1.2233333333333332,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-18",
+  "verdict_top": "BUY"
+}

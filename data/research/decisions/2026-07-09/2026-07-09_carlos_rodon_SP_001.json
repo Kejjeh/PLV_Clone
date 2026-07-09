@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-09_carlos_rodon_SP_001",
+  "inputs": {
+    "archetype_label": "MOVE_WILD",
+    "archetype_overall": 56,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 13.650224051713494,
+    "live_marginal": -89.08867431549328,
+    "model_rank": 51,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_per": 11.66049242106551,
+    "replacement_delta": null
+  },
+  "mlbam_id": 607074,
+  "player_name": "Carlos Rod\u00f3n",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-09",
+  "verdict_top": "MIXED"
+}
