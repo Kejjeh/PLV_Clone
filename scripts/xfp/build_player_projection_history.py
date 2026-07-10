@@ -95,12 +95,14 @@ def _load_one(csv_name: str, player_type: str) -> pd.DataFrame:
 
 
 # Volume-model outputs (validated 2026-07-09: hitter PASS +0.074 Spearman vs
-# naive pace; SP PASS +0.100 — see hitter/sp_volume_model_2026-07-09.md).
-# Units: H = proj RoS PA per team game; SP = proj RoS GS per team game.
-# RP has no volume model yet — stays NaN.
+# naive pace; SP PASS +0.100 — see hitter/sp_volume_model_2026-07-09.md;
+# RP PASS +0.127 2026-07-10 — see rp_volume_model_2026-07-10.md).
+# Units: H = proj RoS PA per team game; SP = proj RoS GS per team game;
+# RP = proj RoS relief appearances (G) per team game.
 _VOLUME_SOURCES = {
     'H': ('xfp_volume_projections.csv', 'proj_ros_pa_per_teamgame'),
     'SP': ('xfp_sp_volume_projections.csv', 'proj_ros_gs_per_teamgame'),
+    'RP': ('xfp_rp_volume_projections.csv', 'proj_ros_g_per_teamgame'),
 }
 
 
