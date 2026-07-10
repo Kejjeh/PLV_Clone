@@ -65,9 +65,20 @@ RP FP/g         = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 2*HLD
 | `xfp_rh3` | `data/outputs/xfp_rh3_projections.csv` | Hitter RoS rank |
 | `xfp_rp3` | `data/outputs/xfp_rp3_projections.csv` | SP RoS rank |
 | `xfp_rprs2` | `data/outputs/xfp_rprs2_projections.csv` | **RP** RoS rank (NOT rp3) |
+| volume (H) | `data/outputs/xfp_volume_projections.csv` | proj RoS **PA/team-game** |
+| volume (SP) | `data/outputs/xfp_sp_volume_projections.csv` | proj RoS **GS/team-game** |
 
 Common mistake: ranking RPs with xfp_rp3. Always use **rprs2** for RPs.
 See `memory/feedback_team_value_reads_must_be_cap_role_elig_aware.md`.
+
+**RoS TOTALS = rate × volume (validated 2026-07-09).** The rate models are
+per-PA / per-start; the volume companions (hitter +0.074 / SP +0.100 Spearman
+vs naive pace, 7/7 yrs, holdout 2/2 each) convert them to totals. xfp_board and
+the snapshot logger (`proj_volume`) already consume them (refresh steps
+4.09/4.09b). Don't hand-multiply by flat 3.5 PA/g or 1.19 starts/wk when a
+volume row exists. Full day's outcomes (incl. the rp3 IL-join regression fix,
+47 arms re-tagged marcel_il): `reference_validated_signals_registry.md`
+§2026-07-09.
 
 ## Key file paths
 

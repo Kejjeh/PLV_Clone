@@ -502,6 +502,31 @@ def main():
         print('  ⚠ PL rank history archive failed — continuing (non-gating)')
 
 
+    # 4.09. Build forward-volume projections (validated 2026-07-09, PASS:
+    # pooled Spearman +0.074 vs naive pace, 7/7 years, holdout 2/2 —
+    # hitter_volume_model_2026-07-09.md). Volume (PA/starts) explains 3-5x
+    # more forward-total-FP variance than projected rate; this companion
+    # model converts the rate models into honest RoS totals. Runs before
+    # 4.10 so the snapshot logger can log proj_volume. Fail-soft.
+    ok_vol = run(
+        '4.09. Build hitter volume projections',
+        'python -X utf8 scripts/xfp/xfp_volume_pipeline.py',
+        timeout=600,
+    )
+    if not ok_vol:
+        print('  ⚠ hitter volume projections failed — proj_volume stays NaN today (non-gating)')
+
+    # 4.09b. SP forward-starts volume (validated 2026-07-09, PASS: pooled
+    # Spearman +0.100 vs naive gs-pace, 7/7 years, holdout 2/2 —
+    # sp_volume_model_2026-07-09.md). Fail-soft.
+    ok_spvol = run(
+        '4.09b. Build SP volume projections',
+        'python -X utf8 scripts/xfp/xfp_sp_volume_pipeline.py',
+        timeout=600,
+    )
+    if not ok_spvol:
+        print('  ⚠ SP volume projections failed — proj_volume stays NaN today (non-gating)')
+
     # 4.10. Append today's per-player projection snapshot to the growing
     # panel at data/research/player_projection_history.parquet. Feeds the
     # opponent-action predictor's Δ-rank feature and any future per-player
@@ -555,6 +580,32 @@ def main():
     )
     if not ok_settle:
         print('  ⚠ decision settlement failed — continuing (non-gating)')
+
+    # 4.11. Snapshot FanGraphs RoS projections (steamerr/rzips/ratcdc/
+    # rfangraphsdc, bat+pit). Date-keyed accumulation for the ~4-week
+    # forward validation of external playing-time/RoS systems. Idempotent
+    # (skips combos already pulled today). Cloudflare pass is intermittent
+    # -> retries internally; fail-soft.
+    ok_fgros = run(
+        '4.11. Snapshot FanGraphs RoS projections',
+        'python -X utf8 scripts/xfp/pull_fg_ros_projections.py',
+        timeout=600,
+    )
+    if not ok_fgros:
+        print('  ⚠ FG RoS projection snapshot failed — continuing (non-gating)')
+
+    # 4.12. Refresh IL transaction history + injury-proneness features
+    # (current month refetch only; historical chunks cached under
+    # il_tx_chunks/). Weekly cadence is sufficient — the derived features
+    # are as-of-Jan-1. Fail-soft.
+    if datetime.now().weekday() == 0:  # Monday, match other weekly steps
+        ok_iltx = run(
+            '4.12. Refresh IL transactions + injury proneness',
+            'python -X utf8 scripts/xfp/fetch_il_transactions.py',
+            timeout=300,
+        )
+        if not ok_iltx:
+            print('  ⚠ IL transaction refresh failed — continuing (non-gating)')
 
     if not args.no_push:
         if not XFP_MODEL.exists():
