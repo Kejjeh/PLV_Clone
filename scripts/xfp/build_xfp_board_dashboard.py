@@ -53,16 +53,23 @@ def _own_cell(r):
 
 def _name_cell(r):
     nm = h(str(r["name"]))
-    low = (r.get("src") == "talent_prior")
+    low = str(r.get("src", "")).startswith("talent_prior")   # src may carry "·vol"
     badge = ' <span class="lc">LOW-CONF*</span>' if low else ""
     return f"{nm}{badge}"
+
+
+def _vol_cell(r, nd=2):
+    v = r.get("vol")
+    if v is None or (isinstance(v, float) and pd.isna(v)):
+        return '<td class="muted">—</td>'
+    return f'<td class="vol">{float(v):.{nd}f}</td>'
 
 
 def _row_class(r):
     cls = []
     if r.get("owner") == "MINE":
         cls.append("mine")
-    if r.get("src") == "talent_prior":
+    if str(r.get("src", "")).startswith("talent_prior"):
         cls.append("lowconf")
     return " ".join(cls)
 
@@ -94,7 +101,7 @@ def _sp_table(df: pd.DataFrame, sortcol: str, n: int) -> str:
     v = _topn_plus_mine(df, sortcol, n)
     head = (
         "<tr><th>#</th><th>Pitcher</th><th>Own</th><th>Team</th><th>Own%</th>"
-        "<th>per_start</th><th>Stuff+</th><th>Src</th><th>Return</th>"
+        "<th>per_start</th><th>Stuff+</th><th>Src</th><th>Vol</th><th>Return</th>"
         "<th>xFP RoS</th><th>xFP PO</th></tr>"
     )
     body = []
@@ -110,6 +117,7 @@ def _sp_table(df: pd.DataFrame, sortcol: str, n: int) -> str:
             f'<td>{_fmt(r.get("per_start"), 2)}</td>'
             f'<td class="muted">{_fmt(r.get("stuff"))}</td>'
             f'<td class="src">{h(str(r.get("src","")))}</td>'
+            f'{_vol_cell(r, 3)}'
             f'<td>{_ret_cell(r)}</td>'
             f'<td class="acc">{_fmt(r.get("xfp_ros"))}</td>'
             f'<td>{_fmt(r.get("xfp_po"))}</td>'
@@ -122,7 +130,7 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
     v = _topn_plus_mine(df, "xfp_ros", n)
     head = (
         "<tr><th>#</th><th>Hitter</th><th>Own</th><th>Team</th><th>Own%</th>"
-        "<th>per_game</th><th>rh3#</th><th>Src</th><th>Return</th>"
+        "<th>per_game</th><th>rh3#</th><th>Src</th><th>Vol</th><th>Return</th>"
         "<th>xFP RoS</th><th>xFP PO</th></tr>"
     )
     body = []
@@ -140,6 +148,7 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
             f'<td>{_fmt(r.get("per_game"), 2)}</td>'
             f'<td class="muted">{rk_s}</td>'
             f'<td class="src">{h(str(r.get("src","")))}</td>'
+            f'{_vol_cell(r, 2)}'
             f'<td>{_ret_cell(r)}</td>'
             f'<td class="acc">{_fmt(r.get("xfp_ros"))}</td>'
             f'<td>{_fmt(r.get("xfp_po"))}</td>'
@@ -157,13 +166,21 @@ def build_html() -> str:
     gen = datetime.now().strftime("%Y-%m-%d %H:%M")
     n_sp_mine = int((sp["owner"] == "MINE").sum())
     n_hit_mine = int((have["owner"] == "MINE").sum())
-    n_tp_sp = int((sp["src"] == "talent_prior").sum())
-    n_tp_hit = int((have["src"] == "talent_prior").sum())
+    sp_src = sp["src"].astype(str)
+    hit_src = have["src"].astype(str)
+    n_tp_sp = int(sp_src.str.startswith("talent_prior").sum())
+    n_tp_hit = int(hit_src.str.startswith("talent_prior").sum())
+    n_vol_sp = int(sp_src.str.endswith("·vol").sum())
+    n_vol_hit = int(hit_src.str.endswith("·vol").sum())
+    n_dock_sp = int(sp_src.str.endswith("·flat↓").sum())
+    n_dock_hit = int(hit_src.str.endswith("·flat↓").sum())
+    sp_p75 = sp.attrs.get("flat_dock_p75")
+    hit_p75 = hit.attrs.get("flat_dock_p75")
 
     # SP section
     sp_html = (
         f'<h2>Starting Pitchers <span class="totals">'
-        f'{len(sp)} ranked · {n_sp_mine} MINE · {n_tp_sp} LOW-CONF</span></h2>'
+        f'{len(sp)} ranked · {n_sp_mine} MINE · {n_tp_sp} LOW-CONF · {n_vol_sp} ·vol · {n_dock_sp} ·flat↓</span></h2>'
         f'<h3>Rank by xFP — Rest of Season</h3>'
         f'{_sp_table(sp, "xfp_ros", SP_TABLE_N)}'
         f'<h3>Rank by xFP — Playoffs ({B.PLAYOFF_START.isoformat()}→{B.SEASON_END.isoformat()})</h3>'
@@ -173,7 +190,7 @@ def build_html() -> str:
     # Hitter buckets
     bucket_html = [
         f'<h2>Hitters <span class="totals">'
-        f'{len(have)} ranked · {n_hit_mine} MINE · {n_tp_hit} LOW-CONF</span></h2>'
+        f'{len(have)} ranked · {n_hit_mine} MINE · {n_tp_hit} LOW-CONF · {n_vol_hit} ·vol · {n_dock_hit} ·flat↓</span></h2>'
     ]
     for bkey, label in B.HITTER_BUCKETS:
         sub = have[have["buckets"].apply(lambda s: bkey in s)].copy()
@@ -188,8 +205,15 @@ def build_html() -> str:
     method = (
         "Headline numbers: SP per_start (Stuff+ proj &gt; rp3 data-driven &gt; "
         "rp3 Marcel) and hitter per_game (rh3, MLBAM-id-joined collision-safe). "
-        f"<b>xFP RoS</b> projects to season end ({B.SEASON_END.isoformat()}) "
-        f"— SP ≈ per_start × {B.RATE*7:.2f}/wk; hitter ≈ per_game × {B.GPW} g/wk. "
+        f"<b>xFP RoS</b> projects to season end ({B.SEASON_END.isoformat()}). "
+        "<b>Volume-sourced rows (src ·vol)</b> use the validated forward-volume "
+        "models (2026-07-09): hitter RoS = per_PA × projected PA/team-game × "
+        "team games in window; SP RoS = per_start × projected starts/team-game "
+        "× team games. The <b>Vol</b> column shows the per-teamgame number "
+        f"(flat equivalents: hitter {B.FLAT_PA_PER_TEAMGAME} PA/tg, SP "
+        f"{B.FLAT_GS_PER_TEAMGAME:.3f} GS/tg). Rows without a volume row keep "
+        f"the flat rates — SP ≈ per_start × {B.RATE*7:.2f}/wk; hitter ≈ "
+        f"per_game × {B.GPW} g/wk. "
         f"<b>xFP PO</b> = the {B.PLAYOFF_START.isoformat()}→{B.SEASON_END.isoformat()} "
         "fantasy-playoff window, availability-scaled. Live IL return dates "
         "(ESPN injury_details) are folded into availability; where no date "
@@ -201,7 +225,15 @@ def build_html() -> str:
         'if-healthy estimate for players the in-season model can\'t score: '
         'Judge / Greene / Snell-class IL stashes). NOT a real in-season read — '
         'a conviction sorter, not a point forecast. '
-        '<span class="own-mine">MINE</span> rows are highlighted.'
+        '<span class="own-mine">MINE</span> rows are highlighted. '
+        '<span class="src">·vol</span> in Src = RoS/PO totals use the player\'s '
+        'projected per-teamgame volume (Vol column) instead of the flat league rate. '
+        '<span class="src">·flat↓</span> = IL / prior-only row with no volume '
+        'projection, docked to the top-quartile (p75) volume ratio of modeled '
+        'rows in its universe'
+        + (f' (SP ×{sp_p75:.3f}' if sp_p75 is not None else ' (SP ×—')
+        + (f', hitters ×{hit_p75:.3f})' if hit_p75 is not None else ', hitters ×—)')
+        + ' so unmodeled stashes aren\'t credited more volume than any modeled player.'
     )
 
     return f"""<!DOCTYPE html>
@@ -253,6 +285,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 .muted {{ color:var(--dim); }}
 .acc {{ color:var(--accent); font-weight:600; }}
 .src {{ color:var(--dim); font-size:.92em; }}
+.vol {{ color:var(--pos); }}
 .ret {{ color:var(--warn); }}
 .own-mine {{ color:var(--pos); font-weight:600; }}
 .own-fa {{ color:var(--dim); }}

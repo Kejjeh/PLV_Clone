@@ -9,11 +9,15 @@ hitter_merged_xfp_rank.py) into one importable engine exposing:
 plus a `main()` CLI that writes the two dated CSVs and prints a summary.
 
 WINDOW MATH (date-parameterized — see TODAY / SEASON_END / PLAYOFF_START below;
-works any day, not hardcoded to 2026-06-11):
+works any day, not hardcoded to 2026-06-11). FLAT path (no volume row):
   SP RoS      = per_start * (avail->SEASON_END days * RATE)          RATE=1.19/7/day
   SP Playoffs = per_start * PLAYOFF_FULL * po_days/PLAYOFF_DAYS      PLAYOFF_FULL=3.6
   Hitter RoS  = per_game  * (avail->SEASON_END days /7 * GPW)        GPW=6.3 g/wk
   Hitter Po   = per_game  * PLAYOFF_GAMES_FULL * po_days/PLAYOFF_DAYS  =18 g
+VOLUME path (2026-07-09): where the validated forward-volume models
+(xfp_volume_projections.csv / xfp_sp_volume_projections.csv) carry the player,
+the flat league volume is replaced by the player's projected per-teamgame
+volume — see the FORWARD-VOLUME MODELS constants block. src gets "·vol".
 
 PER_START / PER_GAME SOURCE TIERS (honest source label carried in `src`):
   SP:      Stuff+ proj_ros_fp  > rp3 data_driven  > rp3 marcel (talent_prior, LOW-CONF)
@@ -76,6 +80,67 @@ PLAYOFF_FULL = 3.6         # full-availability playoff starts
 # Hitter window math
 GPW = 6.3                  # hitter games/week (MLB everyday cadence)
 PLAYOFF_GAMES_FULL = 18    # ~6 g/wk x 3 playoff wk
+
+# ── FORWARD-VOLUME MODELS (validated 2026-07-09, PASS) ──────────────────────
+# data/research/validation_runs/{hitter,sp}_volume_model_2026-07-09.md.
+# Where a per-player volume row exists, the RoS/PO totals swap the FLAT league
+# volume constants for the player's projected per-teamgame volume:
+#   hitter: RoS FP = per_pa   × proj_ros_pa_per_teamgame × team_games_in_window
+#   SP:     RoS FP = per_start × proj_ros_gs_per_teamgame × team_games_in_window
+# with team_games_in_window = the EXISTING window numbers (days/7 × GPW for
+# hitters; for SPs, days × RATE ÷ FLAT_GS_PER_TEAMGAME) — i.e. both reduce to
+#   xfp = flat_xfp × (vol / FLAT_*_PER_TEAMGAME)
+# so the availability-date (IL) window scaling is preserved EXACTLY as before;
+# the volume model is conditional-on-active and the window handles IL timing.
+# The SAME multiplier is applied to the playoff window (defensible + consistent:
+# playoff games count × player-vol / league-flat-vol). Rows using a volume row
+# get src suffix "·vol" + a `vol` column; rows absent from the volume CSVs
+# (e.g. marcel_il IL-stash arms) keep the flat path + existing LOW-CONF flags.
+VOL_HIT_CSV = ROOT / "data/outputs/xfp_volume_projections.csv"
+VOL_SP_CSV = ROOT / "data/outputs/xfp_sp_volume_projections.csv"
+FLAT_PA_PER_TEAMGAME = 3.5           # rh3 convention: per_game = per_pa × 3.5
+FLAT_GS_PER_TEAMGAME = _SPW / GPW    # 1.19 starts/wk ÷ 6.3 team-g/wk ≈ 0.189
+
+# ── FLAT-PATH COMPARABILITY DOCK (2026-07-09 follow-up) ─────────────────────
+# Flat-path rows (no volume row) that are IL'd or prior-only (talent_prior /
+# marcel_il class) are docked by the 75th-PERCENTILE vol ratio
+# (vol / flat_const) of the volume-modeled rows in the SAME universe — i.e. an
+# unmodeled player is credited the volume of a TOP-QUARTILE modeled player,
+# NOT the flat league constant. Rationale: flat-path rows are mostly IL
+# stashes and priors-only arms whose healthy-workload ceiling is
+# top-quartile-like, but crediting them the full flat constant (which exceeds
+# even the MAX modeled volume — ratio 1.0 vs max ~0.93 for SPs) systematically
+# over-ranks them vs volume-modeled rows that embed forward injury/rest risk.
+# Docked rows get src suffix "·flat↓" and keep their existing LOW-CONF flags.
+# Rows that are flat merely because they fall below the volume model's
+# coverage floor but are otherwise ACTIVE/healthy (not prior-only, no ESPN
+# injury status) are NOT docked — they keep the plain flat path.
+FLAT_DOCK_Q = 0.75
+
+
+def _dock_flat_rows(df: pd.DataFrame, flat_const: float):
+    """Apply the flat-path comparability dock in place; returns (df, p75 or
+    None). Dock class = no volume row AND (prior-only src OR IL'd). The p75
+    ratio is computed from this board's own vol-row distribution."""
+    if "vol" not in df.columns:
+        return df, None
+    ratios = (pd.to_numeric(df["vol"], errors="coerce") / flat_const).dropna()
+    if len(ratios) < 10:      # no usable distribution — leave the flat path alone
+        return df, None
+    p75 = float(ratios.quantile(FLAT_DOCK_Q))
+    src_s = df["src"].astype(str)
+    vol_missing = pd.to_numeric(df["vol"], errors="coerce").isna()
+    has_ros = pd.to_numeric(df["xfp_ros"], errors="coerce").notna()
+    prior_only = src_s.str.startswith("talent_prior")
+    il = df["inj"].astype(str).str.strip().replace("nan", "").ne("")
+    dock = vol_missing & has_ros & (prior_only | il)
+    if dock.any():
+        df.loc[dock, "xfp_ros"] = (pd.to_numeric(df.loc[dock, "xfp_ros"]) * p75).round(0)
+        df.loc[dock, "xfp_po"] = (pd.to_numeric(df.loc[dock, "xfp_po"]) * p75).round(0)
+        df.loc[dock, "src"] = src_s[dock] + "·flat↓"
+    df.attrs["flat_dock_p75"] = p75
+    df.attrs["n_flat_dock"] = int(dock.sum())
+    return df, p75
 
 # Coarse IL-return heuristic (days from TODAY) when injury_details has no date.
 # Surgery / season-ending cases are OVER-estimated here (see module docstring).
@@ -148,11 +213,63 @@ def _sp_starts(avail):
     return ros, PLAYOFF_FULL * po_days / PLAYOFF_DAYS
 
 
+# SP volume map: norm("First Last") -> proj_ros_gs_per_teamgame. Name-keyed
+# because the SP board rows are ESPN-name-keyed; names come from the volume
+# CSV itself ("Last, First", flipped) with NaN names recovered via rp3's
+# mlbam `pitcher` -> player_name. Skip-on-ambiguous: any two distinct SPs
+# normalizing to the same full name are dropped from the map entirely
+# (collision safety, CLAUDE.md rule #10 — never guess between same-name arms).
+_SP_VOL_MAPS = None
+
+
+def _sp_vol_maps():
+    global _SP_VOL_MAPS
+    if _SP_VOL_MAPS is not None:
+        return _SP_VOL_MAPS
+    try:
+        v = pd.read_csv(VOL_SP_CSV)
+        rp3 = PROJECTIONS.rp3().dropna(subset=["pitcher", "player_name"])
+        id2nm = dict(zip(rp3["pitcher"].astype(int), rp3["player_name"]))
+        names = []
+        for _, r in v.iterrows():
+            nm = r.get("player_name")
+            if pd.isna(nm) or not str(nm).strip():
+                nm = id2nm.get(int(r["mlbam_id"]))
+            names.append(TP.flip_name(nm) if (nm is not None and pd.notna(nm)) else None)
+        v = v.assign(_nm=names)
+        v = v[v["_nm"].notna() & v["proj_ros_gs_per_teamgame"].notna()]
+        nn = v["_nm"].map(norm)
+        v = v[~nn.duplicated(keep=False)]
+        _SP_VOL_MAPS = [(*_build_map(v["_nm"], v["proj_ros_gs_per_teamgame"]), "vol")]
+    except Exception as e:
+        print(f"[sp_volume] unavailable ({type(e).__name__}: {e}) — flat volume everywhere")
+        _SP_VOL_MAPS = []
+    return _SP_VOL_MAPS
+
+
+def _apply_sp_vol(ps, ros, po, nm):
+    """(xfp_ros, xfp_po, vol, src_suffix) — volume-model totals when the SP has
+    a volume row, flat totals otherwise. See FORWARD-VOLUME MODELS block."""
+    if ps is None:
+        return None, None, None, ""
+    maps = _sp_vol_maps()
+    gv = None
+    if maps:
+        gv, _ = _lookup(maps, nm)
+    if gv is None:
+        return round(float(ps) * ros, 0), round(float(ps) * po, 0), None, ""
+    mult = float(gv) / FLAT_GS_PER_TEAMGAME
+    return (round(float(ps) * ros * mult, 0), round(float(ps) * po * mult, 0),
+            round(float(gv), 3), "·vol")
+
+
 def build_sp_board() -> pd.DataFrame:
     """Merged SP board: MINE staff + every FA SP, dual-ranked by xFP-RoS and
     xFP-playoffs. Returns a DataFrame of the RANKED universe (rows with a
-    per_start). Columns: owner, name, team, own, per_start, stuff, src, inj,
-    ret, xfp_ros, xfp_po."""
+    per_start). Columns: owner, name, team, own, per_start, stuff, src, vol,
+    inj, ret, xfp_ros, xfp_po. src carries a "·vol" suffix (and vol the
+    starts-per-teamgame number) where the forward-volume model replaced the
+    flat 1.19/wk rate."""
     # ---- per_start source tiers ----
     mdl, sc, _ = ss.fit_model()
     d = ss.load_2026().dropna(subset=ss.FEATS).copy()
@@ -182,13 +299,14 @@ def build_sp_board() -> pd.DataFrame:
         ret = rd.date() if (injured and pd.notna(rd)) else TODAY
         avail = max(TODAY, ret)
         ros, po = _sp_starts(avail)
+        xros, xpo, vol, sfx = _apply_sp_vol(ps, ros, po, nm)
         rows.append(dict(owner="MINE", name=nm, team=p.get("pro_team", ""), own="",
                          per_start=None if ps is None else round(float(ps), 2),
-                         stuff=None if stf is None else round(float(stf), 0), src=src,
+                         stuff=None if stf is None else round(float(stf), 0),
+                         src=src + sfx, vol=vol,
                          inj=p.get("injury_status", "") if injured else "",
                          ret=ret if injured else "",
-                         xfp_ros=None if ps is None else round(float(ps) * ros, 0),
-                         xfp_po=None if ps is None else round(float(ps) * po, 0)))
+                         xfp_ros=xros, xfp_po=xpo))
 
     # ---- FA pool ----
     ls = LeagueState(); lg = ls._get_league()
@@ -221,18 +339,24 @@ def build_sp_board() -> pd.DataFrame:
             ret = TODAY
         avail = max(TODAY, ret)
         ros, po = _sp_starts(avail)
+        xros, xpo, vol, sfx = _apply_sp_vol(ps, ros, po, nm)
         rows.append(dict(owner="FA", name=nm, team=getattr(p, "proTeam", ""),
                          own=round(getattr(p, "percent_owned", 0) or 0, 1),
                          per_start=None if ps is None else round(float(ps), 2),
-                         stuff=None if stf is None else round(float(stf), 0), src=src,
+                         stuff=None if stf is None else round(float(stf), 0),
+                         src=src + sfx, vol=vol,
                          inj=status if injured else "", ret=ret if injured else "",
-                         xfp_ros=None if ps is None else round(float(ps) * ros, 0),
-                         xfp_po=None if ps is None else round(float(ps) * po, 0)))
+                         xfp_ros=xros, xfp_po=xpo))
 
     df = pd.DataFrame(rows)
     have = df[df["per_start"].notna()].copy()
+    have, p75 = _dock_flat_rows(have, FLAT_GS_PER_TEAMGAME)  # before sort — dock moves ranks
+    n_dock = have.attrs.get("n_flat_dock", 0)
     have = have.sort_values("xfp_ros", ascending=False).reset_index(drop=True)
+    # re-set attrs — sort_values/reset_index don't reliably propagate .attrs
     have.attrs["n_nodata"] = int(len(df) - len(have))
+    have.attrs["flat_dock_p75"] = p75
+    have.attrs["n_flat_dock"] = n_dock
     return have
 
 
@@ -245,10 +369,11 @@ _RH3_BY_ID = None
 _FULL = None
 _AMBIG_NAMES = None
 _MULTIYR = None
+_HIT_VOL = None   # mlbam batter id -> proj_ros_pa_per_teamgame (volume model)
 
 
 def _load_rh3():
-    global _RH3, _RH3_BY_ID, _FULL, _AMBIG_NAMES, _MULTIYR
+    global _RH3, _RH3_BY_ID, _FULL, _AMBIG_NAMES, _MULTIYR, _HIT_VOL
     if _RH3 is not None:
         return
     rh3 = PROJECTIONS.rh3().dropna(subset=["player_name"])
@@ -264,10 +389,18 @@ def _load_rh3():
     _FULL = full
     _AMBIG_NAMES = {k for k, v in full_ids.items() if len(v) > 1}
     _MULTIYR = pd.read_csv(ROOT / "data/research/xfp_cache/hitters_multiyr_2015_2026.csv")
+    # Hitter forward-volume model (mlbam-id-keyed — collision-free by design).
+    try:
+        hv = pd.read_csv(VOL_HIT_CSV).dropna(subset=["mlbam_id", "proj_ros_pa_per_teamgame"])
+        _HIT_VOL = dict(zip(hv["mlbam_id"].astype(int),
+                            hv["proj_ros_pa_per_teamgame"].astype(float)))
+    except Exception as e:
+        print(f"[hit_volume] unavailable ({type(e).__name__}: {e}) — flat volume everywhere")
+        _HIT_VOL = {}
 
 
 def _rh3_row(name, team=None, position=None):
-    """Return (rh3_row_series, source_str) or (None, 'NO_DATA').
+    """Return (rh3_row_series, source_str, mlbam_id) or (None, 'NO_DATA', None).
     Primary: resolve_batter_id -> RH3_BY_ID. Fallback: collision-safe exact name."""
     _load_rh3()
     try:
@@ -278,30 +411,51 @@ def _rh3_row(name, team=None, position=None):
         row = _RH3_BY_ID.loc[bid]
         if isinstance(row, pd.DataFrame):
             row = row.iloc[0]
-        return row, "id"
+        return row, "id", int(bid)
     nn = norm(name)
     if nn in _AMBIG_NAMES:
-        return None, "NO_DATA"   # collision-safe: don't silently grab a row
+        return None, "NO_DATA", None   # collision-safe: don't silently grab a row
     if nn in _FULL:
-        return _FULL[nn], "name"
-    return None, "NO_DATA"
+        row = _FULL[nn]
+        return row, "name", int(row["batter"])
+    return None, "NO_DATA", None
 
 
 def _project_hitter(name, team=None, position=None):
-    """(per_game, rank, signal, etfr, src). Falls back to the calibrated talent
-    prior (LOW-CONF, src='talent_prior') for elites absent from rh3."""
-    row, src = _rh3_row(name, team=team, position=position)
+    """(per_game, rank, signal, etfr, src, per_pa, mlbam_id). Falls back to the
+    calibrated talent prior (LOW-CONF, src='talent_prior') for rh3-absent elites
+    (per_pa is None on that path)."""
+    row, src, bid = _rh3_row(name, team=team, position=position)
     if row is not None:
         return (float(row["xfp_rh3_per_game"]), int(row["rank"]), str(row["signal"]),
-                round(float(row["expected_total_fp_remaining"]), 0), src)
+                round(float(row["expected_total_fp_remaining"]), 0), src,
+                float(row["xfp_rh3_per_pa"]), bid)
     try:
         bid = resolve_batter_id(name, team=alias_team(team), position=position, multiyr=_MULTIYR)
     except Exception:
         bid = None
     tp = TP.hitter_prior_pg(bid) if bid is not None else None
     if tp is not None:
-        return (tp, None, "stash", None, "talent_prior")
-    return (None, None, "", None, "NO_DATA")
+        return (tp, None, "stash", None, "talent_prior", None,
+                None if bid is None else int(bid))
+    return (None, None, "", None, "NO_DATA", None, None)
+
+
+def _apply_hit_vol(per_game, per_pa, bid, rg, pg):
+    """(xfp_ros, xfp_po, vol, src_suffix) — volume-model totals when the hitter
+    has a volume row (mlbam-id join), flat totals otherwise. rg/pg are the
+    existing availability-scaled window game counts, read as TEAM games under
+    the volume path (GPW 6.3/wk ≈ team cadence). per_pa path is exact; the
+    talent_prior path (per_pa=None) uses the equivalent ratio form
+    per_game × vol / FLAT_PA_PER_TEAMGAME (per_game = per_pa × 3.5 by rh3
+    convention, so the two forms are algebraically identical)."""
+    if per_game is None:
+        return None, None, None, ""
+    vol = _HIT_VOL.get(int(bid)) if bid is not None else None
+    if vol is None:
+        return round(per_game * rg, 0), round(per_game * pg, 0), None, ""
+    eff_pg = per_pa * vol if per_pa is not None else per_game * (vol / FLAT_PA_PER_TEAMGAME)
+    return round(eff_pg * rg, 0), round(eff_pg * pg, 0), round(float(vol), 2), "·vol"
 
 
 def _hitter_windows(avail):
@@ -346,7 +500,9 @@ def build_hitter_board() -> pd.DataFrame:
     xFP-RoS and xFP-playoffs, with bucket membership. Returns the FULL frame
     (ranked + no-data rows). `buckets` is a set per row; `per_game` is None for
     rh3-absent rows. Columns: owner, name, team, own, slots, buckets, per_game,
-    rank, signal, etfr, src, inj, ret, xfp_ros, xfp_po."""
+    rank, signal, etfr, src, vol, inj, ret, xfp_ros, xfp_po. src carries a
+    "·vol" suffix (and vol the PA-per-teamgame number) where the forward-volume
+    model replaced the flat 3.5 PA/g × 6.3 g/wk rate."""
     _load_rh3()
     rows = []
 
@@ -357,21 +513,21 @@ def build_hitter_board() -> pd.DataFrame:
         nm = p["player_name"]
         team = p.get("pro_team", "") or None
         pos = p.get("position", "") or None
-        per_game, rk, sig, etfr, src = _project_hitter(nm, team=team, position=pos)
+        per_game, rk, sig, etfr, src, per_pa, bid = _project_hitter(nm, team=team, position=pos)
         injured = bool(p.get("injured"))
         rd = pd.to_datetime(p.get("return_date"), errors="coerce")
         ret = rd.date() if (injured and pd.notna(rd)) else TODAY
         avail = max(TODAY, ret)
         rg, pg = _hitter_windows(avail)
+        xros, xpo, vol, sfx = _apply_hit_vol(per_game, per_pa, bid, rg, pg)
         slots = p.get("eligible_slots", [])
         rows.append(dict(
             owner="MINE", name=nm, team=team or "", own="", slots=list(slots),
             per_game=None if per_game is None else round(per_game, 2),
-            rank=rk, signal=sig, etfr=etfr, src=src,
+            rank=rk, signal=sig, etfr=etfr, src=src + sfx, vol=vol,
             inj=p.get("injury_status", "") if injured else "",
             ret=ret if injured else "",
-            xfp_ros=None if per_game is None else round(per_game * rg, 0),
-            xfp_po=None if per_game is None else round(per_game * pg, 0),
+            xfp_ros=xros, xfp_po=xpo,
         ))
 
     # ── FA pool: ONE unfiltered size=2000 pull, hitter-eligibility post-filter ──
@@ -410,7 +566,7 @@ def build_hitter_board() -> pd.DataFrame:
         nm = p.name; pid = int(p.playerId)
         team = getattr(p, "proTeam", "") or None
         pos = getattr(p, "position", "") or None
-        per_game, rk, sig, etfr, src = _project_hitter(nm, team=team, position=pos)
+        per_game, rk, sig, etfr, src, per_pa, bid = _project_hitter(nm, team=team, position=pos)
         injured = bool(getattr(p, "injured", False))
         status = getattr(p, "injuryStatus", "ACTIVE")
         if injured:
@@ -419,19 +575,20 @@ def build_hitter_board() -> pd.DataFrame:
             ret = TODAY
         avail = max(TODAY, ret)
         rg, pg = _hitter_windows(avail)
+        xros, xpo, vol, sfx = _apply_hit_vol(per_game, per_pa, bid, rg, pg)
         rows.append(dict(
             owner="FA", name=nm, team=team or "",
             own=round(getattr(p, "percent_owned", 0) or 0, 1),
             slots=list(getattr(p, "eligibleSlots", [])),
             per_game=None if per_game is None else round(per_game, 2),
-            rank=rk, signal=sig, etfr=etfr, src=src,
+            rank=rk, signal=sig, etfr=etfr, src=src + sfx, vol=vol,
             inj=status if injured else "", ret=ret if injured else "",
-            xfp_ros=None if per_game is None else round(per_game * rg, 0),
-            xfp_po=None if per_game is None else round(per_game * pg, 0),
+            xfp_ros=xros, xfp_po=xpo,
         ))
 
     df = pd.DataFrame(rows)
     df["buckets"] = df["slots"].apply(buckets_for)
+    df, _ = _dock_flat_rows(df, FLAT_PA_PER_TEAMGAME)
     return df
 
 
@@ -472,9 +629,16 @@ def main():
           f"({(have['owner']=='MINE').sum()} MINE + {(have['owner']=='FA').sum()} FA) | "
           f"no rh3 data: {len(nodata)}")
     a, b = TP.calib()
-    print(f"  id-joins: {(have['src']=='id').sum()} | name-fallback: "
-          f"{(have['src']=='name').sum()} | talent-prior LOW-CONF: "
-          f"{(have['src']=='talent_prior').sum()} [calib rh3_pg={a:.2f}+{b:.2f}*raw]")
+    src_s = have["src"].astype(str)
+    print(f"  id-joins: {src_s.str.startswith('id').sum()} | name-fallback: "
+          f"{src_s.str.startswith('name').sum()} | talent-prior LOW-CONF: "
+          f"{src_s.str.startswith('talent_prior').sum()} [calib rh3_pg={a:.2f}+{b:.2f}*raw]")
+    print(f"  volume-model rows (·vol): hitters {src_s.str.endswith('·vol').sum()}/{len(have)}"
+          f" | SPs {sp['src'].astype(str).str.endswith('·vol').sum()}/{len(sp)}")
+    hp75 = hit.attrs.get("flat_dock_p75"); sp75 = sp.attrs.get("flat_dock_p75")
+    print(f"  flat-path dock (·flat↓, p75 vol ratio): hitters "
+          f"{hit.attrs.get('n_flat_dock', 0)} rows @ x{hp75 if hp75 is None else round(hp75, 3)}"
+          f" | SPs {sp.attrs.get('n_flat_dock', 0)} rows @ x{sp75 if sp75 is None else round(sp75, 3)}")
     print(f"  -> {hit_out}")
 
     # smoke test: Max Muncy collision resolves to distinct ids
