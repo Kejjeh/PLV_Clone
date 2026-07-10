@@ -310,6 +310,21 @@ def main():
     # truthy), poisoning the imputation for an all-NaN column.
     max_dsr = float(_dsr_max) if pd.notna(_dsr_max) else 200.0
     rolling['days_since_il_return_imp'] = rolling['days_since_il_return'].fillna(max_dsr + 1)
+    # HARD GUARD (IL-join fix 2026-07-09): the IL cache must cover the rolling
+    # substrate's split_day grid (build_il_split_features derives its grid
+    # from the rolling CSVs). On 2026-05-29 the rolling builders moved to a
+    # weekly cadence while the IL cache stayed monthly — this exact join
+    # matched 0.45% of rows and all three VALIDATED IL features silently
+    # degenerated to their fillna constants for ~6 weeks. Healthy hit rate is
+    # ~25-30% of rows carrying IL history; fail loudly if it collapses again.
+    _il_hit = float((rolling['il_stints_to'] > 0).mean())
+    if _il_hit < 0.02:
+        raise RuntimeError(
+            f"IL feature join degenerate: only {_il_hit:.2%} of rolling rows "
+            "carry IL history (expected ~25-30%). The il_split_features cache "
+            "split_day grid no longer matches the rolling substrate — rerun "
+            "scripts/xfp/build_il_split_features.py (it derives its grid from "
+            "the rolling CSVs). See rp3_il_join_fix_2026-07-09.md.")
 
     # RoS schedule-strength feature (validated 2026-05-24, PASS Δr +0.0145).
     # Cache source: scripts/xfp/build_ros_schedule_features.py. Merge mirrors

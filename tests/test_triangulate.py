@@ -81,8 +81,17 @@ CANONICAL_CASES = [
     #   (CAUTION, still PL-unranked) re-lock and pass. Data-driven cache refresh,
     #   not a code change. Weathers straddles the PL boundary like Nelson, so if
     #   this churns again consider a bucket-only lock.
+    # 2026-07-09 (option b) — the rp3 IL-join regression fix (IL cache anchors
+    #   stayed monthly while the rolling substrate went weekly on 2026-05-29;
+    #   see rp3_il_join_fix_2026-07-09.md) restored real IL-history features
+    #   for every SP. Detmers' own row gained his true IL history (per_start
+    #   11.50 -> 12.04, rank 43 -> 40) and he re-crosses the BUY boundary:
+    #   MIXED -> 'BUY — process upgrade'. Corrected-error data change, not a
+    #   code change. This is his 3rd flip across the BUY/MIXED boundary
+    #   (06-17 BUY, 07-04 MIXED, 07-09 BUY) — if he churns again, downgrade
+    #   him to a bucket-only lock like Nelson.
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
-    ("Reid Detmers",    "MIXED — see profile",     "SP", "MIXED",   None),
+    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
     ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
