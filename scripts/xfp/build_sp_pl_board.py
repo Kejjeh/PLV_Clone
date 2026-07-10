@@ -152,7 +152,7 @@ def main():
             bb = '—'
         else:
             net = f"{int(r['net_boom']):+d}" if not pd.isna(r['net_boom']) else '—'
-            bb = f"{g(r['boom_pct'])}/{g(r['bust_pct'])} ({net})"
+            bb = f"{g(r['boom_pct'])}%/{g(r['bust_pct'])}% ({net})"
         disp_rows.append({
             'PL ▲▼ (old)': pl_cell(r),
             'Own': '⭐' if r['owner'] == 'MINE' else 'FA',
@@ -160,7 +160,7 @@ def main():
             'rp3·verdict·xFP': ('—' if pd.isna(r['rp3']) else
                                 f"#{int(r['rp3'])} {r['verdict'] if (isinstance(r['verdict'], str)) else '—'} {g(r['xfp'], 1)}"),
             'L1/L3/L5/L8/Sea': '/'.join(g(r[c], 1) for c in ('L1', 'L3', 'L5', 'L8', 'season')),
-            'boom/bust(net)': bb,
+            'boom%/bust%(net)': bb,
             'HR 26/car': f"{g(r['hr9_2026'])}/{g(r['hr9_career'])}",
             'K%': g(r['k_pct']),
             # K-composition: K/start + K-FED/IP-FED source (K-fed FP repeats

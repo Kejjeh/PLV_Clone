@@ -27,9 +27,50 @@ from validate_fg_pitch_modeling_inseason import load as load_hist, real_ip  # no
 
 ROOT = Path(__file__).resolve().parents[2]
 FG = ROOT / "data" / "research" / "fg_asof"
+BOX = ROOT / "data" / "research" / "xfp_cache" / "boxscore_pitchers.parquet"
 FEATS = ["pre_fp", "k_pct", "bb_pct", "swstr_pct", "siera", "stuff_plus"]
 MIN_GS = 5
+FG_STALE_DAYS = 5          # FG rate stats stabilize but drift; warn past this
+RECENT_APPS = 6            # window for recency-aware role classification
+RECENT_START_RATIO = 0.6   # >= this share of recent apps as starts => SP
 MY_TEAM = "New York Ligers"
+
+
+def _warn_if_fg_stale(path):
+    """Loud guard so a frozen FG scrape is never silently trusted again.
+    The June-6 staleness that mislabeled Griffin Jax (7 GS frozen vs 13 live)
+    would have printed here. Returns age in days."""
+    import time
+    try:
+        age = (time.time() - Path(path).stat().st_mtime) / 86400.0
+    except OSError:
+        print(f"WARN sp_stuff_model: FG file missing ({path})", file=sys.stderr)
+        return None
+    if age > FG_STALE_DAYS:
+        print(f"\n*** STALE FG DATA: {Path(path).name} is {age:.0f} days old "
+              f"(> {FG_STALE_DAYS}d). Stuff+/K%/BB% are frozen at that date. "
+              f"Refresh via: python scripts/_oneoff/fg_2026_current.py ***\n",
+              file=sys.stderr)
+    return age
+
+
+def _live_gs_from_boxscore():
+    """Authoritative GS from the DAILY-refreshed boxscore — immune to FG
+    staleness. Returns per-pitcher live_gs / live_apps / recent_start_ratio so
+    role classification uses live usage, not a frozen season snapshot. The
+    recent-window ratio catches mid-season RP->SP converters (Jax 2026) whose
+    cumulative gs/g is dragged down by early relief appearances."""
+    if not BOX.exists():
+        return None
+    b = pd.read_parquet(BOX, columns=["mlbam_id", "game_date", "gs"])
+    b["game_date"] = pd.to_datetime(b["game_date"])
+    out = []
+    for pid, g in b.groupby("mlbam_id"):
+        g = g.sort_values("game_date")
+        rec = g.tail(RECENT_APPS)
+        out.append((pid, int(g["gs"].sum()), len(g),
+                    float(rec["gs"].mean()) if len(rec) else 0.0))
+    return pd.DataFrame(out, columns=["mlb_id", "live_gs", "live_apps", "recent_start_ratio"])
 
 
 def _norm(name: str) -> str:
@@ -120,13 +161,29 @@ def fit_model():
 
 
 def load_2026():
-    d = pd.read_csv(FG / "fg_pit_2026_current.csv")
+    fpath = FG / "fg_pit_2026_current.csv"
+    _warn_if_fg_stale(fpath)
+    d = pd.read_csv(fpath)
     d["gs"] = pd.to_numeric(d["gs"], errors="coerce")
     d["g"] = pd.to_numeric(d["g"], errors="coerce")
     for c in ["k_pct", "bb_pct", "swstr_pct", "siera", "stuff_plus",
               "location_plus", "pitching_plus", "pb_stuff", "pb_command"]:
         d[c] = pd.to_numeric(d[c], errors="coerce")
-    d = d[(d["gs"] >= MIN_GS) & (d["gs"] / d["g"] >= 0.7)].copy()
+    # Reconcile GS/apps from the daily boxscore so the SP gate is NEVER driven
+    # by a stale FG snapshot. Season gs/g>=0.7 keeps clean starters; the OR on
+    # recent_start_ratio admits mid-season converters (Jax: cum 13/24=0.54 fails
+    # 0.7, but last 6 apps all starts => recent_ratio 1.0 => correctly SP).
+    live = _live_gs_from_boxscore()
+    if live is not None:
+        d = d.merge(live, on="mlb_id", how="left")
+        d["gs"] = d["live_gs"].fillna(d["gs"])
+        d["g"] = d["live_apps"].fillna(d["g"])
+        is_sp = ((d["gs"] >= MIN_GS)
+                 & (((d["gs"] / d["g"]) >= 0.7)
+                    | (d["recent_start_ratio"].fillna(0) >= RECENT_START_RATIO)))
+    else:
+        is_sp = (d["gs"] >= MIN_GS) & (d["gs"] / d["g"] >= 0.7)
+    d = d[is_sp].copy()
     d["pre_fp"] = brownu_fp_per_start(d)
     return d
 

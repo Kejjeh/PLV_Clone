@@ -99,6 +99,20 @@ def main():
     if not ok_fa:
         print('  ⚠ FA snapshot failed — RP cards will show live_marginal=unavailable')
 
+    # 0.8: Refresh the FanGraphs 2026 snapshot (Stuff+/K%/BB%/GS) that powers the
+    # stuff board, floor model, and sustainability. Fail-soft: it's a Chrome scrape
+    # that can flake, and sp_stuff_model now (a) reconciles GS from the daily
+    # boxscore so role classification is immune to FG staleness, and (b) prints a
+    # loud STALE warning past 5 days. This step keeps the RATE stats current.
+    # (Root cause of the 2026-07-08 Jax RP-mislabel: this file sat un-refreshed
+    # from 06-06 because it lived only as a manual _oneoff.)
+    ok_fg = run('0.8. Refresh FanGraphs 2026 snapshot (Stuff+/GS) [fail-soft]',
+                'python -X utf8 scripts/_oneoff/fg_2026_current.py',
+                timeout=240)
+    if not ok_fg:
+        print('  ⚠ FG snapshot refresh failed — stuff/floor keep prior rate stats; '
+              'role classification still live via boxscore GS reconciliation')
+
     if not args.skip_statcast:
         run('1. Refresh statcast (yesterday\'s games)',
             'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
