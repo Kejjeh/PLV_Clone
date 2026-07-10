@@ -96,7 +96,7 @@ def test_settle_sp_decision_from_gamelog(tmp_path, monkeypatch):
         verdict_top="BUY",
         reason_tag="process_intact",
         confidence=0.66,
-        inputs={"proj_per": 14.0},
+        inputs={"proj_per": 14.0, "proj_units": "fp_per_start", "inputs_schema": 2},
     )
     log_decision(rec)
 
@@ -137,7 +137,7 @@ def test_settle_sp_stays_pending_when_too_few_starts(tmp_path, monkeypatch):
         verdict_top="BUY",
         reason_tag="process_intact",
         confidence=0.66,
-        inputs={"proj_per": 14.0},
+        inputs={"proj_per": 14.0, "proj_units": "fp_per_start", "inputs_schema": 2},
     )
     log_decision(rec)
 
@@ -180,7 +180,7 @@ def test_settle_rp_decision_from_gamelog(tmp_path, monkeypatch):
         verdict_top="BUY",
         reason_tag="other",
         confidence=0.66,
-        inputs={"proj_per": 4.0},
+        inputs={"proj_per": 4.0, "proj_units": "fp_per_g", "inputs_schema": 2},
     )
     log_decision(rec)
 
@@ -214,9 +214,9 @@ def test_materializer_handles_mixed_buckets(tmp_path, monkeypatch):
     monkeypatch.setattr(logger_mod, "DECISIONS_ROOT", tmp_path)
 
     snap = "2026-05-01"
-    for bucket, pid, proj in [("H", 333333, 0.72),
-                              ("SP", 444444, 14.0),
-                              ("RP", 555555, 4.0)]:
+    for bucket, pid, proj, units in [("H", 333333, 0.72, "fp_per_pa"),
+                                     ("SP", 444444, 14.0, "fp_per_start"),
+                                     ("RP", 555555, 4.0, "fp_per_g")]:
         rec = DecisionRecord(
             decision_id=f"{snap}_test_{bucket.lower()}_{bucket}_001",
             snapshot_date=snap,
@@ -226,7 +226,7 @@ def test_materializer_handles_mixed_buckets(tmp_path, monkeypatch):
             verdict_top="HOLD",
             reason_tag="other",
             confidence=0.5,
-            inputs={"proj_per": proj},
+            inputs={"proj_per": proj, "proj_units": units, "inputs_schema": 2},
         )
         log_decision(rec)
 

@@ -23,8 +23,9 @@
     "classification": "BUY_MISS",
     "event_unit": "PA",
     "n_events": 81,
-    "proj_per": 2.21,
-    "residual": -1.6420987654320989,
+    "proj_per": 0.6314285714285715,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.06352733686067025,
     "threshold": 0.02,
     "window_days": 21
   },

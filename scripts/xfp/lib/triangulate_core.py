@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from .bucket_dispatch import resolve_player
-from .cached_data import _load_projection, _load_archetype
+from .cached_data import _load_projection, _load_archetype, _load_rp_volume_g
 from .pl_cache import pl_rank, pl_streamer_rank
 from .schedule_strength import schedule_idx_for
 from .boom_stack import compute_boom_stack, STREAMER_RANK_FLOOR, compute_high_k_pitcher
@@ -378,6 +378,11 @@ def model_row(player: dict) -> dict:
             'rank': int(r['rank']),
             'proj_label': 'fp/game',
             'proj': float(r['xfp_rh3_per_game']),
+            # Settlement-unit projection (decision logger): the settler scores
+            # H records in FP/PA, not the FP/game display headline (units bug
+            # fixed 2026-07-10).
+            'proj_settle': float(r['xfp_rh3_per_pa']),
+            'proj_settle_units': 'fp_per_pa',
             'signal': r['signal'],
             'rep_delta': float(r['replacement_delta']),
             'recform': float(r['recency_form_gap']),
@@ -575,6 +580,9 @@ def model_row(player: dict) -> dict:
             'rank': int(r['rank']),
             'proj_label': 'fp/start',
             'proj': float(r['xfp_rp3_per_start']),
+            # FP/start is already the settlement unit for SP records.
+            'proj_settle': float(r['xfp_rp3_per_start']),
+            'proj_settle_units': 'fp_per_start',
             'signal': r['signal'],
             'rep_delta': float(r['replacement_delta']),
             'recform': float(r['recency_form_gap']),
@@ -646,10 +654,20 @@ def model_row(player: dict) -> dict:
         _sl_rp = sustainability_rp(player['id'])  # relievers_multiyr (sp_multiyr drops pure RPs)
     except Exception:
         _sl_rp = {'process_verdict': 'INSUFFICIENT_DATA', 'process_detail': ''}
+    # Settlement-unit projection (decision logger): rprs2's headline is a RoS
+    # TOTAL, but the settler scores RP records in FP/appearance — divide by
+    # the validated RP volume model's implied remaining appearances (>=3
+    # guard against absurd divisions; None when no volume row, in which case
+    # the settler leaves the residual unsettled rather than scoring a total
+    # against a rate — the exact units bug fixed 2026-07-10).
+    _ros_g = _load_rp_volume_g().get(int(r['pitcher']))
+    _proj_settle_rp = (float(r['xfp_ros']) / _ros_g) if (_ros_g and _ros_g >= 3) else None
     return {
         'rank': int(r['rank']),
         'proj_label': 'xfp_ros',
         'proj': float(r['xfp_ros']),
+        'proj_settle': _proj_settle_rp,
+        'proj_settle_units': 'fp_per_g' if _proj_settle_rp is not None else None,
         'signal': r['signal'],
         'rep_delta': float(r['replacement_delta']),
         'recform': None,
@@ -1144,6 +1162,8 @@ def triangulate_player(name: str, bucket: str | None = None,
         'pl_rank': pl_main,
         'model_rank': model.get('rank') if model.get('rank') != '—' else None,
         'model_proj': model.get('proj'),
+        'model_proj_settle': model.get('proj_settle'),
+        'model_proj_settle_units': model.get('proj_settle_units'),
         'arche_overall': arche.get('overall') if arche.get('have') else None,
         'arche_label': arche.get('archetype') if arche.get('have') else None,
         'arche_traj': arche.get('traj_flag') if arche.get('have') else None,

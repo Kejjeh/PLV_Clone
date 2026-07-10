@@ -23,8 +23,9 @@
     "classification": "MIXED_NEUTRAL",
     "event_unit": "PA",
     "n_events": 71,
-    "proj_per": 1.99,
-    "residual": -1.3561971830985915,
+    "proj_per": 0.5685714285714286,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.06523138832997988,
     "threshold": 0.02,
     "window_days": 21
   },

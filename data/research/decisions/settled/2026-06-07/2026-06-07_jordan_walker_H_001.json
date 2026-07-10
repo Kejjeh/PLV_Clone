@@ -17,14 +17,15 @@
   "mlbam_id": 691023,
   "player_name": "Jordan Walker",
   "reason_tag": "archetype_breakout",
-  "settled_at": "2026-06-28",
+  "settled_at": "2026-07-10",
   "settlement": {
     "actual_fp_per_unit": 0.358974358974359,
     "classification": "BUY_MISS",
     "event_unit": "PA",
     "n_events": 78,
-    "proj_per": 1.87,
-    "residual": -1.511025641025641,
+    "proj_per": 0.5342857142857144,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.1753113553113554,
     "threshold": 0.02,
     "window_days": 21
   },

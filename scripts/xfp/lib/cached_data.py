@@ -22,6 +22,20 @@ REQUIRED_COLUMNS = {
 
 
 @functools.lru_cache(maxsize=None)
+def _load_rp_volume_g() -> dict:
+    """mlbam -> implied RoS relief appearances (proj_ros_g) from the RP volume
+    model (validated 2026-07-10, rp_volume_model_2026-07-10.md). Used to convert
+    rprs2's RoS-total headline into the FP/appearance unit the decision settler
+    scores against. Empty dict when the volume CSV is absent (fail-soft: the
+    settlement-unit proj is then unavailable, never silently wrong)."""
+    path = 'data/outputs/xfp_rp_volume_projections.csv'
+    if not os.path.exists(path):
+        return {}
+    df = pd.read_csv(path)[['mlbam_id', 'proj_ros_g']].dropna()
+    return {int(m): float(g) for m, g in zip(df['mlbam_id'], df['proj_ros_g'])}
+
+
+@functools.lru_cache(maxsize=None)
 def _load_projection(bucket: str) -> pd.DataFrame:
     """Load + cache a projection CSV. Adds a normalized '_key' column.
 

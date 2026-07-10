@@ -256,10 +256,13 @@ def units_warnings(df: pd.DataFrame) -> list[str]:
             warns.append(
                 f"bucket {bkt}: mean proj_per {pa:.2f} vs mean realized {aa:.2f} "
                 f"{g['unit'].iloc[0]} (ratio {pa / aa:.1f}x) — proj_per is logged in a "
-                f"DIFFERENT UNIT than the settlement actual "
-                f"(H: rh3 FP/game vs FP/PA; RP: rprs2 RoS total vs FP/appearance). "
-                f"Residual-based hit rates for this bucket are NOT unit-honest; "
-                f"trust only the realized-FP ladder / BUY-vs-FADE comparisons here."
+                f"DIFFERENT UNIT than the settlement actual. This bug was FIXED "
+                f"2026-07-10 (logger schema v2 logs settlement units; the settler "
+                f"converts legacy v1 H records /3.5 and marks v1 RP records "
+                f"UNSETTLEABLE_V1_UNITS). If this warning fires on v2-era records, "
+                f"the logger has REGRESSED — check triangulate_core proj_settle and "
+                f"decisions/logger.py. Residual hit rates for this bucket are not "
+                f"unit-honest until re-settled."
             )
     return warns
 

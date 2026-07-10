@@ -51,6 +51,42 @@ SETTLEMENT_WINDOWS = {
 NEUTRAL_VERDICTS = {"HOLD", "CAUTION", "MIXED"}
 
 
+# The settlement unit each bucket's proj_per must be expressed in
+# (matches SETTLEMENT_WINDOWS event units + thresholds).
+EXPECTED_UNITS = {"H": "fp_per_pa", "SP": "fp_per_start", "RP": "fp_per_g"}
+
+# rh3 display convention: xfp_rh3_per_game = xfp_rh3_per_pa * 3.5 (flat factor,
+# verified max deviation 0.005 across the CSV, 2026-07-09). Used ONLY to
+# convert legacy schema-v1 hitter records, which logged the per-GAME display
+# value as proj_per (units bug fixed 2026-07-10).
+RH3_PA_PER_GAME = 3.5
+
+
+def _settlement_proj(record: DecisionRecord, bucket: str):
+    """Resolve inputs['proj_per'] into the bucket's settlement unit.
+
+    Returns (proj_or_None, note). Schema-v2 records (proj_units present)
+    are native. Legacy v1 records (no proj_units — logged before
+    2026-07-10) carried display units: H per-GAME (convertible: / 3.5),
+    SP per-start (already native), RP RoS TOTAL (NOT convertible after
+    the fact — the remaining-appearance count at log time is unknown).
+    """
+    inputs = record.inputs or {}
+    proj = inputs.get("proj_per")
+    if proj is None:
+        return None, "missing"
+    units = inputs.get("proj_units")
+    if units == EXPECTED_UNITS.get(bucket):
+        return float(proj), "native"
+    if units is None:  # legacy schema v1
+        if bucket == "H":
+            return float(proj) / RH3_PA_PER_GAME, "v1_h_per_game_converted"
+        if bucket == "SP":
+            return float(proj), "v1_sp_native"
+        return None, "v1_rp_units_unrecoverable"
+    return None, f"unknown_units:{units}"
+
+
 def _parse_iso(d: str) -> date:
     """Parse an ISO date string; accept 'YYYY-MM-DD' or full ISO datetime."""
     try:
@@ -113,9 +149,31 @@ def settle_decision(
     if actual_fp_per_unit is None:
         return record
 
-    proj_per = (record.inputs or {}).get("proj_per")
+    proj_per, units_note = _settlement_proj(record, bucket)
     if proj_per is None:
-        # Can't compute residual — leave unsettled, but flag the gap.
+        if units_note == "v1_rp_units_unrecoverable":
+            # Legacy v1 RP records logged a RoS TOTAL as proj_per — a
+            # per-appearance residual cannot be honestly reconstructed.
+            # Settle WITHOUT residual/classification so the record stops
+            # pending and the scorecard's unit-safe stats still see the
+            # realized value.
+            settlement = {
+                "actual_fp_per_unit": float(actual_fp_per_unit),
+                "proj_per": None,
+                "residual": None,
+                "n_events": int(n_events),
+                "event_unit": window["event_unit"],
+                "threshold": window["threshold"],
+                "classification": "UNSETTLEABLE_V1_UNITS",
+                "window_days": window["days"],
+                "proj_units_note": units_note,
+            }
+            return dataclasses.replace(
+                record,
+                settled_at=today.isoformat(),
+                settlement=settlement,
+            )
+        # Missing / unknown-units proj — leave unsettled, flag the gap.
         return record
 
     residual = float(actual_fp_per_unit) - float(proj_per)
@@ -132,6 +190,7 @@ def settle_decision(
         "threshold": window["threshold"],
         "classification": classification,
         "window_days": window["days"],
+        "proj_units_note": units_note,
     }
     return dataclasses.replace(
         record,

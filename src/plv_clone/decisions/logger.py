@@ -164,7 +164,16 @@ def from_triangulate_result(
     inputs = {
         "pl_rank": _safe_int(result.get("pl_rank")),
         "model_rank": _safe_int(result.get("model_rank")),
-        "proj_per": _safe_float(result.get("model_proj")),
+        # inputs_schema 2 (2026-07-10): proj_per is now in SETTLEMENT units
+        # (H fp_per_pa, SP fp_per_start, RP fp_per_g) — previously it logged
+        # the display headline (H fp/GAME, RP RoS TOTAL), which poisoned
+        # settlement residuals at a 3.4x offset for hitters. The display
+        # value is kept as proj_display; proj_units makes records
+        # self-describing so the settler never guesses.
+        "proj_per": _safe_float(result.get("model_proj_settle")),
+        "proj_units": result.get("model_proj_settle_units"),
+        "proj_display": _safe_float(result.get("model_proj")),
+        "inputs_schema": 2,
         "archetype_overall": _safe_int(result.get("arche_overall")),
         "archetype_label": result.get("arche_label"),
         "archetype_traj": result.get("arche_traj"),

@@ -19,12 +19,13 @@
   "reason_tag": "no_convergence",
   "settled_at": "2026-07-10",
   "settlement": {
-    "actual_fp_per_unit": 0.6385542168674698,
+    "actual_fp_per_unit": 0.6309523809523809,
     "classification": "MIXED_NEUTRAL",
     "event_unit": "PA",
-    "n_events": 83,
-    "proj_per": 1.71,
-    "residual": -1.0714457831325301,
+    "n_events": 84,
+    "proj_per": 0.48857142857142855,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.14238095238095239,
     "threshold": 0.02,
     "window_days": 21
   },

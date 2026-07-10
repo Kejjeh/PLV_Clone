@@ -80,7 +80,10 @@ def test_from_triangulate_result_minimal():
         "confidence": 0.66,
         "pl_rank": 88,
         "model_rank": 42,
-        "model_proj": 0.72,
+        "model_proj": 2.52,  # display headline (H: FP/game)
+        # settlement-unit projection (schema v2, units fix 2026-07-10)
+        "model_proj_settle": 0.72,
+        "model_proj_settle_units": "fp_per_pa",
         "arche_overall": 55,
         "arche_label": "POWER_OR_BUST",
         "arche_traj": "stable",
@@ -94,7 +97,10 @@ def test_from_triangulate_result_minimal():
     assert rec.mlbam_id == 553993
     assert rec.bucket == "H"
     assert rec.verdict_top == "BUY"
-    assert rec.inputs["proj_per"] == 0.72
+    assert rec.inputs["proj_per"] == 0.72          # settlement units (FP/PA)
+    assert rec.inputs["proj_units"] == "fp_per_pa"
+    assert rec.inputs["proj_display"] == 2.52      # display headline kept
+    assert rec.inputs["inputs_schema"] == 2
     assert rec.inputs["pl_rank"] == 88
     assert rec.decision_id.startswith("2026-06-06_eugenio_suarez_H_")
 

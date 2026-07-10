@@ -8,7 +8,8 @@
 
 | classification | count |
 |---|---|
-| BUY_MISS | 37 |
+| BUY_HIT | 5 |
+| BUY_MISS | 32 |
 | FADE_HIT | 4 |
 | CAUTION_NEUTRAL | 3 |
 | MIXED_NEUTRAL | 39 |
@@ -17,5 +18,5 @@
 
 | bucket | hits | total | rate |
 |---|---|---|---|
-| H | 4 | 41 | 10% |
-| **ALL** | 4 | 41 | 10% |
+| H | 9 | 41 | 22% |
+| **ALL** | 9 | 41 | 22% |
