@@ -1,0 +1,534 @@
+key_year,n_years_rolling,venue_id,venue_name,main_team_id,team_abbr,name_display_club,n_pa,index_woba,index_runs,index_hr
+2017,1,10,Oakland Coliseum,133,ATH,Athletics,17929,103,106,107
+2017,1,4705,Truist Park,144,ATL,Braves,17471,101,102,90
+2017,1,15,Chase Field,109,AZ,D-backs,17744,105,110,114
+2017,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17935,103,106,121
+2017,1,3,Fenway Park,111,BOS,Red Sox,18351,100,100,79
+2017,1,17,Wrigley Field,112,CHC,Cubs,18601,103,106,102
+2017,1,2602,Great American Ball Park,113,CIN,Reds,17368,102,104,119
+2017,1,5,Progressive Field,114,CLE,Guardians,17651,96,92,92
+2017,1,19,Coors Field,115,COL,Rockies,17538,112,125,110
+2017,1,4,Rate Field,145,CWS,White Sox,17619,101,102,113
+2017,1,2394,Comerica Park,116,DET,Tigers,18035,106,112,104
+2017,1,2392,Daikin Park,117,HOU,Astros,18797,98,96,106
+2017,1,7,Kauffman Stadium,118,KC,Royals,17465,97,94,82
+2017,1,1,Angel Stadium,108,LAA,Angels,17234,95,90,95
+2017,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,18402,95,90,109
+2017,1,4169,loanDepot park,146,MIA,Marlins,16945,98,96,88
+2017,1,32,American Family Field,158,MIL,Brewers,17890,101,102,107
+2017,1,3312,Target Field,142,MIN,Twins,17770,104,108,109
+2017,1,3289,Citi Field,121,NYM,Mets,18520,96,92,92
+2017,1,3313,Yankee Stadium,147,NYY,Yankees,18942,99,98,120
+2017,1,2681,Citizens Bank Park,143,PHI,Phillies,17525,102,104,123
+2017,1,31,PNC Park,134,PIT,Pirates,17259,98,96,79
+2017,1,2680,Petco Park,135,SD,Padres,16891,94,88,89
+2017,1,680,T-Mobile Park,136,SEA,Mariners,17556,97,94,98
+2017,1,2395,Oracle Park,137,SF,Giants,17514,93,86,58
+2017,1,2889,Busch Stadium,138,STL,Cardinals,17395,98,96,87
+2017,1,12,Tropicana Field,139,TB,Rays,17859,95,90,92
+2017,1,13,Globe Life Park in Arlington,140,TEX,Rangers,17946,107,114,113
+2017,1,14,Rogers Centre,141,TOR,Blue Jays,17371,99,98,100
+2017,1,3309,Nationals Park,120,WSH,Nationals,17866,102,104,104
+2017,3,10,Oakland Coliseum,133,ATH,Athletics,55838,97,94,88
+2017,3,15,Chase Field,109,AZ,D-backs,57151,107,114,109
+2017,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,55075,103,106,122
+2017,3,3,Fenway Park,111,BOS,Red Sox,57110,105,110,90
+2017,3,17,Wrigley Field,112,CHC,Cubs,58477,98,96,102
+2017,3,2602,Great American Ball Park,113,CIN,Reds,54882,103,106,120
+2017,3,5,Progressive Field,114,CLE,Guardians,55911,102,104,96
+2017,3,19,Coors Field,115,COL,Rockies,55023,115,132,114
+2017,3,4,Rate Field,145,CWS,White Sox,55831,99,98,104
+2017,3,2394,Comerica Park,116,DET,Tigers,55283,103,106,100
+2017,3,2392,Daikin Park,117,HOU,Astros,56869,96,92,102
+2017,3,7,Kauffman Stadium,118,KC,Royals,56740,99,98,80
+2017,3,1,Angel Stadium,108,LAA,Angels,55247,95,90,94
+2017,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,56164,95,90,103
+2017,3,4169,loanDepot park,146,MIA,Marlins,52536,96,92,76
+2017,3,32,American Family Field,158,MIL,Brewers,55422,101,102,112
+2017,3,3312,Target Field,142,MIN,Twins,55665,103,106,104
+2017,3,3289,Citi Field,121,NYM,Mets,55614,95,90,101
+2017,3,3313,Yankee Stadium,147,NYY,Yankees,56763,100,100,123
+2017,3,2681,Citizens Bank Park,143,PHI,Phillies,53231,100,100,113
+2017,3,31,PNC Park,134,PIT,Pirates,55099,100,100,81
+2017,3,2680,Petco Park,135,SD,Padres,55434,97,94,96
+2017,3,680,T-Mobile Park,136,SEA,Mariners,56768,97,94,104
+2017,3,2395,Oracle Park,137,SF,Giants,54786,96,92,63
+2017,3,2889,Busch Stadium,138,STL,Cardinals,54442,98,96,88
+2017,3,12,Tropicana Field,139,TB,Rays,56011,95,90,98
+2017,3,13,Globe Life Park in Arlington,140,TEX,Rangers,57108,106,112,108
+2017,3,14,Rogers Centre,141,TOR,Blue Jays,57633,100,100,104
+2017,3,3309,Nationals Park,120,WSH,Nationals,54954,99,98,104
+2018,1,10,Oakland Coliseum,133,ATH,Athletics,17540,95,90,86
+2018,1,4705,Truist Park,144,ATL,Braves,17940,98,96,80
+2018,1,15,Chase Field,109,AZ,D-backs,17581,100,100,95
+2018,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17751,102,104,116
+2018,1,3,Fenway Park,111,BOS,Red Sox,19006,103,106,94
+2018,1,17,Wrigley Field,112,CHC,Cubs,17956,102,104,90
+2018,1,2602,Great American Ball Park,113,CIN,Reds,17657,105,110,131
+2018,1,5,Progressive Field,114,CLE,Guardians,17710,103,106,108
+2018,1,19,Coors Field,115,COL,Rockies,17610,115,132,126
+2018,1,4,Rate Field,145,CWS,White Sox,17647,98,96,98
+2018,1,2394,Comerica Park,116,DET,Tigers,17251,97,94,84
+2018,1,2392,Daikin Park,117,HOU,Astros,18135,95,90,99
+2018,1,7,Kauffman Stadium,118,KC,Royals,17774,101,102,87
+2018,1,1,Angel Stadium,108,LAA,Angels,17362,97,94,114
+2018,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,19260,97,94,116
+2018,1,4169,loanDepot park,146,MIA,Marlins,17429,92,85,67
+2018,1,32,American Family Field,158,MIL,Brewers,18640,99,98,113
+2018,1,3312,Target Field,142,MIN,Twins,17478,102,104,92
+2018,1,3289,Citi Field,121,NYM,Mets,17140,91,83,100
+2018,1,3313,Yankee Stadium,147,NYY,Yankees,18644,104,108,117
+2018,1,2681,Citizens Bank Park,143,PHI,Phillies,17111,98,96,111
+2018,1,31,PNC Park,134,PIT,Pirates,17157,100,100,86
+2018,1,2680,Petco Park,135,SD,Padres,17116,100,100,96
+2018,1,680,T-Mobile Park,136,SEA,Mariners,17140,96,92,101
+2018,1,2395,Oracle Park,137,SF,Giants,17272,98,96,74
+2018,1,2889,Busch Stadium,138,STL,Cardinals,17482,97,94,87
+2018,1,12,Tropicana Field,139,TB,Rays,17334,95,90,80
+2018,1,13,Globe Life Park in Arlington,140,TEX,Rangers,17988,111,123,122
+2018,1,14,Rogers Centre,141,TOR,Blue Jays,17798,102,104,112
+2018,1,3309,Nationals Park,120,WSH,Nationals,17432,106,112,118
+2018,3,10,Oakland Coliseum,133,ATH,Athletics,55939,96,92,89
+2018,3,15,Chase Field,109,AZ,D-backs,56227,105,110,108
+2018,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,55307,103,106,116
+2018,3,3,Fenway Park,111,BOS,Red Sox,57818,104,108,90
+2018,3,17,Wrigley Field,112,CHC,Cubs,58373,99,98,93
+2018,3,2602,Great American Ball Park,113,CIN,Reds,54356,104,108,125
+2018,3,5,Progressive Field,114,CLE,Guardians,56589,101,102,102
+2018,3,19,Coors Field,115,COL,Rockies,54938,114,130,117
+2018,3,4,Rate Field,145,CWS,White Sox,55636,100,100,105
+2018,3,2394,Comerica Park,116,DET,Tigers,54882,102,104,101
+2018,3,2392,Daikin Park,117,HOU,Astros,57423,95,90,96
+2018,3,7,Kauffman Stadium,118,KC,Royals,56124,100,100,83
+2018,3,1,Angel Stadium,108,LAA,Angels,55183,96,92,100
+2018,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,57466,95,90,106
+2018,3,4169,loanDepot park,146,MIA,Marlins,53481,95,90,75
+2018,3,32,American Family Field,158,MIL,Brewers,56294,100,100,110
+2018,3,3312,Target Field,142,MIN,Twins,56006,104,108,101
+2018,3,3289,Citi Field,121,NYM,Mets,53998,94,88,97
+2018,3,3313,Yankee Stadium,147,NYY,Yankees,57893,101,102,120
+2018,3,2681,Citizens Bank Park,143,PHI,Phillies,52588,99,98,113
+2018,3,31,PNC Park,134,PIT,Pirates,54540,101,102,81
+2018,3,2680,Petco Park,135,SD,Padres,54667,97,94,93
+2018,3,680,T-Mobile Park,136,SEA,Mariners,56180,97,94,105
+2018,3,2395,Oracle Park,137,SF,Giants,54927,97,94,65
+2018,3,2889,Busch Stadium,138,STL,Cardinals,54696,97,94,90
+2018,3,12,Tropicana Field,139,TB,Rays,56280,95,90,93
+2018,3,13,Globe Life Park in Arlington,140,TEX,Rangers,56911,108,117,115
+2018,3,14,Rogers Centre,141,TOR,Blue Jays,57345,100,100,103
+2018,3,3309,Nationals Park,120,WSH,Nationals,54568,101,102,107
+2019,1,10,Oakland Coliseum,133,ATH,Athletics,17861,96,92,89
+2019,1,4705,Truist Park,144,ATL,Braves,18275,104,108,102
+2019,1,15,Chase Field,109,AZ,D-backs,17762,99,98,94
+2019,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17870,105,110,122
+2019,1,3,Fenway Park,111,BOS,Red Sox,17958,103,106,87
+2019,1,17,Wrigley Field,112,CHC,Cubs,17492,99,98,96
+2019,1,2602,Great American Ball Park,113,CIN,Reds,16977,99,98,110
+2019,1,5,Progressive Field,114,CLE,Guardians,17152,97,94,100
+2019,1,19,Coors Field,115,COL,Rockies,18124,118,139,121
+2019,1,4,Rate Field,145,CWS,White Sox,17105,99,98,110
+2019,1,2394,Comerica Park,116,DET,Tigers,17678,101,102,94
+2019,1,2392,Daikin Park,117,HOU,Astros,19767,102,104,124
+2019,1,7,Kauffman Stadium,118,KC,Royals,17619,100,100,70
+2019,1,1,Angel Stadium,108,LAA,Angels,17702,100,100,103
+2019,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,17508,97,94,114
+2019,1,4169,loanDepot park,146,MIA,Marlins,17473,96,92,79
+2019,1,32,American Family Field,158,MIL,Brewers,17597,99,98,110
+2019,1,3312,Target Field,142,MIN,Twins,18350,100,100,95
+2019,1,3289,Citi Field,121,NYM,Mets,17582,97,94,105
+2019,1,3313,Yankee Stadium,147,NYY,Yankees,18290,97,94,103
+2019,1,2681,Citizens Bank Park,143,PHI,Phillies,17805,103,106,118
+2019,1,31,PNC Park,134,PIT,Pirates,17904,102,104,83
+2019,1,2680,Petco Park,135,SD,Padres,17105,95,90,93
+2019,1,680,T-Mobile Park,136,SEA,Mariners,17750,96,92,100
+2019,1,2395,Oracle Park,137,SF,Giants,17749,91,83,69
+2019,1,2889,Busch Stadium,138,STL,Cardinals,17851,95,90,84
+2019,1,12,Tropicana Field,139,TB,Rays,18211,93,86,85
+2019,1,13,Globe Life Park in Arlington,140,TEX,Rangers,18062,107,114,102
+2019,1,14,Rogers Centre,141,TOR,Blue Jays,18181,100,100,123
+2019,1,3309,Nationals Park,120,WSH,Nationals,19308,105,110,111
+2019,3,10,Oakland Coliseum,133,ATH,Athletics,56543,97,94,93
+2019,3,4705,Truist Park,144,ATL,Braves,56667,101,102,91
+2019,3,15,Chase Field,109,AZ,D-backs,56818,101,102,101
+2019,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,56804,104,108,122
+2019,3,3,Fenway Park,111,BOS,Red Sox,57167,102,104,86
+2019,3,17,Wrigley Field,112,CHC,Cubs,56948,101,102,96
+2019,3,2602,Great American Ball Park,113,CIN,Reds,55025,103,106,121
+2019,3,5,Progressive Field,114,CLE,Guardians,55927,98,96,99
+2019,3,19,Coors Field,115,COL,Rockies,55654,114,130,118
+2019,3,4,Rate Field,145,CWS,White Sox,55306,100,100,106
+2019,3,2394,Comerica Park,116,DET,Tigers,55580,102,104,95
+2019,3,2392,Daikin Park,117,HOU,Astros,60242,98,96,110
+2019,3,7,Kauffman Stadium,118,KC,Royals,55877,100,100,80
+2019,3,1,Angel Stadium,108,LAA,Angels,55526,97,94,105
+2019,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,57623,96,92,111
+2019,3,4169,loanDepot park,146,MIA,Marlins,55100,95,90,77
+2019,3,32,American Family Field,158,MIL,Brewers,57600,100,100,110
+2019,3,3312,Target Field,142,MIN,Twins,56928,102,104,99
+2019,3,3289,Citi Field,121,NYM,Mets,56469,96,92,99
+2019,3,3313,Yankee Stadium,147,NYY,Yankees,58978,101,102,114
+2019,3,2681,Citizens Bank Park,143,PHI,Phillies,55542,101,102,117
+2019,3,31,PNC Park,134,PIT,Pirates,55871,100,100,82
+2019,3,2680,Petco Park,135,SD,Padres,53944,96,92,92
+2019,3,680,T-Mobile Park,136,SEA,Mariners,57012,96,92,100
+2019,3,2395,Oracle Park,137,SF,Giants,55811,94,88,66
+2019,3,2889,Busch Stadium,138,STL,Cardinals,55870,96,92,87
+2019,3,12,Tropicana Field,139,TB,Rays,57748,94,88,87
+2019,3,13,Globe Life Park in Arlington,140,TEX,Rangers,57972,108,117,112
+2019,3,14,Rogers Centre,141,TOR,Blue Jays,57424,100,100,111
+2019,3,3309,Nationals Park,120,WSH,Nationals,58511,104,108,110
+2020,1,10,Oakland Coliseum,133,ATH,Athletics,6819,94,88,83
+2020,1,4705,Truist Park,144,ATL,Braves,6825,101,102,95
+2020,1,15,Chase Field,109,AZ,D-backs,6238,102,104,94
+2020,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,6401,94,88,95
+2020,1,3,Fenway Park,111,BOS,Red Sox,6571,108,117,96
+2020,1,17,Wrigley Field,112,CHC,Cubs,6365,96,92,91
+2020,1,2602,Great American Ball Park,113,CIN,Reds,5831,105,110,154
+2020,1,5,Progressive Field,114,CLE,Guardians,6363,100,100,90
+2020,1,19,Coors Field,115,COL,Rockies,6278,107,114,100
+2020,1,4,Rate Field,145,CWS,White Sox,6059,102,104,114
+2020,1,2394,Comerica Park,116,DET,Tigers,5442,102,104,97
+2020,1,2392,Daikin Park,117,HOU,Astros,6695,92,85,81
+2020,1,7,Kauffman Stadium,118,KC,Royals,5884,102,104,92
+2020,1,1,Angel Stadium,108,LAA,Angels,6259,108,117,119
+2020,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,7840,102,104,128
+2020,1,4169,loanDepot park,146,MIA,Marlins,5208,98,96,86
+2020,1,32,American Family Field,158,MIL,Brewers,5826,102,104,108
+2020,1,3312,Target Field,142,MIN,Twins,6173,94,88,86
+2020,1,3289,Citi Field,121,NYM,Mets,5938,101,102,116
+2020,1,3313,Yankee Stadium,147,NYY,Yankees,6253,101,102,124
+2020,1,2681,Citizens Bank Park,143,PHI,Phillies,6205,103,106,117
+2020,1,31,PNC Park,134,PIT,Pirates,6181,98,96,89
+2020,1,2680,Petco Park,135,SD,Padres,9773,99,98,112
+2020,1,680,T-Mobile Park,136,SEA,Mariners,5141,95,90,100
+2020,1,2395,Oracle Park,137,SF,Giants,6465,103,106,97
+2020,1,2889,Busch Stadium,138,STL,Cardinals,5301,100,100,90
+2020,1,12,Tropicana Field,139,TB,Rays,6512,95,90,82
+2020,1,5325,Globe Life Field,140,TEX,Rangers,9773,100,100,94
+2020,1,2756,Sahlen Field,141,TOR,Blue Jays,5658,101,102,90
+2020,1,3309,Nationals Park,120,WSH,Nationals,6114,97,94,93
+2020,3,10,Oakland Coliseum,133,ATH,Athletics,43337,95,90,85
+2020,3,4705,Truist Park,144,ATL,Braves,45265,102,104,94
+2020,3,15,Chase Field,109,AZ,D-backs,44210,100,100,93
+2020,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,44116,103,106,118
+2020,3,3,Fenway Park,111,BOS,Red Sox,45458,105,110,92
+2020,3,17,Wrigley Field,112,CHC,Cubs,43457,99,98,92
+2020,3,2602,Great American Ball Park,113,CIN,Reds,43066,102,104,128
+2020,3,5,Progressive Field,114,CLE,Guardians,43953,100,100,101
+2020,3,19,Coors Field,115,COL,Rockies,43618,115,132,118
+2020,3,4,Rate Field,145,CWS,White Sox,42747,99,98,107
+2020,3,2394,Comerica Park,116,DET,Tigers,41925,100,100,90
+2020,3,2392,Daikin Park,117,HOU,Astros,45893,98,96,106
+2020,3,7,Kauffman Stadium,118,KC,Royals,42744,101,102,80
+2020,3,1,Angel Stadium,108,LAA,Angels,42738,101,102,112
+2020,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,46158,98,96,119
+2020,3,4169,loanDepot park,146,MIA,Marlins,42498,95,90,74
+2020,3,32,American Family Field,158,MIL,Brewers,44826,99,98,110
+2020,3,3312,Target Field,142,MIN,Twins,44321,100,100,93
+2020,3,3289,Citi Field,121,NYM,Mets,42836,96,92,105
+2020,3,3313,Yankee Stadium,147,NYY,Yankees,44927,102,104,115
+2020,3,2681,Citizens Bank Park,143,PHI,Phillies,43875,102,104,116
+2020,3,31,PNC Park,134,PIT,Pirates,43668,100,100,84
+2020,3,2680,Petco Park,135,SD,Padres,46894,98,96,99
+2020,3,680,T-Mobile Park,136,SEA,Mariners,42173,96,92,100
+2020,3,2395,Oracle Park,137,SF,Giants,43964,95,90,74
+2020,3,2889,Busch Stadium,138,STL,Cardinals,42157,96,92,86
+2020,3,12,Tropicana Field,139,TB,Rays,44361,95,90,83
+2020,3,3309,Nationals Park,120,WSH,Nationals,46022,105,110,111
+2021,1,10,Oakland Coliseum,133,ATH,Athletics,17431,94,88,86
+2021,1,4705,Truist Park,144,ATL,Braves,18531,100,100,107
+2021,1,15,Chase Field,109,AZ,D-backs,17542,104,108,86
+2021,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17554,108,117,139
+2021,1,3,Fenway Park,111,BOS,Red Sox,18873,107,114,94
+2021,1,17,Wrigley Field,112,CHC,Cubs,17444,103,106,124
+2021,1,2602,Great American Ball Park,113,CIN,Reds,17587,110,121,130
+2021,1,5,Progressive Field,114,CLE,Guardians,16847,100,100,110
+2021,1,19,Coors Field,115,COL,Rockies,17146,108,117,105
+2021,1,4,Rate Field,145,CWS,White Sox,17290,101,102,114
+2021,1,2394,Comerica Park,116,DET,Tigers,17092,96,92,72
+2021,1,2392,Daikin Park,117,HOU,Astros,19300,100,100,99
+2021,1,7,Kauffman Stadium,118,KC,Royals,17359,102,104,76
+2021,1,1,Angel Stadium,108,LAA,Angels,17518,101,102,107
+2021,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,18215,99,98,130
+2021,1,4169,loanDepot park,146,MIA,Marlins,17048,94,88,78
+2021,1,32,American Family Field,158,MIL,Brewers,17810,96,92,96
+2021,1,3312,Target Field,142,MIN,Twins,17511,101,102,110
+2021,1,3289,Citi Field,121,NYM,Mets,16150,96,92,92
+2021,1,3313,Yankee Stadium,147,NYY,Yankees,17347,97,94,110
+2021,1,2681,Citizens Bank Park,143,PHI,Phillies,16930,101,102,104
+2021,1,31,PNC Park,134,PIT,Pirates,17407,102,104,78
+2021,1,2680,Petco Park,135,SD,Padres,17262,97,94,94
+2021,1,680,T-Mobile Park,136,SEA,Mariners,17237,92,85,96
+2021,1,2395,Oracle Park,137,SF,Giants,17594,98,96,85
+2021,1,2889,Busch Stadium,138,STL,Cardinals,16868,93,86,77
+2021,1,12,Tropicana Field,139,TB,Rays,17748,94,88,83
+2021,1,5325,Globe Life Field,140,TEX,Rangers,17336,97,94,96
+2021,1,14,Rogers Centre,141,TOR,Blue Jays,8804,95,90,101
+2021,1,3309,Nationals Park,120,WSH,Nationals,17275,104,108,111
+2021,3,10,Oakland Coliseum,133,ATH,Athletics,43580,95,90,85
+2021,3,4705,Truist Park,144,ATL,Braves,46087,103,106,103
+2021,3,15,Chase Field,109,AZ,D-backs,44261,102,104,89
+2021,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,43778,105,110,124
+2021,3,3,Fenway Park,111,BOS,Red Sox,46383,107,114,91
+2021,3,17,Wrigley Field,112,CHC,Cubs,44336,100,100,104
+2021,3,2602,Great American Ball Park,113,CIN,Reds,43175,105,110,126
+2021,3,5,Progressive Field,114,CLE,Guardians,43246,99,98,102
+2021,3,19,Coors Field,115,COL,Rockies,43434,113,128,112
+2021,3,4,Rate Field,145,CWS,White Sox,42564,100,100,113
+2021,3,2394,Comerica Park,116,DET,Tigers,41708,99,98,84
+2021,3,2392,Daikin Park,117,HOU,Astros,46981,100,100,106
+2021,3,7,Kauffman Stadium,118,KC,Royals,42976,101,102,76
+2021,3,1,Angel Stadium,108,LAA,Angels,43854,102,104,107
+2021,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,45786,98,96,124
+2021,3,4169,loanDepot park,146,MIA,Marlins,42395,96,92,81
+2021,3,32,American Family Field,158,MIL,Brewers,44836,98,96,105
+2021,3,3312,Target Field,142,MIN,Twins,45140,99,98,99
+2021,3,3289,Citi Field,121,NYM,Mets,42779,98,96,102
+2021,3,3313,Yankee Stadium,147,NYY,Yankees,43227,98,96,111
+2021,3,2681,Citizens Bank Park,143,PHI,Phillies,43713,103,106,114
+2021,3,31,PNC Park,134,PIT,Pirates,44061,101,102,81
+2021,3,2680,Petco Park,135,SD,Padres,48415,96,92,98
+2021,3,680,T-Mobile Park,136,SEA,Mariners,41263,95,90,99
+2021,3,2395,Oracle Park,137,SF,Giants,45001,95,90,79
+2021,3,2889,Busch Stadium,138,STL,Cardinals,41739,94,88,81
+2021,3,12,Tropicana Field,139,TB,Rays,44924,94,88,84
+2021,3,14,Rogers Centre,141,TOR,Blue Jays,28038,99,98,117
+2021,3,3309,Nationals Park,120,WSH,Nationals,45143,104,108,109
+2022,1,10,Oakland Coliseum,133,ATH,Athletics,17095,97,94,76
+2022,1,4705,Truist Park,144,ATL,Braves,17565,99,98,102
+2022,1,15,Chase Field,109,AZ,D-backs,17143,98,96,82
+2022,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17316,99,98,82
+2022,1,3,Fenway Park,111,BOS,Red Sox,17686,108,117,108
+2022,1,17,Wrigley Field,112,CHC,Cubs,17303,99,98,90
+2022,1,2602,Great American Ball Park,113,CIN,Reds,17540,107,114,131
+2022,1,5,Progressive Field,114,CLE,Guardians,17863,96,92,87
+2022,1,19,Coors Field,115,COL,Rockies,17914,114,130,121
+2022,1,4,Rate Field,145,CWS,White Sox,17578,101,102,109
+2022,1,2394,Comerica Park,116,DET,Tigers,17125,97,94,74
+2022,1,2392,Daikin Park,117,HOU,Astros,18238,99,98,112
+2022,1,7,Kauffman Stadium,118,KC,Royals,17616,105,110,80
+2022,1,1,Angel Stadium,108,LAA,Angels,17206,100,100,118
+2022,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,17542,101,102,118
+2022,1,4169,loanDepot park,146,MIA,Marlins,17073,100,100,91
+2022,1,32,American Family Field,158,MIL,Brewers,17282,98,96,121
+2022,1,3312,Target Field,142,MIN,Twins,17465,100,100,97
+2022,1,3289,Citi Field,121,NYM,Mets,17676,96,92,85
+2022,1,3313,Yankee Stadium,147,NYY,Yankees,18417,98,96,113
+2022,1,2681,Citizens Bank Park,143,PHI,Phillies,18958,103,106,113
+2022,1,31,PNC Park,134,PIT,Pirates,17524,101,102,92
+2022,1,2680,Petco Park,135,SD,Padres,18329,92,85,95
+2022,1,680,T-Mobile Park,136,SEA,Mariners,17516,93,86,108
+2022,1,2395,Oracle Park,137,SF,Giants,17437,100,100,74
+2022,1,2889,Busch Stadium,138,STL,Cardinals,17707,98,96,92
+2022,1,12,Tropicana Field,139,TB,Rays,16965,96,92,91
+2022,1,5325,Globe Life Field,140,TEX,Rangers,17245,102,104,113
+2022,1,14,Rogers Centre,141,TOR,Blue Jays,17499,103,106,117
+2022,1,3309,Nationals Park,120,WSH,Nationals,17607,102,104,113
+2022,3,10,Oakland Coliseum,133,ATH,Athletics,44296,94,88,80
+2022,3,4705,Truist Park,144,ATL,Braves,45214,100,100,104
+2022,3,15,Chase Field,109,AZ,D-backs,43228,102,104,86
+2022,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,43219,102,104,108
+2022,3,3,Fenway Park,111,BOS,Red Sox,45715,109,119,99
+2022,3,17,Wrigley Field,112,CHC,Cubs,44544,100,100,103
+2022,3,2602,Great American Ball Park,113,CIN,Reds,44123,108,117,139
+2022,3,5,Progressive Field,114,CLE,Guardians,43521,98,96,98
+2022,3,19,Coors Field,115,COL,Rockies,43752,111,123,108
+2022,3,4,Rate Field,145,CWS,White Sox,43398,101,102,113
+2022,3,2394,Comerica Park,116,DET,Tigers,41867,97,94,76
+2022,3,2392,Daikin Park,117,HOU,Astros,45997,98,96,100
+2022,3,7,Kauffman Stadium,118,KC,Royals,42948,103,106,80
+2022,3,1,Angel Stadium,108,LAA,Angels,43842,102,104,114
+2022,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,46427,100,100,126
+2022,3,4169,loanDepot park,146,MIA,Marlins,41642,97,94,84
+2022,3,32,American Family Field,158,MIL,Brewers,43225,98,96,110
+2022,3,3312,Target Field,142,MIN,Twins,44638,99,98,100
+2022,3,3289,Citi Field,121,NYM,Mets,43229,97,94,95
+2022,3,3313,Yankee Stadium,147,NYY,Yankees,44389,98,96,115
+2022,3,2681,Citizens Bank Park,143,PHI,Phillies,44904,103,106,113
+2022,3,31,PNC Park,134,PIT,Pirates,43823,101,102,84
+2022,3,2680,Petco Park,135,SD,Padres,48387,96,92,100
+2022,3,680,T-Mobile Park,136,SEA,Mariners,42208,92,85,100
+2022,3,2395,Oracle Park,137,SF,Giants,44483,100,100,83
+2022,3,2889,Busch Stadium,138,STL,Cardinals,41562,96,92,84
+2022,3,12,Tropicana Field,139,TB,Rays,43569,94,88,87
+2022,3,5325,Globe Life Field,140,TEX,Rangers,48364,100,100,101
+2022,3,14,Rogers Centre,141,TOR,Blue Jays,27640,101,102,111
+2022,3,3309,Nationals Park,120,WSH,Nationals,43507,102,104,108
+2023,1,10,Oakland Coliseum,133,ATH,Athletics,17675,96,92,88
+2023,1,4705,Truist Park,144,ATL,Braves,18058,103,106,119
+2023,1,15,Chase Field,109,AZ,D-backs,19262,99,98,79
+2023,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17765,96,92,91
+2023,1,3,Fenway Park,111,BOS,Red Sox,17912,108,117,92
+2023,1,17,Wrigley Field,112,CHC,Cubs,17628,101,102,105
+2023,1,2602,Great American Ball Park,113,CIN,Reds,17755,102,104,127
+2023,1,5,Progressive Field,114,CLE,Guardians,17571,94,88,67
+2023,1,19,Coors Field,115,COL,Rockies,18282,113,128,103
+2023,1,4,Rate Field,145,CWS,White Sox,18157,99,98,98
+2023,1,2394,Comerica Park,116,DET,Tigers,17518,99,98,90
+2023,1,2392,Daikin Park,117,HOU,Astros,18949,100,100,92
+2023,1,7,Kauffman Stadium,118,KC,Royals,17889,106,112,95
+2023,1,1,Angel Stadium,108,LAA,Angels,17966,100,100,115
+2023,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,18242,99,98,122
+2023,1,4169,loanDepot park,146,MIA,Marlins,17413,101,102,87
+2023,1,32,American Family Field,158,MIL,Brewers,17825,98,96,107
+2023,1,3312,Target Field,142,MIN,Twins,18168,100,100,107
+2023,1,3289,Citi Field,121,NYM,Mets,17647,97,94,104
+2023,1,3313,Yankee Stadium,147,NYY,Yankees,17256,99,98,123
+2023,1,2681,Citizens Bank Park,143,PHI,Phillies,19048,99,98,114
+2023,1,31,PNC Park,134,PIT,Pirates,17812,98,96,71
+2023,1,2680,Petco Park,135,SD,Padres,17116,96,92,89
+2023,1,680,T-Mobile Park,136,SEA,Mariners,17578,93,86,94
+2023,1,2395,Oracle Park,137,SF,Giants,17067,94,88,89
+2023,1,2889,Busch Stadium,138,STL,Cardinals,17939,103,106,98
+2023,1,12,Tropicana Field,139,TB,Rays,17740,98,96,103
+2023,1,5325,Globe Life Field,140,TEX,Rangers,19412,106,112,133
+2023,1,14,Rogers Centre,141,TOR,Blue Jays,17604,97,94,95
+2023,1,3309,Nationals Park,120,WSH,Nationals,17543,103,106,98
+2023,3,10,Oakland Coliseum,133,ATH,Athletics,55592,96,92,84
+2023,3,4705,Truist Park,144,ATL,Braves,57274,101,102,111
+2023,3,15,Chase Field,109,AZ,D-backs,56930,100,100,84
+2023,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,55188,101,102,104
+2023,3,3,Fenway Park,111,BOS,Red Sox,58723,108,117,99
+2023,3,17,Wrigley Field,112,CHC,Cubs,56666,101,102,106
+2023,3,2602,Great American Ball Park,113,CIN,Reds,56935,107,114,131
+2023,3,5,Progressive Field,114,CLE,Guardians,54576,97,94,89
+2023,3,19,Coors Field,115,COL,Rockies,56616,112,125,108
+2023,3,4,Rate Field,145,CWS,White Sox,56148,100,100,104
+2023,3,2394,Comerica Park,116,DET,Tigers,55151,97,94,79
+2023,3,2392,Daikin Park,117,HOU,Astros,58630,100,100,101
+2023,3,7,Kauffman Stadium,118,KC,Royals,56004,104,108,84
+2023,3,1,Angel Stadium,108,LAA,Angels,56080,100,100,112
+2023,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,57795,99,98,122
+2023,3,4169,loanDepot park,146,MIA,Marlins,55337,98,96,86
+2023,3,32,American Family Field,158,MIL,Brewers,56437,97,94,109
+2023,3,3312,Target Field,142,MIN,Twins,57532,100,100,104
+2023,3,3289,Citi Field,121,NYM,Mets,55848,96,92,95
+2023,3,3313,Yankee Stadium,147,NYY,Yankees,56225,98,96,116
+2023,3,2681,Citizens Bank Park,143,PHI,Phillies,59085,101,102,113
+2023,3,31,PNC Park,134,PIT,Pirates,56109,101,102,80
+2023,3,2680,Petco Park,135,SD,Padres,56295,95,90,93
+2023,3,680,T-Mobile Park,136,SEA,Mariners,55554,92,85,98
+2023,3,2395,Oracle Park,137,SF,Giants,55493,97,94,84
+2023,3,2889,Busch Stadium,138,STL,Cardinals,54496,99,98,90
+2023,3,12,Tropicana Field,139,TB,Rays,55417,96,92,94
+2023,3,5325,Globe Life Field,140,TEX,Rangers,57888,102,104,111
+2023,3,14,Rogers Centre,141,TOR,Blue Jays,47507,100,100,104
+2023,3,3309,Nationals Park,120,WSH,Nationals,55226,103,106,107
+2024,1,10,Oakland Coliseum,133,ATH,Athletics,17415,98,96,82
+2024,1,4705,Truist Park,144,ATL,Braves,17390,99,98,88
+2024,1,15,Chase Field,109,AZ,D-backs,17899,106,112,92
+2024,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,18141,102,104,104
+2024,1,3,Fenway Park,111,BOS,Red Sox,17800,102,104,90
+2024,1,17,Wrigley Field,112,CHC,Cubs,17372,91,83,85
+2024,1,2602,Great American Ball Park,113,CIN,Reds,17377,105,110,124
+2024,1,5,Progressive Field,114,CLE,Guardians,18159,102,104,106
+2024,1,19,Coors Field,115,COL,Rockies,17535,110,121,105
+2024,1,4,Rate Field,145,CWS,White Sox,17820,99,98,93
+2024,1,2394,Comerica Park,116,DET,Tigers,17632,97,94,92
+2024,1,2392,Daikin Park,117,HOU,Astros,17808,103,106,116
+2024,1,7,Kauffman Stadium,118,KC,Royals,17713,102,104,82
+2024,1,1,Angel Stadium,108,LAA,Angels,17339,101,102,107
+2024,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,19055,100,100,121
+2024,1,4169,loanDepot park,146,MIA,Marlins,18425,104,108,95
+2024,1,32,American Family Field,158,MIL,Brewers,17976,96,92,111
+2024,1,3312,Target Field,142,MIN,Twins,17468,105,110,113
+2024,1,3289,Citi Field,121,NYM,Mets,18730,99,98,108
+2024,1,3313,Yankee Stadium,147,NYY,Yankees,19440,103,106,122
+2024,1,2681,Citizens Bank Park,143,PHI,Phillies,17779,100,100,114
+2024,1,31,PNC Park,134,PIT,Pirates,17884,102,104,90
+2024,1,2680,Petco Park,135,SD,Padres,18073,99,98,123
+2024,1,680,T-Mobile Park,136,SEA,Mariners,16988,89,79,89
+2024,1,2395,Oracle Park,137,SF,Giants,17471,96,92,72
+2024,1,2889,Busch Stadium,138,STL,Cardinals,17190,98,96,83
+2024,1,12,Tropicana Field,139,TB,Rays,17729,96,92,99
+2024,1,5325,Globe Life Field,140,TEX,Rangers,17307,95,90,105
+2024,1,14,Rogers Centre,141,TOR,Blue Jays,17769,100,100,100
+2024,1,3309,Nationals Park,120,WSH,Nationals,17297,99,98,93
+2024,3,10,Oakland Coliseum,133,ATH,Athletics,55403,97,94,81
+2024,3,4705,Truist Park,144,ATL,Braves,56162,100,100,105
+2024,3,15,Chase Field,109,AZ,D-backs,57491,101,102,86
+2024,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,55857,99,98,93
+2024,3,3,Fenway Park,111,BOS,Red Sox,57350,107,114,98
+2024,3,17,Wrigley Field,112,CHC,Cubs,55217,97,94,93
+2024,3,2602,Great American Ball Park,113,CIN,Reds,56113,105,110,128
+2024,3,5,Progressive Field,114,CLE,Guardians,56438,97,94,86
+2024,3,19,Coors Field,115,COL,Rockies,56537,112,125,109
+2024,3,4,Rate Field,145,CWS,White Sox,57822,99,98,98
+2024,3,2394,Comerica Park,116,DET,Tigers,55344,98,96,86
+2024,3,2392,Daikin Park,117,HOU,Astros,57080,100,100,107
+2024,3,7,Kauffman Stadium,118,KC,Royals,56788,104,108,85
+2024,3,1,Angel Stadium,108,LAA,Angels,55854,100,100,112
+2024,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,59029,100,100,122
+2024,3,4169,loanDepot park,146,MIA,Marlins,56832,101,102,92
+2024,3,32,American Family Field,158,MIL,Brewers,57190,97,94,114
+2024,3,3312,Target Field,142,MIN,Twins,56874,102,104,105
+2024,3,3289,Citi Field,121,NYM,Mets,58441,97,94,99
+2024,3,3313,Yankee Stadium,147,NYY,Yankees,59223,100,100,119
+2024,3,2681,Citizens Bank Park,143,PHI,Phillies,59030,101,102,115
+2024,3,31,PNC Park,134,PIT,Pirates,56717,101,102,84
+2024,3,2680,Petco Park,135,SD,Padres,58146,96,92,104
+2024,3,680,T-Mobile Park,136,SEA,Mariners,55886,91,83,96
+2024,3,2395,Oracle Park,137,SF,Giants,55227,97,94,78
+2024,3,2889,Busch Stadium,138,STL,Cardinals,55932,100,100,91
+2024,3,12,Tropicana Field,139,TB,Rays,55802,96,92,98
+2024,3,5325,Globe Life Field,140,TEX,Rangers,57150,101,102,115
+2024,3,14,Rogers Centre,141,TOR,Blue Jays,56362,100,100,103
+2024,3,3309,Nationals Park,120,WSH,Nationals,55170,101,102,101
+2025,1,2529,Sutter Health Park,133,ATH,Athletics,18074,108,117,112
+2025,1,4705,Truist Park,144,ATL,Braves,17893,101,102,105
+2025,1,15,Chase Field,109,AZ,D-backs,17997,102,104,90
+2025,1,2,Oriole Park at Camden Yards,110,BAL,Orioles,17724,103,106,121
+2025,1,3,Fenway Park,111,BOS,Red Sox,18089,103,106,84
+2025,1,17,Wrigley Field,112,CHC,Cubs,17905,98,96,111
+2025,1,2602,Great American Ball Park,113,CIN,Reds,17251,99,98,111
+2025,1,5,Progressive Field,114,CLE,Guardians,17384,95,90,88
+2025,1,19,Coors Field,115,COL,Rockies,17969,115,132,110
+2025,1,4,Rate Field,145,CWS,White Sox,17412,98,96,96
+2025,1,2394,Comerica Park,116,DET,Tigers,18224,105,110,114
+2025,1,2392,Daikin Park,117,HOU,Astros,17268,97,94,106
+2025,1,7,Kauffman Stadium,118,KC,Royals,17294,97,94,83
+2025,1,1,Angel Stadium,108,LAA,Angels,17454,101,102,111
+2025,1,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,19673,104,108,137
+2025,1,4169,loanDepot park,146,MIA,Marlins,17587,97,94,84
+2025,1,32,American Family Field,158,MIL,Brewers,18501,98,96,98
+2025,1,3312,Target Field,142,MIN,Twins,18161,101,102,87
+2025,1,3289,Citi Field,121,NYM,Mets,17636,99,98,101
+2025,1,3313,Yankee Stadium,147,NYY,Yankees,18604,99,98,111
+2025,1,2681,Citizens Bank Park,143,PHI,Phillies,17945,102,104,117
+2025,1,31,PNC Park,134,PIT,Pirates,17496,96,92,66
+2025,1,2680,Petco Park,135,SD,Padres,17309,95,90,91
+2025,1,680,T-Mobile Park,136,SEA,Mariners,18923,91,83,98
+2025,1,2395,Oracle Park,137,SF,Giants,17728,99,98,84
+2025,1,2889,Busch Stadium,138,STL,Cardinals,17317,97,94,77
+2025,1,2523,George M. Steinbrenner Field,139,TB,Rays,17419,102,104,112
+2025,1,5325,Globe Life Field,140,TEX,Rangers,17232,91,83,80
+2025,1,14,Rogers Centre,141,TOR,Blue Jays,19623,103,106,118
+2025,1,3309,Nationals Park,120,WSH,Nationals,17677,101,102,93
+2025,3,4705,Truist Park,144,ATL,Braves,56308,101,102,105
+2025,3,15,Chase Field,109,AZ,D-backs,57885,103,106,88
+2025,3,2,Oriole Park at Camden Yards,110,BAL,Orioles,55788,100,100,106
+2025,3,3,Fenway Park,111,BOS,Red Sox,56758,105,110,89
+2025,3,17,Wrigley Field,112,CHC,Cubs,55966,97,94,99
+2025,3,2602,Great American Ball Park,113,CIN,Reds,55472,103,106,123
+2025,3,5,Progressive Field,114,CLE,Guardians,55909,97,94,85
+2025,3,19,Coors Field,115,COL,Rockies,56521,112,125,105
+2025,3,4,Rate Field,145,CWS,White Sox,57335,99,98,96
+2025,3,2394,Comerica Park,116,DET,Tigers,55445,101,102,99
+2025,3,2392,Daikin Park,117,HOU,Astros,55927,100,100,105
+2025,3,7,Kauffman Stadium,118,KC,Royals,55643,101,102,85
+2025,3,1,Angel Stadium,108,LAA,Angels,55342,101,102,113
+2025,3,22,UNIQLO Field at Dodger Stadium,119,LAD,Dodgers,60332,101,102,127
+2025,3,4169,loanDepot park,146,MIA,Marlins,56592,101,102,90
+2025,3,32,American Family Field,158,MIL,Brewers,57434,97,94,106
+2025,3,3312,Target Field,142,MIN,Twins,56677,103,106,102
+2025,3,3289,Citi Field,121,NYM,Mets,57064,98,96,104
+2025,3,3313,Yankee Stadium,147,NYY,Yankees,59620,100,100,119
+2025,3,2681,Citizens Bank Park,143,PHI,Phillies,56613,101,102,115
+2025,3,31,PNC Park,134,PIT,Pirates,55939,99,98,76
+2025,3,2680,Petco Park,135,SD,Padres,57155,97,94,102
+2025,3,680,T-Mobile Park,136,SEA,Mariners,55729,91,83,93
+2025,3,2395,Oracle Park,137,SF,Giants,55185,97,94,81
+2025,3,2889,Busch Stadium,138,STL,Cardinals,54960,100,100,87
+2025,3,5325,Globe Life Field,140,TEX,Rangers,56720,97,94,104
+2025,3,14,Rogers Centre,141,TOR,Blue Jays,57292,100,100,104
+2025,3,3309,Nationals Park,120,WSH,Nationals,54984,101,102,94

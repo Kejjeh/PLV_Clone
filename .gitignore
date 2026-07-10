@@ -152,3 +152,10 @@ data/outputs/streamer_decision_2*.md
 # Weekly FP substrate — 31MB; its producer is now a staged refresh step, kept
 # on disk but untracked 2026-07-04 (item 17).
 data/research/week_level_substrate.csv
+
+# ── IL transaction resume chunks (parquet, regenerable via fetch_il_transactions.py)
+data/research/xfp_cache/il_tx_chunks/
+# ── FG RoS projection daily snapshots: ~7MB/day accumulation, disk-only panel
+#    (manifest stays tracked; snapshots are consumed locally by validation runs)
+data/research/fg_proj_cache/*.csv
+!data/research/fg_proj_cache/manifest.csv
