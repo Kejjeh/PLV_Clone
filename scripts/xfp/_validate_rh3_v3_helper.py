@@ -27,6 +27,18 @@ warnings.filterwarnings("ignore")
 ROOT = Path(__file__).resolve().parents[2]
 
 
+def _cye(df: pd.DataFrame, feats: list[str]):
+    """Tolerant unpack of rh3.cross_year_eval.
+
+    2026-07-04 the production signature grew a third return value (the
+    per-prediction residual detail frame for CI fitting). The helper only
+    needs (per_year, overall); this shim keeps every validate_<signal>.py
+    working across both signatures.
+    """
+    out = rh3.cross_year_eval(df, feats)
+    return out[0], out[1]
+
+
 def load_and_prep_rh3_inputs() -> pd.DataFrame:
     """Replicate rh3.main()'s data-prep steps and return the prepared
     rolling DataFrame (post-shrinkage, with all RH3_FEATS computed).
@@ -128,7 +140,7 @@ def cross_year_eval_per_split(
     rh3 production behavior).
     """
     sub = df if split_day is None else df[df["split_day"] == split_day]
-    return rh3.cross_year_eval(sub, feats)
+    return _cye(sub, feats)
 
 
 def per_year_signs(per_year: dict, baseline_per_year: dict) -> list[tuple[int, float]]:
@@ -165,8 +177,8 @@ def run_candidate_eval(
 
     # Headline cross-year eval (all split_days, matches rh3 production)
     print("\n=== Headline cross-year eval (all split_days, matches rh3 production) ===")
-    base_per_year, base_overall = rh3.cross_year_eval(rolling, feats_base)
-    ext_per_year, ext_overall = rh3.cross_year_eval(rolling, feats_ext)
+    base_per_year, base_overall = _cye(rolling, feats_base)
+    ext_per_year, ext_overall = _cye(rolling, feats_ext)
 
     print("Baseline RH3_FEATS:")
     for y, r in sorted(base_per_year.items()):
@@ -207,8 +219,8 @@ def run_candidate_eval(
             print(f"  split_day {sd}: n={len(sub)} < 200, skip")
             continue
         try:
-            _, bo = rh3.cross_year_eval(sub, feats_base)
-            _, eo = rh3.cross_year_eval(sub, feats_ext)
+            _, bo = _cye(sub, feats_base)
+            _, eo = _cye(sub, feats_ext)
             d = eo["r"] - bo["r"]
             conv[sd] = d
             print(

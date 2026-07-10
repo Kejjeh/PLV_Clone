@@ -21,9 +21,21 @@ from scripts.xfp.lib.rule9 import rule9_lift  # position-agnostic Rule-9 scoring
 
 from plv_clone.models.xfp.rp3 import (
     RP3_FEATS, cross_year_eval, ROLLING_CSV, MULTIYR_CSV, IL_CSV,
-    SHRINK_SPEC_TO, SHRINK_SPEC_LAST21, build_prior_table,
+    ROS_SCHED_CSV, SHRINK_SPEC_TO, SHRINK_SPEC_LAST21, build_prior_table,
     compute_population_means, apply_shrinkage, TRAIN_YEARS,
 )
+
+
+def _cye(df: pd.DataFrame, feats: list[str]):
+    """Tolerant unpack of rp3.cross_year_eval.
+
+    2026-07-04 the production signature grew a third return value (the
+    per-prediction residual detail frame for CI fitting). The harness only
+    needs (per_year, overall); this shim keeps every validate_<signal>.py
+    working across both signatures.
+    """
+    out = cross_year_eval(df, feats)
+    return out[0], out[1]
 
 
 def prep_rolling() -> pd.DataFrame:
@@ -72,6 +84,23 @@ def prep_rolling() -> pd.DataFrame:
     for c in ('delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
               'delta_chase', 'delta_zone'):
         rolling[c] = rolling[c].fillna(0.0)
+
+    # RoS schedule-strength feature — in RP3_FEATS since 2026-05-24 but this
+    # prep was never updated, so baselines silently dropped every row at the
+    # dropna(feats) step (audit 2026-07-09). Merge mirrors rp3.main().
+    if not ROS_SCHED_CSV.exists():
+        raise FileNotFoundError(
+            f'Missing required RoS schedule cache: {ROS_SCHED_CSV}. '
+            'Run scripts/xfp/build_ros_schedule_features.py.')
+    sched_xw = pd.read_csv(ROS_SCHED_CSV)[
+        ['pitcher', 'year', 'split_day', 'ros_opp_xwoba_weighted']
+    ]
+    rolling = rolling.merge(sched_xw, on=['pitcher', 'year', 'split_day'], how='left')
+    year_means = rolling.groupby('year')['ros_opp_xwoba_weighted'].transform('mean')
+    rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(year_means)
+    rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(
+        rolling['ros_opp_xwoba_weighted'].mean()
+    )
 
     return rolling
 
@@ -134,8 +163,8 @@ def evaluate_candidate(
         raise ValueError(f"{candidate_col} not in rolling DataFrame columns")
 
     # Baseline: full production RP3_FEATS
-    py_base, ov_base = cross_year_eval(df, RP3_FEATS)
-    py_full, ov_full = cross_year_eval(df, RP3_FEATS + [candidate_col])
+    py_base, ov_base = _cye(df, RP3_FEATS)
+    py_full, ov_full = _cye(df, RP3_FEATS + [candidate_col])
     # Rule-9 lift scoring (position-agnostic) lives in lib/rule9.
     r9 = rule9_lift(py_base, py_full, r_base=ov_base['r'], r_full=ov_full['r'])
 
