@@ -163,3 +163,6 @@ data/research/fg_proj_cache/*.csv
 #    (regenerable via data/research/sigma_study_cache/run_sigma_study.py)
 data/research/sigma_study_cache/rh3_2026-*.csv
 data/research/sigma_study_cache/rp3_2026-*.csv
+# ── box-score-era raw API caches (regenerable via build_panels.py / probes)
+data/research/boxscore_era/raw/
+data/research/boxscore_era/raw_probe/
