@@ -3,6 +3,13 @@ name: stream-the-stack
 description: Daily ranked FA SP streamer recommender filtered by boom_stack tier. Surfaces stack=2+ candidates from confirmed probables in the next 3 days, intersected with the league FA pool (Connelly-Early verified), with rp3 projection + variance band + opponent matchup. Use Monday-Friday mornings before lineup lock, or whenever the user asks "stream the stack", "boom stack streamers", "find me boom shots", or "best streamer adds today".
 ---
 
+> **⚠ MERGED (P1, 2026-07-10) → `/streamer-precision-board --filter boom>=2`.** This
+> SKILL is the boom-stack streamer recipe and stays live as the delegate; kept as
+> alias. New invocations should prefer `/streamer-precision-board --filter boom>=2`
+> — the precision board now carries the boom_stack column (live via
+> `lib.boom_stack.compute_boom_stack`, tier-aware boom%, ⚠spike-anti flag) over the
+> same confirmed-probables ∩ FA universe, with FADJ ranking within the shortlist.
+
 # stream-the-stack
 
 You are running the daily boom-stack streamer scan. The goal: surface FA SPs

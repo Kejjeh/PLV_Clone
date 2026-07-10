@@ -1,0 +1,5 @@
+bucket,verdict,n,n_players,mean_actual,median_actual,mean_proj_per,mean_residual,hit_rate,unit
+H,BUY,37,7,0.525,0.529,2.112,-1.587,0.0,PA
+H,CAUTION,3,1,0.758,0.812,1.93,-1.172,,PA
+H,FADE,4,2,0.292,0.292,1.715,-1.423,1.0,PA
+H,MIXED,39,11,0.669,0.671,1.894,-1.225,,PA

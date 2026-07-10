@@ -8,6 +8,12 @@ matter for a start/stream decision:
   ACTUAL season & L5 FP/start + empirical bust% (realized variance the model can't show)
   FADJ   floor_adjusted_xfp — the VALIDATED H2H risk-docked score (ranks the board)
   PROC   process percentile (SwStr) so a rich MEAN with weak process is flagged
+  STACK  boom_stack 0-4 (skill_spike/recform_hot/opp_soft/park_friendly) + tier-aware
+         expected boom% — the right-tail lens absorbed from stream_the_stack
+         (P1 merge 2026-07-10). DISPLAY TAG only; FADJ still ranks the board.
+
+The old /stream-the-stack view is now a filter over this board:
+  python scripts/xfp/run_streamer_board.py --filter "boom>=2"
 
 Rebuilt ad-hoc ~4x in one session (2026-07-03) — each rebuild risked re-introducing
 the ATH park bug. This is the permanent home. **It OWNS nothing** — every shared fact
@@ -23,6 +29,7 @@ Usage:
   python scripts/xfp/run_streamer_board.py                       # today .. today+2
   python scripts/xfp/run_streamer_board.py --start 2026-07-04 --end 2026-07-05
   python scripts/xfp/run_streamer_board.py --csv out.csv
+  python scripts/xfp/run_streamer_board.py --filter "boom>=2"    # boom-shot shortlist
 """
 from __future__ import annotations
 
@@ -75,6 +82,12 @@ def build(start: str, end: str) -> pd.DataFrame:
         DEC = {int(r["mlb_id"]): r for _, r in dec.iterrows()}
     except Exception:
         DEC = {}
+    # boom_stack owner (P1 merge 2026-07-10 — absorbed from stream_the_stack).
+    # Live compute per start; fail-soft so the board still ranks without it.
+    try:
+        from lib.boom_stack import compute_boom_stack as _boom
+    except Exception:
+        _boom = None
 
     rows = []
     for p in slate:
@@ -107,6 +120,23 @@ def build(start: str, end: str) -> pd.DataFrame:
         sw = round(float(drow["swstr_pctl"])) if drow is not None and pd.notna(drow.get("swstr_pctl")) else None
         tier = str(drow["tier"]) if drow is not None else ""
 
+        # boom_stack (OWNER: lib.boom_stack, tier-aware via rp3 rank). Fail-soft.
+        stack = boom_pct = boom_tier = None
+        boom_anti = False
+        if _boom is not None:
+            try:
+                rfg = float(r["recency_form_gap"]) if pd.notna(r.get("recency_form_gap")) else None
+                rk = int(r["rank"]) if pd.notna(r.get("rank")) else None
+                bs = _boom(pitcher_id=p["id"], recency_form_gap=rfg,
+                           next_opp_team=p["opp"], rp3_rank=rk)
+                stack = int(bs["boom_stack"])
+                boom_pct = round(100 * float(bs["boom_rate_expected"]), 1) \
+                    if bs.get("boom_rate_expected") is not None else None
+                boom_tier = bs.get("tier")
+                boom_anti = bool(bs.get("skill_spike_anti_predictive"))
+            except Exception:
+                pass
+
         verdict = []
         if marcel:
             verdict.append("PRIOR-not-read")
@@ -120,12 +150,17 @@ def build(start: str, end: str) -> pd.DataFrame:
             verdict.append(tier)
         if ebust is not None and ebust >= 30:
             verdict.append(f"bust{ebust}%")
+        if stack is not None and stack >= 2:
+            verdict.append(f"BOOM{stack}/4~{boom_pct}%")
+        if boom_anti:
+            verdict.append("⚠spike-anti")
 
         rows.append(dict(
             date=p["date"], own=("MINE" if own == MY else "FA"), pitcher=p["nm"], opp=p["opp"], park=p["park"],
             mean=mean, park_adj=padj, season=seas, l5=l5, n=n, delta=delta,
             bust_pct=ebust, floor_bustP=bustp, floor_tier=ftier, fadj=fadj,
-            swstr_pctl=sw, marcel=marcel, verdict=" ".join(verdict),
+            swstr_pctl=sw, marcel=marcel, boom_stack=stack, boom_pct=boom_pct,
+            boom_tier=boom_tier, boom_anti=boom_anti, verdict=" ".join(verdict),
         ))
     df = pd.DataFrame(rows)
     if len(df):
@@ -139,13 +174,30 @@ def _render(df: pd.DataFrame) -> None:
         return
     for d, g in df.groupby("date"):
         print(f"\n===== {d} — MINE + FA SP streamers, ranked by FADJ (floor-adjusted) =====")
-        print(f"{'own':<5}{'Pitcher':<19}{'@':<9}{'pk±':>6}{'MEAN':>6}{'seas(n)':>10}{'FADJ':>7}{'Sw%':>5}  verdict")
+        print(f"{'own':<5}{'Pitcher':<19}{'@':<9}{'pk±':>6}{'MEAN':>6}{'seas(n)':>10}{'FADJ':>7}{'Sw%':>5}{'stk':>5}  verdict")
         for _, r in g.iterrows():
             sn = f"{r['season']}({r['n']})" if pd.notna(r["season"]) else "—"
             sw = f"{int(r['swstr_pctl'])}" if pd.notna(r["swstr_pctl"]) else "—"
+            stk = f"{int(r['boom_stack'])}/4" if pd.notna(r.get("boom_stack")) else "—"
             fadj = float(r["fadj"]) if pd.notna(r["fadj"]) else float(r["mean"])
             print(f"{r['own']:<5}{str(r['pitcher'])[:19]:<19}{(r['opp']+'@'+r['park'])[:9]:<9}"
-                  f"{r['park_adj']:>+6.1f}{r['mean']:>6.1f}{sn:>10}{fadj:>7.1f}{sw:>5}  {r['verdict']}")
+                  f"{r['park_adj']:>+6.1f}{r['mean']:>6.1f}{sn:>10}{fadj:>7.1f}{sw:>5}{stk:>5}  {r['verdict']}")
+
+
+def _apply_filter(df: pd.DataFrame, expr: str) -> pd.DataFrame:
+    """Apply a `--filter` expression. Supported: 'boom>=N' (the old stream-the-stack
+    view — boom_stack tier shortlist). Unknown expressions raise."""
+    import re
+    m = re.fullmatch(r"\s*boom\s*>=\s*(\d+)\s*", expr)
+    if not m:
+        raise SystemExit(f"--filter: unsupported expression {expr!r} (expected 'boom>=N')")
+    n = int(m.group(1))
+    if not len(df) or "boom_stack" not in df.columns:
+        return df.iloc[0:0]
+    out = df[df["boom_stack"].notna() & (df["boom_stack"] >= n)].reset_index(drop=True)
+    print(f"--filter boom>={n}: {len(df)} -> {len(out)} rows "
+          f"(boom_stack is a DISPLAY TAG; FADJ still ranks within the shortlist)")
+    return out
 
 
 def main() -> None:
@@ -153,8 +205,12 @@ def main() -> None:
     ap.add_argument("--start", default=date.today().isoformat())
     ap.add_argument("--end", default=(date.today() + timedelta(days=2)).isoformat())
     ap.add_argument("--csv", default=None)
+    ap.add_argument("--filter", default=None, dest="filter_expr", metavar="EXPR",
+                    help="e.g. \"boom>=2\" — boom_stack shortlist (old /stream-the-stack view)")
     a = ap.parse_args()
     df = build(a.start, a.end)
+    if a.filter_expr:
+        df = _apply_filter(df, a.filter_expr)
     _render(df)
     if a.csv:
         df.to_csv(a.csv, index=False)

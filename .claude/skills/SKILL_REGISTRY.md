@@ -42,8 +42,10 @@ re-implementations of `scoring.py` (research scripts only) and the 73
 
 63 skills. Status: **active** · **alias** (deprecated delegate — banner in file,
 still triggers, redirects to successor; NEVER deleted) · **meta** (chains others).
-Counts: 40 active-distinct, 11 active-in-overlapping-cluster (⚠ marks them —
-consolidation proposed in §5), 5 aliases, 7 meta.
+Counts: 41 active-distinct, 9 active-in-overlapping-cluster (⚠ marks them —
+consolidation proposed in §5), 6 aliases, 7 meta. (P1 executed 2026-07-10:
+stream-the-stack → alias of streamer-precision-board, which left the
+overlapping set and is now the canonical streamer surface.)
 
 ### Guards / preconditions
 | Skill | Status | Role |
@@ -65,8 +67,8 @@ consolidation proposed in §5), 5 aliases, 7 meta.
 | **sp-board** | active | CANONICAL unified SP board — `--scope {slate\|roster}` |
 | sp-slate-grid | alias | → `/sp-board --scope slate` (holds the full slate recipe) |
 | sp-pl-board | alias | → `/sp-board --scope roster` (holds the PL-sentiment recipe) |
-| streamer-precision-board ⚠ | active | Daily MINE+FA probables ranked by FADJ (owner-module powered) |
-| stream-the-stack ⚠ | active | Daily FA streamers filtered by boom_stack tier ≥2 |
+| **streamer-precision-board** | active | CANONICAL streamer board — MINE+FA probables ranked by FADJ, boom_stack column + `--filter boom>=2` (P1 merge 2026-07-10) |
+| stream-the-stack | alias | → `/streamer-precision-board --filter boom>=2` (holds the boom-stack recipe) |
 | sp-stuff-board | active | Stuff+ RoS FP/start single lens (Location+ REJECTED note carried) |
 | sp-floor | active | Bust-risk P(start <5 FP); K−BB% floor; bench-priority tilt |
 
@@ -145,14 +147,14 @@ consolidation proposed in §5), 5 aliases, 7 meta.
 | Skill | Status | Chain |
 |---|---|---|
 | monday-morning | meta | roster-verify → roster-audit → roster-health → sp-week-plan → fa-monitor → conviction-scan |
-| daily-edge | meta | roster-verify → pregame-check → streamer-precision-board → stream-the-stack |
+| daily-edge | meta | roster-verify → pregame-check → streamer-precision-board (incl. its `--filter boom>=2` shortlist; 4→3 steps, P1 2026-07-10) |
 | trade-deadline | meta | league-deep-audit → conviction-scan → opp-watch → trade-target-scan |
 | playoff-war-room | meta | roster-verify → playoff-team-build → sp-stash-finder → sp-rehab-tracker → forced-drop-planner |
 | playoff-team-build | meta | roster-verify → playoff-xFP rank → sp-stash-finder → action list |
 | fa-signal-to-decision | meta | fa-monitor HIGH → fa-pickup-deep-dive (≤3) → ranked add rec |
 | roster-deep-audit | meta | career-form-rank + hitter/pitcher-sustainability + slump-or-decline sweeps → agreement matrix (MINE-only) |
 
-**Alias policy:** the 5 alias skills keep their full recipe text and trigger
+**Alias policy:** the 6 alias skills keep their full recipe text and trigger
 phrases; a banner below frontmatter redirects to the successor. Never delete an
 alias directory — ~20 other SKILL.md files cross-reference them by old name and
 resolve through the delegation. New prose should cite the canonical names.
@@ -167,6 +169,7 @@ resolve through the delegation. New prose should cite the canonical names.
 | volume-watch | active | Playing-time movers off the validated volume layer: RISERS/FADERS (model volume vs naive season pace) ranked by FP impact (gap × rate), live ownership overlay, IL/marcel flags; WoW deltas auto-activate at ≥7 days of proj_volume history. Volume parallel of /trending (playing MORE vs getting BETTER); dual-list riser = strongest pickup signal. Rule 13. Engine `run_volume_watch.py`. |
 | consensus-diff | active | Ours-vs-MARKET divergence: rate×volume RoS totals vs Steamer/ZiPS/ATC/FG-DC RoS (daily fg_proj_cache snapshots), within-role z-scores, volume-vs-rate decomposition ("plays more" ≠ "is better"), ownership-tagged with roster reality-check section. Rule 13 — routes to /triangulate. Ensemble FEATURE validation unlocks ≈2026-08-06 (4 wks of snapshots). Engine `run_consensus_diff.py`. Sibling of /conviction-scan (ours-vs-process). |
 | matchup-leverage | active | H2H win-probability strategy layer: Monte Carlo of the live matchup (empirical game-log bootstrap + model σ fallback), P(win), regime call (TRAILING→boom / LEADING→floor / CLOSE→E[FP]), and ΔP(win)-ranked moves (bench swaps, SP cap usage, streamer adds). Tells /pregame-check and /sp-week-plan WHICH objective to optimize. Rule 13. Engine `run_matchup_leverage.py`. |
+| verdict-scorecard | active | Decision-quality accountability — the sibling of /model-health (models vs CALLS). Aggregates all SETTLED decisions from the daily decision chain (4.10a/b/c: log → materialize → settle vs realized FP/unit, H 21d / SP 35d / RP 35d) into a verdict ladder (BUY/HOLD/CAUTION/FADE/MIXED × bucket: n, unique players, realized FP-per-unit, hit rate), monotonicity + BUY-vs-FADE discrimination, confidence calibration, named worst calls. Honest n's (EARLY READ + powered-from date below n=100; effective n = unique players). Surfaces the proj_per H/RP units caveat rather than hiding it. Rule 13/5. Engine `run_verdict_scorecard.py`. |
 
 ---
 
@@ -177,6 +180,10 @@ resolve through the delegation. New prose should cite the canonical names.
 - **SP boards:** ✅ MERGED 2026-07-04 → `sp-board --scope {slate|roster}`.
   `sp-stuff-board` (Stuff+) and `sp-floor` (K-BB floor) stay standalone
   single-lens; sp-floor bust tiers are the single bench-priority source.
+- **Streamers:** ✅ MERGED 2026-07-10 (P1) → `streamer-precision-board`
+  (`run_streamer_board.py` grew the boom_stack column via
+  `lib.boom_stack.compute_boom_stack` + `--filter boom>=2`);
+  `stream-the-stack` is the alias.
 - **SP cap family:** `sp-week-plan` / `forced-drop-planner` / `pregame-check` /
   `sp-bench-mc` all DELEGATE to `cap_math` (forced-drop-planner's
   `detect_pitcher_role` + `lineup_slot=='IL'` math is canonical).
@@ -201,7 +208,7 @@ Full rationale + break analysis: `data/research/skill_audit_2026-07-10.md`.
 
 | # | Proposal | Shape | Breaks to manage |
 |---|---|---|---|
-| P1 | `stream-the-stack` → mode of `streamer-precision-board` | board grows boom_stack column + `--filter boom>=2`; stack becomes alias | daily-edge chain (4→3 steps); port tier-aware thresholds |
+| P1 | ✅ **EXECUTED 2026-07-10** — `stream-the-stack` → filter of `streamer-precision-board` | board grew boom_stack column (live `compute_boom_stack`, tier-aware boom% + ⚠spike-anti) + `--filter boom>=2`; stack is now an alias | daily-edge chain updated (4→3 steps); tier-aware thresholds ported via the owner lib; verified live 2026-07-10 (49 probables → 11 boom≥2) |
 | P2 | Hitter-board core: `hitter-board --mode {slate\|merged\|level\|replace\|compare}` | hitter-slate-grid canonical; xfp-board / level-board / fa-replacement-pool / hitter-compare become mode delegates (sp-board `--scope` is the template) | xfp-board ENGINE is a refresh artifact (GH Pages) — engine untouched, only skill entry merges; replace-mode must dispatch P drops to fa-pitcher-pool |
 | P3 | Hitter-form sweeps: `hitter-form --scope {roster\|fa\|league} --lens {sustainability\|breakout\|career-pct}` | merges hitter-sustainability + league-breakout-sustainability + career-form-rank; breakout-sustainability + slump-or-decline stay as deep-dives | roster-deep-audit step list; reconcile tier vocabularies |
 

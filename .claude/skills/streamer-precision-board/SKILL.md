@@ -1,6 +1,6 @@
 ---
 name: streamer-precision-board
-description: Daily ranked SP streamer decision board over a date window. For every MINE + FA confirmed probable SP, reconciles four lenses in one row — opponent+park-adjusted rp3 MEAN, season/L5 actuals + empirical bust%, the validated floor_adjusted_xfp (FADJ, which ranks the board), and process percentile — with marcel_il / decline flags. Use when the user asks "rank the streamers", "best FA start for 7/x", "who do I stream", "streamer board", or overlays their own arms against the FA market for cap-filling. Ranks by FADJ so a rich MEAN with a bad floor drops. Calls the owner modules (park_fp_adj, floor_adjusted_xfp, boom_bust, resolve_pitcher_id) — never re-types a park table or a cutoff.
+description: Daily ranked SP streamer decision board over a date window. For every MINE + FA confirmed probable SP, reconciles five lenses in one row — opponent+park-adjusted rp3 MEAN, season/L5 actuals + empirical bust%, the validated floor_adjusted_xfp (FADJ, which ranks the board), process percentile, and the boom_stack 0-4 right-tail tag (tier-aware boom%, absorbed from /stream-the-stack in the P1 merge 2026-07-10) — with marcel_il / decline flags. `--filter boom>=2` reproduces the old stream-the-stack boom-shot shortlist. Use when the user asks "rank the streamers", "best FA start for 7/x", "who do I stream", "streamer board", "stream the stack", "boom stack streamers", "find me boom shots", "best streamer adds today", or overlays their own arms against the FA market for cap-filling. Ranks by FADJ so a rich MEAN with a bad floor drops. Calls the owner modules (park_fp_adj, floor_adjusted_xfp, boom_bust, boom_stack, resolve_pitcher_id) — never re-types a park table or a cutoff.
 ---
 
 # streamer-precision-board
@@ -16,7 +16,8 @@ actually decide a start:
 | **bust%** | empirical share of starts < `SP_BUST` | `lib.boom_bust.SP_BUST` |
 | **FADJ** | `floor_adjusted_xfp` — H2H risk-docked score; **ranks the board** | `lib.extra_lenses.floor_adjusted_xfp` |
 | **Sw%** | SwStr percentile — flags a rich MEAN with weak process | `sp_decline_model` |
-| **verdict** | RICH/LIGHT/FAIR + PRIOR/FLOOR-RISK/decline/bust flags | derived |
+| **stk** | boom_stack 0-4 (skill_spike/recform_hot/opp_soft/park_friendly) — right-tail DISPLAY TAG, tier-aware expected boom% in verdict | `lib.boom_stack.compute_boom_stack` |
+| **verdict** | RICH/LIGHT/FAIR + PRIOR/FLOOR-RISK/decline/bust + BOOMn/4~x% + ⚠spike-anti flags | derived |
 
 **Trigger phrases:** "rank the streamers", "best FA start for 7/4", "who should I
 stream", "streamer board", "streamer options", "overlay my arms on the streamers".
@@ -49,6 +50,9 @@ python scripts/xfp/run_streamer_board.py --start 2026-07-04 --end 2026-07-05
 
 # Persist for downstream skills (daily-edge bundle)
 python scripts/xfp/run_streamer_board.py --csv data/research/streamer_board_$(date +%F).csv
+
+# Boom-shot shortlist — the old /stream-the-stack view (P1 merge 2026-07-10)
+python scripts/xfp/run_streamer_board.py --filter "boom>=2"
 ```
 
 The engine (`run_streamer_board.py`) is thin: it fetches confirmed probables,
@@ -75,7 +79,17 @@ scoring formula to it.
 3. **Overlay mode:** MINE arms appear inline with FA, so you can see exactly where
    your rostered starts sit vs the streamer market (usually your arms win on their
    own days; the market only helps where a FA MEAN beats all your arms that day).
-4. **Always show the full stack** — do not headline a single lens or let a verdict
+4. **`stk` (boom_stack 0-4) is the right-tail lens** (absorbed from
+   `/stream-the-stack`, P1 2026-07-10): skill_spike + recform_hot + opp_soft +
+   park_friendly, each 0|1, computed live via `lib.boom_stack.compute_boom_stack`
+   with the tier-aware boom% lookup (ace stack=3 ≈ 56.7% boom vs streamer 17.4% —
+   `BOOM_RATE_BY_TIER_STACK`). Verdict shows `BOOMn/4~x%` at stack ≥2 and
+   `⚠spike-anti` when skill_spike is regression-predictive at sp2_sp3/backend
+   tiers. **DISPLAY TAG only** — FADJ still ranks the board; a stack=3 with a low
+   MEAN is a lottery ticket, not an expected 17 FP. The DECLINE-RISK verdict flag
+   is the same ERA-trap guard the old skill enforced (do NOT stream a propped arm
+   even at stack ≥2).
+5. **Always show the full stack** — do not headline a single lens or let a verdict
    flip across turns.
 
 ---
@@ -85,18 +99,19 @@ scoring formula to it.
 - `lib.extra_lenses.park_fp_adj` — venue-aware park→FP (VENUE_ERAS ATH/TB guard)
 - `lib.extra_lenses.floor_adjusted_xfp` / `floor_lens` / `floor_flag` — H2H floor
 - `lib.boom_bust.SP_BOOM` / `SP_BUST` — realized boom/bust cutoffs
+- `lib.boom_stack.compute_boom_stack` — boom_stack 0-4 + tier-aware boom% (P1 2026-07-10)
 - `plv_clone.utils.name_match.resolve_pitcher_id` — collision-safe id
 - `app.espn_connector.get_all_teams` — ownership (MINE / FA / other)
 - `sp_decline_model.build` — RISING/DECLINE-RISK tier + SwStr percentile
 
 ## Part of the `daily-edge` bundle
 
-`roster-verify → pregame-check → streamer-precision-board → stream-the-stack`.
-`stream-the-stack` then applies its boom_stack ≥2 filter over the *same* FA pool
-this board already surfaced (don't re-fetch).
+`roster-verify → pregame-check → streamer-precision-board` (3-step chain since the
+P1 merge 2026-07-10). The boom-shot shortlist is this board's own `--filter
+boom>=2` — no separate stream-the-stack step, no re-fetch.
 
 ## When NOT to use
 
-- Need the boom_stack-tier shortlist only → `/stream-the-stack` (thinner, FA-only).
 - Weekly cap math / which of MY starts to bench → `/sp-week-plan` + `cap_math`.
 - A single arm's deep dive → `/fa-pickup-deep-dive` or `/triangulate`.
+- Component-level boom decomposition → `/boom-bust-history --explain <name>`.
