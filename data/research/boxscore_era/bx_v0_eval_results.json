@@ -1,0 +1,116 @@
+{
+  "hitters": {
+    "per_decade": {
+      "1970": {
+        "n": 2169,
+        "r_model": 0.6356,
+        "r_marcel": 0.6275,
+        "delta": 0.0081
+      },
+      "1980": {
+        "n": 2335,
+        "r_model": 0.6065,
+        "r_marcel": 0.5942,
+        "delta": 0.0124
+      },
+      "1990": {
+        "n": 2421,
+        "r_model": 0.6733,
+        "r_marcel": 0.6543,
+        "delta": 0.019
+      },
+      "2000": {
+        "n": 2679,
+        "r_model": 0.6636,
+        "r_marcel": 0.6401,
+        "delta": 0.0235
+      },
+      "2010": {
+        "n": 2685,
+        "r_model": 0.5967,
+        "r_marcel": 0.5741,
+        "delta": 0.0226
+      },
+      "2020": {
+        "n": 1071,
+        "r_model": 0.5491,
+        "r_marcel": 0.5106,
+        "delta": 0.0385
+      }
+    },
+    "pooled": {
+      "n": 13360,
+      "r_model": 0.6479,
+      "r_marcel": 0.632,
+      "delta": 0.0159
+    },
+    "slice_2015_2025": {
+      "n": 2414,
+      "r_model": 0.5689,
+      "r_marcel": 0.539
+    },
+    "gates": {
+      "g1_pooled_delta_ge_0.01": true,
+      "g2_sign_consistency_5of6": "6/6 -> True",
+      "g3_statcast_slice": true,
+      "verdict": "PASS"
+    }
+  },
+  "pitchers": {
+    "per_decade": {
+      "1970": {
+        "n": 936,
+        "r_model": 0.4998,
+        "r_marcel": 0.4216,
+        "delta": 0.0782
+      },
+      "1980": {
+        "n": 1109,
+        "r_model": 0.4422,
+        "r_marcel": 0.3572,
+        "delta": 0.0849
+      },
+      "1990": {
+        "n": 1123,
+        "r_model": 0.5485,
+        "r_marcel": 0.5031,
+        "delta": 0.0454
+      },
+      "2000": {
+        "n": 1255,
+        "r_model": 0.5403,
+        "r_marcel": 0.4732,
+        "delta": 0.0671
+      },
+      "2010": {
+        "n": 1274,
+        "r_model": 0.5667,
+        "r_marcel": 0.5152,
+        "delta": 0.0515
+      },
+      "2020": {
+        "n": 483,
+        "r_model": 0.5327,
+        "r_marcel": 0.4163,
+        "delta": 0.1164
+      }
+    },
+    "pooled": {
+      "n": 6180,
+      "r_model": 0.5214,
+      "r_marcel": 0.4757,
+      "delta": 0.0457
+    },
+    "slice_2015_2025": {
+      "n": 1116,
+      "r_model": 0.5749,
+      "r_marcel": 0.4814
+    },
+    "gates": {
+      "g1_pooled_delta_ge_0.01": true,
+      "g2_sign_consistency_5of6": "6/6 -> True",
+      "g3_statcast_slice": true,
+      "verdict": "PASS"
+    }
+  }
+}
