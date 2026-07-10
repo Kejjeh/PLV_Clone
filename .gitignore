@@ -159,3 +159,7 @@ data/research/xfp_cache/il_tx_chunks/
 #    (manifest stays tracked; snapshots are consumed locally by validation runs)
 data/research/fg_proj_cache/*.csv
 !data/research/fg_proj_cache/manifest.csv
+# ── sigma-study snapshot cache: git-history-recovered daily projection CSVs
+#    (regenerable via data/research/sigma_study_cache/run_sigma_study.py)
+data/research/sigma_study_cache/rh3_2026-*.csv
+data/research/sigma_study_cache/rp3_2026-*.csv
