@@ -356,11 +356,13 @@ the printed full-log path when the summary doesn't have enough detail.
   manager-rating audit (PL-weighted, outcome-chaser, save-chaser, etc.).
   Backtest-validated: under Late Night Bettsing's profile their actual
   archetype_breakout adds (Max Meyer, Weathers, Ashcraft) surface in the
-  predictor's top-12. v1 uses hardcoded profile weights; once the new
-  player_projection_history.parquet + date-keyed pl_cache snapshots have
-  accumulated ~4 weeks, refit from panel data. Engine:
-  `scripts/xfp/opponent_action_predictor.py`. See plan
-  `~/.claude/plans/hidden-percolating-harp.md`.
+  predictor's top-12. **v2 (2026-07-10): weights refit from the accumulated
+  projection panel + date-keyed pl_cache** — held-out top-12 hit rate 58.8%
+  vs v1's 17.6% (17-event test, direction decisive). v2 is the default;
+  `--weights v1` falls back to the hardcoded profiles. Refit harness
+  `scripts/xfp/refit_opp_watch_v2.py` (rerun checkpoint ~2026-08-07);
+  weights `data/research/opp_watch_v2_weights.json`. Engine:
+  `scripts/xfp/opponent_action_predictor.py`.
 - `/boom-stack-explain` — decompose a single player's current
   boom_stack tag (SP or hitter) into components with status, value,
   threshold, tier outcome lookup, and verdict. Use when asked "why is

@@ -10,26 +10,30 @@ Each profile reflects what that manager appears to value (PL rank vs raw
 outcomes vs trajectory). Validated to surface Late-Night-Bettsing's actual
 archetype_breakout adds (Max Meyer, Weathers, Ashcraft) in the top-12.
 
-PANEL REFIT — DEFERRED, gate NOT clearable yet (checked 2026-07-04, item 5):
-The projection-history panel (`player_projection_history.parquet`) now holds 20
-snapshots (2026-06-04 → 06-29) and 22 dated pl_cache files, so Δ-rank features
-ARE computable in principle. HOWEVER the pre-registered swap gate — "swap only
-if the panel refit backtests at least as well on the LNB canonical adds" — is
-UNCLEARABLE because those canonical adds (Weathers + Ashcraft 2026-05-04, Max
-Meyer 05-25) ALL PREDATE the panel's first snapshot (06-04): there is no
-before-the-add snapshot to compute the Δ-rank features the refit needs, so the
-refit cannot be scored on the pre-registered test. The only in-window LNB adds
-(E. Rodríguez, Ben Brown, both 06-04) sit AT the panel edge (no clean prior
-snapshot) and are n=2 — far too thin and off-pre-registration to substitute.
-=> v1 hardcoded PROFILES RETAINED. Re-run the refit + backtest once ≥4 weeks of
-post-06-04 LNB adds have accumulated (each with a clean prior snapshot), or
-re-anchor the canonical add set to in-panel-window adds and re-pre-register.
-Do NOT swap weights before the gate clears. The CLI surface stays the same.
+v2 (2026-07-10): ADD-side weights refit from panel data — pooled logistic over
+the v1 component scores (pl/traj/model/outcome/role) PLUS Δ-rank 7/14d (from
+`player_projection_history.parquet`), boxscore FP L7 salience, and the v1
+per-team profile score as a prior feature (per-team behavior enters ONLY
+through that feature — per-team refits would overfit at n≤17 adds/team).
+Gate (re-anchored + re-pre-registered per the v1 docstring's escape hatch,
+since the original LNB canonical adds predate the panel): chronological 70/30
+split over 56 in-window adds (2026-06-06 → 07-09); held-out top-12 hit rate
+v2 10/17 (58.8%) vs v1 3/17 (17.6%) — gate CLEARED, v2 shipped as default.
+Excl. Josh's own team: v2 7/12 vs v1 2/12. Full pre-registration + results:
+`data/research/validation_runs/opp_watch_v2_refit_2026-07-10.md`; refit
+harness `scripts/xfp/refit_opp_watch_v2.py`; deploy weights
+`data/research/opp_watch_v2_weights.json`.
+v1 hardcoded profiles remain available via `--weights v1` (and are the
+automatic fallback when the weights json is missing). DROP-side intrinsic
+weights stay v1 (pre-registered scope limit); the drop marginal-upgrade term
+consumes whichever add scorer is active. Trigger stage unchanged (v1
+calibration). The CLI surface is unchanged except the optional --weights.
 
 Usage:
   python scripts/xfp/opponent_action_predictor.py --team "Late Night Bettsing"
   python scripts/xfp/opponent_action_predictor.py --all-teams
   python scripts/xfp/opponent_action_predictor.py --team "Frendy's Fantastic Team" --top 10
+  python scripts/xfp/opponent_action_predictor.py --team "Team Solomon" --weights v1
 """
 from __future__ import annotations
 
@@ -46,6 +50,9 @@ from plv_clone.paths import ROOT
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 TX_PARQ = ROOT / 'data' / 'research' / 'transactions_history.parquet'
 PANEL = ROOT / 'data' / 'research' / 'player_projection_history.parquet'
+V2_WEIGHTS = ROOT / 'data' / 'research' / 'opp_watch_v2_weights.json'
+BOX_H = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_hitters.parquet'
+BOX_P = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
 
 
 # _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
@@ -73,6 +80,117 @@ PROFILES = {
 }
 
 DEFAULT_PROFILE = dict(pl=0.20, traj=0.20, model=0.20, outcome=0.20, role=0.10, draft=0.10)
+
+# v2 feature order — must match refit_opp_watch_v2.py / opp_watch_v2_weights.json
+V2_FEATS = ['pl', 'traj', 'model', 'outcome', 'role', 'd7', 'd14', 'fp_l7', 'v1_prior']
+
+
+def load_v2_weights() -> dict | None:
+    """Fitted v2 coefficients, or None (caller falls back to v1)."""
+    if not V2_WEIGHTS.exists():
+        return None
+    try:
+        w = json.loads(V2_WEIGHTS.read_text(encoding='utf-8'))
+        if all(f in w.get('coefs', {}) for f in V2_FEATS):
+            return w
+    except Exception:
+        pass
+    return None
+
+
+_EXTRAS_CACHE: dict | None = None
+
+
+def _build_v2_extras() -> dict:
+    """name_key -> {'d7','d14','fp_l7'} — deploy-time analogs of the refit features.
+
+    Δ-rank over trailing ~7/14d from the projection panel (rising = +, /100,
+    clipped [-1,1]) and total BrownU FP over the last 7 calendar days from the
+    boxscore store (clip(fp/30, 0, 1.5)). mlbam-keyed internally; surfaced by
+    normalized FULL-name key because the FA/triangulate CSVs carry ESPN ids,
+    not mlbam (Rule 10: unambiguous full-name match only — ambiguous keys are
+    skipped and score 0s). Cached per process (--all-teams runs 8 predictions).
+    """
+    global _EXTRAS_CACHE
+    if _EXTRAS_CACHE is not None:
+        return _EXTRAS_CACHE
+    import numpy as np
+    extras: dict = {}
+    try:
+        p = pd.read_parquet(PANEL)
+        p['snapshot_date'] = pd.to_datetime(p['snapshot_date']).dt.date
+        dates = sorted(p['snapshot_date'].unique())
+    except Exception:
+        _EXTRAS_CACHE = extras
+        return extras
+    if not dates:
+        _EXTRAS_CACHE = extras
+        return extras
+    A = dates[-1]
+
+    def _nearest(target, tol=3):
+        cands = [d for d in dates if abs((d - target).days) <= tol]
+        return min(cands, key=lambda d: abs((d - target).days)) if cands else None
+
+    A7, A14 = _nearest(A - timedelta(days=7)), _nearest(A - timedelta(days=14))
+    cur = p[p['snapshot_date'] == A].drop_duplicates('mlbam_id').set_index('mlbam_id')
+    prev = {}
+    for tag, Ap in (('d7', A7), ('d14', A14)):
+        prev[tag] = (p[p['snapshot_date'] == Ap].drop_duplicates('mlbam_id')
+                     .set_index('mlbam_id')['rank'].to_dict()) if Ap else {}
+
+    fp7: dict = {}
+    try:
+        h = pd.read_parquet(BOX_H)[['game_date', 'mlbam_id', 'fp_h']].rename(columns={'fp_h': 'fp'})
+        pi = pd.read_parquet(BOX_P)[['game_date', 'mlbam_id', 'gs', 'fp_sp', 'fp_rp']]
+        pi['fp'] = np.where(pi['gs'] > 0, pi['fp_sp'], pi['fp_rp'])
+        box = pd.concat([h[['game_date', 'mlbam_id', 'fp']], pi[['game_date', 'mlbam_id', 'fp']]])
+        box['game_date'] = pd.to_datetime(box['game_date']).dt.date
+        cut = date.today() - timedelta(days=7)
+        fp7 = box[box['game_date'] >= cut].groupby('mlbam_id')['fp'].sum().to_dict()
+    except Exception:
+        pass
+
+    # unambiguous normalized full-name key -> mlbam
+    keys = p.drop_duplicates(['mlbam_id'])[['mlbam_id', 'player_name']].copy()
+    keys['k'] = keys['player_name'].map(_norm)
+    amb = set(keys['k'][keys['k'].duplicated(keep=False)])
+    for _, r in keys.iterrows():
+        if r['k'] in amb:
+            continue
+        mid = r['mlbam_id']
+        if mid not in cur.index:
+            continue
+        rank_now = int(cur.loc[mid, 'rank'])
+        d = {}
+        for tag in ('d7', 'd14'):
+            pr = prev[tag].get(mid)
+            d[tag] = float(np.clip((int(pr) - rank_now) / 100.0, -1, 1)) if pr is not None else 0.0
+        d['fp_l7'] = float(np.clip(fp7.get(mid, 0.0) / 30.0, 0, 1.5))
+        extras[r['k']] = d
+    _EXTRAS_CACHE = extras
+    return extras
+
+
+def _score_player_for_add_v2(row: pd.Series, w_profile: dict, w2: dict,
+                             extras: dict) -> tuple[float, dict]:
+    """v2 add score: sigmoid of the fitted pooled-logistic linear index.
+
+    Same [0,1]-ish scale as v1 so the drop-side marginal-upgrade term keeps
+    working unchanged. Per-team behavior enters via the v1_prior feature.
+    """
+    import math
+    v1_score, comps = _score_player_for_add(row, w_profile)
+    ex = extras.get(_norm(str(row.get('player_name') or '')),
+                    {'d7': 0.0, 'd14': 0.0, 'fp_l7': 0.0})
+    feats = dict(comps)
+    feats.update(ex)
+    feats['v1_prior'] = v1_score
+    c = w2['coefs']
+    z = w2['intercept'] + sum(c[f] * feats[f] for f in V2_FEATS)
+    score = 1.0 / (1.0 + math.exp(-z))
+    components = {f: round(feats[f], 3) for f in V2_FEATS}
+    return score, components
 
 
 def load_data():
@@ -222,10 +340,21 @@ def _score_player_for_drop(row: pd.Series, w: dict, draft_round: int | None,
     return score, components
 
 
-def predict_team(team_name: str, top: int = 5) -> dict:
+def predict_team(team_name: str, top: int = 5, weights_mode: str = 'v2') -> dict:
     tri_res, rosters, tx, fa = load_data()
     today = date.today()
     profile = PROFILES.get(team_name, DEFAULT_PROFILE)
+
+    # Weight regime: v2 (panel-refit pooled logistic) is the default; falls
+    # back to v1 hardcoded profiles when the weights json is missing/invalid.
+    w2 = load_v2_weights() if weights_mode == 'v2' else None
+    if w2 is not None:
+        extras = _build_v2_extras()
+        score_add = lambda r: _score_player_for_add_v2(r, profile, w2, extras)  # noqa: E731
+        weights_mode = 'v2'
+    else:
+        score_add = lambda r: _score_player_for_add(r, profile)  # noqa: E731
+        weights_mode = 'v1'
 
     # TRIGGER
     trig = trigger_score(team_name, tx, today)
@@ -234,7 +363,7 @@ def predict_team(team_name: str, top: int = 5) -> dict:
     fa_with_tri = fa.merge(tri_res, left_on='k', right_on='k', how='left', suffixes=('', '_tri'))
     add_scores = []
     for _, r in fa_with_tri.iterrows():
-        s, comps = _score_player_for_add(r, profile)
+        s, comps = score_add(r)
         add_scores.append({'player': r['player_name'], 'bucket': r['bucket'],
                            'pl_rank': r.get('pl_rank'), 'mdl_rank': r.get('model_rank'),
                            'arche_traj': r.get('arche_traj'), 'verdict': r.get('verdict_top'),
@@ -270,7 +399,7 @@ def predict_team(team_name: str, top: int = 5) -> dict:
         r = tri_row.iloc[0]
         d_round = draft_map.get(k)
         bucket = r.get('bucket')
-        own_add_score, _ = _score_player_for_add(r, profile)
+        own_add_score, _ = score_add(r)
         best_fa = top_fa_by_bucket.get(bucket, 0.0)
         marginal_upgrade = max(0.0, best_fa - own_add_score)
         # Drop pressure: intrinsic signals the player is bad regardless of alternatives
@@ -293,6 +422,7 @@ def predict_team(team_name: str, top: int = 5) -> dict:
         'team': team_name,
         'profile_name': team_name if team_name in PROFILES else 'DEFAULT',
         'profile_weights': profile,
+        'weights_mode': weights_mode,
         'trigger': trig,
         'top_adds': add_scores[:top],
         'top_drops': drop_scores[:top],
@@ -303,8 +433,12 @@ def format_report(pred: dict) -> str:
     if 'error' in pred:
         return f"ERROR: {pred['error']}\n"
     t = pred['trigger']
+    mode = pred.get('weights_mode', 'v1')
+    mode_note = ('v2 panel-refit (profile enters as v1_prior feature)'
+                 if mode == 'v2' else 'v1 hardcoded profile weights')
     lines = [
         f"\n=== Opponent action prediction — {pred['team']} ===",
+        f"Weights: {mode} — {mode_note}",
         f"Profile: {pred['profile_name']}  (pl={pred['profile_weights']['pl']:.2f}  traj={pred['profile_weights']['traj']:.2f}  model={pred['profile_weights']['model']:.2f}  outcome={pred['profile_weights']['outcome']:.2f}  role={pred['profile_weights']['role']:.2f})",
         f"",
         f"TRIGGER  P(transact in 24h) = {t['p_transact_24h']:.3f}",
@@ -326,6 +460,9 @@ def main():
     ap.add_argument('--team', type=str)
     ap.add_argument('--all-teams', action='store_true')
     ap.add_argument('--top', type=int, default=5)
+    ap.add_argument('--weights', choices=['v2', 'v1'], default='v2',
+                    help='v2 = panel-refit weights (default; auto-falls back to v1 '
+                         'if opp_watch_v2_weights.json is missing). v1 = hardcoded profiles.')
     args = ap.parse_args()
 
     if not args.team and not args.all_teams:
@@ -333,7 +470,7 @@ def main():
 
     teams = list(PROFILES.keys()) if args.all_teams else [args.team]
     for t in teams:
-        pred = predict_team(t, top=args.top)
+        pred = predict_team(t, top=args.top, weights_mode=args.weights)
         print(format_report(pred))
 
 

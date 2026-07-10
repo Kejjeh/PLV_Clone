@@ -1,0 +1,37 @@
+{
+  "version": "v2_2026-07-10",
+  "features": [
+    "pl",
+    "traj",
+    "model",
+    "outcome",
+    "role",
+    "d7",
+    "d14",
+    "fp_l7",
+    "v1_prior"
+  ],
+  "coefs": {
+    "pl": 3.0055544234306604,
+    "traj": 0.27988256282951635,
+    "model": 3.562743705625616,
+    "outcome": 0.45554905255199113,
+    "role": -5.226897573905278,
+    "d7": -1.2056505475227064,
+    "d14": 0.7439047320888287,
+    "fp_l7": 3.5081889229949303,
+    "v1_prior": 1.2107904522182467
+  },
+  "intercept": -2.2265465890548635,
+  "fit_window": [
+    "2026-06-05",
+    "2026-07-09"
+  ],
+  "n_events": 56,
+  "gate": {
+    "test_top12_v2": 0.5882352941176471,
+    "test_top12_v1": 0.17647058823529413,
+    "test_n": 17
+  },
+  "note": "pooled logistic; per-team behavior enters via v1_prior feature; pre-registered in validation_runs/opp_watch_v2_refit_2026-07-10.md"
+}
