@@ -1,0 +1,24 @@
+{
+  "bucket": "RP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-10_tanner_scott_RP_001",
+  "inputs": {
+    "archetype_label": "LATE_INNING_STUFF_CTRL",
+    "archetype_overall": 76,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 4.032229395551612,
+    "live_marginal": -25.60000000000001,
+    "model_rank": 7,
+    "override_tag": null,
+    "pl_rank": 31,
+    "proj_per": 109.8,
+    "replacement_delta": 86.1
+  },
+  "mlbam_id": 656945,
+  "player_name": "Tanner Scott",
+  "reason_tag": "process_upgrade",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-10",
+  "verdict_top": "BUY"
+}

@@ -17,8 +17,17 @@
   "mlbam_id": 650333,
   "player_name": "Luis Arraez",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-10",
+  "settlement": {
+    "actual_fp_per_unit": 0.5753424657534246,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 1.95,
+    "residual": -1.3746575342465754,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-19",
   "verdict_top": "MIXED"
 }

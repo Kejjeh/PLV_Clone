@@ -1,0 +1,24 @@
+{
+  "bucket": "SP",
+  "confidence": 0.5,
+  "decision_id": "2026-07-10_freddy_peralta_SP_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_4_5",
+    "archetype_overall": 51,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 13.534818083536056,
+    "live_marginal": -210.4016226840991,
+    "model_rank": 60,
+    "override_tag": null,
+    "pl_rank": 60,
+    "proj_per": 11.29833671660776,
+    "replacement_delta": null
+  },
+  "mlbam_id": 642547,
+  "player_name": "Freddy Peralta",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-10",
+  "verdict_top": "CAUTION"
+}
