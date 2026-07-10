@@ -654,7 +654,8 @@ without rebuilding.
   layer (rh3/Blended xFP) gives a verdict and you want to verify
   whether recent actuals support or contradict it, invoke
   `/boom-bust-history --names "X,Y"` for the hard-actuals
-  decomposition (L21 hitter games, boom% ≥10 FP, bust% <2 FP).
+  decomposition (L21 hitter games, boom% ≥5 FP, bust% <0 FP —
+  recalibrated 2026-06-28; old 10/2 cutoffs fired 3%/57% = useless).
   Especially useful when a FA's model verdict is MED confidence —
   actuals tell you whether to trust the projection or treat it as
   stale.

@@ -398,6 +398,22 @@ the printed full-log path when the summary doesn't have enough detail.
   Validation `early_season_bat_speed_2026-06-16.md`. Rejected forward-ranker
   promotion (sample-blocked to 2027) — `bat_tracking_fp_family_2026-06-16.md`.
 
+- `/model-health` — model scorecard + data-health tripwires: forward
+  accuracy per model (7/14/21/28d anchors, model-vs-prior delta, volume
+  skill) + PASS/WARN/FAIL regression checks (IL-join match rate, frozen
+  caches, snapshot lag). Monday refresh step 4.13; run after any pipeline
+  refactor. Born 2026-07-10 from the 6-week-silent rp3 IL-join regression.
+- `/volume-watch` — playing-time RISERS/FADERS off the validated volume
+  layer (model volume vs naive pace, ranked by gap × rate), live ownership
+  overlay. Volume parallel of `/trending`; dual-list riser = strongest
+  pickup signal. Rule 13.
+- `/consensus-diff` — ours-vs-market divergence (Steamer/ZiPS/ATC/FG-DC
+  RoS, daily snapshots) with volume-vs-rate decomposition. Rule 13, routes
+  to `/triangulate`; ensemble-feature validation unlocks ≈2026-08-06.
+- `/matchup-leverage` — H2H win-prob Monte Carlo: P(win) + regime
+  (TRAILING→boom / LEADING→floor / CLOSE→E[FP]) + ΔP(win)-ranked moves.
+  Sets the OBJECTIVE for `/pregame-check` and `/sp-week-plan`. Rule 13.
+
 This list is NOT exhaustive — more repo-level skills exist than are
 described above. The canonical index (ownership seams + backlog) is
 `.claude/skills/SKILL_REGISTRY.md`; check it before concluding a skill

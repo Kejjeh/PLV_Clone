@@ -90,8 +90,12 @@ CANONICAL_CASES = [
     #   code change. This is his 3rd flip across the BUY/MIXED boundary
     #   (06-17 BUY, 07-04 MIXED, 07-09 BUY) — if he churns again, downgrade
     #   him to a bucket-only lock like Nelson.
+    # 2026-07-10 — he churned again (4th flip: the 07-10 daily refresh moved
+    #   him back to MIXED). Executing the pre-committed remedy above:
+    #   bucket-only lock. He sits ON the BUY/MIXED verdict boundary and
+    #   every refresh can tip him; resolution + bucket stay enforced.
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
-    ("Reid Detmers",    "BUY — process upgrade",   "SP", "BUY",     None),
+    ("Reid Detmers",    None,                      "SP", None,      None),
     ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',

@@ -527,6 +527,19 @@ def main():
     if not ok_spvol:
         print('  ⚠ SP volume projections failed — proj_volume stays NaN today (non-gating)')
 
+    # 4.09c. RP forward-appearance volume (validated 2026-07-10, PASS: pooled
+    # Spearman +0.127 vs naive g-pace, 6/6 years, holdout 2/2 —
+    # rp_volume_model_2026-07-10.md). Completes the volume layer (H/SP/RP).
+    # Must run AFTER rprs2 (name fallback) and BEFORE 4.10 (logger fill).
+    # Fail-soft.
+    ok_rpvol = run(
+        '4.09c. Build RP volume projections',
+        'python -X utf8 scripts/xfp/xfp_rp_volume_pipeline.py',
+        timeout=600,
+    )
+    if not ok_rpvol:
+        print('  ⚠ RP volume projections failed — proj_volume stays NaN today (non-gating)')
+
     # 4.10. Append today's per-player projection snapshot to the growing
     # panel at data/research/player_projection_history.parquet. Feeds the
     # opponent-action predictor's Δ-rank feature and any future per-player
@@ -606,6 +619,22 @@ def main():
         )
         if not ok_iltx:
             print('  ⚠ IL transaction refresh failed — continuing (non-gating)')
+
+        # 4.13. Model scorecard + data-health tripwires (Mondays). Forward
+        # accuracy per model at 7/14/21/28d anchors + PASS/WARN/FAIL data
+        # regression checks (IL join, ros caches, statcast/boxscore lag, FG
+        # snapshots, row counts, proj_volume fill). Built 2026-07-10 after
+        # the rp3 IL-join regression sat undetected for ~6 weeks. Fail-soft:
+        # a scorecard problem must never block the refresh — but exit 1
+        # (>=1 FAIL tripwire) is surfaced loudly.
+        ok_scorecard = run(
+            '4.13. Model scorecard + data-health tripwires',
+            'python -X utf8 scripts/xfp/build_model_scorecard.py',
+            timeout=600,
+        )
+        if not ok_scorecard:
+            print('  ! model scorecard reported FAIL tripwire(s) — read '
+                  'data/outputs/model_scorecard.md (non-gating)')
 
     if not args.no_push:
         if not XFP_MODEL.exists():

@@ -1,6 +1,6 @@
 ---
 name: monday-morning
-description: Meta-skill that chains roster-verify → roster-audit (full) → sp-week-plan → fa-monitor → conviction-scan into a single Monday workflow. Replaces 3-5 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
+description: Meta-skill that chains roster-verify → roster-audit (full) → roster-health → sp-week-plan → fa-monitor → conviction-scan into a single Monday workflow. Replaces 4-6 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
 ---
 
 # monday-morning
