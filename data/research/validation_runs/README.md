@@ -125,3 +125,4 @@ starting <year Y>.
 | rp_role_first_rating | research-only | 2026-07-04 | RESEARCH-ONLY | shipped as RP OVERALL_FP display; sv_pre-vs-rprs2 deferred to ~Aug 2026 |
 | hitter_overall_reweight | research-only | 2026-07-04 | RESEARCH-ONLY | shipped as hitter OVERALL_FP display; in-season null vs rh3 |
 | april_prior_process_anchor | rp3 | 2026-07-04 | RESEARCH-ONLY | deferred to 2027-04 (needs April logged rp3 snapshot) |
+| stuff_asof_thin_gs (M1/M2) | rp3 | 2026-07-11 | REJECTED | stuff×thin-gs interaction: lift +0.0002/+0.0001 vs +0.005 gate, 2/7 signs, neg holdout. rp3 shrinkage already handles thin samples; Jax "undervaluation" is case-study intuition that doesn't generalize (SPEED_PROFILE precedent) |
