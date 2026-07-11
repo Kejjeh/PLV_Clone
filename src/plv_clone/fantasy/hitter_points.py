@@ -49,7 +49,6 @@ _HBP_SHRINK_PA = 250.0   # prior weight for HBP shrinkage (r=0.322 YoY, less sti
 _K_EVENTS  = {"strikeout", "strikeout_double_play", "strikeout_triple_play"}
 _H_EVENTS  = {"single", "double", "triple", "home_run"}
 _TB_MAP    = {"single": 1, "double": 2, "triple": 3, "home_run": 4}
-_SB_EVENTS = {"stolen_base_2b", "stolen_base_3b", "stolen_base_home"}
 _NON_PA    = {
     "stolen_base_2b", "stolen_base_3b", "stolen_base_home",
     "caught_stealing_2b", "caught_stealing_3b", "caught_stealing_home",
@@ -104,7 +103,17 @@ def calibrate(
         pp_df = read_parquet(pp_dir)
         mh_df = pd.read_csv(mh_path)
 
-        actual = _compute_hitter_actuals(pp_df)
+        # Season SB counts from the MLB Stats API snapshot (statcast events
+        # never record steals — sb_target_fix 2026-07-10). Lazy import to
+        # avoid the fantasy <-> pipelines circular import.
+        season_sb = None
+        try:
+            from plv_clone.pipelines.build_fantasy_exports import _compute_sb_rates
+            season_sb = _compute_sb_rates(yr, cache_path=models_dir / f"sb_rates_{yr}.csv")
+        except Exception as e:
+            logger.warning("Season SB counts unavailable for year=%d (%s) — sb actuals will be 0.", yr, e)
+
+        actual = _compute_hitter_actuals(pp_df, season_sb=season_sb)
         merged = mh_df.merge(actual, on="batter", how="inner")
         merged["year"] = yr
         records.append(merged)
@@ -330,17 +339,19 @@ def compute_positional_zscores(
     return df
 
 
-def _compute_hitter_actuals(pp_df: pd.DataFrame) -> pd.DataFrame:
-    """Compute per-batter actual rate stats from pitch-level events."""
+def _compute_hitter_actuals(
+    pp_df: pd.DataFrame, season_sb: pd.DataFrame | None = None
+) -> pd.DataFrame:
+    """Compute per-batter actual rate stats from pitch-level events.
+
+    *season_sb*: optional DataFrame with (batter, sb) season SB counts from
+    the MLB Stats API (build_fantasy_exports._compute_sb_rates / the
+    sb_rates_{year}.csv snapshot). Statcast `events` never records steals
+    (sb_target_fix 2026-07-10), so SB cannot be derived from *pp_df*; when
+    *season_sb* is None the sb/sb_rate columns are 0.
+    """
     events = pp_df.dropna(subset=["events"]).copy()
     events = events[events["events"].astype(str).str.strip() != ""]
-
-    # SB: count before filtering to PA events
-    sb = (
-        events[events["events"].isin(_SB_EVENTS)]
-        .groupby("batter").size()
-        .rename("sb")
-    )
 
     pa = events[~events["events"].isin(_NON_PA)].copy()
     # Use events strings for PA-level outcomes (pitch-level flags like is_walk
@@ -360,7 +371,17 @@ def _compute_hitter_actuals(pp_df: pd.DataFrame) -> pd.DataFrame:
         tb=("tb", "sum"),
     ).reset_index()
 
-    stats = stats.merge(sb, on="batter", how="left").fillna({"sb": 0})
+    # SB joined from the MLB Stats API season counts (see docstring)
+    if (
+        season_sb is not None
+        and not season_sb.empty
+        and {"batter", "sb"} <= set(season_sb.columns)
+    ):
+        sb = season_sb[["batter", "sb"]].drop_duplicates("batter").copy()
+        sb["batter"] = sb["batter"].astype(stats["batter"].dtype)
+        stats = stats.merge(sb, on="batter", how="left").fillna({"sb": 0})
+    else:
+        stats["sb"] = 0
 
     denom = stats["pa_actual"].clip(lower=1)
     for col in ("bb", "k", "hbp", "h", "tb", "sb"):

@@ -47,6 +47,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
+# Canonical gameLog parse idiom lives in the package so the rolling export
+# (plv_clone.pipelines.build_exports) shares it with this builder.
+from plv_clone.data.sb_gamelog import parse_games
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 RAW = CACHE / 'sb_gamelog_raw'
@@ -103,25 +107,6 @@ def fetch_gamelog(year: int, pid: int, force: bool = False) -> dict:
 def load_batter_years() -> pd.DataFrame:
     df = pd.read_csv(ROLLING_CSV, usecols=['batter', 'year'])
     return df.drop_duplicates().sort_values(['year', 'batter']).reset_index(drop=True)
-
-
-def parse_games(data: dict) -> list[dict]:
-    """Extract per-game (date, sb, pa) rows from a gameLog response."""
-    stats = data.get('stats', [])
-    if not stats:
-        return []
-    rows = []
-    for s in stats[0].get('splits', []):
-        dt = s.get('date')
-        st = s.get('stat', {})
-        if not dt:
-            continue
-        rows.append({
-            'date': dt,
-            'sb': int(st.get('stolenBases') or 0),
-            'pa': int(st.get('plateAppearances') or 0),
-        })
-    return rows
 
 
 def cmd_pull(years: list[int], max_seconds: float, force: bool) -> None:

@@ -154,6 +154,10 @@ def hit_stats(sc_name, parq):
             AND estimated_woba_using_speedangle IS NOT NULL
           ) AS xwoba,
           SUM(CASE WHEN events='home_run' THEN 1 ELSE 0 END) AS hr,
+          -- KNOWN-DEAD (sb_target_fix 2026-07-10): no stolen_base* value ever
+          -- occurs in statcast `events` (and this literal is wrong anyway) —
+          -- sb is identically 0. Cosmetic-only in this one-off audit; a real
+          -- fix needs the gameLog source (build_batter_sb_gamelog.py).
           SUM(CASE WHEN events='stolen_base' THEN 1 ELSE 0 END) AS sb
         FROM read_parquet('{parq}')
         WHERE player_name = '{safe}'

@@ -27,6 +27,7 @@ import datetime as _dt
 import json
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from plv_clone.config import PipelineConfig, get_config
@@ -52,7 +53,6 @@ _ROLLING_MIN_PA = 10
 
 # ── Event sets for rolling fantasy rate computation ───────────────────────────
 _K_EVENTS_RFP  = {"strikeout", "strikeout_double_play", "strikeout_triple_play"}
-_SB_EVENTS_RFP = {"stolen_base_2b", "stolen_base_3b", "stolen_base_home"}
 _H_EVENTS_RFP  = {"single", "double", "triple", "home_run"}
 _TB_MAP_RFP    = {"single": 1, "double": 2, "triple": 3, "home_run": 4}
 _NON_PA_RFP    = {
@@ -292,6 +292,44 @@ def build_rolling_plv(
 
 # ── Hitter: rolling Process+ ──────────────────────────────────────────────────
 
+def _build_sb_date_map(years) -> dict[int, tuple[np.ndarray, np.ndarray]]:
+    """Per-batter (game_dates, sb_counts) arrays from the SB gameLog cache.
+
+    Statcast `events` never carries stolen_base_* (steals are baserunning
+    events), so windowed SB must come from the MLB gameLog per-game cache
+    (written by scripts/xfp/build_batter_sb_gamelog.py). Only SB>0 games are
+    kept; a missing cache yields an empty map (rolling_sb_pa falls back to 0).
+    """
+    from plv_clone.data.sb_gamelog import load_sb_gamelog_year
+
+    yrs = sorted({int(y) for y in pd.Series(list(years)).dropna()})
+    frames = [load_sb_gamelog_year(y) for y in yrs]
+    sb_long = pd.concat(frames, ignore_index=True) if frames else pd.DataFrame()
+    sb_map: dict[int, tuple[np.ndarray, np.ndarray]] = {}
+    if sb_long.empty or sb_long["sb"].sum() == 0:
+        logger.warning(
+            "SB gameLog cache empty/missing for years=%s — rolling_sb_pa will be 0. "
+            "Run scripts/xfp/build_batter_sb_gamelog.py pull first.", list(years))
+        return sb_map
+    sb_long = sb_long[sb_long["sb"] > 0]
+    for pid, g in sb_long.groupby("batter"):
+        g = g.sort_values("date")
+        sb_map[int(pid)] = (g["date"].to_numpy(), g["sb"].to_numpy())
+    logger.info("SB gameLog: %d batters with steals loaded for rolling windows.", len(sb_map))
+    return sb_map
+
+
+def _sb_in_window(sb_map: dict, batter_id, window_start, window_end) -> int:
+    """Sum a batter's SB for game dates in [window_start, window_end]."""
+    entry = sb_map.get(int(batter_id))
+    if entry is None:
+        return 0
+    dates_arr, sb_arr = entry
+    lo = np.searchsorted(dates_arr, np.datetime64(pd.Timestamp(window_start)), side="left")
+    hi = np.searchsorted(dates_arr, np.datetime64(pd.Timestamp(window_end)), side="right")
+    return int(sb_arr[lo:hi].sum()) if hi > lo else 0
+
+
 def build_rolling_process_plus(
     pp_df: pd.DataFrame,
     window_days: int = 30,
@@ -308,6 +346,10 @@ def build_rolling_process_plus(
 
     pp_df = pp_df.copy()
     pp_df["game_date"] = pd.to_datetime(pp_df["game_date"])
+
+    # Per-batter calendar-dated SB (statcast `events` never carries steals;
+    # source: MLB gameLog cache via plv_clone.data.sb_gamelog).
+    sb_map = _build_sb_date_map(pp_df["game_date"].dt.year.unique())
 
     rows = []
     dates = pp_df["game_date"].sort_values().unique()
@@ -345,7 +387,9 @@ def build_rolling_process_plus(
             if "events" in window.columns:
                 ev_all = window.dropna(subset=["events"])
                 ev_all = ev_all[ev_all["events"].astype(str).str.strip() != ""]
-                sb_cnt = ev_all["events"].isin(_SB_EVENTS_RFP).sum()
+                # SB from the gameLog date cache (same calendar window as the
+                # other stats); statcast events never carry steals.
+                sb_cnt = _sb_in_window(sb_map, batter_id, window_start, window_end)
                 ev = ev_all[~ev_all["events"].isin(_NON_PA_RFP)]
                 pa_ev = max(len(ev), 1)
                 row["rolling_k_pa"]   = round(ev["events"].isin(_K_EVENTS_RFP).sum() / pa_ev, 4)
