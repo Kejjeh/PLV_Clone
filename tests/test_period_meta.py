@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 
 from scripts.xfp.lib.period_meta import (  # noqa: E402
-    resolve_period_meta, espn_period_meta,
+    resolve_period_meta, resolve_current_period_meta, espn_period_meta,
 )
 
 
@@ -34,8 +34,10 @@ class _FakeSettings:
 
 
 class _FakeLeague:
-    def __init__(self, matchup_periods):
+    def __init__(self, matchup_periods, current_period=None):
         self.settings = _FakeSettings(matchup_periods)
+        # ESPN exposes the live period as league.currentMatchupPeriod
+        self.currentMatchupPeriod = current_period
 
 
 # ESPN's real mapping shape: ASG lists as a single week-index despite its 2-week
@@ -89,6 +91,38 @@ def test_missing_matchup_periods_falls_back_to_single_week():
         settings = None
     meta = resolve_period_meta(_Bare(), 8, today=date(2026, 7, 15))
     assert meta["sp_cap"] == 10 and meta["weeks"] == 1
+
+
+# ── resolve_current_period_meta: reads league.currentMatchupPeriod itself ─────
+# The seam the cap consumers call so none of them re-duplicate the
+# getattr(currentMatchupPeriod) + resolve_period_meta dance.
+
+def test_current_period_meta_reads_live_asg_period_as_16():
+    """A league sitting on the ASG period (15) → cap 16, without the caller
+    having to pass the period number."""
+    league = _FakeLeague(_MP, current_period=15)
+    meta = resolve_current_period_meta(league, today=date(2026, 7, 11))
+    assert meta["sp_cap"] == 16
+    assert meta["period"] == 15
+
+
+def test_current_period_meta_missing_period_is_safe_10():
+    """A league object with no currentMatchupPeriod attribute → single-week
+    default (cap 10), never a crash — the fail-safe every caller relies on."""
+    class _Bare:
+        settings = None
+    meta = resolve_current_period_meta(_Bare(), today=date(2026, 7, 15))
+    assert meta["sp_cap"] == 10
+    assert meta["weeks"] == 1
+
+
+def test_current_period_meta_two_week_playoff_is_20():
+    """The live-period seam preserves the 10×weeks rule: a league on a 2-week
+    playoff round (22 → [22,23]) → cap 20."""
+    league = _FakeLeague(_MP, current_period=22)
+    meta = resolve_current_period_meta(league, today=date(2026, 9, 14))
+    assert meta["sp_cap"] == 20
+    assert meta["weeks"] == 2
 
 
 # ── banked-count reader re-exported here shares one implementation ────────────

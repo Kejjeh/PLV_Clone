@@ -36,7 +36,11 @@ OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 from plv_clone.cap_math import SP_CAP, cap_excess_starts  # single source for the SP-cap rule
-WEEK_CAP_SP_STARTS = SP_CAP  # BrownU 10-starts/week cap (was a local literal)
+# Default cap = a standard single week (10). main() resolves the CURRENT period's
+# cap live (16 in the ASG block / 20 in a 2-week playoff round) and passes it to
+# cap_excess_starts; this constant is only the fail-soft fallback when the live
+# league object is unreachable. Period-aware fix 2026-07-11.
+WEEK_CAP_SP_STARTS = SP_CAP
 
 # MLB team_id → tricode mapping
 TEAM_ID_TO_ABBR = {
@@ -90,7 +94,21 @@ def fetch_week_schedule(days_ahead: int = 7) -> pd.DataFrame:
 
 def main():
     from plv_clone.league_state import LeagueState
-    teams = LeagueState().all_teams()
+    _ls = LeagueState()
+    teams = _ls.all_teams()
+    # Resolve THIS matchup period's SP-start cap (10 normal / 16 ASG / 20 playoff
+    # 2-week) instead of assuming a flat 10 — the same resolver matchup.html and
+    # /roster-audit use. Fail-soft: any ESPN hiccup keeps the 10 default.
+    week_cap = WEEK_CAP_SP_STARTS
+    try:
+        from scripts.xfp.lib.period_meta import resolve_current_period_meta
+        _pmeta = resolve_current_period_meta(_ls._get_league())
+        week_cap = _pmeta['sp_cap']
+        print(f"Period {_pmeta['period']} · {_pmeta['weeks']}-week · "
+              f"SP cap {week_cap}")
+    except Exception as _e:
+        print(f"  (period cap resolve failed: {type(_e).__name__}; "
+              f"using default {week_cap})")
     ligers = teams[teams['team_name'] == 'New York Ligers']
     sps = ligers[ligers['position'].isin(['SP', 'P'])][['player_name', 'pro_team']]
     print(f'Ligers SPs: {len(sps)}')
@@ -163,10 +181,10 @@ def main():
     # Rank globally by xfp_per_start_sched, descending (display column).
     starts['rank'] = starts['xfp_per_start_sched'].rank(ascending=False, method='min').astype(int)
     # Cap which starts count via the canonical planning cap (cap_math): start the
-    # best SP_CAP by projected FP, bench the rest. cap_excess_starts takes EXACTLY
-    # the top SP_CAP (stable tie-break) — unlike rank<=cap, which over-counts when
-    # ties straddle the boundary.
-    _excess = cap_excess_starts(starts['xfp_per_start_sched'].tolist(), WEEK_CAP_SP_STARTS)
+    # best `week_cap` by projected FP, bench the rest. cap_excess_starts takes
+    # EXACTLY the top `week_cap` (stable tie-break) — unlike rank<=cap, which
+    # over-counts when ties straddle the boundary. week_cap is period-resolved.
+    _excess = cap_excess_starts(starts['xfp_per_start_sched'].tolist(), week_cap)
     starts['count_toward_cap'] = [i not in _excess for i in range(len(starts))]
     starts['decision'] = starts['count_toward_cap'].map(lambda x: 'START' if x else 'BENCH (cap)')
 
@@ -178,13 +196,13 @@ def main():
 
     print(f'\n=== Lineup Optimizer Summary ===')
     print(f'  Total projected SP starts this week: {total}')
-    print(f'  Cap: {WEEK_CAP_SP_STARTS}')
+    print(f'  Cap: {week_cap}')
     print(f'  Counting toward score: {capped}')
-    if total > WEEK_CAP_SP_STARTS:
-        print(f'  *** OVER CAP by {total - WEEK_CAP_SP_STARTS} starts ***')
+    if total > week_cap:
+        print(f'  *** OVER CAP by {total - week_cap} starts ***')
         print(f'  Bench-loss without optimizing: {benched_total:.1f} fp (lowest ranked auto-skipped)')
     else:
-        print(f'  Under cap by {WEEK_CAP_SP_STARTS - total}. All starts count.')
+        print(f'  Under cap by {week_cap - total}. All starts count.')
     print(f'  Expected counting-score fp this week: {sum_count:.1f}')
 
     print(f'\n=== Per-start ranking ===')
@@ -197,7 +215,7 @@ def main():
 
     payload = {
         'as_of': str(date.today()),
-        'cap': WEEK_CAP_SP_STARTS,
+        'cap': week_cap,
         'total_starts': int(total),
         'counting_starts': int(capped),
         'expected_counting_fp': round(float(sum_count), 1),

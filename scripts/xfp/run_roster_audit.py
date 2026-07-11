@@ -144,10 +144,10 @@ def main():
     # from the ONE shared resolver (cap = 10×weeks, ASG period 15 override = 16),
     # never a hardcoded 10 — so this matches /matchup-leverage and matchup.html.
     # Banked count is ESPN's authoritative statId-33 counter (the x/16 on-screen).
-    from scripts.xfp.lib.period_meta import resolve_period_meta, espn_period_meta
+    from scripts.xfp.lib.period_meta import resolve_current_period_meta, espn_period_meta
     _league = _ls._get_league()
-    _period = getattr(_league, 'currentMatchupPeriod', None)
-    _pmeta = resolve_period_meta(_league, _period)
+    _pmeta = resolve_current_period_meta(_league)   # reads live currentMatchupPeriod
+    _period = _pmeta['period']
     sp_cap = _pmeta['sp_cap']
     _weeks = _pmeta['weeks']
     try:

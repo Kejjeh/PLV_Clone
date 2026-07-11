@@ -75,6 +75,21 @@ def resolve_period_meta(league, period, *, today: date | None = None) -> dict:
     }
 
 
+def resolve_current_period_meta(league, *, today: date | None = None) -> dict:
+    """Resolve cap + window + week-count for the league's CURRENT matchup period.
+
+    The one seam every cap consumer should call: it reads the live period off
+    ``league.currentMatchupPeriod`` (ESPN) and delegates to
+    :func:`resolve_period_meta`, so no engine re-duplicates the
+    ``getattr(league, 'currentMatchupPeriod') → resolve`` dance (which used to be
+    copy-pasted into run_roster_audit / run_matchup_leverage / the matchup
+    dashboard). Returns the same dict as ``resolve_period_meta``. A league
+    missing ``currentMatchupPeriod`` resolves as period ``None`` → the safe
+    single-week default (cap 10)."""
+    period = getattr(league, "currentMatchupPeriod", None)
+    return resolve_period_meta(league, period, today=today)
+
+
 def espn_period_meta(league, period, my_team_id, opp_team_id) -> dict:
     """AUTHORITATIVE per-team banked SP-start count for the current matchup period,
     read straight from ESPN (the same statId-33 counter ESPN uses to enforce the
