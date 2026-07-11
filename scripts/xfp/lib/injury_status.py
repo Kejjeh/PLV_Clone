@@ -59,25 +59,96 @@ def refresh_il_cache(path: Path | str = INJURY_CACHE) -> int:
 
     Returns the number of injured players written. Live — run by the daily
     pipeline, not in tests.
+
+    2026-07-11 (A2/E1.5b): also fetches per-player ``injury_details`` (ESPN
+    estimated return_date, injury_type, status_code) for the INJURED subset
+    only (~30-80 bounded GETs — the full ~1500-player universe would blow the
+    step budget; league_state.injury_details is one GET per player). Written
+    under ``details`` keyed by ESPN player_id, each record carrying the
+    display name so offline consumers (snapshot logger) can join by
+    normalized name. This is the daily ESPN return-date ESTIMATE log that the
+    E1.5b estimate-vs-actual calibration study needs. Fail-soft: a details
+    fetch error still writes the flag cache.
     """
     import datetime
     from plv_clone.league_state import default_state
 
-    teams = default_state().all_teams()
+    state = default_state()
+    teams = state.all_teams()
     il: dict[str, str] = {}
+    il_ids: dict[int, str] = {}          # espn player_id -> display name
     for _, row in teams.iterrows():
         status = str(row.get("injury_status") or "").upper()
         if row.get("injured") and status in _IL_STATES:
             name = row.get("player_name")
             if name:
                 il[str(name)] = status
+                pid = row.get("player_id")
+                if pid is not None and not (isinstance(pid, float) and pid != pid):
+                    il_ids[int(pid)] = str(name)
+
+    details: dict[str, dict] = {}
+    try:
+        det = state.injury_details(sorted(il_ids))
+        for _, r in det.iterrows():
+            pid = r.get("player_id")
+            if pid is None or (isinstance(pid, float) and pid != pid):
+                continue
+            pid = int(pid)
+            rd = r.get("return_date")
+            details[str(pid)] = {
+                "name": il_ids.get(pid),
+                "status": il.get(il_ids.get(pid, ""), None),
+                "return_date": str(rd) if rd is not None and str(rd) != "NaT" and rd == rd else None,
+                "days_until_return": (int(r["days_until_return"])
+                                      if r.get("days_until_return") is not None
+                                      and r.get("days_until_return") == r.get("days_until_return")
+                                      else None),
+                "injury_type": r.get("injury_type") if r.get("injury_type") == r.get("injury_type") else None,
+                "status_code": r.get("status_code") if r.get("status_code") == r.get("status_code") else None,
+            }
+    except Exception as exc:  # fail-soft: flag cache must still land
+        print(f"  ! injury_details fetch failed ({type(exc).__name__}: {exc}) — "
+              f"details section omitted, flag cache still written")
+
     payload = {
         "fetched": datetime.date.today().isoformat(),
         "il": il,
+        "details": details,
     }
     with open(path, "w", encoding="utf-8") as fh:
         json.dump(payload, fh, indent=2)
     return len(il)
+
+
+def load_injury_details(path: Path | str = INJURY_CACHE) -> tuple[dict, str | None]:
+    """Return ``({_normalize(name): detail_record}, fetched_date)`` from the cache.
+
+    Records whose normalized name is ambiguous (two injured players normalize
+    identically — the Max Muncy class) are DROPPED rather than guessed
+    (feedback_player_name_collisions). Returns ``({}, None)`` if the cache is
+    missing or predates the ``details`` section.
+    """
+    try:
+        with open(path, encoding="utf-8") as fh:
+            raw = json.load(fh)
+    except (FileNotFoundError, json.JSONDecodeError, OSError):
+        return {}, None
+    fetched = raw.get("fetched")
+    out: dict[str, dict] = {}
+    ambiguous: set[str] = set()
+    for rec in (raw.get("details") or {}).values():
+        name = rec.get("name")
+        if not name:
+            continue
+        key = _normalize(name)
+        if key in out:
+            ambiguous.add(key)
+            continue
+        out[key] = rec
+    for key in ambiguous:
+        out.pop(key, None)
+    return out, fetched
 
 
 if __name__ == "__main__":

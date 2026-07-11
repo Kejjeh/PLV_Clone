@@ -35,15 +35,53 @@ Schema (stable):
                               column exists now so the schema stays stable)
                               [added 2026-07-09]
 
-Backward compatibility: rows appended before 2026-07-09 lack the three new
+Lens columns [added 2026-07-11, workstream A2 — forward-log the lenses that
+CANNOT be reconstructed as-of later, so a common-basis forward-Spearman table
+becomes computable in ~4-6 weeks]. Sourcing rule: OFFLINE ONLY — every value
+comes from an artifact an earlier refresh step already wrote (PL cache 2.85,
+archetype panels 2.6/2.7/2.8, boom pools 3.85/4.45, batter_rolling 1b,
+injury cache 4.05). Zero live HTTP here. Each source carries an *_asof stamp
+so forward analysis never pretends freshness. All fail-soft: a missing
+artifact leaves NaN, never crashes the append.
+
+  pl_rank               float (PL Top-150/100/Closers rank; NaN = unranked
+                              or cache missing)
+  pl_asof               str   (PL cache fetched date)
+  arche_overall         float (archetype OVERALL 20-80, current-year row)
+  arche_traj            str   (traj_flag)
+  arche_cell            str   (3-letter cell)
+  boom_stack            float (SP: full-pool 4.45; H: daily slate 3.85 —
+                              H is SPARSE by design, only today's scheduled
+                              hitters have a value; that IS the as-of truth)
+  boom_asof             str   (source JSON date)
+  xwoba_l21d            float (H only: xwoba_on_contact_l21d from
+                              batter_rolling_features — the CLAUDE.md #8
+                              drop-check diagnostic, not reconstructable
+                              later because the cache holds one current row)
+  espn_status           str   (IL flag, injured-rostered subset only)
+  espn_return_date      str   (ESPN ESTIMATED return date — the E1.5b
+                              estimate log; calibrate vs actual activations
+                              once ~6-8 wks accrue)
+  espn_injury_type      str
+  injury_asof           str   (injury cache fetched date)
+
+Deliberately NOT logged (pre-registered exclusions, plan 2026-07-11):
+ownership%% (needs a live ESPN pull — violates the offline rule) and
+sustainability verdict (no refresh artifact carries it; the 4.72b snapshot
+CSV was checked and has no sustainability column — do not bolt a live
+engine call on here to get one).
+
+Backward compatibility: rows appended before a schema bump lack the newer
 columns; pd.concat aligns on the union schema so old rows read back with
-NaN there — a full-parquet read stays valid across the schema bump.
+NaN there — a full-parquet read stays valid across schema bumps.
 
 Idempotent on (snapshot_date, player_type, mlbam_id) — re-running on the same
 day with the same source is a no-op.
 """
 from __future__ import annotations
 
+import glob as _glob
+import json
 import sys
 from datetime import date
 from pathlib import Path
@@ -52,7 +90,8 @@ import pandas as pd
 
 from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
-PANEL = ROOT / 'data' / 'research' / 'player_projection_history.parquet'
+RESEARCH = ROOT / 'data' / 'research'
+PANEL = RESEARCH / 'player_projection_history.parquet'
 
 TODAY = date.today().isoformat()
 
@@ -123,6 +162,139 @@ def _attach_proj_volume(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
     return out
 
 
+# ---------------------------------------------------------------------------
+# Lens enrichment (A2, 2026-07-11) — offline artifact joins, each fail-soft.
+# ---------------------------------------------------------------------------
+
+_ARCHE_PANELS = {
+    'SP': (RESEARCH / 'sp_archetype_career_panel.parquet', 'pitcher'),
+    'H': (RESEARCH / 'hitter_archetype_career_panel.parquet', 'batter'),
+    'RP': (RESEARCH / 'rp_archetype_career_panel.parquet', 'pitcher'),
+}
+
+_BOOM_SOURCES = {
+    'SP': ('sp_boom_stack_full_pool_*.json', 'pitcher_id'),
+    'H': ('hitter_boom_stack_*.json', 'batter_id'),
+}
+
+_CUR_YEAR = int(TODAY[:4])
+
+
+def _note(msg: str) -> None:
+    print(f'  {msg}')
+
+
+def _attach_pl_rank(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    try:
+        try:
+            from scripts.xfp.lib.pl_cache import pl_rank
+        except ImportError:
+            from lib.pl_cache import pl_rank
+        ranks, dates = [], []
+        for name in out['player_name']:
+            rk, dt = pl_rank(str(name), player_type)
+            ranks.append(float(rk) if isinstance(rk, (int, float)) else float('nan'))
+            dates.append(dt)
+        out['pl_rank'] = ranks
+        out['pl_asof'] = dates
+        n = out['pl_rank'].notna().sum()
+        _note(f'pl_rank ({player_type}): {n}/{len(out)} ranked')
+    except Exception as e:
+        _note(f'! pl_rank ({player_type}) skipped: {type(e).__name__}: {e}')
+    return out
+
+
+def _attach_archetype(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    path, id_col = _ARCHE_PANELS[player_type]
+    try:
+        panel = pd.read_parquet(
+            path, columns=[id_col, 'year', 'OVERALL', 'traj_flag', 'cell'])
+        cur = panel[panel['year'] == _CUR_YEAR].drop_duplicates(id_col, keep='last')
+        cur = cur.set_index(cur[id_col].astype(int))
+        ids = out['mlbam_id'].astype(int)
+        out['arche_overall'] = ids.map(cur['OVERALL'])
+        out['arche_traj'] = ids.map(cur['traj_flag'])
+        out['arche_cell'] = ids.map(cur['cell'])
+        _note(f'archetype ({player_type}): {out["arche_overall"].notna().sum()}'
+              f'/{len(out)} matched from {path.name}')
+    except Exception as e:
+        _note(f'! archetype ({player_type}) skipped: {type(e).__name__}: {e}')
+    return out
+
+
+def _attach_boom(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    src = _BOOM_SOURCES.get(player_type)
+    if src is None:
+        return out
+    pattern, id_key = src
+    try:
+        files = sorted(_glob.glob(str(OUT / pattern)))
+        if not files:
+            _note(f'! boom_stack ({player_type}): no {pattern} files')
+            return out
+        latest = files[-1]  # dated filenames sort chronologically
+        asof = Path(latest).stem.rsplit('_', 1)[-1]
+        cands = json.loads(Path(latest).read_text(encoding='utf-8')).get('candidates', [])
+        boom_map = {int(c[id_key]): c.get('boom_stack')
+                    for c in cands if c.get(id_key) is not None}
+        out['boom_stack'] = out['mlbam_id'].astype(int).map(boom_map)
+        out['boom_asof'] = asof
+        _note(f'boom_stack ({player_type}): {out["boom_stack"].notna().sum()}'
+              f'/{len(out)} from {Path(latest).name}'
+              + (' [sparse by design: daily slate only]' if player_type == 'H' else ''))
+    except Exception as e:
+        _note(f'! boom_stack ({player_type}) skipped: {type(e).__name__}: {e}')
+    return out
+
+
+def _attach_xwoba_l21d(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    if player_type != 'H':
+        return out
+    try:
+        brf = pd.read_csv(RESEARCH / 'xfp_cache' / 'batter_rolling_features.csv',
+                          usecols=['batter', 'xwoba_on_contact_l21d'])
+        m = dict(zip(brf['batter'].astype(int), brf['xwoba_on_contact_l21d']))
+        out['xwoba_l21d'] = out['mlbam_id'].astype(int).map(m)
+        _note(f'xwoba_l21d (H): {out["xwoba_l21d"].notna().sum()}/{len(out)}')
+    except Exception as e:
+        _note(f'! xwoba_l21d skipped: {type(e).__name__}: {e}')
+    return out
+
+
+def _attach_injury(out: pd.DataFrame) -> pd.DataFrame:
+    try:
+        try:
+            from scripts.xfp.lib.injury_status import load_injury_details
+        except ImportError:
+            from lib.injury_status import load_injury_details
+        try:
+            from plv_clone.utils.name_match import _normalize
+        except ImportError:
+            _normalize = str.lower
+        details, fetched = load_injury_details()
+        if not details:
+            _note('injury details: cache empty or pre-details schema — NaN')
+            return out
+        keys = out['player_name'].map(lambda n: _normalize(str(n)))
+        out['espn_status'] = keys.map(lambda k: (details.get(k) or {}).get('status'))
+        out['espn_return_date'] = keys.map(lambda k: (details.get(k) or {}).get('return_date'))
+        out['espn_injury_type'] = keys.map(lambda k: (details.get(k) or {}).get('injury_type'))
+        out['injury_asof'] = fetched
+        _note(f'injury details: {out["espn_status"].notna().sum()}/{len(out)} '
+              f'flagged (injured-rostered subset only, asof {fetched})')
+    except Exception as e:
+        _note(f'! injury details skipped: {type(e).__name__}: {e}')
+    return out
+
+
+def _enrich_lenses(out: pd.DataFrame, player_type: str) -> pd.DataFrame:
+    out = _attach_pl_rank(out, player_type)
+    out = _attach_archetype(out, player_type)
+    out = _attach_boom(out, player_type)
+    out = _attach_xwoba_l21d(out, player_type)
+    return out
+
+
 def main() -> int:
     print('=== player projection history append ===')
     parts = []
@@ -132,11 +304,12 @@ def main() -> int:
         ('xfp_rprs2_projections.csv', 'RP'),
     ]:
         try:
-            parts.append(_load_one(csv_name, ptype))
+            parts.append(_enrich_lenses(_load_one(csv_name, ptype), ptype))
         except FileNotFoundError:
             print(f'  ! skip {csv_name} (not found)')
             continue
     new = pd.concat(parts, ignore_index=True)
+    new = _attach_injury(new)
     print(f'  today {TODAY}: {len(new)} rows assembled (H={(new.player_type=="H").sum()}  SP={(new.player_type=="SP").sum()}  RP={(new.player_type=="RP").sum()})')
 
     if PANEL.exists():

@@ -228,6 +228,12 @@ def main():
     # dashboard prefers (with a freshness guard — see build_matchup_dashboard
     # load_projections). Must run AFTER rp3 regen, BEFORE matchup build.
     # Fail-soft: if ESPN is down, the dashboard's freshness guard will raise.
+    # CAUTION (2026-07-09 post-mortem): this patch fixes the DISPLAYED flag,
+    # which is exactly why the dead training-time IL join went unnoticed for
+    # 6 weeks — dashboards looked right while the model trained on constants.
+    # Never treat this shim's output as evidence the rolling×IL join works;
+    # that is what the scorecard's il_join_match_rate + il_grid_coverage
+    # tripwires are for.
     ok_ilfix = run('2a. Patch is_on_il_at_split from live ESPN status',
                    'python -X utf8 scripts/xfp/fix_il_flag_from_espn.py',
                    timeout=180)
@@ -425,8 +431,11 @@ def main():
 
     # 4.05. Refresh the offline injury-status cache from live ESPN — powers the
     # triangulate IL caveat (so an injured star isn't surfaced as a naked BUY).
-    run('4.05. Refresh injury-status cache (ESPN IL flags)',
-        'python -X utf8 scripts/xfp/lib/injury_status.py', timeout=120)
+    # 4.05 also fetches per-player injury_details (return dates) for the
+    # injured-rostered subset (~30-80 bounded GETs) since 2026-07-11 (A2/E1.5b
+    # estimate log) — timeout raised 120→300 to absorb them.
+    run('4.05. Refresh injury-status cache (ESPN IL flags + return dates)',
+        'python -X utf8 scripts/xfp/lib/injury_status.py', timeout=300)
 
     # 4.7. Build triangulate.html (cyclable three-lens roster report). Depends on
     # the injury cache above + the archetype/projection panels. Fail-soft.
@@ -585,7 +594,9 @@ def main():
     ok_pphist = run(
         '4.10. Append player projection history',
         'python -X utf8 scripts/xfp/build_player_projection_history.py',
-        timeout=60,
+        # 60→180 (2026-07-11): the A2 lens columns widen the parquet and add
+        # offline artifact joins (PL cache, archetype panels, boom pools).
+        timeout=180,
     )
     if not ok_pphist:
         print('  ⚠ player projection history append failed — continuing (non-gating)')
