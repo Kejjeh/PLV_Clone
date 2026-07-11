@@ -299,7 +299,13 @@ USER_AGENT = 'Mozilla/5.0 (matchup-dashboard)'
 SEASON_END = date(2026, 9, 28)
 
 # SP start cap per BrownU rules — single source of truth is cap_math.SP_CAP.
+# MAX_SP_STARTS_PER_WEEK is the DEFAULT (single-week) cap; the live cap for the
+# CURRENT matchup period is resolved period-aware via the shared period_meta
+# resolver (ASG period 15 → 16, 2-week playoff round → 20) — see main().
 from plv_clone.cap_math import SP_CAP as MAX_SP_STARTS_PER_WEEK  # noqa: E402
+from scripts.xfp.lib.period_meta import (  # noqa: E402
+    resolve_period_meta, espn_period_meta,
+)
 
 # League-average per-event FP (for opp factor centering)
 LEAGUE_AVG_SP_FP_PER_START = 11.5
@@ -1353,8 +1359,11 @@ def apply_sp_cap(team_projections, cap=MAX_SP_STARTS_PER_WEEK):
     return capped_fp
 
 
-def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob):
+def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob,
+                            cap=None):
     """Build a TOP-OF-PAGE list of urgent actionables."""
+    if cap is None:
+        cap = MAX_SP_STARTS_PER_WEEK
     items = []
 
     # Injuries
@@ -1374,9 +1383,9 @@ def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob):
                       if b.get('type') == 'start' and not b.get('confirmed', True))
     n_starts = n_confirmed + n_predicted
     pred_s = f' (+{n_predicted} predicted)' if n_predicted else ''
-    if n_starts < 7:
+    if n_starts < cap - 3:
         items.append({'urgency': 'med', 'icon': '📉',
-                       'text': f'Only {n_confirmed} confirmed starts{pred_s} this week — add a streamer to hit the 10-start cap'})
+                       'text': f'Only {n_confirmed} confirmed starts{pred_s} this week — add a streamer to hit the {cap}-start cap'})
 
     # Win prob extremes
     if win_prob < 0.40:
@@ -2203,12 +2212,23 @@ def _count_past_sp_starts_http(windows, today):
 
 
 def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None,
-                       league=None, my_team_name=None):
-    """Show SP-start cap utilization for the week: past + today/future.
+                       league=None, my_team_name=None, cap=None,
+                       banked_espn=None, pmeta=None):
+    """Show SP-start cap utilization for the period: banked/past + today/future.
 
     Pass `league` + `my_team_name` to enable add-date-aware past-start
     counting (filters out starts pitched before a player joined this roster).
+
+    Period-aware (2026-07-11): `cap` is the current matchup period's SP cap
+    (default `MAX_SP_STARTS_PER_WEEK`=10; 16 for the ASG block, 20 for a 2-week
+    playoff round). When `banked_espn` (ESPN's authoritative statId-33
+    period-to-date count) is supplied it is used as the "already used" figure —
+    it correctly spans a multi-week/ASG period, unlike the this-week-only
+    boxscore count that stays the fallback. `pmeta` (the resolver dict) drives
+    the period/window label for a multi-week period.
     """
+    if cap is None:
+        cap = MAX_SP_STARTS_PER_WEEK
     n_confirmed = 0
     n_predicted = 0
     for proj in my_proj.values():
@@ -2230,25 +2250,45 @@ def render_cap_status(my_proj, my_lineup=None, week_start=None, today=None,
         except Exception as e:
             print(f'  ⚠ past-starts count failed: {e}')
 
-    n_starts = n_past + n_forward
-    past_note = (f'<b>{n_past} already pitched</b> + ' if n_past else '')
+    # Prefer ESPN's authoritative banked count (period-to-date; spans a
+    # multi-week/ASG block) for the "already used" figure; fall back to this
+    # week's boxscore count for a plain single-week period.
+    if banked_espn is not None:
+        n_used = int(banked_espn)
+        used_note = f'<b>{n_used} banked (ESPN)</b> + '
+    else:
+        n_used = n_past
+        used_note = (f'<b>{n_past} already pitched</b> + ' if n_past else '')
+
+    n_starts = n_used + n_forward
     pred_note = (f' <span class="muted">(+{n_predicted} rotation-gap predicted)</span>'
                  if n_predicted else '')
     forward_note = (f'<b>{n_forward} today/upcoming</b>{pred_note}'
                     if n_forward else '0 today/upcoming')
-    breakdown = f'{past_note}{forward_note}'
+    breakdown = f'{used_note}{forward_note}'
 
-    if n_starts >= 10:
+    # Period/window label — shown for a genuine multi-week period OR an override
+    # block like the ASG span (which ESPN reports as weeks==1 despite spanning
+    # two calendar weeks, so the covered flag is what makes it multi-week).
+    span_word = 'week'
+    win_lbl = ''
+    if pmeta is not None and ((pmeta.get('weeks') or 1) > 1 or pmeta.get('covered')):
+        span_word = 'period'
+        win_lbl = (f' <span class="muted">(period {pmeta.get("period")}: '
+                   f'{pmeta.get("week_start")}–{pmeta.get("week_end")})</span>')
+
+    near = max(cap - 2, 0)
+    if n_starts >= cap:
         msg = (f'<p class="notes"><b>⚠ SP cap at maximum:</b> {breakdown} · '
-               f'{n_starts}/10 starts this week. '
-               f'Excess starts past 10 are zeroed in scoring.</p>')
-    elif n_starts < 8:
+               f'{n_starts}/{cap} starts this {span_word}{win_lbl}. '
+               f'Excess starts past {cap} are zeroed in scoring.</p>')
+    elif n_starts < near:
         msg = (f'<p class="notes"><b>📉 Under SP cap:</b> {breakdown} · '
-               f'only {n_starts}/10 starts. '
-               f'Add a streamer to claim more of the 10-start/week cap.</p>')
+               f'only {n_starts}/{cap} starts this {span_word}{win_lbl}. '
+               f'Add a streamer to claim more of the {cap}-start cap.</p>')
     else:
         msg = (f'<p class="notes">✓ SP cap: {breakdown} · '
-               f'<b>{n_starts}/10</b> total starts this week.</p>')
+               f'<b>{n_starts}/{cap}</b> total starts this {span_word}{win_lbl}.</p>')
     return msg
 
 
@@ -3133,6 +3173,29 @@ def main():
     week_end = week_start + timedelta(days=6)
     days_remaining_in_week = (week_end - today).days
 
+    # Period-aware SP cap (2026-07-11): the CAP + banked count for the current
+    # matchup period come from the ONE shared resolver — so matchup.html shows
+    # the same cap as /matchup-leverage and /roster-audit (ASG period 15 → 16,
+    # 2-week playoff round → 20, normal week → 10). The single-week projection
+    # WINDOW above (week_start/week_end) is intentionally left unchanged — this
+    # is a weekly planning view and touching the window would perturb the
+    # guarded SP-projection logic. Only the cap NUMBER + banked display change.
+    _pmeta = resolve_period_meta(mu['league_obj'], mu['period'], today=today)
+    sp_cap = _pmeta['sp_cap']
+    try:
+        _banked_meta = espn_period_meta(
+            mu['league_obj'], mu['period'],
+            getattr(mu['mine'], 'team_id', None),
+            getattr(mu['opp'], 'team_id', None))
+    except Exception as _e:
+        print(f'  ⚠ ESPN banked-count fetch failed ({_e}); cap display uses this-week counts')
+        _banked_meta = {}
+    _banked_mine = _banked_meta.get('my_banked')
+    if sp_cap != MAX_SP_STARTS_PER_WEEK or _pmeta['weeks'] > 1:
+        print(f'  period {mu["period"]} SP cap {sp_cap} '
+              f'({_pmeta["weeks"]}-week, {_pmeta["week_start"]}→{_pmeta["week_end"]}); '
+              f'banked mine {_banked_mine}')
+
     # Boxscore bridge: load actuals for any SP starts already played this week
     # (week_start through yesterday). Injected into render_team_table when
     # ESPN WTD is still 0 — bridges the ~few-hour lag before ESPN scores games.
@@ -3225,9 +3288,11 @@ def main():
                                           rprs2_map, ts_map, today, week_end, adj=adj)
                 for p in mu['opp_lineup']}
 
-    # Apply SP cap (10 starts/week)
-    my_capped = apply_sp_cap(my_proj)
-    opp_capped = apply_sp_cap(opp_proj)
+    # Apply SP cap (period-aware: 10/week, 16 for the ASG period, 20 for a
+    # 2-week playoff round). A single week's ≤~7 starts fall under a 16/20 cap
+    # — so nothing is wrongly zeroed during a multi-week period.
+    my_capped = apply_sp_cap(my_proj, cap=sp_cap)
+    opp_capped = apply_sp_cap(opp_proj, cap=sp_cap)
     if my_capped > 0: print(f'  Ligers SP cap removed {my_capped:.1f} FP')
     if opp_capped > 0: print(f'  Opp SP cap removed {opp_capped:.1f} FP')
 
@@ -3240,7 +3305,7 @@ def main():
                   if b.get('type') == 'start' and not b.get('confirmed', True))
     my_total_starts = my_conf + my_pred
     pred_note = f' + {my_pred} rotation-gap predicted' if my_pred else ''
-    print(f'  SP starts: {my_conf} confirmed{pred_note} = {my_total_starts}/10 cap')
+    print(f'  SP starts: {my_conf} confirmed{pred_note} = {my_total_starts}/{sp_cap} cap')
 
     # Team totals + variance — SLOT-AWARE (2026-06-03, updated 2026-06-15).
     # Exclude only true IL/IR slots. BE is treated as active because the
@@ -3336,7 +3401,7 @@ def main():
                                                 rh3_map, rp3_map, rp3_by_mlbam,
                                                 rprs2_map, ts_map, today, week_end, adj=shadow_adj)
                       for p in mu['opp_lineup']}
-        apply_sp_cap(my_proj_s); apply_sp_cap(opp_proj_s)
+        apply_sp_cap(my_proj_s, cap=sp_cap); apply_sp_cap(opp_proj_s, cap=sp_cap)
         # Slot-aware filter for shadow log (mirrors live aggregation 2026-06-03)
         my_active_s = {p.name: my_proj_s[p.name] for p in mu['my_lineup']
                        if _is_active_slot(p) and p.name in my_proj_s}
@@ -3380,12 +3445,15 @@ def main():
     boom_bust_block = render_boom_bust_scan(mu['my_lineup'], mu['opp_lineup'])
     cap_block = render_cap_status(my_proj, mu['my_lineup'], week_start, today,
                                     league=mu['league_obj'],
-                                    my_team_name=mu['mine'].team_name)
+                                    my_team_name=mu['mine'].team_name,
+                                    cap=sp_cap, banked_espn=_banked_mine,
+                                    pmeta=_pmeta)
     closer_block = render_closer_tracker()
     diff_block = render_snapshot_diff()
     ci_block = render_ci_bands(my_total, my_sigma2, opp_total, opp_sigma2)
     action_items_block = synthesize_action_items(my_proj, mu['my_lineup'],
-                                                    schedules_by_team, win_prob)
+                                                    schedules_by_team, win_prob,
+                                                    cap=sp_cap)
     gauge_html = render_win_prob_gauge(win_prob)
     fire_block = render_days_of_fire(my_proj)
     playoff_block = render_playoff_simulation()
@@ -3750,7 +3818,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 <div class="notes">
   📅 Period <b>{mu["period"]}</b> · {h(str(week_start))} → {h(str(week_end))} ·
   Today is {h(today.strftime("%A %b %d"))} · {days_remaining_in_week} days remaining after today.<br>
-  📊 SPs: probable starts × opp-bat-index factor (BrownU 10-start/week cap applied).
+  📊 SPs: probable starts × opp-bat-index factor (BrownU {sp_cap}-start cap applied).
   Hitters: per-game × opposing-SP-projection factor.
   RPs: role-based appearance rate (closer 55%, setup 40%, middle 30%).<br>
   🎲 Win probability: normal approximation from team variance estimates

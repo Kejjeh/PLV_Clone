@@ -84,6 +84,12 @@ from scripts.xfp.lib.boom_bust import (  # noqa: E402
 from plv_clone.cap_math import (  # noqa: E402
     sp_cap_for_period, period_window, is_period_covered, weeks_in_period,
 )
+# The period-resolver (cap + window) and the authoritative ESPN banked-count
+# reader are SHARED with run_roster_audit + build_matchup_dashboard so all three
+# engines agree on the current period's cap/window/banked count (2026-07-11).
+from scripts.xfp.lib.period_meta import (  # noqa: E402
+    resolve_period_meta, espn_period_meta,
+)
 # Era-general subseason variance bands (2026-07-10): honest FALLBACK sigma for
 # thin-history players only — the primary empirical-bootstrap path is untouched.
 from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
@@ -256,60 +262,6 @@ def banked_sp_starts_from_box(sp_mlbams: set[int], week_start: date, today: date
     return int(((dates >= week_start.isoformat()) & (dates < today.isoformat())).sum())
 
 
-def espn_period_meta(league, period: int, my_team_id, opp_team_id) -> dict:
-    """AUTHORITATIVE per-team banked SP-start count for the current matchup period,
-    read straight from ESPN (the same statId-33 counter ESPN uses to enforce the
-    cap): cumulativeScore.statBySlot["22"].value. This is ground truth — it's the
-    3/16, 6/16 shown on the matchup screen — and supersedes the boxscore-store
-    inference. Also returns the elapsed scoring-period span (for the loud
-    multi-week warning) and the per-scoring-period cap rate (for a cross-check).
-
-    Returns {} on any failure so the caller falls back to the boxscore count."""
-    out: dict = {}
-    try:
-        data = league.espn_request.league_get(params={'view': ['mMatchupScore']})
-    except Exception as exc:
-        print(f'  WARN espn_period_meta: mMatchupScore fetch failed ({exc}); '
-              f'falling back to boxscore-store banked count')
-        return out
-
-    def _gs(side):
-        cum = (side or {}).get('cumulativeScore', {}) or {}
-        slot = (cum.get('statBySlot') or {}).get('22') or {}
-        if slot.get('statId') != 33:
-            return None
-        val = slot.get('value')
-        return int(round(val)) if val is not None else None
-
-    for m in data.get('schedule', []):
-        if m.get('matchupPeriodId') != period:
-            continue
-        for side in ('home', 'away'):
-            s = m.get(side)
-            if not s:
-                continue
-            tid = s.get('teamId')
-            if tid == my_team_id:
-                out['my_banked'] = _gs(s)
-                pbsp = s.get('pointsByScoringPeriod') or {}
-                if pbsp:
-                    sps = sorted(int(k) for k in pbsp.keys())
-                    out['elapsed_span_days'] = sps[-1] - sps[0]
-            elif tid == opp_team_id:
-                out['opp_banked'] = _gs(s)
-
-    # per-scoring-period start rate (statId 33) — for the cap cross-check warning
-    try:
-        sett = league.espn_request.league_get(params={'view': ['mSettings']})['settings']
-        lim = (sett.get('rosterSettings', {}) or {}).get('lineupSlotStatLimits', {}) or {}
-        rate = (lim.get('22') or {}).get('limitValue')
-        if rate:
-            out['cap_rate_per_sp'] = float(rate)
-    except Exception:
-        pass
-    return out
-
-
 def build_state(verbose=True):
     """Pull live matchup + schedules + projections; classify every active-slot
     player into H/SP/RP with remaining units and model mean/sigma."""
@@ -326,18 +278,10 @@ def build_state(verbose=True):
     # the All-Star break removes game-days AND ESPN lists it as a single week.
     # A standard single-week period resolves to SP_CAP(10) + a Mon–Sun week —
     # byte-identical to before.
-    try:
-        mp = getattr(mu['league_obj'].settings, 'matchup_periods', {}) or {}
-    except Exception:
-        mp = {}
-    weeks = weeks_in_period(mp, period)
-    sp_cap = sp_cap_for_period(period, weeks=weeks)
-    win = period_window(period)
-    if win is not None:                       # ASG override (real date span)
-        week_start, week_end = win
-    else:                                     # standard OR multi-week playoff
-        week_start = today - timedelta(days=today.weekday())
-        week_end = week_start + timedelta(days=7 * max(1, weeks) - 1)
+    pmeta = resolve_period_meta(mu['league_obj'], period, today=today)
+    weeks = pmeta['weeks']
+    sp_cap = pmeta['sp_cap']
+    week_start, week_end = pmeta['week_start'], pmeta['week_end']
 
     # Authoritative banked counts + loud multi-week / cap cross-checks from ESPN.
     meta = espn_period_meta(mu['league_obj'], period,

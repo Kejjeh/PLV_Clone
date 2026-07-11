@@ -140,6 +140,24 @@ def main():
     from plv_clone.cap_math import projected_starts as _cap_proj
     projected_starts = _cap_proj(healthy_sp_count)
 
+    # Period-aware SP cap (2026-07-11): the current matchup period's cap comes
+    # from the ONE shared resolver (cap = 10×weeks, ASG period 15 override = 16),
+    # never a hardcoded 10 — so this matches /matchup-leverage and matchup.html.
+    # Banked count is ESPN's authoritative statId-33 counter (the x/16 on-screen).
+    from scripts.xfp.lib.period_meta import resolve_period_meta, espn_period_meta
+    _league = _ls._get_league()
+    _period = getattr(_league, 'currentMatchupPeriod', None)
+    _pmeta = resolve_period_meta(_league, _period)
+    sp_cap = _pmeta['sp_cap']
+    _weeks = _pmeta['weeks']
+    try:
+        _my_team = _ls._find_my_team()
+        _banked = espn_period_meta(_league, _period,
+                                   getattr(_my_team, 'team_id', None), None)
+    except Exception:
+        _banked = {}
+    banked_mine = _banked.get('my_banked')
+
     hitters = roster[~roster['position'].isin(['SP', 'RP', 'P'])].copy()
     hitters['proj'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[0])
     hitters['rank'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[1])
@@ -226,21 +244,34 @@ def main():
     print(f"\n_Summary: {returns_7d} returns ≤7d, {returns_30d} ≤30d, {il_frees_30d} IL slots free up within 30d._\n")
 
     print("## SP cap math")
-    gap = 10 - projected_starts
-    print(f"**{healthy_sp_count} healthy SPs → ~{projected_starts:.1f} starts/week vs 10-start cap → {gap:+.1f} gap**")
+    _cov = ('OVERRIDE' if _pmeta['covered']
+            else (f"10×{_weeks}wk" if _weeks > 1 else 'default'))
+    print(f"_Period {_period} · {_pmeta['week_start']} → {_pmeta['week_end']} · "
+          f"{_weeks}-week · SP cap **{sp_cap}** ({_cov})._\n")
+    if banked_mine is not None:
+        _rem = max(sp_cap - banked_mine, 0)
+        print(f"**Banked (ESPN, authoritative): {banked_mine}/{sp_cap} SP starts this "
+              f"period → {_rem} remaining.**")
+    # Projected starts scale by the period's week count so a multi-week period
+    # (ASG/playoff) compares like-for-like against its period cap. weeks=1 keeps
+    # a normal week byte-identical to the old `10 - projected_starts`.
+    period_proj = projected_starts * _weeks
+    gap = sp_cap - period_proj
+    print(f"**{healthy_sp_count} healthy SPs → ~{projected_starts:.1f} starts/week "
+          f"(~{period_proj:.1f} over {_weeks}wk) vs {sp_cap}-start cap → {gap:+.1f} gap**")
     if gap > 0.5:
-        print(f"→ Streaming needed (~{gap:.0f} starts short).")
+        print(f"→ Streaming needed (~{gap:.0f} starts short of the {sp_cap} cap).")
     elif gap < -0.5:
         print(f"→ OVER cap by {abs(gap):.1f} — bench/drop required.")
     else:
-        print("→ At cap, no streaming needed this week.")
+        print("→ At cap, no streaming needed this period.")
     print("\nForward-looking SP transitions:")
     running = healthy_sp_count
     for _, r in il_df[il_df['position'] == 'SP'].sort_values('days_until_return').iterrows():
         running += 1
         from plv_clone.cap_math import projected_starts as _cap_proj2
         proj = _cap_proj2(running)
-        g = 10 - proj
+        g = sp_cap - proj * _weeks
         note = "⚠ FORCED DROP" if g < -0.5 else ("streaming still OK" if g > 0.5 else "at cap")
         print(f"  - {r['return_date']} (+{int(r['days_until_return'])}d): {r['player_name']} → {running} SPs → {proj:.1f}/wk ({note})")
     print()
