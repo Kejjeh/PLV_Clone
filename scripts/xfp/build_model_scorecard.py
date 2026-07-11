@@ -37,6 +37,7 @@ Run:  PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/xfp/build_model_scoreca
 from __future__ import annotations
 
 import glob
+import json
 import os
 import sys
 from datetime import date, datetime, timedelta
@@ -60,7 +61,10 @@ BOX_H = CACHE / 'boxscore_hitters.parquet'
 BOX_P = CACHE / 'boxscore_pitchers.parquet'
 STATCAST_2026 = CACHE / 'statcast_2026.parquet'
 ROLLING_P_CSV = CACHE / 'rolling_pitchers_2018_2026.csv'
+ROLLING_H_CSV = CACHE / 'rolling_hitters_2018_2026.csv'
+ROLLING_R_CSV = CACHE / 'rolling_relievers_2018_2026.csv'
 IL_CSV = CACHE / 'il_split_features_2018_2026.csv'
+IL_TX_JSON = CACHE / 'il_transactions_2026.json'
 ROS_SCHED_CSV = CACHE / 'ros_schedule_features_2018_2026.csv'
 FG_ASOF_DIR = RESEARCH / 'fg_asof'
 FG_PROJ_CACHE_DIR = RESEARCH / 'fg_proj_cache'
@@ -506,6 +510,78 @@ def check_il_join() -> None:
             f'{comp:.3f} (n={len(cur)}); collapse (<0.25x) = dead join')
 
 
+def check_il_grid_coverage() -> None:
+    """The IL cache's (year, split_day) grid must cover every rolling
+    substrate's grid EXACTLY — the rp3/harness IL join is an exact merge on
+    (pitcher, year, split_day), so a missing grid cell silently un-joins
+    every pitcher at that split (the 2026-07-09 root cause: rolling moved
+    to a weekly grid while the IL cache stayed monthly). refresh_all.py now
+    builds IL features AFTER the rolling substrates; any missing cell here
+    means that ordering (or the grid derivation) regressed. Complements
+    il_join_match_rate, which measures the CONSEQUENCE (match rate) rather
+    than the cause (grid drift)."""
+    if not IL_CSV.exists():
+        add_row('data_health', 'il_grid_coverage', 'all', None, 'SKIP',
+                'il_split_features CSV missing')
+        return
+    il = pd.read_csv(IL_CSV, usecols=['year', 'split_day']).drop_duplicates()
+    il_grid = {(int(y), int(s)) for y, s in il.itertuples(index=False)}
+    for label, path in [('rolling_pitchers', ROLLING_P_CSV),
+                        ('rolling_hitters', ROLLING_H_CSV),
+                        ('rolling_relievers', ROLLING_R_CSV)]:
+        if not path.exists():
+            add_row('data_health', 'il_grid_coverage', label, None, 'SKIP',
+                    f'{path.name} missing')
+            continue
+        d = pd.read_csv(path, usecols=['year', 'split_day']).drop_duplicates()
+        need = {(int(y), int(s)) for y, s in d.itertuples(index=False)}
+        missing = sorted(need - il_grid)
+        status = 'FAIL' if missing else 'PASS'
+        preview = ', '.join(f'{y}/{s}' for y, s in missing[:8])
+        note = (f'{len(missing)}/{len(need)} substrate grid cells absent from '
+                f'IL cache' + (f' (first: {preview})' if missing else ''))
+        add_row('data_health', 'il_grid_coverage', label,
+                len(missing), status, note)
+
+
+def check_il_tx_json_freshness() -> None:
+    """il_transactions_2026.json self-refresh liveness. The refetch in
+    build_il_split_features triggers whenever the newest cached event is
+    >STALE_AFTER_DAYS(=3) old, so in-season the file mtime naturally cycles
+    every ~4 days; an mtime older than ~8 days means the self-refresh
+    stopped running (the 2026-05-06 frozen-cache failure mode, which held
+    the JSON at 1,807 events for 6 weeks). Newest-EVENT staleness is
+    WARN-only by design: during league-wide pauses (the ASG break) no IL
+    transactions occur anywhere, so an event-date FAIL would false-fire
+    exactly when nothing is wrong."""
+    if not IL_TX_JSON.exists():
+        add_row('data_health', 'il_tx_json_freshness', 'all', None, 'SKIP',
+                f'missing {IL_TX_JSON.name}')
+        return
+    mtime_age = (datetime.now()
+                 - datetime.fromtimestamp(os.path.getmtime(IL_TX_JSON))).days
+    status = 'FAIL' if mtime_age > 8 else ('WARN' if mtime_age > 5 else 'PASS')
+    add_row('data_health', 'il_tx_json_freshness', 'file_mtime', mtime_age,
+            status, 'proves the STALE_AFTER_DAYS self-refresh is running '
+            '(in-season natural cycle ~4d)')
+    try:
+        rows = json.loads(IL_TX_JSON.read_text(encoding='utf-8'))
+        max_d = max((r.get('date') or '') for r in rows) if rows else ''
+    except Exception as e:
+        add_row('data_health', 'il_tx_json_freshness', 'newest_event', None,
+                'WARN', f'JSON unreadable: {type(e).__name__}: {e}')
+        return
+    if not max_d:
+        add_row('data_health', 'il_tx_json_freshness', 'newest_event', None,
+                'WARN', 'no dated events in cache')
+        return
+    ev_age = (TODAY - date.fromisoformat(max_d[:10])).days
+    status = 'WARN' if ev_age > 7 else 'PASS'
+    add_row('data_health', 'il_tx_json_freshness', 'newest_event', ev_age,
+            status, f'newest IL event {max_d[:10]} (WARN-only: ASG break / '
+            'transaction lulls are legitimate)')
+
+
 def check_ros_opp_xwoba() -> None:
     """NaN-pre-fill rate of ros_opp_xwoba_weighted on the 2026 rolling grid."""
     if not (ROLLING_P_CSV.exists() and ROS_SCHED_CSV.exists()):
@@ -709,6 +785,8 @@ def run_data_health() -> None:
         except Exception:
             hist = None
     _run_check('il_join_match_rate', check_il_join)
+    _run_check('il_grid_coverage', check_il_grid_coverage)
+    _run_check('il_tx_json_freshness', check_il_tx_json_freshness)
     _run_check('ros_opp_xwoba_nan_rate', check_ros_opp_xwoba)
     _run_check('ros_cache_split_day_lag', check_ros_cache_frozen)
     _run_check('statcast_max_date_lag_days', check_statcast_lag)

@@ -26,7 +26,6 @@ SCRIPTS = ROOT / 'scripts' / 'xfp'
 STAGES = [
     # Counting / API pulls (slow, daily-stable)
     ('Pitcher counting stats (MLB API)',         'build_pitcher_counting.py',     'counting'),
-    ('IL split features',                        'build_il_split_features.py',    'il'),
     ('Team strength index (statcast-based)',     'build_team_strength.py',        'team-strength'),
     ('Pitcher schedule (MLB API probables)',     'build_pitcher_schedule.py',     'schedule'),
     # Substrate builders
@@ -38,6 +37,13 @@ STAGES = [
     ('Rolling hitter substrate',                 'build_rolling_hitters.py',      None),
     ('Rolling SP substrate',                     'build_rolling_pitchers.py',     None),
     ('Rolling reliever substrate',               'build_rolling_relievers.py',    None),
+    # IL split features derive their (year, split_day) grid FROM the rolling
+    # substrates, so this stage must run AFTER them (and before its consumers:
+    # enrich_rolling_relievers + the models). It used to run at stage 2, which
+    # left the IL grid one refresh behind the rolling grid every day — the
+    # same shape as the 2026-07-09 dead-join bug. The scorecard's
+    # il_grid_coverage tripwire asserts exact coverage.
+    ('IL split features',                        'build_il_split_features.py',    'il'),
     ('Enrich rolling relievers (team context)',  'enrich_rolling_relievers.py',   None),
     # Models
     ('H2 hitter cross-year lock',                'xfp_h2_lock.py',                None),
