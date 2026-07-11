@@ -329,6 +329,12 @@ overwritten).
    part of the SB-feature rise, Sal Stewart 55→92). Full test suite:
    **626 passed**, no lock updates.
 
+Follow-up (2026-07-10 late evening): the registered future-prereg candidate —
+the single B2+B4 SP composite — was pre-registered and run same night
+(`bx_sp_composite_2026-07-10.md`): **FAIL** at +0.0045 vs the +0.005 gate
+(7/7 signs, holdout both years +, coef +0.354 — g1 only, same as B2/B4).
+The bx-SP family is CLOSED until the 2026 season completes.
+
 Post-promotion note: `validate_bx_ensemble.py` and `validate_bx_preflight.py`
 are now HISTORICAL one-shots — RH3_FEATS contains `bx_prior_h` and the
 helper pre-merges it, so re-running them would double-merge via `_merge_bx`

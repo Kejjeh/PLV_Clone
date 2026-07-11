@@ -2,27 +2,378 @@
   "generated": "2026-07-10",
   "period": 15,
   "opp_team": "Team Solomon",
-  "my_score": 196.6,
-  "opp_score": 216.6,
+  "my_score": 237.5,
+  "opp_score": 239.7,
   "days_remaining_incl_today": 3,
-  "sims": 20000,
-  "pwin": 0.5504,
-  "proj_final_mine": 407.9,
-  "proj_final_opp": 401.9,
+  "sims": 10000,
+  "pwin": 0.6964,
+  "proj_final_mine": 448.6,
+  "proj_final_opp": 424.8,
   "margin_p10_p50_p90": [
-    -53.7,
-    5.9,
-    65.8
+    -36.1,
+    23.5,
+    83.7
   ],
   "variance_sensitivity": {
-    "pwin_var_up20": 0.5447,
-    "pwin_var_down20": 0.5555,
-    "dpwin_dvar": -0.0109,
-    "baseline": 0.5504
+    "pwin_var_up20": 0.6779,
+    "pwin_var_down20": 0.7158,
+    "dpwin_dvar": -0.0379,
+    "baseline": 0.6964
   },
-  "regime": "CLOSE",
-  "regime_note": "E[FP] is approximately the right objective \u2014 rank by expected points",
+  "regime": "LEADING",
+  "regime_note": "variance is a LIABILITY \u2014 prefer floor (SAFE-tier, low bust%) plays",
   "banked_sp_starts": 3,
   "cap_remaining": 7,
-  "rule13": "decision layer only \u2014 projections (rh3/rp3/rprs2) untouched"
+  "rule13": "decision layer only \u2014 projections (rh3/rp3/rprs2) untouched",
+  "hitter_sit_priority": [
+    {
+      "name": "Vladimir Guerrero Jr.",
+      "n_games": 3,
+      "mean_g": 2.09,
+      "dpwin_if_benched": -0.0374,
+      "emp_sigma": 2.58,
+      "boom_pct": 16,
+      "bust_pct": 28,
+      "slot": "1B"
+    },
+    {
+      "name": "Elly De La Cruz",
+      "n_games": 3,
+      "mean_g": 2.08,
+      "dpwin_if_benched": -0.0407,
+      "emp_sigma": 3.96,
+      "boom_pct": 16,
+      "bust_pct": 24,
+      "slot": "SS"
+    },
+    {
+      "name": "Corbin Carroll",
+      "n_games": 3,
+      "mean_g": 2.18,
+      "dpwin_if_benched": -0.0431,
+      "emp_sigma": 3.12,
+      "boom_pct": 12,
+      "bust_pct": 16,
+      "slot": "OF"
+    },
+    {
+      "name": "Bo Bichette",
+      "n_games": 3,
+      "mean_g": 1.93,
+      "dpwin_if_benched": -0.0507,
+      "emp_sigma": 2.77,
+      "boom_pct": 16,
+      "bust_pct": 8,
+      "slot": "BE"
+    },
+    {
+      "name": "Max Muncy",
+      "n_games": 3,
+      "mean_g": 2.11,
+      "dpwin_if_benched": -0.0517,
+      "emp_sigma": 3.93,
+      "boom_pct": 20,
+      "bust_pct": 16,
+      "slot": "3B"
+    },
+    {
+      "name": "Michael Harris II",
+      "n_games": 3,
+      "mean_g": 2.28,
+      "dpwin_if_benched": -0.0559,
+      "emp_sigma": 2.93,
+      "boom_pct": 16,
+      "bust_pct": 12,
+      "slot": "OF"
+    },
+    {
+      "name": "Hunter Goodman",
+      "n_games": 3,
+      "mean_g": 2.04,
+      "dpwin_if_benched": -0.0565,
+      "emp_sigma": 5.89,
+      "boom_pct": 28,
+      "bust_pct": 40,
+      "slot": "C"
+    },
+    {
+      "name": "Dominic Canzone",
+      "n_games": 3,
+      "mean_g": 1.91,
+      "dpwin_if_benched": -0.0568,
+      "emp_sigma": 4.02,
+      "boom_pct": 32,
+      "bust_pct": 20,
+      "slot": "OF"
+    },
+    {
+      "name": "Jordan Walker",
+      "n_games": 3,
+      "mean_g": 1.86,
+      "dpwin_if_benched": -0.0582,
+      "emp_sigma": 3.66,
+      "boom_pct": 28,
+      "bust_pct": 20,
+      "slot": "OF"
+    },
+    {
+      "name": "Pete Alonso",
+      "n_games": 3,
+      "mean_g": 2.22,
+      "dpwin_if_benched": -0.0607,
+      "emp_sigma": 4.12,
+      "boom_pct": 36,
+      "bust_pct": 24,
+      "slot": "1B/3B"
+    },
+    {
+      "name": "Kody Clemens",
+      "n_games": 3,
+      "mean_g": 1.91,
+      "dpwin_if_benched": -0.0671,
+      "emp_sigma": 4.31,
+      "boom_pct": 36,
+      "bust_pct": 28,
+      "slot": "2B/SS"
+    },
+    {
+      "name": "Luis Arraez",
+      "n_games": 3,
+      "mean_g": 2.24,
+      "dpwin_if_benched": -0.0705,
+      "emp_sigma": 3.08,
+      "boom_pct": 20,
+      "bust_pct": 0,
+      "slot": "UTIL"
+    },
+    {
+      "name": "Wyatt Langford",
+      "n_games": 3,
+      "mean_g": 2.01,
+      "dpwin_if_benched": -0.0727,
+      "emp_sigma": 3.13,
+      "boom_pct": 36,
+      "bust_pct": 8,
+      "slot": "OF"
+    },
+    {
+      "name": "Luis Garcia Jr.",
+      "n_games": 3,
+      "mean_g": 2.16,
+      "dpwin_if_benched": -0.0958,
+      "emp_sigma": 5.28,
+      "boom_pct": 40,
+      "bust_pct": 20,
+      "slot": "2B"
+    }
+  ],
+  "sp_bench_scenarios": [
+    {
+      "name": "Freddy Peralta",
+      "date": "2026-07-11",
+      "opp": "BOS",
+      "confirmed": true,
+      "model_fp": 11.7,
+      "marcel_il": false,
+      "dpwin_if_benched": -0.0922,
+      "emp_boom_pct": 7,
+      "emp_bust_pct": 27,
+      "emp_n": 15,
+      "floor_tier": "MODERATE",
+      "floor_bust_prob": 27
+    },
+    {
+      "name": "Hunter Greene",
+      "date": "2026-07-10",
+      "opp": "CHC",
+      "confirmed": true,
+      "model_fp": 12.06,
+      "marcel_il": true,
+      "dpwin_if_benched": -0.0935,
+      "emp_boom_pct": 0,
+      "emp_bust_pct": 100,
+      "emp_n": 1,
+      "floor_tier": null,
+      "floor_bust_prob": null
+    },
+    {
+      "name": "Emmet Sheehan",
+      "date": "2026-07-12",
+      "opp": "AZ",
+      "confirmed": true,
+      "model_fp": 12.26,
+      "marcel_il": false,
+      "dpwin_if_benched": -0.0956,
+      "emp_boom_pct": 7,
+      "emp_bust_pct": 27,
+      "emp_n": 15,
+      "floor_tier": "MODERATE",
+      "floor_bust_prob": 21
+    },
+    {
+      "name": "Parker Messick",
+      "date": "2026-07-10",
+      "opp": "MIA",
+      "confirmed": true,
+      "model_fp": 12.02,
+      "marcel_il": false,
+      "dpwin_if_benched": -0.0965,
+      "emp_boom_pct": 40,
+      "emp_bust_pct": 0,
+      "emp_n": 15,
+      "floor_tier": "MODERATE",
+      "floor_bust_prob": 21
+    },
+    {
+      "name": "Jose Soriano",
+      "date": "2026-07-12",
+      "opp": "MIN",
+      "confirmed": true,
+      "model_fp": 12.28,
+      "marcel_il": false,
+      "dpwin_if_benched": -0.0982,
+      "emp_boom_pct": 20,
+      "emp_bust_pct": 40,
+      "emp_n": 15,
+      "floor_tier": "MODERATE",
+      "floor_bust_prob": 23
+    },
+    {
+      "name": "Shota Imanaga",
+      "date": "2026-07-10",
+      "opp": "CIN",
+      "confirmed": true,
+      "model_fp": 12.48,
+      "marcel_il": false,
+      "dpwin_if_benched": -0.1,
+      "emp_boom_pct": 40,
+      "emp_bust_pct": 20,
+      "emp_n": 15,
+      "floor_tier": "MODERATE",
+      "floor_bust_prob": 23
+    }
+  ],
+  "fa_streamer_adds": [
+    {
+      "name": "Ian Seymour",
+      "team": "TB",
+      "date": "2026-07-12",
+      "opp": "SEA",
+      "per_start_ev": 11.37,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0806,
+      "emp_boom_pct": 40,
+      "emp_bust_pct": 20,
+      "emp_n": 5,
+      "pct_owned": 27.4
+    },
+    {
+      "name": "Kyle Bradish",
+      "team": "Bal",
+      "date": "2026-07-11",
+      "opp": "KC",
+      "per_start_ev": 11.42,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0801,
+      "emp_boom_pct": 40,
+      "emp_bust_pct": 27,
+      "emp_n": 15,
+      "pct_owned": 69.1
+    },
+    {
+      "name": "Dustin May",
+      "team": "StL",
+      "date": "2026-07-12",
+      "opp": "ATL",
+      "per_start_ev": 10.75,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0783,
+      "emp_boom_pct": 33,
+      "emp_bust_pct": 13,
+      "emp_n": 15,
+      "pct_owned": 14.7
+    },
+    {
+      "name": "Griffin Jax",
+      "team": "TB",
+      "date": "2026-07-11",
+      "opp": "SEA",
+      "per_start_ev": 10.89,
+      "marcel_il": false,
+      "dpwin_if_added": 0.075,
+      "emp_boom_pct": 8,
+      "emp_bust_pct": 15,
+      "emp_n": 13,
+      "pct_owned": 47.5
+    },
+    {
+      "name": "Matthew Boyd",
+      "team": "ChC",
+      "date": "2026-07-12",
+      "opp": "CIN",
+      "per_start_ev": 11.1,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0745,
+      "emp_boom_pct": 25,
+      "emp_bust_pct": 38,
+      "emp_n": 8,
+      "pct_owned": 45.1
+    },
+    {
+      "name": "Jack Flaherty",
+      "team": "Det",
+      "date": "2026-07-10",
+      "opp": "PHI",
+      "per_start_ev": 11.0,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0695,
+      "emp_boom_pct": 27,
+      "emp_bust_pct": 33,
+      "emp_n": 15,
+      "pct_owned": 38.2
+    },
+    {
+      "name": "Luis Castillo",
+      "team": "Sea",
+      "date": "2026-07-10",
+      "opp": "TB",
+      "per_start_ev": 11.27,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0659,
+      "emp_boom_pct": 14,
+      "emp_bust_pct": 21,
+      "emp_n": 14,
+      "pct_owned": 53.1
+    },
+    {
+      "name": "Aaron Nola",
+      "team": "Phi",
+      "date": "2026-07-10",
+      "opp": "DET",
+      "per_start_ev": 10.87,
+      "marcel_il": false,
+      "dpwin_if_added": 0.0574,
+      "emp_boom_pct": 20,
+      "emp_bust_pct": 40,
+      "emp_n": 15,
+      "pct_owned": 38.2
+    }
+  ],
+  "top_moves": [
+    {
+      "move": "ADD Ian Seymour (FA) for 2026-07-12 vs SEA",
+      "dpwin": 0.0806,
+      "why": "extra cap-eligible start, EV 11.37, boom% 40"
+    },
+    {
+      "move": "ADD Kyle Bradish (FA) for 2026-07-11 vs KC",
+      "dpwin": 0.0801,
+      "why": "extra cap-eligible start, EV 11.42, boom% 40"
+    },
+    {
+      "move": "ADD Dustin May (FA) for 2026-07-12 vs ATL",
+      "dpwin": 0.0783,
+      "why": "extra cap-eligible start, EV 10.75, boom% 33"
+    }
+  ]
 }
