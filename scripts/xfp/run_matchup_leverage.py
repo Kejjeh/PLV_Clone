@@ -79,6 +79,9 @@ from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 from scripts.xfp.lib.boom_bust import (  # noqa: E402
     SP_BOOM, SP_BUST, H_BOOM, H_BUST, RP_BOOM, RP_BUST,
 )
+# Era-general subseason variance bands (2026-07-10): honest FALLBACK sigma for
+# thin-history players only — the primary empirical-bootstrap path is untouched.
+from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
 
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -315,7 +318,8 @@ def build_state(verbose=True):
                 nk = _norm(p.name)
                 rp_info = rp3_map.get(nk, {})
                 per_start = rp_info.get('per_start') or None
-                sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
+                sigma = (rp_info.get('sigma')
+                         or fallback_sigma('SP', default=SIGMA_PER_SP_START))
                 dq = dq_by_mlbam.get(int(mlbam)) if mlbam else None
                 for b in proj['breakdown']:
                     if b.get('type') != 'start':
@@ -341,8 +345,10 @@ def build_state(verbose=True):
                             'n_rem_games': n_rem,
                             'p_app': min(units / n_rem, 1.0),
                             'mean_app': (proj['fp'] / units) if units else 0.0,
-                            'sigma_app': math.sqrt(max(proj['sigma2'], 0) / units)
-                                         if units else SIGMA_PER_RP_GAME})
+                            'sigma_app': (math.sqrt(max(proj['sigma2'], 0) / units)
+                                          or fallback_sigma('RP', default=SIGMA_PER_RP_GAME))
+                                         if units
+                                         else fallback_sigma('RP', default=SIGMA_PER_RP_GAME)})
             else:
                 units = float(proj.get('units') or 0)
                 if units <= 0 or proj.get('fp', 0) <= 0:
@@ -354,7 +360,8 @@ def build_state(verbose=True):
                                 'n_games': n_games,
                                 'mean_g': proj['fp'] / n_games,
                                 'sigma_g': math.sqrt(max(proj['sigma2'], 0) / n_games)
-                                           if proj['sigma2'] else 3.0,
+                                           if proj['sigma2']
+                                           else fallback_sigma('H', default=3.0),
                                 'slot': getattr(p, 'lineup_slot', None)
                                         or getattr(p, 'lineupSlot', '') or '',
                                 'injury': str(getattr(p, 'injuryStatus', '') or '')})
@@ -654,7 +661,7 @@ def fa_streamer_adds(state, D, base_p, opp_total, regime, max_candidates=8):
         emp = emp_series(s0['pid'], 'SP')
         sigma = (float(info['xfp_rp3_sigma'])
                  if info is not None and pd.notna(info.get('xfp_rp3_sigma'))
-                 else SIGMA_PER_SP_START)
+                 else fallback_sigma('SP', default=SIGMA_PER_SP_START))
         fp_draw = _blend_draws(rng, emp, per_start_ev, sigma, K_PRIOR_SP, n_sims)
         extra = [{'event': {'name': p.name, 'date': s0['date'], 'opp': s0['opp'],
                             'confirmed': True, 'mlbam': s0['pid']},

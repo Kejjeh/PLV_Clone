@@ -85,6 +85,9 @@ from build_matchup_dashboard import (  # noqa: E402
 )
 from monte_carlo import calibrate_means, current_period_monday  # noqa: E402
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
+# Era-general subseason variance bands (2026-07-10): honest FALLBACK sigma for
+# thin-history players only — the primary empirical-bootstrap path is untouched.
+from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
 from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK  # noqa: E402
 
 OUT = ROOT / 'data' / 'outputs'
@@ -97,7 +100,9 @@ RP_ACTIVE_CAP = 4        # BrownU active RP cap
 CHURN_SHRINK = 0.15      # roster-churn haircut: shrink mu 15% toward league mean
 CHURN_SD_INFLATE = 1.05  # ...and widen sd 5% (future rosters are uncertain)
 MC_EMP_BLEND = 0.5       # weight on roster-MC mean vs played-week empirical mean
-DEFAULT_SIGMA_G_H = 3.2  # per-game hitter FP sd fallback (thin history)
+# per-game hitter FP sd fallback (thin history) — era-general variance band
+# (H/game/T2/2021-25) when available; 3.2 if the bands CSV is missing.
+DEFAULT_SIGMA_G_H = float(fallback_sigma('H', default=3.2))
 JOSH_TAG = 'Ligers'
 
 
@@ -248,7 +253,8 @@ def classify_team_roster(team, rh3_map, rp3_map, rprs2_map, vol_h, vol_sp,
                 lam = float(np.clip(lam, 0.4, 2.0))
                 sps.append({'name': p.name, 'mlbam': mlbam, 'emp': emp,
                             'per_start': per_start,
-                            'sigma': float(info.get('sigma') or SIGMA_PER_SP_START),
+                            'sigma': float(info.get('sigma')
+                                           or fallback_sigma('SP', default=SIGMA_PER_SP_START)),
                             'lam': lam})
             else:
                 info = rprs2_map.get(nk, {})
@@ -262,7 +268,8 @@ def classify_team_roster(team, rh3_map, rp3_map, rprs2_map, vol_h, vol_sp,
                 rps.append({'name': p.name, 'mlbam': mlbam, 'emp': emp,
                             'wk_mean': wk_mean, 'apps_wk': apps_wk,
                             'mean_app': wk_mean / apps_wk,
-                            'sigma_app': float(info.get('sigma') or SIGMA_PER_RP_GAME)})
+                            'sigma_app': float(info.get('sigma')
+                                               or fallback_sigma('RP', default=SIGMA_PER_RP_GAME))})
         else:
             info = rh3_map.get(nk, {})
             per_pa = float(info.get('per_pa') or 0)
