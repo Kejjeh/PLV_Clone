@@ -977,7 +977,14 @@ def _verdict_direction(verdict_top: str) -> str:
 
 
 def compute_confidence(verdict_top: str, pl_rank, model_rank, arche: dict) -> tuple[float, int, int]:
-    """Return (confidence_0_1, n_signals_aligned, n_signals_available)."""
+    """Return (confidence_0_1, n_signals_aligned, n_signals_available).
+
+    Rule 13 is enforced here BY CONSTRUCTION: confidence reads only verdict
+    direction + PL rank + model rank + archetype. Display-only lenses
+    (boom_stack, floor, sustainability, trending, stuff_cmd, …) must never
+    become inputs — they are context, not additive point-forecast lift
+    (lens_value_add_2026-06-11: clean OOS ΔR² ≈ 0 / negative).
+    """
     direction = _verdict_direction(verdict_top)
     aligned = 0
     available = 4
@@ -1029,22 +1036,35 @@ def compute_confidence(verdict_top: str, pl_rank, model_rank, arche: dict) -> tu
 
 # ---------- counterfactual watch-list ----------
 
-def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict, pl_rank) -> list[str]:
-    """4-5 templated counterfactual triggers that would flip the verdict."""
+def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict, pl_rank,
+                     bucket: str | None = None) -> list[str]:
+    """4-5 templated counterfactual triggers that would flip the verdict.
+
+    Bucket-gated (2026-07-11): trigger text is position-phrased, so items must
+    match the player's bucket. The CAUTION branch used to append hitter-phrased
+    triggers (career_pct, L21d xwOBACON) unconditionally — they rendered as
+    literal text on SP/RP CAUTION cards (the "SP xwOBACON token" ghost sighting;
+    no SP lens ever computed such a value). bucket=None (unknown) emits only
+    bucket-neutral items.
+    """
     m_rank = model.get('rank') if isinstance(model.get('rank'), int) else None
     has_arche = bool(arche.get('have'))
     overall = arche.get('overall') if has_arche else None
     a_traj = arche.get('traj_flag') if has_arche else None
+    is_hitter = bucket == 'H'
+    is_pitcher = bucket in ('SP', 'RP')
 
     items: list[str] = []
 
     if verdict_top == 'HOLD':
-        if reason_tag == 'process_intact':
+        # process_intact / post_tj_ramp are pitcher-phrased (SwingMiss,
+        # velo_tier, WalkAvoid) — only emit them for pitcher buckets.
+        if reason_tag == 'process_intact' and is_pitcher:
             items.append(f"model rank slips past #35 (currently #{m_rank})")
             items.append("SwingMiss sub-rating drops below 45")
             items.append("archetype trajectory worsens to CAREER_LOW")
             items.append("velo_tier drops to FINESSE")
-        elif reason_tag == 'post_tj_ramp':
+        elif reason_tag == 'post_tj_ramp' and is_pitcher:
             items.append("SwingMiss rating falls below 50 (stuff actually eroding)")
             items.append("WalkAvoid fails to recover above 45 after 4 starts")
             items.append("model rank slips past #60")
@@ -1054,12 +1074,16 @@ def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict
             items.append("archetype OVERALL drops below 50")
             items.append("traj_flag flips to TRENDING_DOWN")
     elif verdict_top == 'CAUTION':
-        items.append("career_pct drops below current floor")
-        items.append("L21d xwOBACON drops more than 0.020 from season")
+        if is_hitter:
+            # hitter-only lenses: career-form percentile + contact quality
+            items.append("career_pct drops below current floor")
+            items.append("L21d xwOBACON drops more than 0.020 from season")
         items.append("archetype OVERALL drops below 45")
         items.append(f"PL rank deteriorates past #100 (currently {pl_rank})")
         if has_arche and arche.get('velo_tier') == 'FINESSE':
             items.append("velo drops further (already FINESSE tier)")
+        if is_pitcher:
+            items.append("SwStr% keeps sliding vs season level over next 3 starts")
     elif verdict_top == 'MIXED':
         items.append(f"PL rank changes by >20 (currently {pl_rank})")
         items.append(f"model rank changes by >20 (currently #{m_rank})")
@@ -1141,7 +1165,7 @@ def triangulate_player(name: str, bucket: str | None = None,
     verdict_top, reason_tag = consolidate_verdict(verdict)
     m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
     confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
-    watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main)
+    watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main, bucket=b)
 
     # IL caveat (injected) — applied AFTER verdict synthesis so the talent read
     # (verdict_top, confidence, watch_list) is untouched; only the surfaced

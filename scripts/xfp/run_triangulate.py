@@ -991,7 +991,7 @@ def main():
         verdict_top, reason_tag = consolidate_verdict(verdict)
         m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
         confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
-        watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main)
+        watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main, bucket=bucket)
 
         if not _verdict_matches(verdict, filters):
             continue
