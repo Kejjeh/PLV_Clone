@@ -1,7 +1,7 @@
 {
   "generated": "2026-07-11",
-  "upgrade_floor_fpp": -0.0819,
-  "hit_upgrade_floor_xwoba": 0.329,
+  "upgrade_floor_fpp": -0.0868,
+  "hit_upgrade_floor_xwoba": 0.33,
   "alert_count": 1,
   "hitter_alert_count": 0,
   "alerts": [
@@ -13,7 +13,7 @@
       ],
       "gs": 5,
       "fpp": 0.0485,
-      "fpp_gap": 0.1304,
+      "fpp_gap": 0.1353,
       "gsp": 4,
       "l4": "3/4",
       "whiff_pct": 27.3,

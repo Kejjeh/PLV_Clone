@@ -4,24 +4,24 @@
   "decision_id": "2026-07-11_michael_harris_ii_H_001",
   "inputs": {
     "archetype_label": "AGGRESSIVE_STAR",
-    "archetype_overall": 63,
-    "archetype_traj": "STABLE",
-    "blended_xfp": 2.559913531566528,
+    "archetype_overall": 64,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 2.555029902650097,
     "inputs_schema": 2,
     "live_marginal": null,
-    "model_rank": 26,
+    "model_rank": 25,
     "override_tag": null,
     "pl_rank": 35,
     "proj_display": 2.18,
-    "proj_per": 0.6216350889073928,
+    "proj_per": 0.6228232687766411,
     "proj_units": "fp_per_pa",
     "replacement_delta": null
   },
   "mlbam_id": 671739,
   "player_name": "Michael Harris II",
-  "reason_tag": "no_convergence",
+  "reason_tag": "process_upgrade",
   "settled_at": null,
   "settlement": null,
   "snapshot_date": "2026-07-11",
-  "verdict_top": "MIXED"
+  "verdict_top": "BUY"
 }

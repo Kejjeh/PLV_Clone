@@ -1,24 +1,5 @@
 [
   {
-    "period": 12,
-    "window": [
-      "2026-06-15",
-      "2026-06-21"
-    ],
-    "realized_my": 294.6,
-    "realized_margin": -90.39999999999998,
-    "sim_my_p10_p90": [
-      302.1,
-      412.7
-    ],
-    "sim_margin_p10_p90": [
-      -75.5,
-      82.5
-    ],
-    "my_total_inside_80": false,
-    "margin_inside_80": false
-  },
-  {
     "period": 13,
     "window": [
       "2026-06-22",
@@ -27,12 +8,12 @@
     "realized_my": 322.1,
     "realized_margin": -9.199999999999989,
     "sim_my_p10_p90": [
-      317.5,
-      428.0
+      320.2,
+      439.3
     ],
     "sim_margin_p10_p90": [
-      -85.1,
-      67.6
+      -72.5,
+      80.1
     ],
     "my_total_inside_80": true,
     "margin_inside_80": true
@@ -46,12 +27,12 @@
     "realized_my": 306.5,
     "realized_margin": -56.80000000000001,
     "sim_my_p10_p90": [
-      297.0,
-      413.5
+      300.2,
+      414.7
     ],
     "sim_margin_p10_p90": [
-      -114.2,
-      42.6
+      -106.9,
+      46.7
     ],
     "my_total_inside_80": true,
     "margin_inside_80": true
