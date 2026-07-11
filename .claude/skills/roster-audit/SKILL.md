@@ -100,9 +100,13 @@ Then summarize:
 
 ## Step 4 — SP cap math
 
-Hard-coded league constants (BrownU, per
-`memory/reference_league_rules.md`):
-- 10-SP-start-per-week cap (only first 10 count)
+League constants (BrownU, per `memory/reference_league_rules.md`):
+- period SP-start cap — 10 per standard scoring week (only the first 10
+  count), but period-aware: 16 for the ASG block (matchup period 15) / 20
+  for a 2-week playoff round (general rule: 10 × scoring weeks in the
+  period). Resolve the LIVE cap via
+  `resolve_current_period_meta(league)['sp_cap']` (from
+  `scripts.xfp.lib.period_meta`) rather than hardcoding 10.
 - ~1.19 SP starts per active SP per week (empirical — owner: `cap_math.STARTS_PER_SP_PER_WEEK`)
 
 Compute:
@@ -114,7 +118,7 @@ gap_to_cap = _gap(healthy_sp)
 ```
 
 Report:
-- "X healthy SPs → ~Y starts/week vs 10 cap → Z starts short / over"
+- "X healthy SPs → ~Y starts/week vs the period cap (10 std / 16 ASG / 20 playoff) → Z starts short / over"
 - If under cap by ≥ 0.5 starts: streaming needed N times this week.
   Suggest checking `xfp_rp3_projections.csv` for FA streamers (next step).
 - If over cap: no streaming, suggest the lowest-projection SP to bench
@@ -418,7 +422,7 @@ Within 7 days:
 
 Within 30 days:
   - Player B returns → IL slot frees; opportunity for IL stash candidate <C>
-  - Date X: SP count crosses 10/wk cap → forced drop, pre-identify
+  - Date X: SP count crosses the period cap → forced drop, pre-identify
     candidate from Step 6
 ```
 
@@ -442,7 +446,7 @@ Final report uses this layout (markdown for readability):
 <summary>
 
 ## SP cap math
-<X SPs → Y starts vs 10 cap → Z gap>
+<X SPs → Y starts vs the period cap → Z gap>
 <forward-looking dates>
 
 ## Drop candidates (bottom-3 per bucket)

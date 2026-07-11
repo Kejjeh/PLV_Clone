@@ -1,6 +1,6 @@
 ---
 name: sp-bench-mc
-description: Monte Carlo decision tool for SP-bench calls under the 10-start cap. Pulls each healthy SP's per-start FP distribution from MLB Stats API (last 30 starts across 2024-2026), blends with rp3 priors, applies the chronological cap rule, and compares bench scenarios with win-prob deltas + bootstrap CIs. Self-aware: prints a "not earning complexity" verdict when scenario gap is within MC noise (<1pp). Use when (a) projected starts exceed cap by 1-2, AND (b) the obvious bench-by-rp3 call isn't clearly settled — e.g., the lowest-rp3 start faces a favorable matchup and a higher-rp3 start faces brutal opp.
+description: Monte Carlo decision tool for SP-bench calls under the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week; resolve live via resolve_current_period_meta(league)['sp_cap']). Pulls each healthy SP's per-start FP distribution from MLB Stats API (last 30 starts across 2024-2026), blends with rp3 priors, applies the chronological cap rule, and compares bench scenarios with win-prob deltas + bootstrap CIs. Self-aware: prints a "not earning complexity" verdict when scenario gap is within MC noise (<1pp). Use when (a) projected starts exceed cap by 1-2, AND (b) the obvious bench-by-rp3 call isn't clearly settled — e.g., the lowest-rp3 start faces a favorable matchup and a higher-rp3 start faces brutal opp.
 ---
 
 # sp-bench-mc

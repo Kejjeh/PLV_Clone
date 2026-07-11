@@ -202,7 +202,7 @@ The script:
 | `reason_tag` | str | Original specifier: `strong_hold`, `archetype_breakout`, `model_anchored`, `process_upgrade`, `under_the_radar`, `outcomes_only_rookie`, `post_tj_ramp`, `process_intact`, `process_red_flag`, `pl_outcome_chase`, `no_convergence` |
 | `confidence` | float 0-1 | Fraction of 4 independent signals (PL aligned / model aligned / archetype present / arche traj aligned) that converge with `verdict_top`. STRONG HOLD with all 4 signals = 1.0 |
 | `watch_list` | list[str] (dict) / `;`-joined str (CSV) | 4-5 counterfactual triggers that would flip the verdict — surfaced for HOLD/CAUTION/MIXED especially |
-| `within_bucket_rank` | int / None | Batch mode only: per `(category, bucket)` group, rank by `model_rank` asc. Tells you "this is the user's #3 SP" vs "#11 SP" — critical for the 10-start cap. `None` when input CSV has no `category` column. |
+| `within_bucket_rank` | int / None | Batch mode only: per `(category, bucket)` group, rank by `model_rank` asc. Tells you "this is the user's #3 SP" vs "#11 SP" — critical for the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week). `None` when input CSV has no `category` column. |
 
 The `format_card()` output now includes a `**Confidence:** N (X of Y signals agree)` line and a `**Watch list:** ...; ...` line.
 

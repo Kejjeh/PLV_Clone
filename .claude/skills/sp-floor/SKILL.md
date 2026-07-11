@@ -1,6 +1,6 @@
 ---
 name: sp-floor
-description: SP FLOOR / bust-risk board — ranks starting pitchers by their probability of a dud start (<5 FP), the "avoid bad days" lens that complements Stuff+ (mean) and boom-bust-history (measured variance). Use for bench-against-the-10-start-cap decisions — which start is most likely to crater. Triggers: "which SP do I bench", "bust risk", "floor on my SPs", "who's most likely to blow up", "safest start this week", "avoid bad days".
+description: SP FLOOR / bust-risk board — ranks starting pitchers by their probability of a dud start (<5 FP), the "avoid bad days" lens that complements Stuff+ (mean) and boom-bust-history (measured variance). Use for bench-against-the-period-SP-start-cap (10 standard week / 16 ASG block / 20 playoff 2-week) decisions — which start is most likely to crater. Triggers: "which SP do I bench", "bust risk", "floor on my SPs", "who's most likely to blow up", "safest start this week", "avoid bad days".
 ---
 
 # sp-floor
@@ -37,7 +37,7 @@ starts to sit *over the cap on average*, not which one will implode tonight.
 `--staff` board: each rostered SP with K% / BB% / **bust_prob** / tier:
 - **SAFE** (<20%) — highest floor, never the bench candidate
 - **MODERATE** (20-30%)
-- **RISKY** (≥30%) — bench-first when you're over the 10-start cap
+- **RISKY** (≥30%) — bench-first when you're over the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week)
 
 ## How to read it against the other lenses
 
@@ -60,5 +60,6 @@ MODERATE — don't bench him to avoid bad days. Bench Valdez (RISKY, K 18.6%).
   >> predicted bust, the gap is shape/contact the command model can't see (e.g.,
   Soriano: predicted 22%, measured 38% — flat-ride sinker). Run
   `/pitcher-sustainability` on those.
-- **Single-axis.** Doesn't see role, injury, or the 10-start cap math — feed it
-  into `/sp-week-plan` for the actual bench decision.
+- **Single-axis.** Doesn't see role, injury, or the period SP-start cap math (10
+  standard week / 16 ASG block / 20 playoff 2-week) — feed it into `/sp-week-plan`
+  for the actual bench decision.

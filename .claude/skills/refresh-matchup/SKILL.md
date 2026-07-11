@@ -43,7 +43,7 @@ The script:
 3. Projects each rostered player: hitters per-game with opp-SP factor,
    SPs with rotation-gap fallback for unconfirmed late-week,
    RPs with role-based appearance rate
-4. Applies 10-SP-start cap (sort by FP desc, zero excess)
+4. Applies the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week; sort by FP desc, zero excess)
 5. Computes win probability from projected gap + combined variance
 6. Logs the prediction to `predictions_history.csv` (one row per build)
 7. Writes to BOTH `data/outputs/matchup.html` AND `xfp-model/docs/matchup.html`
@@ -150,7 +150,7 @@ the plv_clone commit with appropriate commit message style.
 
 Surface any noteworthy items from the build:
 - 2-start pitchers flagged
-- Players capped out of the 10-start budget
+- Players capped out of the period SP-start budget (10 standard week / 16 ASG block / 20 playoff 2-week)
 - Action items the dashboard generated (injuries, lineup conflicts)
 - Specific bench-the-worst-start recommendations
 

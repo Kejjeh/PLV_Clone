@@ -1,6 +1,6 @@
 ---
 name: forced-drop-planner
-description: Given the current roster's IL return timeline, computes the exact date the 10-SP-start cap will be breached, pre-identifies the cut candidate from rp3 rankings, and optionally surfaces FA replacement options. Use when multiple IL starters are returning in close succession (Glasnow/Fried pattern) and you need to plan cuts in advance.
+description: Given the current roster's IL return timeline, computes the exact date the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week) will be breached, pre-identifies the cut candidate from rp3 rankings, and optionally surfaces FA replacement options. Use when multiple IL starters are returning in close succession (Glasnow/Fried pattern) and you need to plan cuts in advance.
 ---
 
 # forced-drop-planner
@@ -61,8 +61,8 @@ import pandas as pd
 roster = get_my_roster_with_injuries()
 # Bucket by ACTUAL role, NOT the raw ESPN position tag: a dual-eligible starter
 # (Detmers 2026 — position='RP' but eligible 'SP' and actually starting) must
-# count as an SP against the 10-start cap. detect_pitcher_role self-resolves the
-# mlbam and decides on real gamesStarted (gotcha #8), never the stale tag.
+# count as an SP against the period SP-start cap. detect_pitcher_role self-resolves
+# the mlbam and decides on real gamesStarted (gotcha #8), never the stale tag.
 pitchers = roster[roster['eligible_slots'].apply(
     lambda s: any(p in str(s) for p in ('SP', 'RP')))].copy()
 pitchers['role'] = pitchers.apply(detect_pitcher_role, axis=1)
@@ -76,6 +76,12 @@ proj_starts = projected_starts(n_healthy)   # OWNER — never re-type 1.19
 print(f"Current: {n_healthy} healthy SPs → {proj_starts:.2f} starts/wk vs {SP_CAP} cap")
 print(f"Gap: {gap_to_cap(n_healthy):+.2f}")
 ```
+
+`SP_CAP` is 10 only for a standard scoring week. For the LIVE period cap
+(ASG block = 16, playoff 2-week = 20) resolve
+`resolve_current_period_meta(league)['sp_cap']` (from
+`scripts.xfp.lib.period_meta`) and compare projected starts against that
+value in Step 2's over-cap test, not a hardcoded 10.
 
 ---
 

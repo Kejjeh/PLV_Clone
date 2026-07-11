@@ -1,6 +1,6 @@
 ---
 name: sp-week-plan
-description: Plan the upcoming scoring week's SP usage against the 10-start cap. Projects each healthy SP's start count (1 or 2) from confirmed probables + rotation gap, joins opponent offensive strength, ranks starts by expected FP, identifies the weakest start to bench when starts exceed cap, and flags long-IL SPs as drop candidates. Use Monday morning, or whenever the user asks "how many starts do I have this week", "should I bench any SP", "which start is the weakest", or "I have N starts — what do I drop".
+description: Plan the upcoming scoring week's SP usage against the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week). Projects each healthy SP's start count (1 or 2) from confirmed probables + rotation gap, joins opponent offensive strength, ranks starts by expected FP, identifies the weakest start to bench when starts exceed cap, and flags long-IL SPs as drop candidates. Use Monday morning, or whenever the user asks "how many starts do I have this week", "should I bench any SP", "which start is the weakest", or "I have N starts — what do I drop".
 ---
 
 # sp-week-plan
@@ -9,12 +9,16 @@ You are planning the upcoming scoring week's SP usage. The skill
 exists because Monday-morning SP-planning is a 5-step workflow that
 recurs every week (MLB probables → rotation-gap predictions →
 opponent strength → recent form → bench/drop recommendation), and
-because the BrownU 10-start cap means a wrong bench costs you 0 FP
+because the BrownU period SP-start cap means a wrong bench costs you 0 FP
 on what could have been a 25-FP start.
 
-The 10-SP-start cap is HARD — starts 11+ count as zeros (see
-`reference_league_rules.md`). Always confirm projected starts vs cap
-even if the user didn't ask explicitly.
+The period SP-start cap (10 standard week / 16 ASG block / 20 playoff
+2-week) is HARD — starts past the cap count as zeros (see
+`reference_league_rules.md`). Resolve the LIVE cap via
+`resolve_current_period_meta(league)['sp_cap']` (from
+`scripts.xfp.lib.period_meta`) — 10 is only the standard-week default.
+Always confirm projected starts vs cap even if the user didn't ask
+explicitly.
 
 ---
 
@@ -23,7 +27,11 @@ even if the user didn't ask explicitly.
 1. **Scoring window** (default = current Mon–Sun, i.e., today through
    Sunday). If today is mid-week, surface remaining-week starts and
    note that earlier starts are locked.
-2. **Cap** (default = 10 SP starts per BrownU rules). Don't change
+2. **Cap** — resolve the LIVE cap via
+   `resolve_current_period_meta(league)['sp_cap']` (from
+   `scripts.xfp.lib.period_meta`), never hardcode. 10 is only the
+   standard-week default (ASG block = 16, playoff 2-week = 20;
+   general rule 10 × scoring weeks in the period). Don't override
    without confirmation.
 3. **Mode** — `plan` (default, full output) | `bench-only` (just the
    bench recommendation) | `drops-only` (just the drop list).
@@ -61,8 +69,10 @@ Critical, and now enforced by the owner modules:
 - **`lineup_slot`, not `position`, for the slot** — SPs on `BE` still pitch their normal
   rotation; they just need moving to a `P` slot on start day. Flag injured SPs sitting on
   `BE` instead of `IL` (a BE-slot drag, not an IL stash).
-- **Cap math from `cap_math`** — `SP_CAP` (10) and the 1.19 rate live in the owner; never
-  re-type them here.
+- **Cap math from `cap_math`** — `SP_CAP` (10, the standard-week default; 16 ASG / 20
+  playoff 2-week) and the 1.19 rate live in the owner; never re-type them here. For the
+  LIVE period cap resolve `resolve_current_period_meta(league)['sp_cap']` (from
+  `scripts.xfp.lib.period_meta`) rather than assuming 10.
 
 ---
 
@@ -251,13 +261,14 @@ The callout is surfaced in Step 8 between the projected-starts table and
 the bench-recommendation section. The header only renders when at least
 one SP qualifies. Even when this fires, cap math (Step 6) still binds —
 "week-boom lock" means "don't bench either of these two starts when
-choosing the cut," not "exempt from the 10-start cap."
+choosing the cut," not "exempt from the period SP-start cap (10 standard
+week / 16 ASG block / 20 playoff 2-week)."
 
 ---
 
 ## Step 5.6 — Floor / bust-risk overlay (the bench-decision tie-breaker)
 
-EV (Step 5) ranks starts by their MEAN. But the 10-start cap punishes ZEROS —
+EV (Step 5) ranks starts by their MEAN. But the period SP-start cap punishes ZEROS —
 a dud start (<5 FP) wastes a capped slot. So the bench decision also needs the
 FLOOR: which start is most likely to crater. Validated 2026-06-06
 (`sp_floor_model_2026-06-06.md`): the floor is driven by **K−BB%**, NOT Stuff+
@@ -334,7 +345,8 @@ When you build the week's cap math:
    from rotation gap.
 3. **Future starts** — confirmed probables + rotation-gap predictions
    for dates > today within the window.
-4. Total = past + today + future. THAT is what hits the 10-cap.
+4. Total = past + today + future. THAT is what hits the period cap
+   (10 standard week / 16 ASG block / 20 playoff 2-week).
 
 ```python
 total_starts = past_starts + sum(start_counts)
@@ -439,8 +451,9 @@ Separate from the weekly bench decision, surface drop candidates:
 **Tier 1 (drop if any roster pressure):**
 - 60-day IL SPs (>30 day return) — biggest opportunity cost. Recovery
   stigma means even when "back" they need ramp time.
-- Healthy SPs not in your top 8 by rp3 projection (with the 10-cap
-  binding, you only need ~8 active SPs anyway).
+- Healthy SPs not in your top 8 by rp3 projection (with the standard-week
+  10-cap binding, you only need ~8 active SPs anyway; a wider ASG/playoff
+  cap eases this).
 
 **Tier 2 (hold but monitor):**
 - BE-slot injured pitchers (move to IL slot as soon as one frees)
@@ -467,7 +480,7 @@ multiple weeks running suggests too many SPs on roster).
 ... rows sorted by start day ...
 ... (e.g.) Grayson Rodriguez | 8.21 (5.75-10.66) | data_driven_thin | 2026-06-04 | 2026-06-09 | 2 | ... | ... | SAFE | — |
 
-**TOTAL projected starts: N** (cap = 10)
+**TOTAL projected starts: N** (cap = 10 (standard week; 16 ASG / 20 playoff 2-week) — resolve live via `resolve_current_period_meta(league)['sp_cap']`)
 
 ## Week-boom locks
 
@@ -500,7 +513,7 @@ Tier 3: <hold>
 
 - Bench <one line>
 - Drop <one line if applicable>
-- N starts projected vs 10 cap
+- N starts projected vs cap (10 standard week; 16 ASG / 20 playoff 2-week)
 ```
 
 ### How to read the projection fields

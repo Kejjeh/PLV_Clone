@@ -10,7 +10,7 @@ Runs the full Monday decision workflow in one pass:
 1. **roster-verify** — confirm live roster membership before anything else
 2. **roster-audit** — slot occupancy, IL returns, SP cap math, drop candidates, FA adds
 3. **roster-health** — signal-driven alerts (TRENDING_DOWN, ARCHETYPE_DOWNGRADE, COLD_BABIP, etc.) layered on top of the slot/cap view from step 2
-4. **sp-week-plan** — project this week's starts against the 10-cap, rank, bench recommendation
+4. **sp-week-plan** — project this week's starts against the period cap (10 std / 16 ASG / 20 playoff 2-week), rank, bench recommendation
 5. **fa-monitor** — pull HIGH-priority alerts from all signals
 6. **conviction-scan** — league-wide model-vs-process divergence watch (buy-low / sell-high conviction; Rule 13 context only)
 
@@ -165,7 +165,7 @@ IL: X/3  |  Bench: Y/4  |  Active: Z/22
 Cleanup: <injured-not-IL list>
 
 ## SP cap
-N healthy SPs → P starts/wk vs 10 cap (G gap)
+N healthy SPs → P starts/wk vs the period cap (G gap)
 ⚠ Forced drop deadline: <date> (<player> activates → over cap)
 Pre-identified cut: <weakest SP by rp3>
 

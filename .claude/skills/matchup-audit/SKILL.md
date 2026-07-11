@@ -203,6 +203,8 @@ Henderson 1 start         Henderson 1 start          ✓
 ... etc ...
 TOTAL: 10                 SP cap: 10/10              ✓
 ```
+(SP cap 10 = standard week; 16 ASG block / 20 playoff 2-week — resolve
+live via `resolve_current_period_meta(league)['sp_cap']`)
 
 Discrepancy means a regression — investigate which bug pattern applies.
 

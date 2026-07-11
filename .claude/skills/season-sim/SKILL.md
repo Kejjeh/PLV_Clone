@@ -54,7 +54,10 @@ Machine-readable output: `data/outputs/season_sim.json`.
    rate x volume layer: hitters = rh3 per-PA x volume PA/team-game
    (top 13 healthy by weekly mean; BE counts active, only IL/injury
    states zero a player); SPs = rp3 per-start x SP-volume GS/team-game
-   with the 10-start weekly cap inside each draw; RPs = rprs2 RoS/week
+   with the period SP-start cap inside each draw (resolve per period via
+   `resolve_period_meta(league, period)['sp_cap']` from
+   `scripts.xfp.lib.period_meta` — 10 standard week, but 16 for the ASG
+   block / 20 for a 2-week playoff round, not a flat 10); RPs = rprs2 RoS/week
    (top 4). Per-player variance is the empirical boxscore bootstrap
    blended with model sigma — the same `_blend_draws`/`emp_series`
    machinery imported from `run_matchup_leverage.py`. The MC mean is

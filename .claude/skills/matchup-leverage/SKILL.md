@@ -1,6 +1,6 @@
 ---
 name: matchup-leverage
-description: Win-probability STRATEGY layer for the current H2H matchup — the skill that tells every other skill WHICH OBJECTIVE to optimize. Every other lens maximizes expected FP, but BrownU H2H is won by P(my_total > opp_total); when TRAILING variance is an ASSET (prefer boom/bust plays), when LEADING variance is a LIABILITY (prefer floor), when CLOSE E[FP] is approximately right. Monte-Carlo simulates the rest of the scoring period (~10k draws; per remaining player-game the FP draw bootstraps the player's empirical boxscore game-log distribution, Bayesian-blended with the model mean/sigma when history is thin; SP starts are event-level with the chronological 10-start cap inside each trial and rotation-gap starts occurring at p=0.80), outputs P(win) + score distribution + dP(win)/d(variance), then scores each ACTIONABLE decision in Delta-P(win) — NOT Delta-E[FP]: (a) hitter sit-priority, (b) SP cap-bench scenarios, (c) top-3 FA streamer adds. Rule 13 decision layer — never moves rh3/rp3/rprs2. Triggers — "can I win this week", "what are my odds", "should I go boom or floor", "matchup strategy", "I'm down 40 points", "protect my lead", "win probability", "leverage", "am I drawing dead this week".
+description: Win-probability STRATEGY layer for the current H2H matchup — the skill that tells every other skill WHICH OBJECTIVE to optimize. Every other lens maximizes expected FP, but BrownU H2H is won by P(my_total > opp_total); when TRAILING variance is an ASSET (prefer boom/bust plays), when LEADING variance is a LIABILITY (prefer floor), when CLOSE E[FP] is approximately right. Monte-Carlo simulates the rest of the scoring period (~10k draws; per remaining player-game the FP draw bootstraps the player's empirical boxscore game-log distribution, Bayesian-blended with the model mean/sigma when history is thin; SP starts are event-level with the chronological period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week, resolved live via period_meta) inside each trial and rotation-gap starts occurring at p=0.80), outputs P(win) + score distribution + dP(win)/d(variance), then scores each ACTIONABLE decision in Delta-P(win) — NOT Delta-E[FP]: (a) hitter sit-priority, (b) SP cap-bench scenarios, (c) top-3 FA streamer adds. Rule 13 decision layer — never moves rh3/rp3/rprs2. Triggers — "can I win this week", "what are my odds", "should I go boom or floor", "matchup strategy", "I'm down 40 points", "protect my lead", "win probability", "leverage", "am I drawing dead this week".
 ---
 
 # matchup-leverage
@@ -57,7 +57,8 @@ Machine-readable output: `data/outputs/matchup_leverage.json`
    per-player remaining units via the dashboard's `project_player`
    (neutral adjusters), role-aware SP bucketing via
    `detect_pitcher_role` (gotcha #8), banked SP starts from the boxscore
-   parquet (role-correct `gs` flag), cap_remaining = 10 - banked.
+   parquet (role-correct `gs` flag), cap_remaining = sp_cap - banked
+   (sp_cap is period-resolved: 10 std / 16 ASG / 20 playoff 2-week).
    BE slots count as active (gotcha #7 — Josh activates healthy bench
    daily; only IL/IR slots and IL injuryStatus zero a player).
 2. **MONTE CARLO** — ~10k sims. Hitters: n remaining games, each game FP
@@ -68,7 +69,7 @@ Machine-readable output: `data/outputs/matchup_leverage.json`
    event-level starts (confirmed + rotation-gap predicted at p=0.80),
    empirical last-15-start bootstrap blended with the rp3 per-start
    mean/sigma, rescaled to the dashboard's matchup-adjusted per-start EV,
-   chronological 10-cap applied INSIDE each trial. marcel_il arms lean
+   chronological period cap applied INSIDE each trial. marcel_il arms lean
    parametric automatically (no 2026 start history = no empirical weight).
 3. **Variance sensitivity** — re-sims with my remaining-FP deviations
    scaled +/-20%: the sign of dP(win)/dVar is the regime confirmation
@@ -105,7 +106,7 @@ Machine-readable output: `data/outputs/matchup_leverage.json`
   Tier-B-flagged high-boom arm is a keep (TRAILING) or the first bench
   (LEADING). The validated conservative v2 bench rules still gate the
   rare CAP-BENCH; leverage only re-orders within what those rules allow.
-- `/sp-week-plan` — Monday cap budgeting maximizes E[FP] across 10
+- `/sp-week-plan` — Monday cap budgeting maximizes E[FP] across the period cap
   starts; leverage re-scores the marginal start in P(win) space when the
   matchup is lopsided.
 - `/sp-bench-mc` (sp_bench_mc.py) — the SP-only ancestor of this engine

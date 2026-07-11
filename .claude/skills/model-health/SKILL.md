@@ -49,6 +49,16 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    - `il_join_match_rate` -> `scripts/xfp/build_il_split_features.py`
      (grid derives from the rolling CSVs — regenerate AFTER any rolling
      cache regen; see `rp3_il_join_fix_2026-07-09.md`)
+   - `il_grid_coverage` -> `scripts/xfp/build_il_split_features.py`
+     (2026-07-11: FAILs if any rolling `(year, split_day)` cell is MISSING
+     from the IL cache — the direct cause the match-rate check only sees as
+     a consequence. Fix: rebuild IL features after the rolling substrates;
+     `refresh_all.py` now orders the IL stage after them.)
+   - `il_tx_json_freshness` -> the IL-transactions self-refresh in
+     `build_il_split_features.py` (2026-07-11: FAILs on a stale
+     `il_transactions_2026.json` FILE mtime — proves the STALE_AFTER_DAYS
+     refetch is running; newest-event staleness is WARN-only so the ASG
+     break / transaction lulls don't false-fire.)
    - `ros_opp_xwoba_nan_rate` / `ros_cache_split_day_lag` ->
      `scripts/xfp/build_ros_schedule_features.py`
    - `statcast_max_date_lag_days` -> gf bridge

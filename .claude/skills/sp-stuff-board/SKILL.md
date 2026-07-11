@@ -107,7 +107,7 @@ the other three lenses caught.
 ## Guardrails
 
 - **Single-lens by design** — Stuff+ only. It ignores rp3, archetype, injury, role,
-  and the 10-SP-cap. Use it as a FILTER that feeds `/triangulate` or
+  and the period SP-start cap (10 std / 16 ASG / 20 playoff 2-week). Use it as a FILTER that feeds `/triangulate` or
   `/fa-pickup-deep-dive` for a final verdict, NOT as the verdict itself.
 - **Stuff+ is the MEAN, not the floor.** It predicts who scores most RoS (via velo),
   NOT who avoids dud starts. For "which start do I bench / avoid bad days," use

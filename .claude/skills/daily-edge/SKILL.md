@@ -65,7 +65,7 @@ def my_tag(name): return '✓' if _norm(name) in my_names else ''
 ## Step 2 — pregame-check (condensed)
 
 Run the `/pregame-check` protocol over `roster` + `probables`. Default START
-every confirmed start UNLESS the 10-SP cap is at overflow risk AND the start
+every confirmed start UNLESS the period SP-start cap is at overflow risk AND the start
 is the lowest-EV one, OR blend ≤7 + opp_bat ≥1.10 + Tier B NOISE/REGRESS.
 Always START on SOFT opp_bat (<0.95). Also scan the opponent's confirmed SPs
 and flag my hitters facing boom_stack ≥3 opp pitchers.

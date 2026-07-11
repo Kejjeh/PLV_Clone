@@ -1,13 +1,13 @@
 ---
 name: pregame-check
-description: Morning-of (before lineup lock) daily decision skill. For each of my SPs starting today, decides whether the start is CAP-WORTHY (counts toward 10-SP cap) vs CAP-BENCH (keep on BE because better starts are coming) based on empirically validated rules. Empirical validation 2026-06-06 (n=13,716 starts 2023-25) showed the v1 "aggressive bench" rules were REJECTED — even flagged starts average 9-11 FP, well above replacement ~5 FP. **Skill v2 is conservative** — default to START every confirmed start UNLESS the 10-SP cap is at risk of overflow OR Blended xFP is at replacement-level AND matchup is brutal. Also pre-scans opponent's confirmed SPs and flags any of my hitters facing high-boom opp pitchers (boom_stack ≥3). Pulls live matchup state + current win prob delta. Use every game-day morning before ~12 PM ET. The missing daily layer between /sp-week-plan (weekly cap math) and /roster-deep-audit (seasonal). Triggers — "pregame check", "should I bench today", "any of my SPs in trouble today", "morning roster check", "pregame", "should I start X today", "what's my matchup look like today".
+description: Morning-of (before lineup lock) daily decision skill. For each of my SPs starting today, decides whether the start is CAP-WORTHY (counts toward the period SP-start cap — 10 standard week / 16 ASG block / 20 playoff 2-week) vs CAP-BENCH (keep on BE because better starts are coming) based on empirically validated rules. Empirical validation 2026-06-06 (n=13,716 starts 2023-25) showed the v1 "aggressive bench" rules were REJECTED — even flagged starts average 9-11 FP, well above replacement ~5 FP. **Skill v2 is conservative** — default to START every confirmed start UNLESS the period SP-start cap is at risk of overflow OR Blended xFP is at replacement-level AND matchup is brutal. Also pre-scans opponent's confirmed SPs and flags any of my hitters facing high-boom opp pitchers (boom_stack ≥3). Pulls live matchup state + current win prob delta. Use every game-day morning before ~12 PM ET. The missing daily layer between /sp-week-plan (weekly cap math) and /roster-deep-audit (seasonal). Triggers — "pregame check", "should I bench today", "any of my SPs in trouble today", "morning roster check", "pregame", "should I start X today", "what's my matchup look like today".
 ---
 
 # pregame-check
 
 You are running the **morning-of (before lineup lock) daily decision check**.
 For each of the user's SP starts today: decide whether to START (count
-toward the 10-SP cap) or CAP-BENCH (keep on BE so the start doesn't count
+toward the period SP-start cap) or CAP-BENCH (keep on BE so the start doesn't count
 and the cap slot stays free). Also surface opp confirmed SPs + live
 matchup state + projected daily delta.
 

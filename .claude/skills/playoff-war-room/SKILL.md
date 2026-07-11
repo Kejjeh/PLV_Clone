@@ -14,7 +14,7 @@ bundle **playoff-war-room**):
 3. **sp-stash-finder** — IL'd FA SPs whose ESPN return date arrives before
    playoffs end, ranked by playoff xFP and IL-slot cost
 4. **sp-rehab-tracker** — rehab-timeline tracking for my IL'd + stash SPs
-5. **forced-drop-planner** — exact date the 10-SP cap breaches from the IL
+5. **forced-drop-planner** — exact date the period SP-start cap (20 in a 2-week playoff round) breaches from the IL
    return cascade + pre-identified cut candidate (cap_math)
 
 For any specific player, run `/triangulate <name>` for the 3-lens verdict.

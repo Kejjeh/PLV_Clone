@@ -139,6 +139,6 @@ won't abort the pipeline.
 
 - `/fa-replacement-pool` / `/fa-sp-pool` — flat FA-only ranked lists
 - `/sp-slate-grid` — daily SP slate with live boom_stack + all model lenses
-- `/sp-week-plan` — my-roster weekly 10-SP-cap math
+- `/sp-week-plan` — my-roster period SP-cap math (10 std / 16 ASG / 20 playoff)
 - `/triangulate` — single/few-player three-lens deep dive
 - `/sp-stash-finder` — IL'd FA SPs with playoff-return timing

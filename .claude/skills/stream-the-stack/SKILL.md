@@ -195,7 +195,7 @@ If no stack=2+ candidates exist today, the report notes this is expected
 - `/fa-sp-pool` — broader FA SP scan ranked by PL Top 100 (not by boom_stack).
   Use for season-long rosterables; stream-the-stack is for THIS WEEK's adds.
 - `/sp-week-plan` — once you've added the streamer, confirm it doesn't push
-  you past the 10-SP-start weekly cap.
+  you past the period SP-start cap (10 standard week / 16 ASG block / 20 playoff 2-week).
 - `/sp-decline` — the propped-results risk board this skill's `decline` column
   is sourced from. Run `/sp-decline --players "X"` for the full whiff/K-LEVEL
   decomposition behind any ⚠ PROPPED flag.
