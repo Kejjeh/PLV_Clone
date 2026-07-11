@@ -88,7 +88,9 @@ from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 # Era-general subseason variance bands (2026-07-10): honest FALLBACK sigma for
 # thin-history players only — the primary empirical-bootstrap path is untouched.
 from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
-from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK  # noqa: E402
+from plv_clone.cap_math import (  # noqa: E402
+    STARTS_PER_SP_PER_WEEK, period_window, is_period_covered, weeks_in_period,
+)
 
 OUT = ROOT / 'data' / 'outputs'
 
@@ -168,11 +170,24 @@ def build_state():
                     wtd[ht.team_name] = hs
                     wtd[at.team_name] = as_
 
-    # fraction of the current scoring week still unplayed (incl. today)
+    # fraction of the CURRENT matchup period still unplayed (incl. today) and how
+    # many scoring-weeks it spans. A standard period = 1 week (Mon–Sun). The ASG
+    # block uses its documented span (period 15 override). A multi-week playoff
+    # ROUND (matchupPeriods len > 1) spans that many Mon–Sun weeks. So frac_left
+    # and the current-period draw scale (mu * weeks) are right (2026-07-11).
     today = _today_et()
-    monday = current_period_monday(today)
-    week_end = monday + timedelta(days=6)
-    frac_left = min(max(((week_end - today).days + 1) / 7.0, 0.0), 1.0)
+    pw = period_window(cur)
+    if pw is not None:                        # ASG override (real date span)
+        p_start, p_end = pw
+        span_days = (p_end - p_start).days + 1
+        cur_period_weeks = max(1.0, round(span_days / 7.0))
+        frac_left = min(max(((p_end - today).days + 1) / span_days, 0.0), 1.0)
+    else:                                     # standard OR multi-week playoff
+        cur_period_weeks = float(weeks_in_period(mp, cur))
+        monday = current_period_monday(today)
+        span_days = 7 * int(cur_period_weeks)
+        week_end = monday + timedelta(days=span_days - 1)
+        frac_left = min(max(((week_end - today).days + 1) / span_days, 0.0), 1.0)
 
     return {
         'league': lg, 'teams': teams, 'names': names, 'josh': josh,
@@ -181,6 +196,8 @@ def build_state():
         'wins0': wins0, 'losses0': losses0, 'pts0': dict(pts0),
         'wtd': wtd, 'h2h0': dict(h2h0), 'cal': dict(cal),
         'today': today, 'frac_left': frac_left,
+        'cur_period_weeks': cur_period_weeks,
+        'cur_period_covered': is_period_covered(cur),
     }
 
 
@@ -434,6 +451,10 @@ def simulate(state, strength, n_sims, seed, josh_mu_delta=0.0,
 
     periods = sorted(state['cal'].keys())
     f = state['frac_left']
+    # current period may span >1 scoring week (ASG block): its remaining scoring
+    # is mu * weeks * frac_left, and sd scales by sqrt(weeks * frac_left). W=1 for
+    # a standard week -> byte-identical to the pre-2026-07-11 single-week draw.
+    W = float(state.get('cur_period_weeks', 1.0))
 
     # weekly score draws per team per period
     S = {}
@@ -441,8 +462,9 @@ def simulate(state, strength, n_sims, seed, josh_mu_delta=0.0,
         S[t] = {}
         for p in periods:
             if p == state['cur']:
+                fw = max(f * W, 1e-9)
                 S[t][p] = (state['wtd'].get(t, 0.0)
-                           + rng.normal(mu[t] * f, sd[t] * math.sqrt(max(f, 1e-9)),
+                           + rng.normal(mu[t] * f * W, sd[t] * math.sqrt(fw),
                                         n_sims))
             else:
                 S[t][p] = rng.normal(mu[t], sd[t], n_sims)
@@ -691,7 +713,9 @@ def main():
     print(f"  period {state['cur']} of {state['reg_end']} regular; playoffs: "
           f"{state['n_playoff']} teams, rounds "
           f"{[(p, f'{L}wk') for p, L in state['playoff_rounds']]}")
-    print(f"  current-week fraction remaining: {state['frac_left']:.2f}")
+    _wk = state.get('cur_period_weeks', 1.0)
+    _span = f", ~{_wk:.0f} scoring-week span (ASG/multi-week)" if _wk != 1.0 else ""
+    print(f"  current-period fraction remaining: {state['frac_left']:.2f}{_span}")
     for t in sorted(state['names'],
                     key=lambda x: (-state['wins0'][x], -state['pts0'].get(x, 0))):
         print(f"  {t:<28} {state['wins0'][t]:>2}-{state['losses0'][t]:<2}  "
@@ -757,6 +781,10 @@ def main():
         'marcel_il-tagged SP rows use the suppressed rp3 prior (gotcha #1) — '
         'FA-tier arms on sim rosters may be slightly underrated.',
         'Thin-history teams lean on the league-average weekly sd.',
+        'Current-period span: covered ASG/multi-week periods scale the weekly '
+        'draw by round(span_days/7) weeks; the ~3 ASG dead days are counted in '
+        'the calendar span, a mild (~2 nominal vs ~1.6 game-weeks) over-count of '
+        'that single period only. Standard 1-week periods are unchanged.',
         'Seeding tiebreak: H2H record within tie group then points-for; ESPN '
         'circular-knot edge cases resolve by group H2H win pct.',
         'Rule 13: decision layer only — nothing here moves rh3/rp3/rprs2.',
@@ -769,6 +797,8 @@ def main():
         'playoff_rounds': state['playoff_rounds'],
         'sims': args.sims, 'team_sims': args.team_sims, 'seed': args.seed,
         'frac_current_week_left': round(state['frac_left'], 3),
+        'cur_period_weeks': state.get('cur_period_weeks', 1.0),
+        'cur_period_covered': state.get('cur_period_covered', False),
         'standings': {t: {'wins': state['wins0'][t],
                           'losses': state['losses0'][t],
                           'pf': round(state['pts0'].get(t, 0), 1),

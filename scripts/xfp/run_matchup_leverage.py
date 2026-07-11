@@ -70,7 +70,6 @@ from build_matchup_dashboard import (  # noqa: E402
     _norm,
     IL_INJURY_STATES,
     ESPN_TO_MLB_TEAM,
-    MAX_SP_STARTS_PER_WEEK,
     SIGMA_PER_SP_START,
     SIGMA_PER_RP_GAME,
     FALLBACK_SP_PER_START,
@@ -78,6 +77,12 @@ from build_matchup_dashboard import (  # noqa: E402
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
 from scripts.xfp.lib.boom_bust import (  # noqa: E402
     SP_BOOM, SP_BUST, H_BOOM, H_BUST, RP_BOOM, RP_BUST,
+)
+# Period-aware SP cap + window (2026-07-11): the ASG/playoff multi-week blocks
+# carry a different cap (period 15 = 16) and a >7-day span. Default single-week
+# periods resolve to SP_CAP(10) + Mon–Sun, byte-identical to before.
+from plv_clone.cap_math import (  # noqa: E402
+    sp_cap_for_period, period_window, is_period_covered, weeks_in_period,
 )
 # Era-general subseason variance bands (2026-07-10): honest FALLBACK sigma for
 # thin-history players only — the primary empirical-bootstrap path is untouched.
@@ -251,17 +256,113 @@ def banked_sp_starts_from_box(sp_mlbams: set[int], week_start: date, today: date
     return int(((dates >= week_start.isoformat()) & (dates < today.isoformat())).sum())
 
 
+def espn_period_meta(league, period: int, my_team_id, opp_team_id) -> dict:
+    """AUTHORITATIVE per-team banked SP-start count for the current matchup period,
+    read straight from ESPN (the same statId-33 counter ESPN uses to enforce the
+    cap): cumulativeScore.statBySlot["22"].value. This is ground truth — it's the
+    3/16, 6/16 shown on the matchup screen — and supersedes the boxscore-store
+    inference. Also returns the elapsed scoring-period span (for the loud
+    multi-week warning) and the per-scoring-period cap rate (for a cross-check).
+
+    Returns {} on any failure so the caller falls back to the boxscore count."""
+    out: dict = {}
+    try:
+        data = league.espn_request.league_get(params={'view': ['mMatchupScore']})
+    except Exception as exc:
+        print(f'  WARN espn_period_meta: mMatchupScore fetch failed ({exc}); '
+              f'falling back to boxscore-store banked count')
+        return out
+
+    def _gs(side):
+        cum = (side or {}).get('cumulativeScore', {}) or {}
+        slot = (cum.get('statBySlot') or {}).get('22') or {}
+        if slot.get('statId') != 33:
+            return None
+        val = slot.get('value')
+        return int(round(val)) if val is not None else None
+
+    for m in data.get('schedule', []):
+        if m.get('matchupPeriodId') != period:
+            continue
+        for side in ('home', 'away'):
+            s = m.get(side)
+            if not s:
+                continue
+            tid = s.get('teamId')
+            if tid == my_team_id:
+                out['my_banked'] = _gs(s)
+                pbsp = s.get('pointsByScoringPeriod') or {}
+                if pbsp:
+                    sps = sorted(int(k) for k in pbsp.keys())
+                    out['elapsed_span_days'] = sps[-1] - sps[0]
+            elif tid == opp_team_id:
+                out['opp_banked'] = _gs(s)
+
+    # per-scoring-period start rate (statId 33) — for the cap cross-check warning
+    try:
+        sett = league.espn_request.league_get(params={'view': ['mSettings']})['settings']
+        lim = (sett.get('rosterSettings', {}) or {}).get('lineupSlotStatLimits', {}) or {}
+        rate = (lim.get('22') or {}).get('limitValue')
+        if rate:
+            out['cap_rate_per_sp'] = float(rate)
+    except Exception:
+        pass
+    return out
+
+
 def build_state(verbose=True):
     """Pull live matchup + schedules + projections; classify every active-slot
     player into H/SP/RP with remaining units and model mean/sigma."""
     mu = get_matchup()
     rh3_map, rp3_map, rp3_by_mlbam, rprs2_map, ts_map = load_projections()
     today = _today_et()
-    week_start = today - timedelta(days=today.weekday())
-    week_end = week_start + timedelta(days=6)
+    period = mu['period']
+
+    # ── PERIOD-AWARE cap + window (2026-07-11) ───────────────────────────────
+    # General rule: cap = 10 × weeks, weeks = len(matchupPeriods[period]) from
+    # ESPN settings — so regular weeks -> 10 and 2-week playoff rounds -> 20
+    # automatically. The ASG block (period 15) is the ONE exception: an explicit
+    # override (cap 16 + a real Jul 6–19 window) that beats the formula, because
+    # the All-Star break removes game-days AND ESPN lists it as a single week.
+    # A standard single-week period resolves to SP_CAP(10) + a Mon–Sun week —
+    # byte-identical to before.
+    try:
+        mp = getattr(mu['league_obj'].settings, 'matchup_periods', {}) or {}
+    except Exception:
+        mp = {}
+    weeks = weeks_in_period(mp, period)
+    sp_cap = sp_cap_for_period(period, weeks=weeks)
+    win = period_window(period)
+    if win is not None:                       # ASG override (real date span)
+        week_start, week_end = win
+    else:                                     # standard OR multi-week playoff
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(days=7 * max(1, weeks) - 1)
+
+    # Authoritative banked counts + loud multi-week / cap cross-checks from ESPN.
+    meta = espn_period_meta(mu['league_obj'], period,
+                            getattr(mu['mine'], 'team_id', None),
+                            getattr(mu['opp'], 'team_id', None))
+    # Warn ONLY when the period LOOKS single-week (weeks==1, no override) yet has
+    # already scored across >1 week — the ASG-without-override trap. A clean
+    # multi-week playoff round (weeks>=2) is handled by 10×weeks and must NOT warn.
+    if not is_period_covered(period) and weeks == 1:
+        span = meta.get('elapsed_span_days')
+        if span is not None and span > 6:
+            print('  ' + '!' * 70)
+            print(f'  LOUD WARNING: matchup period {period} has already scored across '
+                  f'{span + 1} calendar days (>1 week) but ESPN lists it as a single '
+                  f'week and it has NO override in cap_math.PERIOD_CAP_OVERRIDES. '
+                  f'Falling back to cap {sp_cap} + a single Mon–Sun week — very likely '
+                  f'WRONG for an ASG-style block. Add {{{period}: <cap>}} + a window to '
+                  f'cap_math.py. See the maintenance note there.')
+            print('  ' + '!' * 70)
 
     if verbose:
-        print(f'  period {mu["period"]}  week {week_start} -> {week_end}  today {today}')
+        cov = ('OVERRIDE' if is_period_covered(period)
+               else (f'10×{weeks}wk' if weeks > 1 else 'default'))
+        print(f'  period {period}  cap {sp_cap} ({cov})  weeks {weeks}  '
+              f'window {week_start} -> {week_end}  today {today}')
         print(f'  WTD: Ligers {mu["my_score"]:.1f} | {mu["opp"].team_name} {mu["opp_score"]:.1f}')
 
     # Schedules: ESPN primary, MLB Stats fallback — but ALWAYS fetch the all-30
@@ -372,18 +473,35 @@ def build_state(verbose=True):
     my_h, my_rp, my_sp = _classify(mu['my_lineup'], 'mine')
     opp_h, opp_rp, opp_sp = _classify(mu['opp_lineup'], 'opp')
 
-    banked_mine = banked_sp_starts_from_box(set(my_sp_ids.values()), week_start, today)
-    banked_opp = banked_sp_starts_from_box(set(opp_sp_ids.values()), week_start, today)
+    # Banked SP starts: ESPN's authoritative statId-33 count is ground truth
+    # (matches the x/CAP shown on the matchup screen); the boxscore-store count
+    # over the resolved window is the fallback AND an independent cross-check.
+    box_mine = banked_sp_starts_from_box(set(my_sp_ids.values()), week_start, today)
+    box_opp = banked_sp_starts_from_box(set(opp_sp_ids.values()), week_start, today)
+    banked_mine = meta.get('my_banked') if meta.get('my_banked') is not None else box_mine
+    banked_opp = meta.get('opp_banked') if meta.get('opp_banked') is not None else box_opp
+    if verbose:
+        src = 'ESPN' if meta.get('my_banked') is not None else 'box'
+        print(f'  banked SP starts: mine {banked_mine} (source {src}; box cross-check '
+              f'{box_mine}), opp {banked_opp} (box {box_opp})  cap {sp_cap}')
+        if meta.get('my_banked') is not None and meta['my_banked'] != box_mine:
+            print(f'  note: ESPN banked ({meta["my_banked"]}) != box cross-check '
+                  f'({box_mine}) — ESPN wins (bench-day starts / roster churn differ)')
+    if banked_mine >= sp_cap or banked_opp >= sp_cap:
+        print(f'  WARNING: a side has banked >= cap ({banked_mine}/{banked_opp} vs cap '
+              f'{sp_cap}) — if starts remain, the cap for period {period} may be too low.')
 
     return {
         'mu': mu, 'today': today, 'week_start': week_start, 'week_end': week_end,
+        'period': period, 'sp_cap': sp_cap, 'period_weeks': weeks,
+        'period_covered': is_period_covered(period),
         'days_remaining': (week_end - today).days + 1,
         'schedules_by_team': schedules_by_team, 'mlb_sched_all': mlb_sched_all,
         'my_hitters': my_h, 'my_rps': my_rp, 'my_sp_events': my_sp,
         'opp_hitters': opp_h, 'opp_rps': opp_rp, 'opp_sp_events': opp_sp,
         'banked_mine': banked_mine, 'banked_opp': banked_opp,
-        'cap_remaining_mine': max(MAX_SP_STARTS_PER_WEEK - banked_mine, 0),
-        'cap_remaining_opp': max(MAX_SP_STARTS_PER_WEEK - banked_opp, 0),
+        'cap_remaining_mine': max(sp_cap - banked_mine, 0),
+        'cap_remaining_opp': max(sp_cap - banked_opp, 0),
         'rp3_map': None,  # not needed post-classify
     }
 
@@ -711,6 +829,10 @@ def calibrate(periods_arg: str, n_sims: int, seed: int):
     cur = league.currentMatchupPeriod
     today = _today_et()
     week_start_cur = today - timedelta(days=today.weekday())
+    try:
+        _mp = getattr(league.settings, 'matchup_periods', {}) or {}
+    except Exception:
+        _mp = {}
 
     if periods_arg == 'auto':
         periods = [cur - 2, cur - 1]
@@ -724,9 +846,16 @@ def calibrate(periods_arg: str, n_sims: int, seed: int):
     box_p, box_h = _box('P'), _box('H')
     results = []
     for per in periods:
-        offset = cur - per
-        win_start = week_start_cur - timedelta(days=7 * offset)
-        win_end = win_start + timedelta(days=6)
+        # Period-aware window: use the documented override for a multi-week/ASG
+        # period, else the 7-day offset from the current week (BrownU default).
+        pw = period_window(per)
+        if pw is not None:
+            win_start, win_end = pw
+        else:
+            offset = cur - per
+            win_start = week_start_cur - timedelta(days=7 * offset)
+            win_end = win_start + timedelta(days=6)
+        per_cap = sp_cap_for_period(per, weeks=weeks_in_period(_mp, per))
         ws, we = win_start.isoformat(), win_end.isoformat()
         print(f'\n--- calibrate period {per}: {ws} -> {we} ---')
 
@@ -790,10 +919,10 @@ def calibrate(periods_arg: str, n_sims: int, seed: int):
                         for _ in range(n_hg):
                             total += rng.choice(np.asarray(src), n_sims)
                         n_events['H'] += n_hg
-            # chronological 10-start cap
+            # chronological start cap (period-aware: 10 default, 16 for ASG)
             start_events.sort(key=lambda t: t[0])
             for i, (_, draws) in enumerate(start_events):
-                if i < MAX_SP_STARTS_PER_WEEK:
+                if i < per_cap:
                     total += draws
             return total, n_events
 
@@ -868,9 +997,16 @@ def main():
     margin = my - opp
 
     print('\n--- STATE ---')
+    _cov = 'OVERRIDE' if state['period_covered'] else 'default'
+    print(f"  period {state['period']}  SP cap {state['sp_cap']} ({_cov})  "
+          f"window {state['week_start']} -> {state['week_end']}")
     print(f"  Ligers {state['mu']['my_score']:.1f}  vs  "
           f"{state['mu']['opp'].team_name} {state['mu']['opp_score']:.1f}   "
           f"(days left incl today: {state['days_remaining']})")
+    print(f"  SP starts banked/cap: mine {state['banked_mine']}/{state['sp_cap']} "
+          f"(remaining {state['cap_remaining_mine']}), "
+          f"opp {state['banked_opp']}/{state['sp_cap']} "
+          f"(remaining {state['cap_remaining_opp']})")
     print(f"  projected final: {my.mean():.0f} vs {opp.mean():.0f}   "
           f"margin p10/p50/p90 = {np.percentile(margin,10):+.0f} / "
           f"{np.percentile(margin,50):+.0f} / {np.percentile(margin,90):+.0f}")
@@ -893,8 +1029,14 @@ def main():
         'variance_sensitivity': vs,
         'regime': regime,
         'regime_note': REGIME_BLURB[regime],
+        'sp_cap': state['sp_cap'],
+        'period_weeks': state['period_weeks'],
+        'period_covered': state['period_covered'],
+        'period_window': [str(state['week_start']), str(state['week_end'])],
         'banked_sp_starts': state['banked_mine'],
+        'banked_sp_starts_opp': state['banked_opp'],
         'cap_remaining': state['cap_remaining_mine'],
+        'cap_remaining_opp': state['cap_remaining_opp'],
         'rule13': 'decision layer only — projections (rh3/rp3/rprs2) untouched',
     }
 
