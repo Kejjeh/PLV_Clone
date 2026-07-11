@@ -1,0 +1,322 @@
+{
+  "model": "rh3",
+  "n_pooled": 36571,
+  "folds": [
+    2018,
+    2019,
+    2021,
+    2022,
+    2023,
+    2024,
+    2025
+  ],
+  "pooled": {
+    "r_ridge": 0.6275,
+    "r_gbm": 0.5738,
+    "r_blend": 0.6257,
+    "mae_ridge": 0.0861,
+    "mae_gbm": 0.0915,
+    "mae_blend": 0.0863
+  },
+  "per_year": {
+    "2018": {
+      "n": 5154,
+      "ridge": 0.6073,
+      "gbm": 0.5815,
+      "blend": 0.6154
+    },
+    "2019": {
+      "n": 5387,
+      "ridge": 0.6812,
+      "gbm": 0.6071,
+      "blend": 0.6729
+    },
+    "2021": {
+      "n": 5258,
+      "ridge": 0.5776,
+      "gbm": 0.5091,
+      "blend": 0.5632
+    },
+    "2022": {
+      "n": 5055,
+      "ridge": 0.6445,
+      "gbm": 0.6171,
+      "blend": 0.6551
+    },
+    "2023": {
+      "n": 5312,
+      "ridge": 0.5974,
+      "gbm": 0.5231,
+      "blend": 0.5856
+    },
+    "2024": {
+      "n": 5271,
+      "ridge": 0.597,
+      "gbm": 0.5993,
+      "blend": 0.6284
+    },
+    "2025": {
+      "n": 5134,
+      "ridge": 0.6373,
+      "gbm": 0.562,
+      "blend": 0.6255
+    }
+  },
+  "gates": {
+    "gbm": {
+      "lift_ge_0.005": false,
+      "signs_ge_5of7": false,
+      "holdout_avg_pos": false
+    },
+    "blend": {
+      "lift_ge_0.005": false,
+      "signs_ge_5of7": false,
+      "holdout_avg_pos": true
+    }
+  },
+  "verdict": {
+    "gbm": "REJECTED",
+    "blend": "REJECTED"
+  },
+  "overfit_gap_mean": {
+    "ridge": 0.0061,
+    "gbm": 0.3858
+  },
+  "seed_stability": {
+    "s0": 0.5738,
+    "s1": 0.5738,
+    "s2": 0.5738
+  },
+  "decile_tables": {
+    "ridge": {
+      "0": {
+        "mean_pred": 0.3666,
+        "mean_actual": 0.3718,
+        "n": 3658,
+        "bias": -0.0052
+      },
+      "1": {
+        "mean_pred": 0.4208,
+        "mean_actual": 0.4231,
+        "n": 3657,
+        "bias": -0.0023
+      },
+      "2": {
+        "mean_pred": 0.4488,
+        "mean_actual": 0.4474,
+        "n": 3657,
+        "bias": 0.0014
+      },
+      "3": {
+        "mean_pred": 0.4709,
+        "mean_actual": 0.463,
+        "n": 3657,
+        "bias": 0.0078
+      },
+      "4": {
+        "mean_pred": 0.491,
+        "mean_actual": 0.4843,
+        "n": 3657,
+        "bias": 0.0067
+      },
+      "5": {
+        "mean_pred": 0.5112,
+        "mean_actual": 0.5092,
+        "n": 3657,
+        "bias": 0.002
+      },
+      "6": {
+        "mean_pred": 0.5346,
+        "mean_actual": 0.5341,
+        "n": 3657,
+        "bias": 0.0005
+      },
+      "7": {
+        "mean_pred": 0.5601,
+        "mean_actual": 0.5568,
+        "n": 3657,
+        "bias": 0.0033
+      },
+      "8": {
+        "mean_pred": 0.5948,
+        "mean_actual": 0.5917,
+        "n": 3657,
+        "bias": 0.0031
+      },
+      "9": {
+        "mean_pred": 0.6747,
+        "mean_actual": 0.6824,
+        "n": 3657,
+        "bias": -0.0077
+      }
+    },
+    "gbm": {
+      "0": {
+        "mean_pred": 0.3504,
+        "mean_actual": 0.3823,
+        "n": 3658,
+        "bias": -0.0319
+      },
+      "1": {
+        "mean_pred": 0.4121,
+        "mean_actual": 0.4294,
+        "n": 3657,
+        "bias": -0.0173
+      },
+      "2": {
+        "mean_pred": 0.4408,
+        "mean_actual": 0.4503,
+        "n": 3657,
+        "bias": -0.0095
+      },
+      "3": {
+        "mean_pred": 0.4641,
+        "mean_actual": 0.4678,
+        "n": 3657,
+        "bias": -0.0036
+      },
+      "4": {
+        "mean_pred": 0.486,
+        "mean_actual": 0.4863,
+        "n": 3657,
+        "bias": -0.0004
+      },
+      "5": {
+        "mean_pred": 0.5084,
+        "mean_actual": 0.5123,
+        "n": 3657,
+        "bias": -0.004
+      },
+      "6": {
+        "mean_pred": 0.5328,
+        "mean_actual": 0.5286,
+        "n": 3657,
+        "bias": 0.0043
+      },
+      "7": {
+        "mean_pred": 0.5604,
+        "mean_actual": 0.5515,
+        "n": 3657,
+        "bias": 0.0089
+      },
+      "8": {
+        "mean_pred": 0.5982,
+        "mean_actual": 0.5902,
+        "n": 3657,
+        "bias": 0.008
+      },
+      "9": {
+        "mean_pred": 0.6912,
+        "mean_actual": 0.6651,
+        "n": 3657,
+        "bias": 0.0262
+      }
+    },
+    "blend": {
+      "0": {
+        "mean_pred": 0.3666,
+        "mean_actual": 0.3719,
+        "n": 3658,
+        "bias": -0.0053
+      },
+      "1": {
+        "mean_pred": 0.4201,
+        "mean_actual": 0.4231,
+        "n": 3657,
+        "bias": -0.0031
+      },
+      "2": {
+        "mean_pred": 0.4473,
+        "mean_actual": 0.4421,
+        "n": 3657,
+        "bias": 0.0052
+      },
+      "3": {
+        "mean_pred": 0.4682,
+        "mean_actual": 0.4647,
+        "n": 3657,
+        "bias": 0.0036
+      },
+      "4": {
+        "mean_pred": 0.4881,
+        "mean_actual": 0.4843,
+        "n": 3657,
+        "bias": 0.0038
+      },
+      "5": {
+        "mean_pred": 0.509,
+        "mean_actual": 0.514,
+        "n": 3657,
+        "bias": -0.005
+      },
+      "6": {
+        "mean_pred": 0.5323,
+        "mean_actual": 0.5358,
+        "n": 3657,
+        "bias": -0.0035
+      },
+      "7": {
+        "mean_pred": 0.5579,
+        "mean_actual": 0.5544,
+        "n": 3657,
+        "bias": 0.0035
+      },
+      "8": {
+        "mean_pred": 0.5928,
+        "mean_actual": 0.5942,
+        "n": 3657,
+        "bias": -0.0014
+      },
+      "9": {
+        "mean_pred": 0.6766,
+        "mean_actual": 0.6793,
+        "n": 3657,
+        "bias": -0.0027
+      }
+    }
+  },
+  "best_params_by_fold": {
+    "2018": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2019": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2021": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2022": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2023": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2024": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    },
+    "2025": {
+      "learning_rate": 0.1,
+      "max_iter": 500,
+      "max_leaf_nodes": 31,
+      "min_samples_leaf": 50
+    }
+  }
+}
