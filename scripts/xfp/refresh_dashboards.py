@@ -143,6 +143,23 @@ def main():
     if not ok_bs:
         print('  ⚠ boxscore bridge failed — recent actuals may lag 1-2 days')
 
+    # 1.6. As-of SB gamelog refresh (sb_asof_feature_2026-07-10.md): the rh3
+    # feature sb_per_pa_to_sh went LIVE on the MLB Stats API gameLog source.
+    # Completed years are immutable; the 2026 cache goes stale as the season
+    # progresses, so re-pull + assemble (~5-6 min) BEFORE the rolling-hitters
+    # rebuild (step 1c on the --no-models path; inside refresh_all in step 2)
+    # so the rolling cache sees yesterday's steals. Fail-soft: on failure the
+    # rolling builder carries the LAST PULLED CUTOFF forward — leakage-safe,
+    # but recent SBs won't be credited until the next successful pull.
+    ok_sb = run('1.6. Refresh as-of SB gamelog (2026 pull + assemble)',
+                'python -X utf8 scripts/xfp/build_batter_sb_gamelog.py pull --years 2026 --force && '
+                'python -X utf8 scripts/xfp/build_batter_sb_gamelog.py assemble',
+                timeout=900)
+    if not ok_sb:
+        print('  ⚠ as-of SB refresh failed — rolling builder carries the last '
+              'pulled SB cutoff forward (leakage-safe, but sb_per_pa_to_sh '
+              'will lag until the next successful pull)')
+
     run('1b. Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 
@@ -173,6 +190,27 @@ def main():
                  timeout=600)
     if not ok_ros:
         print('  ⚠ ros schedule-strength rebuild failed — pipelines may trip the NaN guard')
+
+    # 1.95. Box-score-era bx priors (bx_ensemble_2026-07-10.md): bx_prior_h is
+    # a PROMOTED rh3 feature (B1 PASS + live-SB pre-flight PROMOTE 2026-07-10),
+    # so this must run BEFORE the rh3 rebuild in step 2. The cache is built
+    # from COMPLETED T-1 seasons, so it is static within a season — the step
+    # is effectively annual (season rollover / boxscore-era panel rebuild).
+    # mtime gate: skip when the CSV exists and is <30 days old; the rebuild is
+    # cheap and idempotent, so the gate is purely a time saver. Fail-soft: rh3
+    # raises loudly on a missing/stale cache (>50%-current-year-NaN guard).
+    _bx_csv = ROOT / 'data' / 'research' / 'xfp_cache' / 'bx_priors_2018_2026.csv'
+    _bx_fresh = (_bx_csv.exists()
+                 and (time.time() - _bx_csv.stat().st_mtime) < 30 * 86400)
+    if _bx_fresh:
+        print('\n  1.95. bx priors cache fresh (<30 days) — skip rebuild')
+    else:
+        ok_bx = run('1.95. Build bx box-score priors (annual-ish, mtime-gated)',
+                    'python -X utf8 scripts/xfp/build_bx_priors.py',
+                    timeout=900)
+        if not ok_bx:
+            print('  ⚠ bx priors rebuild failed — rh3 (bx_prior_h is a promoted '
+                  'feature) will fail loudly if the existing cache is missing/stale')
 
     if not args.no_models:
         # --skip-schedule: build_pitcher_schedule already ran as its own step

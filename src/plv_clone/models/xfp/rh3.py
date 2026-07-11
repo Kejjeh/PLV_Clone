@@ -44,6 +44,7 @@ MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2
 H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
 ROS_OPP_SP_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_opp_sp_xwoba_per_hitter.csv'
+BX_PRIORS_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'bx_priors_2018_2026.csv'
 MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 HITTER_RATINGS_MASTER = ROOT / 'data' / 'research' / 'hitter_ratings_master.csv'
 MODEL_PKL   = ROOT / 'data' / 'models' / 'xfp_rh3_pipeline.pkl'
@@ -131,6 +132,19 @@ RH3_FEATS = [
     # (batter, year, split_day); NaN filled with per-year mean (mostly
     # end-of-year batters with no remaining games).
     'ros_opp_sp_xwoba_weighted',
+    # Box-score-era ensemble prior (bx v0 hitter leg): vintage ridge prediction
+    # of year-T fp_per_pa from the player's T-1 box line, trained only on panel
+    # years <= T-1 (no train-on-future). Validated PASS 2026-07-10 as cell B1
+    # (Δr +0.0088 vs full baseline on the pre-SB cache; pre-flight on the
+    # live-SB BUILDER_VERSION-3 cache +0.0076, holdout mean +0.0072, coef
+    # +0.026 — PROMOTE per the pre-registered rule; sign consistency 4/7 on
+    # the new substrate, disclosed). Cache built by
+    # scripts/xfp/build_bx_priors.py — see
+    # data/research/xfp_cache/bx_priors_2018_2026.csv. Joined on
+    # (batter, year); NaN (rookies / no qualifying T-1 box line) filled with
+    # per-year mean. See bx_ensemble_2026-07-10.md +
+    # bx_prior_h_promotion_2026-07-10.md.
+    'bx_prior_h',
 ]
 H2_LOCKED_CSV = ROOT / 'data' / 'outputs' / 'seasonality_h2_locked.csv'
 XWOBA_RESID_CSV = ROOT / 'data' / 'outputs' / 'hitter_xwoba_residual.csv'
@@ -394,6 +408,41 @@ def main():
             'Run scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py.'
         )
 
+    # Box-score-era ensemble prior (validated 2026-07-10, B1 PASS + pre-flight
+    # PROMOTE on the live-SB cache). Cache source: scripts/xfp/build_bx_priors.py.
+    # Merge mirrors the validation harness (_merge_bx in validate_bx_ensemble.py):
+    # (batter, year) mlbam join, per-year-mean fill.
+    if BX_PRIORS_CSV.exists():
+        bx = pd.read_csv(BX_PRIORS_CSV)[['mlbam', 'year', 'bx_prior_h']].rename(
+            columns={'mlbam': 'batter'})
+        rolling = rolling.merge(bx, on=['batter', 'year'], how='left')
+        n_missing = int(rolling['bx_prior_h'].isna().sum())
+        # HARD GUARD (mirrors ros_opp_sp_xwoba_weighted, audit 2026-07-04): the
+        # bx prior is built from COMPLETED T-1 seasons, so ~35-40% NaN (rookies /
+        # sub-floor T-1 lines) is the healthy state. If the MAJORITY of
+        # current-season rows are NaN pre-fill, the cache is stale/broken (e.g.
+        # season rolled over without a build_bx_priors.py rerun) and the fill
+        # would silently constant-serve a validated feature: fail loudly.
+        _cur_yr = int(rolling['year'].max())
+        _cur = rolling[rolling['year'] == _cur_yr]
+        _cur_nan = float(_cur['bx_prior_h'].isna().mean()) if len(_cur) else 0.0
+        if _cur_nan > 0.50:
+            raise RuntimeError(
+                f"bx_prior_h: {_cur_nan:.0%} of {_cur_yr} rows are NaN pre-fill — "
+                f"the bx priors cache looks STALE (expected ~35-40% NaN). Rerun "
+                "scripts/xfp/build_bx_priors.py (refresh step 1.95). Refusing to "
+                "silently constant-fill a validated feature.")
+        year_means = rolling.groupby('year')['bx_prior_h'].transform('mean')
+        rolling['bx_prior_h'] = rolling['bx_prior_h'].fillna(year_means)
+        rolling['bx_prior_h'] = rolling['bx_prior_h'].fillna(rolling['bx_prior_h'].mean())
+        print(f'  bx_prior_h missing pre-fill: {n_missing}/{len(rolling)} '
+              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
+    else:
+        raise FileNotFoundError(
+            f'Missing required bx priors cache: {BX_PRIORS_CSV}. '
+            'Run scripts/xfp/build_bx_priors.py.'
+        )
+
     # Shrinkage on both windows
     print('Shrinkage (cumulative + last21)...')
     pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
@@ -454,7 +503,11 @@ def main():
         # showed Δr +0.0137 vs full rh3 v2 baseline, 7/7 per-year positives,
         # holdout 2/2. Rule 9 hard assert now FIRES meaningfully against the
         # full prior-production baseline (RH3_FEATS minus this one feature).
-        v2_added: set[str] = {"ros_opp_sp_xwoba_weighted"}
+        # 2026-07-10: promoted bx_prior_h (box-score-era ensemble prior, B1
+        # PASS + live-SB pre-flight PROMOTE, bx_ensemble_2026-07-10.md). The
+        # gate now asserts the JOINT lift of both promoted features vs a
+        # baseline that drops them.
+        v2_added: set[str] = {"ros_opp_sp_xwoba_weighted", "bx_prior_h"}
         baseline_feats = [f for f in RH3_FEATS if 'last21' not in f and f not in v2_added]
         _ , baseline, _ = cross_year_eval(rolling, baseline_feats)
         delta = overall['r'] - baseline['r']

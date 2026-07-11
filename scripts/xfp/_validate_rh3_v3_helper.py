@@ -96,6 +96,25 @@ def load_and_prep_rh3_inputs() -> pd.DataFrame:
     else:
         rolling["ros_opp_sp_xwoba_weighted"] = 0.0
 
+    # bx_prior_h — in RH3_FEATS since 2026-07-10 (B1 promotion), must be merged
+    # for Rule 9 baseline parity. Mirrors the rh3.main() merge (mlbam join on
+    # (batter, year), per-year-mean fill). Idempotent: skip if caller pre-merged
+    # (e.g. validate_bx_ensemble._merge_bx).
+    if "bx_prior_h" in rolling.columns:
+        pass
+    elif rh3.BX_PRIORS_CSV.exists():
+        bx = pd.read_csv(rh3.BX_PRIORS_CSV)[["mlbam", "year", "bx_prior_h"]].rename(
+            columns={"mlbam": "batter"}
+        )
+        rolling = rolling.merge(bx, on=["batter", "year"], how="left")
+        year_means = rolling.groupby("year")["bx_prior_h"].transform("mean")
+        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(year_means)
+        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(
+            rolling["bx_prior_h"].mean()
+        )
+    else:
+        rolling["bx_prior_h"] = 0.0
+
     # xwoba_gap_to (derived; not currently in FEATS but computed for parity)
     if "xwoba_on_contact_to" in rolling.columns and "woba_d_sum_to" in rolling.columns:
         rolling["actual_woba_per_pa_to"] = np.where(

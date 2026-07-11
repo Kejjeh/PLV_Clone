@@ -1,0 +1,199 @@
+{
+  "leg": "rh3",
+  "sb_per_pa_to_nonzero_frac": 0.0,
+  "baseline_r": 0.6275,
+  "join_stats": {
+    "bx_prior_h": {
+      "overall_match_rate": 0.5488,
+      "per_year": {
+        "2018": {
+          "n_rows": 13685,
+          "n_matched": 6544,
+          "match_rate": 0.4782
+        },
+        "2019": {
+          "n_rows": 14439,
+          "n_matched": 6982,
+          "match_rate": 0.4836
+        },
+        "2021": {
+          "n_rows": 14144,
+          "n_matched": 6142,
+          "match_rate": 0.4342
+        },
+        "2022": {
+          "n_rows": 10484,
+          "n_matched": 6402,
+          "match_rate": 0.6106
+        },
+        "2023": {
+          "n_rows": 10715,
+          "n_matched": 6570,
+          "match_rate": 0.6132
+        },
+        "2024": {
+          "n_rows": 10690,
+          "n_matched": 6799,
+          "match_rate": 0.636
+        },
+        "2025": {
+          "n_rows": 10764,
+          "n_matched": 6739,
+          "match_rate": 0.6261
+        },
+        "2026": {
+          "n_rows": 5328,
+          "n_matched": 3347,
+          "match_rate": 0.6282
+        }
+      }
+    },
+    "bx_age_mult_h": {
+      "overall_match_rate": 0.5488,
+      "per_year": {
+        "2018": {
+          "n_rows": 13685,
+          "n_matched": 6544,
+          "match_rate": 0.4782
+        },
+        "2019": {
+          "n_rows": 14439,
+          "n_matched": 6982,
+          "match_rate": 0.4836
+        },
+        "2021": {
+          "n_rows": 14144,
+          "n_matched": 6142,
+          "match_rate": 0.4342
+        },
+        "2022": {
+          "n_rows": 10484,
+          "n_matched": 6402,
+          "match_rate": 0.6106
+        },
+        "2023": {
+          "n_rows": 10715,
+          "n_matched": 6570,
+          "match_rate": 0.6132
+        },
+        "2024": {
+          "n_rows": 10690,
+          "n_matched": 6799,
+          "match_rate": 0.636
+        },
+        "2025": {
+          "n_rows": 10764,
+          "n_matched": 6739,
+          "match_rate": 0.6261
+        },
+        "2026": {
+          "n_rows": 5328,
+          "n_matched": 3347,
+          "match_rate": 0.6282
+        }
+      }
+    }
+  },
+  "cells": {
+    "B1_bx_prior_h": {
+      "cell": "B1_bx_prior_h",
+      "r_baseline": 0.6275,
+      "r_extended": 0.6363,
+      "lift": 0.0088,
+      "n_baseline": 36571,
+      "n_extended": 36571,
+      "per_year_lift": {
+        "2018": 0.0128,
+        "2019": 0.0161,
+        "2021": 0.0002,
+        "2022": -0.0049,
+        "2023": 0.0123,
+        "2024": 0.0191,
+        "2025": -0.0005
+      },
+      "positives": 5,
+      "holdout_lifts": {
+        "2024": 0.0191,
+        "2025": -0.0005
+      },
+      "holdout_mean_lift": 0.0093,
+      "holdout_each_year_positive": false,
+      "coef": 0.028422,
+      "gates": {
+        "g1_lift_ge_0.005": true,
+        "g2_signs_5of7": "5/7 -> True",
+        "g3_holdout_mean_positive": "mean=+0.0093 -> True (each-year-positive: False)",
+        "g4_coef_sign": "+0.028422 expected + -> True"
+      },
+      "verdict": "PASS"
+    },
+    "B3_bx_age_mult_h": {
+      "cell": "B3_bx_age_mult_h",
+      "r_baseline": 0.6275,
+      "r_extended": 0.6276,
+      "lift": 0.0001,
+      "n_baseline": 36571,
+      "n_extended": 36571,
+      "per_year_lift": {
+        "2018": 0.0008,
+        "2019": -0.0013,
+        "2021": 0.0008,
+        "2022": -0.0006,
+        "2023": 0.0025,
+        "2024": -0.0006,
+        "2025": 0.0
+      },
+      "positives": 3,
+      "holdout_lifts": {
+        "2024": -0.0006,
+        "2025": 0.0
+      },
+      "holdout_mean_lift": -0.0003,
+      "holdout_each_year_positive": false,
+      "coef": 0.003932,
+      "gates": {
+        "g1_lift_ge_0.005": false,
+        "g2_signs_5of7": "3/7 -> False",
+        "g3_holdout_mean_positive": "mean=-0.0003 -> False (each-year-positive: False)",
+        "g4_coef_sign": "+0.003932 expected + -> True"
+      },
+      "verdict": "REJECTED"
+    }
+  },
+  "joint": {
+    "cell": "JOINT_B1_B3",
+    "r_baseline": 0.6275,
+    "r_extended": 0.6361,
+    "lift": 0.0086,
+    "n_baseline": 36571,
+    "n_extended": 36571,
+    "per_year_lift": {
+      "2018": 0.0129,
+      "2019": 0.0143,
+      "2021": 0.001,
+      "2022": -0.0049,
+      "2023": 0.0132,
+      "2024": 0.018,
+      "2025": -0.0001
+    },
+    "positives": 5,
+    "holdout_lifts": {
+      "2024": 0.018,
+      "2025": -0.0001
+    },
+    "holdout_mean_lift": 0.0089,
+    "holdout_each_year_positive": false,
+    "coef": 0.028025,
+    "gates": {
+      "g1_lift_ge_0.005": true,
+      "g2_signs_5of7": "5/7 -> True",
+      "g3_holdout_mean_positive": "mean=+0.0089 -> True (each-year-positive: False)",
+      "g4_coef_sign": "+0.028025 expected + -> True"
+    },
+    "verdict": "PASS",
+    "joint_coefs": {
+      "bx_prior_h": 0.028025,
+      "bx_age_mult_h": 0.002009
+    }
+  }
+}

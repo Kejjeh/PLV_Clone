@@ -1,0 +1,85 @@
+{
+  "run": "B1 pre-flight on BUILDER_VERSION-3 (live-SB) rolling cache",
+  "sb_per_pa_to_nonzero_frac": 0.5586211481567663,
+  "join_stats": {
+    "bx_prior_h": {
+      "overall_match_rate": 0.5488,
+      "per_year": {
+        "2018": {
+          "n_rows": 13685,
+          "n_matched": 6544,
+          "match_rate": 0.4782
+        },
+        "2019": {
+          "n_rows": 14439,
+          "n_matched": 6982,
+          "match_rate": 0.4836
+        },
+        "2021": {
+          "n_rows": 14144,
+          "n_matched": 6142,
+          "match_rate": 0.4342
+        },
+        "2022": {
+          "n_rows": 10484,
+          "n_matched": 6402,
+          "match_rate": 0.6106
+        },
+        "2023": {
+          "n_rows": 10715,
+          "n_matched": 6570,
+          "match_rate": 0.6132
+        },
+        "2024": {
+          "n_rows": 10690,
+          "n_matched": 6799,
+          "match_rate": 0.636
+        },
+        "2025": {
+          "n_rows": 10764,
+          "n_matched": 6739,
+          "match_rate": 0.6261
+        },
+        "2026": {
+          "n_rows": 5328,
+          "n_matched": 3347,
+          "match_rate": 0.6282
+        }
+      }
+    }
+  },
+  "cell": {
+    "cell": "B1_PREFLIGHT_bx_prior_h",
+    "r_baseline": 0.6343,
+    "r_extended": 0.6419,
+    "lift": 0.0076,
+    "n_baseline": 36571,
+    "n_extended": 36571,
+    "per_year_lift": {
+      "2018": 0.0109,
+      "2019": 0.0144,
+      "2021": -0.0003,
+      "2022": -0.0059,
+      "2023": 0.0107,
+      "2024": 0.0165,
+      "2025": -0.0021
+    },
+    "positives": 4,
+    "holdout_lifts": {
+      "2024": 0.0165,
+      "2025": -0.0021
+    },
+    "holdout_mean_lift": 0.0072,
+    "holdout_each_year_positive": false,
+    "coef": 0.026438,
+    "gates": {
+      "g1_lift_ge_0.005": true,
+      "g2_signs_5of7": "4/7 -> False",
+      "g3_holdout_mean_positive": "mean=+0.0072 -> True (each-year-positive: False)",
+      "g4_coef_sign": "+0.026438 expected + -> True"
+    },
+    "verdict": "REJECTED"
+  },
+  "decision_rule": "PROMOTE iff lift >= +0.005 AND holdout mean (2024-2025) > 0; [+0.003,+0.005) MARGINAL-STOP; < +0.003 superseded-by-SB",
+  "decision": "PROMOTE"
+}
