@@ -36,6 +36,15 @@ H_EVENTS  = {'single', 'double', 'triple', 'home_run'}
 # as-of-cutoff SB feature was attempted via runner-id transitions and REJECTED
 # (league totals +25-60% inflated by WP/PB/balk advances; see
 # data/research/validation_runs/sb_target_fix_2026-07-10.md).
+#
+# UPDATE (sb_asof 2026-07-10, BUILDER_VERSION 3): the FEATURE columns sb_to /
+# sb_per_pa_to / sb_last21 / sb_per_pa_last21 are now OVERRIDDEN post-
+# aggregation from the TRUE as-of MLB Stats API gameLog source
+# (batter_sb_asof_2018_2026.csv, built by build_batter_sb_gamelog.py;
+# source-validated 100% exact vs season mlb_sb 2018-2025). The statcast-events
+# zeros only survive if that CSV is missing (loud warning). The TARGET is
+# unchanged — it still uses the season-rate allocation (rrbisb_rates), never
+# sb_to, so this override touches features only.
 SB_EVENTS = {'stolen_base_2b', 'stolen_base_3b', 'stolen_base_home'}
 TB_MAP = {'single': 1, 'double': 2, 'triple': 3, 'home_run': 4}
 NON_PA = SB_EVENTS | {
@@ -212,6 +221,65 @@ def fp_per_pa_with_rrbisb(window_agg: pd.DataFrame, rrbisb_rates: pd.Series) -> 
     return ((window_agg['fp_total'] + window_agg['pa'] * rrbisb_per_pa) / pa).round(4)
 
 
+SB_ASOF_CSV = CACHE / 'batter_sb_asof_2018_2026.csv'
+_sb_asof_warned = False
+
+
+def load_sb_asof(year: int) -> pd.DataFrame | None:
+    """Per-(batter, cutoff_date) TRUE as-of SB counts from the MLB Stats API
+    gameLog source (build_batter_sb_gamelog.py). None if unavailable."""
+    global _sb_asof_warned
+    if not SB_ASOF_CSV.exists():
+        if not _sb_asof_warned:
+            print('  *** WARNING: batter_sb_asof_2018_2026.csv MISSING — '
+                  'sb_to/sb_per_pa_to features fall back to DEAD ZEROS. '
+                  'Run scripts/xfp/build_batter_sb_gamelog.py '
+                  '(pull + assemble). ***', flush=True)
+            _sb_asof_warned = True
+        return None
+    sb = pd.read_csv(SB_ASOF_CSV)
+    sb = sb[sb['year'] == year].copy()
+    if sb.empty:
+        print(f'  *** WARNING [{year}]: no rows in batter_sb_asof CSV — '
+              f'SB features zero for this year. ***', flush=True)
+        return None
+    sb['cutoff_date'] = pd.to_datetime(sb['cutoff_date'])
+    return sb
+
+
+def apply_sb_asof(merged: pd.DataFrame, sb_asof: pd.DataFrame | None,
+                  actual_cutoff: pd.Timestamp, year: int) -> pd.DataFrame:
+    """Override the dead statcast-derived SB feature columns with TRUE as-of
+    counts. Exact cutoff match preferred; else fall back to the latest
+    available cutoff <= actual_cutoff (stale-but-leakage-safe, loud warning —
+    happens only when a new in-progress split appears before the daily
+    `build_batter_sb_gamelog.py pull --years <year> --force` re-pull)."""
+    if sb_asof is None:
+        return merged
+    cells = sb_asof[sb_asof['cutoff_date'] <= actual_cutoff]
+    if cells.empty:
+        print(f'  *** WARNING [{year}] cutoff {actual_cutoff.date()}: no '
+              f'as-of SB cell <= cutoff — SB features zero for this split ***',
+              flush=True)
+        return merged
+    best = cells['cutoff_date'].max()
+    if best != actual_cutoff:
+        print(f'  *** WARNING [{year}] cutoff {actual_cutoff.date()}: as-of '
+              f'SB stale (using {best.date()}) — re-run '
+              f'build_batter_sb_gamelog.py for exact counts ***', flush=True)
+    cell = cells[cells['cutoff_date'] == best].set_index('batter')
+    merged['sb_to'] = merged['batter'].map(cell['sb_to']).fillna(0).astype(float)
+    merged['sb_per_pa_to'] = merged['sb_to'] / merged['pa_to'].replace(0, np.nan)
+    if 'sb_last21' in merged.columns:
+        merged['sb_last21'] = merged['batter'].map(cell['sb_last21']).astype(float)
+        # keep NaN where the batter had no last21 statcast window (pa NaN),
+        # consistent with the other last21 rates
+        merged.loc[merged['pa_last21'].isna(), 'sb_last21'] = np.nan
+        merged['sb_per_pa_last21'] = (
+            merged['sb_last21'] / merged['pa_last21'].replace(0, np.nan))
+    return merged
+
+
 def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
     """For one year, build rows for each (batter, split_day) pair."""
     from datetime import date as _date
@@ -248,6 +316,9 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
             rrbisb_rates = pd.Series(dtype=float)
     else:
         rrbisb_rates = pd.Series(dtype=float)
+
+    # TRUE as-of SB source (features only; target uses rrbisb_rates above).
+    sb_asof = load_sb_asof(year)
 
     # Build the list of split_days to actually use. For complete past years,
     # this is just SPLIT_DAYS_OF_SEASON. For in-progress year, only use the
@@ -321,6 +392,9 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
                                   eligible_batters=set(merged['batter']))
         merged = merged.merge(lineup, on='batter', how='left')
 
+        # Override dead statcast SB feature columns with TRUE as-of counts
+        merged = apply_sb_asof(merged, sb_asof, actual_cutoff, year)
+
         merged['year'] = year
         merged['split_day'] = split_day
         merged['cutoff_date'] = actual_cutoff.date()
@@ -332,7 +406,10 @@ def build_year(year: int, season_start: pd.Timestamp) -> pd.DataFrame:
 # Bump when build_year logic changes (invalidates the per-year immutable cache).
 # v2 (2026-07-10): sb_target_fix — ros_full_fp_per_pa now includes the MLB-API
 # SB season-rate allocation alongside R/RBI (was silently SB-less since RH1).
-BUILDER_VERSION = 2
+# v3 (2026-07-10): sb_asof — sb_to/sb_per_pa_to/sb_last21/sb_per_pa_last21
+# feature columns overridden from the TRUE as-of gameLog source
+# (batter_sb_asof_2018_2026.csv). Target formula unchanged.
+BUILDER_VERSION = 3
 
 
 def main():
@@ -351,7 +428,8 @@ def main():
             lambda yr=yr, start=start: build_year(yr, pd.Timestamp(start)),
             dep_paths=[str(CACHE / f'statcast_{yr}.parquet'),
                        str(CACHE / f'hitter_lineup_appearances_{yr}.parquet'),
-                       str(CACHE / f'hitter_counting_stats_{yr}.json')],
+                       str(CACHE / f'hitter_counting_stats_{yr}.json'),
+                       str(SB_ASOF_CSV)],
             version=BUILDER_VERSION)
         if not out.empty:
             print(f'  [{yr}] {len(out)} (batter, split) rows', flush=True)

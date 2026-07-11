@@ -70,6 +70,14 @@ data/research/xfp_cache/*.parquet.bak
 # statcast mtime,size; rebuilt on demand — binary, rotates per refresh, never track).
 data/research/xfp_cache/.build_cache/
 
+# Raw MLB Stats API gameLog JSON cache for the as-of SB source (~5.7k files,
+# regenerable via build_batter_sb_gamelog.py pull; resume-safe request cache).
+data/research/xfp_cache/sb_gamelog_raw/
+
+# Raw MLB Stats API gameLog JSON cache for the subseason variance-bands panel
+# (~5k gz files 2010-2025, regenerable via build_subseason_variance_bands.py pull).
+data/research/xfp_cache/variance_gamelog_raw/
+
 # Keep aggregated CSVs in xfp_cache (training reference, smaller)
 !data/research/xfp_cache/*.csv
 
