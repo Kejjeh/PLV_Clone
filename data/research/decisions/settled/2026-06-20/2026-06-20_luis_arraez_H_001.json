@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-20_luis_arraez_H_001",
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_SLAP",
+    "archetype_overall": 58,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.252508033089994,
+    "live_marginal": 10.700000000000017,
+    "model_rank": 70,
+    "override_tag": null,
+    "pl_rank": 59,
+    "proj_per": 1.95,
+    "replacement_delta": null
+  },
+  "mlbam_id": 650333,
+  "player_name": "Luis Arraez",
+  "reason_tag": "no_convergence",
+  "settled_at": "2026-07-11",
+  "settlement": {
+    "actual_fp_per_unit": 0.7183098591549296,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 71,
+    "proj_per": 0.5571428571428572,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.16116700201207246,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-20",
+  "verdict_top": "MIXED"
+}

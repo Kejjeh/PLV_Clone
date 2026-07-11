@@ -17,8 +17,18 @@
   "mlbam_id": 624413,
   "player_name": "Pete Alonso",
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-11",
+  "settlement": {
+    "actual_fp_per_unit": 0.48717948717948717,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 78,
+    "proj_per": 0.6057142857142858,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.11853479853479859,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-20",
   "verdict_top": "BUY"
 }

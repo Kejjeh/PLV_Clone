@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-20_bryce_eldridge_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 68,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 1.685626243651644,
+    "live_marginal": -92.8,
+    "model_rank": 53,
+    "override_tag": null,
+    "pl_rank": 93,
+    "proj_per": 2.0,
+    "replacement_delta": null
+  },
+  "mlbam_id": 805811,
+  "player_name": "Bryce Eldridge",
+  "reason_tag": "process_red_flag",
+  "settled_at": "2026-07-11",
+  "settlement": {
+    "actual_fp_per_unit": 0.273972602739726,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.5714285714285714,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.2974559686888454,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-20",
+  "verdict_top": "CAUTION"
+}
