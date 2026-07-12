@@ -155,6 +155,53 @@ def test_unresolved_mlbam_pitcher_is_omitted():
     assert result == []
 
 
+def test_cap_kwarg_counts_only_first_start():
+    """cap= (decision-console seam) overrides the flat SP_CAP default."""
+    week_start = date(2026, 5, 22)
+    roster = [
+        RosterPitcher(name=f"Pitcher{i}", mlbam_id=10000 + i,
+                      injury_status="ACTIVE", position="SP")
+        for i in range(3)
+    ]
+    probables = WeekProbables(
+        starts={(10000 + i, week_start + timedelta(days=i)): "BAL" for i in range(3)},
+    )
+    rp3 = {f"Pitcher{i}": 10.0 for i in range(3)}
+
+    result = weekly_sp_projection(
+        roster=roster,
+        week_start=week_start,
+        week_end=week_start + timedelta(days=6),
+        rp3=rp3,
+        probables=probables,
+        cap=1,
+    )
+
+    chronological = sorted(result, key=lambda s: s.start_date)
+    assert [s.counts_toward_cap for s in chronological] == [True, False, False]
+
+
+def test_rp3_absent_name_projects_zero_not_keyerror():
+    """A probable for a pitcher missing from the rp3 map projects 0.0 FP
+    (decision-console FA arms won't always carry a rate)."""
+    roster = [
+        RosterPitcher(name="Unrated Arm", mlbam_id=55555,
+                      injury_status="ACTIVE", position="SP"),
+    ]
+    probables = WeekProbables(starts={(55555, date(2026, 5, 24)): "BAL"})
+
+    result = weekly_sp_projection(
+        roster=roster,
+        week_start=date(2026, 5, 22),
+        week_end=date(2026, 5, 28),
+        rp3={},
+        probables=probables,
+    )
+
+    assert len(result) == 1
+    assert result[0].projected_fp == 0.0
+
+
 # ── cap_excess_starts: the FP-rank planning cap (matchup/optimizer) ────────────
 
 def test_cap_excess_starts_under_cap_is_empty():

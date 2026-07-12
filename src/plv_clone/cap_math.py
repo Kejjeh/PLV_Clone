@@ -184,6 +184,7 @@ def weekly_sp_projection(
     week_end: date,
     rp3: dict[str, float],
     probables: WeekProbables,
+    cap: int = SP_CAP,
 ) -> list[SPStart]:
     matches: list[tuple[RosterPitcher, int, date, str]] = []
     for p in roster:
@@ -203,8 +204,8 @@ def weekly_sp_projection(
             mlbam_id=mlbam,
             start_date=day,
             opponent_team=opp,
-            projected_fp=rp3[p.name],
-            counts_toward_cap=i < SP_CAP,
+            projected_fp=rp3.get(p.name, 0.0),
+            counts_toward_cap=i < cap,
         )
         for i, (p, mlbam, day, opp) in enumerate(matches)
     ]
