@@ -793,6 +793,7 @@ window.XFP_MY_TEAM = __MY_TEAM_JSON__;
 window.XFP_AUDIT = __AUDIT_JSON__;
 window.XFP_ADVISORY = __ADVISORY_JSON__;
 window.XFP_WEEKLY = __WEEKLY_JSON__;
+window.XFP_DECISION = __DECISION_JSON__;
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js" crossorigin></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js" crossorigin></script>
@@ -817,8 +818,8 @@ window.XFP_WEEKLY = __WEEKLY_JSON__;
 <div id="root"></div>
 <script type="text/babel">
 // ═══ Constants ════════════════════════════════════════════════════════════════
-const TABS = ['my-team', 'audit', 'projections', 'hitters', 'analysis', 'advisory', 'model'];
-const TAB_LABELS = { 'my-team': 'My Team', audit: 'Team Audit', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', advisory: 'Advisory', model: 'Model Info' };
+const TABS = ['my-team', 'decision', 'audit', 'projections', 'hitters', 'analysis', 'advisory', 'model'];
+const TAB_LABELS = { 'my-team': 'My Team', decision: 'Decision', audit: 'Team Audit', projections: 'Pitchers', hitters: 'Hitters', analysis: 'Analysis', advisory: 'Advisory', model: 'Model Info' };
 const MONO  = '"IBM Plex Mono", ui-monospace, monospace';
 const SERIF = '"Source Serif 4", "Source Serif Pro", "Iowan Old Style", Georgia, serif';
 
@@ -1734,12 +1735,232 @@ function Dashboard({ dark }) {
         <AdvisoryTab advisory={window.XFP_ADVISORY || {}} myTeam={myTeam} colors={colors} />
       )}
 
+      {activeTab === 'decision' && (
+        <DecisionTab data={window.XFP_DECISION} colors={colors} />
+      )}
+
       <div style={{ padding:'24px 32px', borderTop:`1px solid ${colors.border}`, marginTop:32,
                     fontSize:10, fontFamily:MONO, color:colors.dim, letterSpacing:1, textTransform:'uppercase' }}>
         Pitchers: V11 (SP only, Statcast + FG Pitching+) · Hitters: H2 (Ridge, 13 features) ·
         <a href="https://github.com/Kejjeh/xfp-model" style={{ color:colors.accent, marginLeft:6 }}>github.com/Kejjeh/xfp-model</a>
       </div>
     </div>
+  );
+}
+
+// ═══ Decision tab (My Team vs FA console — VIEW-ONLY over the precomputed
+// console_data.json payload; every number was computed server-side in
+// scripts/xfp/lib/decision_console.py. Allowed ops here: lookup, sort
+// comparison, subtracting two payload numbers for display, sign→color.) ════════
+function DecisionTab({ data, colors }) {
+  const [axis, setAxis] = React.useState('ros');
+  const [bucket, setBucket] = React.useState('SP');
+  const [mineId, setMineId] = React.useState('');
+  const [faId, setFaId] = React.useState('');
+
+  if (!data) {
+    return (
+      <div style={{ padding:'32px', fontFamily:MONO, color:colors.dim }}>
+        Decision console payload not built today — run the daily refresh
+        (matchup build or scripts/xfp/build_console_data.py) to populate
+        console_data.json.
+      </div>
+    );
+  }
+
+  const AXES = [['ros', 'RoS'], ['week', 'Week'], ['po', 'Playoffs']];
+  const idx = {};
+  data.buckets.forEach(b => b.players.forEach(p => { if (!idx[p.id]) idx[p.id] = p; }));
+  const nameOf = id => (idx[id] ? idx[id].name : id);
+  const active = data.buckets.find(b => b.key === bucket) || data.buckets[0];
+  const spB = data.buckets.find(b => b.key === 'SP');
+  const spIds = {};
+  if (spB) spB.players.forEach(p => { spIds[p.id] = true; });
+  const axKey = 'xfp_' + axis;
+  const rows = active.players.slice().sort((a, b) => {
+    const av = a[axKey] == null ? -Infinity : a[axKey];
+    const bv = b[axKey] == null ? -Infinity : b[axKey];
+    return bv - av;
+  });
+  const wk = data.week;
+  const dcell = (v) => v == null
+    ? <td style={{ padding:'4px 10px', color:colors.dim }}>—</td>
+    : <td style={{ padding:'4px 10px', fontWeight:600,
+                   color: v > 0 ? colors.pos : (v < 0 ? colors.neg : colors.dim) }}>
+        {(v > 0 ? '+' : '') + v}</td>;
+  const chip = (txt, col) => (
+    <span style={{ marginLeft:6, padding:'0 5px', borderRadius:3, fontSize:9,
+                   background:col + '33', color:col }}>{txt}</span>);
+
+  // simulator: pure payload lookups + one subtraction (SP week uses the
+  // precomputed pairwise cap-aware map)
+  let sim = null;
+  const m = idx[mineId], f = idx[faId];
+  if (m && f) {
+    const shared = m.slots.filter(s => f.slots.indexOf(s) >= 0);
+    const dRos = (f.xfp_ros == null || m.xfp_ros == null) ? null
+      : Math.round((f.xfp_ros - m.xfp_ros) * 10) / 10;
+    const dPo = (f.xfp_po == null || m.xfp_po == null) ? null
+      : Math.round((f.xfp_po - m.xfp_po) * 10) / 10;
+    let dWeek = null, weekApprox = false;
+    if (spB && spIds[m.id] && spIds[f.id]) {
+      const pw = spB.pair_week_deltas[m.id + '|' + f.id];
+      if (pw !== undefined && pw !== null) dWeek = pw;
+      else if (f.xfp_week != null && m.xfp_week != null) {
+        dWeek = Math.round((f.xfp_week - m.xfp_week) * 10) / 10;
+        weekApprox = true;
+      }
+    } else if (f.xfp_week != null && m.xfp_week != null) {
+      dWeek = Math.round((f.xfp_week - m.xfp_week) * 10) / 10;
+    }
+    sim = { dRos, dWeek, dPo, weekApprox, shared,
+            warns: ['LOW_CONF', 'IL', 'WEEK_EST'].filter(fl => f.flags.indexOf(fl) >= 0) };
+  }
+
+  const btn = (on) => ({
+    background: on ? colors.panel : 'transparent', color: on ? colors.text : colors.dim,
+    border: `1px solid ${on ? colors.accent : colors.border}`, borderRadius:4,
+    padding:'3px 12px', marginRight:6, cursor:'pointer', fontFamily:MONO, fontSize:11 });
+  const th = { padding:'5px 10px', textAlign:'left', color:colors.dim, fontFamily:MONO,
+               fontSize:10, letterSpacing:1, textTransform:'uppercase',
+               borderBottom:`1px solid ${colors.border}` };
+  const td = { padding:'4px 10px', borderBottom:`1px solid ${colors.border}`,
+               fontFamily:MONO, fontSize:12 };
+
+  return (
+    <>
+      <SectionHeading num="I" label="Decision Console — My Team vs FA"
+        right={`generated ${data.generated_at} · source ${data.source}`} colors={colors} />
+      <div style={{ padding:'0 32px 8px' }}>
+        <div style={{ marginBottom:10 }}>
+          {AXES.map(([k, lbl]) => (
+            <button key={k} style={btn(axis === k)} onClick={() => setAxis(k)}>{lbl}</button>
+          ))}
+        </div>
+        <div style={{ fontFamily:MONO, fontSize:11, color:colors.dim,
+                      border:`1px dashed ${colors.border}`, borderRadius:4,
+                      padding:'6px 10px', marginBottom:14 }}>
+          {wk
+            ? <>Period <b style={{color:colors.text}}>{wk.period}</b> ({wk.week_start} → {wk.week_end})
+                · SP cap <b style={{color:colors.text}}>{wk.sp_cap}</b>
+                · banked <b style={{color:colors.text}}>{wk.banked_mine == null ? '?' : wk.banked_mine}</b>
+                · scheduled <b style={{color:colors.text}}>{wk.scheduled_mine}</b>
+                · cap room <b style={{color:colors.text}}>{wk.cap_room == null ? '?' : wk.cap_room}</b>
+                {wk.week_est && chip('estimates in play', colors.warn)}</>
+            : <>Week axis estimated — no period/schedule context in this payload.</>}
+        </div>
+      </div>
+
+      <SectionHeading num="II" label="Top Swap Recommendations" colors={colors} />
+      <div style={{ padding:'0 32px 18px' }}>
+        {data.headline_recs.length === 0
+          ? <div style={{ fontFamily:MONO, fontSize:12, color:colors.dim }}>
+              No swap clears the verdict threshold right now.</div>
+          : <table style={{ borderCollapse:'collapse', width:'100%' }}>
+              <thead><tr>
+                <th style={th}>Drop</th><th style={th}>Add</th><th style={th}>Bucket</th>
+                <th style={th}>ΔRoS</th><th style={th}>ΔWeek</th><th style={th}>ΔPO</th>
+                <th style={th}>Verdict</th>
+              </tr></thead>
+              <tbody>
+                {data.headline_recs.map((r, i) => (
+                  <tr key={i}>
+                    <td style={{...td, color:colors.neg}}>{nameOf(r.drop_id)}</td>
+                    <td style={{...td, color:colors.pos}}>{nameOf(r.add_id)}</td>
+                    <td style={{...td, color:colors.dim}}>{r.bucket}</td>
+                    {dcell(r.delta_ros)}{dcell(r.delta_week)}{dcell(r.delta_po)}
+                    <td style={td}>
+                      <span style={{ padding:'1px 7px', borderRadius:3, fontSize:10, fontWeight:600,
+                        background:(r.verdict === 'STRONG' ? colors.pos : r.verdict === 'MODEST' ? colors.warn : colors.dim) + '33',
+                        color: r.verdict === 'STRONG' ? colors.pos : r.verdict === 'MODEST' ? colors.warn : colors.dim }}>
+                        {r.verdict}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>}
+      </div>
+
+      <SectionHeading num="III" label="Position Boards" colors={colors} />
+      <div style={{ padding:'0 32px 18px' }}>
+        <div style={{ marginBottom:10 }}>
+          {data.buckets.map(b => (
+            <button key={b.key} style={btn(bucket === b.key)}
+              onClick={() => setBucket(b.key)}>{b.key}</button>
+          ))}
+        </div>
+        {active.note && <div style={{ fontFamily:MONO, fontSize:10, color:colors.dim,
+                                      marginBottom:8 }}>{active.note}</div>}
+        <table style={{ borderCollapse:'collapse', width:'100%' }}>
+          <thead><tr>
+            <th style={th}>Player</th><th style={th}>Own</th><th style={th}>Team</th>
+            <th style={th}>Slots</th><th style={th}>Rate</th>
+            <th style={th}>xFP {AXES.find(a => a[0] === axis)[1]}</th>
+          </tr></thead>
+          <tbody>
+            {rows.map(p => (
+              <tr key={p.id} style={p.owner === 'MINE' ? { background:colors.mine || '#2a332022' } : null}>
+                <td style={td}>{p.name}
+                  {p.flags.map(fl => chip(fl.replace('_', '-'),
+                    fl === 'IL' ? colors.neg : fl === 'TWO_START' ? colors.pos : colors.warn))}
+                  {p.ret && chip(p.ret, colors.warn)}</td>
+                <td style={{...td, color: p.owner === 'MINE' ? colors.pos : colors.dim}}>
+                  {p.owner === 'MINE' ? 'MINE' : (p.own_pct == null ? 'FA' : p.own_pct + '%')}</td>
+                <td style={{...td, color:colors.dim}}>{p.team}</td>
+                <td style={{...td, color:colors.dim}}>{p.slots.join('/')}</td>
+                <td style={td}>{p.rate == null ? '—' : p.rate}</td>
+                <td style={{...td, color:colors.accent, fontWeight:600}}>
+                  {p[axKey] == null ? '—' : p[axKey]}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <SectionHeading num="IV" label="Swap Simulator" colors={colors} />
+      <div style={{ padding:'0 32px 24px', fontFamily:MONO, fontSize:12 }}>
+        <label style={{ color:colors.dim, marginRight:16 }}>Drop (mine){' '}
+          <select value={mineId} onChange={e => setMineId(e.target.value)}
+            style={{ background:colors.panel, color:colors.text,
+                     border:`1px solid ${colors.border}`, borderRadius:4, padding:'2px 6px' }}>
+            <option value="">—</option>
+            {data.sim.mine_ids.map(id => <option key={id} value={id}>{nameOf(id)}</option>)}
+          </select>
+        </label>
+        <label style={{ color:colors.dim }}>Add (FA){' '}
+          <select value={faId} onChange={e => setFaId(e.target.value)}
+            style={{ background:colors.panel, color:colors.text,
+                     border:`1px solid ${colors.border}`, borderRadius:4, padding:'2px 6px' }}>
+            <option value="">—</option>
+            {data.buckets.map(b => (
+              <optgroup key={b.key} label={b.label}>
+                {(data.sim.fa_ids_by_bucket[b.key] || []).map(id => (
+                  <option key={id} value={id}>{nameOf(id)}</option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+        </label>
+        <div style={{ marginTop:12, color:colors.text }}>
+          {!sim
+            ? <span style={{ color:colors.dim }}>Pick a drop and an add to simulate the swap on all three axes.</span>
+            : <>Drop <b>{m.name}</b> → add <b>{f.name}</b>:{' '}
+                {[['ΔRoS', sim.dRos], ['ΔWeek', sim.dWeek], ['ΔPO', sim.dPo]].map(([lbl, v], i) => (
+                  <span key={lbl} style={{ marginRight:12,
+                    color: v == null ? colors.dim : v > 0 ? colors.pos : v < 0 ? colors.neg : colors.dim }}>
+                    {lbl} {v == null ? '—' : (v > 0 ? '+' : '') + v}
+                    {lbl === 'ΔWeek' && sim.weekApprox && chip('≈ cap-approx', colors.warn)}
+                  </span>
+                ))}
+                {sim.shared.length === 0 && chip('no shared slot — needs a matching open slot', colors.neg)}
+                {sim.warns.map(w => chip('add is ' + w, colors.warn))}
+              </>}
+        </div>
+        <div style={{ marginTop:14, fontSize:10, color:colors.dim }}>
+          {data.note}. LOW-CONF / IL FAs never appear in recommendations but stay visible in the tables.
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -4676,6 +4897,24 @@ def main():
     else:
         weekly_json = '{"weeks":{},"players":[]}'
 
+    # Decision-console payload (written by the matchup build / step 4.52
+    # CLI). Index is a PURE CONSUMER: stale or missing -> literal null and
+    # the Decision tab shows a "not built today" notice, never fetches.
+    decision_json = 'null'
+    decision_path = ROOT / 'data' / 'outputs' / 'console_data.json'
+    try:
+        from datetime import date as _date
+        _dc = json.loads(decision_path.read_text(encoding='utf-8'))
+        if (_dc.get('schema_version') == 1
+                and str(_dc.get('generated_at', ''))[:10] == _date.today().isoformat()):
+            # escape </ so free-text fields can't close the <script> block
+            decision_json = json.dumps(_dc, separators=(',', ':')).replace('</', '<\\/')
+        else:
+            print(f"  decision console payload stale "
+                  f"({str(_dc.get('generated_at', ''))[:10]}) — Decision tab shows notice")
+    except Exception as _e:
+        print(f"  decision console payload unavailable ({type(_e).__name__}) — Decision tab shows notice")
+
     from lib.dashboard_chrome import topnav as _topnav
     html = (HTML_TEMPLATE
             .replace('__TOPNAV__', _topnav('index'))
@@ -4687,7 +4926,8 @@ def main():
             .replace('__MY_TEAM_JSON__', my_team_json)
             .replace('__AUDIT_JSON__', audit_json)
             .replace('__ADVISORY_JSON__', advisory_json)
-            .replace('__WEEKLY_JSON__', weekly_json))
+            .replace('__WEEKLY_JSON__', weekly_json)
+            .replace('__DECISION_JSON__', decision_json))
 
     OUT_PRIMARY.write_text(html, encoding='utf-8')
     OUT_DOCS.parent.mkdir(parents=True, exist_ok=True)
