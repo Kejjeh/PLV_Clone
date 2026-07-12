@@ -967,6 +967,35 @@ def _resolve_mlbam_via_api(name, cache={}):
     return pid
 
 
+def _pitcher_mlbam_lookup(name, cache={}):
+    """Pitcher-ONLY name cache (sp_multiyr + relievers CSVs), consulted BEFORE
+    the mixed player_mlbam_lookup cache. That mixed cache loads the HITTER csv
+    first and setdefault ties go to whoever loads first — canonical bug
+    (found 2026-07-11): SP Eury Pérez (691587) resolved to the retired OF
+    Eury Pérez (516811), silently zeroing his projected starts. The pitcher
+    CSVs also store "Last, First" names, so this cache indexes BOTH name
+    orders; same-name pitcher pairs are handled upstream by the
+    KNOWN_PITCHER_COLLISIONS branch."""
+    if not cache:
+        for csv, col in [(CACHE / 'sp_multiyr_2015_2025.csv', 'pitcher'),
+                         (CACHE / 'relievers_multiyr_2018_2026.csv', 'pitcher')]:
+            try:
+                cols = pd.read_csv(csv, nrows=1).columns.tolist()
+                ncol = 'player_name' if 'player_name' in cols else 'name'
+                df = pd.read_csv(csv, usecols=[col, ncol])
+                for _, r in df.drop_duplicates(ncol).iterrows():
+                    nm = str(r[ncol])
+                    keys = {_norm(nm)}
+                    if ',' in nm:
+                        last, _, first = nm.partition(',')
+                        keys.add(_norm(f'{first.strip()} {last.strip()}'))
+                    for k in keys:
+                        cache.setdefault(k, int(r[col]))
+            except Exception as e:
+                _warn_except('pitcher_mlbam_csv_cache', e)
+    return cache.get(_norm(name))
+
+
 def _resolve_pitcher_mlbam(name, *, team=None, role=None):
     """Collision-safe pitcher name → MLBAM id — the single seam for resolving a
     rostered/FA pitcher's id in this module (mirrors the hitter collision guard
@@ -974,15 +1003,15 @@ def _resolve_pitcher_mlbam(name, *, team=None, role=None):
 
     For a same-name pitcher (KNOWN_PITCHER_COLLISIONS, e.g. the two Logan Allens)
     disambiguate via resolve_id(team=...) BEFORE the name-based lookups, which
-    would otherwise grab whichever same-name row landed in the cache first. For
-    every non-colliding name this is byte-identical to the prior
-    `player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)` path.
+    would otherwise grab whichever same-name row landed in the cache first.
+    Then the pitcher-only cache, then the mixed cache, then the API.
     """
     if name in _KNOWN_PITCHER_COLLISIONS:
         pid = resolve_id(name, kind='pitcher', team=(team or None), role=role)
         if pid is not None:
             return int(pid)
-    return player_mlbam_lookup(name) or _resolve_mlbam_via_api(name)
+    return (_pitcher_mlbam_lookup(name) or player_mlbam_lookup(name)
+            or _resolve_mlbam_via_api(name))
 
 
 def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
@@ -1665,81 +1694,6 @@ def render_power_rankings():
         return '\n'.join(out)
     except Exception as e:
         return f'<h2>🏆 League Power Rankings</h2><p class="muted">error: {h(str(e))}</p>'
-
-
-def render_drop_pickup_suggestions(my_lineup, rh3_map, fas=None, rostered=None):
-    """Find your lowest-RoS Ligers + matching FA upgrades.
-
-    `fas` / `rostered` are threaded in from main()'s single FA fetch (network
-    diet, audit 2026-07-04). Falls back to a local fetch when not provided.
-    """
-    try:
-        if fas is None or rostered is None:
-            from plv_clone.league_state import LeagueState
-            league = LeagueState()._get_league()
-            rostered = set()
-            for t in league.teams:
-                for p in t.roster:
-                    rostered.add(_norm(p.name))
-            fas = league.free_agents(size=2000)  # never <2000: size<2000 silently drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md)
-        rh3 = pd.read_csv(OUT / 'xfp_rh3_projections.csv').drop_duplicates('player_name')
-        rh3['nk'] = rh3['player_name'].map(_norm)
-        rh3_lkup = rh3.set_index('nk').to_dict('index')
-
-        my_hit = []
-        for p in my_lineup:
-            slots = set(getattr(p, 'eligibleSlots', []) or [])
-            if not (slots & {'C','1B','2B','3B','SS','OF','DH','UTIL'}): continue
-            nk = _norm(p.name)
-            info = rh3_lkup.get(nk, {})
-            ros = info.get('expected_total_fp_remaining') or 0
-            my_hit.append({'name': p.name, 'ros': ros, 'slots': slots})
-        my_hit.sort(key=lambda x: x['ros'])  # ascending — worst first
-
-        fa_hit = []
-        for fa in fas:
-            nk = _norm(fa.name)
-            if nk in rostered: continue
-            # IL filter — never recommend adding an injured player.
-            if is_il_player(fa):
-                continue
-            slots = set(getattr(fa, 'eligibleSlots', []) or [])
-            if not (slots & {'C','1B','2B','3B','SS','OF','DH','UTIL'}): continue
-            info = rh3_lkup.get(nk, {})
-            ros = info.get('expected_total_fp_remaining') or 0
-            if ros < 100: continue
-            fa_hit.append({'name': fa.name, 'ros': ros, 'slots': slots,
-                            'pct_owned': float(getattr(fa, 'percent_owned', 0) or 0)})
-        fa_hit.sort(key=lambda x: -x['ros'])
-
-        suggestions = []
-        used_fa = set()
-        for drop in my_hit[:5]:  # bottom 5 Ligers
-            for fa in fa_hit:
-                if fa['name'] in used_fa: continue
-                # Slot compatibility: FA can play at least one of drop's slots
-                if not (drop['slots'] & fa['slots']): continue
-                gain = fa['ros'] - drop['ros']
-                if gain < 20: continue
-                suggestions.append({'drop': drop, 'add': fa, 'gain': gain})
-                used_fa.add(fa['name'])
-                break
-        if not suggestions:
-            return ('<h2>🔄 Drop / Pickup Suggestions</h2>'
-                    '<p class="muted">No clear upgrades — your roster is well-set.</p>')
-        out = ['<h2>🔄 Drop / Pickup Suggestions <small class="muted">(positions match, gain ≥ 20 RoS)</small></h2>',
-               '<table><thead><tr><th>Drop</th><th>RoS</th><th>→ Add</th><th>%Own</th><th>RoS</th><th>Gain</th></tr></thead><tbody>']
-        for s in suggestions:
-            out.append(f'<tr><td class="neg">{player_link(s["drop"]["name"])}</td>'
-                       f'<td>{s["drop"]["ros"]:.0f}</td>'
-                       f'<td class="pos">{player_link(s["add"]["name"])}</td>'
-                       f'<td>{s["add"]["pct_owned"]:.0f}%</td>'
-                       f'<td>{s["add"]["ros"]:.0f}</td>'
-                       f'<td><b class="pos">+{s["gain"]:.0f}</b></td></tr>')
-        out.append('</tbody></table>')
-        return '\n'.join(out)
-    except Exception as e:
-        return f'<h2>🔄 Drop / Pickup Suggestions</h2><p class="muted">error: {h(str(e))}</p>'
 
 
 def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
@@ -3438,8 +3392,50 @@ def main():
     except Exception as e:
         _warn_except('main.fa_pool_fetch', e)
         fa_pool, rostered_names = None, None  # consumers fall back to their own fetch
-    drop_pickup_block = render_drop_pickup_suggestions(
-        mu['my_lineup'], rh3_map, fas=fa_pool, rostered=rostered_names)
+    # ---- DECISION CONSOLE (replaced the drop/pickup widget, 2026-07-11) ----
+    # Built from main()'s in-hand artifacts — zero roster/FA/schedule/banked
+    # refetch. The week ctx deliberately uses THIS PAGE's Mon–Sun planning
+    # window (not the full multi-week period window) so the console's week
+    # numbers agree with every other table on the page; the period cap +
+    # banked count still come from the shared resolver. Lazy import both ways
+    # (decision_console imports this module inside functions) — circularity
+    # guard.
+    try:
+        from lib.decision_console import (build_console_data,
+                                          render_console_html,
+                                          roster_from_lineup)
+        _week_ctx = {
+            'pmeta': {'period': mu['period'], 'weeks': _pmeta['weeks'],
+                      'sp_cap': sp_cap, 'week_start': week_start,
+                      'week_end': week_end,
+                      'covered': bool(_pmeta.get('covered'))},
+            'banked_mine': _banked_mine,
+            'schedules_by_team': schedules_by_team,
+            'sp_starts_by_pitcher': sp_starts_by_pitcher,
+            'today': today, 'source': 'matchup',
+            'team_map': dict(ESPN_TO_MLB_TEAM),
+        }
+        console_data = build_console_data(
+            roster=roster_from_lineup(mu['my_lineup'],
+                                      il_returns=_maps['il_returns']),
+            fas=fa_pool or [], league=mu['league_obj'],
+            my_team_id=getattr(mu['mine'], 'team_id', None),
+            week_ctx=_week_ctx, source='matchup',
+            # reuse this module's collision-safe resolver (CSV caches + API
+            # fallback + in-process cache) instead of the CSV-only default
+            id_resolver=lambda name, team=None, role=None:
+                _resolve_pitcher_mlbam(name, team=team, role=role))
+        (OUT / 'console_data.json').write_text(
+            json.dumps(console_data), encoding='utf-8')
+        print(f'  decision console: {sum(len(b["players"]) for b in console_data["buckets"])} rows, '
+              f'{len(console_data["headline_recs"])} headline recs -> console_data.json')
+        console_block = render_console_html(
+            console_data, theme='matchup', page_key='matchup',
+            default_axis='week')
+    except Exception as e:
+        _warn_except('decision_console', e)
+        console_block = ('<p class="muted">⚠ decision console unavailable '
+                         f'this build ({type(e).__name__}: {h(str(e))})</p>')
     streamer_block = render_2start_gems(schedules_by_team, today, week_end,
                                         fas=fa_pool, rostered=rostered_names)
     boom_bust_block = render_boom_bust_scan(mu['my_lineup'], mu['opp_lineup'])
@@ -3803,7 +3799,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 <div class="toc">
   <a href="#optimizer">🎯 Optimizer</a>
   <a href="#fire">🔥 Days of Fire</a>
-  <a href="#drops">🔄 Drops/Pickups</a>
+  <a href="#drops">🧭 Decision Console</a>
   <a href="#streamers">💎 Streamers</a>
   <a href="#boombust">🎯 Boom/Bust</a>
   <a href="#myteam">My Roster</a>
@@ -3844,8 +3840,8 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 </details></section>
 
 <section id="drops"><details open>
-<summary>🔄 Drop / Pickup Suggestions</summary>
-{drop_pickup_block}
+<summary>🧭 Decision Console — My Team vs FA</summary>
+{console_block}
 </details></section>
 
 <section id="streamers"><details open>

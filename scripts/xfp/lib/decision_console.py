@@ -169,6 +169,15 @@ def _default_id_resolver(name, team=None, role=None):
     from plv_clone.utils.name_match import resolve_pitcher_id
     try:
         pid = resolve_pitcher_id(name, team=(B.alias_team(team) or None), role=role)
+        if pid:
+            return int(pid)
+    except Exception:
+        pass
+    # matchup's pitcher-first chain (pitcher-only CSV cache with both name
+    # orders + API fallback) — handles "Pérez, Eury"-style CSV spellings the
+    # plain resolver misses
+    try:
+        pid = _matchup_module()._resolve_pitcher_mlbam(name, team=team, role=role)
         return int(pid) if pid else None
     except Exception:
         return None
@@ -205,6 +214,21 @@ def roster_from_lineup(players, il_returns=None) -> pd.DataFrame:
     return pd.DataFrame(rows, columns=cols)
 
 
+def _matchup_module():
+    """Resolve the matchup module WITHOUT double-importing it: when
+    build_matchup_dashboard runs as __main__, a bare import here would
+    re-execute the whole module as a second copy. Function-local by design
+    (circularity guard)."""
+    m = sys.modules.get("build_matchup_dashboard")
+    if m is not None:
+        return m
+    main_mod = sys.modules.get("__main__")
+    if main_mod is not None and hasattr(main_mod, "build_sp_starts_by_pitcher"):
+        return main_mod
+    import build_matchup_dashboard as M
+    return M
+
+
 # ── week context ─────────────────────────────────────────────────────────────
 def compute_week_ctx(league, roster: pd.DataFrame, fas: list, *,
                      my_team_id=None, today: date | None = None,
@@ -220,7 +244,7 @@ def compute_week_ctx(league, roster: pd.DataFrame, fas: list, *,
     board's top-N by xfp_ros); default = first `fa_week_top_n` FA SPs.
     """
     try:
-        import build_matchup_dashboard as M   # function-local: circularity guard
+        M = _matchup_module()
     except Exception:
         return None
     try:
@@ -289,8 +313,7 @@ def _ctx_team_map(week_ctx):
     if tm:
         return tm
     try:
-        import build_matchup_dashboard as M   # function-local: circularity guard
-        return dict(M.ESPN_TO_MLB_TEAM)
+        return dict(_matchup_module().ESPN_TO_MLB_TEAM)
     except Exception:
         return {}
 
@@ -448,6 +471,26 @@ def build_console_data(*, roster, fas, league=None, injury_details=None,
             continue
         sp_extras.append(p)
 
+    # MINE dual-eligible arms tagged RP/P by ESPN whose REAL role is SP
+    # (gotcha #8): the SP board's position filter misses them and the RP
+    # bucket must not swallow them — surface as MINE SP rows (MINE rows are
+    # never dropped, rate or not).
+    mine_sp_extras = []
+    if roster is not None and len(roster):
+        for _, r in roster[roster["position"].isin(["RP", "P"])].iterrows():
+            slots = {str(s).upper() for s in (r.get("eligible_slots") or [])}
+            if not ({"SP", "RP"} <= slots):
+                continue
+            try:
+                if role_detector(r) != "SP":
+                    continue
+            except Exception:
+                continue
+            nn = B.norm(r["player_name"])
+            dual_sp_norms.add(nn)
+            if nn not in board_norms:
+                mine_sp_extras.append(r)
+
     def _sp_mlbam(name, team):
         return id_resolver(name, team=team, role="SP")
 
@@ -528,6 +571,49 @@ def build_console_data(*, roster, fas, league=None, injury_details=None,
             mlbam_by_rowid[rid] = int(mlbam)
             rates[p.name] = float(rate)
 
+    for r in mine_sp_extras:
+        nm = r["player_name"]
+        espn_id = int(r.get("player_id") or 0) or None
+        mlbam = _sp_mlbam(nm, r.get("pro_team"))
+        ps = _extra_sp_rate(nm)
+        flags = ["ROLE_SP"]
+        rate = None
+        xros = xpo = None
+        src = "role_detect"
+        injured = bool(r.get("injured"))
+        istatus = str(r.get("injury_status", "") or "ACTIVE")
+        ret_d = _as_date(r.get("return_date")) if injured else None
+        avail = max(today, ret_d) if ret_d else today
+        if ps is not None:
+            rate = _r1(ps[0])
+            src = ps[1]
+            ros_s, po_s = B._sp_starts(avail)
+            xros, xpo = _r1(ps[0] * ros_s), _r1(ps[0] * po_s)
+        else:
+            flags.append("NO_DATA")
+        inj = istatus if injured else ""
+        if inj:
+            flags.append("IL")
+        rid = _row_id(mlbam, espn_id, nm)
+        sp_players.append({
+            "id": rid, "mlbam": mlbam, "espn_id": espn_id, "name": nm,
+            "owner": "MINE", "team": str(r.get("pro_team", "") or ""),
+            "own_pct": None, "slots": ["SP"], "rate": rate,
+            "rate_unit": "per_start", "src": src, "xfp_ros": xros,
+            "xfp_po": xpo, "xfp_week": None, "xfp_week_marginal": None,
+            "week_detail": {"starts": [], "games": None},
+            "flags": flags, "inj": inj,
+            "ret": _iso(ret_d) if ret_d else "", "extras": {},
+            "_lslot": str(r.get("lineup_slot", "") or ""),
+            "_istatus": istatus,
+        })
+        if mlbam and rate is not None:
+            mlbam_by_rowid[rid] = int(mlbam)
+            rates[nm] = float(rate)
+            mine_rps.append(RosterPitcher(name=nm, mlbam_id=int(mlbam),
+                                          injury_status=istatus,
+                                          position="SP"))
+
     # ---- week axis: cap-marginal engine ----
     week_est_fired = False
     if pmeta is not None and probables.starts:
@@ -541,8 +627,7 @@ def build_console_data(*, roster, fas, league=None, injury_details=None,
                 if starts_fetcher is not None:
                     fetched = starts_fetcher(missing, sched, win_start, win_end)
                 else:
-                    import build_matchup_dashboard as M   # circularity guard
-                    fetched = M.build_sp_starts_by_pitcher(
+                    fetched = _matchup_module().build_sp_starts_by_pitcher(
                         missing, sched, win_start, win_end)
             except Exception as e:
                 print(f"[decision_console] FA probables fetch failed "

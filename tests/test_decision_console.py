@@ -307,6 +307,29 @@ def test_dual_eligible_detected_sp_lands_in_sp_not_rp(monkeypatch):
     assert row["rate"] == 11.0 and row["src"] == "rp3_dd"
 
 
+def test_mine_dual_eligible_rp_tagged_sp_surfaces_as_mine_sp(monkeypatch):
+    """A MINE arm ESPN-tagged 'RP' whose real role is SP must appear as a
+    MINE SP row (MINE rows are never dropped) and stay out of the RP bucket."""
+    monkeypatch.setattr(
+        dc, "_EXTRA_SP_MAPS",
+        [(*dc.B._build_map(["My Dual Arm"], [12.5]), "rp3_dd")])
+    roster = _roster_df([
+        ("My Dual Arm", 31, "RP", "LAA", ["SP", "RP"], "P", False, "ACTIVE",
+         None),
+    ])
+
+    def role(p):
+        return "SP"
+
+    data = _build(roster=roster, role_detector=role)
+    assert "My Dual Arm" not in {p["name"]
+                                 for p in _bucket(data, "RP")["players"]}
+    row = _player(data, "SP", "My Dual Arm")
+    assert row["owner"] == "MINE"
+    assert "ROLE_SP" in row["flags"]
+    assert row["rate"] == 12.5
+
+
 def test_rateless_dual_eligible_fa_extra_dropped_as_noise():
     """A dual-eligible FA detected as SP but with NO model rate is dropped
     (noise control) — not shown, and still kept out of the RP bucket."""
