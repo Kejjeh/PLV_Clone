@@ -176,6 +176,58 @@ def alias_team(t):
     return ESPN_TEAM_ALIAS.get(str(t).upper(), str(t).upper())
 
 
+def _ret_map(ls, players) -> dict:
+    """ESPN playerId -> return date, for the injured subset of `players`.
+
+    Lifted from the previously duplicated per-board blocks; the map is a
+    superset of what each board reads (it covers the whole pool, not just the
+    board's position slice), which is behavior-identical per row."""
+    inj_ids = [int(p.playerId) for p in players if getattr(p, "injured", False)]
+    out = {}
+    if not inj_ids:
+        return out
+    try:
+        idf = ls.injury_details(inj_ids)
+        rc = next((c for c in idf.columns if "return" in c.lower()), None)
+        ic = next((c for c in idf.columns if c.lower() in ("player_id", "playerid", "id")), None)
+        if rc and ic:
+            for _, r in idf.iterrows():
+                rv = pd.to_datetime(r[rc], errors="coerce")
+                if pd.notna(rv):
+                    out[int(r[ic])] = rv.date()
+    except Exception as e:
+        print(f"[injury_details] {type(e).__name__}: {e}")
+    return out
+
+
+def fetch_board_inputs() -> dict:
+    """ONE network pass feeding both boards (and the decision console).
+
+    Returns {ls, league, my_team_id, roster, fas, injury_details,
+    rostered_names}. `fas` is the raw unfiltered size=2000 pool (never <2000 —
+    feedback_fa_pool_size_cap.md); each board applies its own position filter.
+    `injury_details` is the espn-playerId->return-date map for every injured
+    FA in the pool."""
+    ls = LeagueState()
+    lg = ls._get_league()
+    try:
+        my_team_id = getattr(ls._find_my_team(), "team_id", None)
+    except Exception:
+        my_team_id = None
+    roster = ls.my_roster_with_injuries()
+    fas = list(lg.free_agents(size=2000))
+    rostered_names = {norm(p.name) for t in lg.teams for p in t.roster}
+    return {
+        "ls": ls,
+        "league": lg,
+        "my_team_id": my_team_id,
+        "roster": roster,
+        "fas": fas,
+        "injury_details": _ret_map(ls, fas),
+        "rostered_names": rostered_names,
+    }
+
+
 # =============================================================================
 # SP BOARD
 # =============================================================================
@@ -263,13 +315,18 @@ def _apply_sp_vol(ps, ros, po, nm):
             round(float(gv), 3), "·vol")
 
 
-def build_sp_board() -> pd.DataFrame:
+def build_sp_board(*, roster=None, fas=None, injury_details=None) -> pd.DataFrame:
     """Merged SP board: MINE staff + every FA SP, dual-ranked by xFP-RoS and
     xFP-playoffs. Returns a DataFrame of the RANKED universe (rows with a
     per_start). Columns: owner, name, team, own, per_start, stuff, src, vol,
     inj, ret, xfp_ros, xfp_po. src carries a "·vol" suffix (and vol the
     starts-per-teamgame number) where the forward-volume model replaced the
-    flat 1.19/wk rate."""
+    flat 1.19/wk rate.
+
+    Injection seam (fetch_board_inputs): pass `roster`
+    (my_roster_with_injuries frame), `fas` (raw free_agents(size=2000) list)
+    and `injury_details` (espn playerId -> return date) to skip ALL network
+    fetches. No-arg call is behavior-identical to before."""
     # ---- per_start source tiers ----
     mdl, sc, _ = ss.fit_model()
     d = ss.load_2026().dropna(subset=ss.FEATS).copy()
@@ -289,7 +346,7 @@ def build_sp_board() -> pd.DataFrame:
     rows = []
 
     # ---- MY staff ----
-    ros_my = LeagueState().my_roster_with_injuries()
+    ros_my = roster if roster is not None else LeagueState().my_roster_with_injuries()
     mine = ros_my[ros_my["position"] == "SP"]
     for _, p in mine.iterrows():
         nm = p["player_name"]
@@ -309,26 +366,16 @@ def build_sp_board() -> pd.DataFrame:
                          xfp_ros=xros, xfp_po=xpo))
 
     # ---- FA pool ----
-    ls = LeagueState(); lg = ls._get_league()
     # size=2000 UNFILTERED, position post-filtered — per-position size<2000 silently
     # drops low-owned high-FP FAs (feedback_fa_pool_size_cap.md; audit 2026-07-04).
-    fas = [p for p in lg.free_agents(size=2000)
-           if getattr(p, "position", None) == "SP"]
-    inj_ids = [int(p.playerId) for p in fas if getattr(p, "injured", False)]
-    ret_map = {}
-    try:
-        idf = ls.injury_details(inj_ids)
-        rc = next((c for c in idf.columns if "return" in c.lower()), None)
-        ic = next((c for c in idf.columns if c.lower() in ("player_id", "playerid", "id")), None)
-        if rc and ic:
-            for _, r in idf.iterrows():
-                rv = pd.to_datetime(r[rc], errors="coerce")
-                if pd.notna(rv):
-                    ret_map[int(r[ic])] = rv.date()
-    except Exception as e:
-        print(f"[injury_details] {type(e).__name__}: {e}")
+    ls = None
+    if fas is None or injury_details is None:
+        ls = LeagueState()
+    pool = fas if fas is not None else ls._get_league().free_agents(size=2000)
+    fa_sps = [p for p in pool if getattr(p, "position", None) == "SP"]
+    ret_map = injury_details if injury_details is not None else _ret_map(ls, fa_sps)
 
-    for p in fas:
+    for p in fa_sps:
         nm = p.name; pid = int(p.playerId)
         ps, src = _lookup(PS, nm); stf, _ = _lookup(STF, nm)
         injured = bool(getattr(p, "injured", False))
@@ -495,19 +542,23 @@ HITTER_BUCKETS = [
 ]
 
 
-def build_hitter_board() -> pd.DataFrame:
+def build_hitter_board(*, roster=None, fas=None, injury_details=None) -> pd.DataFrame:
     """Merged hitter board: MINE hitters + every FA hitter, dual-ranked by
     xFP-RoS and xFP-playoffs, with bucket membership. Returns the FULL frame
     (ranked + no-data rows). `buckets` is a set per row; `per_game` is None for
     rh3-absent rows. Columns: owner, name, team, own, slots, buckets, per_game,
     rank, signal, etfr, src, vol, inj, ret, xfp_ros, xfp_po. src carries a
     "·vol" suffix (and vol the PA-per-teamgame number) where the forward-volume
-    model replaced the flat 3.5 PA/g × 6.3 g/wk rate."""
+    model replaced the flat 3.5 PA/g × 6.3 g/wk rate.
+
+    Injection seam (fetch_board_inputs): pass `roster`, `fas` (raw unfiltered
+    size=2000 pool) and `injury_details` (espn playerId -> return date) to
+    skip ALL network fetches. No-arg call is behavior-identical to before."""
     _load_rh3()
     rows = []
 
     # ── MY hitters ──
-    ros_my = LeagueState().my_roster_with_injuries()
+    ros_my = roster if roster is not None else LeagueState().my_roster_with_injuries()
     mine = ros_my[~ros_my["position"].isin(["SP", "RP", "P"])].copy()
     for _, p in mine.iterrows():
         nm = p["player_name"]
@@ -534,10 +585,13 @@ def build_hitter_board() -> pd.DataFrame:
     # (was 7 per-position size=1500 pulls — per-position fetches silently drop
     # low-owned high-FP FAs AND cost 7x the API calls. feedback_fa_pool_size_cap.md;
     # audit 2026-07-04.)
-    ls = LeagueState(); lg = ls._get_league()
+    ls = None
+    if fas is None or injury_details is None:
+        ls = LeagueState()
     seen, fa_players = set(), []
     try:
-        for pl in lg.free_agents(size=2000):
+        pool = fas if fas is not None else ls._get_league().free_agents(size=2000)
+        for pl in pool:
             pid = int(pl.playerId)
             if pid in seen:
                 continue
@@ -548,19 +602,7 @@ def build_hitter_board() -> pd.DataFrame:
     except Exception as e:
         print(f"[free_agents unfiltered] {type(e).__name__}: {e}")
 
-    inj_ids = [int(p.playerId) for p in fa_players if getattr(p, "injured", False)]
-    ret_map = {}
-    try:
-        idf = ls.injury_details(inj_ids)
-        rc = next((c for c in idf.columns if "return" in c.lower()), None)
-        ic = next((c for c in idf.columns if c.lower() in ("player_id", "playerid", "id")), None)
-        if rc and ic:
-            for _, r in idf.iterrows():
-                rv = pd.to_datetime(r[rc], errors="coerce")
-                if pd.notna(rv):
-                    ret_map[int(r[ic])] = rv.date()
-    except Exception as e:
-        print(f"[injury_details] {type(e).__name__}: {e}")
+    ret_map = injury_details if injury_details is not None else _ret_map(ls, fa_players)
 
     for p in fa_players:
         nm = p.name; pid = int(p.playerId)
@@ -606,9 +648,12 @@ def _hitter_out_path():
 def main():
     print(f"build_xfp_boards — TODAY={TODAY} SEASON_END={SEASON_END} "
           f"PLAYOFF_START={PLAYOFF_START}")
+    inputs = fetch_board_inputs()   # ONE roster + FA pull for both boards
+    _inj = dict(roster=inputs["roster"], fas=inputs["fas"],
+                injury_details=inputs["injury_details"])
 
     # ── SP board ──
-    sp = build_sp_board()
+    sp = build_sp_board(**_inj)
     sp_out = _sp_out_path()
     sp.to_csv(sp_out, index=False)
     n_mine = int((sp["owner"] == "MINE").sum())
@@ -617,7 +662,7 @@ def main():
     print(f"  -> {sp_out}")
 
     # ── Hitter board ──
-    hit = build_hitter_board()
+    hit = build_hitter_board(**_inj)
     have = hit[hit["per_game"].notna()].copy()
     nodata = hit[hit["per_game"].isna()].copy()
     out_df = hit.copy()

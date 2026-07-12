@@ -159,8 +159,11 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
 
 def build_html() -> str:
     from lib.dashboard_chrome import topnav as _topnav  # unified nav owner (item 8)
-    sp = B.build_sp_board()
-    hit = B.build_hitter_board()
+    inputs = B.fetch_board_inputs()   # ONE roster + ONE free_agents(2000) pull for both boards
+    sp = B.build_sp_board(roster=inputs["roster"], fas=inputs["fas"],
+                          injury_details=inputs["injury_details"])
+    hit = B.build_hitter_board(roster=inputs["roster"], fas=inputs["fas"],
+                               injury_details=inputs["injury_details"])
     have = hit[hit["per_game"].notna()].copy()
 
     gen = datetime.now().strftime("%Y-%m-%d %H:%M")
