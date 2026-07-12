@@ -47,6 +47,9 @@ The script:
 5. Computes win probability from projected gap + combined variance
 6. Logs the prediction to `predictions_history.csv` (one row per build)
 7. Writes to BOTH `data/outputs/matchup.html` AND `xfp-model/docs/matchup.html`
+8. Rebuilds the embedded Decision Console (My Team vs FA, 3-axis) and
+   rewrites `data/outputs/console_data.json` — the shared payload that
+   xfp_board.html and index.html's Decision tab also embed
 
 Expected runtime: 20-45 seconds (depending on MLB Stats API responsiveness).
 
@@ -72,6 +75,10 @@ Red flags to surface:
   failed. Check the player's row in matchup.html.
 - **WTD = 0.0 for both teams** — ESPN matchup data didn't load. Build
   may be invalid; rerun in a few minutes.
+- **Console header `generated_at` not today, or the console section
+  shows an error placeholder** — the decision-console build inside
+  main() failed (it's fail-soft so the page still publishes). Check the
+  build log for `[decision_console]` / `⚠ decision console` lines.
 
 If any red flag fires, **stop and run `/matchup-audit` before
 committing** — committing a broken dashboard misleads the user.
@@ -120,7 +127,8 @@ a row to `data/outputs/predictions_history.csv`. Commit both:
 
 ```bash
 cd ..  # back to plv_clone root
-git add data/outputs/matchup.html data/outputs/predictions_history.csv
+git add data/outputs/matchup.html data/outputs/predictions_history.csv \
+        data/outputs/console_data.json
 git commit -m "refresh: matchup.html + predictions log for Week N
 
 Mirrors the xfp-model push (<sha>).
@@ -146,6 +154,7 @@ the plv_clone commit with appropriate commit message style.
 
   xfp-model: <sha> pushed → https://kejjeh.github.io/xfp-model/matchup.html
   plv_clone: <sha> pushed
+  console: <N> rows, <M> headline recs (console_data.json rewritten)
 ```
 
 Surface any noteworthy items from the build:
@@ -189,3 +198,8 @@ Surface any noteworthy items from the build:
 - After a roster transaction that hasn't yet propagated to ESPN
   (check `get_my_roster()` first — if the new player isn't showing,
   matchup will project the old roster)
+
+Note: this light path rebuilds ONLY matchup.html — the consoles embedded
+in xfp_board.html and index.html keep their last-refresh numbers (each
+console header shows its `generated_at` stamp, so staleness is visible,
+never silent). The full daily refresh brings all three back in sync.

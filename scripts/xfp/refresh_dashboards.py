@@ -494,6 +494,19 @@ def main():
     if not ok_full_pool:
         print('  ⚠ sp_boom_stack_full_pool failed — continuing (non-gating)')
 
+    # 4.52. Decision-console payload FALLBACK writer. The matchup build
+    # (step 4) is the authoritative writer of data/outputs/console_data.json
+    # (freshest week context); --if-stale makes this a no-op when that
+    # succeeded and a same-day rebuild when it didn't, so xfp_board (4.55)
+    # and index (refresh_all) always have a fresh payload. Fail-soft.
+    ok_console = run(
+        '4.52. Decision-console payload (fallback writer, --if-stale)',
+        'python -X utf8 scripts/xfp/build_console_data.py --if-stale',
+        timeout=300,
+    )
+    if not ok_console:
+        print('  ⚠ console payload build failed — continuing (consoles show stale stamp)')
+
     # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
     # --payload-only (item 16, 2026-07-04): the shell is now BYTE-STABLE (meta line
     # renders client-side from the payload), so the daily refresh only rewrites the
