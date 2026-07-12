@@ -284,9 +284,14 @@ def test_same_name_fas_distinct_ids():
 
 
 # ── 8: Detmers dual-eligible routes to SP, not RP ────────────────────────────
-def test_dual_eligible_detected_sp_lands_in_sp_not_rp():
+def test_dual_eligible_detected_sp_lands_in_sp_not_rp(monkeypatch):
     detmers = _FakePlayer("Reid Detmers", 6001, "RP", ["SP", "RP"],
                           proTeam="LAA")
+    # give the extras path a real rp3 rate (rate-less FA extras are dropped
+    # as noise — only arms the model can score surface as role-corrected rows)
+    monkeypatch.setattr(
+        dc, "_EXTRA_SP_MAPS",
+        [(*dc.B._build_map(["Reid Detmers"], [11.0]), "rp3_dd")])
 
     def role(p):
         return "SP" if getattr(p, "name", "") == "Reid Detmers" else "RP"
@@ -299,6 +304,22 @@ def test_dual_eligible_detected_sp_lands_in_sp_not_rp():
     assert "Reid Detmers" in sp_names
     row = _player(data, "SP", "Reid Detmers")
     assert "ROLE_SP" in row["flags"]
+    assert row["rate"] == 11.0 and row["src"] == "rp3_dd"
+
+
+def test_rateless_dual_eligible_fa_extra_dropped_as_noise():
+    """A dual-eligible FA detected as SP but with NO model rate is dropped
+    (noise control) — not shown, and still kept out of the RP bucket."""
+    ghost = _FakePlayer("Org Depth Arm", 6002, "RP", ["SP", "RP"], proTeam="MIA")
+
+    def role(p):
+        return "SP" if getattr(p, "name", "") == "Org Depth Arm" else "RP"
+
+    data = _build(fas=[ghost], role_detector=role)
+    assert "Org Depth Arm" not in {p["name"]
+                                   for p in _bucket(data, "SP")["players"]}
+    assert "Org Depth Arm" not in {p["name"]
+                                   for p in _bucket(data, "RP")["players"]}
 
 
 # ── 9-10: MINE retention + BE/IL droppability ────────────────────────────────
@@ -441,6 +462,47 @@ def test_payload_schema_lock():
     # JSON-serializable end to end
     import json
     json.dumps(data)
+
+
+# ── 15: renderer smoke ───────────────────────────────────────────────────────
+def test_render_console_html_smoke():
+    sp = _sp_board([
+        dict(owner="MINE", name="My Ace", team="PHI", own="", per_start=15.0,
+             stuff=None, src="Stuff+", vol=None, inj="", ret="",
+             xfp_ros=300.0, xfp_po=60.0),
+        dict(owner="FA", name="Two Start Guy", team="SD", own=4.0,
+             per_start=12.0, stuff=None, src="rp3_dd", vol=None, inj="",
+             ret="", xfp_ros=250.0, xfp_po=50.0),
+    ])
+    ctx = _ctx({200: [_start("2026-07-13"), _start("2026-07-18")]}, banked=15)
+    data = _build(sp_board=sp, id_resolver=_sp_resolver, week_ctx=ctx)
+    html = dc.render_console_html(data, theme="board", page_key="testpage",
+                                  default_axis="week")
+
+    assert 'id="dc-testpage"' in html
+    assert 'data-axis="week"' in html                    # default axis
+    assert data["generated_at"] in html                  # staleness stamp
+    assert "window.__DC_DATA_testpage" in html           # namespaced payload
+    # three axis spans per value cell
+    assert html.count('class="v v-ros"') >= 2
+    assert html.count('class="v v-week"') >= 2
+    assert html.count('class="v v-po"') >= 2
+    # every CSS rule is .dc-scoped (no bare tag selectors leaking to the host)
+    css = html.split("<style>")[1].split("</style>")[0]
+    for line in css.splitlines():
+        line = line.strip()
+        if line.startswith((".", "}", "--")) or not line or ":" in line.split("{")[0] and "{" not in line:
+            continue
+        if "{" in line:
+            sel = line.split("{")[0].strip()
+            if sel:
+                assert sel.startswith(".dc"), f"unscoped CSS selector: {sel}"
+    # cap header shows the live period cap + banked
+    assert "SP cap <b>16</b>" in html
+    assert "banked <b>15</b>" in html
+    # </ escaped inside embedded JSON (script-injection guard)
+    payload_part = html.split("window.__DC_DATA_testpage = ")[1].split(";\n(function")[0]
+    assert "</" not in payload_part.replace("<\\/", "")
 
 
 # ── hitter week axis from schedule ───────────────────────────────────────────

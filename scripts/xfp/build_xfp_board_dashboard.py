@@ -157,6 +157,36 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
     return f"<table><thead>{head}</thead><tbody>{''.join(body)}</tbody></table>"
 
 
+def _console_block(sp, hit, inputs) -> str:
+    """Embedded decision console. Reuses today's console_data.json when fresh
+    (keeps all three dashboards on the same numbers); otherwise builds from
+    the in-hand boards/fetch and rewrites the payload. Fail-soft: the boards
+    must still publish if the console errors."""
+    import json
+    from lib.decision_console import (SCHEMA_VERSION, build_console_data,
+                                      render_console_html)
+    cpath = OUT / "console_data.json"
+    data = None
+    try:
+        cur = json.loads(cpath.read_text(encoding="utf-8"))
+        if (cur.get("schema_version") == SCHEMA_VERSION
+                and str(cur.get("generated_at", ""))[:10]
+                == datetime.now().strftime("%Y-%m-%d")):
+            data = cur
+    except Exception:
+        data = None
+    if data is None:
+        data = build_console_data(
+            roster=inputs["roster"], fas=inputs["fas"],
+            league=inputs["league"],
+            injury_details=inputs["injury_details"],
+            my_team_id=inputs["my_team_id"],
+            sp_board=sp, hitter_board=hit, source="board")
+        cpath.write_text(json.dumps(data), encoding="utf-8")
+    return render_console_html(data, theme="board", page_key="board",
+                               default_axis="ros")
+
+
 def build_html() -> str:
     from lib.dashboard_chrome import topnav as _topnav  # unified nav owner (item 8)
     inputs = B.fetch_board_inputs()   # ONE roster + ONE free_agents(2000) pull for both boards
@@ -165,6 +195,13 @@ def build_html() -> str:
     hit = B.build_hitter_board(roster=inputs["roster"], fas=inputs["fas"],
                                injury_details=inputs["injury_details"])
     have = hit[hit["per_game"].notna()].copy()
+
+    try:
+        console_html = _console_block(sp, hit, inputs)
+    except Exception as e:
+        console_html = (f'<div class="note">⚠ decision console unavailable '
+                        f'this build ({type(e).__name__}: {e})</div>')
+        print(f"[xfp_board] console error: {type(e).__name__}: {e}")
 
     gen = datetime.now().strftime("%Y-%m-%d %H:%M")
     n_sp_mine = int((sp["owner"] == "MINE").sum())
@@ -306,6 +343,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 </header>
 <div class="note">{method}</div>
 <div class="legend">{legend}</div>
+{console_html}
 {sp_html}
 {''.join(bucket_html)}
 <div class="meta">New York Ligers · plv_clone · engine: scripts/xfp/build_xfp_boards.py · skill: /xfp-board</div>

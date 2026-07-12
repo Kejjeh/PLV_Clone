@@ -495,6 +495,8 @@ def build_console_data(*, roster, fas, league=None, injury_details=None,
         espn_id = int(p.playerId)
         mlbam = _sp_mlbam(p.name, getattr(p, "proTeam", None))
         ps = _extra_sp_rate(p.name)
+        if ps is None and B.norm(p.name) not in roster_meta:
+            continue   # rate-less FA extras are noise (same rule as RP NO_DATA)
         flags = ["ROLE_SP"]
         rate = None
         xros = xpo = None
@@ -564,8 +566,10 @@ def build_console_data(*, roster, fas, league=None, injury_details=None,
         for row in sp_players:
             mlbam = mlbam_by_rowid.get(row["id"])
             if mlbam is None or row["rate"] is None:
+                # per-row fallback: WEEK_EST flag on the row only — the header
+                # week_est stays a CTX-level signal (banked missing / no
+                # probables at all), not "some FA didn't resolve".
                 _sp_week_est(row, rem_days, eff_cap)
-                week_est_fired = week_est_fired or "WEEK_EST" in row["flags"]
                 continue
             in_window = [g for g in (starts_by_pid.get(mlbam) or [])
                          if _as_date(g.get("date")) is not None
@@ -1030,6 +1034,388 @@ def _bucket_recs(bkey, players, pair_week_deltas, strong, modest):
             used.add(a["id"])
             break
     return recs
+
+
+# ═════════════════════════════════════════════════════════════════════════════
+# RENDERER — display-only. All numbers come precomputed from the payload; the
+# embedded JS is limited to dict lookup, sort comparison, subtracting two
+# payload numbers for display, and sign→CSS class (the module's design law).
+# ═════════════════════════════════════════════════════════════════════════════
+from html import escape as _h
+
+# matchup.html and xfp_board.html share the warm-dark palette; the theme param
+# stays so a future host page can diverge without touching call sites.
+_THEMES = {
+    "board":   {"bg": "#1a1815", "panel": "#211e1a", "stripe": "#1d1b17",
+                "border": "#34302a", "text": "#f5f1ea", "dim": "#a89e8a",
+                "accent": "#d97757", "pos": "#7fb069", "neg": "#c1666b",
+                "warn": "#d4a945", "mine": "#2a3320"},
+}
+_THEMES["matchup"] = _THEMES["board"]
+
+_FLAG_LABELS = {"LOW_CONF": "LOW-CONF", "IL": "IL", "WEEK_EST": "wk-est",
+                "DOCKED": "flat↓", "TWO_START": "2-START", "NO_DATA": "no data",
+                "ROLE_SP": "role:SP"}
+
+_AXES = [("ros", "RoS"), ("week", "Week"), ("po", "Playoffs")]
+
+
+def _fmtv(v):
+    return "—" if v is None else f"{v:g}"
+
+
+def _flags_html(flags):
+    return "".join(
+        f'<span class="dc-flag dc-flag-{f.lower()}">{_h(_FLAG_LABELS.get(f, f))}</span>'
+        for f in flags)
+
+
+def _val_cell(p):
+    week = p["xfp_week"]
+    attrs = " ".join(
+        f'data-{ax}="{"" if v is None else v}"'
+        for ax, v in (("ros", p["xfp_ros"]), ("week", week), ("po", p["xfp_po"])))
+    spans = "".join(
+        f'<span class="v v-{ax}">{_fmtv(v)}</span>'
+        for ax, v in (("ros", p["xfp_ros"]), ("week", week), ("po", p["xfp_po"])))
+    return f'<td class="dc-val" {attrs}>{spans}</td>'
+
+
+def _bucket_table(b):
+    rows = []
+    for p in b["players"]:
+        cls = "dc-mine" if p["owner"] == "MINE" else ""
+        own = "MINE" if p["owner"] == "MINE" else (
+            f'{p["own_pct"]:g}%' if p["own_pct"] is not None else "FA")
+        ret = f' <span class="dc-ret">{_h(p["ret"])}</span>' if p["ret"] else ""
+        rows.append(
+            f'<tr class="{cls}" data-id="{_h(p["id"])}">'
+            f'<td class="dc-name">{_h(p["name"])}{_flags_html(p["flags"])}{ret}</td>'
+            f'<td class="dc-dim">{_h(own)}</td>'
+            f'<td class="dc-dim">{_h(p["team"])}</td>'
+            f'<td class="dc-dim">{_h("/".join(p["slots"]))}</td>'
+            f'<td data-rate="{"" if p["rate"] is None else p["rate"]}">'
+            f'{_fmtv(p["rate"])}</td>'
+            f'{_val_cell(p)}</tr>')
+    week_head = ('<th class="dc-sort" data-col="val">xFP '
+                 '<span class="v v-ros">RoS</span><span class="v v-week">Week'
+                 '</span><span class="v v-po">PO</span> ↕</th>')
+    if not b["axis_support"]["week"]:
+        week_head = week_head.replace('<span class="v v-week">Week</span>',
+                                      '<span class="v v-week">Week —</span>')
+    return (
+        f'<table class="dc-table"><thead><tr>'
+        f'<th>Player</th><th>Own</th><th>Team</th><th>Slots</th>'
+        f'<th class="dc-sort" data-col="rate">Rate ↕</th>{week_head}'
+        f'</tr></thead><tbody>{"".join(rows)}</tbody></table>')
+
+
+def _recs_table(data, name_of):
+    if not data["headline_recs"]:
+        return ('<p class="dc-dim dc-norecs">No swap clears the verdict '
+                'threshold right now — the FA pool offers no upgrade over '
+                'your worst droppable starters.</p>')
+    rows = []
+    for r in data["headline_recs"]:
+        def _d(v):
+            if v is None:
+                return '<td class="dc-dim">—</td>'
+            cls = "dc-pos" if v > 0 else ("dc-neg" if v < 0 else "dc-dim")
+            return f'<td class="{cls}">{v:+g}</td>'
+        rows.append(
+            f'<tr><td class="dc-name">{_h(name_of(r["drop_id"]))}</td>'
+            f'<td class="dc-name">{_h(name_of(r["add_id"]))}</td>'
+            f'<td class="dc-dim">{_h(r["bucket"])}</td>'
+            f'{_d(r["delta_ros"])}{_d(r["delta_week"])}{_d(r["delta_po"])}'
+            f'<td><span class="dc-verdict dc-verdict-{r["verdict"].lower()}">'
+            f'{_h(r["verdict"])}</span></td></tr>')
+    return (
+        '<table class="dc-table"><thead><tr>'
+        '<th>Drop</th><th>Add</th><th>Bucket</th><th>ΔRoS</th><th>ΔWeek</th>'
+        '<th>ΔPO</th><th>Verdict</th></tr></thead>'
+        f'<tbody>{"".join(rows)}</tbody></table>')
+
+
+def _cap_line(data):
+    wk = data["week"]
+    if wk is None:
+        return ('<div class="dc-cap dc-est">Week axis is <b>estimated</b> '
+                '(no period/schedule context this build) — flat league rates, '
+                'no cap awareness.</div>')
+    banked = "?" if wk["banked_mine"] is None else wk["banked_mine"]
+    room = "?" if wk["cap_room"] is None else wk["cap_room"]
+    est = (' <span class="dc-flag dc-flag-week_est">estimates in play</span>'
+           if wk["week_est"] else "")
+    return (
+        f'<div class="dc-cap">Period <b>{wk["period"]}</b> '
+        f'({_h(wk["week_start"])} → {_h(wk["week_end"])}, {wk["weeks"]}-wk) · '
+        f'SP cap <b>{wk["sp_cap"]}</b> · banked <b>{banked}</b> · '
+        f'scheduled <b>{wk["scheduled_mine"]}</b> · cap room <b>{room}</b>'
+        f'{est}</div>')
+
+
+def _sim_selects(data, name_of):
+    mine_opts = "".join(
+        f'<option value="{_h(pid)}">{_h(name_of(pid))}</option>'
+        for pid in data["sim"]["mine_ids"])
+    fa_groups = []
+    for b in data["buckets"]:
+        ids = data["sim"]["fa_ids_by_bucket"].get(b["key"], [])
+        if not ids:
+            continue
+        opts = "".join(f'<option value="{_h(pid)}">{_h(name_of(pid))}</option>'
+                       for pid in ids)
+        fa_groups.append(f'<optgroup label="{_h(b["label"])}">{opts}</optgroup>')
+    return (
+        '<div class="dc-sim"><h4>Swap simulator</h4>'
+        '<label>Drop (mine) <select class="dc-sim-mine">'
+        f'<option value="">—</option>{mine_opts}</select></label>'
+        '<label>Add (FA) <select class="dc-sim-fa">'
+        f'<option value="">—</option>{"".join(fa_groups)}</select></label>'
+        '<div class="dc-sim-out dc-dim">Pick a drop and an add to simulate '
+        'the swap on all three axes.</div></div>')
+
+
+def _console_css(theme):
+    t = _THEMES.get(theme, _THEMES["board"])
+    v = "".join(f"--dc-{k}:{val};" for k, val in t.items())
+    return f"""
+.dc {{ {v} background:var(--dc-panel); border:1px solid var(--dc-border);
+  border-radius:8px; padding:1em 1.2em 1.2em; margin:1.2em 0;
+  color:var(--dc-text); font-size:.95em; }}
+.dc h3.dc-title {{ margin:0; color:var(--dc-accent); font-size:1.15em; }}
+.dc .dc-gen {{ color:var(--dc-dim); font-size:.78em;
+  font-family:'IBM Plex Mono',ui-monospace,monospace; }}
+.dc .dc-head {{ display:flex; flex-wrap:wrap; gap:.8em; align-items:baseline;
+  justify-content:space-between; margin-bottom:.6em; }}
+.dc .dc-axes button, .dc .dc-tabs button {{ background:var(--dc-stripe);
+  color:var(--dc-dim); border:1px solid var(--dc-border); border-radius:4px;
+  padding:.25em .8em; cursor:pointer; font:inherit; font-size:.85em; }}
+.dc .dc-axes button.on, .dc .dc-tabs button.on {{ color:var(--dc-text);
+  border-color:var(--dc-accent); background:var(--dc-panel); }}
+.dc .dc-cap {{ font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:.82em; color:var(--dc-dim); border:1px dashed var(--dc-border);
+  border-radius:4px; padding:.45em .7em; margin:.5em 0 .8em; }}
+.dc .dc-cap b {{ color:var(--dc-text); }}
+.dc .dc-cap.dc-est {{ color:var(--dc-warn); }}
+.dc h4 {{ margin:.9em 0 .35em; color:var(--dc-accent); font-size:.95em;
+  font-family:'IBM Plex Mono',ui-monospace,monospace; letter-spacing:.04em; }}
+.dc .dc-table {{ border-collapse:collapse; width:100%;
+  font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.8em; }}
+.dc .dc-table th {{ background:var(--dc-stripe); color:var(--dc-dim);
+  text-align:left; padding:.4em .6em; border-bottom:1px solid var(--dc-border);
+  font-weight:600; font-size:.85em; text-transform:uppercase;
+  letter-spacing:.06em; }}
+.dc .dc-table th.dc-sort {{ cursor:pointer; }}
+.dc .dc-table td {{ padding:.35em .6em;
+  border-bottom:1px solid var(--dc-border); font-variant-numeric:tabular-nums; }}
+.dc .dc-table tbody tr:nth-child(even) td {{ background:var(--dc-stripe); }}
+.dc .dc-table tbody tr.dc-mine td {{ background:var(--dc-mine); }}
+.dc .dc-name {{ color:var(--dc-text); }}
+.dc .dc-dim {{ color:var(--dc-dim); }}
+.dc .dc-pos {{ color:var(--dc-pos); font-weight:600; }}
+.dc .dc-neg {{ color:var(--dc-neg); font-weight:600; }}
+.dc .dc-ret {{ color:var(--dc-warn); font-size:.85em; }}
+.dc .dc-flag {{ display:inline-block; margin-left:.45em; padding:0 4px;
+  border-radius:2px; font-size:.72em; letter-spacing:.03em;
+  background:rgba(212,169,69,.18); color:var(--dc-warn); }}
+.dc .dc-flag-two_start {{ background:rgba(127,176,105,.18);
+  color:var(--dc-pos); }}
+.dc .dc-flag-il {{ background:rgba(193,102,107,.18); color:var(--dc-neg); }}
+.dc .dc-verdict {{ padding:.1em .5em; border-radius:3px; font-size:.78em;
+  font-weight:600; }}
+.dc .dc-verdict-strong {{ background:rgba(127,176,105,.2);
+  color:var(--dc-pos); }}
+.dc .dc-verdict-modest {{ background:rgba(212,169,69,.2);
+  color:var(--dc-warn); }}
+.dc .dc-verdict-marginal {{ background:var(--dc-stripe); color:var(--dc-dim); }}
+.dc .v {{ display:none; }}
+.dc[data-axis="ros"] .v-ros {{ display:inline; }}
+.dc[data-axis="week"] .v-week {{ display:inline; }}
+.dc[data-axis="po"] .v-po {{ display:inline; }}
+.dc .dc-bucket {{ display:none; }}
+.dc .dc-bucket.on {{ display:block; }}
+.dc .dc-note {{ color:var(--dc-dim); font-size:.78em; margin-top:.6em; }}
+.dc .dc-sim {{ border-top:1px solid var(--dc-border); margin-top:1em;
+  padding-top:.6em; }}
+.dc .dc-sim label {{ margin-right:1.2em; color:var(--dc-dim);
+  font-size:.85em; }}
+.dc .dc-sim select {{ background:var(--dc-stripe); color:var(--dc-text);
+  border:1px solid var(--dc-border); border-radius:4px; padding:.2em .4em;
+  font:inherit; font-size:.9em; max-width:16em; }}
+.dc .dc-sim-out {{ margin-top:.55em;
+  font-family:'IBM Plex Mono',ui-monospace,monospace; font-size:.85em; }}
+"""
+
+
+_CONSOLE_JS = r"""
+(function () {
+  var root = document.getElementById('dc-__PK__');
+  if (!root) return;
+  var D = window.__DC_DATA___PK__;
+  var idx = {};
+  D.buckets.forEach(function (b) {
+    b.players.forEach(function (p) { if (!idx[p.id]) idx[p.id] = p; });
+  });
+  var spBucket = null, spIds = {};
+  D.buckets.forEach(function (b) {
+    if (b.key === 'SP') {
+      spBucket = b;
+      b.players.forEach(function (p) { spIds[p.id] = true; });
+    }
+  });
+
+  function fmt(v) { return v === null || v === undefined || v === '' ? '—' : v; }
+  function cls(v) { return v > 0 ? 'dc-pos' : (v < 0 ? 'dc-neg' : 'dc-dim'); }
+
+  root.addEventListener('click', function (ev) {
+    var ax = ev.target.closest('.dc-axes button');
+    if (ax) {
+      root.dataset.axis = ax.dataset.axis;
+      root.querySelectorAll('.dc-axes button').forEach(function (b) {
+        b.classList.toggle('on', b === ax);
+      });
+      return;
+    }
+    var tab = ev.target.closest('.dc-tabs button');
+    if (tab) {
+      root.querySelectorAll('.dc-tabs button').forEach(function (b) {
+        b.classList.toggle('on', b === tab);
+      });
+      root.querySelectorAll('.dc-bucket').forEach(function (d) {
+        d.classList.toggle('on', d.dataset.bucket === tab.dataset.bucket);
+      });
+      return;
+    }
+    var th = ev.target.closest('th.dc-sort');
+    if (th) {
+      var table = th.closest('table');
+      var tbody = table.querySelector('tbody');
+      var attr = th.dataset.col === 'rate' ? 'rate' : root.dataset.axis;
+      var sel = th.dataset.col === 'rate' ? '[data-rate]' : '.dc-val';
+      var dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+      th.dataset.dir = dir;
+      var rows = Array.prototype.slice.call(tbody.rows);
+      rows.sort(function (a, b) {
+        var av = parseFloat(a.querySelector(sel).dataset[attr]);
+        var bv = parseFloat(b.querySelector(sel).dataset[attr]);
+        if (isNaN(av)) av = -Infinity;
+        if (isNaN(bv)) bv = -Infinity;
+        return dir === 'asc' ? av - bv : bv - av;
+      });
+      rows.forEach(function (r) { tbody.appendChild(r); });
+    }
+  });
+
+  var mineSel = root.querySelector('.dc-sim-mine');
+  var faSel = root.querySelector('.dc-sim-fa');
+  var out = root.querySelector('.dc-sim-out');
+  function runSim() {
+    var m = idx[mineSel.value], f = idx[faSel.value];
+    if (!m || !f) {
+      out.className = 'dc-sim-out dc-dim';
+      out.textContent = 'Pick a drop and an add to simulate the swap on all three axes.';
+      return;
+    }
+    var shared = m.slots.filter(function (s) { return f.slots.indexOf(s) >= 0; });
+    var parts = [];
+    ['ros', 'po'].forEach(function (ax) {
+      var a = f['xfp_' + ax], b = m['xfp_' + ax];
+      var lbl = ax === 'ros' ? 'ΔRoS' : 'ΔPO';
+      if (a === null || b === null) { parts.push(lbl + ' —'); return; }
+      var d = Math.round((a - b) * 10) / 10;
+      parts.push('<span class="' + cls(d) + '">' + lbl + ' ' +
+                 (d > 0 ? '+' : '') + d + '</span>');
+    });
+    var wtxt = 'ΔWeek —', approx = '';
+    if (spBucket && spIds[m.id] && spIds[f.id]) {
+      var pw = spBucket.pair_week_deltas[m.id + '|' + f.id];
+      if (pw !== undefined && pw !== null) {
+        wtxt = '<span class="' + cls(pw) + '">ΔWeek ' + (pw > 0 ? '+' : '') + pw + '</span>';
+      } else if (f.xfp_week !== null && m.xfp_week !== null) {
+        var dw = Math.round((f.xfp_week - m.xfp_week) * 10) / 10;
+        wtxt = '<span class="' + cls(dw) + '">ΔWeek ' + (dw > 0 ? '+' : '') + dw + '</span>';
+        approx = ' <span class="dc-flag">≈ cap-approx</span>';
+      }
+    } else if (f.xfp_week !== null && m.xfp_week !== null) {
+      var dh = Math.round((f.xfp_week - m.xfp_week) * 10) / 10;
+      wtxt = '<span class="' + cls(dh) + '">ΔWeek ' + (dh > 0 ? '+' : '') + dh + '</span>';
+    }
+    parts.splice(1, 0, wtxt + approx);
+    var warn = [];
+    if (!shared.length) {
+      warn.push('no shared slot — cross-position move needs a matching open slot');
+    }
+    ['LOW_CONF', 'IL', 'WEEK_EST'].forEach(function (fl) {
+      if (f.flags.indexOf(fl) >= 0) warn.push('add is ' + fl);
+    });
+    var caps = '';
+    if (spIds[f.id] && f.week_detail && f.week_detail.starts) {
+      var c = f.week_detail.starts.filter(function (s) { return s.counts; }).length;
+      caps = ' · adds ' + c + ' countable start' + (c === 1 ? '' : 's') + ' this period';
+    }
+    out.className = 'dc-sim-out';
+    out.innerHTML = 'Drop <b>' + m.name + '</b> → add <b>' + f.name + '</b>: ' +
+      parts.join(' · ') + caps +
+      (warn.length ? ' <span class="dc-ret">⚠ ' + warn.join('; ') + '</span>' : '');
+  }
+  mineSel.addEventListener('change', runSim);
+  faSel.addEventListener('change', runSim);
+})();
+"""
+
+
+def render_console_html(data, *, theme: str = "board", page_key: str,
+                        default_axis: str = "ros") -> str:
+    """Self-contained console block (scoped CSS + vanilla display-only JS).
+    Safe to interpolate into an f-string host page; when a host uses
+    str.format, pass this block as a format ARGUMENT (its braces are then
+    never re-parsed)."""
+    names = {}
+    for b in data["buckets"]:
+        for p in b["players"]:
+            names.setdefault(p["id"], p["name"])
+
+    def name_of(pid):
+        return names.get(pid, pid)
+
+    axes_btns = "".join(
+        f'<button data-axis="{ax}" class="{"on" if ax == default_axis else ""}"'
+        f'>{lbl}</button>' for ax, lbl in _AXES)
+    tab_btns = "".join(
+        f'<button data-bucket="{_h(b["key"])}" '
+        f'class="{"on" if i == 0 else ""}">{_h(b["key"])}</button>'
+        for i, b in enumerate(data["buckets"]))
+    bucket_divs = "".join(
+        f'<div class="dc-bucket {"on" if i == 0 else ""}" '
+        f'data-bucket="{_h(b["key"])}">'
+        + (f'<p class="dc-note">{_h(b["note"])}</p>' if b["note"] else "")
+        + _bucket_table(b) + "</div>"
+        for i, b in enumerate(data["buckets"]))
+
+    payload = json.dumps(data).replace("</", "<\\/")
+    js = _CONSOLE_JS.replace("__PK__", page_key)
+    gen = _h(str(data["generated_at"]))
+
+    return f"""<section class="dc" id="dc-{_h(page_key)}" data-axis="{_h(default_axis)}">
+<style>{_console_css(theme)}</style>
+<div class="dc-head">
+  <div><h3 class="dc-title">🧭 Decision Console — My Team vs FA</h3>
+  <div class="dc-gen">generated {gen} · source {_h(str(data["source"]))}</div></div>
+  <div class="dc-axes">{axes_btns}</div>
+</div>
+{_cap_line(data)}
+<h4>Top swap recommendations</h4>
+{_recs_table(data, name_of)}
+<h4>Position boards</h4>
+<div class="dc-tabs">{tab_btns}</div>
+{bucket_divs}
+{_sim_selects(data, name_of)}
+<p class="dc-note">{_h(data["note"])}. LOW-CONF / IL FAs never appear in
+recommendations but stay visible in the tables. MINE rows are always shown,
+even below the FA display cut.</p>
+<script>window.__DC_DATA_{page_key} = {payload};{js}</script>
+</section>"""
 
 
 # ── CLI (standalone payload writer — refresh step 4.52 fallback) ────────────
