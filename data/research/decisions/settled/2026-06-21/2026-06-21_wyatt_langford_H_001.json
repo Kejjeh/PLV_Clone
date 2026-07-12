@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-21_wyatt_langford_H_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_HITTER",
+    "archetype_overall": 50,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 2.6866799605182234,
+    "live_marginal": null,
+    "model_rank": 112,
+    "override_tag": null,
+    "pl_rank": 90,
+    "proj_per": 1.84,
+    "replacement_delta": null
+  },
+  "mlbam_id": 694671,
+  "player_name": "Wyatt Langford",
+  "reason_tag": "no_convergence",
+  "settled_at": "2026-07-12",
+  "settlement": {
+    "actual_fp_per_unit": 0.926829268292683,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 41,
+    "proj_per": 0.5257142857142857,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.4011149825783973,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "MIXED"
+}

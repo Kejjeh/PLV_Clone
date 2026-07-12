@@ -17,8 +17,18 @@
   "mlbam_id": 805811,
   "player_name": "Bryce Eldridge",
   "reason_tag": "process_red_flag",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-12",
+  "settlement": {
+    "actual_fp_per_unit": 0.2054794520547945,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.5571428571428572,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.35166340508806265,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-21",
   "verdict_top": "CAUTION"
 }

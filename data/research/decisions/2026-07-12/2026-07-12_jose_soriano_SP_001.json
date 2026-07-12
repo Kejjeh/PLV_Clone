@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-12_jose_soriano_SP_001",
+  "inputs": {
+    "archetype_label": "WILD_FIREBALLER",
+    "archetype_overall": 59,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 11.857313814009574,
+    "inputs_schema": 2,
+    "live_marginal": -252.21420595167362,
+    "model_rank": 41,
+    "override_tag": null,
+    "pl_rank": 63,
+    "proj_display": 11.909475192621994,
+    "proj_per": 11.909475192621994,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 667755,
+  "player_name": "Jos\u00e9 Soriano",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-12",
+  "verdict_top": "MIXED"
+}

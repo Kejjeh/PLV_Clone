@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.25,
+  "decision_id": "2026-07-12_max_fried_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_MOVEMENT",
+    "archetype_overall": 62,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 13.82060199151694,
+    "inputs_schema": 2,
+    "live_marginal": -158.25786068045466,
+    "model_rank": 58,
+    "override_tag": "DECLINE_VETO",
+    "pl_rank": null,
+    "proj_display": 11.308160126150222,
+    "proj_per": 11.308160126150222,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 608331,
+  "player_name": "Max Fried",
+  "reason_tag": "decline_veto",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-12",
+  "verdict_top": "CAUTION"
+}

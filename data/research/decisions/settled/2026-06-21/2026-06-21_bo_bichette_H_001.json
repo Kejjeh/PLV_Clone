@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-06-21_bo_bichette_H_001",
+  "inputs": {
+    "archetype_label": "CONTACT_HACKER",
+    "archetype_overall": 55,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 2.4962339704785124,
+    "live_marginal": 25.5,
+    "model_rank": 40,
+    "override_tag": null,
+    "pl_rank": 97,
+    "proj_per": 2.04,
+    "replacement_delta": null
+  },
+  "mlbam_id": 666182,
+  "player_name": "Bo Bichette",
+  "reason_tag": "model_anchored",
+  "settled_at": "2026-07-12",
+  "settlement": {
+    "actual_fp_per_unit": 0.45,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 80,
+    "proj_per": 0.5828571428571429,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.13285714285714284,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "BUY"
+}

@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-06-21_michael_harris_ii_H_001",
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_STAR",
+    "archetype_overall": 65,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 2.551375263161512,
+    "live_marginal": null,
+    "model_rank": 18,
+    "override_tag": null,
+    "pl_rank": 23,
+    "proj_per": 2.21,
+    "replacement_delta": null
+  },
+  "mlbam_id": 671739,
+  "player_name": "Michael Harris II",
+  "reason_tag": "strong_hold",
+  "settled_at": "2026-07-12",
+  "settlement": {
+    "actual_fp_per_unit": 0.5116279069767442,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 86,
+    "proj_per": 0.6314285714285715,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.11980066445182724,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-06-21",
+  "verdict_top": "BUY"
+}
