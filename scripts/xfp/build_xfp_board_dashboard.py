@@ -187,6 +187,82 @@ def _console_block(sp, hit, inputs) -> str:
                                default_axis="ros")
 
 
+def _context_block(sp) -> str:
+    """Statcast three-axis context (stuff / command / contact) for the
+    talent_prior SP rows — arms whose per_start is a suppressed Marcel prior,
+    so recent Statcast is the only real read. Display / diagnosis only (Rule 13);
+    none of these beats rp3 out-of-sample, so they never move a headline. Empty
+    string when there are no talent_prior SPs. Callers wrap this fail-soft so a
+    missing/updating Statcast parquet can't stop the boards from publishing."""
+    from lib.sp_stuff_context import context_for
+
+    tp = sp[sp["src"].astype(str).str.startswith("talent_prior")]
+    if tp.empty:
+        return ""
+
+    def _c(v, nd):
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return '<td class="muted">—</td>'
+        return f"<td>{float(v):.{nd}f}</td>"
+
+    def _acc(v):
+        if v is None or (isinstance(v, float) and pd.isna(v)):
+            return '<td class="acc muted">—</td>'
+        return f'<td class="acc">{float(v):.1f}</td>'
+
+    head = (
+        "<tr><th>Pitcher</th><th>Team</th><th>Return</th><th>GS</th>"
+        "<th>StuffFP</th><th>·L3</th><th>K-BB%</th><th>·L3</th>"
+        "<th>xwOBAc</th><th>·L3</th></tr>"
+    )
+    scored, nodata = [], []
+    for _, r in tp.iterrows():
+        ctx = context_for(r["name"], r.get("team"))
+        (scored if ctx and ctx.get("s") is not None else nodata).append((r, ctx))
+    # lead with the readable signal — best in-form stuff first
+    scored.sort(key=lambda rc: (rc[1]["s"]["stufffp"] is None,
+                                -(rc[1]["s"]["stufffp"] or 0)))
+    body = []
+    for r, ctx in scored:
+        s, l3 = ctx["s"], ctx["l3"]
+        thin = ' <span class="thin">thin</span>' if ctx.get("low_conf") else ""
+        body.append(
+            f'<tr class="{_row_class(r)}">'
+            f"<td>{_name_cell(r)}</td>"
+            f'<td class="muted">{h(str(r.get("team","") or ""))}</td>'
+            f"<td>{_ret_cell(r)}</td>"
+            f'<td class="muted">{ctx["starts"]}{thin}</td>'
+            f'{_acc(s["stufffp"])}{_c(l3["stufffp"], 1)}'
+            f'{_c(s["kbb"], 1)}{_c(l3["kbb"], 1)}'
+            f'{_c(s["xwc"], 3)}{_c(l3["xwc"], 3)}</tr>'
+        )
+
+    note = (
+        "For these <span class=\"lc\">LOW-CONF*</span> arms, per_start is a "
+        "suppressed Marcel prior — here is the real recent-Statcast read. "
+        "<b>StuffFP</b> (stuff) = validated composite of CSW/SwStr/Whiff fit "
+        "2021–26 to forward FP/start [−6.12 + .483·CSW + 1.095·SwStr − .368·Whiff], "
+        "in FP units · <b>K-BB%</b> (command) · <b>xwOBAcon</b> (contact, lower "
+        "is better) — the one axis independent of stuff &amp; command. Tested "
+        "out-of-sample, none beats rp3, so this is <b>context / diagnosis only, "
+        'never a headline</b>. <span class="thin">thin</span> = under 4 starts, '
+        "so xwOBAcon there is directional."
+    )
+    nod = ""
+    if nodata:
+        names = ", ".join(h(str(r["name"])) for r, _ in nodata)
+        nod = (f'<div class="legend">+ {len(nodata)} talent_prior arms with no '
+               f"2026 Statcast (deep IL / pre-debut): {names}</div>")
+    return (
+        '<h2>Statcast context <span class="totals">talent_prior · '
+        f"{len(scored)} with data · {len(nodata)} no-Statcast · display-only"
+        "</span></h2>"
+        f'<div class="note">{note}</div>'
+        f"<table><thead>{head}</thead><tbody>{''.join(body)}</tbody></table>"
+        f"{nod}"
+    )
+
+
 def build_html() -> str:
     from lib.dashboard_chrome import topnav as _topnav  # unified nav owner (item 8)
     inputs = B.fetch_board_inputs()   # ONE roster + ONE free_agents(2000) pull for both boards
@@ -202,6 +278,12 @@ def build_html() -> str:
         console_html = (f'<div class="note">⚠ decision console unavailable '
                         f'this build ({type(e).__name__}: {e})</div>')
         print(f"[xfp_board] console error: {type(e).__name__}: {e}")
+
+    try:
+        context_html = _context_block(sp)
+    except Exception as e:
+        context_html = ""
+        print(f"[xfp_board] context block error: {type(e).__name__}: {e}")
 
     gen = datetime.now().strftime("%Y-%m-%d %H:%M")
     n_sp_mine = int((sp["owner"] == "MINE").sum())
@@ -332,6 +414,8 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 .lc {{ display:inline-block; padding:0 5px; border-radius:2px; font-size:.78em;
       background:rgba(212,169,69,.20); color:var(--warn); font-weight:600;
       letter-spacing:.04em; }}
+.thin {{ display:inline-block; padding:0 4px; border-radius:2px; font-size:.72em;
+        background:rgba(212,169,69,.18); color:var(--warn); font-weight:600; }}
 .meta {{ color:var(--dim); font-size:.78em; margin-top:2.5em; text-align:center;
         border-top:1px solid var(--border); padding-top:1em; }}
 </style></head>
@@ -345,6 +429,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 <div class="legend">{legend}</div>
 {console_html}
 {sp_html}
+{context_html}
 {''.join(bucket_html)}
 <div class="meta">New York Ligers · plv_clone · engine: scripts/xfp/build_xfp_boards.py · skill: /xfp-board</div>
 </div></body></html>
