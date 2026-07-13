@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-13_griffin_jax_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 55,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 29.089924652484846,
+    "inputs_schema": 2,
+    "live_marginal": -149.46714650297477,
+    "model_rank": 73,
+    "override_tag": null,
+    "pl_rank": 41,
+    "proj_display": 10.93751860510659,
+    "proj_per": 10.93751860510659,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 643377,
+  "player_name": "Griffin Jax",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-13",
+  "verdict_top": "MIXED"
+}
