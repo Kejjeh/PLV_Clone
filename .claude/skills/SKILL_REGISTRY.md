@@ -75,6 +75,7 @@ overlapping set and is now the canonical streamer surface.)
 ### SP cap / week management
 | Skill | Status | Role |
 |---|---|---|
+| cap-check | active | Focused any-day cap answer: banked (statId-33) + projected starts vs period cap → exact bench call; value blends rp3 + L5 form. Engine `weekly_cap_check.py`. Calls `period_meta` + `detect_pitcher_role` |
 | sp-week-plan | active | Week's starts vs 10-cap; weakest-start bench call |
 | pregame-check | active | Morning-of START vs CAP-BENCH (validated v2 rules) + opp-SP scan |
 | forced-drop-planner | active | Cap-breach date from IL cascade + pre-identified cuts (canonical role/IL math) |
