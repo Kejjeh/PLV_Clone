@@ -1,6 +1,6 @@
 ---
 name: monday-morning
-description: Meta-skill that chains roster-verify → roster-audit (full) → roster-health → sp-week-plan → fa-monitor → conviction-scan into a single Monday workflow. Replaces 4-6 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
+description: Meta-skill that chains roster-verify → roster-audit (full) → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan into a single Monday workflow. Replaces 5-7 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
 ---
 
 # monday-morning
@@ -11,8 +11,9 @@ Runs the full Monday decision workflow in one pass:
 2. **roster-audit** — slot occupancy, IL returns, SP cap math, drop candidates, FA adds
 3. **roster-health** — signal-driven alerts (TRENDING_DOWN, ARCHETYPE_DOWNGRADE, COLD_BABIP, etc.) layered on top of the slot/cap view from step 2
 4. **sp-week-plan** — project this week's starts against the period cap (10 std / 16 ASG / 20 playoff 2-week), rank, bench recommendation
-5. **fa-monitor** — pull HIGH-priority alerts from all signals
-6. **conviction-scan** — league-wide model-vs-process divergence watch (buy-low / sell-high conviction; Rule 13 context only)
+5. **cap-check** — the *exact* cap verdict: banked starts (ESPN statId-33) + projected remaining vs the live cap → the precise start to bench, value blended rp3 + recent L5 form (engine `weekly_cap_check.py`)
+6. **fa-monitor** — pull HIGH-priority alerts from all signals
+7. **conviction-scan** — league-wide model-vs-process divergence watch (buy-low / sell-high conviction; Rule 13 context only)
 
 For any specific player flagged in steps 2-5, optionally run `/triangulate <name>` to get the full 3-lens verdict + confidence + watch-list before making the move.
 
@@ -125,6 +126,27 @@ for _, r in il_sps.iterrows():
 
 ---
 
+## Step 3b — cap-check (exact bench call)
+
+`/sp-week-plan` above gives the projection and a matchup-ranked bench idea;
+`/cap-check` locks the *precise* cap verdict. It reads **banked** starts from
+ESPN statId-33 (not the rough `projected_starts(n)` estimate), projects the
+remaining starts (confirmed probables + rotation cadence, **sliding off
+ASG-break / off days**), and ranks the bench by a **rp3 + recent-L5 blend** so a
+stale / opener-dragged rp3 can't mis-bench a hot arm.
+
+```bash
+python scripts/xfp/weekly_cap_check.py
+```
+
+Surface its one-line verdict (**UNDER cap by N** → N stream slots, or **OVER cap
+by N** → bench these exact starts) in the report, and let it override Step 3's
+bench idea when they disagree (cap-check is banked-aware, Step 3 is not).
+**Carry the caveat: a benched start is a THIS-WEEK form call, not a drop** — a
+cold arm with rising velo / K-BB% stays rostered and just sits the one start.
+
+---
+
 ## Step 4 — fa-monitor (condensed)
 
 Using `fa_all` and `rh3_idx` from shared data, run all 6 signals.
@@ -170,7 +192,9 @@ N healthy SPs → P starts/wk vs the period cap (G gap)
 Pre-identified cut: <weakest SP by rp3>
 
 ## This week's starts
-<projected starts table, bench call>
+<projected starts table>
+Cap verdict (cap-check): banked B + projected P = T vs cap C → **UNDER by N** /
+**OVER by N → bench <pitcher> <date>** (this-week form call, not a drop)
 
 ## IL returns
 <return timeline table — next 30 days>

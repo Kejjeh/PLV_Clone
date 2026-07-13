@@ -147,7 +147,7 @@ overlapping set and is now the canonical streamer surface.)
 ### Meta-skills (report bundles — chain, never re-derive)
 | Skill | Status | Chain |
 |---|---|---|
-| monday-morning | meta | roster-verify → roster-audit → roster-health → sp-week-plan → fa-monitor → conviction-scan |
+| monday-morning | meta | roster-verify → roster-audit → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan |
 | daily-edge | meta | roster-verify → pregame-check → streamer-precision-board (incl. its `--filter boom>=2` shortlist; 4→3 steps, P1 2026-07-10) |
 | trade-deadline | meta | league-deep-audit → conviction-scan → opp-watch → trade-target-scan |
 | playoff-war-room | meta | roster-verify → playoff-team-build → sp-stash-finder → sp-rehab-tracker → forced-drop-planner |
