@@ -1,0 +1,27 @@
+{
+  "bucket": "RP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-15_tanner_scott_RP_001",
+  "inputs": {
+    "archetype_label": "LATE_INNING_STUFF_CTRL",
+    "archetype_overall": 77,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 4.032229395551612,
+    "inputs_schema": 2,
+    "live_marginal": -26.80000000000001,
+    "model_rank": 8,
+    "override_tag": null,
+    "pl_rank": 26,
+    "proj_display": 104.5,
+    "proj_per": 4.583333333333333,
+    "proj_units": "fp_per_g",
+    "replacement_delta": 85.9
+  },
+  "mlbam_id": 656945,
+  "player_name": "Tanner Scott",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-15",
+  "verdict_top": "BUY"
+}
