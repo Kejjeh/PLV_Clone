@@ -32,6 +32,43 @@ from plv_clone.cap_math import (  # noqa: F401  (re-exported for callers)
 )
 
 
+def _calendar_weeks(period, mp) -> int:
+    """True CALENDAR-week span of a period. The ASG block (period 15) spans two
+    calendar weeks but ESPN lists it as a single scoring index, so trust its
+    explicit override window over the scoring-index count."""
+    win = period_window(period)
+    if win is not None:
+        return max(1, round(((win[1] - win[0]).days + 1) / 7))
+    return weeks_in_period(mp, period)
+
+
+def _period_start(league, period, mp, today: date) -> date:
+    """Monday of the requested period's first week.
+
+    For the CURRENT period (or a league that doesn't expose one) this is simply
+    the week of ``today`` — byte-identical to the pre-fix behavior. For any OTHER
+    period it walks forward/back from the current period's start, summing each
+    intervening period's *calendar* weeks, so an ASG/playoff block that is longer
+    than one week shifts later periods by the right number of days (the bug: the
+    old code returned the week of ``today`` for every period, so any non-current
+    period resolved to the wrong window)."""
+    cur_monday = today - timedelta(days=today.weekday())
+    cur_mp = getattr(league, "currentMatchupPeriod", None)
+    if cur_mp is None or period is None or cur_mp == period:
+        return cur_monday
+    cur_win = period_window(cur_mp)          # ASG current → its real start
+    anchor = cur_win[0] if cur_win is not None else cur_monday
+    if period > cur_mp:
+        d = anchor
+        for p in range(cur_mp, period):
+            d = d + timedelta(days=7 * _calendar_weeks(p, mp))
+        return d
+    d = anchor
+    for p in range(cur_mp - 1, period - 1, -1):
+        d = d - timedelta(days=7 * _calendar_weeks(p, mp))
+    return d
+
+
 def resolve_period_meta(league, period, *, today: date | None = None) -> dict:
     """Resolve cap + date window + week-count for a matchup ``period``.
 
@@ -63,7 +100,7 @@ def resolve_period_meta(league, period, *, today: date | None = None) -> dict:
     if win is not None:                       # ASG override (real date span)
         week_start, week_end = win
     else:                                     # standard OR multi-week playoff
-        week_start = today - timedelta(days=today.weekday())
+        week_start = _period_start(league, period, mp, today)
         week_end = week_start + timedelta(days=7 * max(1, weeks) - 1)
     return {
         "period": period,

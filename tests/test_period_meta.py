@@ -125,6 +125,35 @@ def test_current_period_meta_two_week_playoff_is_20():
     assert meta["weeks"] == 2
 
 
+# ── future-period windows: shift correctly past the 2-week ASG block ──────────
+# Regression for the bug where resolve_period_meta returned the week of `today`
+# for EVERY period, so any non-current period (e.g. planning P16-18 while sitting
+# in P15) resolved to the wrong window.
+
+def test_future_periods_shift_past_asg_block():
+    """Sitting in the ASG block (period 15, Jul 6–19), the following standard
+    periods resolve to their real Mon–Sun weeks — P16 = 7/20-26, P18 = 8/3-9 —
+    NOT the week of `today`. The 2-week ASG span must push them a week further
+    than a naive scoring-index count would."""
+    league = _FakeLeague(_MP, current_period=15)
+    p16 = resolve_period_meta(league, 16, today=date(2026, 7, 11))
+    assert p16["week_start"] == date(2026, 7, 20)   # NOT 7/6 (week of today)
+    assert p16["week_end"] == date(2026, 7, 26)
+    assert p16["sp_cap"] == 10
+    p18 = resolve_period_meta(league, 18, today=date(2026, 7, 11))
+    assert p18["week_start"] == date(2026, 8, 3)
+    assert p18["week_end"] == date(2026, 8, 9)
+
+
+def test_current_period_window_unchanged_when_period_matches():
+    """The current-period path is byte-identical to before: asking for the period
+    the league is actually on returns the week of `today`."""
+    league = _FakeLeague(_MP, current_period=8)
+    meta = resolve_period_meta(league, 8, today=date(2026, 7, 15))  # Wed
+    assert meta["week_start"] == date(2026, 7, 13)
+    assert meta["week_end"] == date(2026, 7, 19)
+
+
 # ── banked-count reader re-exported here shares one implementation ────────────
 
 class _FakeRequest:
