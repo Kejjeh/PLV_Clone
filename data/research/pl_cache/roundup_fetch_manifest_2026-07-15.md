@@ -1,5 +1,12 @@
 # SP Roundup fetch manifest — teed up 2026-07-15
 
+> **✅ RESOLVED 2026-07-15.** The env egress policy was updated to allow `pitcherlist.com`,
+> so the fetch was executed the same day. WebFetch stays bot-blocked (403), but `curl` gets
+> 200. Window 6/30–7/12 fetched + distilled. Deliverables:
+> `sp_roundup_timeline_2026-07-15.md` + `nick_sentiment_2026-07-15.json` (this dir).
+> The notes below are kept for provenance.
+
+
 **Why this file exists:** a session on 2026-07-15 was asked to *fetch all missing
 Pitcher List "SP Roundup" recaps, distill Nick/Crumpler sentiment per pitcher, and
 store the timeline* — but the Claude-Code-on-the-web environment's egress policy
