@@ -1,5 +1,18 @@
 # HANDOFF → local session — finalize SP adds/drops (2026-07-16)
 
+> **STATUS: STEPS 1–2 EXECUTED 2026-07-16 (local session). This file is now PARTLY OBSOLETE.**
+> The live pull **contradicted** this handoff's roster premise:
+> - **Troy Melton is NOT ours** — rostered by *2015 Draft First Round*. The "Melton ADDED /
+>   Melton-for-Rodón" claim below is **false**; the add never landed. Do not start him Friday.
+> - **Emmet Sheehan is NOT ours** — live FREE AGENT (this file listed him on our staff).
+> - **Griffin Jax is ALREADY ours** — listed below as an FA add target.
+> - **Sean Burke is rostered** (Late Night Bettsing) — not an available alternative.
+> - Rodón-dropped ✅ confirmed. Henderson still a live FA ✅.
+> - **Roster is 29/29 with all 3 IL slots used → any add requires a drop.**
+>
+> Read `data/research/roster_state_current.md` for the verified state. Steps 3–4 below remain
+> open, but re-read them against the corrected staff, not the list in this file.
+
 **Why this exists:** the web/cloud session that did the roundup + sentiment work **cannot reach
 ESPN** (no `.env` creds in the cloud clone — `ESPN_LEAGUE_ID`/`ESPN_SWID`/`ESPN_S2` live only in
 the gitignored local `.env`; `espn_api`/pandas also not installed there). Run the steps below in a
