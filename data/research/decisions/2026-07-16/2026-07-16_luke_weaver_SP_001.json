@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-16_luke_weaver_SP_001",
+  "inputs": {
+    "archetype_label": "GENERIC_HR_PRONE",
+    "archetype_overall": 39,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 12.40940288350064,
+    "inputs_schema": 2,
+    "live_marginal": -222.31999999999996,
+    "model_rank": 342,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_display": 4.82,
+    "proj_per": 4.82,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 596133,
+  "player_name": "Luke Weaver",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-16",
+  "verdict_top": "CAUTION"
+}
