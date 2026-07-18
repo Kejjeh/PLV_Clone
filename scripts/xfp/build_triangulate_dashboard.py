@@ -570,7 +570,11 @@ document.getElementById('prev').onclick=()=>show(i-1);
 document.getElementById('next').onclick=()=>show(i+1);
 document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')show(i-1);
  if(e.key==='ArrowRight')show(i+1);});
-show(0);
+let start=0;
+if(location.hash.startsWith('#p=')){const w=decodeURIComponent(location.hash.slice(3)).toLowerCase();
+ const k=cards.findIndex(c=>{const h2=c.querySelector('h2');return h2&&h2.textContent.trim().toLowerCase()===w;});
+ if(k>=0)start=k;}
+show(start);
 """
 
 
@@ -958,6 +962,66 @@ def _advanced_panel(c: dict) -> str:
             f'<div class="adv-body">{inner}</div></details>')
 
 
+
+# name -> (role, mlbam) map for profiles deep-links (2026-07-18 cross-links).
+# rh3/rp3 CSVs carry "Last, First" names; convert + normalize. (name, team)
+# key first, then unique-name fallback; ambiguous names get no link.
+def _load_profile_id_map():
+    import unicodedata as _ud, re as _re
+    import pandas as _pd
+
+    def _n(s):
+        s = _ud.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode()
+        return _re.sub(r'[^a-z ]', '', s.lower()).strip()
+
+    def _flip(nm):
+        if ',' in str(nm):
+            last, _, first = str(nm).partition(',')
+            return f'{first.strip()} {last.strip()}'
+        return str(nm)
+
+    by_nt, by_n = {}, {}
+    for path, idc, role in ((ROOT / 'data/outputs/xfp_rh3_projections.csv', 'batter', 'hitter'),
+                            (ROOT / 'data/outputs/xfp_rp3_projections.csv', 'pitcher', 'sp')):
+        try:
+            df = _pd.read_csv(path, usecols=[idc, 'player_name', 'team'] if role == 'hitter'
+                              else [idc, 'player_name'])
+        except Exception as e:
+            _warn('profile_id_map', e)
+            continue
+        for _, r in df.iterrows():
+            nm = _n(_flip(r['player_name']))
+            pid = r[idc]
+            if _pd.isna(pid):
+                continue
+            pid = int(pid)
+            tm = _n(r['team']) if 'team' in df.columns and _pd.notna(r.get('team')) else ''
+            by_nt[(nm, tm)] = (role, pid)
+            if nm in by_n and by_n[nm][1] != pid:
+                by_n[nm] = None  # ambiguous — no link
+            else:
+                by_n.setdefault(nm, (role, pid))
+    return by_nt, by_n, _n
+
+
+_PROFILE_IDS = None
+
+
+def _profile_link(c):
+    global _PROFILE_IDS
+    if _PROFILE_IDS is None:
+        _PROFILE_IDS = _load_profile_id_map()
+    by_nt, by_n, _n = _PROFILE_IDS
+    nm = _n(c.get('name'))
+    tm = _n(c.get('team') or '')
+    hit = by_nt.get((nm, tm)) or by_n.get(nm)
+    if not hit:
+        return ''
+    role, pid = hit
+    return (f'<a class="xlink" href="player_profiles.html?player={pid}&tab=boom" '
+            f'title="Full profile (game-by-game archive)">full profile →</a>')
+
+
 def _card_html(c: dict, idx: int) -> str:
     vcls = c['vclass']
     badge = (f'<span class="badge il">🏥 {h(str(c["il_status"]))}</span>'
@@ -988,12 +1052,13 @@ def _card_html(c: dict, idx: int) -> str:
     ] if p)
     advanced = _advanced_panel(c)
     grp_lab = _GROUP_LABELS.get(c.get('group'), c.get('group') or '')
+    plink = _profile_link(c)
     return f"""
 <article class="card" data-i="{idx}">
   <div class="vhead">
     <h2>{h(str(c['name']))}</h2>
     <span class="team mono">{h(str(grp_lab))} · {h(str(c.get('team') or ''))}</span>
-    <span class="badge {vcls}">{top}</span>{badge}
+    <span class="badge {vcls}">{top}</span>{badge}{plink}
   </div>
   <div class="verdict">{verdict_html}</div>
   <div class="grid">{panels}</div>
@@ -1145,6 +1210,9 @@ def _fa_rail_html(fa_cards: list[dict]) -> str:
 
 
 _FA_CSS = """
+.xlink{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--dim);
+ text-decoration:none;border:1px solid var(--line);border-radius:3px;padding:3px 8px;margin-left:8px}
+.xlink:hover{color:var(--accent);border-color:var(--accent)}
 .traj-chart{width:100%;height:92px;margin:6px 0 2px;display:block}
 .tl-row{display:flex;gap:10px;align-items:center;font-size:10px;margin-bottom:4px}
 .tl-item{font-family:'IBM Plex Mono',monospace;font-weight:500}
