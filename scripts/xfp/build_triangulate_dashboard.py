@@ -1135,7 +1135,9 @@ def render_page(cards: list[dict], fa_rows: list[dict] | None = None) -> str:
 
 
 def main():
-    names = sys.argv[1:] or my_roster_names()
+    argv = [a for a in sys.argv[1:] if a != '--live-fa']
+    live_fa = '--live-fa' in sys.argv[1:]
+    names = argv or my_roster_names()
     if not names:
         print('  no roster names — pass names as args')
         return
@@ -1144,9 +1146,24 @@ def main():
     il_n = sum(1 for c in cards if c['is_il'])
     print(f'  built {len(cards)} cards ({il_n} on IL)')
     fa_raw = load_fa_rows({c.get('name') for c in cards})
-    lens_map = load_batch_lens()
-    fa_rows = [_fa_card_from_batch(j, lens_map.get(j.get('name'))) for j in fa_raw]
-    print(f'  FA section: {len(fa_rows)} free agents (full-card render from nightly batch)')
+    if live_fa:
+        # Full-fidelity FA cards: run the live engine per FA (~5-8s each; the
+        # 500+ pool takes ~45-60 min — background/nightly use only). Falls back
+        # to the batch card for any FA the live engine can't resolve.
+        print(f'  --live-fa: running the live engine over {len(fa_raw)} FAs...')
+        fa_cards = collect_cards([j['name'] for j in fa_raw])
+        got = {c['name'] for c in fa_cards}
+        lens_map = load_batch_lens()
+        fa_cards += [_fa_card_from_batch(j, lens_map.get(j.get('name')))
+                     for j in fa_raw if j.get('name') not in got]
+        by_name = {c['name']: c for c in fa_cards}
+        order = {j['name']: k for k, j in enumerate(fa_raw)}
+        fa_rows = sorted(by_name.values(), key=lambda c: order.get(c['name'], 9999))
+        print(f'  FA section: {len(fa_rows)} free agents (LIVE engine; {len(fa_raw) - len(got)} batch-fallback)')
+    else:
+        lens_map = load_batch_lens()
+        fa_rows = [_fa_card_from_batch(j, lens_map.get(j.get('name'))) for j in fa_raw]
+        print(f'  FA section: {len(fa_rows)} free agents (full-card render from nightly batch)')
     html_doc = render_page(cards, fa_rows)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'triangulate.html').write_text(html_doc, encoding='utf-8')
