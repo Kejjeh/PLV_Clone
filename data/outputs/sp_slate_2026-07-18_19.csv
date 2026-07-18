@@ -1,0 +1,61 @@
+date,et,name,vs,owner,ownteam,rp3_rank,per_start,dq,recform,blend,boom,opp_bat,tier,pl,strm
+2026-07-18,10:05PM,Zack Littell,@ Athletics,FA,,265.0,4.2,data_driven_full,6.3,3.9,3.0,0.9345,soft,,DNS
+2026-07-18,10:05PM,J.T. Ginn,vs Washington Nationals,FA,,153.0,11.5,data_driven_full,-4.0,11.0,0.0,1.0487,tough,,DNS
+2026-07-18,10:07PM,Tarik Skubal,@ Los Angeles Angels,opp,Team Solomon,2.0,16.1,data_driven_full,1.5,16.8,1.0,0.9275,soft,2.0,AUTO
+2026-07-18,10:07PM,Grayson Rodriguez,vs Detroit Tigers,FA,,292.0,3.3,data_driven_thin,4.3,8.9,1.0,0.9718,neutral,,DNS
+2026-07-18,1:10PM,Jared Jones,@ Cleveland Guardians,opp,Frendy's Fantastic Team,34.0,9.7,data_driven_full,6.1,12.8,2.0,0.879,soft,37.0,
+2026-07-18,1:10PM,Gavin Williams,vs Pittsburgh Pirates,opp,U Just Lost To Edwin Diaz,20.0,14.1,data_driven_full,-0.8,13.2,0.0,1.0211,neutral,24.0,
+2026-07-18,2:20PM,Taj Bradley,@ Chicago Cubs,opp,U Just Lost To Edwin Diaz,26.0,14.1,data_driven_full,7.1,11.5,2.0,0.9821,neutral,72.0,QUES
+2026-07-18,2:20PM,Matthew Boyd,vs Minnesota Twins,FA,,100.0,10.4,data_driven_full,0.0,10.8,1.0,1.0159,neutral,63.0,PROB
+2026-07-18,3:07PM,Davis Martin,@ Toronto Blue Jays,FA,,129.0,11.8,data_driven_full,-8.5,11.9,1.0,0.8796,soft,88.0,QUES
+2026-07-18,3:07PM,Shane Bieber,vs Chicago White Sox,opp,U Just Lost To Edwin Diaz,283.0,1.8,data_driven_thin,1.6,,0.0,0.9926,neutral,,DNS
+2026-07-18,3:10PM,Rhett Lowder,@ Colorado Rockies,FA,,238.0,7.6,data_driven_full,-8.2,8.9,0.0,0.979,neutral,,DNS
+2026-07-18,3:10PM,Tomoyuki Sugano,vs Cincinnati Reds,FA,,341.0,7.7,marcel_il,0.0,6.7,1.0,0.9675,soft,,DNS
+2026-07-18,4:05PM,Sean Manaea,@ Philadelphia Phillies,FA,,179.0,8.0,data_driven_thin,0.7,8.4,1.0,0.9918,neutral,,QUES
+2026-07-18,4:05PM,Jesús Luzardo,vs New York Mets,opp,Boone's Bad Bullpen,10.0,13.9,data_driven_full,7.6,17.1,2.0,1.0313,tough,16.0,AUTO
+2026-07-18,4:10PM,Trevor Rogers,@ Houston Astros,FA,,97.0,9.0,data_driven_full,4.6,10.0,2.0,0.9722,neutral,46.0,PROB
+2026-07-18,4:10PM,Spencer Arrighetti,vs Baltimore Orioles,FA,,232.0,9.7,data_driven_full,-5.8,10.6,1.0,0.981,neutral,,DNS
+2026-07-18,4:10PM,Griffin Canning,@ Kansas City Royals,FA,,192.0,6.0,data_driven_full,2.8,6.7,0.0,1.0059,neutral,,DNS
+2026-07-18,4:10PM,Randy Dobnak,vs San Diego Padres,FA,,,,,,,,,,,
+2026-07-18,4:10PM,Dustin May,@ Arizona Diamondbacks,FA,,83.0,11.2,data_driven_full,2.1,12.2,1.0,0.9547,soft,60.0,PROB
+2026-07-18,4:10PM,Brandon Pfaadt,vs St. Louis Cardinals,FA,,150.0,10.3,data_driven_thin,3.6,9.9,1.0,1.0105,neutral,85.0,QUES
+2026-07-18,4:10PM,Ian Seymour,@ Boston Red Sox,FA,,79.0,10.1,data_driven_thin,2.0,13.2,1.0,0.9937,neutral,62.0,PROB
+2026-07-18,4:10PM,Patrick Sandoval,vs Tampa Bay Rays,FA,,305.0,8.1,marcel_il,0.0,,0.0,0.9907,neutral,,DNS
+2026-07-18,4:10PM,MacKenzie Gore,@ Atlanta Braves,opp,U Just Lost To Edwin Diaz,51.0,11.1,data_driven_full,-4.4,9.9,2.0,0.9264,soft,55.0,QUES
+2026-07-18,4:10PM,Owen Murphy,vs Texas Rangers,FA,,,,,,,,,,100.0,DNS
+2026-07-18,4:10PM,Max Meyer,@ Milwaukee Brewers,opp,Late Night Bettsing,60.0,13.9,data_driven_full,-4.8,13.7,1.0,1.0268,neutral,18.0,AUTO
+2026-07-18,4:10PM,Shane Drohan,vs Miami Marlins,FA,,71.0,9.5,data_driven_full,2.6,12.7,1.0,1.0003,neutral,77.0,QUES
+2026-07-18,7:10PM,Logan Allen,vs Pittsburgh Pirates,FA,,306.0,8.1,marcel_il,0.0,,0.0,1.0211,neutral,,
+2026-07-18,8:08PM,Logan Webb,@ Seattle Mariners,opp,Team Solomon,66.0,12.4,data_driven_full,-6.0,10.1,2.0,0.9274,soft,21.0,AUTO
+2026-07-18,8:08PM,Bryan Woo,vs San Francisco Giants,opp,Late Night Bettsing,18.0,13.2,data_driven_full,-0.0,13.1,1.0,1.0361,tough,20.0,AUTO
+2026-07-18,8:08PM,Emmet Sheehan,@ New York Yankees,FA,,38.0,10.5,data_driven_full,3.6,11.4,3.0,0.9139,soft,44.0,QUES
+2026-07-18,8:08PM,Ryan Weathers,vs Los Angeles Dodgers,FA,,96.0,11.9,data_driven_full,-8.9,11.4,1.0,1.0351,tough,53.0,QUES
+2026-07-19,12:15PM,Sean Burke,@ Toronto Blue Jays,opp,Late Night Bettsing,61.0,11.4,data_driven_full,9.1,13.8,3.0,0.8796,soft,33.0,
+2026-07-19,12:15PM,Trey Yesavage,vs Chicago White Sox,opp,U Just Lost To Edwin Diaz,115.0,12.1,data_driven_full,-3.7,11.2,0.0,0.9926,neutral,79.0,
+2026-07-19,1:35PM,Shane McClanahan,@ Boston Red Sox,opp,Frendy's Fantastic Team,49.0,11.7,data_driven_full,8.0,14.0,1.0,0.9937,neutral,39.0,
+2026-07-19,1:35PM,Sonny Gray,vs Tampa Bay Rays,opp,Team Solomon,46.0,13.5,data_driven_full,8.1,11.3,1.0,0.9907,neutral,27.0,
+2026-07-19,1:35PM,Nolan McLean,@ Philadelphia Phillies,opp,Treasure Island Mashers,47.0,13.1,data_driven_full,2.0,13.6,1.0,0.9918,neutral,30.0,
+2026-07-19,1:35PM,Alan Rangel,vs New York Mets,FA,,210.0,7.1,data_driven_thin,0.0,,1.0,1.0313,tough,,
+2026-07-19,1:35PM,Grant Holmes,vs Texas Rangers,FA,,109.0,9.2,data_driven_full,3.3,9.2,3.0,0.9701,neutral,,
+2026-07-19,1:40PM,Paul Skenes,@ Cleveland Guardians,opp,Boone's Bad Bullpen,8.0,15.1,data_driven_full,-8.2,13.2,1.0,0.879,soft,7.0,
+2026-07-19,1:40PM,Tanner Bibee,vs Pittsburgh Pirates,FA,,117.0,11.3,data_driven_full,-3.2,9.7,0.0,1.0211,neutral,81.0,
+2026-07-19,2:10PM,Kyle Bradish,@ Houston Astros,FA,,62.0,11.2,data_driven_full,2.9,10.9,1.0,0.9722,neutral,38.0,
+2026-07-19,2:10PM,Hunter Brown,vs Baltimore Orioles,opp,Frendy's Fantastic Team,74.0,10.0,data_driven_thin,-6.2,10.7,1.0,0.981,neutral,42.0,
+2026-07-19,2:10PM,Germán Márquez,@ Kansas City Royals,FA,,325.0,5.6,data_driven_full,2.2,4.7,0.0,1.0059,neutral,,
+2026-07-19,2:10PM,Noah Cameron,vs San Diego Padres,FA,,121.0,8.7,data_driven_full,-5.2,9.8,0.0,0.9781,neutral,90.0,
+2026-07-19,2:10PM,Eury Pérez,@ Milwaukee Brewers,MINE,New York Ligers,37.0,12.1,data_driven_full,7.4,11.3,3.0,1.0268,neutral,48.0,
+2026-07-19,2:10PM,Robert Gasser,vs Miami Marlins,FA,,141.0,8.7,data_driven_full,-1.7,11.5,1.0,1.0003,neutral,96.0,
+2026-07-19,2:20PM,Zebby Matthews,@ Chicago Cubs,FA,,173.0,11.6,data_driven_full,0.1,9.9,1.0,0.9821,neutral,91.0,
+2026-07-19,2:20PM,Shota Imanaga,vs Minnesota Twins,MINE,New York Ligers,29.0,12.7,data_driven_full,-1.1,11.2,1.0,1.0159,neutral,41.0,
+2026-07-19,3:10PM,Hunter Greene,@ Colorado Rockies,MINE,New York Ligers,19.0,11.5,data_driven_thin,0.0,,0.0,0.979,neutral,19.0,
+2026-07-19,3:10PM,Ryan Feltner,vs Cincinnati Reds,FA,,206.0,8.3,data_driven_full,0.3,8.0,1.0,0.9675,soft,,
+2026-07-19,4:05PM,Foster Griffin,@ Athletics,opp,2015 Draft First Round,76.0,14.5,data_driven_full,6.0,12.4,3.0,0.9345,soft,35.0,
+2026-07-19,4:05PM,Jacob Lopez,vs Washington Nationals,FA,,260.0,3.6,data_driven_full,2.9,5.9,0.0,1.0487,tough,,
+2026-07-19,4:07PM,Casey Mize,@ Los Angeles Angels,opp,Boone's Bad Bullpen,33.0,14.6,data_driven_full,3.6,16.0,2.0,0.9275,soft,61.0,
+2026-07-19,4:07PM,Ryan Johnson,vs Detroit Tigers,FA,,231.0,5.1,data_driven_thin,-0.0,5.3,0.0,0.9718,neutral,,
+2026-07-19,4:10PM,Robbie Ray,@ Seattle Mariners,opp,Late Night Bettsing,174.0,10.6,data_driven_full,1.6,8.0,2.0,0.9274,soft,59.0,
+2026-07-19,4:10PM,Logan Gilbert,vs San Francisco Giants,opp,2015 Draft First Round,9.0,15.7,data_driven_full,3.8,14.3,2.0,1.0361,tough,14.0,
+2026-07-19,4:10PM,Andre Pallante,@ Arizona Diamondbacks,FA,,177.0,9.9,data_driven_full,-4.5,9.7,1.0,0.9547,soft,92.0,
+2026-07-19,4:10PM,Eduardo Rodriguez,vs St. Louis Cardinals,opp,Late Night Bettsing,224.0,13.8,data_driven_full,0.7,9.4,0.0,1.0105,neutral,64.0,
+2026-07-19,7:20PM,Yoshinobu Yamamoto,@ New York Yankees,opp,Treasure Island Mashers,12.0,17.6,data_driven_full,-2.4,14.9,2.0,0.9139,soft,9.0,
+2026-07-19,7:20PM,Cam Schlittler,vs Los Angeles Dodgers,opp,2015 Draft First Round,11.0,17.2,data_driven_full,-3.0,15.7,1.0,1.0351,tough,4.0,
