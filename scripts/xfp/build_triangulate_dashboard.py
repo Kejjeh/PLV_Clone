@@ -979,19 +979,64 @@ _NAV = _topnav('triangulate')  # unified nav owner (item 8) — was hand-copied
 # grouped by the same canonical position taxonomy, collapsed <details> per
 # group so 500+ rows aren't all visible at once. Sorted within group by
 # in-season archetype OVERALL (the "latest overall" read), then headline proj.
-# Cards are LIGHTWEIGHT (batch fields only — no live engine call per FA).
+# FA cards render through the SAME _card_html as roster cards (user feedback
+# 2026-07-18: "cards must look exactly the same") — the card dict is built
+# from batch fields instead of a live triangulate_player() call, so fields the
+# batch doesn't carry (confidence, watch list, p25/p75 band, value tier)
+# gracefully render as the panels' own empty states.
 
-def _fa_badge_class(r: dict) -> str:
-    if r.get('il_status'):
-        return 'il'
-    text = f"{r.get('category') or ''} {r.get('verdict') or ''}".upper()
-    if 'BUY' in text:
-        return 'buy'
-    if 'SELL' in text or 'DROP' in text or 'FADE' in text:
-        return 'sell'
-    if 'HOLD' in text:
-        return 'hold'
-    return 'mixed'
+def _fa_card_from_batch(j: dict, lens: dict | None) -> dict:
+    bucket = _txt(j.get('bucket')) or 'H'
+    il_status = _txt(j.get('il_status'))
+    boom_none = {'stack': None, 'tier': None, 'boom_rate': None,
+                 'bust_rate': None, 'mean_fp': None, 'components': None}
+    c = {
+        'name': j.get('name'), 'bucket': bucket, 'team': j.get('team'),
+        'verdict': j.get('verdict'),
+        'verdict_top': _txt(j.get('category')) or _txt(j.get('verdict')),
+        'override_tag': j.get('override_tag'),
+        'il_status': il_status,
+        'is_il': bool(il_status) and str(il_status).upper() in _IL_STATES,
+        'confidence': None, 'n_aligned': None, 'n_avail': None,
+        'rationale': j.get('rationale'), 'watch_list': [],
+        'sustainability': None, 'sustainability_detail': None,
+        'pl_rank': j.get('pl_rank'), 'model_rank': j.get('model_rank'),
+        'model_proj': _num(j.get('model_proj')),
+        'model_signal': _txt(j.get('model_signal')),
+        'arche_label': _txt(j.get('arche_label')),
+        'arche_overall': _num(j.get('arche_overall')),
+        'arche_traj': _txt(j.get('arche_traj')),
+        'arche_t1': _num(j.get('arche_t1_fp')),
+        'blended_xfp': _num(j.get('blended_xfp')),
+        'pl': {'rank': j.get('pl_rank'), 'date': None,
+               'stream': None, 'stream_opp': None},
+        'model': {'rank': j.get('model_rank'), 'proj': _num(j.get('model_proj')),
+                  'proj_label': _txt(j.get('model_proj_label')),
+                  'signal': _txt(j.get('model_signal')),
+                  'p25': None, 'p75': None, 'sigma': None, 'dq_tag': None},
+        'arche': {'have': bool(j.get('arche_have')),
+                  'label': _txt(j.get('arche_label')),
+                  'overall': _num(j.get('arche_overall')),
+                  'cell': _txt(j.get('arche_cell')),
+                  'traj': _txt(j.get('arche_traj')),
+                  't1': _num(j.get('arche_t1_fp')), 't2': None, 'slope': None,
+                  'career_pct': _num(j.get('arche_career_pct')),
+                  'boundary': None, 'age_tier': None, 'velo_tier': None,
+                  'stuff_subtype': None},
+        'boom': dict(boom_none),
+        'sp': {'decline_tier': None, 'velo_severity': None, 'velo_yoy_flag': None,
+               'recform_tag': None, 'recform_z': None, 'recform_mean': None,
+               'high_k': False, 'high_k_z': None, 'elite_framer': False,
+               'framing_tax': False, 'il_return': False, 'process_verdict': None},
+        'blend': {'xfp': _num(j.get('blended_xfp')), 'ci': None,
+                  'value_tier': None, 'rep_delta': None, 'role': None,
+                  'role_char': None, 'ros': None},
+    }
+    c['vclass'] = _verdict_class(c)
+    c['lens'] = lens
+    c['group'] = (j.get('position_group') if j.get('position_group') in GROUP_RANK
+                  else _resolve_group(c, lens))
+    return c
 
 
 def load_fa_rows(exclude_names: set[str] | None = None) -> list[dict]:
@@ -1022,73 +1067,23 @@ def load_fa_rows(exclude_names: set[str] | None = None) -> list[dict]:
     return sorted(rows, key=key)
 
 
-def _fa_card_html(r: dict, idx: int) -> str:
-    vcls = _fa_badge_class(r)
-    top = (r.get('category') or 'FA').upper()
-    il = (f'<span class="badge il">🏥 {h(str(r["il_status"]))}</span>'
-          if r.get('il_status') else '')
-    arche = (f'{h(str(r.get("arche_label") or "—"))} · {_fmt(r.get("arche_overall"), 0)} OVR'
-             f' · {h(str(r.get("arche_traj") or "—"))}')
-    lens = _panel(
-        'Three-lens read',
-        _kv('Pitcher List', f'<span class="mono">{_fmt(r.get("pl_rank"))}</span>')
-        + _kv('Model', f'#{_fmt(r.get("model_rank"), 0)} · {h(str(r.get("model_proj_label") or "—"))}'
-              f' · {h(str(r.get("model_signal") or "—"))}', _word_cls(r.get('model_signal')))
-        + _kv('Archetype', arche, _word_cls(r.get('arche_traj')))
-        + (_kv('Arche T+1', _fmt(r.get('arche_t1_fp'), 1)) if r.get('arche_t1_fp') is not None else '')
-        + _kv('Blended xFP', f'<span class="mono">{_fmt(r.get("blended_xfp"), 2)}'
-              f' {h(str(r.get("blend_unit") or ""))}</span>'),
-        span=True)
-    ctx_rows = ''
-    if r.get('trend_tag'):
-        ctx_rows += _kv('Trend', h(str(r['trend_tag'])), _word_cls(r['trend_tag']))
-    if r.get('floor_flag') or r.get('floor_tier'):
-        fb = r.get('floor_bust_prob')
-        ctx_rows += _kv('Floor', f'{h(str(r.get("floor_flag") or r.get("floor_tier")))}'
-                        + (f' · bust {_pct(fb)}' if fb is not None else ''),
-                        _word_cls(r.get('floor_flag')))
-    if r.get('stuff_plus') is not None:
-        ctx_rows += _kv('Stuff+', f'<span class="mono">{_fmt(r.get("stuff_plus"), 0)}</span>'
-                        + (f' · {h(str(r.get("stuff_cmd_tag")))}' if r.get('stuff_cmd_tag') else ''))
-    if r.get('boom_bust'):
-        ctx_rows += _kv('Boom/bust', h(str(r['boom_bust'])))
-    if r.get('next_start_date'):
-        ctx_rows += _kv('Next start', f'{h(str(r["next_start_date"]))} {h(str(r.get("next_opp") or ""))}')
-    if r.get('shadow_verdict'):
-        ctx_rows += _kv('Shadow scout', h(str(r['shadow_verdict'])), _word_cls(r['shadow_verdict']))
-    ctx = _panel('Context lenses', ctx_rows, span=True) if ctx_rows else ''
-    rat = h(str(r.get('rationale') or r.get('verdict') or '—'))
-    grp_lab = _GROUP_LABELS.get(r.get('position_group'), r.get('position_group') or '')
-    return f"""
-<article class="card" data-i="{idx}">
-  <div class="vhead">
-    <h2>{h(str(r['name']))}</h2>
-    <span class="team mono">FA · {h(str(grp_lab))} · {h(str(r.get('team') or ''))}</span>
-    <span class="badge {vcls}">{top}</span>{il}
-  </div>
-  <div class="verdict">{h(str(r.get('verdict') or '—'))}</div>
-  <div class="grid">{lens}{ctx}</div>
-  <div class="rat"><div class="pt">Rationale</div>{rat}</div>
-</article>"""
-
-
-def _fa_rail_html(rows: list[dict]) -> str:
+def _fa_rail_html(fa_cards: list[dict]) -> str:
     """Collapsible FA rail: <details> per position group; button order MUST
     match the FA card render order (index-based nav)."""
-    out = [f'<div class="fa-head">FREE AGENTS <span class="mono">({len(rows)})</span></div>']
+    out = [f'<div class="fa-head">FREE AGENTS <span class="mono">({len(fa_cards)})</span></div>']
     cur = None
-    for r in rows:
-        grp = r.get('position_group')
+    for c in fa_cards:
+        grp = c.get('group')
         if grp != cur:
             if cur is not None:
                 out.append('</details>')
             cur = grp
-            n_grp = sum(1 for x in rows if x.get('position_group') == grp)
+            n_grp = sum(1 for x in fa_cards if x.get('group') == grp)
             out.append(f'<details class="fa-grp"><summary>{h(str(_GROUP_LABELS.get(grp, grp or "—")))}'
                        f' <span class="mono">({n_grp})</span></summary>')
-        ov = r.get('arche_overall')
+        ov = c['arche'].get('overall')
         vt = f'{ov:.0f}' if isinstance(ov, (int, float)) else '—'
-        out.append(f'<button><span class="dot {_fa_badge_class(r)}"></span>{h(str(r["name"]))}'
+        out.append(f'<button><span class="dot {c["vclass"]}"></span>{h(str(c["name"]))}'
                    f'<span class="vt">{vt}</span></button>')
     if cur is not None:
         out.append('</details>')
@@ -1114,7 +1109,7 @@ def render_page(cards: list[dict], fa_rows: list[dict] | None = None) -> str:
         body = '<div class="empty">No triangulate cards — roster empty or names unresolved.</div>'
     else:
         fa_rail = _fa_rail_html(fa_rows) if fa_rows else ''
-        fa_cards = ''.join(_fa_card_html(r, len(cards) + k) for k, r in enumerate(fa_rows))
+        fa_cards = ''.join(_card_html(c, len(cards) + k) for k, c in enumerate(fa_rows))
         body = f"""
 <div class="layout">
   <nav class="rail">{_rail_html(cards)}{fa_rail}</nav>
@@ -1148,8 +1143,10 @@ def main():
     cards = collect_cards(names)
     il_n = sum(1 for c in cards if c['is_il'])
     print(f'  built {len(cards)} cards ({il_n} on IL)')
-    fa_rows = load_fa_rows({c.get('name') for c in cards})
-    print(f'  FA section: {len(fa_rows)} free agents from nightly batch')
+    fa_raw = load_fa_rows({c.get('name') for c in cards})
+    lens_map = load_batch_lens()
+    fa_rows = [_fa_card_from_batch(j, lens_map.get(j.get('name'))) for j in fa_raw]
+    print(f'  FA section: {len(fa_rows)} free agents (full-card render from nightly batch)')
     html_doc = render_page(cards, fa_rows)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'triangulate.html').write_text(html_doc, encoding='utf-8')
