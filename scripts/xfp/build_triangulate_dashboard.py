@@ -64,7 +64,14 @@ def _freshest_nightly():
 
 
 _BATCH_JSON = _freshest_nightly() or (ROOT / 'data' / 'research' / '.tri_team_fa_out.json')
-_BATCH_CSV = ROOT / 'data' / 'research' / '.tri_grouped.csv'
+# The CSV sibling of the nightly JSON carries the 49 flat lens columns
+# (traj_*/bb_*/split_*/xstat_*/ha_*/tto_*). The legacy .tri_grouped.csv FROZE
+# on 2026-06-22 — reading it pinned every card's in-season trajectory at
+# 04-25→06-20 no matter how fresh the snapshots were (fixed 2026-07-18).
+_NIGHTLY_CSV = (_BATCH_JSON.with_suffix('.csv')
+                if _BATCH_JSON.name.startswith('triangulate_nightly') else None)
+_BATCH_CSV = (_NIGHTLY_CSV if _NIGHTLY_CSV is not None and _NIGHTLY_CSV.exists()
+              else ROOT / 'data' / 'research' / '.tri_grouped.csv')
 
 # Group display labels (canonical taxonomy) + the order_groups()-driven ordering.
 _GROUP_LABELS = dict(ALL_POSITION_GROUPS)
