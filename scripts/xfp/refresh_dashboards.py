@@ -482,6 +482,23 @@ def main():
             if not ok_tri_hist:
                 print('  ⚠ triangulate history append failed — continuing (non-gating)')
 
+    # 4.73. Full-fidelity triangulate.html rebuild: FA cards through the LIVE
+    # engine (--live-fa), so every FA card matches roster cards (confidence,
+    # watch list, projection band) — user request 2026-07-18. Runs AFTER 4.72
+    # so load_fa_rows() sees TONIGHT's nightly universe, and REPLACES the 4.7
+    # roster-only page. ~45-60 min for the ~500-FA pool; fail-soft — the 4.7
+    # page remains published if this step dies. Known inefficiency: the pool
+    # was already batch-triangulated in 4.72b; this re-runs the engine per FA
+    # because the dashboard card needs the full result dict, not the flat row.
+    # Optimization path: teach collect_cards() to consume the 4.72 run store.
+    ok_tri_livefa = run(
+        '4.73. Rebuild triangulate.html with live-engine FA cards (--live-fa)',
+        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py --live-fa',
+        timeout=5400,
+    )
+    if not ok_tri_livefa:
+        print('  ⚠ live-fa triangulate rebuild failed — 4.7 roster-only page stands')
+
     # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
     # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
     # probables window covered by stream_the_stack (~15-25). Lets the profiles
