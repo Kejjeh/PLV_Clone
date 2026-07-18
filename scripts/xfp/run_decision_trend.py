@@ -73,6 +73,22 @@ def main() -> int:
         names = mine[~mine['position'].isin(['SP', 'RP'])]['player_name'].tolist()
 
     from plv_clone.utils.name_match import resolve_batter_id
+
+    def _mlb_search(name):
+        """Accent-tolerant fallback: MLB people/search (fix 2026-07-18 —
+        resolve_batter_id missed accented FAs like Peña/Suárez)."""
+        import requests
+        try:
+            r = requests.get('https://statsapi.mlb.com/api/v1/people/search',
+                             params={'names': name}, timeout=15).json()
+            for p in r.get('people', []):
+                if p.get('active') and p.get('primaryPosition', {}).get('abbreviation') not in ('P',):
+                    return p['id']
+        except Exception:
+            pass
+        return None
+
+    have = set(sc['batter'].unique())
     ids = {}
     for n in names:
         team = None
@@ -80,10 +96,19 @@ def main() -> int:
             hit = roster[roster['player_name'] == n]
             if len(hit) == 1:
                 team = hit.iloc[0]['pro_team']
+        bid = None
         try:
-            ids[n] = resolve_batter_id(n, team=team)
+            bid = resolve_batter_id(n, team=team)
         except Exception:
+            bid = None
+        if bid is None or bid not in have:
+            alt = _mlb_search(n)
+            if alt is not None and alt in have:
+                bid = alt
+        if bid is None:
             print(f'  ! could not resolve {n} — skipped', file=sys.stderr)
+        else:
+            ids[n] = bid
 
     print(f"DECISION TREND — L21 primary / L7 early hint / baseline = season pre-L21")
     print(f"data through {today.date()}  |  Rule 13: approach-change detector, never a ranker\n")

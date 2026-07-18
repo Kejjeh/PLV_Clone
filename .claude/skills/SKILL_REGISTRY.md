@@ -230,3 +230,8 @@ scripts · 73-copy name-normalizer collapse.
 | 9 | 🟡 MED | Doc drift fixed 2026-07-10: fa-monitor 12-signal count, hitter-slate-grid boom cutoffs (10/2→5/0), monday-morning chain description | ✅ done |
 
 **Legend:** ✅ shipped · ⬜ pending · 🔴 needs validated migration.
+
+## 2026-07-18 additions
+- `/second-half-splits` — career pre/post-ASG splits in BrownU FP, position-grouped, role-truth bucketing. Engine `run_second_half_splits.py`.
+- `/decision-trend` — swing-decision approach-change tracker (L21/L7, validated windows). Engine `run_decision_trend.py`; evidence `decision_window_study.py`.
+- `/pitcher-role` — role-truth (detect_pitcher_role) promoted from gotcha #8 to a mandatory pre-claim skill after the Jax/Detmers mislabel session.
