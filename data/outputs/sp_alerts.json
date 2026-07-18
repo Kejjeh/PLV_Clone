@@ -1,26 +1,10 @@
 {
-  "generated": "2026-07-17",
+  "generated": "2026-07-18",
   "upgrade_floor_fpp": -0.0868,
   "hit_upgrade_floor_xwoba": 0.328,
-  "alert_count": 1,
+  "alert_count": 0,
   "hitter_alert_count": 0,
-  "alerts": [
-    {
-      "name": "Logan Henderson",
-      "tier": "HIGH",
-      "signals": [
-        "SigA-HIGH"
-      ],
-      "gs": 5,
-      "fpp": 0.0485,
-      "fpp_gap": 0.1353,
-      "gsp": 4,
-      "l4": "3/4",
-      "whiff_pct": 27.3,
-      "xwoba_con": 0.357,
-      "rp3_rank": 999
-    }
-  ],
+  "alerts": [],
   "hitter_alerts": [],
-  "my_active_sp_count": 6
+  "my_active_sp_count": 7
 }

@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-18_logan_henderson_SP_001",
+  "inputs": {
+    "archetype_label": "STUFF_PLUS_CTRL",
+    "archetype_overall": 65,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 11.025308241754225,
+    "inputs_schema": 2,
+    "live_marginal": -91.82197219319255,
+    "model_rank": 88,
+    "override_tag": null,
+    "pl_rank": 36,
+    "proj_display": 10.618321112272296,
+    "proj_per": 10.618321112272296,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 701656,
+  "player_name": "Logan Henderson",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-18",
+  "verdict_top": "CAUTION"
+}
