@@ -756,6 +756,52 @@ def _sgn(v, nd=0):
     return f'{v:+.{nd}f}'
 
 
+_TRAJ_COLORS = ['#8aa8c4', '#7fb069', '#d4a945']  # domain lines (OVR = accent)
+
+
+def _traj_svg(t: dict) -> str:
+    """Inline SVG line chart of the in-season arc (2026-07-18, ported from the
+    profiles page's trajectory chart): OVERALL (accent, bold) + rated domain
+    lines over the weekly snapshot points, fixed 20-80 y-scale, y=50 guide."""
+    pts = t.get('points') or []
+    if len(pts) < 2:
+        return ''
+    keys = [k for k in pts[0] if k not in ('label', 'archetype', 'OVERALL')]
+    series = ['OVERALL'] + keys[:3]
+    W, H, P = 252, 92, 8
+    n = len(pts)
+    xs = [P + (W - 2 * P) * k / (n - 1) for k in range(n)]
+
+    def y(v):
+        v = min(max(v, 20), 80)
+        return P + (H - 2 * P) * (1 - (v - 20) / 60)
+
+    y50 = y(50)
+    parts = [f'<line x1="{P}" y1="{y50:.1f}" x2="{W-P}" y2="{y50:.1f}" '
+             f'stroke="var(--line)" stroke-dasharray="3 3" stroke-width="1"/>']
+    legend = []
+    for i, name in enumerate(series):
+        vals = [_num(p.get(name)) for p in pts]
+        if any(v is None for v in vals):
+            continue
+        col = 'var(--accent)' if name == 'OVERALL' else _TRAJ_COLORS[(i - 1) % 3]
+        wid = '2' if name == 'OVERALL' else '1.2'
+        op = '1' if name == 'OVERALL' else '.72'
+        path = ' '.join(f'{x:.1f},{y(v):.1f}' for x, v in zip(xs, vals))
+        parts.append(f'<polyline points="{path}" fill="none" stroke="{col}" '
+                     f'stroke-width="{wid}" opacity="{op}"/>')
+        legend.append(f'<span class="tl-item" style="color:{col}">'
+                      f'{h(name.title() if name != "OVERALL" else "OVR")}</span>')
+    if len(parts) <= 1:
+        return ''
+    lo_lab, hi_lab = h(str(pts[0].get('label') or '')), h(str(pts[-1].get('label') or ''))
+    return (f'<svg class="traj-chart" viewBox="0 0 {W} {H}" preserveAspectRatio="none">'
+            + ''.join(parts) + '</svg>'
+            f'<div class="tl-row"><span class="mono tl-x">{lo_lab}</span>'
+            + ''.join(legend)
+            + f'<span class="mono tl-x">{hi_lab}</span></div>')
+
+
 def _trajectory_panel(c: dict) -> str:
     """In-season trajectory arc: First->Last OVERALL + labels, OVERALL delta, last
     archetype, and the 3-domain last values + deltas (context-only)."""
@@ -790,7 +836,8 @@ def _trajectory_panel(c: dict) -> str:
     cad = (t['cadence'] or '')
     n = t['n']
     tag = (f'{int(n)} pts · {cad}' if n is not None else cad)
-    return _panel('In-season trajectory', arc + sub + last_arch + rows, tag=tag)
+    chart = _traj_svg(t)
+    return _panel('In-season trajectory', arc + sub + chart + last_arch + rows, tag=tag)
 
 
 def _ctx_cell(label, value, sub='', cls=''):
@@ -1098,6 +1145,11 @@ def _fa_rail_html(fa_cards: list[dict]) -> str:
 
 
 _FA_CSS = """
+.traj-chart{width:100%;height:92px;margin:6px 0 2px;display:block}
+.tl-row{display:flex;gap:10px;align-items:center;font-size:10px;margin-bottom:4px}
+.tl-item{font-family:'IBM Plex Mono',monospace;font-weight:500}
+.tl-x{color:var(--dim);font-size:9.5px}
+.tl-row .tl-x:last-child{margin-left:auto}
 .fa-head{padding:18px 16px 6px;color:var(--accent);font-size:11px;letter-spacing:.14em;
  font-weight:600;border-top:1px solid var(--line);margin-top:12px}
 .fa-grp summary{padding:9px 16px;cursor:pointer;color:var(--dim);font-size:11.5px;
