@@ -556,7 +556,8 @@ function show(n){i=(n+cards.length)%cards.length;
  cards.forEach((c,k)=>c.classList.toggle('show',k===i));
  btns.forEach((b,k)=>b.classList.toggle('active',k===i));
  document.getElementById('pos').textContent=(i+1)+' / '+cards.length;
- const a=btns[i]; if(a) a.scrollIntoView({block:'nearest'});}
+ const a=btns[i]; if(a){const d=a.closest('details'); if(d) d.open=true;
+  a.scrollIntoView({block:'nearest'});}}
 btns.forEach((b,k)=>b.onclick=()=>show(k));
 document.getElementById('prev').onclick=()=>show(i-1);
 document.getElementById('next').onclick=()=>show(i+1);
@@ -973,21 +974,156 @@ from lib.dashboard_chrome import topnav as _topnav  # noqa: E402
 _NAV = _topnav('triangulate')  # unified nav owner (item 8) — was hand-copied
 
 
-def render_page(cards: list[dict]) -> str:
+# ---------------------------------------------------------------- FA section
+# Second rail section (2026-07-18): every FA from the freshest NIGHTLY batch,
+# grouped by the same canonical position taxonomy, collapsed <details> per
+# group so 500+ rows aren't all visible at once. Sorted within group by
+# in-season archetype OVERALL (the "latest overall" read), then headline proj.
+# Cards are LIGHTWEIGHT (batch fields only — no live engine call per FA).
+
+def _fa_badge_class(r: dict) -> str:
+    if r.get('il_status'):
+        return 'il'
+    text = f"{r.get('category') or ''} {r.get('verdict') or ''}".upper()
+    if 'BUY' in text:
+        return 'buy'
+    if 'SELL' in text or 'DROP' in text or 'FADE' in text:
+        return 'sell'
+    if 'HOLD' in text:
+        return 'hold'
+    return 'mixed'
+
+
+def load_fa_rows(exclude_names: set[str] | None = None) -> list[dict]:
+    """FA rows from the freshest nightly batch. `exclude_names` guards against
+    batch-lag: a player added to the roster AFTER the nightly ran still carries
+    owner_team='FA' in the batch (Mead 2026-07-18 canonical) — the live roster
+    card wins and the stale FA row is dropped."""
+    try:
+        batch = json.loads(_BATCH_JSON.read_text(encoding='utf-8'))
+    except Exception as e:
+        _warn('fa_rows', e)
+        return []
+    excl = {str(n).lower() for n in (exclude_names or set())}
+    rows = [r for r in batch.get('players', [])
+            if (r.get('owner_team') == 'FA')
+            and str(r.get('name', '')).lower() not in excl
+            and (r.get('model_rank') is not None or r.get('pl_rank') is not None
+                 or r.get('arche_have'))]
+    present = order_groups(r.get('position_group') for r in rows if r.get('position_group'))
+    grank = {g: i for i, g in enumerate(present)}
+
+    def key(r):
+        ov = r.get('arche_overall')
+        hp = r.get('headline_proj')
+        return (grank.get(r.get('position_group'), len(present)),
+                -(ov if isinstance(ov, (int, float)) else -1),
+                -(hp if isinstance(hp, (int, float)) else -999))
+    return sorted(rows, key=key)
+
+
+def _fa_card_html(r: dict, idx: int) -> str:
+    vcls = _fa_badge_class(r)
+    top = (r.get('category') or 'FA').upper()
+    il = (f'<span class="badge il">🏥 {h(str(r["il_status"]))}</span>'
+          if r.get('il_status') else '')
+    arche = (f'{h(str(r.get("arche_label") or "—"))} · {_fmt(r.get("arche_overall"), 0)} OVR'
+             f' · {h(str(r.get("arche_traj") or "—"))}')
+    lens = _panel(
+        'Three-lens read',
+        _kv('Pitcher List', f'<span class="mono">{_fmt(r.get("pl_rank"))}</span>')
+        + _kv('Model', f'#{_fmt(r.get("model_rank"), 0)} · {h(str(r.get("model_proj_label") or "—"))}'
+              f' · {h(str(r.get("model_signal") or "—"))}', _word_cls(r.get('model_signal')))
+        + _kv('Archetype', arche, _word_cls(r.get('arche_traj')))
+        + (_kv('Arche T+1', _fmt(r.get('arche_t1_fp'), 1)) if r.get('arche_t1_fp') is not None else '')
+        + _kv('Blended xFP', f'<span class="mono">{_fmt(r.get("blended_xfp"), 2)}'
+              f' {h(str(r.get("blend_unit") or ""))}</span>'),
+        span=True)
+    ctx_rows = ''
+    if r.get('trend_tag'):
+        ctx_rows += _kv('Trend', h(str(r['trend_tag'])), _word_cls(r['trend_tag']))
+    if r.get('floor_flag') or r.get('floor_tier'):
+        fb = r.get('floor_bust_prob')
+        ctx_rows += _kv('Floor', f'{h(str(r.get("floor_flag") or r.get("floor_tier")))}'
+                        + (f' · bust {_pct(fb)}' if fb is not None else ''),
+                        _word_cls(r.get('floor_flag')))
+    if r.get('stuff_plus') is not None:
+        ctx_rows += _kv('Stuff+', f'<span class="mono">{_fmt(r.get("stuff_plus"), 0)}</span>'
+                        + (f' · {h(str(r.get("stuff_cmd_tag")))}' if r.get('stuff_cmd_tag') else ''))
+    if r.get('boom_bust'):
+        ctx_rows += _kv('Boom/bust', h(str(r['boom_bust'])))
+    if r.get('next_start_date'):
+        ctx_rows += _kv('Next start', f'{h(str(r["next_start_date"]))} {h(str(r.get("next_opp") or ""))}')
+    if r.get('shadow_verdict'):
+        ctx_rows += _kv('Shadow scout', h(str(r['shadow_verdict'])), _word_cls(r['shadow_verdict']))
+    ctx = _panel('Context lenses', ctx_rows, span=True) if ctx_rows else ''
+    rat = h(str(r.get('rationale') or r.get('verdict') or '—'))
+    grp_lab = _GROUP_LABELS.get(r.get('position_group'), r.get('position_group') or '')
+    return f"""
+<article class="card" data-i="{idx}">
+  <div class="vhead">
+    <h2>{h(str(r['name']))}</h2>
+    <span class="team mono">FA · {h(str(grp_lab))} · {h(str(r.get('team') or ''))}</span>
+    <span class="badge {vcls}">{top}</span>{il}
+  </div>
+  <div class="verdict">{h(str(r.get('verdict') or '—'))}</div>
+  <div class="grid">{lens}{ctx}</div>
+  <div class="rat"><div class="pt">Rationale</div>{rat}</div>
+</article>"""
+
+
+def _fa_rail_html(rows: list[dict]) -> str:
+    """Collapsible FA rail: <details> per position group; button order MUST
+    match the FA card render order (index-based nav)."""
+    out = [f'<div class="fa-head">FREE AGENTS <span class="mono">({len(rows)})</span></div>']
+    cur = None
+    for r in rows:
+        grp = r.get('position_group')
+        if grp != cur:
+            if cur is not None:
+                out.append('</details>')
+            cur = grp
+            n_grp = sum(1 for x in rows if x.get('position_group') == grp)
+            out.append(f'<details class="fa-grp"><summary>{h(str(_GROUP_LABELS.get(grp, grp or "—")))}'
+                       f' <span class="mono">({n_grp})</span></summary>')
+        ov = r.get('arche_overall')
+        vt = f'{ov:.0f}' if isinstance(ov, (int, float)) else '—'
+        out.append(f'<button><span class="dot {_fa_badge_class(r)}"></span>{h(str(r["name"]))}'
+                   f'<span class="vt">{vt}</span></button>')
+    if cur is not None:
+        out.append('</details>')
+    return '\n'.join(out)
+
+
+_FA_CSS = """
+.fa-head{padding:18px 16px 6px;color:var(--accent);font-size:11px;letter-spacing:.14em;
+ font-weight:600;border-top:1px solid var(--line);margin-top:12px}
+.fa-grp summary{padding:9px 16px;cursor:pointer;color:var(--dim);font-size:11.5px;
+ letter-spacing:.08em;list-style:none;user-select:none}
+.fa-grp summary:hover{background:var(--panel);color:var(--accent)}
+.fa-grp summary::before{content:'▸ '}
+.fa-grp[open] summary::before{content:'▾ '}
+"""
+
+
+def render_page(cards: list[dict], fa_rows: list[dict] | None = None) -> str:
     today = date.today().isoformat()
+    fa_rows = fa_rows or []
     n_il = sum(1 for c in cards if c['is_il'])
-    if not cards:
+    if not cards and not fa_rows:
         body = '<div class="empty">No triangulate cards — roster empty or names unresolved.</div>'
     else:
+        fa_rail = _fa_rail_html(fa_rows) if fa_rows else ''
+        fa_cards = ''.join(_fa_card_html(r, len(cards) + k) for k, r in enumerate(fa_rows))
         body = f"""
 <div class="layout">
-  <nav class="rail">{_rail_html(cards)}</nav>
+  <nav class="rail">{_rail_html(cards)}{fa_rail}</nav>
   <section class="main">
     <div class="cyc">
       <button id="prev">← Prev</button><button id="next">Next →</button>
       <span class="pos" id="pos"></span><span class="pos">· ←/→ keys</span>
     </div>
-    {''.join(_card_html(c, k) for k, c in enumerate(cards))}
+    {''.join(_card_html(c, k) for k, c in enumerate(cards))}{fa_cards}
   </section>
 </div>"""
     return f"""<!doctype html><html lang="en"><head><meta charset="utf-8">
@@ -995,10 +1131,10 @@ def render_page(cards: list[dict]) -> str:
 <title>Triangulate — Ligers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>{_CSS}</style></head>
+<style>{_CSS}{_FA_CSS}</style></head>
 <body>
 <div class="topbar"><h1>🔱 Triangulate</h1>
-<span class="sub">{len(cards)} players · {n_il} on IL · three-lens read · {today}</span>{_NAV}</div>
+<span class="sub">{len(cards)} roster · {len(fa_rows)} FA · {n_il} on IL · three-lens read · {today}</span>{_NAV}</div>
 {body}
 <script>{_JS}</script></body></html>"""
 
@@ -1012,7 +1148,9 @@ def main():
     cards = collect_cards(names)
     il_n = sum(1 for c in cards if c['is_il'])
     print(f'  built {len(cards)} cards ({il_n} on IL)')
-    html_doc = render_page(cards)
+    fa_rows = load_fa_rows({c.get('name') for c in cards})
+    print(f'  FA section: {len(fa_rows)} free agents from nightly batch')
+    html_doc = render_page(cards, fa_rows)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'triangulate.html').write_text(html_doc, encoding='utf-8')
     print(f'  wrote {OUT / "triangulate.html"}')
