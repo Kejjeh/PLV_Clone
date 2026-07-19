@@ -60,7 +60,9 @@ surfaces stale `v9/v10/v11`-style duplicates.
   period)`), and read the authoritative banked count from ESPN statId-33
   (`espn_period_meta`). Add a new ASG-style exception by adding one entry to
   `PERIOD_CAP_OVERRIDES` + `PERIOD_WINDOW_OVERRIDES`. Committed 2026-07-11.
-- **RP slots:** cap is **4** active RPs, not 3.
+- **RP slots:** cap is **4** active RPs, not 3. **Josh's standing rule: 4 true
+  RPs is also the FLOOR — never propose an RP drop to absorb an SP return or
+  free a roster spot; RP drops are only RP-for-RP upgrades (2026-07-18).**
 - **Empirical rate:** ~1.19 SP starts per active SP per week.
 
 ### Scoring formulas

@@ -41,3 +41,9 @@ Period 15 (ASG block, Jul 6–19) cap = **16**, not 10. IL cascade is **Fried ~7
 A live session should run `/roster-verify` (or `get_my_roster_with_injuries()` +
 `get_all_teams()`), reconcile this ledger, save `live_rosters_<date>.parquet`, then commit.
 **Never trust a cloud/web session's ownership tags** — it cannot reach ESPN (gotcha #4/#11).
+
+## Standing roster constraints (Josh, 2026-07-18 — durable, not per-week)
+- **ALWAYS carry 4 true RPs** (by detect_pitcher_role, not ESPN tag). Never
+  propose an RP drop to absorb an SP activation or free a roster spot. RP
+  drops are only ever RP-for-RP upgrades. (Stated twice on 7/18 — Latz is
+  not a lever.)
