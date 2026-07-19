@@ -89,6 +89,9 @@ from scripts.xfp.lib.archetype_engine import (  # noqa: E402
     rating_20_80, bucket, boundary_distance, boundary_tier_label,
     age_tier as _eng_age_tier,
     compute_stickiness as _eng_stickiness,
+    attach_trajectory as _eng_attach_trajectory,
+    build_career_panel as _eng_career_panel,
+    compute_boundary_validation as _eng_boundary_validation,
 )
 
 
@@ -480,48 +483,9 @@ def build_ratings_panel(current_year=2026):
     qual['t2_fp_projection'] = qual['t2_fp_proj_raw'].clip(lower=0.1, upper=1.2).round(3)
     qual = qual.drop(columns=['t2_fp_proj_raw'])
 
-    # Trajectory alerts — 3-year OVERALL slope + career percentile.
-    # Slope = linear-regression slope of OVERALL on year over the last 3 seasons
-    # (including current). Career percentile = where current OVERALL sits within
-    # this player's own historical distribution.
-    idkey = 'batter'
-    qual_sorted = qual.sort_values([idkey, 'year'])[[idkey, 'year', 'OVERALL']].copy()
-
-    def _trajectory_metrics(group):
-        g = group.sort_values('year').reset_index(drop=True)
-        g['OVERALL_slope_3yr'] = np.nan
-        g['OVERALL_career_pct'] = np.nan
-        for i in range(len(g)):
-            # Slope from last 3 (or fewer) seasons up to and including current
-            window = g.iloc[max(0, i-2):i+1]
-            if len(window) >= 2 and window['year'].max() - window['year'].min() >= 1:
-                slope = np.polyfit(window['year'].values, window['OVERALL'].values, 1)[0]
-                g.loc[g.index[i], 'OVERALL_slope_3yr'] = slope
-            # Career percentile: where current overall sits in player's history (inclusive)
-            career = g.iloc[:i+1]['OVERALL']
-            g.loc[g.index[i], 'OVERALL_career_pct'] = (career < g.loc[g.index[i], 'OVERALL']).sum() / len(career)
-        return g
-
-    qual_sorted = qual_sorted.groupby(idkey, group_keys=False)[[idkey, 'year', 'OVERALL']].apply(_trajectory_metrics)
-    qual_sorted['OVERALL_slope_3yr'] = qual_sorted['OVERALL_slope_3yr'].round(2)
-    qual_sorted['OVERALL_career_pct'] = qual_sorted['OVERALL_career_pct'].round(3)
-
-    # Trajectory flag
-    def _traj_flag(row):
-        s = row['OVERALL_slope_3yr']
-        p = row['OVERALL_career_pct']
-        if pd.notna(s) and s >= 3.0: return 'TRENDING_UP'
-        if pd.notna(s) and s <= -3.0: return 'TRENDING_DOWN'
-        if pd.notna(p) and p >= 0.90: return 'CAREER_HIGH'
-        if pd.notna(p) and p <= 0.10: return 'CAREER_LOW'
-        return 'STABLE'
-    qual_sorted['traj_flag'] = qual_sorted.apply(_traj_flag, axis=1)
-
-    # Merge back into qual (preserve row order)
-    qual = qual.merge(
-        qual_sorted[[idkey, 'year', 'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag']],
-        on=[idkey, 'year'], how='left'
-    )
+    # Trajectory alerts — 3-year OVERALL slope + career percentile + flag.
+    # Hoisted to lib/archetype_engine (item 20/D3); hitter id column: batter.
+    qual = _eng_attach_trajectory(qual, id_col='batter')
 
     return qual
 
@@ -566,19 +530,9 @@ def compute_decline_baselines(qual):
 
 
 def build_career_panel(qual):
-    """Attach T+1 / T+2 outcomes for comp matching."""
-    careers = qual.sort_values(['batter','year']).reset_index(drop=True)
-    careers['next_fp']   = careers.groupby('batter')['fp_per_pa'].shift(-1)
-    careers['next_arch'] = careers.groupby('batter')['archetype'].shift(-1)
-    careers['next_year'] = careers.groupby('batter')['year'].shift(-1)
-    careers['t2_fp']     = careers.groupby('batter')['fp_per_pa'].shift(-2)
-    careers['t2_year']   = careers.groupby('batter')['year'].shift(-2)
-
-    careers['name'] = careers['player_name'].apply(
-        lambda s: s.split(',',1)[1].strip()+' '+s.split(',',1)[0].strip()
-                  if isinstance(s, str) and ',' in s else s
-    )
-    return careers
+    """Attach T+1 / T+2 outcomes for comp matching.
+    Hoisted to lib/archetype_engine (item 20/D3) — hitter params: batter / fp_per_pa."""
+    return _eng_career_panel(qual, id_col='batter', fp_col='fp_per_pa')
 
 
 def main():
@@ -657,22 +611,8 @@ def main():
         json.dump(decl, f, indent=2)
     print('  wrote hitter_decline_baselines.json', flush=True)
 
-    # Boundary tier validation stats
-    careers2 = qual.sort_values(['batter','year']).reset_index(drop=True)
-    careers2['next_arch'] = careers2.groupby('batter')['archetype'].shift(-1)
-    careers2['next_year'] = careers2.groupby('batter')['year'].shift(-1)
-    current = int(qual['year'].max())
-    trans = careers2[(careers2['next_year'] == careers2['year'] + 1) &
-                     (careers2['next_year'] != current)].copy()
-    trans['stayed'] = (trans['archetype'] == trans['next_arch']).astype(int)
-    boundary_stats = {}
-    for tier in ['EDGE','NEAR_EDGE','SOLID']:
-        sub = trans[trans['boundary_tier'] == tier]
-        if len(sub) >= 10:
-            boundary_stats[tier] = {
-                'n_transitions': int(len(sub)),
-                'retention_pct': round(100 * float(sub['stayed'].mean()), 1),
-            }
+    # Boundary tier validation stats — engine hoist (item 20/D3)
+    boundary_stats = _eng_boundary_validation(qual, id_col='batter')
     with open(OUT_DIR / 'hitter_boundary_validation.json','w',encoding='utf-8') as f:
         json.dump(boundary_stats, f, indent=2)
     print('  wrote hitter_boundary_validation.json', flush=True)

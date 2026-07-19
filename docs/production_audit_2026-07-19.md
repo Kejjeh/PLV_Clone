@@ -152,6 +152,34 @@ already pass `timeout=`.
 - **14/R5 visibility guards — DONE.** rh3 master_hitter match rate, rp3
   schedule-cache age, volume attach unmapped fraction (values unchanged).
 
+## Wave 5 (tail) — SHIPPED 2026-07-19
+
+- **9/M1 name-flip dedup — DONE (conservative).** 10 files now use the one
+  canonical `bucket_dispatch._flip_lastfirst` (provably key-space-identical
+  swaps only). 4 sites skipped with reasons (tuple-key joins with
+  unique-last-name fallback have no committed-API equivalent; `_norm`
+  variants with different stripping semantics kept as dict-join keys).
+  **M2 (bare people/search bypasses) was STALE** — all 8 flagged engines
+  already route through resolve_*; no changes needed.
+- **11 triangulate split — DONE.** build_triangulate_dashboard.py 1,356→218
+  lines; lib/triangulate_{dashboard_style,cards,fa,links}.py; acyclic deps;
+  every name re-exported; render harness byte-identical (149,102 B).
+- **20/D3 archetype dedup — DONE.** trajectory/career-panel/boundary
+  scaffolding hoisted to archetype_engine (−142 lines); golden A/B: all 12
+  output files equal (parquets DataFrame-equal, CSVs/JSONs byte-identical).
+- **21/W2-W3 vectorization — DONE.** engine.lookup_sigma_vec + np.select for
+  all 4 signal/tag applies; A/B byte-identical on all three projection CSVs.
+- **lib/ packaging — DEFERRED DELIBERATELY.** Scripts need scripts/xfp on
+  sys.path regardless (sibling imports like `import build_xfp_boards`), so
+  packaging `lib` as a top-level wheel package buys ~nothing while claiming
+  a generic global name. Revisit only as part of a full move to
+  src/plv_clone/lib/ with repo-wide import rewrite (offseason candidate).
+- Remaining (small, deliberate): D4 il-asof helper (touches volume+rp3 —
+  bundle with next model change), output-path-string codemod (118 refs) +
+  year-literal triage, fangraphs CSV disposition (human call), rh3/rp3
+  warm-skip fingerprint gap (WATCH — Josh review), monitor_drift/relievers
+  FP-order sites (need per-file reorder verification).
+
 ## Backlog (ranked; each verified against source, none started)
 
 ### High impact

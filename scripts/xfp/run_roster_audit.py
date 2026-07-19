@@ -22,6 +22,7 @@ sys.path.insert(0, str(ROOT))
 from plv_clone.league_state import LeagueState
 from plv_clone.utils.name_match import build_safe_name_index, safe_lookup
 from scripts.xfp.lib.pitcher_role import build_role_lookup, detect_pitcher_role
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst  # shared 'Last, First' flip (audit item 9)
 
 _BS_PITCHERS = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
 _BS_LOOKBACK_DAYS = 14
@@ -126,9 +127,7 @@ def main():
         if pid and nm:
             _rp3_mlbam[nm.lower().strip()] = int(pid)
             if ',' in nm:
-                parts = nm.split(',', 1)
-                canon = (parts[1].strip() + ' ' + parts[0].strip()).lower().strip()
-                _rp3_mlbam[canon] = int(pid)
+                _rp3_mlbam[_flip_lastfirst(nm).lower().strip()] = int(pid)
 
     def _bs_last_str(player_name: str) -> str:
         mlbam = _rp3_mlbam.get(player_name.lower().strip())

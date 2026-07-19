@@ -29,6 +29,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from .bucket_dispatch import _flip_lastfirst as _flip  # shared 'Last, First' flip (audit item 9)
+
 ROOT = Path(__file__).resolve().parents[3]
 STATCAST = ROOT / "data" / "research" / "xfp_cache" / "statcast_2026.parquet"
 
@@ -56,14 +58,6 @@ def stufffp(csw, swstr, whiff):
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode()
     return re.sub(r"\s+", " ", re.sub(r"[^a-z ]", "", s.lower())).strip()
-
-
-def _flip(n: str) -> str:
-    """Savant 'Last, First' -> 'First Last'."""
-    if "," in str(n):
-        last, first = str(n).split(",", 1)
-        return f"{first.strip()} {last.strip()}"
-    return str(n)
 
 
 @lru_cache(maxsize=1)

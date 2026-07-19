@@ -106,6 +106,30 @@ def lookup_sigma(
     return ci_table.get((split_day, q), overall_sigma)
 
 
+def lookup_sigma_vec(
+    ci_table: dict,
+    overall_sigma: float,
+    split_day: int,
+    preds: np.ndarray,
+    pred_buckets: dict[int, np.ndarray],
+) -> np.ndarray:
+    """Vectorized `lookup_sigma` for a CONSTANT split_day (the projection
+    stage's shape: one latest_split, many preds). Element-wise identical to
+    the scalar version, including the split_day-not-in-buckets fallback and
+    the searchsorted/clamp bucket assignment. Golden A/B verified
+    byte-identical on all three model CSVs 2026-07-19 (audit item 21, W2)."""
+    preds = np.asarray(preds, dtype=float)
+    if split_day not in pred_buckets:
+        return np.full(preds.shape, float(overall_sigma), dtype=float)
+    cuts = pred_buckets[split_day]
+    q = np.clip(np.searchsorted(cuts, preds), 0, len(cuts))
+    bucket_sigma = np.array(
+        [ci_table.get((split_day, b), overall_sigma) for b in range(len(cuts) + 1)],
+        dtype=float,
+    )
+    return bucket_sigma[q]
+
+
 # ── Per-model fit scaffolding (hoisted 2026-07-19, audit backlog D2) ─────────
 # The bodies below were copy-pasted verbatim across rh3/rp3/rprs2, differing
 # only in the eligibility filter expression, min-row constants, and the

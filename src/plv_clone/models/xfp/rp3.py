@@ -26,7 +26,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
-from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
 from plv_clone.league_config import SP_REPLACEMENT_RANK as REPLACEMENT_SP_RANK
 
 warnings.filterwarnings('ignore')
@@ -472,10 +472,10 @@ def main():
         pred_buckets[int(split)] = cuts
 
     Z25 = 0.6745
-    sigmas = []
-    for _, row in valid.iterrows():
-        sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
-                                   row['xfp_rp3_per_start'], pred_buckets))
+    # (vectorized 2026-07-19, audit item 21/W2 — latest_split is constant here;
+    # golden A/B verified byte-identical vs the scalar iterrows loop)
+    sigmas = lookup_sigma_vec(ci_table, overall_sigma, latest_split,
+                              valid['xfp_rp3_per_start'].to_numpy(), pred_buckets)
     valid['xfp_rp3_sigma_raw'] = sigmas
     # Empirical sigma recalibration (added 2026-06-03). Raw LOO residual sigma
     # under-covers the per-start panel by ~2.3x. Multiply by alpha_global so
@@ -540,18 +540,17 @@ def main():
     #   marcel_no_data   : gs_to == 0 and not IL — should be rare/empty
     #   marcel_il        : prior_source == 'marcel_il' OR is_on_il_at_split == 1
     #                      (Marcel prior * IL_PRIOR_DISCOUNT, no 2026 form)
-    def _quality_tag(row):
-        gs = float(row.get('gs_to', 0) or 0)
-        src = row.get('prior_source', '')
-        is_il = int(row.get('is_on_il_at_split', 0) or 0)
-        if src == 'marcel_il' or is_il == 1:
-            return 'marcel_il'
-        if gs == 0:
-            return 'marcel_no_data'
-        if gs >= 8:
-            return 'data_driven_full'
-        return 'data_driven_thin'
-    valid['data_quality_tag'] = valid.apply(_quality_tag, axis=1)
+    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
+    # byte-identical vs the row-wise _quality_tag closure)
+    valid['data_quality_tag'] = np.select(
+        [
+            (valid['prior_source'] == 'marcel_il') | (valid['is_on_il_at_split'] == 1),
+            valid['gs_to'] == 0,
+            valid['gs_to'] >= 8,
+        ],
+        ['marcel_il', 'marcel_no_data', 'data_driven_full'],
+        default='data_driven_thin',
+    )
 
     # marcel_baseline — the pure Marcel prior (undiscounted), surfaced
     # explicitly so consumers can show "Marcel says X, 2026 data says Y,
@@ -570,7 +569,27 @@ def main():
         np.nan,
     )
 
-    valid['signal'] = valid.apply(_signal, axis=1)
+    # Add/drop signal (vectorized 2026-07-19, audit item 21/W3 — golden A/B
+    # verified byte-identical vs the row-wise _signal()). Uses the DECISION
+    # band (narrow, raw-sigma) for the add/drop trigger — the wide ×2.41
+    # display band is a coverage-calibrated CI, not a decision band; using it
+    # for add/drop made the signal inert (100% hold, verdict_backtest
+    # 2026-06-11). The is_on_il_at_split test replicates bool() truthiness
+    # (NaN/non-zero -> 'il'); NaN comparisons match row-wise (NaN > x = False).
+    _il = valid['is_on_il_at_split']
+    _repl = valid['replacement_xfp_per_start']
+    _p25 = valid['xfp_rp3_decision_p25']
+    _p75 = valid['xfp_rp3_decision_p75']
+    valid['signal'] = np.select(
+        [
+            _il.isna() | (_il != 0),
+            valid['replacement_delta'].isna() | _repl.isna(),
+            _p25.notna() & (_p25 > _repl),
+            _p75.notna() & (_p75 < _repl),
+        ],
+        ['il', 'hold', 'add', 'drop'],
+        default='hold',
+    )
     valid = valid.sort_values('xfp_rp3_per_start', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
 
@@ -732,28 +751,6 @@ def compute_replacement_delta(df: pd.DataFrame) -> pd.DataFrame:
     df['replacement_xfp_per_start'] = round(repl, 3)
     df['replacement_delta'] = (df['xfp_rp3_per_start'] - repl).round(3)
     return df
-
-
-def _signal(row) -> str:
-    # Use the DECISION band (narrow, raw-sigma) for the add/drop trigger if it
-    # is present, falling back to the displayed band for callers that only
-    # materialize xfp_rp3_p25/p75 (e.g. the verdict backtest). The wide ×2.41
-    # display band is a coverage-calibrated CI, not a decision band — using it
-    # for add/drop made the signal inert (100% hold, verdict_backtest 2026-06-11).
-    delta = row.get('replacement_delta', 0)
-    p25 = row.get('xfp_rp3_decision_p25', row.get('xfp_rp3_p25', None))
-    p75 = row.get('xfp_rp3_decision_p75', row.get('xfp_rp3_p75', None))
-    repl = row.get('replacement_xfp_per_start', None)
-    is_il = bool(row.get('is_on_il_at_split', 0))
-    if is_il:
-        return 'il'
-    if delta is None or pd.isna(delta) or repl is None or pd.isna(repl):
-        return 'hold'
-    if p25 is not None and not pd.isna(p25) and p25 > repl:
-        return 'add'
-    if p75 is not None and not pd.isna(p75) and p75 < repl:
-        return 'drop'
-    return 'hold'
 
 
 if __name__ == '__main__':

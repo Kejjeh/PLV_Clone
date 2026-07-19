@@ -16,6 +16,7 @@ sys.path.insert(0, str(REPO))
 from plv_clone.league_state import LeagueState
 from plv_clone.projections import PROJECTIONS
 from plv_clone.utils.name_match import lookup_batter_id_cached
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst
 
 PARQ26 = (REPO / "data/research/xfp_cache/statcast_2026.parquet").as_posix()
 PARQ25 = (REPO / "data/research/xfp_cache/statcast_2025.parquet").as_posix()
@@ -36,11 +37,9 @@ def _norm(s):
 
 
 def display_name(sc):
-    sc = str(sc)          # coerce NaN/float names (avoid '"," in float' TypeError)
-    if "," in sc:
-        p = sc.split(",", 1)
-        return p[1].strip() + " " + p[0].strip()
-    return sc
+    # str() coerces NaN/float names first (avoid '"," in float' TypeError);
+    # flip itself owned by lib.bucket_dispatch._flip_lastfirst (audit item 9).
+    return _flip_lastfirst(str(sc))
 
 
 def rp3_rank(name):

@@ -45,6 +45,7 @@ sys.path.insert(0, str(ROOT))
 
 from plv_clone.utils.name_match import lookup_batter_id_cached       # noqa
 from scripts.xfp.hitter_sustainability import classify, _norm         # noqa
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst           # noqa  shared 'Last, First' flip (audit item 9)
 from scripts.xfp.process_metrics_batch import batch_process_metrics   # noqa
 from scripts.xfp.slump_trajectory_batch import batch_slump_trajectory # noqa
 from scripts.xfp.peak_breakout_validator import batch_peak_validator   # noqa
@@ -621,12 +622,8 @@ def main() -> None:
         """Strip accents: 'Jesús' → 'Jesus', 'Ján' → 'Jan'."""
         return _ud.normalize("NFKD", s).encode("ascii", "ignore").decode("ascii")
 
-    def _to_first_last(name: str) -> str:
-        """Convert 'Last, First' → 'First Last'. Pass-through if no comma."""
-        if "," in name:
-            parts = [p.strip() for p in name.split(",", 1)]
-            return f"{parts[1]} {parts[0]}"
-        return name
+    # 'Last, First' → 'First Last' flip owned by lib.bucket_dispatch (audit item 9).
+    _to_first_last = _flip_lastfirst
 
     rp3 = PROJECTIONS.rp3()
     rprs2 = PROJECTIONS.rprs2()

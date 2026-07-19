@@ -27,7 +27,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
-from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
 from plv_clone.league_config import HITTER_REPLACEMENT_RANK as REPLACEMENT_RANK
 from plv_clone.models.xfp.hitter_sigma_hetero import (
     load_calibration as _load_hetero_calib,
@@ -512,12 +512,12 @@ def main():
         pred_buckets[int(split)] = cuts
 
     # Per-row sigma + p25/p75 via residual normal approximation (z=0.6745)
+    # (vectorized 2026-07-19, audit item 21/W2 — latest_split is constant here;
+    # golden A/B verified byte-identical vs the scalar iterrows loop)
     Z25 = 0.6745
-    sigmas = []
-    for _, row in valid.iterrows():
-        sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
-                                   row['xfp_rh3_per_pa'], pred_buckets))
-    valid['xfp_rh3_sigma_raw'] = sigmas
+    valid['xfp_rh3_sigma_raw'] = lookup_sigma_vec(
+        ci_table, overall_sigma, latest_split,
+        valid['xfp_rh3_per_pa'].to_numpy(), pred_buckets)
     # Hetero sigma (validated 2026-06-03, SHIP_HETERO_FOR_HITTERS): per-batter
     # multiplicative factor from a ridge over hitter_ratings_master features
     # (POWER, ev90, contact_pct, iso, ...). CV r2=0.5744; pooled coverage
@@ -605,8 +605,22 @@ def main():
     print('\n--- Computing replacement-level deltas ---')
     valid = compute_replacement_delta(valid)
 
-    # Composite signal
-    valid['signal'] = valid.apply(_signal, axis=1)
+    # Composite signal for the dashboard (vectorized 2026-07-19, audit item
+    # 21/W3 — golden A/B verified byte-identical vs the row-wise _signal()):
+    #   hold : replacement_delta / replacement level missing
+    #   add  : high-confidence above replacement (p25 still > replacement)
+    #   drop : below replacement and even p75 doesn't recover
+    # NaN comparisons intentionally match row-wise semantics (NaN > x = False).
+    _repl = valid['replacement_xfp_per_pa']
+    valid['signal'] = np.select(
+        [
+            valid['replacement_delta'].isna() | _repl.isna(),
+            valid['xfp_rh3_p25'].notna() & (valid['xfp_rh3_p25'] > _repl),
+            valid['xfp_rh3_p75'].notna() & (valid['xfp_rh3_p75'] < _repl),
+        ],
+        ['hold', 'add', 'drop'],
+        default='hold',
+    )
 
     valid = valid.sort_values('xfp_rh3_per_pa', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
@@ -713,23 +727,6 @@ def compute_replacement_delta(df: pd.DataFrame) -> pd.DataFrame:
     df['replacement_delta'] = (df['xfp_rh3_per_pa'] - df['replacement_xfp_per_pa']).round(4)
     df = df.drop(columns=['_pos'])
     return df
-
-
-def _signal(row) -> str:
-    """Signal bucket for the dashboard."""
-    delta = row.get('replacement_delta', 0)
-    p25 = row.get('xfp_rh3_p25', None)
-    repl = row.get('replacement_xfp_per_pa', None)
-    if delta is None or pd.isna(delta) or repl is None or pd.isna(repl):
-        return 'hold'
-    # ADD: high-confidence above replacement (p25 still > replacement)
-    if p25 is not None and not pd.isna(p25) and p25 > repl:
-        return 'add'
-    # DROP: below replacement and even p75 doesn't recover
-    p75 = row.get('xfp_rh3_p75', None)
-    if p75 is not None and not pd.isna(p75) and p75 < repl:
-        return 'drop'
-    return 'hold'
 
 
 if __name__ == '__main__':

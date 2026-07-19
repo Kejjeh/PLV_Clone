@@ -55,6 +55,7 @@ import pandas as pd
 
 from plv_clone.paths import ROOT as REPO  # single source for repo paths
 from lib.archetype_engine import rate_value, label_for_cell, rate_pillars  # shared 20-80 seam
+from lib.bucket_dispatch import _flip_lastfirst  # shared 'Last, First' flip (audit item 9)
 RES = REPO / 'data/research'
 CACHE = REPO / 'data/research/xfp_cache'
 OUT_LOCAL = REPO / 'data/outputs/player_profiles.html'
@@ -147,11 +148,8 @@ def _fail(msg: str):
 
 
 def pretty_sp_name(s):
-    """`Skubal, Tarik` -> `Tarik Skubal`. Pass through otherwise."""
-    if isinstance(s, str) and ',' in s:
-        a, b = s.split(',', 1)
-        return f'{b.strip()} {a.strip()}'
-    return s
+    """`Skubal, Tarik` -> `Tarik Skubal`. Pass through otherwise (incl. NaN)."""
+    return _flip_lastfirst(s) if isinstance(s, str) else s
 
 
 def assert_schema():
@@ -448,9 +446,7 @@ def build_sp_start_snapshots(years=(2024, 2025, 2026), window=10, min_starts=3):
                 if None in (STUFF, MOVEMENT, CONTROL):
                     continue
                 cell, arch = label_for_cell([STUFF, MOVEMENT, CONTROL], sdefs)
-                nm = (name_lookup.get(int(pid), {}) or {}).get('player_name')
-                if isinstance(nm, str) and ',' in nm:
-                    a, c = nm.split(',', 1); nm = f'{c.strip()} {a.strip()}'
+                nm = pretty_sp_name((name_lookup.get(int(pid), {}) or {}).get('player_name'))
                 out.append({
                     'pitcher': int(pid), 'player_name': nm, 'year': yr,
                     'date': w['date'], 'start_no': w['start_no'], 'gs_to': w['start_no'],
@@ -594,10 +590,7 @@ def build_rp_snapshots():
         cell, arch = label_for_cell([STUFF, CONTROL, BATTED_BALL], rdefs)
 
         info = name_lookup.get(int(row['pitcher']), {'name': None})
-        nm = info.get('name')
-        if isinstance(nm, str) and ',' in nm:
-            a, c = nm.split(',', 1)
-            nm = f'{c.strip()} {a.strip()}'
+        nm = pretty_sp_name(info.get('name'))
 
         # Weighted Overall — mirrors OVERALL_W in build_rp_archetypes.py
         # (STUFF 0.55 / CONTROL 0.30 / BATTED_BALL 0.15) so the snapshot

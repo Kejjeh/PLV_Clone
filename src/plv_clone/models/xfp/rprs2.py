@@ -52,7 +52,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
-from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
 from plv_clone.league_config import RP_REPLACEMENT_RANK as REPLACEMENT_RANK_RP
 
 warnings.filterwarnings('ignore')
@@ -354,11 +354,11 @@ def main():
         pred_buckets[int(split)] = cuts
 
     Z25 = 0.6745
-    sigmas = []
-    for _, row in valid.iterrows():
-        sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
-                                   row['xfp_full_year'], pred_buckets))
-    valid['xfp_sigma'] = sigmas
+    # (vectorized 2026-07-19, audit item 21/W2 — latest_split is constant here;
+    # golden A/B verified byte-identical vs the scalar iterrows loop)
+    valid['xfp_sigma'] = lookup_sigma_vec(
+        ci_table, overall_sigma, latest_split,
+        valid['xfp_full_year'].to_numpy(), pred_buckets)
     valid['xfp_p25'] = (valid['xfp_full_year'] - Z25 * valid['xfp_sigma']).clip(lower=0)
     valid['xfp_p75'] = valid['xfp_full_year'] + Z25 * valid['xfp_sigma']
 
@@ -417,16 +417,19 @@ def main():
     valid['replacement_xfp'] = round(repl, 1)
     valid['replacement_delta'] = (valid['xfp_full_year'] - repl).round(1)
 
-    def signal(row):
-        rd = row.get('replacement_delta')
-        p25 = row.get('xfp_p25')
-        p75 = row.get('xfp_p75')
-        rep = row.get('replacement_xfp')
-        if pd.isna(rd) or pd.isna(rep): return 'hold'
-        if pd.notna(p25) and p25 > rep: return 'add'
-        if pd.notna(p75) and p75 < rep: return 'drop'
-        return 'hold'
-    valid['signal'] = valid.apply(signal, axis=1)
+    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
+    # byte-identical vs the row-wise signal closure; NaN comparisons match
+    # row-wise semantics, NaN > x = False)
+    _rep = valid['replacement_xfp']
+    valid['signal'] = np.select(
+        [
+            valid['replacement_delta'].isna() | _rep.isna(),
+            valid['xfp_p25'].notna() & (valid['xfp_p25'] > _rep),
+            valid['xfp_p75'].notna() & (valid['xfp_p75'] < _rep),
+        ],
+        ['hold', 'add', 'drop'],
+        default='hold',
+    )
     valid = valid.sort_values('xfp_full_year', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
 

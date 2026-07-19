@@ -48,6 +48,7 @@ from scripts.xfp.lib.process_panel import (  # noqa: E402
     resolve_hitter_marker,
 )
 from scripts.xfp.lib.season_dates import season_start  # noqa: E402
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst  # noqa: E402  shared 'Last, First' flip (audit item 9)
 
 ROOT = _ROOT
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -244,13 +245,8 @@ def _join_sp_names_and_rp3(panel: pd.DataFrame, cur_pq: Path) -> pd.DataFrame:
     name_map = name_df.set_index('pitcher')['player_name'].to_dict()
     panel['player_name'] = panel['pitcher'].map(name_map)
 
-    def _flip(n):
-        if isinstance(n, str) and ',' in n:
-            a, b = [x.strip() for x in n.split(',', 1)]
-            return f'{b} {a}'
-        return n
-
-    panel['name'] = panel['player_name'].apply(_flip)
+    panel['name'] = panel['player_name'].apply(
+        lambda n: _flip_lastfirst(n) if isinstance(n, str) else n)
 
     rp3_path = OUT / 'xfp_rp3_projections.csv'
     if rp3_path.exists():

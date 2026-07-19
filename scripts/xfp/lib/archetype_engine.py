@@ -128,6 +128,109 @@ def age_tier(age, *, pre_max: int, peak_max: int):
     return 'POST_PEAK'
 
 
+def trajectory_metrics(group):
+    """Per-player 3-year OVERALL slope + career percentile (item 20/D3 hoist).
+
+    Applied per id-group on a frame holding ``year`` / ``OVERALL``. Extracted
+    verbatim from the identical ``_trajectory_metrics`` closures in the SP and
+    hitter builders.
+    """
+    g = group.sort_values('year').reset_index(drop=True)
+    g['OVERALL_slope_3yr'] = np.nan
+    g['OVERALL_career_pct'] = np.nan
+    for i in range(len(g)):
+        # Slope from last 3 (or fewer) seasons up to and including current
+        window = g.iloc[max(0, i-2):i+1]
+        if len(window) >= 2 and window['year'].max() - window['year'].min() >= 1:
+            slope = np.polyfit(window['year'].values, window['OVERALL'].values, 1)[0]
+            g.loc[g.index[i], 'OVERALL_slope_3yr'] = slope
+        # Career percentile: where current overall sits in player's history (inclusive)
+        career = g.iloc[:i+1]['OVERALL']
+        g.loc[g.index[i], 'OVERALL_career_pct'] = (career < g.loc[g.index[i], 'OVERALL']).sum() / len(career)
+    return g
+
+
+def traj_flag(row):
+    """TRENDING_UP / TRENDING_DOWN / CAREER_HIGH / CAREER_LOW / STABLE from the
+    trajectory metrics (item 20/D3 hoist — verbatim ``_traj_flag``)."""
+    s = row['OVERALL_slope_3yr']
+    p = row['OVERALL_career_pct']
+    if pd.notna(s) and s >= 3.0: return 'TRENDING_UP'
+    if pd.notna(s) and s <= -3.0: return 'TRENDING_DOWN'
+    if pd.notna(p) and p >= 0.90: return 'CAREER_HIGH'
+    if pd.notna(p) and p <= 0.10: return 'CAREER_LOW'
+    return 'STABLE'
+
+
+def attach_trajectory(qual, *, id_col: str):
+    """Attach OVERALL_slope_3yr / OVERALL_career_pct / traj_flag to the panel.
+
+    The scaffolding around :func:`trajectory_metrics` / :func:`traj_flag` that
+    the SP and hitter builders duplicated verbatim (modulo the id column):
+    sort, per-player apply, rounding, and the merge back (preserving row order).
+    """
+    qual_sorted = qual.sort_values([id_col, 'year'])[[id_col, 'year', 'OVERALL']].copy()
+    qual_sorted = qual_sorted.groupby(id_col, group_keys=False)[[id_col, 'year', 'OVERALL']].apply(trajectory_metrics)
+    qual_sorted['OVERALL_slope_3yr'] = qual_sorted['OVERALL_slope_3yr'].round(2)
+    qual_sorted['OVERALL_career_pct'] = qual_sorted['OVERALL_career_pct'].round(3)
+    qual_sorted['traj_flag'] = qual_sorted.apply(traj_flag, axis=1)
+
+    # Merge back into qual (preserve row order)
+    return qual.merge(
+        qual_sorted[[id_col, 'year', 'OVERALL_slope_3yr', 'OVERALL_career_pct', 'traj_flag']],
+        on=[id_col, 'year'], how='left'
+    )
+
+
+def build_career_panel(qual, *, id_col: str, fp_col: str):
+    """Attach T+1 / T+2 outcomes for comp matching (item 20/D3 hoist).
+
+    Near-identical across the SP and hitter builders modulo the id/fp columns.
+    The "Last, First" -> "First Last" display flip reuses the canonical
+    ``bucket_dispatch._flip_lastfirst`` (guarded so non-str values — e.g. NaN
+    player names — pass through unchanged, matching the builders' historical
+    ``isinstance(s, str)`` check rather than _flip_lastfirst's ``str(s)``).
+    """
+    from .bucket_dispatch import _flip_lastfirst  # lazy: keeps toolkit import light
+
+    careers = qual.sort_values([id_col, 'year']).reset_index(drop=True)
+    careers['next_fp']   = careers.groupby(id_col)[fp_col].shift(-1)
+    careers['next_arch'] = careers.groupby(id_col)['archetype'].shift(-1)
+    careers['next_year'] = careers.groupby(id_col)['year'].shift(-1)
+    careers['t2_fp']     = careers.groupby(id_col)[fp_col].shift(-2)
+    careers['t2_year']   = careers.groupby(id_col)['year'].shift(-2)
+
+    # Pretty display name
+    careers['name'] = careers['player_name'].apply(
+        lambda s: _flip_lastfirst(s) if isinstance(s, str) else s
+    )
+    return careers
+
+
+def compute_boundary_validation(qual, *, id_col: str):
+    """EDGE / NEAR_EDGE / SOLID T+1 archetype-retention stats (item 20/D3 hoist).
+
+    The boundary-tier validation block duplicated verbatim (modulo the id
+    column) in both builders' ``main()``. Feeds ``*_boundary_validation.json``.
+    """
+    careers = qual.sort_values([id_col, 'year']).reset_index(drop=True)
+    careers['next_arch'] = careers.groupby(id_col)['archetype'].shift(-1)
+    careers['next_year'] = careers.groupby(id_col)['year'].shift(-1)
+    current = int(qual['year'].max())
+    trans = careers[(careers['next_year'] == careers['year'] + 1) &
+                    (careers['next_year'] != current)].copy()
+    trans['stayed'] = (trans['archetype'] == trans['next_arch']).astype(int)
+    boundary_stats = {}
+    for tier in ['EDGE', 'NEAR_EDGE', 'SOLID']:
+        sub = trans[trans['boundary_tier'] == tier]
+        if len(sub) >= 10:
+            boundary_stats[tier] = {
+                'n_transitions': int(len(sub)),
+                'retention_pct': round(100 * float(sub['stayed'].mean()), 1),
+            }
+    return boundary_stats
+
+
 def compute_stickiness(qual, *, id_col: str, fp_col: str, ndigits: int,
                        guard_empty: bool = False):
     """YoY archetype retention + per-age-tier breakdown (item 14 hoist).
