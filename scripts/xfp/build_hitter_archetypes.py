@@ -181,11 +181,6 @@ def derive_babip(df):
     return ((df['h'] - df['hr']) / denom).clip(lower=0, upper=1)
 
 
-def derive_2b3b_rate(df):
-    """Gap-power rate: doubles + triples per PA."""
-    return ((df['b2'] + df['b3']) / df['pa'].clip(lower=1)).clip(lower=0)
-
-
 def derive_sb_per_opp(df):
     """SB / (singles + walks + HBP) — denominator is roughly times-reached-1B."""
     opp = (df['b1'] + df['bb'] + df['hbp']).clip(lower=1)
@@ -200,7 +195,6 @@ def build_ratings_panel(current_year=2026):
 
     # Derived metrics
     m['babip']        = derive_babip(m)
-    m['rate_2b3b']    = derive_2b3b_rate(m)
     m['sb_per_opp']   = derive_sb_per_opp(m)
     # O-Contact% = chase contact rate = (contact - z_contact) / o_swing
     m['o_contact']     = (m['contact'] - m['z_contact']).clip(lower=0)

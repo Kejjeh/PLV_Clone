@@ -96,7 +96,11 @@ CANONICAL_CASES = [
     #   every refresh can tip him; resolution + bucket stay enforced.
     ("Aaron Judge",     "ON IL",                   "H",  None,      "IL"),
     ("Reid Detmers",    None,                      "SP", None,      None),
-    ("Ryan Weathers",   "MIXED — see profile",     "SP", "MIXED",   None),
+    # 2026-07-19 — Weathers churned AGAIN (5th flip: 07-19 daily refresh moved
+    #   him MIXED -> 'BUY — archetype breakout'). He sits on the same BUY/MIXED
+    #   boundary as Detmers; executing the same pre-committed remedy:
+    #   bucket-only lock (resolution + bucket stay enforced).
+    ("Ryan Weathers",   None,                      "SP", None,      None),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
     # model #133, archetype OVR 36 TRENDING_DOWN) the gap rule can't fire and he reads
@@ -107,10 +111,17 @@ CANONICAL_CASES = [
     #   these off MIXED. Suárez/Turner now PL-ranked well above model -> FADE (PL
     #   chasing outcomes); Schmitt's archetype-breakout rule fires with the fresh
     #   PL rank + model lag. Data-driven (cache refresh), not a code change.
-    ("Eugenio Suárez",   "FADE — PL chasing outcomes", "H",  "FADE",  None),
+    # 2026-07-19 refresh: Suárez FADE -> MIXED (the FADE rule needs PL rank well
+    #   above model; the gap closed with fresh Wk16 data). Same FADE/MIXED
+    #   boundary churn as Turner below — re-pinned once; if he flips again,
+    #   downgrade to a bucket-only lock.
+    ("Eugenio Suárez",   "MIXED — see profile",    "H",  "MIXED", None),
     # 2026-06-20 refresh: Schmitt's BUY sub-reason drifted archetype-breakout ->
     #   process-upgrade (rh3/archetype data shift; still BUY top). Data-driven.
-    ("Casey Schmitt",   "BUY — process upgrade",      "H",  "BUY",   None),
+    # 2026-07-19: sub-reason oscillated BACK to archetype-breakout (2nd swing
+    #   between the two BUY rules). Lock the BUY top only; drop the sub-reason
+    #   lock — it flips on which BUY rule fires first, not on conviction.
+    ("Casey Schmitt",   None,                      "H",  "BUY",   None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "STRONG HOLD/BUY",         "SP", None,      None),
     ("Kyle Bradish",    "CAUTION",                 "SP", "CAUTION", None),

@@ -367,8 +367,11 @@ def main():
 
     # career_stage = target year - first MLB year per batter
     first_year = multiyr.groupby('batter')['year'].min().to_dict()
-    rolling['career_stage'] = rolling.apply(
-        lambda r: r['year'] - first_year.get(r['batter'], r['year']), axis=1)
+    # vectorized (audit 2026-07-19): identical to the old row-wise apply —
+    # unmapped batters fill with their own year (career_stage 0), then int.
+    rolling['career_stage'] = (
+        rolling['year'] - rolling['batter'].map(first_year).fillna(rolling['year'])
+    ).astype(int)
     print(f'  computed career_stage: range {rolling["career_stage"].min()}-{rolling["career_stage"].max()}')
 
     # RoS opposing-SP schedule strength (validated 2026-05-24, PASS Δr +0.0137).

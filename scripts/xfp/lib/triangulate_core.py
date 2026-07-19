@@ -1127,55 +1127,17 @@ def il_caveat(il_status) -> str | None:
     return None
 
 
-def triangulate_player(name: str, bucket: str | None = None,
-                       *, il_status=None) -> dict | None:
-    """Run the full triangulate pipeline for one player.
-
-    ``il_status`` is an injected ESPN/MLB injury status (e.g. 'IL60'); the engine
-    stays offline (caller supplies it). When set, the verdict is caveated so an
-    injured player isn't surfaced as a naked BUY.
-
-    Returns a structured dict, or None if the player couldn't be resolved.
-    """
-    player = resolve_player(name, bucket)
-    if not player:
-        return None
-    b = player['bucket']
-    model = model_row(player)
-    m_rank_int = model.get('rank') if isinstance(model.get('rank'), int) else None
-    pl_main, pl_main_date = pl_rank(player['display_name'], b, model_rank=m_rank_int)
-    if b == 'SP':
-        pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name'])
-    else:
-        pl_stream, pl_stream_opp, pl_stream_date = '—', None, None
-    arche = archetype_row(player)
-    verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
-    verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
-
-    # Phase 3 blended xFP (additive — does NOT alter verdict synthesis).
-    try:
-        blend = compute_blended_xfp(
-            player_name=player['display_name'],
-            player_type=b,
-            mlbam_id=int(player['id']),
-        )
-    except Exception as _e:
-        blend = {'blended_xfp': None, 'notes': [f'blend_error: {type(_e).__name__}']}
-
-    verdict_top, reason_tag = consolidate_verdict(verdict)
-    m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
-    confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
-    watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main, bucket=b)
-
-    # IL caveat (injected) — applied AFTER verdict synthesis so the talent read
-    # (verdict_top, confidence, watch_list) is untouched; only the surfaced
-    # verdict string + override_tag mark the injury.
-    _il_mark = il_caveat(il_status)
-    if _il_mark:
-        verdict = f'{_il_mark} {verdict}'
-        override_tag = override_tag or 'IL'
-
-    result = {
+def assemble_result(*, player, bucket, pl_main, pl_main_date, pl_stream,
+                    pl_stream_opp, pl_stream_date, model, arche, verdict,
+                    rationale, override_tag, verdict_top, reason_tag,
+                    confidence, n_aligned, n_avail, watch_list, blend,
+                    il_status=None) -> dict:
+    """Canonical triangulate result-dict schema — the ONE place the card
+    contract is defined. Shared by triangulate_player() (live path) and
+    run_triangulate.py's batch loop (--cards-out store), so nightly-persisted
+    FA cards can never drift from live-engine cards."""
+    b = bucket
+    return {
         'player': player,
         'bucket': b,
         'pl_main': pl_main,
@@ -1230,6 +1192,64 @@ def triangulate_player(name: str, bucket: str | None = None,
         # H-only position passthrough for display.
         'position_for_marginal': blend.get('position') if b == 'H' else None,
     }
+
+
+def triangulate_player(name: str, bucket: str | None = None,
+                       *, il_status=None) -> dict | None:
+    """Run the full triangulate pipeline for one player.
+
+    ``il_status`` is an injected ESPN/MLB injury status (e.g. 'IL60'); the engine
+    stays offline (caller supplies it). When set, the verdict is caveated so an
+    injured player isn't surfaced as a naked BUY.
+
+    Returns a structured dict, or None if the player couldn't be resolved.
+    """
+    player = resolve_player(name, bucket)
+    if not player:
+        return None
+    b = player['bucket']
+    model = model_row(player)
+    m_rank_int = model.get('rank') if isinstance(model.get('rank'), int) else None
+    pl_main, pl_main_date = pl_rank(player['display_name'], b, model_rank=m_rank_int)
+    if b == 'SP':
+        pl_stream, pl_stream_opp, pl_stream_date = pl_streamer_rank(player['display_name'])
+    else:
+        pl_stream, pl_stream_opp, pl_stream_date = '—', None, None
+    arche = archetype_row(player)
+    verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
+    verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
+
+    # Phase 3 blended xFP (additive — does NOT alter verdict synthesis).
+    try:
+        blend = compute_blended_xfp(
+            player_name=player['display_name'],
+            player_type=b,
+            mlbam_id=int(player['id']),
+        )
+    except Exception as _e:
+        blend = {'blended_xfp': None, 'notes': [f'blend_error: {type(_e).__name__}']}
+
+    verdict_top, reason_tag = consolidate_verdict(verdict)
+    m_rank_for_conf = model.get('rank') if isinstance(model.get('rank'), int) else None
+    confidence, n_aligned, n_avail = compute_confidence(verdict_top, pl_main, m_rank_for_conf, arche)
+    watch_list = build_watch_list(verdict_top, reason_tag, model, arche, pl_main, bucket=b)
+
+    # IL caveat (injected) — applied AFTER verdict synthesis so the talent read
+    # (verdict_top, confidence, watch_list) is untouched; only the surfaced
+    # verdict string + override_tag mark the injury.
+    _il_mark = il_caveat(il_status)
+    if _il_mark:
+        verdict = f'{_il_mark} {verdict}'
+        override_tag = override_tag or 'IL'
+
+    result = assemble_result(
+        player=player, bucket=b, pl_main=pl_main, pl_main_date=pl_main_date,
+        pl_stream=pl_stream, pl_stream_opp=pl_stream_opp,
+        pl_stream_date=pl_stream_date, model=model, arche=arche,
+        verdict=verdict, rationale=rationale, override_tag=override_tag,
+        verdict_top=verdict_top, reason_tag=reason_tag, confidence=confidence,
+        n_aligned=n_aligned, n_avail=n_avail, watch_list=watch_list,
+        blend=blend, il_status=il_status)
 
     # PR 5 follow-up: env-var gated decision logging.
     # When PLV_LOG_DECISIONS=1, persist a DecisionRecord for each

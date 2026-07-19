@@ -399,6 +399,17 @@ def main():
     cnt_df = cnt_df[['pitcher','name','saves','holds','fp_actual_2026']].rename(
         columns={'name':'name_api','saves':'sv_2026','holds':'hld_2026'})
     valid = valid.merge(cnt_df, on='pitcher', how='left')
+    # Match-rate guard (audit 2026-07-19, same failure shape as the 6-week
+    # rp3 IL-join regression): if the counting-stats id space desyncs from the
+    # rolling substrate, every fp_actual_2026 silently becomes 0 and xfp_ros
+    # collapses to xfp_full_year for the whole board. Fail LOUD instead.
+    _cnt_match = float(valid['fp_actual_2026'].notna().mean()) if len(valid) else 0.0
+    print(f'  counting-stats join match rate: {_cnt_match:.0%} ({valid["fp_actual_2026"].notna().sum()}/{len(valid)})')
+    if len(valid) >= 20 and _cnt_match < 0.5:
+        raise RuntimeError(
+            f'rprs2 counting-stats join matched only {_cnt_match:.0%} of the RP pool '
+            f'— pitcher_counting_stats JSON is stale or id-desynced; refusing to '
+            f'publish an xfp_ros board with the RoS subtraction silently zeroed.')
     valid['fp_actual_2026'] = valid['fp_actual_2026'].fillna(0)
     # xfp_ros is the GENUINE rest-of-season figure: the full-season projection
     # (model target = fp_year_total) MINUS the FP already banked in 2026. This

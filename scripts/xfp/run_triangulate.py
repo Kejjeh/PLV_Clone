@@ -34,6 +34,7 @@ from scripts.xfp.lib.triangulate_core import (
     model_row, archetype_row, synthesize, apply_overrides,
     consolidate_verdict, compute_confidence, build_watch_list, il_caveat,
     flatten_lenses, compute_actuals, flatten_actuals, flatten_extra,
+    assemble_result,
 )
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 from scripts.xfp.lib.snapshots import (
@@ -751,6 +752,42 @@ def _apply_within_ranks(df_out):
     return df_out
 
 
+def _jsonable(o):
+    """Recursively coerce a triangulate result dict to JSON-safe types:
+    numpy scalars -> python, NaN -> None, tuples/sets -> lists, exotic -> str.
+    Used by --cards-out so the persisted store round-trips into
+    build_card_data() exactly like a live result (which tolerates None)."""
+    if o is None or isinstance(o, (str, bool)):
+        return o
+    if isinstance(o, (int, float)):
+        try:
+            if pd.isna(o):
+                return None
+        except Exception:
+            pass
+        return o
+    if isinstance(o, dict):
+        return {str(k): _jsonable(v) for k, v in o.items()}
+    if isinstance(o, (list, tuple, set)):
+        return [_jsonable(x) for x in o]
+    if hasattr(o, 'item'):        # numpy scalar (int64/float64/bool_)
+        try:
+            return _jsonable(o.item())
+        except Exception:
+            pass
+    if hasattr(o, 'tolist'):      # numpy array
+        try:
+            return [_jsonable(x) for x in o.tolist()]
+        except Exception:
+            pass
+    try:
+        if pd.isna(o):
+            return None
+    except Exception:
+        pass
+    return str(o)
+
+
 def _json_payload(json_rows):
     """Aggregate JSON payload (counts over the FULL set). Shared by both paths."""
     resolved = [r for r in json_rows if r.get('resolved', True) is not False]
@@ -785,21 +822,23 @@ def _run_parallel(args, input_df, n_jobs):
         input_df.iloc[a:b].to_csv(shard_in, index=False)
         cmd = [sys.executable, '-X', 'utf8', os.path.abspath(__file__),
                '--names-file', shard_in, '--jobs', '1']
-        out_csv = out_json = None
+        out_csv = out_json = out_cards = None
         if args.csv_out:
             out_csv = os.path.join(tmpdir, f'out_{k}.csv'); cmd += ['--csv-out', out_csv]
         if args.json_out:
             out_json = os.path.join(tmpdir, f'out_{k}.json'); cmd += ['--json-out', out_json]
+        if getattr(args, 'cards_out', None):
+            out_cards = os.path.join(tmpdir, f'cards_{k}.json'); cmd += ['--cards-out', out_cards]
         if args.bucket:
             cmd += ['--bucket', args.bucket]
         if args.filter:
             cmd += ['--filter', args.filter]
         env = {**os.environ, 'PYTHONIOENCODING': 'utf-8', 'PYTHONUTF8': '1'}
         jobs.append((subprocess.Popen(cmd, env=env, stdout=subprocess.DEVNULL,
-                                      stderr=subprocess.DEVNULL), out_csv, out_json))
+                                      stderr=subprocess.DEVNULL), out_csv, out_json, out_cards))
     # wait + collect (a failed child raises so we never write a silently-partial result)
-    csv_parts, json_parts = [], []
-    for proc, out_csv, out_json in jobs:
+    csv_parts, json_parts, cards_all = [], [], {}
+    for proc, out_csv, out_json, out_cards in jobs:
         rc = proc.wait()
         if rc != 0:
             raise RuntimeError(f"triangulate shard failed (exit {rc}); aborting parallel run")
@@ -808,6 +847,9 @@ def _run_parallel(args, input_df, n_jobs):
         if out_json and os.path.exists(out_json):
             with open(out_json, encoding='utf-8') as f:
                 json_parts.extend(json.load(f).get('players', []))
+        if out_cards and os.path.exists(out_cards):
+            with open(out_cards, encoding='utf-8') as f:
+                cards_all.update(json.load(f))
 
     if args.csv_out and csv_parts:
         # union-concat (sort=False keeps first-appearance column order, matching the
@@ -840,6 +882,11 @@ def _run_parallel(args, input_df, n_jobs):
         with open(args.json_out, 'w', encoding='utf-8') as f:
             json.dump(payload, f, indent=2, default=str)
         print(f"Wrote {len(json_parts)} rows to {args.json_out}  [parallel jobs={n_jobs}]")
+    if getattr(args, 'cards_out', None) and cards_all:
+        os.makedirs(os.path.dirname(os.path.abspath(args.cards_out)) or '.', exist_ok=True)
+        with open(args.cards_out, 'w', encoding='utf-8') as f:
+            json.dump(cards_all, f)
+        print(f"Wrote {len(cards_all)} full card records to {args.cards_out}  [parallel jobs={n_jobs}]")
 
 
 # ---------- main ----------
@@ -852,6 +899,11 @@ def main():
     ap.add_argument('--names-file', default=None, help='CSV with a player_name column (batch mode)')
     ap.add_argument('--csv-out', default=None, help='Write batch results to this CSV (instead of per-player cards)')
     ap.add_argument('--json-out', default=None, help='Write batch results to this JSON file (dashboard-friendly). May coexist with --csv-out.')
+    ap.add_argument('--cards-out', default=None, metavar='PATH',
+                    help='Also persist the FULL per-player result dicts (live-card '
+                         'schema via assemble_result) as {name: result} JSON. '
+                         'build_triangulate_dashboard hydrates FA cards from this '
+                         'store instead of re-running the engine per FA.')
     ap.add_argument('--filter', default=None,
                     help='Comma-separated verdict substrings (case-insensitive). Only emit matching rows/cards.')
     ap.add_argument('--summary-only', action='store_true',
@@ -948,6 +1000,7 @@ def main():
     rows = []
     csv_rows = []
     json_rows = []
+    cards_store = {}
     for name in name_list:
         player = resolve_player(name, args.bucket)
         if not player:
@@ -1020,6 +1073,20 @@ def main():
         except Exception:
             _blend = {}
         _bx = _blend.get('blended_xfp')
+        if args.cards_out:
+            # Full-fidelity card store: the SAME result-dict schema the live
+            # engine returns (assemble_result is the shared seam in
+            # triangulate_core), so the dashboard hydrates FA cards from
+            # tonight's batch instead of re-running the engine per FA.
+            cards_store[player['display_name']] = assemble_result(
+                player=player, bucket=bucket, pl_main=pl_main,
+                pl_main_date=pl_main_date, pl_stream=pl_stream,
+                pl_stream_opp=pl_stream_opp, pl_stream_date=pl_stream_date,
+                model=model, arche=arche, verdict=verdict, rationale=rationale,
+                override_tag=override_tag, verdict_top=verdict_top,
+                reason_tag=reason_tag, confidence=confidence,
+                n_aligned=n_aligned, n_avail=n_avail, watch_list=watch_list,
+                blend=_blend, il_status=il_status)
         _headline_src = 'blended_xfp' if _bx is not None else {'H': 'rh3', 'SP': 'rp3', 'RP': 'rprs2'}.get(bucket, 'model')
         _mp = model.get('proj')
         _headline_proj = _bx if _bx is not None else (_mp if isinstance(_mp, (int, float)) else None)
@@ -1195,6 +1262,11 @@ def main():
         with open(args.json_out, 'w', encoding='utf-8') as f:
             json.dump(payload, f, indent=2, default=str)
         print(f"Wrote {len(json_rows)} rows to {args.json_out}")
+    if args.cards_out:
+        os.makedirs(os.path.dirname(os.path.abspath(args.cards_out)) or '.', exist_ok=True)
+        with open(args.cards_out, 'w', encoding='utf-8') as f:
+            json.dump(_jsonable(cards_store), f)
+        print(f"Wrote {len(cards_store)} full card records to {args.cards_out}")
     if not batch_out and len(rows) > 1:
         print(compare_table(rows))
 

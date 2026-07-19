@@ -212,13 +212,19 @@ def main():
             print('  ⚠ bx priors rebuild failed — rh3 (bx_prior_h is a promoted '
                   'feature) will fail loudly if the existing cache is missing/stale')
 
+    # ok_models gates the git publish (steps 5/6): a failed model rebuild means
+    # every downstream dashboard is rendered from STALE projections — publishing
+    # them as "fresh" is the failure mode the audit 2026-07-19 flagged (F2).
+    ok_models = True
     if not args.no_models:
         # --skip-schedule: build_pitcher_schedule already ran as its own step
         # here (dead duplicate probables pull inside refresh_all otherwise).
-        ok = run('2. Rebuild xFP models',
-                 'python -X utf8 scripts/xfp/refresh_all.py --skip-schedule',
-                  timeout=1800)
-        if not ok: print('  → continuing despite model rebuild issue')
+        ok_models = run('2. Rebuild xFP models',
+                        'python -X utf8 scripts/xfp/refresh_all.py --skip-schedule',
+                        timeout=1800)
+        if not ok_models:
+            print('  → continuing (build steps still run) but the PUBLISH will be '
+                  'GATED — dashboards would carry stale projections')
 
     # 2a. Patch stale is_on_il_at_split from live ESPN injury status.
     # The rp3 pipeline's is_on_il_at_split (and the data_quality_tag='marcel_il'
@@ -437,10 +443,11 @@ def main():
     run('4.05. Refresh injury-status cache (ESPN IL flags + return dates)',
         'python -X utf8 scripts/xfp/lib/injury_status.py', timeout=300)
 
-    # 4.7. Build triangulate.html (cyclable three-lens roster report). Depends on
-    # the injury cache above + the archetype/projection panels. Fail-soft.
-    run('4.7. Build triangulate.html (three-lens roster report)',
-        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py', timeout=300)
+    # 4.7 (triangulate.html) MOVED below the 4.72 nightly batch (2026-07-19):
+    # the dashboard now hydrates its FA cards from the batch's --cards-out
+    # store, so it must build AFTER tonight's store exists. One build, full
+    # fidelity — replaces the old 4.7 roster-only build + 4.73 ~50-min
+    # --live-fa re-run pair.
 
     # 4.72. Nightly league-wide triangulate backfill + verdict history append.
     # Builds the player universe (roster + my drops + opp churn + FA_TOP with
@@ -467,7 +474,8 @@ def main():
             f'python -X utf8 scripts/xfp/run_triangulate.py '
             f'--names-file {_tri_universe} --snapshot {_tri_label} '
             f'--run-id {_tri_runid} --csv-out {_tri_json.replace(".json", ".csv")} '
-            f'--json-out {_tri_json}',
+            f'--json-out {_tri_json} '
+            f'--cards-out {_tri_json.replace(".json", "_cards.json")}',
             timeout=1800,
         )
         if not ok_tri_batch:
@@ -482,22 +490,21 @@ def main():
             if not ok_tri_hist:
                 print('  ⚠ triangulate history append failed — continuing (non-gating)')
 
-    # 4.73. Full-fidelity triangulate.html rebuild: FA cards through the LIVE
-    # engine (--live-fa), so every FA card matches roster cards (confidence,
-    # watch list, projection band) — user request 2026-07-18. Runs AFTER 4.72
-    # so load_fa_rows() sees TONIGHT's nightly universe, and REPLACES the 4.7
-    # roster-only page. ~45-60 min for the ~500-FA pool; fail-soft — the 4.7
-    # page remains published if this step dies. Known inefficiency: the pool
-    # was already batch-triangulated in 4.72b; this re-runs the engine per FA
-    # because the dashboard card needs the full result dict, not the flat row.
-    # Optimization path: teach collect_cards() to consume the 4.72 run store.
-    ok_tri_livefa = run(
-        '4.73. Rebuild triangulate.html with live-engine FA cards (--live-fa)',
-        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py --live-fa',
-        timeout=5400,
+    # 4.7. Build triangulate.html (three-lens roster report + full-fidelity FA
+    # section). Runs AFTER the 4.72 chain so tonight's --cards-out store exists:
+    # roster cards run the live engine (~26 players, fast); FA cards hydrate
+    # from the store — identical schema to live (assemble_result seam), zero
+    # per-FA recompute. Replaced the 4.73 --live-fa re-run (~45-60 min/night,
+    # ~100% duplicate of 4.72b — audit 2026-07-19 F1). If tonight's batch
+    # failed, the dashboard falls back to the freshest prior store/batch with
+    # its own staleness warning. Fail-soft.
+    ok_tri_page = run(
+        '4.7. Build triangulate.html (roster live + FA from nightly cards store)',
+        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py',
+        timeout=600,
     )
-    if not ok_tri_livefa:
-        print('  ⚠ live-fa triangulate rebuild failed — 4.7 roster-only page stands')
+    if not ok_tri_page:
+        print('  ⚠ triangulate.html build failed — prior page stands')
 
     # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
     # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
@@ -731,6 +738,13 @@ def main():
             print('  ! verdict scorecard failed — continuing (non-gating)')
 
     if not args.no_push:
+        if not ok_models:
+            print('\n  ✖ PUBLISH GATED: the model rebuild (step 2) FAILED, so the '
+                  'dashboards above were rendered from STALE projections.\n'
+                  '    Nothing was committed or pushed to xfp-model. Fix the model '
+                  'rebuild and re-run refresh_dashboards.py (or push manually if '
+                  'the staleness is understood and acceptable).')
+            return
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
             return

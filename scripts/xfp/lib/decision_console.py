@@ -1516,9 +1516,22 @@ def main(argv=None):
         try:
             cur = json.loads(out.read_text(encoding="utf-8"))
             gen = str(cur.get("generated_at", ""))[:10]
+            # Freshness = same-day AND newer than the data it renders. The old
+            # date-only check skipped regeneration even after an intraday
+            # refresh rebuilt the projections underneath it (2026-07-18
+            # staleness trap: console served the morning payload all day).
+            _inputs = [
+                ROOT / "data/outputs/xfp_rh3_projections.csv",
+                ROOT / "data/outputs/xfp_rp3_projections.csv",
+                ROOT / "data/outputs/xfp_rprs2_projections.csv",
+                ROOT / "data/research/xfp_cache/boxscore_hitters.parquet",
+            ]
+            newest_input = max((p.stat().st_mtime for p in _inputs if p.exists()),
+                               default=0.0)
             if (cur.get("schema_version") == SCHEMA_VERSION
-                    and gen == date.today().isoformat()):
-                print(f"console_data.json fresh ({gen}) — skipped")
+                    and gen == date.today().isoformat()
+                    and out.stat().st_mtime >= newest_input):
+                print(f"console_data.json fresh ({gen}, newer than inputs) — skipped")
                 return 0
         except Exception:
             pass

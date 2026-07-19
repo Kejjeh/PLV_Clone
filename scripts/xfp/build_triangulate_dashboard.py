@@ -52,6 +52,9 @@ def _freshest_nightly():
     import time as _time
     cands = _glob.glob(str(ROOT / 'data' / 'research' / 'triangulate_universe'
                            / 'triangulate_nightly_*.json'))
+    # the *_cards.json sidecar (full result-dict store, --cards-out) shares the
+    # prefix — it is NOT the batch payload; never let it win the glob.
+    cands = [c for c in cands if not c.endswith('_cards.json')]
     if not cands:
         return None
     newest = max(cands, key=_os.path.getmtime)
@@ -1158,6 +1161,25 @@ def _fa_card_from_batch(j: dict, lens: dict | None) -> dict:
     return c
 
 
+def load_fa_cards_store() -> dict:
+    """Full-fidelity FA card store: {name: result-dict} in the LIVE-card schema
+    (triangulate_core.assemble_result), written by run_triangulate --cards-out
+    alongside the nightly batch (refresh step 4.72b). Hydrating from this store
+    makes FA cards identical to roster cards at ~zero cost — no per-FA engine
+    re-run. Returns {} when absent (pre-store nights) so callers fall back to
+    the flat batch card."""
+    if not _BATCH_JSON.name.startswith('triangulate_nightly'):
+        return {}
+    store_path = _BATCH_JSON.with_name(_BATCH_JSON.stem + '_cards.json')
+    if not store_path.exists():
+        return {}
+    try:
+        return json.loads(store_path.read_text(encoding='utf-8'))
+    except Exception as e:
+        _warn('fa_cards_store', e)
+        return {}
+
+
 def load_fa_rows(exclude_names: set[str] | None = None) -> list[dict]:
     """FA rows from the freshest nightly batch. `exclude_names` guards against
     batch-lag: a player added to the roster AFTER the nightly ran still carries
@@ -1289,8 +1311,33 @@ def main():
         print(f'  FA section: {len(fa_rows)} free agents (LIVE engine; {len(fa_raw) - len(got)} batch-fallback)')
     else:
         lens_map = load_batch_lens()
-        fa_rows = [_fa_card_from_batch(j, lens_map.get(j.get('name'))) for j in fa_raw]
-        print(f'  FA section: {len(fa_rows)} free agents (full-card render from nightly batch)')
+        store = load_fa_cards_store()
+        if store:
+            # DEFAULT path since 2026-07-19: hydrate FA cards from the nightly
+            # --cards-out store (same result-dict schema as the live engine) —
+            # full fidelity (confidence / bands / watch list / value tier) with
+            # no per-FA engine re-run. Replaces the ~50-min --live-fa refresh
+            # step; --live-fa remains as a manual force-live override.
+            fa_rows, n_fallback = [], 0
+            for j in fa_raw:
+                res = store.get(j.get('name'))
+                if res:
+                    c = build_card_data(res)
+                    c['vclass'] = _verdict_class(c)
+                    lens = lens_map.get(c.get('name'))
+                    c['lens'] = lens
+                    c['group'] = (j.get('position_group')
+                                  if j.get('position_group') in GROUP_RANK
+                                  else _resolve_group(c, lens))
+                    fa_rows.append(c)
+                else:
+                    n_fallback += 1
+                    fa_rows.append(_fa_card_from_batch(j, lens_map.get(j.get('name'))))
+            print(f'  FA section: {len(fa_rows)} free agents (full-fidelity from '
+                  f'nightly cards store; {n_fallback} flat-batch fallback)')
+        else:
+            fa_rows = [_fa_card_from_batch(j, lens_map.get(j.get('name'))) for j in fa_raw]
+            print(f'  FA section: {len(fa_rows)} free agents (full-card render from nightly batch)')
     html_doc = render_page(cards, fa_rows)
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'triangulate.html').write_text(html_doc, encoding='utf-8')
