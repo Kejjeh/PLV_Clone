@@ -221,50 +221,21 @@ def apply_shrinkage(df: pd.DataFrame, pop_means: dict, spec: dict) -> pd.DataFra
 _FIT_FP_VERSION = 1
 
 
+# eligibility mask shared by the fit stages (hoisted scaffolding, audit D2)
+def _fit_filter(d: pd.DataFrame):
+    return (d['pa_to'] >= EVAL_PA_MIN) & (d['ros_pa'] >= ROS_PA_MIN) & (d['year'] != 2020)
+
+
 def _fit_fingerprint(rolling: pd.DataFrame, feats: list[str]) -> str:
-    """Content hash of everything the fit stage depends on: the TRAIN-YEAR rows
-    (immutable slice — the rolling CSV legitimately changes daily via
-    in-progress-season rows), the feature list, target/filter constants.
-    Warm-skip is exact: same fingerprint => byte-identical fit artifacts."""
-    import hashlib
-    sub = rolling[rolling['year'].isin(TRAIN_YEARS)]
-    cols = [c for c in sorted(set(feats + [TARGET, 'year', 'split_day'])) if c in sub.columns]
-    h = hashlib.md5()
-    h.update(pd.util.hash_pandas_object(sub[cols].reset_index(drop=True), index=False).values.tobytes())
-    h.update(repr((sorted(feats), TARGET, EVAL_PA_MIN, ROS_PA_MIN,
-                   sorted(TRAIN_YEARS), _FIT_FP_VERSION)).encode())
-    return h.hexdigest()
+    return _engine.fit_fingerprint(
+        rolling, feats, target=TARGET, train_years=TRAIN_YEARS,
+        extra=(TARGET, EVAL_PA_MIN, ROS_PA_MIN), fp_version=_FIT_FP_VERSION)
 
 
 def cross_year_eval(df: pd.DataFrame, feats: list[str]):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
-    df = df.dropna(subset=feats + [TARGET]).copy()
-    df = df[(df['pa_to'] >= EVAL_PA_MIN) & (df['ros_pa'] >= ROS_PA_MIN) & (df['year'] != 2020)]
-    per_year, preds_all, acts_all = {}, [], []
-    _details = []
-    for held in TRAIN_YEARS:
-        train = df[df['year'] != held]; test = df[df['year'] == held]
-        if len(train) < 100 or len(test) < 30:
-            continue
-        pipe = Pipeline([('sc', StandardScaler()),
-                         ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
-        pipe.fit(train[feats].values, train[TARGET].values)
-        preds = pipe.predict(test[feats].values)
-        r = float(np.corrcoef(preds, test[TARGET].values)[0, 1])
-        mae = float(np.mean(np.abs(preds - test[TARGET].values)))
-        per_year[held] = {'r': round(r, 4), 'mae': round(mae, 4), 'n': len(test)}
-        preds_all.extend(preds.tolist()); acts_all.extend(test[TARGET].tolist())
-        _details.append(pd.DataFrame({'pred': preds, 'actual': test[TARGET].values,
-                                      'split_day': test['split_day'].values}))
-    overall_r = float(np.corrcoef(preds_all, acts_all)[0, 1]) if preds_all else np.nan
-    overall_mae = float(np.mean(np.abs(np.array(preds_all) - np.array(acts_all))))
-    detail = (pd.concat(_details, ignore_index=True) if _details
-              else pd.DataFrame(columns=['pred', 'actual', 'split_day']))
-    detail['resid'] = detail['actual'] - detail['pred']
-    return per_year, {'r': round(overall_r, 4), 'mae': round(overall_mae, 4),
-                      'n': len(preds_all)}, detail
+    return _engine.cross_year_eval_ridge(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=_fit_filter, min_train=100, min_test=30)
 
 
 def fit_residual_ci(df: pd.DataFrame, feats: list[str], resid: pd.DataFrame | None = None):
@@ -274,39 +245,15 @@ def fit_residual_ci(df: pd.DataFrame, feats: list[str], resid: pd.DataFrame | No
     second LOO pass here was fit-for-fit IDENTICAL to it (same filters, same
     alphas, same folds; audit 2026-07-04, 46.2s/day of duplicate fitting).
     Falls back to the old independent pass when not supplied."""
-    if resid is not None and len(resid):
-        res = resid
-    else:
-        sub = df.dropna(subset=feats + [TARGET]).copy()
-        sub = sub[(sub['pa_to'] >= EVAL_PA_MIN) & (sub['ros_pa'] >= ROS_PA_MIN)
-                  & (sub['year'] != 2020)]
-        res = _engine.train_residual_table(
-            df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
-            min_train=100, min_test=30,
-        )
-    out: dict[tuple[int, int], float] = {}
-    for split in sorted(res['split_day'].unique()):
-        sub2 = res[res['split_day'] == split]
-        qs = pd.qcut(sub2['pred'], q=4, duplicates='drop', labels=False)
-        for q in sorted(sub2.groupby(qs).groups.keys()):
-            ix = (qs == q)
-            sigma = float(sub2.loc[ix, 'resid'].std())
-            out[(int(split), int(q))] = sigma
-    overall_sigma = float(res['resid'].std())
-    return out, overall_sigma
+    return _engine.fit_residual_ci_from(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=_fit_filter, min_train=100, min_test=30, resid=resid)
 
 
 def train_final(df: pd.DataFrame, feats: list[str]):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
-    train = df.dropna(subset=feats + [TARGET])
-    train = train[(train['pa_to'] >= EVAL_PA_MIN) & (train['ros_pa'] >= ROS_PA_MIN)
-                  & (train['year'].isin(TRAIN_YEARS))]
-    pipe = Pipeline([('sc', StandardScaler()),
-                     ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=10))])
-    pipe.fit(train[feats].values, train[TARGET].values)
-    return pipe, len(train)
+    return _engine.train_final_ridge(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=lambda d: (d['pa_to'] >= EVAL_PA_MIN) & (d['ros_pa'] >= ROS_PA_MIN))
 
 
 def main():
@@ -630,6 +577,17 @@ def main():
                             'fantasy_positions_display']
                 if c in mh.columns]
         valid = valid.merge(mh[keep], on='batter', how='left')
+        # Match-rate visibility guard (audit 2026-07-19 R5): a desynced master
+        # CSV silently drops primary_position -> everyone collapses to the
+        # UTIL replacement bucket and replacement_delta distorts. Values
+        # unchanged — surface the match rate so the failure can't hide.
+        if 'primary_position' in valid.columns:
+            _pos_match = float(valid['primary_position'].notna().mean())
+            print(f'  master_hitter position match rate: {_pos_match:.0%}')
+            if _pos_match < 0.5:
+                print('  !! WARNING: <50% of hitters matched master_hitter — '
+                      'replacement buckets are collapsing to UTIL; the master '
+                      'CSV is stale or id-desynced')
     if 'primary_position' not in valid.columns:
         valid['primary_position'] = None
 

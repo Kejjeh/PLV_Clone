@@ -324,13 +324,16 @@ def test_result_dict_has_csv_columns():
 
 def test_lru_cache_avoids_redundant_disk_reads():
     """Calling triangulate_player twice on the same bucket must not
-    re-read the projection parquet/CSV from disk."""
+    re-read the projection parquet/CSV from disk. (2026-07-19: the cache
+    moved to the mtime-keyed `_load_projection_at` — the public
+    `_load_projection` is now a thin freshness-token wrapper.)"""
+    from lib.cached_data import _load_projection_at
     # Prime
     triangulate_player("Aaron Judge")
-    info_before = _load_projection.cache_info()
+    info_before = _load_projection_at.cache_info()
     # Same bucket
     triangulate_player("Trea Turner")
-    info_after_same = _load_projection.cache_info()
+    info_after_same = _load_projection_at.cache_info()
     assert info_after_same.misses == info_before.misses, (
         "Same-bucket second call caused additional cache miss "
         f"(misses {info_before.misses} -> {info_after_same.misses})"

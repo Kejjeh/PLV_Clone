@@ -109,12 +109,29 @@ def _get_league():
         )
     try:
         from espn_api.baseball import League
-        league = League(
-            league_id=LEAGUE_ID,
-            year=YEAR,
-            espn_s2=ESPN_S2,
-            swid=SWID,
-        )
+        # Retry with backoff (audit 2026-07-19 M3): the League constructor is
+        # one big authenticated GET and the single most common transient
+        # failure point — an ESPN 5xx here used to abort the whole engine.
+        league = None
+        for _attempt, _delay in ((1, 2), (2, 5), (3, None)):
+            try:
+                league = League(
+                    league_id=LEAGUE_ID,
+                    year=YEAR,
+                    espn_s2=ESPN_S2,
+                    swid=SWID,
+                )
+                break
+            except ImportError:
+                raise
+            except Exception as _le:
+                if _delay is None:
+                    raise
+                import time as _t
+                print(f"  espn: League construction failed "
+                      f"({type(_le).__name__}: {_le}) — retry {_attempt}/2 "
+                      f"in {_delay}s")
+                _t.sleep(_delay)
         if os.environ.get("PLV_ESPN_SNAPSHOT") == "1":
             _wrap_free_agents_with_snapshot(league)
         return league

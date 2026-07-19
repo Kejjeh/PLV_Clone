@@ -35,8 +35,23 @@ def _load_rp_volume_g() -> dict:
     return {int(m): float(g) for m, g in zip(df['mlbam_id'], df['proj_ros_g'])}
 
 
-@functools.lru_cache(maxsize=None)
+def _mtime_token(path) -> float:
+    """File-freshness token threaded into the lru_cache keys below so a
+    long-lived process (daemon / mid-run ensure_fresh() rebuild) stops serving
+    pre-refresh frames (audit 2026-07-19 M5). Same idiom as disk_cache's
+    (mtime,size) signature; 0.0 for a missing file keeps miss-behavior."""
+    try:
+        return os.path.getmtime(path)
+    except OSError:
+        return 0.0
+
+
 def _load_projection(bucket: str) -> pd.DataFrame:
+    return _load_projection_at(bucket, _mtime_token(PROJECTIONS[bucket]))
+
+
+@functools.lru_cache(maxsize=None)
+def _load_projection_at(bucket: str, _mt: float) -> pd.DataFrame:
     """Load + cache a projection CSV. Adds a normalized '_key' column.
 
     Validates the load-bearing schema up front (REQUIRED_COLUMNS) so a missing headline
@@ -59,8 +74,12 @@ def _load_projection(bucket: str) -> pd.DataFrame:
     return df
 
 
-@functools.lru_cache(maxsize=None)
 def _load_archetype(bucket: str):
+    return _load_archetype_at(bucket, _mtime_token(ARCHETYPE_PANELS[bucket]))
+
+
+@functools.lru_cache(maxsize=None)
+def _load_archetype_at(bucket: str, _mt: float):
     """Load + cache an archetype panel parquet."""
     panel_path = ARCHETYPE_PANELS[bucket]
     if not os.path.exists(panel_path):
@@ -71,8 +90,13 @@ def _load_archetype(bucket: str):
     return p
 
 
-@functools.lru_cache(maxsize=None)
 def _load_pl_cache(filename: str) -> dict:
+    return _load_pl_cache_at(filename,
+                             _mtime_token(os.path.join(PL_CACHE_DIR, filename)))
+
+
+@functools.lru_cache(maxsize=None)
+def _load_pl_cache_at(filename: str, _mt: float) -> dict:
     path = os.path.join(PL_CACHE_DIR, filename)
     if not os.path.exists(path):
         return {'fetched': None, 'source_url': None, 'ranks': {}}

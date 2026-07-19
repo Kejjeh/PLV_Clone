@@ -104,8 +104,29 @@ def gf_rows_for_game(pk, lookup):
             try:
                 rows.append(map_gf_pitch(p, meta, lookup, is_terminal=is_term))
             except Exception:
+                _DROPPED[0] += 1
                 continue
     return rows
+
+
+# Silent-drop tripwire (audit 2026-07-19 R4): the per-pitch except above used
+# to swallow EVERY mapping error invisibly — a gf schema drift would drop the
+# whole provisional day and the models would silently lose their same-day
+# bridge. Count drops and warn loudly past a threshold.
+_DROPPED = [0]
+
+
+def report_drops(n_mapped: int) -> None:
+    d = _DROPPED[0]
+    total = n_mapped + d
+    if not total:
+        return
+    frac = d / total
+    print(f"  gf pitch-mapping drops: {d}/{total} ({frac:.1%})")
+    if frac > 0.20:
+        print(f"  !! WARNING: {frac:.0%} of gf pitches failed to map — "
+              f"likely a game-feed schema drift; the provisional bridge is "
+              f"degraded (models fall back to the 1-2 day canonical lag).")
 
 
 def main():
@@ -161,6 +182,7 @@ def main():
             games += 1
         d += timedelta(days=1)
 
+    report_drops(len(new_rows))
     if not new_rows:
         if n_prior_prov:
             _write(canonical, sc.columns)

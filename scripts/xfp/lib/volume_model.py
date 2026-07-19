@@ -146,6 +146,14 @@ def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
         rem_arr[out.index.get_indexer(ix)] = n_total - n_to
     out['team_games_to'] = to_arr
     out['team_games_remaining'] = rem_arr
+    # Fallback-visibility guard (audit 2026-07-19 R5): the league-mean branch
+    # silently absorbs a stale/desynced team map. Values unchanged — surface
+    # the unmapped fraction so a broken map can't hide.
+    _unmapped = float(out['team'].isna().mean()) if 'team' in out.columns else 0.0
+    if _unmapped > 0:
+        marker = '  !! WARNING' if _unmapped > 0.25 else '  '
+        print(f'{marker} attach_team_games: {_unmapped:.1%} of rows unmapped to a '
+              f'team (league-mean fallback applied)')
     return out
 
 
