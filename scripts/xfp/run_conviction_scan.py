@@ -31,13 +31,14 @@ import unicodedata
 from pathlib import Path
 
 import pandas as pd
+from plv_clone.league_config import MY_TEAM_NAME
 
 _ROOT = Path(__file__).resolve().parents[2]
 for p in (_ROOT, _ROOT / "src", _ROOT / "scripts" / "xfp"):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-MY = "New York Ligers"
+MY = MY_TEAM_NAME
 RES = _ROOT / "data" / "research"
 OUT = _ROOT / "data" / "outputs"
 

@@ -20,7 +20,6 @@ from scipy.stats import pearsonr
 
 # Allow running from repo root without editable install
 _repo_root = Path(__file__).parent.parent
-sys.path.insert(0, str(_repo_root / "src"))
 
 from plv_clone.config import get_config
 from plv_clone.models.pl_plv_model import (

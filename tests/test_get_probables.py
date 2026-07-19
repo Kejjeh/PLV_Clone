@@ -10,7 +10,6 @@ import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(_ROOT / "src"))
 
 from plv_clone.mlb_stats import get_probables, get_schedule
 

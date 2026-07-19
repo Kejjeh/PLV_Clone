@@ -24,7 +24,6 @@ from plv_clone.projections import PROJECTIONS
 
 # scripts/xfp/lib/talent_prior.py -> parents[3] == repo root (plv_clone)
 ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(ROOT / "src"))
 
 _MU = None
 _CALIB = None          # (intercept a, slope b) for rh3_pg = a + b*raw_pg

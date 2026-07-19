@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pandas as pd
 
+from plv_clone.league_config import MY_TEAM_NAME
 from plv_clone.paths import ROOT
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 
@@ -193,9 +194,9 @@ def _classify_style(n_tx, span, avg_pl_add, pct_traj_up, pct_chase,
 
 def navigation_strategy(profiles: list[dict]) -> str:
     """Synthesize a master navigation strategy table from profiles."""
-    me = next((p for p in profiles if p['team'] == 'New York Ligers'), None)
+    me = next((p for p in profiles if p['team'] == MY_TEAM_NAME), None)
     if not me:
-        return 'New York Ligers profile not found.'
+        return f'{MY_TEAM_NAME} profile not found.'
 
     lines = [
         '',
@@ -207,7 +208,7 @@ def navigation_strategy(profiles: list[dict]) -> str:
         '|---|---|---|---|---|---|',
     ]
     for p in profiles:
-        if p['team'] == 'New York Ligers':
+        if p['team'] == MY_TEAM_NAME:
             continue
         style = p['style_label']
         # Bid-against logic: same archetypes we want = overlap = compete

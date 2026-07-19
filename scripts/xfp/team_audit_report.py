@@ -39,7 +39,7 @@ OUT = ROOT / 'data' / 'outputs'
 RES = ROOT / 'data' / 'research'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
-MY_TEAM_NAME = 'New York Ligers'
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def _norm(s):

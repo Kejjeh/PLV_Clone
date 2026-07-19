@@ -61,6 +61,7 @@ def _strip_accents(s):
 # routed to the name_match owner (item 10, 2026-07-04). Proven byte-identical on
 # a diverse name set (accents, suffixes, "Last, First"), so this is a pure move.
 from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def fetch_week_schedule(days_ahead: int = 7) -> pd.DataFrame:
@@ -109,7 +110,7 @@ def main():
     except Exception as _e:
         print(f"  (period cap resolve failed: {type(_e).__name__}; "
               f"using default {week_cap})")
-    ligers = teams[teams['team_name'] == 'New York Ligers']
+    ligers = teams[teams['team_name'] == MY_TEAM_NAME]
     sps = ligers[ligers['position'].isin(['SP', 'P'])][['player_name', 'pro_team']]
     print(f'Ligers SPs: {len(sps)}')
     print(sps['player_name'].tolist())

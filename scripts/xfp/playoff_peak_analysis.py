@@ -25,6 +25,7 @@ import sys
 import pandas as pd
 from plv_clone.projections import PROJECTIONS
 import numpy as np
+from plv_clone.league_config import MY_TEAM_NAME
 
 ROOT = Path('c:/Users/Joshua/plv_clone')
 sys.path.insert(0, str(ROOT))
@@ -166,7 +167,7 @@ def main():
     # Cross-reference with Ligers roster + top FAs
     from plv_clone.league_state import LeagueState
     league = LeagueState()._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
     my_names = {p.name for p in my_team.roster}
     print(f'\n=== LIGERS ROSTER — career playoff lift ===')
     print(f'{"PLAYER":<25s} {"LIFT%":>8s} {"YRS":>4s} {"STD":>7s}')

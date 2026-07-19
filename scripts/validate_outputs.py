@@ -28,7 +28,6 @@ import warnings
 warnings.filterwarnings("ignore")
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
 
 # Force UTF-8 on Windows
 if hasattr(sys.stdout, "reconfigure"):

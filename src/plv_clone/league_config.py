@@ -29,6 +29,11 @@ Replacement-level cutoffs (rank past which a player is on the FA pool):
 """
 from __future__ import annotations
 
+# League identity (audit 2026-07-19 item 7): the team name was hardcoded as
+# a string literal in ~30 files. Import from here.
+MY_TEAM_NAME = "New York Ligers"
+SEASON_YEAR = 2026  # bump at rollover; see audit R2 for the data-driven filters
+
 LEAGUE_SIZE = 8
 ROSTER_SIZE = 26
 STARTERS = 22

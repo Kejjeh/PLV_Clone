@@ -54,8 +54,9 @@ for p in (_ROOT, _ROOT / "src", _ROOT / "scripts" / "xfp"):
         sys.path.insert(0, str(p))
 
 from plv_clone.utils.name_match import join_key as _nrm  # noqa: E402
+from plv_clone.league_config import MY_TEAM_NAME
 
-MY = "New York Ligers"
+MY = MY_TEAM_NAME
 CACHE = _ROOT / "data" / "research" / "fg_proj_cache"
 OUT = _ROOT / "data" / "outputs"
 SYSTEMS = ["steamerr", "rzips", "ratcdc", "rfangraphsdc"]

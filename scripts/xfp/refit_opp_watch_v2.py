@@ -31,6 +31,7 @@ from plv_clone.utils.name_match import join_key as _norm
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from opponent_action_predictor import PROFILES, DEFAULT_PROFILE, _score_player_for_add
+from plv_clone.league_config import MY_TEAM_NAME
 
 RES = ROOT / 'data' / 'research'
 TRI = RES / 'triangulate_universe'
@@ -355,7 +356,7 @@ def main():
                     print(f'    {t:28s} n={v["n"]:2d}  top12 {v["top12"]}/{v["n"]}')
 
     # sensitivity: pooled excluding Josh's own team
-    test_opp = [e for e in test if e['team'] != 'New York Ligers']
+    test_opp = [e for e in test if e['team'] != MY_TEAM_NAME]
     for name, scorer in [('v1', v1_scorer), ('v2', v2)]:
         pooled, _, _ = hit_rates(test_opp, scorer)
         print(f'{name} — TEST excl. NYL: top12 {pooled["top12"]}/{pooled["n"]} ({pooled["top12_rate"]:.1%})')

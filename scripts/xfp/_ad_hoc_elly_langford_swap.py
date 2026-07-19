@@ -12,7 +12,6 @@ from pathlib import Path
 
 ROOT = Path(r"c:/Users/Joshua/plv_clone")
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "src"))
 
 from app.espn_connector import (
     get_my_roster_with_injuries,

@@ -27,9 +27,10 @@ import sys
 
 import numpy as np
 import pandas as pd
+from plv_clone.league_config import MY_TEAM_NAME
 
 STATCAST = 'data/research/xfp_cache/statcast_2026.parquet'
-MY_TEAM = 'New York Ligers'
+MY_TEAM = MY_TEAM_NAME
 
 SWING = {'hit_into_play', 'foul', 'swinging_strike', 'swinging_strike_blocked',
          'foul_tip', 'foul_bunt', 'missed_bunt', 'bunt_foul_tip'}

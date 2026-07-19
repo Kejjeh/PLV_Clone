@@ -624,7 +624,7 @@ def build_rp_snapshots():
 
 
 # ── ESPN roster-status + eligibility ─────────────────────────────────────────
-MY_TEAM_NAME = 'New York Ligers'
+from plv_clone.league_config import MY_TEAM_NAME
 # ESPN exposes slot strings like 'C','1B','2B','3B','SS','LF','CF','RF','OF',
 # 'DH','SP','RP'. We collapse the corner-outfield strings into 'OF' for filters.
 _OUTFIELD_SLOTS = {'OF', 'LF', 'CF', 'RF'}

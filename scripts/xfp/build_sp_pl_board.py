@@ -23,7 +23,7 @@ Inputs (skill regenerates these each run):
 Usage: python scripts/xfp/build_sp_pl_board.py --date 2026-06-30
 """
 import sys, os, json, argparse, unicodedata
-sys.path.insert(0, '.'); sys.path.insert(0, 'src')
+sys.path.insert(0, '.')
 import pandas as pd
 import numpy as np
 from pathlib import Path
@@ -33,8 +33,9 @@ from plv_clone.league_state import default_state
 def get_all_teams():  # league_state migration 2026-07-04 (schema superset)
     return default_state().all_teams()
 from lib.boom_bust import SP_BOOM, SP_BUST  # OWNER: boom/bust cutoffs (never re-type 17/5)
+from plv_clone.league_config import MY_TEAM_NAME
 
-MY = 'New York Ligers'
+MY = MY_TEAM_NAME
 C = Path('data/research/xfp_cache')
 PA = {'single','double','triple','home_run','strikeout','strikeout_double_play','walk','intent_walk',
       'hit_by_pitch','field_out','force_out','grounded_into_double_play','double_play','triple_play',

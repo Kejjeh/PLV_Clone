@@ -22,6 +22,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from plv_clone.league_config import MY_TEAM_NAME
+
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
@@ -431,7 +433,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 {sp_html}
 {context_html}
 {''.join(bucket_html)}
-<div class="meta">New York Ligers · plv_clone · engine: scripts/xfp/build_xfp_boards.py · skill: /xfp-board</div>
+<div class="meta">{MY_TEAM_NAME} · plv_clone · engine: scripts/xfp/build_xfp_boards.py · skill: /xfp-board</div>
 </div></body></html>
 """
 

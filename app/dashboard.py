@@ -22,7 +22,6 @@ import pandas as pd
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT / "src"))
 
 # Anchor cwd to project root so config relative paths resolve correctly
 # regardless of where `streamlit run` was invoked from.
@@ -31,6 +30,7 @@ os.chdir(ROOT)
 from plv_clone.config import get_config
 from plv_clone.utils.provenance import read_build_meta
 from plv_clone.utils.season_stage import infer_stage, get_thresholds
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 # ── Sample-warning row highlight ─────────────────────────────────────────────
@@ -78,7 +78,7 @@ def _render_signal_table(df: pd.DataFrame, name_col: str, extra_cols: list) -> N
 if str(ROOT / "app") not in sys.path:
     sys.path.insert(0, str(ROOT / "app"))
 
-_MY_TEAM = "New York Ligers"
+_MY_TEAM = MY_TEAM_NAME
 
 
 @st.cache_data(ttl=300)

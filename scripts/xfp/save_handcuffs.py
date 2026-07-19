@@ -24,6 +24,7 @@ import sys
 import pandas as pd
 
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
 
@@ -121,7 +122,7 @@ def main():
               f'SV={r["saves"]} HLD={r["holds"]} G={r["games"]}')
 
     # Per-Ligers RP, show their leverage rank
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
     my_rps = [p.name for p in my_team.roster
               if 'RP' in (getattr(p, 'eligibleSlots', None) or [])]
     print(f'\n=== LIGERS RPs LEVERAGE RANK ===')

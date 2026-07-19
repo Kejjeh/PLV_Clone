@@ -38,13 +38,8 @@ _ROOT = Path(__file__).resolve().parents[3]
 _BOX_PITCHERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_pitchers.parquet"
 _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.parquet"
 
-# The BrownU scoring formula has ONE owner (audit 2026-07-03). Bootstrap src/ so the
-# import works regardless of caller path setup. Proven identical to the old inline
-# formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
-import sys as _sys
-_SRC = _ROOT / "src"
-if str(_SRC) not in _sys.path:
-    _sys.path.insert(0, str(_SRC))
+# The BrownU scoring formula has ONE owner (audit 2026-07-03). Proven identical to the
+# old inline formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
 
 

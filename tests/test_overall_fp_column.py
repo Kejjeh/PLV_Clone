@@ -19,7 +19,6 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT / "scripts" / "xfp"))
-sys.path.insert(0, str(_ROOT / "src"))
 
 from build_player_profiles_dashboard import annotate_overall_fp
 

@@ -26,7 +26,6 @@ import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
-sys.path.insert(0, str(ROOT / "src"))
 
 BX_CSV = ROOT / "data" / "research" / "xfp_cache" / "bx_priors_2018_2026.csv"
 OUT_JSON = (ROOT / "data" / "research" / "validation_runs"

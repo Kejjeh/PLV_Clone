@@ -50,9 +50,10 @@ except Exception:  # pragma: no cover - graceful degrade
     _rp_decline_tier_map = lambda: {}  # noqa: E731
 
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 TRI = ROOT / 'data' / 'research' / 'triangulate_universe'
 FA_SNAP_DIR = ROOT / 'data' / 'research' / 'fa_snapshots'
-MY_TEAM = 'New York Ligers'
+MY_TEAM = MY_TEAM_NAME
 
 # Behavioral pitch templates — keyed by opponent_profiler style label.
 PITCH_TEMPLATES = {

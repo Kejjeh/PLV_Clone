@@ -24,6 +24,7 @@ from sklearn.preprocessing import StandardScaler
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_fg_pitch_modeling_inseason import load as load_hist, real_ip  # noqa: E402
+from plv_clone.league_config import MY_TEAM_NAME
 
 ROOT = Path(__file__).resolve().parents[2]
 FG = ROOT / "data" / "research" / "fg_asof"
@@ -33,7 +34,7 @@ MIN_GS = 5
 FG_STALE_DAYS = 5          # FG rate stats stabilize but drift; warn past this
 RECENT_APPS = 6            # window for recency-aware role classification
 RECENT_START_RATIO = 0.6   # >= this share of recent apps as starts => SP
-MY_TEAM = "New York Ligers"
+MY_TEAM = MY_TEAM_NAME
 
 
 def _warn_if_fg_stale(path):

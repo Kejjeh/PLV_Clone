@@ -31,6 +31,7 @@ from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 RES = ROOT / 'data' / 'research'
@@ -201,7 +202,7 @@ def main():
     else:
         from plv_clone.league_state import LeagueState
         league = LeagueState()._get_league()
-        my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+        my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
         my_names = {p.name for p in my_team.roster}
         ligers_rows = rh[rh['player_name'].isin(my_names)]
         target_ids = set(ligers_rows['batter'].astype(int))

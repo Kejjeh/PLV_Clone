@@ -58,6 +58,7 @@ BOX_P = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
 # _norm routed to the name_match owner (item 10, 2026-07-04). Self-consistent:
 # the draft_map / rost dicts are built + looked up with this helper.
 from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 # Per-opponent behavioral profiles (v1: hardcoded from manager-rating audit).
@@ -70,7 +71,7 @@ from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 #   draft_capital     : how protective of late-round picks they are (lower = more willing to drop)
 PROFILES = {
     'Late Night Bettsing':       dict(pl=0.40, traj=0.30, model=0.10, outcome=0.05, role=0.10, draft=0.05),
-    'New York Ligers':           dict(pl=0.15, traj=0.25, model=0.40, outcome=0.05, role=0.10, draft=0.05),  # Josh's own model + process
+    MY_TEAM_NAME:           dict(pl=0.15, traj=0.25, model=0.40, outcome=0.05, role=0.10, draft=0.05),  # Josh's own model + process
     "Frendy's Fantastic Team":   dict(pl=0.30, traj=0.05, model=0.05, outcome=0.50, role=0.05, draft=0.05),  # outcome chaser
     'Team Solomon':              dict(pl=0.30, traj=0.10, model=0.10, outcome=0.30, role=0.15, draft=0.05),  # save chaser
     "Boone's Bad Bullpen":       dict(pl=0.20, traj=0.15, model=0.15, outcome=0.25, role=0.20, draft=0.05),  # coin flip

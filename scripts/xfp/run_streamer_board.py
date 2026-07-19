@@ -51,8 +51,9 @@ from app.espn_connector import get_all_teams
 from lib.boom_bust import SP_BOOM, SP_BUST
 from lib.extra_lenses import floor_adjusted_xfp, floor_flag, floor_lens, park_fp_adj
 from plv_clone.utils.name_match import resolve_pitcher_id
+from plv_clone.league_config import MY_TEAM_NAME
 
-MY = "New York Ligers"
+MY = MY_TEAM_NAME
 RP3_CSV = _ROOT / "data" / "outputs" / "xfp_rp3_projections.csv"
 BOX = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_pitchers.parquet"
 

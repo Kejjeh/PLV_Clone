@@ -42,7 +42,6 @@ from plv_clone.projections import PROJECTIONS
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / 'src'))
 
 from plv_clone.utils.name_match import lookup_batter_id_cached       # noqa
 from scripts.xfp.hitter_sustainability import classify, _norm         # noqa
@@ -63,8 +62,9 @@ from plv_clone.league_state import LeagueState          # noqa
 from scripts.xfp.injury_signals import (                               # noqa
     batch_injury_status, classify_injury_impact, enrich_from_roster_df,
 )
+from plv_clone.league_config import MY_TEAM_NAME
 
-MY_TEAM = "New York Ligers"
+MY_TEAM = MY_TEAM_NAME
 TODAY = date.today().isoformat()
 CURRENT_MONTH = date.today().month
 CACHE = ROOT / "data" / "research" / "xfp_cache"

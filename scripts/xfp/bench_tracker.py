@@ -26,6 +26,7 @@ import pandas as pd
 from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
 from plv_clone.fantasy.scoring import pitcher_fp
+from plv_clone.league_config import MY_TEAM_NAME
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -82,7 +83,7 @@ def main():
     SNAPS.mkdir(parents=True, exist_ok=True)
     from plv_clone.league_state import LeagueState
     league = LeagueState()._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
 
     # For each player on roster, compute fp earned last week
     week_end = pd.Timestamp(date.today())
