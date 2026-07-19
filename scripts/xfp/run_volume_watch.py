@@ -24,6 +24,11 @@ Sections:
 Output: console + data/outputs/volume_watch.csv
 """
 import sys, argparse, unicodedata
+# Windows cp1252 console guard — sections print — etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 sys.path.insert(0, '.')
 import numpy as np
 import pandas as pd

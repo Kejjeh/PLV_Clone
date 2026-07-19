@@ -34,10 +34,11 @@ def _ensure_actual_cols(df: pd.DataFrame) -> pd.DataFrame:
 def _period_closed(period_first_snapshot_date: pd.Timestamp, today: pd.Timestamp) -> bool:
     """Period covers Mon-Sun starting from first-snapshot's ISO week.
 
-    Thin wrapper around the pure helpers in scripts/xfp/lib/period_math.py.
+    Thin wrapper around the pure helpers in scripts/xfp/lib/period_meta.py
+    (merged from the single-importer lib/period_math.py, audit 2026-07-19).
     Centralized 2026-06-06 (PR 3a) so the math has one home + parametrized tests.
     """
-    from scripts.xfp.lib.period_math import compute_period_window, is_period_closed
+    from scripts.xfp.lib.period_meta import compute_period_window, is_period_closed
     _, period_end = compute_period_window(period_first_snapshot_date.date())
     return is_period_closed(period_end, today.date())
 

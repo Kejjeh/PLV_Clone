@@ -121,8 +121,9 @@ MIN_PRIOR_GAMES = 20
 # ---------------------------------------------------------------------------
 # Cached helpers
 # ---------------------------------------------------------------------------
-@lru_cache(maxsize=1)
-
+# (2026-07-19 fix: a stray blank line bound @lru_cache to _today_et instead of
+# the games loader below — freezing "today" for process lifetime while the
+# statcast panel re-read on EVERY component call. Cache moved to the loader.)
 def _today_et():
     """Date in America/New_York (audit 2026-07-04): the hourly UTC runner made
     date.today() flip to TOMORROW during 8pm-2am ET games — Sunday-night builds
@@ -132,6 +133,7 @@ def _today_et():
     return datetime.now(ZoneInfo('America/New_York')).date()
 
 
+@lru_cache(maxsize=1)
 def _load_batter_games_2026() -> pd.DataFrame:
     """Per-(batter, game) panel for 2026 — same construction as
     analyze_hitter_boom_bust.py (one row per PA, aggregated to game).

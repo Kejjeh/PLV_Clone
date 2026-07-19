@@ -220,15 +220,25 @@ def main():
     hdr = (f"{'pitcher':<21}{('owner' if has_own else 'tm'):<16}{'GS':>3}{'Stuff+':>8}"
            f"{'curFP':>8}{'projFP':>9}{'b/o gap':>9}{'d_proj':>8}")
 
+    def emit(r, suffix=""):
+        # per-player crash guard (audit 2026-07-19 item 22, collect_cards
+        # pattern): one bad row (NaN int cast, missing field) must not kill
+        # the board — warn one line and continue.
+        try:
+            print(fmt(r) + suffix)
+        except Exception as e:
+            print(f"WARN sp_stuff row {getattr(r, 'player_name_fg', '?')}: "
+                  f"{type(e).__name__}: {e} — skipped")
+
     print("=== TOP 20 BY PROJECTED RoS FP/START (league-wide) ===")
     print(hdr); print("-" * len(hdr))
     for _, r in d.nlargest(20, "proj_ros_fp").iterrows():
-        print(fmt(r))
+        emit(r)
 
     print("\n=== TOP 20 BREAKOUT CANDIDATES (elite Stuff+, lagging results) ===")
     print(hdr); print("-" * len(hdr))
     for _, r in d[d["stuff_pctl"] >= 60].nlargest(20, "breakout_gap").iterrows():
-        print(fmt(r))
+        emit(r)
 
     if has_own:
         mine = d[d["own"] == "MINE"].sort_values("proj_ros_fp", ascending=False)
@@ -236,18 +246,17 @@ def main():
         print(f"\n=== YOUR SP STAFF ({len(mine)}) - ranked by projected RoS FP ===")
         print(hdr); print("-" * len(hdr))
         for _, r in mine.iterrows():
-            print(fmt(r))
+            emit(r)
         worst_mine = mine["proj_ros_fp"].min() if len(mine) else 0
         print(f"\n=== TOP 15 FA SPs (projFP) - upgrades over your weakest "
               f"projected starter ({worst_mine:.1f}) flagged * ===")
         print(hdr); print("-" * len(hdr))
         for _, r in fa.nlargest(15, "proj_ros_fp").iterrows():
-            star = " *" if r.proj_ros_fp > worst_mine else ""
-            print(fmt(r) + star)
+            emit(r, " *" if r.proj_ros_fp > worst_mine else "")
         print(f"\n=== TOP 12 FA BREAKOUT TARGETS (b/o gap, Stuff+ pctl>=60) ===")
         print(hdr); print("-" * len(hdr))
         for _, r in fa[fa["stuff_pctl"] >= 60].nlargest(12, "breakout_gap").iterrows():
-            print(fmt(r))
+            emit(r)
 
 
 if __name__ == "__main__":

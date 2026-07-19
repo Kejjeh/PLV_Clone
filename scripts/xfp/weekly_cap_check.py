@@ -21,6 +21,12 @@ import argparse
 import re
 import sys
 import unicodedata
+
+# Windows cp1252 console guard — header prints —/→/· etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 

@@ -7,6 +7,11 @@ changes.
 """
 from __future__ import annotations
 import os, sys
+# Windows cp1252 console guard — this report prints —/→/⚠ etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 from datetime import datetime, date
 from pathlib import Path
 import pandas as pd
@@ -15,7 +20,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from plv_clone.league_state import LeagueState
-from plv_clone.utils.name_match import fuzzy_match_name
+from plv_clone.utils.name_match import build_safe_name_index, safe_lookup
 from scripts.xfp.lib.pitcher_role import build_role_lookup, detect_pitcher_role
 
 _BS_PITCHERS = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
@@ -47,12 +52,32 @@ pd.set_option('display.width', 250)
 pd.set_option('display.max_columns', 30)
 
 
-def match(df_proj, name_col, projection_col, roster_player):
-    m = fuzzy_match_name(roster_player, df_proj[name_col].tolist())
-    if m:
-        row = df_proj[df_proj[name_col] == m].iloc[0]
-        return row[projection_col], int(row['rank']) if pd.notna(row.get('rank')) else None
-    return None, None
+def match(df_proj, name_index, projection_col, player_name, team=None):
+    """Collision-safe projection lookup (CLAUDE.md rule 10).
+
+    Exact normalized full-name join via `safe_lookup` (accents/suffixes/
+    'Last, First' handled), with `team` breaking true same-name collisions
+    (Max Muncy LAD vs ATH). NEVER fuzzy: the old difflib-0.78 path let FA
+    prospect "Hayden Alvarez" inherit Yordan Alvarez's rh3 row and invented
+    "Bryce Mayer" from Bryce Miller (2026-07-19). No/ambiguous match →
+    (None, None); the row is skipped, not guessed.
+    """
+    lbl = safe_lookup(player_name, name_index, team=team)
+    if lbl is None:
+        return None, None
+    row = df_proj.loc[lbl]
+    return row[projection_col], int(row['rank']) if pd.notna(row.get('rank')) else None
+
+
+def join_proj(df, df_proj, name_index, projection_col):
+    """Add `proj`/`rank` to `df` by collision-safe name join (one lookup per
+    row, team-hinted from `pro_team`)."""
+    pairs = [match(df_proj, name_index, projection_col,
+                   r['player_name'], team=r.get('pro_team'))
+             for _, r in df.iterrows()]
+    df['proj'] = [p[0] for p in pairs] if pairs else pd.Series(dtype=float)
+    df['rank'] = [p[1] for p in pairs] if pairs else pd.Series(dtype=float)
+    return df
 
 
 def main():
@@ -81,6 +106,15 @@ def main():
     rh3 = pd.read_csv(proj_files['rh3']).dropna(subset=['player_name'])
     rp3 = pd.read_csv(proj_files['rp3']).dropna(subset=['player_name'])
     rprs2 = pd.read_csv(proj_files['rprs2']).dropna(subset=['name_api'])
+
+    # Collision-safe name indexes, built ONCE per projection frame (rule 10).
+    # rh3 carries a team column, so its true same-name collisions (both Max
+    # Muncys appear as the identical string) resolve via the pro_team hint;
+    # rp3/rprs2 have no team column → ambiguous names skip rather than guess.
+    rh3_idx = build_safe_name_index(
+        rh3['player_name'], rh3['team'] if 'team' in rh3.columns else None)
+    rp3_idx = build_safe_name_index(rp3['player_name'])
+    rprs2_idx = build_safe_name_index(rprs2['name_api'])
 
     # Boxscore bridge: recent actual start stats (fills statcast lag).
     # Build name→mlbam from rp3, then look up each rostered SP's last start.
@@ -159,18 +193,15 @@ def main():
     banked_mine = _banked.get('my_banked')
 
     hitters = roster[~roster['position'].isin(['SP', 'RP', 'P'])].copy()
-    hitters['proj'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[0])
-    hitters['rank'] = hitters['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[1])
+    hitters = join_proj(hitters, rh3, rh3_idx, 'xfp_rh3_per_pa')
     hit_drops = hitters.sort_values('proj', ascending=True, na_position='first').head(3)
 
     sps = roster[(roster['effective_role'] == 'SP') & (~roster['injured'])].copy()
-    sps['proj'] = sps['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[0])
-    sps['rank'] = sps['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[1])
+    sps = join_proj(sps, rp3, rp3_idx, 'xfp_rp3_per_start')
     sp_drops = sps.sort_values('proj', ascending=True, na_position='first').head(3)
 
     rps = roster[(roster['effective_role'] == 'RP') & (~roster['injured'])].copy()
-    rps['proj'] = rps['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[0])
-    rps['rank'] = rps['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[1])
+    rps = join_proj(rps, rprs2, rprs2_idx, 'xfp_ros')
     rp_drops = rps.sort_values('proj', ascending=True, na_position='first').head(2)
 
     # Bug fix: was get_free_agents(position='SP', size=200) — silently truncates pool.
@@ -180,15 +211,18 @@ def main():
     fa_all = get_free_agents()
     fa_sp_all = fa_all[fa_all['position'] == 'SP'].copy()
     fa_sp = fa_sp_all[fa_sp_all['percent_owned'] < 95].copy()
-    fa_sp['proj'] = fa_sp['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[0])
-    fa_sp['rank'] = fa_sp['player_name'].apply(lambda n: match(rp3, 'player_name', 'xfp_rp3_per_start', n)[1])
+    fa_sp = join_proj(fa_sp, rp3, rp3_idx, 'xfp_rp3_per_start')
     fa_sp = fa_sp.dropna(subset=['proj']).sort_values('proj', ascending=False).head(10)
 
     # Recency outlier alert: FA SPs where L21d form significantly exceeds model projection.
     # Criteria: gs_to >= 10, recency_form_gap > 2.5 — "model may be lagging" candidates
     # the main rp3-ranked table misses because the model weights longer history.
     # NOTE: cross-reference against full FA SP pool (not just top-10 above).
-    fa_sp_all_names = fa_sp_all['player_name'].tolist()
+    # Collision-safe: exact normalized name join against the FA pool. The old
+    # fuzzy pass could tag rostered "Rogers, Trevor" as FA via Tyler Rogers.
+    fa_sp_pool_idx = build_safe_name_index(
+        fa_sp_all['player_name'],
+        fa_sp_all['pro_team'] if 'pro_team' in fa_sp_all.columns else None)
     rp3_all = pd.read_csv(proj_files['rp3']).dropna(subset=['player_name'])
     recency_cols = {'gs_to', 'recency_form_gap', 'fp_per_start_last21'}
     if recency_cols.issubset(set(rp3_all.columns)):
@@ -199,8 +233,7 @@ def main():
         ].copy()
         recency_matches = []
         for _, row in recency_outliers.iterrows():
-            m = fuzzy_match_name(row['player_name'], fa_sp_all_names)
-            if m:
+            if safe_lookup(row['player_name'], fa_sp_pool_idx) is not None:
                 recency_matches.append(row)
         recency_alerts = pd.DataFrame(recency_matches) if recency_matches else pd.DataFrame()
     else:
@@ -208,15 +241,13 @@ def main():
 
     # Bug fix: was get_free_agents(size=300) — size param ignored by wrapper; made explicit.
     fa_hit = fa_all[~fa_all['position'].isin(['SP', 'RP', 'P'])].copy()
-    fa_hit = fa_hit[fa_hit['percent_owned'] < 95]
-    fa_hit['proj'] = fa_hit['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[0])
-    fa_hit['rank'] = fa_hit['player_name'].apply(lambda n: match(rh3, 'player_name', 'xfp_rh3_per_pa', n)[1])
+    fa_hit = fa_hit[fa_hit['percent_owned'] < 95].copy()
+    fa_hit = join_proj(fa_hit, rh3, rh3_idx, 'xfp_rh3_per_pa')
     fa_hit = fa_hit.dropna(subset=['proj']).sort_values('proj', ascending=False).head(5)
 
     fa_rp = fa_all[fa_all['position'] == 'RP'].copy()
     fa_rp = fa_rp[fa_rp['percent_owned'] < 95].copy()
-    fa_rp['proj'] = fa_rp['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[0])
-    fa_rp['rank'] = fa_rp['player_name'].apply(lambda n: match(rprs2, 'name_api', 'xfp_ros', n)[1])
+    fa_rp = join_proj(fa_rp, rprs2, rprs2_idx, 'xfp_ros')
     fa_rp = fa_rp.dropna(subset=['proj']).sort_values('proj', ascending=False).head(3)
 
     # ─── Output ────────────────────────────────────────────────────────
