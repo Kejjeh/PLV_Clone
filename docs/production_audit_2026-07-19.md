@@ -128,10 +128,34 @@ already pass `timeout=`.
    finding: `lib/boom_bust._ip_to_float` is NOT wrong — its docstring
    describes the naive-float bug it deliberately avoids.
 
+## Tranche 3 — SHIPPED 2026-07-19 (commits db77bcd + e9c41ae)
+
+- **5/D2 model-scaffolding dedup — DONE.** engine.py gains fit_fingerprint /
+  cross_year_eval_ridge / fit_residual_ci_from / train_final_ridge; rh3/rp3/
+  rprs2 delegate (rprs2 keeps its specialized cross_year_eval). Golden:
+  rp3+rprs2 byte-identical; rh3 COLD-vs-COLD identical. **Watch item
+  discovered:** rh3/rp3 LOO training includes in-progress-season rows the
+  warm-skip fingerprint doesn't cover, so CI/sigma artifacts stay frozen
+  between fingerprint bumps — surfaced for review, NOT changed (Rule 9).
+- **6 sys.path (src subset) — DONE.** 55 redundant src-inserts removed
+  (editable install covers them). Packaging lib/ + remaining root inserts
+  still open (below).
+- **7 constants (team name) — DONE.** MY_TEAM_NAME + SEASON_YEAR in
+  plv_clone.league_config; 41 literals across 34 files codemodded. ALSO:
+  league_config existed as TWO byte-identical copies (src + scripts/xfp) —
+  scripts copy collapsed to a re-export shim; the dormant HD=3 was fixed in
+  the src copy too. Path-string + year-literal codemods still open.
+- **8/M3 ESPN retry — DONE.** League construction retries 3x w/ backoff.
+- **12/M5 cached_data mtime keys — DONE.** projection/archetype/pl_cache
+  loaders keyed on file mtime (rp_volume_g + streamer loaders still plain).
+- **13/R4 gf-bridge drop counter — DONE.** Counted + >20% loud warning.
+- **14/R5 visibility guards — DONE.** rh3 master_hitter match rate, rp3
+  schedule-cache age, volume attach unmapped fraction (values unchanged).
+
 ## Backlog (ranked; each verified against source, none started)
 
 ### High impact
-5. **Model-scaffolding dedup (D2).** `cross_year_eval` / `train_final` /
+(5.) **Model-scaffolding dedup (D2) — DONE above.** `cross_year_eval` / `train_final` /
    `_fit_fingerprint` / warm-load / pred-bucket loops copy-pasted across
    rh3/rp3/rprs2 → engine.py. Load-bearing: ship behind byte-identical
    golden-projection tests.
