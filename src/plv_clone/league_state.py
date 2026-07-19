@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import logging
 import time
+from pathlib import Path
 from typing import Optional
 
 import pandas as pd
@@ -563,14 +564,56 @@ class LeagueState:
 
         Uses ESPN's public athlete endpoint (no auth required). Players
         with no current injury record come back with NaN fields.
+
+        Snapshot read-through (audit 2026-07-19 F3): when PLV_ESPN_SNAPSHOT=1
+        (set only by the refresh_dashboards driver), per-player records are
+        served from a short-TTL accumulating JSON cache so the ~4 refresh
+        steps that each sweep the injured subset (~30-80 HTTP GETs apiece)
+        share one fetch per player per run. days_until_return is recomputed
+        from the cached return_date at read time. Fail-open: any cache
+        problem falls through to the live fetch. Interactive use (env var
+        unset) is unaffected.
         """
+        import json as _json
+        import os as _os
+        import time as _time
         import requests
         from datetime import date, datetime
 
+        _snap_on = _os.environ.get("PLV_ESPN_SNAPSHOT") == "1"
+        _ttl_s = float(_os.environ.get("PLV_ESPN_SNAPSHOT_TTL_MIN", "180")) * 60
+        _snap_path = (Path(__file__).resolve().parents[2]
+                      / "data" / "research" / "espn_snapshot" / "injury_details.json")
+        _snap: dict = {}
+        if _snap_on:
+            try:
+                if _snap_path.exists():
+                    _snap = _json.loads(_snap_path.read_text(encoding="utf-8"))
+            except Exception:
+                _snap = {}
+
+        def _row_from_snap(entry):
+            row = dict(entry["row"])
+            rd = row.get("return_date")
+            if rd:
+                try:
+                    rdt = datetime.fromisoformat(rd).date()
+                    row["return_date"] = rdt
+                    row["days_until_return"] = (rdt - date.today()).days
+                except Exception:
+                    row["return_date"] = None
+            return row
+
+        _fetched_any = False
         rows = []
         for pid in player_ids:
             if pid is None:
                 continue
+            if _snap_on:
+                entry = _snap.get(str(pid))
+                if entry and (_time.time() - float(entry.get("ts", 0))) < _ttl_s:
+                    rows.append(_row_from_snap(entry))
+                    continue
             url = (
                 "https://site.web.api.espn.com/apis/common/v3/sports/baseball/mlb/"
                 f"athletes/{pid}"
@@ -588,6 +631,9 @@ class LeagueState:
             injuries = athlete.get("injuries", []) or []
             if not injuries:
                 rows.append({"player_id": pid})
+                if _snap_on:
+                    _snap[str(pid)] = {"ts": _time.time(), "row": {"player_id": pid}}
+                    _fetched_any = True
                 continue
 
             inj = injuries[0]
@@ -604,7 +650,7 @@ class LeagueState:
                 except Exception:
                     pass
 
-            rows.append({
+            row = {
                 "player_id": pid,
                 "injury_type": details.get("type")
                 or inj.get("type", {}).get("description", ""),
@@ -615,7 +661,20 @@ class LeagueState:
                 "status_code": (inj.get("type", {}) or {}).get("abbreviation", ""),
                 "short_comment": inj.get("shortComment", ""),
                 "long_comment": inj.get("longComment", ""),
-            })
+            }
+            rows.append(row)
+            if _snap_on:
+                srow = dict(row)
+                srow["return_date"] = return_dt.isoformat() if return_dt else None
+                _snap[str(pid)] = {"ts": _time.time(), "row": srow}
+                _fetched_any = True
+
+        if _snap_on and _fetched_any:
+            try:
+                _snap_path.parent.mkdir(parents=True, exist_ok=True)
+                _snap_path.write_text(_json.dumps(_snap), encoding="utf-8")
+            except Exception:
+                pass
 
         return pd.DataFrame(rows)
 

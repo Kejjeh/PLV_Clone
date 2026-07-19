@@ -288,8 +288,9 @@ def main():
         milb_pri = pd.read_csv(MILB_PRIORS_CSV)[['pitcher', 'projected_fp_per_start']]
         milb_pri = milb_pri.rename(columns={'projected_fp_per_start': 'milb_prior_fp'})
         rolling = rolling.merge(milb_pri, on='pitcher', how='left')
-        # Fill NaN MLB-prior rows in 2026 with MiLB prior where available
-        is_2026 = rolling['year'] == 2026
+        # Fill NaN MLB-prior rows in the current season with MiLB prior where
+        # available (data-driven year — audit R2, no hardcoded 2026)
+        is_2026 = rolling['year'] == int(rolling['year'].max())
         needs_fallback = is_2026 & rolling['prior_fp_per_start'].isna()
         has_milb = needs_fallback & rolling['milb_prior_fp'].notna()
         rolling.loc[has_milb, 'prior_fp_per_start'] = rolling.loc[has_milb, 'milb_prior_fp']
@@ -456,8 +457,10 @@ def main():
             print(f'    {f:<28s} {c:+.4f}')
 
 
-    # Project 2026
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # Project the current season = latest year in the substrate (audit R2:
+    # the old hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
         return
     latest_split = int(df_26['split_day'].max())
@@ -486,7 +489,7 @@ def main():
     IL_PRIOR_MIN_GS = 5  # need ≥5 GS-equivalent of prior history
     projected_ids = set(valid['pitcher'])
     prior_only = prior[~prior['pitcher'].isin(projected_ids)
-                        & (prior['year'] == 2026)
+                        & (prior['year'] == proj_year)
                         & (prior['prior_gs_eff'] >= IL_PRIOR_MIN_GS)].copy()
     if not prior_only.empty:
         prior_only['xfp_rp3_per_start'] = (prior_only['prior_fp_per_start']

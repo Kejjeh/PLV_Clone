@@ -78,31 +78,59 @@ already pass `timeout=`.
 
 ---
 
+## Backlog items 1-4 — SHIPPED 2026-07-19 (second commit, same day)
+
+1. **ESPN snapshot layer (F3) — DONE, redesigned per survey.** Key finding:
+   `league.teams` comes free with League construction; the real duplicate
+   network cost was 5-6 `free_agents(size=2000)` pulls + ~4 per-player
+   injury-HTTP sweeps per night. Implementation (env-gated, fail-open):
+   - `plv_clone/espn.py::_wrap_free_agents_with_snapshot` — when
+     `PLV_ESPN_SNAPSHOT=1`, the plain big-pool pull is served from a
+     short-TTL pickle (`data/research/espn_snapshot/`, gitignored). One
+     seam covers every consumer because all League handles come from the
+     lru-cached `_get_league()` factory. Verified live: disk hit 0.017s vs
+     1.12s live, Player attrs intact through pickle.
+   - `league_state.injury_details` — accumulating per-player JSON cache with
+     TTL + `days_until_return` recomputed from cached `return_date` at read
+     time (verified: date round-trips as a real `date`). All refresh-path
+     injury consumers route through this one method (survey).
+   - `refresh_dashboards.main()` sets `PLV_ESPN_SNAPSHOT=1` (+TTL 240) for
+     all child steps; interactive/skill use never sets it → stays live.
+2. **Volume-pipeline dedup + team-games cache (D1/W4) — DONE.** New
+   `scripts/xfp/lib/volume_model.py` (team-games + catcher-flags scans with
+   PER-YEAR mtime-guarded parquet caches, attach, make_pipe, cross_year_eval,
+   tercile_calibration, check_gates — bodies extracted verbatim,
+   parametrized). Hitter + SP pipelines slimmed to config + prepare/eligible/
+   main; RP keeps its by-design-different scan/gates but shares the eval
+   primitives. The 7 immutable historical parquets are no longer re-read
+   nightly (~2.5 GB/night IO removed). **Golden check: all three projection
+   CSVs byte-IDENTICAL before/after.**
+3. **Year-2026 rollover (R2/R3) — filters + dynamic scans DONE.**
+   `proj_year = int(rolling['year'].max())` replaces every `== 2026` in
+   rh3/rp3/rprs2 + the three volume pipelines; statcast scan ranges are now
+   `range(2018, current_year+1)`; rprs2's counting-stats path follows
+   proj_year. Execution-tested: all three models run clean, row counts match
+   production, rprs2 join match rate 100%. REMAINING (offseason): the
+   `*_2018_2026.csv` substrate FILENAMES are a cross-builder naming
+   convention — parameterizing them needs a coordinated pass through the
+   rolling/multiyr builders (single-constant change per file at rollover).
+4. **FP-formula consolidation (H2/§5) — production paths DONE, bit-safely.**
+   Because float addition is non-associative, only sites whose operand order
+   matches `scoring.pitcher_fp` exactly were swapped to the helper
+   (bit-identical by construction): `build_rolling_pitchers`,
+   `build_sp_multiyr`, `build_multiyr_fp_store`, `build_weekly_fp_substrate`
+   (runs-as-ER proxy documented). `rprs2.py` (RP-order site) swapped and
+   **A/B-verified: projections CSV identical**. DEFERRED (order-mismatched,
+   would need per-file re-verification): `build_rolling_relievers:290`,
+   `build_relievers_multiyr:46/193`, `build_subseason_variance_bands:293`,
+   `monitor_drift:175` + its local parse_ip (different None semantics than
+   `scoring._parse_ip` — do not blind-swap). CORRECTION to the original
+   finding: `lib/boom_bust._ip_to_float` is NOT wrong — its docstring
+   describes the naive-float bug it deliberately avoids.
+
 ## Backlog (ranked; each verified against source, none started)
 
 ### High impact
-1. **ESPN snapshot step (F3).** ~8-10 independent ESPN pulls/night (5-6 full
-   `free_agents(size=2000)` pages) across steps 0.5/0.6/0.7/2a/4.05/4.72a/
-   4.55/4.10a because each step is its own subprocess. One early snapshot step
-   → dated JSON → point consumers at it with an mtime guard. ~5-8× ESPN diet.
-2. **Volume-pipeline dedup + team-games cache (D1/W4).** The three volume
-   pipelines are ~90% copy-paste (~250 lines: `build_team_games`,
-   `attach_team_games`, eval scaffolding) AND each rebuilds the identical
-   `(year,team)→game-dates` schedule from ~8 statcast parquets nightly
-   (hitter volume reads them twice via `build_catcher_flags`). Hoist to
-   `lib/volume_model.py` + materialize team-games once, keyed on parquet
-   mtimes. Biggest redundant-IO item.
-3. **Year-2026 rollover hardening (R2/R3).** Every model hardcodes 2026
-   (`rh3.py:539`, `rp3.py:460/489`, `rprs2.py:355/384`, volume pipelines,
-   `range(2018,2027)` scans, `*_2026.csv` paths). On 2027-01-01 all three
-   models silently no-op. Derive `PROJ_YEAR` + parameterize paths. Do in the
-   offseason with a golden-output equivalence check.
-4. **FP-formula consolidation (H2/§5).** Canonical `fantasy/scoring.py` exists
-   but the formula is hand-inlined in ~15 substrate/engine files (40+ counting
-   `ip*3.3` in research scripts), incl. `rprs2.py:394` with its own `parse_ip`.
-   A known-wrong IP-notation variant already exists in the wild
-   (`lib/boom_bust.py:150` note). Sweep the production files onto
-   `scoring.pitcher_fp/hitter_fp/_parse_ip`, guarded by test_scoring_parity.
 5. **Model-scaffolding dedup (D2).** `cross_year_eval` / `train_final` /
    `_fit_fingerprint` / warm-load / pred-bucket loops copy-pasted across
    rh3/rp3/rprs2 → engine.py. Load-bearing: ship behind byte-identical

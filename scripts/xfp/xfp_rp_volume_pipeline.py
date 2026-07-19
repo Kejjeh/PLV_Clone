@@ -48,6 +48,9 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from lib.volume_model import make_pipe as _lib_make_pipe, \
+    cell_spearman as _lib_cell_spearman, wavg as _lib_wavg
+
 warnings.filterwarnings('ignore')
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -106,7 +109,8 @@ def build_schedule_and_relief_apps() -> tuple[pd.DataFrame, dict]:
     """
     tg_frames = []
     relief_apps: dict[tuple[int, int], np.ndarray] = {}
-    for yr in list(range(2018, 2027)):
+    from datetime import date as _date
+    for yr in list(range(2018, _date.today().year + 1)):
         if yr == 2020:
             continue
         p_path = CACHE / f'statcast_{yr}.parquet'
@@ -270,32 +274,18 @@ def eligible(df: pd.DataFrame, need_target: bool = True) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------- eval
+# make_pipe / cell_spearman / wavg: shared lib.volume_model (hoisted 2026-07-19);
+# thin local aliases keep the RP-specific call sites unchanged.
 def _make_pipe():
-    from sklearn.linear_model import RidgeCV
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    return Pipeline([('sc', StandardScaler()),
-                     ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
+    return _lib_make_pipe()
 
 
 def _cell_spearman(sub: pd.DataFrame, pred_col: str) -> list[tuple[int, float]]:
-    """[(n, spearman)] per (split_day) cell with n >= MIN_CELL_N."""
-    from scipy.stats import spearmanr
-    out = []
-    for _, g in sub.groupby('split_day'):
-        if len(g) < MIN_CELL_N:
-            continue
-        rho = spearmanr(g[pred_col], g[TARGET]).statistic
-        out.append((len(g), float(rho)))
-    return out
+    return _lib_cell_spearman(sub, pred_col, TARGET, MIN_CELL_N)
 
 
 def _wavg(cells: list[tuple[int, float]]) -> float:
-    if not cells:
-        return np.nan
-    n = np.array([c[0] for c in cells], dtype=float)
-    v = np.array([c[1] for c in cells], dtype=float)
-    return float(np.sum(n * v) / np.sum(n))
+    return _lib_wavg(cells)
 
 
 def cross_year_eval(df: pd.DataFrame):
@@ -381,7 +371,10 @@ def main():
     print(f'rolling: {len(rolling)} rows')
 
     rolling = prepare(rolling)
-    zero_share = float((rolling.loc[rolling['year'] != 2026, 'ros_g'] == 0).mean())
+    # projection year = latest season in the substrate (audit R2: the old
+    # hardcoded 2026 literals would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    zero_share = float((rolling.loc[rolling['year'] != proj_year, 'ros_g'] == 0).mean())
     print(f'ros_g == 0 share (past years, pre-filter): {zero_share:.3f} '
           f'(no truncation — attrition class present)')
 
@@ -416,9 +409,9 @@ def main():
     for f, c in sorted(zip(RP_VOLUME_FEATS, coefs), key=lambda x: -abs(x[1])):
         print(f'    {f:<28s} {c:+.4f}')
 
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
-        print('No 2026 rows — skipping projection output.')
+        print(f'No {proj_year} rows — skipping projection output.')
         return verdict
     latest_split = int(df_26['split_day'].max())
     # SP-volume idiom: each pitcher's MOST-RECENT snapshot within the recency

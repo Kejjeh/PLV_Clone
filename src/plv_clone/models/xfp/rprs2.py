@@ -352,7 +352,10 @@ def main():
 
 
     # Project 2026
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # projection year = latest season in the substrate (audit R2: the old
+    # hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
         return
     latest_split = int(df_26['split_day'].max())
@@ -381,7 +384,10 @@ def main():
     valid['xfp_p25'] = (valid['xfp_full_year'] - Z25 * valid['xfp_sigma']).clip(lower=0)
     valid['xfp_p75'] = valid['xfp_full_year'] + Z25 * valid['xfp_sigma']
 
-    cnt = json.loads((COUNTING_DIR / 'pitcher_counting_stats_2026.json').read_text())
+    # counting-stats path follows the projection year (audit R2). NOTE: the
+    # fp_actual_2026 / sv_2026 / hld_2026 COLUMN names are downstream schema
+    # (dashboards read them) and stay fixed regardless of season.
+    cnt = json.loads((COUNTING_DIR / f'pitcher_counting_stats_{proj_year}.json').read_text())
     cnt_df = pd.DataFrame(cnt)
     def parse_ip(v):
         if v is None or pd.isna(v): return np.nan
@@ -391,10 +397,14 @@ def main():
             return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
         return float(v)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
-    cnt_df['fp_actual_2026'] = (
-        cnt_df['strikeOuts'] + cnt_df['ip']*3.3 + cnt_df['saves']*5
-        + cnt_df['holds']*2 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
-        - cnt_df['hits'] - cnt_df['hitByPitch']
+    # canonical BrownU weights via scoring.pitcher_fp (audit #4 — this was one
+    # of ~15 inline re-derivations). A/B-verified vs the old inline expression
+    # 2026-07-19: projections CSV identical.
+    from plv_clone.fantasy.scoring import pitcher_fp as _pfp
+    cnt_df['fp_actual_2026'] = _pfp(
+        k=cnt_df['strikeOuts'], ip=cnt_df['ip'], h=cnt_df['hits'],
+        er=cnt_df['earnedRuns'], bb=cnt_df['baseOnBalls'],
+        hbp=cnt_df['hitByPitch'], sv=cnt_df['saves'], hld=cnt_df['holds'],
     ).round(1)
     cnt_df = cnt_df[['pitcher','name','saves','holds','fp_actual_2026']].rename(
         columns={'name':'name_api','saves':'sv_2026','holds':'hld_2026'})

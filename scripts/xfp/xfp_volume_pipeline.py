@@ -37,6 +37,13 @@ import warnings
 import numpy as np
 import pandas as pd
 
+from lib.volume_model import (
+    build_team_games, build_catcher_flags, attach_team_games,
+    make_pipe, cross_year_eval as _cross_year_eval,
+    tercile_calibration as _tercile_calibration,
+    check_gates as _check_gates,
+)
+
 warnings.filterwarnings('ignore')
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -79,81 +86,8 @@ VOLUME_FEATS = [
 ]
 
 
-# ---------------------------------------------------------------- team games
-def build_team_games() -> pd.DataFrame:
-    """Per (year, team): sorted array of distinct game dates (one per game_pk).
-
-    Returns long frame (year, team, game_date) with one row per team-game.
-    """
-    frames = []
-    for yr in list(range(2018, 2027)):
-        if yr == 2020:
-            continue
-        p = CACHE / f'statcast_{yr}.parquet'
-        if not p.exists():
-            continue
-        d = pd.read_parquet(p, columns=['game_pk', 'game_date', 'home_team', 'away_team'])
-        d = d.drop_duplicates('game_pk')
-        d['game_date'] = pd.to_datetime(d['game_date'])
-        home = d[['game_pk', 'game_date', 'home_team']].rename(columns={'home_team': 'team'})
-        away = d[['game_pk', 'game_date', 'away_team']].rename(columns={'away_team': 'team'})
-        tg = pd.concat([home, away], ignore_index=True)
-        tg['year'] = yr
-        frames.append(tg[['year', 'team', 'game_date']])
-    return pd.concat(frames, ignore_index=True)
-
-
-def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
-                      batter_team: pd.DataFrame) -> pd.DataFrame:
-    """Attach team_games_to / team_games_remaining per row via the batter's
-    modal team-year; league-mean fallback when the team is unmapped."""
-    out = rolling.merge(batter_team, on=['batter', 'year'], how='left')
-    out['cutoff_date'] = pd.to_datetime(out['cutoff_date'])
-
-    # index: (year, team) -> sorted numpy date array
-    dates_by = {k: np.sort(g['game_date'].values)
-                for k, g in team_games.groupby(['year', 'team'])}
-    # league fallback: per year, mean games to/after each cutoff
-    total_by = {k: len(v) for k, v in dates_by.items()}
-
-    to_arr = np.full(len(out), np.nan)
-    rem_arr = np.full(len(out), np.nan)
-    for (yr, team, cut), ix in out.groupby(['year', 'team', 'cutoff_date'],
-                                           dropna=False).groups.items():
-        key = (yr, team)
-        if key in dates_by:
-            n_to = int(np.searchsorted(dates_by[key], np.datetime64(cut), side='right'))
-            n_total = total_by[key]
-        else:
-            # league mean across the year's teams
-            keys = [k for k in dates_by if k[0] == yr]
-            if not keys:
-                continue
-            n_to = int(np.mean([np.searchsorted(dates_by[k], np.datetime64(cut), side='right')
-                                for k in keys]))
-            n_total = int(np.mean([total_by[k] for k in keys]))
-        to_arr[out.index.get_indexer(ix)] = n_to
-        rem_arr[out.index.get_indexer(ix)] = n_total - n_to
-    out['team_games_to'] = to_arr
-    out['team_games_remaining'] = rem_arr
-    return out
-
-
-def build_catcher_flags() -> dict[tuple[int, int], int]:
-    """(year, mlbam_id) -> 1 if the player caught >= CATCHER_MIN_PITCHES."""
-    flags: dict[tuple[int, int], int] = {}
-    for yr in list(range(2018, 2027)):
-        if yr == 2020:
-            continue
-        p = CACHE / f'statcast_{yr}.parquet'
-        if not p.exists():
-            continue
-        f2 = pd.read_parquet(p, columns=['fielder_2'])['fielder_2']
-        vc = f2.value_counts()
-        for pid in vc[vc >= CATCHER_MIN_PITCHES].index:
-            flags[(yr, int(pid))] = 1
-    return flags
-
+# team games / catcher flags / eval toolkit: shared lib.volume_model
+# (hoisted 2026-07-19 — bodies unchanged, per-year disk-cached scans)
 
 # ------------------------------------------------------------------ features
 def prepare(rolling: pd.DataFrame) -> pd.DataFrame:
@@ -167,7 +101,7 @@ def prepare(rolling: pd.DataFrame) -> pd.DataFrame:
 
     print('Building team-games schedule from statcast parquets...', flush=True)
     team_games = build_team_games()
-    rolling = attach_team_games(rolling, team_games, bt)
+    rolling = attach_team_games(rolling, team_games, bt, id_col='batter')
 
     # target + anchor
     rolling['pa_per_teamgame_to'] = rolling['pa_to'] / rolling['team_games_to']
@@ -194,7 +128,7 @@ def prepare(rolling: pd.DataFrame) -> pd.DataFrame:
 
     # catcher flag
     print('Deriving catcher flags from fielder_2...', flush=True)
-    cflags = build_catcher_flags()
+    cflags = build_catcher_flags(CATCHER_MIN_PITCHES)
     rolling['is_catcher'] = [cflags.get((y, int(b)), 0)
                              for y, b in zip(rolling['year'], rolling['batter'])]
 
@@ -233,101 +167,23 @@ def eligible(df: pd.DataFrame, need_target: bool = True) -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------- eval
-def _make_pipe():
-    from sklearn.linear_model import RidgeCV
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    return Pipeline([('sc', StandardScaler()),
-                     ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
-
-
-def _cell_spearman(sub: pd.DataFrame, pred_col: str) -> list[tuple[int, float]]:
-    """[(n, spearman)] per (split_day) cell with n >= MIN_CELL_N."""
-    from scipy.stats import spearmanr
-    out = []
-    for _, g in sub.groupby('split_day'):
-        if len(g) < MIN_CELL_N:
-            continue
-        rho = spearmanr(g[pred_col], g[TARGET]).statistic
-        out.append((len(g), float(rho)))
-    return out
-
-
-def _wavg(cells: list[tuple[int, float]]) -> float:
-    if not cells:
-        return np.nan
-    n = np.array([c[0] for c in cells], dtype=float)
-    v = np.array([c[1] for c in cells], dtype=float)
-    return float(np.sum(n * v) / np.sum(n))
-
-
 def cross_year_eval(df: pd.DataFrame):
-    """LOO over TRAIN_YEARS. Returns per-year dict + pooled dict + detail."""
-    df = eligible(df)
-    per_year = {}
-    all_cells_model, all_cells_naive = [], []
-    detail_frames = []
-    mae_m_num = mae_n_num = mae_den = 0.0
-    for held in TRAIN_YEARS:
-        train = df[df['year'] != held]
-        test = df[df['year'] == held].copy()
-        if len(train) < 100 or len(test) < 30:
-            continue
-        pipe = _make_pipe()
-        pipe.fit(train[VOLUME_FEATS].values, train[TARGET].values)
-        test['pred'] = np.clip(pipe.predict(test[VOLUME_FEATS].values), *PRED_CLIP)
-        cells_m = _cell_spearman(test, 'pred')
-        cells_n = _cell_spearman(test, 'pa_per_teamgame_to')
-        sp_m, sp_n = _wavg(cells_m), _wavg(cells_n)
-        mae_m = float(np.mean(np.abs(test['pred'] - test[TARGET])))
-        mae_n = float(np.mean(np.abs(test['pa_per_teamgame_to'] - test[TARGET])))
-        per_year[held] = {'spear_model': round(sp_m, 4), 'spear_naive': round(sp_n, 4),
-                          'delta': round(sp_m - sp_n, 4),
-                          'mae_model': round(mae_m, 4), 'mae_naive': round(mae_n, 4),
-                          'n': len(test)}
-        all_cells_model += cells_m
-        all_cells_naive += cells_n
-        mae_m_num += mae_m * len(test)
-        mae_n_num += mae_n * len(test)
-        mae_den += len(test)
-        detail_frames.append(test[['batter', 'year', 'split_day', 'pred',
-                                   'pa_per_teamgame_to', TARGET]])
-    pooled = {
-        'spear_model': round(_wavg(all_cells_model), 4),
-        'spear_naive': round(_wavg(all_cells_naive), 4),
-        'delta': round(_wavg(all_cells_model) - _wavg(all_cells_naive), 4),
-        'mae_model': round(mae_m_num / mae_den, 4),
-        'mae_naive': round(mae_n_num / mae_den, 4),
-        'n': int(mae_den),
-    }
-    detail = pd.concat(detail_frames, ignore_index=True)
-    return per_year, pooled, detail
+    """LOO over TRAIN_YEARS (shared engine, hitter parametrization)."""
+    return _cross_year_eval(
+        df, feats=VOLUME_FEATS, target=TARGET, naive_col='pa_per_teamgame_to',
+        id_col='batter', train_years=TRAIN_YEARS, pred_clip=PRED_CLIP,
+        eligible_fn=eligible, min_cell_n=MIN_CELL_N)
 
 
 def tercile_calibration(detail: pd.DataFrame) -> pd.DataFrame:
-    d = detail.copy()
-    d['tercile'] = pd.qcut(d['pred'], 3, labels=['low', 'mid', 'high'])
-    return (d.groupby('tercile')
-            .agg(n=('pred', 'size'),
-                 mean_pred=('pred', 'mean'),
-                 mean_actual=(TARGET, 'mean'),
-                 mean_naive=('pa_per_teamgame_to', 'mean'))
-            .round(3))
+    return _tercile_calibration(detail, TARGET, 'pa_per_teamgame_to', decimals=3)
 
 
 # --------------------------------------------------------------------- gates
 def check_gates(per_year: dict, pooled: dict) -> tuple[bool, list[str]]:
-    lines = []
-    g1 = pooled['delta'] >= GATE_POOLED_DSPEAR
-    lines.append(f"Gate 1 pooled ΔSpearman {pooled['delta']:+.4f} >= +{GATE_POOLED_DSPEAR}: "
-                 f"{'PASS' if g1 else 'FAIL'}")
-    pos_years = sum(1 for v in per_year.values() if v['delta'] > 0)
-    g2 = pos_years >= GATE_YEARS_POSITIVE
-    lines.append(f"Gate 2 per-year Δ>0 in {pos_years}/{len(per_year)} years "
-                 f"(need >= {GATE_YEARS_POSITIVE}): {'PASS' if g2 else 'FAIL'}")
-    g3 = all(per_year.get(y, {'delta': -1})['delta'] > 0 for y in HOLDOUT_YEARS)
-    lines.append(f"Gate 3 holdout {HOLDOUT_YEARS} both Δ>0: {'PASS' if g3 else 'FAIL'}")
-    return (g1 and g2 and g3), lines
+    return _check_gates(per_year, pooled, pooled_gate=GATE_POOLED_DSPEAR,
+                        years_positive=GATE_YEARS_POSITIVE,
+                        holdout_years=HOLDOUT_YEARS)
 
 
 # ---------------------------------------------------------------------- main
@@ -365,7 +221,7 @@ def main():
 
     # ------------------------------------------------ final fit + 2026 output
     train = eligible(rolling[rolling['year'].isin(TRAIN_YEARS)])
-    pipe = _make_pipe()
+    pipe = make_pipe()
     pipe.fit(train[VOLUME_FEATS].values, train[TARGET].values)
     coefs = pipe.named_steps['r'].coef_
     print(f'\n--- Final fit (n_train={len(train)}, '
@@ -373,9 +229,12 @@ def main():
     for f, c in sorted(zip(VOLUME_FEATS, coefs), key=lambda x: -abs(x[1])):
         print(f'    {f:<26s} {c:+.4f}')
 
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # projection year = latest season in the substrate (audit R2: the old
+    # hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
-        print('No 2026 rows — skipping projection output.')
+        print(f'No {proj_year} rows — skipping projection output.')
         return verdict
     latest_split = int(df_26['split_day'].max())
     df_26 = df_26[(df_26['split_day'] == latest_split)
@@ -389,7 +248,7 @@ def main():
                                   .rank(pct=True) * 100).round(1)
 
     names = (pd.read_csv(MULTIYR_CSV, usecols=['batter', 'year', 'player_name', 'team'])
-             .query('year == 2026').drop_duplicates('batter')
+             .query('year == @proj_year').drop_duplicates('batter')
              [['batter', 'player_name', 'team']])
     df_26 = df_26.merge(names, on='batter', how='left', suffixes=('', '_m'))
     if 'team' not in df_26.columns and 'team_m' in df_26.columns:

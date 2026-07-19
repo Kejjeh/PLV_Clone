@@ -69,6 +69,10 @@ data/research/xfp_cache/*.parquet
 # (audit 2026-07-19; git rm --cached'd the same day).
 data/research/xfp_cache/*.bak
 
+# ESPN snapshot layer (refresh-run network diet, audit 2026-07-19 F3) —
+# short-TTL pickles/JSON regenerated every refresh; never track.
+data/research/espn_snapshot/
+
 # Disk-cache for the triangulate perf layer (pickled snapshots/decline-lens keyed on
 # statcast mtime,size; rebuilt on demand — binary, rotates per refresh, never track).
 data/research/xfp_cache/.build_cache/

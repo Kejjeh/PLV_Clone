@@ -62,6 +62,12 @@ def run(label, cmd, cwd=None, timeout=900, env=None):
 
 
 def main():
+    # ESPN snapshot mode for every child step (audit 2026-07-19 F3): one live
+    # free_agents(size=2000) pull + one injury-detail sweep feed the whole
+    # refresh via short-TTL disk caches (see plv_clone/espn.py and
+    # league_state.injury_details). Interactive/skill runs never set this.
+    os.environ['PLV_ESPN_SNAPSHOT'] = '1'
+    os.environ.setdefault('PLV_ESPN_SNAPSHOT_TTL_MIN', '240')
     ap = argparse.ArgumentParser()
     ap.add_argument('--no-push', action='store_true',
                     help='skip git commit/push at end')

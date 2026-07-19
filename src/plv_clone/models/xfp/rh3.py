@@ -539,7 +539,10 @@ def main():
 
 
     # Projection for 2026
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # projection year = latest season in the substrate (audit R2: the old
+    # hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
         print('No 2026 data.'); return
     latest_split = int(df_26['split_day'].max())
@@ -618,7 +621,7 @@ def main():
     valid['xfp_rh3_per_game'] = (valid['xfp_rh3_per_pa'] * PA_PER_GAME_LEAGUE).round(2)
 
     # Names + position
-    names = multiyr[multiyr['year'] == 2026][['batter', 'player_name', 'team']] \
+    names = multiyr[multiyr['year'] == proj_year][['batter', 'player_name', 'team']] \
         .drop_duplicates('batter')
     valid = valid.drop_duplicates('batter').merge(names, on='batter', how='left')
     if MASTER_HITTER.exists():

@@ -150,8 +150,12 @@ def pitcher_weekly(df: pd.DataFrame, pitcher_ids: set, weeks: list[pd.Timestamp]
         k=('k', 'sum'), bb=('bb', 'sum'), hbp=('hbp', 'sum'),
         h=('h', 'sum'), runs=('runs', 'sum'), outs=('outs', 'sum')).reset_index()
     agg['ip'] = agg['outs'] / 3.0
-    agg['fp'] = (agg['k'] + agg['ip'] * 3.3 - agg['h'] - 2 * agg['runs']
-                 - agg['bb'] - agg['hbp'])
+    # canonical BrownU weights via scoring.pitcher_fp (audit #4); statcast has
+    # no ER attribution here, so runs feeds the ER slot (pre-existing proxy).
+    # Operand order matches the old inline expression -> bit-identical.
+    from plv_clone.fantasy.scoring import pitcher_fp
+    agg['fp'] = pitcher_fp(k=agg['k'], ip=agg['ip'], h=agg['h'],
+                           er=agg['runs'], bb=agg['bb'], hbp=agg['hbp'])
 
     out = {}
     for _, r in agg.iterrows():
