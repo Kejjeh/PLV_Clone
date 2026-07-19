@@ -715,6 +715,21 @@ def main():
             print('  ! model scorecard reported FAIL tripwire(s) — read '
                   'data/outputs/model_scorecard.md (non-gating)')
 
+        # 4.13b. VERDICT scorecard (Mondays, paired with 4.13). model-health
+        # grades the MODELS; this grades the CALLS — the settled triangulate
+        # verdicts (BUY/HOLD/CAUTION/FADE vs realized FP). Added 2026-07-18:
+        # first full read showed a monotonic hitter ladder but an INVERTED
+        # confidence calibration (1.00-conf hit 7.7% vs 0.75-conf 32.5%) and
+        # SP MIXED missing proj by -5.5/start — both flagged for re-check as
+        # cohorts settle. Fail-soft, non-gating.
+        ok_verdicts = run(
+            '4.13b. Verdict scorecard (decision-quality, settled calls)',
+            'python -X utf8 scripts/xfp/run_verdict_scorecard.py',
+            timeout=600,
+        )
+        if not ok_verdicts:
+            print('  ! verdict scorecard failed — continuing (non-gating)')
+
     if not args.no_push:
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
