@@ -17,8 +17,18 @@
   "mlbam_id": 665489,
   "player_name": "Vladimir Guerrero Jr.",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-19",
+  "settlement": {
+    "actual_fp_per_unit": 0.4,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 60,
+    "proj_per": 0.5885714285714286,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.1885714285714286,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-28",
   "verdict_top": "MIXED"
 }
