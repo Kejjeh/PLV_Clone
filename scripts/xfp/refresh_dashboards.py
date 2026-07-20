@@ -311,6 +311,20 @@ def main():
         'python -X utf8 scripts/xfp/build_sp_archetypes.py',
         timeout=120)
 
+    # 2.62. In-house Stuff+ fallback (2026-07-20): archetype STUFF (step 2.6,
+    # same-day) + PLV quantile-mapped onto the FG stuff_plus scale. Consumed
+    # by sp_stuff_model.load_2026 ONLY when the FG scrape (step 0.8) is stale
+    # — which it silently is whenever chromedriver flakes (model-health
+    # tripwire fg_scrape_silent_fail). Fail-soft: without this file a stale
+    # FG just stays frozen (pre-fallback behavior).
+    ok_inh_stuff = run(
+        '2.62. Build in-house Stuff+ fallback (arch+PLV, FG-scale)',
+        'python -X utf8 scripts/xfp/build_inhouse_stuff.py',
+        timeout=120)
+    if not ok_inh_stuff:
+        print('  ⚠ in-house stuff build failed — stuff lens falls back to '
+              'frozen FG when stale (non-gating)')
+
     # Lineup-spot context (structural-leverage signal, gmLI analog for hitters).
     # Display-only; joined into the hitter master in step 2.7 below. Must run
     # BEFORE step 2.7 so the new columns are populated downstream.

@@ -31,6 +31,7 @@
 | **BrownU scoring formula** | `src/plv_clone/fantasy/scoring.py` | `pitcher_fp/hitter_fp/score_*`; `3.3` only as `LeagueScoring.ip` | 🔴 ~25 research-script inline copies remain (live producers clean) |
 | **FA-pool fetch** (size=2000) | `src/plv_clone/league_state.py:198` | `available_fa(position=...)` | ✅ done 2026-07-04 (dashboard + matchup) |
 | **SP cap + 1.19 starts/wk + roster spec** | `src/plv_clone/cap_math.py` | `SP_CAP` · `STARTS_PER_SP_PER_WEEK` · `projected_starts()` · `gap_to_cap()` | ✅ owner + main consumers routed 2026-07-04; remaining engines pending |
+| **Stuff+ source-of-truth + staleness fallback** | `scripts/xfp/sp_stuff_model.py` (`load_2026` seam) + `scripts/xfp/build_inhouse_stuff.py` | FG `stuff_plus` when fresh; arch-STUFF/PLV quantile-mapped in-house score when FG >2d stale; `stuff_source` provenance col (fg\|arch\|plv\|fg_frozen) | ✅ shipped 2026-07-20 — implements the REGISTERED `archetype_stuff_replacement_2026-06-06` FALLBACK-ONLY verdict; refresh step 2.62; tripwire `fg_scrape_silent_fail` |
 
 **Migration frontier:** the bypass hotspots are the `scripts/xfp` layer's
 re-implementations of `scoring.py` (research scripts only) and the 73
