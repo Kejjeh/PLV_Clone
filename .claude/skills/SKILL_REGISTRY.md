@@ -170,6 +170,15 @@ resolve through it.
 | fa-signal-to-decision | meta | fa-monitor HIGH → fa-pickup-deep-dive (≤3) → ranked add rec |
 | roster-deep-audit | meta | career-form-rank + hitter/pitcher-sustainability + slump-or-decline sweeps → agreement matrix (MINE-only) |
 
+### Domain masters (2026-07-20 — one command per decision domain; chain-only, day/arg-aware)
+| Skill | Status | Chain |
+|---|---|---|
+| daily-rhythm | meta | whats-new → daily-edge (game-days) → monday-morning (Mondays / --full); consolidated "Today's actions" list |
+| moves | meta | decision-gates check → churn-plan verify → cap-check → forced-drop-planner (execution state; live-scan truth) |
+| player-verdict | meta | guards (verify + role + id) → triangulate N names → pitcher-/hitter-compare (bucket-correct) → boom-bust-history → ONE firm verdict (Rule 12) |
+| all-boards | meta | sp-board slate → streamer-precision-board (+boom>=2) → hitter-board slate → fa-pitcher-pool sp+rp → fa-monitor HIGH; one FA pull |
+| form-check | meta | sp-form ×4 lenses (+rp-decline) → hitter-form roster (+career) → flag-routed deep-dive queue (Rule 13 sweep) |
+
 **Alias policy:** the 6 alias skills keep their full recipe text and trigger
 phrases; a banner below frontmatter redirects to the successor. Never delete an
 alias directory — ~20 other SKILL.md files cross-reference them by old name and

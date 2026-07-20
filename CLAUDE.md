@@ -175,6 +175,13 @@ SKILL.md; this table routes.
 `/player-id-resolve` (name collisions), `/pitcher-role` (SP/RP truth incl.
 the Jax RP-slot-lag rule).
 
+**Domain masters (2026-07-20) — one command runs a whole domain:**
+`/daily-rhythm` (whats-new → daily-edge → monday-morning, day-aware) ·
+`/moves` (gates → churn verify → cap → forced-drop) · `/player-verdict <names>`
+(triangulate → bucket-correct compare → boom-bust → ONE answer) ·
+`/all-boards` (every board, one FA pull) · `/form-check` (all form lenses,
+roster-wide, flag-routed deep-dive queue).
+
 | Moment | Reach for |
 |---|---|
 | **Catch-up** ("what's new / any standouts?") | `/whats-new` (delta since last look: transactions, my lines, rank movers, injuries, PL, FA standouts) |
