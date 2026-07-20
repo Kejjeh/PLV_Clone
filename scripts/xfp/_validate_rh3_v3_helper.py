@@ -56,6 +56,10 @@ def load_and_prep_rh3_inputs() -> pd.DataFrame:
     rolling["prior_fp_per_pa"] = rolling["prior_fp_per_pa"].fillna(league_mu)
     rolling["prior_pa_eff"] = rolling["prior_pa_eff"].fillna(0.0)
 
+    # AAA callup prior blend — mirrors rh3.main() (production since 2026-07-19).
+    from plv_clone.models.xfp.aaa_translation import blend_callup_prior
+    rolling = blend_callup_prior(rolling)
+
     # H2-locked career profile
     if rh3.H2_LOCKED_CSV.exists():
         h2 = pd.read_csv(rh3.H2_LOCKED_CSV)[["batter", "lift_h2_aug150"]]

@@ -218,7 +218,7 @@ def apply_shrinkage(df: pd.DataFrame, pop_means: dict, spec: dict) -> pd.DataFra
 
 # Bump to force a cold fit when fit-stage LOGIC changes (data/FEATS changes are
 # caught automatically by the content hash).
-_FIT_FP_VERSION = 1
+_FIT_FP_VERSION = 2  # v2: AAA callup prior blend (2026-07-19) — forces cold refit
 
 
 # eligibility mask shared by the fit stages (hoisted scaffolding, audit D2)
@@ -270,6 +270,14 @@ def main():
     league_mu = float(multiyr[multiyr['pa'] >= 200]['fp_per_pa_actual'].mean())
     rolling['prior_fp_per_pa'] = rolling['prior_fp_per_pa'].fillna(league_mu)
     rolling['prior_pa_eff']    = rolling['prior_pa_eff'].fillna(0.0)
+
+    # AAA callup prior blend (validated PASS 2026-07-19, subgroup partial r
+    # +0.276 train / +0.238 holdout / 7/7 yrs — milb_aaa_translation_2026-07-19.md;
+    # integration sign-off same date). Blends the translated AAA rate profile
+    # into prior_fp_per_pa for rows with < 150 MLB PA (prior_pa_eff + pa_to),
+    # weight decaying to 0 at the boundary. Non-callup rows untouched.
+    from plv_clone.models.xfp.aaa_translation import blend_callup_prior
+    rolling = blend_callup_prior(rolling)
 
     # H2-locked career profile feature (Aug-01 cutoff, min 150 PA per half)
     if H2_LOCKED_CSV.exists():

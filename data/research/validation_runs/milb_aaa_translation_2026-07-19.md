@@ -23,6 +23,18 @@ verdict: PASS
   is a SEPARATE task: blend translated prior into prior_fp_per_pa for
   prior_pa_eff+pa_to < 150 rows, full-pipeline backtest, user sign-off.
 
+## PRODUCTION INTEGRATION (Step 9, signed off + shipped 2026-07-19)
+
+- Module `src/plv_clone/models/xfp/aaa_translation.py` (frozen spec in docstring);
+  blend called in rh3.main() after the Marcel prior; validation-helper mirror updated;
+  `_FIT_FP_VERSION` 1 -> 2 (cold refit forced).
+- Blend: w_aaa = clip(150 - (prior_pa_eff + pa_to), 0, 150); prior' =
+  (prior_pa_eff*prior + w_aaa*aaa_pred) / (prior_pa_eff + w_aaa). Parameter-free,
+  anchored on the validated 150-PA boundary. 15,031 rows / 942 callup batters touched.
+- Gates: cross_year_r 0.6418 -> 0.6419 (no degradation); golden diff = refit jitter
+  only on non-callups (mean |d| 0.001), top movers all callups 68-135 PA shifting
+  0.009-0.016 FP/PA (mostly downward — regresses hot thin samples); 763/763 tests pass.
+
 ## Design (subgroup incremental, Wave 3B of campaign ledger)
 
 1. **Translation fit** (2015-2023 pairs only; frozen before evaluation): survivorship
