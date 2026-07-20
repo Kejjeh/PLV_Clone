@@ -96,6 +96,88 @@ def merge_with_model(
     return merged
 
 
+# ── Collision-safe exact-name join (Rule 10) ─────────────────────────────
+# `fuzzy_match_name` must NEVER be used to JOIN a player list onto a stats/
+# projection frame: a 0.78 difflib cutoff lets "Hayden Alvarez" inherit
+# "Yordan Alvarez"'s row and invents "Bryce Mayer" from "Bryce Miller"
+# (roster-audit FA board, 2026-07-19). These helpers are the join-safe
+# replacement: exact normalized full-name match, team tie-break, and a
+# refuse-to-guess None on anything ambiguous.
+
+TEAM_CODE_ALIASES: dict[str, str] = {
+    # ESPN / FanGraphs spellings → the Statcast codes the model CSVs carry.
+    "ARI": "AZ", "CHW": "CWS", "WSN": "WSH", "OAK": "ATH",
+    "SDP": "SD", "SFG": "SF", "TBR": "TB", "KCR": "KC",
+}
+
+
+def team_key(team) -> str:
+    """Canonicalize a team abbreviation across ESPN / Statcast / FanGraphs."""
+    t = str(team or "").upper().strip()
+    return TEAM_CODE_ALIASES.get(t, t)
+
+
+def safe_name_key(name) -> str:
+    """Exact-join key: :func:`_normalize` plus punctuation collapse so
+    "C.J. Abrams" / "CJ Abrams" and curly-vs-straight apostrophes converge."""
+    s = _normalize(name)
+    for ch in (".", "'", "’"):
+        s = s.replace(ch, "")
+    return " ".join(s.replace("-", " ").split())
+
+
+def build_safe_name_index(names, teams=None) -> dict[str, list]:
+    """Build ``{safe_name_key: [(label, team_key|None), ...]}`` for
+    :func:`safe_lookup`.
+
+    ``names`` may be a pandas Series (lookups return its index labels — hand
+    the label to ``df.loc``) or any iterable (labels are list positions).
+    ``teams`` optionally aligns 1:1 with ``names`` and enables team
+    tie-breaking for true same-name collisions (Max Muncy LAD vs ATH).
+    """
+    if hasattr(names, "index") and hasattr(names, "tolist"):
+        labels, vals = list(names.index), names.tolist()
+    else:
+        vals = list(names)
+        labels = list(range(len(vals)))
+    if teams is None:
+        tkeys = [None] * len(vals)
+    else:
+        traw = teams.tolist() if hasattr(teams, "tolist") else list(teams)
+        # `t == t` filters NaN floats from pandas columns.
+        tkeys = [team_key(t) if (t is not None and t == t and str(t).strip())
+                 else None for t in traw]
+    idx: dict[str, list] = {}
+    for lbl, n, tk in zip(labels, vals, tkeys):
+        k = safe_name_key(n)
+        if k:
+            idx.setdefault(k, []).append((lbl, tk))
+    return idx
+
+
+def safe_lookup(name, index: dict[str, list], *, team=None):
+    """Collision-safe replacement for :func:`fuzzy_match_name` in JOIN
+    contexts. Exact normalized full-name match only — no distance metric, so
+    a surname-similar prospect can never inherit a star's row.
+
+    Returns the single matching label from :func:`build_safe_name_index`.
+    On a same-name collision, ``team`` breaks the tie; if the match is still
+    absent or ambiguous, returns None — the caller must skip the row, never
+    guess (see ``memory/feedback_player_name_collisions.md``).
+    """
+    cands = index.get(safe_name_key(name))
+    if not cands:
+        return None
+    if len(cands) == 1:
+        return cands[0][0]
+    if team is not None:
+        tk = team_key(team)
+        hits = [lbl for lbl, t in cands if t == tk]
+        if len(hits) == 1:
+            return hits[0]
+    return None
+
+
 # Known name collisions in the player universe. Each entry maps a colliding
 # name to a list of (team, position, mlbam_id) tuples so the resolver can pick
 # the right player using roster metadata. See
@@ -573,6 +655,11 @@ def _reset_cache_for_tests() -> None:
 __all__ = [
     "fuzzy_match_name",
     "merge_with_model",
+    "safe_name_key",
+    "build_safe_name_index",
+    "safe_lookup",
+    "team_key",
+    "TEAM_CODE_ALIASES",
     "resolve_batter_id",
     "resolve_pitcher_id",
     "lookup_batter_id_cached",
