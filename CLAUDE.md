@@ -550,6 +550,8 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     faint floor, **context-only (Rule 13) — never a number-mover or re-rank reason.** Snapshot
     logger (`build_player_projection_history.py`, refresh step 4.10) re-verified live; re-run the
     retro on logged (not git) snapshots in ~3-4 wks + do a proper single-start rp3 σ-coverage study.
+    **(Both closed: σ-coverage 2026-07-10 NO-CHANGE α=2.41; logged-snapshot retro 2026-07-19
+    CONFIRMED — registry entry same date. New watch: SP volume edge decay, next 4.13 run.)**
 
 ## Don't do these (load-bearing feedback)
 
