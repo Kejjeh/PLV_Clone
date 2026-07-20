@@ -488,7 +488,11 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
    fp/start, not an RP). Always use `detect_pitcher_role(player_or_row)`
    from `scripts/xfp/lib/pitcher_role.py`, which checks `eligible_slots`
    first and falls back to MLB Stats API `gamesStarted` for dual-eligible
-   cases. The rule: SP `eligible_slots` only → SP; RP only → RP; both →
+   cases. The rule: SP `eligible_slots` only → SP; RP only → RP **unless the
+   name is in rp3 (ESPN slot grants lag a mid-season RP→SP conversion —
+   canonical: Griffin Jax 2026 post-trade, RP-only slots for weeks while
+   starting for TB, so cap math ignored his starts; fixed 2026-07-19), then
+   decide on `gamesStarted` like the dual path**; both →
    `gamesStarted / gamesPlayed >= 0.4` → SP. Applied in
    `build_matchup_dashboard.py` and `run_roster_audit.py`; wire it anywhere
    you filter pitchers by role. Canonical fix 2026-06-15.
