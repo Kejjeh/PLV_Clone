@@ -17,8 +17,18 @@
   "mlbam_id": 664126,
   "player_name": "Pete Fairbanks",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 2.5545454545454547,
+    "classification": "UNSETTLEABLE_V1_UNITS",
+    "event_unit": "appearances",
+    "n_events": 11,
+    "proj_per": null,
+    "proj_units_note": "v1_rp_units_unrecoverable",
+    "residual": null,
+    "threshold": 0.5,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "MIXED"
 }

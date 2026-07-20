@@ -17,8 +17,18 @@
   "mlbam_id": 667755,
   "player_name": "Jos\u00e9 Soriano",
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 6.639999999999999,
+    "classification": "BUY_MISS",
+    "event_unit": "starts",
+    "n_events": 5,
+    "proj_per": 11.569467965939468,
+    "proj_units_note": "v1_sp_native",
+    "residual": -4.92946796593947,
+    "threshold": 1.0,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "BUY"
 }

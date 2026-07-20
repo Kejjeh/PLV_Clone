@@ -17,8 +17,18 @@
   "mlbam_id": 686527,
   "player_name": "Dominic Canzone",
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 0.46808510638297873,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 47,
+    "proj_per": 0.5514285714285714,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.08334346504559265,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-06-29",
   "verdict_top": "BUY"
 }

@@ -17,8 +17,18 @@
   "mlbam_id": 701542,
   "player_name": "Will Warren",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 6.339999999999999,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "starts",
+    "n_events": 5,
+    "proj_per": 10.261673630230394,
+    "proj_units_note": "v1_sp_native",
+    "residual": -3.921673630230395,
+    "threshold": 1.0,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "MIXED"
 }

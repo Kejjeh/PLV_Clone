@@ -17,8 +17,18 @@
   "mlbam_id": 672282,
   "player_name": "Reid Detmers",
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 11.183333333333332,
+    "classification": "BUY_MISS",
+    "event_unit": "starts",
+    "n_events": 6,
+    "proj_per": 12.190330572011987,
+    "proj_units_note": "v1_sp_native",
+    "residual": -1.0069972386786556,
+    "threshold": 1.0,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "BUY"
 }

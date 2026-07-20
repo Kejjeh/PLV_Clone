@@ -17,8 +17,18 @@
   "mlbam_id": 656945,
   "player_name": "Tanner Scott",
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 6.654545454545455,
+    "classification": "UNSETTLEABLE_V1_UNITS",
+    "event_unit": "appearances",
+    "n_events": 11,
+    "proj_per": null,
+    "proj_units_note": "v1_rp_units_unrecoverable",
+    "residual": null,
+    "threshold": 0.5,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "BUY"
 }

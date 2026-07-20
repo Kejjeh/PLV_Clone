@@ -17,8 +17,18 @@
   "mlbam_id": 642547,
   "player_name": "Freddy Peralta",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 2.879999999999998,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "starts",
+    "n_events": 5,
+    "proj_per": 11.41520250194622,
+    "proj_units_note": "v1_sp_native",
+    "residual": -8.535202501946223,
+    "threshold": 1.0,
+    "window_days": 35
+  },
   "snapshot_date": "2026-06-15",
   "verdict_top": "MIXED"
 }
