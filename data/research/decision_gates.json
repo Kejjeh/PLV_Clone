@@ -96,6 +96,22 @@
       "notes": "Staff sweep 2026-07-20; marcel-suppressed rp3 overstates IL returners (gotcha #1)",
       "criteria": "Before activating Fried ~7/27 run /player-verdict 'Max Fried' 'Parker Messick' 'Logan Henderson' (forced-drop Step 2b returner check). 2026-07-20 reads: Fried DECLINE-VETO, stuff 97.2, gap -42, T+1 10.7 vs Henderson 108.2/SAFE/T+1 14.5",
       "created": "2026-07-20T11:47:00"
+    },
+    {
+      "id": "carroll-elbow",
+      "player": "Corbin Carroll",
+      "bucket": "H",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "2+ straight missed games => revisit the extra-OF add (depth over upgrade); plays through => OF upgrade path only",
+      "check_from": null,
+      "expires": "2026-07-24",
+      "notes": "Pairs with the Canzone-upgrade decision; canzone-mead 8/7 earmark unchanged",
+      "criteria": "DTD elbow (DD, listed return 7/20). Check lineups: did he start tonight/tomorrow? Note he is also -3.57sigma cold (form-check 7/20) \u2014 injury may explain the slump",
+      "created": "2026-07-20T17:31:09"
     }
   ]
 }
