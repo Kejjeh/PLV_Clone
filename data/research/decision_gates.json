@@ -63,6 +63,38 @@
       "notes": "proxy: appearances in trailing 10d, not starts \u2014 verify starts by eye when TRIGGERED",
       "criteria": null,
       "created": "2026-07-20T00:50:18"
+    },
+    {
+      "id": "detmers-role",
+      "player": "Reid Detmers",
+      "bucket": "SP",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Relief again => 5 true RPs (floor loosens, RP-for-RP lane widens); a START => SP as before",
+      "check_from": null,
+      "expires": "2026-07-27",
+      "notes": "Affects 4-RP-floor arithmetic in /moves + forced-drop cascade",
+      "criteria": "detect_pitcher_role flipped Detmers to RP on live recent-usage 2026-07-20 \u2014 verify his NEXT appearance by eye (relief or start)",
+      "created": "2026-07-20T11:47:00"
+    },
+    {
+      "id": "fried-vs-incumbent",
+      "player": "Max Fried",
+      "bucket": "SP",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "If the lens stack still reads Fried below Henderson/Messick at return, the activation itself is the cut decision \u2014 do NOT auto-drop the rookie",
+      "check_from": null,
+      "expires": "2026-07-28",
+      "notes": "Staff sweep 2026-07-20; marcel-suppressed rp3 overstates IL returners (gotcha #1)",
+      "criteria": "Before activating Fried ~7/27 run /player-verdict 'Max Fried' 'Parker Messick' 'Logan Henderson' (forced-drop Step 2b returner check). 2026-07-20 reads: Fried DECLINE-VETO, stuff 97.2, gap -42, T+1 10.7 vs Henderson 108.2/SAFE/T+1 14.5",
+      "created": "2026-07-20T11:47:00"
     }
   ]
 }

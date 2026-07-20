@@ -18,7 +18,9 @@ you've registered, and caps that constrain the next one — in one pass.
    → banked (ESPN statId-33) + projected vs the live period cap
    (`sp_cap_for_period` — never hardcode 10).
 4. **forced-drop-planner** — IL-return cascade: breach dates + pre-identified
-   cut candidates (SP-only cuts; the 4-RP floor is absolute).
+   cut candidates (SP-only cuts; the 4-RP floor is absolute). Include its
+   Step 2b RETURNER-vs-INCUMBENT check — an activation is a choice; the
+   returner can be the weakest forward read (the Fried 7/27 case).
 
 ## Pull-once contract
 

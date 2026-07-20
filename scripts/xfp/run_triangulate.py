@@ -562,7 +562,10 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     exp = model.get('expected') or {}
     if exp and exp.get('gap') is not None:
         g = exp['gap']; lab = 'xwOBA-allowed' if bucket in ('SP', 'RP') else 'xwOBA'
-        tail = {'OVERPERFORMING': (' — regression UP coming' if bucket in ('SP', 'RP') else ' — due for negative regression'),
+        # pitcher phrasing fix (staff sweep 2026-07-20): "regression UP coming"
+        # read as bullish for a PITCHER — for SP/RP overperforming means the
+        # allowed-xwOBA regresses UP, i.e. results should WORSEN. Say that.
+        tail = {'OVERPERFORMING': (' — results luck-flattered; ratios should worsen' if bucket in ('SP', 'RP') else ' — due for negative regression'),
                 'UNDERPERFORMING': (' — ratios should improve' if bucket in ('SP', 'RP') else ' — bounce due'),
                 'ALIGNED': ''}.get(exp['regression'], '')
         lines.append(f"\n🎲 **Expected (luck)** {lab} {exp['xwoba']:.3f} vs actual {exp['woba']:.3f} "
@@ -598,6 +601,16 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                'STUFF-DECLINE': 'swing-and-miss/velo eroding — STRUCTURAL decline (sell candidate)'}.get(scd['tag'], '')
         _yoy = scd.get('yoy_swstr_d')
         _yoystr = f" · SwStr YoY {_yoy:+.1f}pp" if _yoy is not None else ""
+        # Leg-conflict caveat (staff sweep 2026-07-20, Imanaga case): the
+        # classifier's in-season OR YoY design is validated and unchanged —
+        # but when the tag fired on the IN-SEASON leg while YoY SwStr is
+        # clearly POSITIVE, the season-level evidence CONTRADICTS "structural"
+        # and the display must say so (Rule 12: show the conflict, don't let
+        # one leg headline unopposed). Display-only; classifier untouched.
+        if scd['tag'] == 'STUFF-DECLINE' and _yoy is not None and _yoy >= 1.0:
+            _nt += (f" ⚠ LEG CONFLICT: YoY SwStr {_yoy:+.1f}pp is POSITIVE — "
+                    f"the in-season dip alone fired this tag; season-level "
+                    f"stuff is holding. Treat as WATCH, not a structural sell")
         lines.append(f"\n{_ic} **Stuff-vs-command ({scd['tag']}):** SwStr {scd['swstr_d']:+.1f}pp · "
                      f"FBvelo {scd['velo_d']:+.1f} · BB {scd['bb_d']:+.1f}pp (early→recent 2026){_yoystr} — {_nt}")
     nxt = model.get('next_start') or {}

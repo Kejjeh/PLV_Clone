@@ -156,6 +156,24 @@ letting the second return silently "reset" to the baseline.
 
 ---
 
+## Step 2b — RETURNER-vs-INCUMBENT check (added 2026-07-20, the Fried case)
+
+An IL activation is a roster CHOICE, not an obligation. Before Step 3
+pre-identifies a cut from the incumbents, run the RETURNER through the lens
+stack too (`/player-verdict <returner> <bottom 2 incumbents>` or read their
+triangulate cards): if the returner's forward read (T+1, stuff, decline
+flags) is WORSE than the arm he would displace, the correct "cut" may be
+the returner himself (drop on activation, or hold the IL slot if eligible).
+
+Canonical (2026-07-20 staff sweep): Fried returning 7/27 carried a
+DECLINE-VETO card — stuff 97.2, breakout gap −42 (whiff/K propped), T+1
+10.7 — while the squeeze victim Henderson carried stuff 108.2 / SAFE floor /
+T+1 14.5. The cascade math said "Fried in, cut a rookie"; the lens stack
+said the returner was the weakest forward read on the staff. Surface both —
+the gate decides the default, the returner-check decides whether the
+default is sane. (Marcel-suppressed rp3 ranks on IL arms overstate
+returners — compare on Stuff+ proj / T+1 / archetype, per gotcha #1.)
+
 ## Step 3 — Identify cut candidates
 
 From the healthy SP pool, rank by rp3 projection ascending. The bottom 2-3 are
