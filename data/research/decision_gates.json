@@ -1,0 +1,68 @@
+{
+  "gates": [
+    {
+      "id": "messick-velo",
+      "player": "Parker Messick",
+      "bucket": "SP",
+      "mlbam": 800048,
+      "metric": "fb_velo_last_start",
+      "cmp": "<",
+      "threshold": 95.0,
+      "window_n": null,
+      "decision": "Messick is the 7/27 Fried cut (fatigue REAL)",
+      "check_from": "2026-07-20",
+      "expires": "2026-07-27",
+      "notes": "season norm 95.5+; rebound \u2192 keep, peralta-2h gate decides",
+      "criteria": null,
+      "created": "2026-07-20T00:50:17"
+    },
+    {
+      "id": "peralta-2h",
+      "player": "Freddy Peralta",
+      "bucket": "SP",
+      "mlbam": 642547,
+      "metric": "fp_lastN",
+      "cmp": "<=",
+      "threshold": 8.0,
+      "window_n": 2,
+      "decision": "Peralta becomes the 7/27 drop instead",
+      "check_from": null,
+      "expires": "2026-07-27",
+      "notes": "2H thesis predicts immediate K% jump (career 29.9%); eyeball K%<22% too. 4-RP floor absolute \u2014 the cut MUST be an SP",
+      "criteria": null,
+      "created": "2026-07-20T00:50:18"
+    },
+    {
+      "id": "canzone-mead",
+      "player": "Dominic Canzone",
+      "bucket": "H",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Canzone is the 8/7 Judge-return hitter cut (earmarked)",
+      "check_from": null,
+      "expires": "2026-08-08",
+      "notes": null,
+      "criteria": "Track both L21; flip earmark to Mead ONLY if Mead idles while Canzone rebounds (July xwOBAcon-vsR .298)",
+      "created": "2026-07-20T00:50:18"
+    },
+    {
+      "id": "clemens-pt",
+      "player": "Kody Clemens",
+      "bucket": "H",
+      "mlbam": 665019,
+      "metric": "games_lastN",
+      "cmp": ">=",
+      "threshold": 5.0,
+      "window_n": 10,
+      "decision": "Clemens PT premise flipped \u2192 waiver claim-back candidate",
+      "check_from": "2026-07-20",
+      "expires": "2026-07-31",
+      "notes": "proxy: appearances in trailing 10d, not starts \u2014 verify starts by eye when TRIGGERED",
+      "criteria": null,
+      "created": "2026-07-20T00:50:18"
+    }
+  ]
+}

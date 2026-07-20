@@ -1,7 +1,12 @@
 ---
 name: league-breakout-sustainability
-description: League-wide breakout-sustainability ranking across all 8 teams' rosters + FA pool. 5-axis scorecard (Bayesian shrinkage, process metrics, power markers, CI, career-best xwOBACON) → SUSTAINABLE/NARROW/POWER-ONLY/MIXED/HOT-STREAK/DECLINE tiers. Sweep alternative to single-player `/breakout-sustainability`. Use weekly to surface trade-target heat-map across the league. For multi-lens deep-dive on any individual flagged candidate, hand off to `/triangulate` or `/breakout-sustainability`.
+description: ALIAS → /hitter-form --scope league. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/hitter-form --scope league`.** This SKILL holds
+> the complete 5-axis league-wide scorecard recipe and stays live as the
+> delegate; new invocations should prefer `/hitter-form --scope league`
+> (routing + trigger phrases live on the canonical).
 
 # league-breakout-sustainability
 

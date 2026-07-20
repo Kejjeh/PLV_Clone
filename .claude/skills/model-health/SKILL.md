@@ -86,6 +86,38 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    and any "insufficient data yet" notes (e.g. volume skill needs ~5+
    forward days past 2026-07-10, the first snapshot carrying proj_volume).
 
+## Pipeline staleness section (added 2026-07-20)
+
+Third scorecard section (`pipeline_staleness`), same PASS/WARN/FAIL pattern,
+FAILs count into the exit code. Charter: **model-health owns DATA/PIPELINE
+runtime health; /production-audit owns CODE/SKILL/registry drift.** Each check
+is fail-soft (an errored check reports WARN, never crashes the scorecard).
+
+1. `console_data_freshness` — WARN = `console_data.json` is older than a
+   model input (rh3/rp3/rprs2 CSV or boxscore_hitters) → the decision console
+   is serving stale numbers (the 2026-07-18 trap). Fix: regenerate the console
+   (the refresh step that builds `data/outputs/console_data.json`).
+2. `tri_nightly_freshness` — FAIL = freshest
+   `triangulate_nightly_*.json` ≥26h old (nightly not running; rerun the
+   triangulate nightly builder). WARN = `_cards.json` sidecar missing
+   (first-night tolerance; FA cards fall back to the flat batch).
+3. `publish_freshness` — WARN = a GitHub Pages artifact
+   (`xfp-model/docs/{index,matchup,triangulate,xfp_board}.html`) lags
+   `console_data.json` by >26h → stuck publish. Fix: rerun the publish step /
+   `/refresh-matchup` push. SKIP if the xfp-model sibling isn't checked out.
+4. `espn_snapshot_ttl` — WARN = a `data/research/espn_snapshot/` file is
+   older than 4× its TTL (env `PLV_ESPN_SNAPSHOT_TTL_MIN`, default 240 min)
+   → a refresh crashed mid-flight and left its snapshot behind. Fix: delete
+   the stale snapshot (it only exists refresh-side).
+5. `trajectory_endpoint` — WARN = the freshest nightly CSV's
+   `traj_last_label` MM-DD endpoints max out >3 days before the file's own
+   date (the frozen 04-25→06-20 trajectory class). Fix: rebuild the archetype
+   trajectory panels feeding the nightly.
+6. `golden_stash_leftover` — FAIL = `data/models/.golden_stash/` has a
+   subdir → a crashed /golden-run left model pkls stashed (production may be
+   running swapped-in goldens). Fix:
+   `python scripts/ci/golden_run.py --restore`.
+
 ## Reading the output
 
 - `status`: **PASS/WARN/FAIL** (health tripwires), **INFO** (accuracy

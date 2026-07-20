@@ -1,7 +1,12 @@
 ---
 name: career-form-rank
-description: Rank a set of batters by current L150-PA xwOBA AND surface where that current value sits in each player's full career distribution of rolling-150 windows. Outputs a "peak vs slump vs typical" landscape that distinguishes "FA looks better than my hitter" (often a peak-form mirage) from genuine sustainable upgrades. Use whenever the user asks "where does my current performance rank in my career", "is X at peak or slumping", "compare my roster + FAs by L150 process", or wants to gut-check a swap by career-percentile context.
+description: ALIAS → /hitter-form --lens career. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/hitter-form --lens career`.** This SKILL holds
+> the complete career-percentile recipe (rolling-150 windows + anti-mirage
+> check) and stays live as the delegate; new invocations should prefer
+> `/hitter-form --lens career` (routing + trigger phrases live on the canonical).
 
 # career-form-rank
 

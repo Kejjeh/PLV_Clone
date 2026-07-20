@@ -69,6 +69,13 @@ ROS_SCHED_CSV = CACHE / 'ros_schedule_features_2018_2026.csv'
 FG_ASOF_DIR = RESEARCH / 'fg_asof'
 FG_PROJ_CACHE_DIR = RESEARCH / 'fg_proj_cache'
 RH3_CSV = OUT / 'xfp_rh3_projections.csv'
+RP3_CSV = OUT / 'xfp_rp3_projections.csv'
+RPRS2_CSV = OUT / 'xfp_rprs2_projections.csv'
+CONSOLE_JSON = OUT / 'console_data.json'
+TRI_NIGHTLY_DIR = RESEARCH / 'triangulate_universe'
+XFP_MODEL_DOCS = ROOT / 'xfp-model' / 'docs'
+ESPN_SNAPSHOT_DIR = RESEARCH / 'espn_snapshot'
+GOLDEN_STASH_DIR = ROOT / 'data' / 'models' / '.golden_stash'
 
 SCORECARD_CSV = OUT / 'model_scorecard.csv'
 SCORECARD_MD = OUT / 'model_scorecard.md'
@@ -799,23 +806,244 @@ def run_data_health() -> None:
 
 
 # =========================================================================
+# SECTION 3 — PIPELINE STALENESS (freshness tripwires)
+# =========================================================================
+
+def _run_staleness_check(name: str, fn) -> None:
+    """Fail-soft wrapper: an errored staleness check reports WARN (a check
+    that cannot run is itself a mild staleness signal), never a crash."""
+    try:
+        fn()
+    except Exception as e:
+        add_row('pipeline_staleness', name, 'all', None, 'WARN',
+                f'check errored: {type(e).__name__}: {e}')
+
+
+def _mtime(p: Path) -> datetime:
+    return datetime.fromtimestamp(os.path.getmtime(p))
+
+
+def check_console_data_freshness() -> None:
+    """The 2026-07-18 trap: models rebuilt but console_data.json not
+    regenerated -> the decision console silently serves stale numbers.
+    console_data.json mtime must be >= the newest of its model inputs."""
+    if not CONSOLE_JSON.exists():
+        add_row('pipeline_staleness', 'console_data_freshness', 'all', None,
+                'SKIP', f'missing {CONSOLE_JSON.name}')
+        return
+    inputs = [RH3_CSV, RP3_CSV, RPRS2_CSV, BOX_H]
+    present = [p for p in inputs if p.exists()]
+    if not present:
+        add_row('pipeline_staleness', 'console_data_freshness', 'all', None,
+                'SKIP', 'no model-input files present to compare against')
+        return
+    newest = max(present, key=lambda p: os.path.getmtime(p))
+    lag_h = (_mtime(newest) - _mtime(CONSOLE_JSON)).total_seconds() / 3600
+    status = 'PASS' if lag_h <= 0 else 'WARN'
+    add_row('pipeline_staleness', 'console_data_freshness', 'all',
+            round(max(lag_h, 0.0), 1), status,
+            f'console_data.json vs newest input {newest.name}; hours behind '
+            '(>0 = stale decision console — the 2026-07-18 trap)')
+
+
+def check_tri_nightly_freshness() -> None:
+    """The triangulate nightly must have run within the last 26h; its
+    _cards.json sidecar missing is WARN-only (first-night tolerance — the
+    FA cards fall back to the flat batch)."""
+    files = [Path(p) for p in
+             glob.glob(str(TRI_NIGHTLY_DIR / 'triangulate_nightly_*.json'))
+             if not p.endswith('_cards.json')]
+    if not files:
+        add_row('pipeline_staleness', 'tri_nightly_freshness', 'nightly_json',
+                None, 'FAIL', 'no triangulate_nightly_*.json found at all')
+        return
+    freshest = max(files, key=lambda p: os.path.getmtime(p))
+    age_h = (datetime.now() - _mtime(freshest)).total_seconds() / 3600
+    status = 'PASS' if age_h < 26 else 'FAIL'
+    add_row('pipeline_staleness', 'tri_nightly_freshness', 'nightly_json',
+            round(age_h, 1), status,
+            f'freshest {freshest.name}; age hours (>=26h = nightly not running)')
+    cards = freshest.with_name(freshest.stem + '_cards.json')
+    status = 'PASS' if cards.exists() else 'WARN'
+    add_row('pipeline_staleness', 'tri_nightly_freshness', 'cards_sidecar',
+            int(cards.exists()), status,
+            f'{cards.name} ' + ('present' if cards.exists() else
+            'missing (first-night tolerance; FA cards fall back to flat batch)'))
+
+
+def check_publish_freshness() -> None:
+    """Stuck-publish detector: each GitHub Pages artifact must not lag
+    console_data.json by more than 26h (one missed daily publish)."""
+    if not XFP_MODEL_DOCS.exists():
+        add_row('pipeline_staleness', 'publish_freshness', 'all', None,
+                'SKIP', 'xfp-model/docs absent (sibling repo not checked out '
+                'on this machine) — publish check not applicable')
+        return
+    if not CONSOLE_JSON.exists():
+        add_row('pipeline_staleness', 'publish_freshness', 'all', None,
+                'SKIP', f'missing {CONSOLE_JSON.name} reference point')
+        return
+    ref = _mtime(CONSOLE_JSON)
+    for page in ('index', 'matchup', 'triangulate', 'xfp_board'):
+        p = XFP_MODEL_DOCS / f'{page}.html'
+        if not p.exists():
+            add_row('pipeline_staleness', 'publish_freshness', page, None,
+                    'WARN', f'{p.name} missing from xfp-model/docs')
+            continue
+        lag_h = (ref - _mtime(p)).total_seconds() / 3600
+        status = 'WARN' if lag_h > 26 else 'PASS'
+        add_row('pipeline_staleness', 'publish_freshness', page,
+                round(max(lag_h, 0.0), 1), status,
+                'hours behind console_data.json (>26h = stuck publish)')
+
+
+def check_espn_snapshot_ttl() -> None:
+    """The intra-refresh ESPN snapshot should be consumed and cleared; a
+    file lingering past 4x its TTL (env PLV_ESPN_SNAPSHOT_TTL_MIN, default
+    240 min) means a refresh crashed mid-flight and left it behind."""
+    try:
+        ttl_min = float(os.environ.get('PLV_ESPN_SNAPSHOT_TTL_MIN', '240'))
+    except ValueError:
+        ttl_min = 240.0
+    files = ([p for p in ESPN_SNAPSHOT_DIR.iterdir() if p.is_file()]
+             if ESPN_SNAPSHOT_DIR.exists() else [])
+    if not files:
+        add_row('pipeline_staleness', 'espn_snapshot_ttl', 'all', 0, 'PASS',
+                'no snapshot files present (snapshot only exists refresh-side)')
+        return
+    oldest = min(files, key=lambda p: os.path.getmtime(p))
+    age_min = (datetime.now() - _mtime(oldest)).total_seconds() / 60
+    status = 'WARN' if age_min > 4 * ttl_min else 'PASS'
+    add_row('pipeline_staleness', 'espn_snapshot_ttl', 'all',
+            round(age_min, 0), status,
+            f'oldest {oldest.name} age minutes vs TTL {ttl_min:.0f}min '
+            f'(WARN >{4 * ttl_min:.0f}min = stale snapshot lingering)')
+
+
+def check_trajectory_endpoint() -> None:
+    """The frozen-trajectory class (04-25 -> 06-20 style: archetype
+    trajectory endpoints stuck weeks behind while the nightly kept
+    publishing). Implementation (documented): the nightly CSV's
+    `traj_last_label` column carries the trajectory ENDPOINT as MM-DD for
+    weekly-cadence rows ('#N' start-index labels are skipped) — the max
+    parsed endpoint must be within 3 days of the file's own date. Falls
+    back to a `snapshot*` date column max vs file date if traj_last_label
+    is absent."""
+    files = [Path(p) for p in
+             glob.glob(str(TRI_NIGHTLY_DIR / 'triangulate_nightly_*.json'))
+             if not p.endswith('_cards.json')]
+    if not files:
+        add_row('pipeline_staleness', 'trajectory_endpoint', 'all', None,
+                'SKIP', 'no triangulate nightly files to inspect')
+        return
+    freshest = max(files, key=lambda p: os.path.getmtime(p))
+    csv_path = freshest.with_suffix('.csv')
+    if not csv_path.exists():
+        add_row('pipeline_staleness', 'trajectory_endpoint', 'all', None,
+                'WARN', f'nightly CSV sibling {csv_path.name} missing')
+        return
+    # the file's own date: from the filename (triangulate_nightly_YYYY-MM-DD)
+    try:
+        file_date = date.fromisoformat(csv_path.stem[-10:])
+    except ValueError:
+        file_date = _mtime(csv_path).date()
+    header = pd.read_csv(csv_path, nrows=0).columns
+    traj_cols = [c for c in header if 'traj' in c and 'last' in c]
+    date_col = next((c for c in traj_cols if c == 'traj_last_label'),
+                    traj_cols[0] if traj_cols else None)
+    endpoints: list[date] = []
+    if date_col is not None:
+        vals = pd.read_csv(csv_path, usecols=[date_col])[date_col].dropna()
+        for v in vals.astype(str):
+            if len(v) == 5 and v[2] == '-':  # MM-DD endpoint label
+                try:
+                    d = date(file_date.year, int(v[:2]), int(v[3:]))
+                except ValueError:
+                    continue
+                if d > file_date + timedelta(days=7):  # year wrap
+                    d = d.replace(year=file_date.year - 1)
+                endpoints.append(d)
+    src = f'{date_col} MM-DD endpoints'
+    if not endpoints:  # fallback: a snapshot/date column
+        snap_col = next((c for c in header if 'snapshot' in c.lower()), None)
+        if snap_col is not None:
+            vals = pd.to_datetime(
+                pd.read_csv(csv_path, usecols=[snap_col])[snap_col],
+                errors='coerce').dropna()
+            endpoints = [d.date() for d in vals]
+            src = f'{snap_col} column max'
+    if not endpoints:
+        add_row('pipeline_staleness', 'trajectory_endpoint', 'all', None,
+                'WARN', 'no identifiable trajectory-endpoint / snapshot date '
+                f'column in {csv_path.name}')
+        return
+    gap = (file_date - max(endpoints)).days
+    status = 'PASS' if gap <= 3 else 'WARN'
+    add_row('pipeline_staleness', 'trajectory_endpoint', 'all', gap, status,
+            f'max endpoint {max(endpoints)} vs file date {file_date} via '
+            f'{src} (gap >3d = frozen 04-25->06-20 trajectory class)')
+
+
+def check_golden_stash_leftover() -> None:
+    """A crashed /golden-run leaves model pkls stashed in
+    data/models/.golden_stash/ — production would then run on the swapped-in
+    goldens. Any subdir = FAIL until restored."""
+    if not GOLDEN_STASH_DIR.exists():
+        add_row('pipeline_staleness', 'golden_stash_leftover', 'all', 0,
+                'PASS', 'no .golden_stash dir (nothing stashed)')
+        return
+    subdirs = sorted(p.name for p in GOLDEN_STASH_DIR.iterdir() if p.is_dir())
+    if subdirs:
+        add_row('pipeline_staleness', 'golden_stash_leftover', 'all',
+                len(subdirs), 'FAIL',
+                'crashed /golden-run left model pkls stashed '
+                f'({", ".join(subdirs[:5])}) — run '
+                '`python scripts/ci/golden_run.py --restore`')
+    else:
+        add_row('pipeline_staleness', 'golden_stash_leftover', 'all', 0,
+                'PASS', '.golden_stash present but empty')
+
+
+def run_pipeline_staleness() -> None:
+    _run_staleness_check('console_data_freshness', check_console_data_freshness)
+    _run_staleness_check('tri_nightly_freshness', check_tri_nightly_freshness)
+    _run_staleness_check('publish_freshness', check_publish_freshness)
+    _run_staleness_check('espn_snapshot_ttl', check_espn_snapshot_ttl)
+    _run_staleness_check('trajectory_endpoint', check_trajectory_endpoint)
+    _run_staleness_check('golden_stash_leftover', check_golden_stash_leftover)
+
+
+# =========================================================================
 # OUTPUT
 # =========================================================================
 
 def _render_md(df: pd.DataFrame) -> str:
     lines = [f'# Model scorecard — {TODAY.isoformat()}', '']
     health = df[df['section'] == 'data_health']
+    stale = df[df['section'] == 'pipeline_staleness']
     n_fail = (health['status'] == 'FAIL').sum()
     n_warn = (health['status'] == 'WARN').sum()
     n_skip = (health['status'] == 'SKIP').sum()
     lines.append(f'**Data health:** {(health["status"] == "PASS").sum()} PASS'
                  f' / {n_warn} WARN / {n_fail} FAIL / {n_skip} SKIP')
+    lines.append(f'**Pipeline staleness:** {(stale["status"] == "PASS").sum()} PASS'
+                 f' / {(stale["status"] == "WARN").sum()} WARN'
+                 f' / {(stale["status"] == "FAIL").sum()} FAIL'
+                 f' / {(stale["status"] == "SKIP").sum()} SKIP')
     lines.append('')
     lines.append('## Data-health tripwires')
     lines.append('')
     lines.append('| check | segment | value | status | note |')
     lines.append('|---|---|---|---|---|')
     for _, r in health.iterrows():
+        lines.append(f'| {r["metric"]} | {r["segment"]} | {r["value"]} '
+                     f'| {r["status"]} | {r["note"]} |')
+    lines.append('')
+    lines.append('## Pipeline-staleness tripwires')
+    lines.append('')
+    lines.append('| check | segment | value | status | note |')
+    lines.append('|---|---|---|---|---|')
+    for _, r in stale.iterrows():
         lines.append(f'| {r["metric"]} | {r["segment"]} | {r["value"]} '
                      f'| {r["status"]} | {r["note"]} |')
     lines.append('')
@@ -841,6 +1069,7 @@ def main() -> int:
     print(f'=== model scorecard {TODAY.isoformat()} ===')
     run_forward_accuracy()
     run_data_health()
+    run_pipeline_staleness()
 
     df = pd.DataFrame(ROWS, columns=['date', 'section', 'metric', 'segment',
                                      'value', 'status', 'note'])
@@ -859,9 +1088,14 @@ def main() -> int:
 
     # ---- console summary -------------------------------------------------
     health = df[df['section'] == 'data_health']
+    stale = df[df['section'] == 'pipeline_staleness']
     fa = df[df['section'] == 'forward_accuracy']
     print('\n--- DATA HEALTH ---')
     for _, r in health.iterrows():
+        print(f'  [{r["status"]:^6}] {r["metric"]} ({r["segment"]}): '
+              f'{r["value"]}  {r["note"]}')
+    print('\n--- PIPELINE STALENESS ---')
+    for _, r in stale.iterrows():
         print(f'  [{r["status"]:^6}] {r["metric"]} ({r["segment"]}): '
               f'{r["value"]}  {r["note"]}')
     print('\n--- FORWARD ACCURACY (headline: spearman_rate, all) ---')
@@ -869,9 +1103,11 @@ def main() -> int:
               & (fa['segment'].isin(['all', 'model']))]
     for _, r in head.iterrows():
         print(f'  [{r["status"]:^12}] {r["metric"]}: {r["value"]}  ({r["note"]})')
-    n_fail = (health['status'] == 'FAIL').sum()
-    n_warn = (health['status'] == 'WARN').sum()
-    print(f'\nSummary: {n_fail} FAIL, {n_warn} WARN tripwires. '
+    trip = pd.concat([health, stale])
+    n_fail = (trip['status'] == 'FAIL').sum()
+    n_warn = (trip['status'] == 'WARN').sum()
+    print(f'\nSummary: {n_fail} FAIL, {n_warn} WARN tripwires '
+          f'(data health + pipeline staleness). '
           f'{len(df)} rows -> {SCORECARD_CSV.name} / {SCORECARD_MD.name}; '
           f'history {len(hist_df)} rows.')
     return 1 if n_fail else 0

@@ -1,7 +1,12 @@
 ---
 name: level-board
-description: Rank hitters by the EMPIRICALLY-VALIDATED best simple forward-FP indicator — a lightly-shrunk season-to-date FP/g level — and surface the LEVEL-vs-rh3 divergence (RIDING-HOT = producing above the model / PEDIGREE = model sees more than the line / aligned). Use when the user asks "who has the highest season-to-date level", "rank hitters by their level", "who's producing the most", "level board", "who's riding hot vs their model", or wants the validated level read on roster + FA hitters. Display/context only — rh3 stays the headline projection.
+description: ALIAS → /hitter-board --mode level. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/hitter-board --mode level`.** This SKILL holds the
+> complete level-board recipe and stays live as the delegate; new invocations
+> should prefer `/hitter-board --mode level` (routing + trigger phrases live on
+> the canonical).
 
 # level-board — season-to-date hitter LEVEL board
 

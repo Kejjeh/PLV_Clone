@@ -1,7 +1,13 @@
 ---
 name: pitcher-sustainability
-description: Augments rp3 (the validated ROS projection) with a 9-marker Statcast skill decomposition (velo, swstr, CSW, chase, K%, BB%, HardHit%, Barrel%, xwOBA-contact). The headline ROS number is rp3.per_start. The sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS) is a CONFIDENCE LAYER on that rp3 number. The most valuable output is the DIVERGENCE SIGNAL — when sustainability decomp and rp3 disagree by >1.5 FP, we get BUY-LOW (rp3 hasn't caught up to a real breakout) or SELL-HIGH (production won't sustain, rp3 already conservative) actionable flags. Use when (a) a pitcher had a monster game or rough stretch and you need to know if rp3's number is going to move, (b) auditing your SP staff for hidden regression risk or buy-low candidates, (c) sizing up FA SPs by validated rp3 PLUS skill confirmation.
+description: ALIAS → /sp-form --lens sustainability. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/sp-form --lens sustainability`.** This SKILL holds
+> the complete 9-marker sustainability recipe (buckets, divergence signals,
+> bull/base/bear) and stays live as the delegate; new invocations should prefer
+> `/sp-form --lens sustainability` (routing + trigger phrases live on the
+> canonical).
 
 # pitcher-sustainability
 

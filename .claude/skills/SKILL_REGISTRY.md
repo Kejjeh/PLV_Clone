@@ -38,20 +38,29 @@ re-implementations of `scoring.py` (research scripts only) and the 73
 
 ---
 
-## 2. Full skill catalog (audit 2026-07-10)
+## 2. Full skill catalog (resynced 2026-07-20; enforced by `tests/test_skills_registered.py`)
 
-63 skills. Status: **active** · **alias** (deprecated delegate — banner in file,
-still triggers, redirects to successor; NEVER deleted) · **meta** (chains others).
-Counts: 41 active-distinct, 9 active-in-overlapping-cluster (⚠ marks them —
-consolidation proposed in §5), 6 aliases, 7 meta. (P1 executed 2026-07-10:
-stream-the-stack → alias of streamer-precision-board, which left the
-overlapping set and is now the canonical streamer surface.)
+**83 skills on disk.** Status: **active** · **alias** (delegate — banner in
+file, recipe retained, redirects to canonical; NEVER deleted) · **meta**
+(chains others). P1 (streamers) executed 2026-07-10; **P2 (hitter-board,
+modified) + P3 (hitter-form) + the sp-form dispatcher executed 2026-07-20**
+— 16 aliases total. The drift that let this catalog claim "63" while disk
+held 74 is now test-enforced: every on-disk skill must appear here and every
+row here must exist on disk.
+
+**Alias policy (amended 2026-07-20):** an alias keeps its full recipe under
+an ALIAS banner, but its TRIGGER PHRASES are ported to the canonical's
+description and its own description is cut to the short `ALIAS → /canonical`
+form (the always-loaded token cost of 16 verbose alias descriptions was the
+biggest listing bloat). Never delete an alias directory — cross-references
+resolve through it.
 
 ### Guards / preconditions
 | Skill | Status | Role |
 |---|---|---|
 | roster-verify | active | Live is-mine verification before labeling anyone "yours" |
 | player-id-resolve | active | Name-collision guard (KNOWN_COLLISIONS, resolve_*_id) |
+| pitcher-role | active | Role truth (detect_pitcher_role incl. the Jax RP-slot rule) — mandatory pre-claim |
 
 ### Ops / process
 | Skill | Status | Role |
@@ -85,10 +94,11 @@ overlapping set and is now the canonical streamer surface.)
 | Skill | Status | Role |
 |---|---|---|
 | sp-archetype | active | 20-80 S/M/C + trajectory + comps (process lens) |
-| sp-breakout-signal | active | Outcome-based hot-streak validity (NOISE→LOCK) |
-| sp-decline | active | RoS decline-risk (SwStr/K LEVEL — validated, not slope) |
-| pitcher-sustainability | active | 9-marker confidence layer on rp3 + divergence flags |
-| shadow-scout | active | Process card for SPs with no rp3/archetype row (rookies) |
+| **sp-form** | active | CANONICAL SP form surface — `--lens {breakout\|decline\|sustainability\|shadow}` (4 separately-validated engines, never blended; 2026-07-20) |
+| sp-breakout-signal | alias | → `/sp-form --lens breakout` (holds the recipe) |
+| sp-decline | alias | → `/sp-form --lens decline` (holds the recipe) |
+| pitcher-sustainability | alias | → `/sp-form --lens sustainability` (holds the recipe) |
+| shadow-scout | alias | → `/sp-form --lens shadow` (holds the recipe) |
 | sp-rehab-tracker | active | MiLB rehab-outing tracker for IL'd SPs |
 | sp-stash-finder | active | FA IL stashes whose return beats playoff end |
 | rp-archetype | active | RP 20-80 S/C/B + role tags + comps |
@@ -102,24 +112,26 @@ overlapping set and is now the canonical streamer surface.)
 | fa-rp-pool | alias | → `/fa-pitcher-pool --role rp` (holds RP recipe) |
 | fa-monitor | active | Weekly 12-signal wire scan (A-F + J-O incl. rating-arc riser) |
 | fa-pickup-deep-dive | active | Single-FA deep dive → PASS/CONSIDER/SKIP |
-| fa-replacement-pool ⚠ | active | "Dropping X" flat ranked replacement list (H or P) |
+| fa-replacement-pool | alias | → `/hitter-board --mode replace` (holds the recipe; P drops dispatch to fa-pitcher-pool) |
 
 ### Hitter boards
 | Skill | Status | Role |
 |---|---|---|
-| **hitter-slate-grid** ⚠ | active | CANONICAL hitter FA decision board (all 14 layers) |
-| xfp-board ⚠ | active | Merged roster+FA RoS/playoff dual-rank HTML boards |
-| level-board ⚠ | active | Season FP/g LEVEL rank + LEVEL-vs-rh3 divergence |
-| hitter-compare ⚠ | active | 2-6 hitter head-to-head tables + verdict |
+| **hitter-board** | active | CANONICAL hitter board — `--mode {slate\|level\|replace}` (P2 executed 2026-07-20, MODIFIED: xfp-board + hitter-compare deliberately NOT absorbed — see notes on their rows) |
+| hitter-slate-grid | alias | → `/hitter-board --mode slate` (holds the 14-layer recipe) |
+| level-board | alias | → `/hitter-board --mode level` (holds the recipe) |
+| xfp-board | active | Merged roster+FA RoS/playoff dual-rank HTML boards — CROSS-POSITION (its SP half would misroute under hitter-board; kept standalone) |
+| hitter-compare | active | 2-6 hitter head-to-head tables + verdict (distinct interaction; kept standalone; SP twin = /pitcher-compare) |
 
 ### Hitter form / sustainability
 | Skill | Status | Role |
 |---|---|---|
-| slump-or-decline | active | Downside diagnostic; DROP needs 3/3 test convergence |
-| breakout-sustainability ⚠ | active | Single-hitter "is the breakout real" deep dive |
-| hitter-sustainability ⚠ | active | Sweep 9-marker confidence layer on rh3 |
-| league-breakout-sustainability ⚠ | active | League-wide 5-axis breakout sweep / trade heat-map |
-| career-form-rank ⚠ | active | L150 career-percentile landscape (anti-buy-high lens) |
+| **hitter-form** | active | CANONICAL hitter form sweep — `--scope {roster\|fa\|league}` + `--lens career` (P3 executed 2026-07-20) |
+| hitter-sustainability | alias | → `/hitter-form --scope roster\|fa` (holds the 9-marker recipe) |
+| league-breakout-sustainability | alias | → `/hitter-form --scope league` (holds the recipe) |
+| career-form-rank | alias | → `/hitter-form --lens career` (holds the recipe) |
+| slump-or-decline | active | Downside diagnostic; DROP needs 3/3 test convergence (standalone deep-dive per P3) |
+| breakout-sustainability | active | Single-hitter "is the breakout real" deep dive (standalone per P3) |
 | hitter-archetype | active | 20-80 C/P/D + SB overlay + trajectory + comps |
 
 ### Cross-position lenses
@@ -133,6 +145,8 @@ overlapping set and is now the canonical streamer surface.)
 | conviction-scan | active | Model-vs-process divergence (buy-low/sell-high WATCH), Rule 13 |
 | savant-compare | active | Savant percentile side-by-side (external visual proof) |
 | pl-cross-reference | active | Pure external-sanity PL-vs-us surface (RETAINED 2026-07-04) |
+| second-half-splits | active | Career pre/post-ASG splits in BrownU FP, role-truth bucketing (2026-07-18) |
+| decision-trend | active | Swing-decision approach-change tracker (L21/L7 validated windows), Rule 13 (2026-07-18) |
 
 ### League-wide / trade
 | Skill | Status | Role |
@@ -143,6 +157,7 @@ overlapping set and is now the canonical streamer surface.)
 | scouting-report | active | Roster ownership × archetype trajectory movers brief |
 | opp-watch | active | Predict opponent's next roster move (behavior profiles) |
 | trade-target-scan | active | live_marginal sell-bait / ask-targets + pitch templates |
+| season-sim | active | Season simulation (playoff odds / seed scenarios) |
 
 ### Meta-skills (report bundles — chain, never re-derive)
 | Skill | Status | Chain |
@@ -210,8 +225,9 @@ Full rationale + break analysis: `data/research/skill_audit_2026-07-10.md`.
 | # | Proposal | Shape | Breaks to manage |
 |---|---|---|---|
 | P1 | ✅ **EXECUTED 2026-07-10** — `stream-the-stack` → filter of `streamer-precision-board` | board grew boom_stack column (live `compute_boom_stack`, tier-aware boom% + ⚠spike-anti) + `--filter boom>=2`; stack is now an alias | daily-edge chain updated (4→3 steps); tier-aware thresholds ported via the owner lib; verified live 2026-07-10 (49 probables → 11 boom≥2) |
-| P2 | Hitter-board core: `hitter-board --mode {slate\|merged\|level\|replace\|compare}` | hitter-slate-grid canonical; xfp-board / level-board / fa-replacement-pool / hitter-compare become mode delegates (sp-board `--scope` is the template) | xfp-board ENGINE is a refresh artifact (GH Pages) — engine untouched, only skill entry merges; replace-mode must dispatch P drops to fa-pitcher-pool |
-| P3 | Hitter-form sweeps: `hitter-form --scope {roster\|fa\|league} --lens {sustainability\|breakout\|career-pct}` | merges hitter-sustainability + league-breakout-sustainability + career-form-rank; breakout-sustainability + slump-or-decline stay as deep-dives | roster-deep-audit step list; reconcile tier vocabularies |
+| P2 | ✅ **EXECUTED 2026-07-20, MODIFIED** — `hitter-board --mode {slate\|level\|replace}` | hitter-slate-grid / level-board / fa-replacement-pool aliased. DEVIATIONS from the 07-10 design, both deliberate: **xfp-board NOT absorbed** (cross-position board — its SP half would misroute under a "hitter" name) and **hitter-compare NOT absorbed** (distinct 2-6-player interaction; /pitcher-compare built as its SP twin instead) | replace-mode dispatches P drops to fa-pitcher-pool (noted in canonical) |
+| P3 | ✅ **EXECUTED 2026-07-20** — `hitter-form --scope {roster\|fa\|league}` + `--lens career` | hitter-sustainability / league-breakout-sustainability / career-form-rank aliased; breakout-sustainability + slump-or-decline stay standalone deep-dives as designed | roster-deep-audit chain wording verified (aliases resolve) |
+| P4 | ✅ **EXECUTED 2026-07-20** — `sp-form --lens {breakout\|decline\|sustainability\|shadow}` | sp-breakout-signal / sp-decline / pitcher-sustainability / shadow-scout aliased — invocation surface ONLY over four separately-validated engines (§4 seam intact; a /lens dispatcher over the process-direction family was considered and REJECTED against the "do NOT build a sixth" rule — discovery handled by CLAUDE.md's cheat-sheet lens table instead) | rp-decline / rp-archetype stay standalone (RP seam) |
 
 **Still pending from earlier audits:** `buy-low-sell-high-scan` dedicated skill
 (conviction-scan is the interim surface) · scoring-formula sweep of ~25 research
@@ -235,3 +251,23 @@ scripts · 73-copy name-normalizer collapse.
 - `/second-half-splits` — career pre/post-ASG splits in BrownU FP, position-grouped, role-truth bucketing. Engine `run_second_half_splits.py`.
 - `/decision-trend` — swing-decision approach-change tracker (L21/L7, validated windows). Engine `run_decision_trend.py`; evidence `decision_window_study.py`.
 - `/pitcher-role` — role-truth (detect_pitcher_role) promoted from gotcha #8 to a mandatory pre-claim skill after the Jax/Detmers mislabel session.
+
+## 7. Added 2026-07-20 (skill-system redesign)
+
+Daily-use (born from July's recurring workflows):
+| Skill | Status | Role |
+|---|---|---|
+| churn-plan | active | Multi-step move sequencing with ET first-pitch deadlines + LIVE execution verify (EXECUTED/PARTIAL/PENDING/MISSED — the missed-Bradish class). Engine `run_churn_plan.py`; 4-RP floor enforced in-engine. |
+| decision-gates | active | Pre-registered, self-pruning decision gates (velo/FP/PT metrics + manual); state `data/research/decision_gates.json` (tracked); monday-morning 3c now runs its `check`. Engine `run_decision_gates.py`. |
+| whats-new | active | Delta briefing since last look (transactions, my lines, rank movers, injuries, PL editions, FA standouts) — pure joiner over the refresh's accumulated stores. Rule 13 awareness layer. Engine `run_whats_new.py`. |
+| pitcher-compare | active | 2-6 pitcher head-to-head + FIRM verdict (SP twin of hitter-compare; PROSE over existing engines; delta-vs-triangulate stated in-skill). |
+
+Maintenance:
+| Skill | Status | Role |
+|---|---|---|
+| golden-run | active | A/B output-equivalence verifier for behavior-preserving refactors (manifest + input-drift refusal + --cold pkl stash + always-restore). **Owner of "output-equivalence verification."** Engine `scripts/ci/golden_run.py`. |
+| production-audit | active | Repeatable multi-agent CODE audit (4-surface fan-out; the 2026-07-19 five-wave process). Owns CODE/SKILL/registry drift; /model-health owns DATA/PIPELINE runtime health. |
+
+model-health grew the 6-tripwire PIPELINE STALENESS section same day
+(console_data freshness, tri nightly + cards sidecar, publish freshness,
+espn_snapshot TTL, trajectory endpoints, golden_stash leftovers).
