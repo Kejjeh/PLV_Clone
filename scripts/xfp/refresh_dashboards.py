@@ -224,6 +224,36 @@ def main():
             print('  ⚠ bx priors rebuild failed — rh3 (bx_prior_h is a promoted '
                   'feature) will fail loudly if the existing cache is missing/stale')
 
+    # 1.96/1.97. Context-lens trending caches (Rule 13 display-only). These read
+    # the statcast cache refreshed in step 1/1.05 and are cheap (seconds each).
+    # Historically NOT wired into any pipeline, so they silently drifted 1-2
+    # months stale while rp3/rh3/rprs2 stayed same-day (fixed 2026-07-20). Both
+    # fail-soft — they feed /trending and Section B of the daily-edge briefing,
+    # no model consumes them.
+    run('1.96. Rebuild SP fastball-velocity trend cache (sp_velocity_trend.csv)',
+        'python -X utf8 scripts/xfp/sp_velocity_trend.py',
+        timeout=300)
+    run('1.97. Rebuild bat-speed trending cache (bat_speed_trending_2026.csv)',
+        'python -X utf8 scripts/xfp/research/early_season_trending_2026.py',
+        timeout=300)
+
+    # 1.98. PLV target boards (hitter_pre_breakout / breakout_flags + master_*,
+    # process_plus_rolling). `plv update` does a full-season pitch-feature
+    # rebuild (heavy, ~minutes), so it runs on a WEEKLY cadence via an mtime gate
+    # on its pre_breakout output — same pattern as the bx priors (1.95). Skipped
+    # on --no-models (the fast path never does the heavy PLV rebuild). Fail-soft:
+    # these are display-only boards; no publish-critical dashboard gates on them.
+    if not args.no_models:
+        _pb_csv = ROOT / 'data' / 'outputs' / 'hitter_pre_breakout_2026.csv'
+        _pb_fresh = (_pb_csv.exists()
+                     and (time.time() - _pb_csv.stat().st_mtime) < 7 * 86400)
+        if _pb_fresh:
+            print('\n  1.98. PLV target boards fresh (<7 days) — skip weekly rebuild')
+        else:
+            run('1.98. Rebuild PLV target boards (plv update, weekly, mtime-gated)',
+                'python -X utf8 -m plv_clone.cli update --year 2026',
+                timeout=1800)
+
     # ok_models gates the git publish (steps 5/6): a failed model rebuild means
     # every downstream dashboard is rendered from STALE projections — publishing
     # them as "fresh" is the failure mode the audit 2026-07-19 flagged (F2).
