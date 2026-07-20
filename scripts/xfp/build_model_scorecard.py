@@ -666,17 +666,37 @@ def check_boxscore_lag() -> None:
 
 
 def check_fg_snapshot_age() -> None:
-    """FG 2026 'current' snapshot age via file mtime. Stale >5d = WARN."""
+    """FG 2026 'current' snapshot age — SILENT-SCRAPE-FAILURE tripwire.
+
+    fg_2026_current.py is a DAILY refresh step (0.8), but it's an
+    undetected-chromedriver scrape that (a) flakes often and (b) exits 0 even
+    when chromedriver crashes — so the refresh's fail-soft `run()` prints ✓
+    while the file never updates. Age is therefore the ONLY signal that the
+    scrape has been failing. Thresholds are DAILY-tight (a daily step 3+ days
+    old means ≥2 consecutive silent failures), not the multi-day-cadence
+    thresholds used for weekly caches. Canonical: 2026-07-20, FG frozen 6d at
+    7/14 across daily auto-refreshes while every run logged success.
+    """
     pats = sorted(glob.glob(str(FG_ASOF_DIR / 'fg_*_2026_current.csv')))
     if not pats:
-        add_row('data_health', 'fg_2026_snapshot_age_days', 'all', None,
-                'SKIP', 'no fg_*_2026_current.csv found in fg_asof')
+        # a daily step producing NOTHING is worse than a stale file
+        add_row('data_health', 'fg_scrape_silent_fail', 'all', None,
+                'FAIL', 'no fg_*_2026_current.csv in fg_asof — the daily FG '
+                'scrape (step 0.8) has never succeeded / output is missing')
         return
     for p in pats:
         age = (datetime.now() - datetime.fromtimestamp(os.path.getmtime(p))).days
-        status = 'FAIL' if age > 10 else ('WARN' if age > 5 else 'PASS')
-        add_row('data_health', 'fg_2026_snapshot_age_days', Path(p).name,
-                age, status, 'mtime-based')
+        # daily step: >2d WARN (≥1 missed daily scrape), >5d FAIL (a week of
+        # silent flakes — Stuff+/floor/sustainability are frozen)
+        status = 'FAIL' if age > 5 else ('WARN' if age > 2 else 'PASS')
+        note = 'mtime-based; daily step (0.8)'
+        if status != 'PASS':
+            note += (f' — FG scrape appears to be SILENTLY FAILING '
+                     f'({age}d since last successful update; it exits 0 on '
+                     f'chromedriver crash). Run scripts/_oneoff/fg_2026_current.py '
+                     f'in an interactive shell with a working Chrome.')
+        add_row('data_health', 'fg_scrape_silent_fail', Path(p).name,
+                age, status, note)
 
 
 def check_fg_proj_cache_gaps() -> None:
@@ -798,7 +818,7 @@ def run_data_health() -> None:
     _run_check('ros_cache_split_day_lag', check_ros_cache_frozen)
     _run_check('statcast_max_date_lag_days', check_statcast_lag)
     _run_check('boxscore_lag_days', check_boxscore_lag)
-    _run_check('fg_2026_snapshot_age_days', check_fg_snapshot_age)
+    _run_check('fg_scrape_silent_fail', check_fg_snapshot_age)
     _run_check('fg_proj_cache_gaps', check_fg_proj_cache_gaps)
     _run_check('proj_rowcount_delta_7d',
                lambda: check_projection_rowcounts(hist))

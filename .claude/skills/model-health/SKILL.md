@@ -64,8 +64,15 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    - `statcast_max_date_lag_days` -> gf bridge
      (`build_statcast_gf_bridge.py`, refresh step 1.05)
    - `boxscore_*_lag_days` -> `refresh_boxscores.py` (step 1.5)
-   - `fg_2026_snapshot_age` / `fg_proj_cache_*` -> FG snapshotter
-     (refresh step 4.11)
+   - `fg_scrape_silent_fail` (was `fg_2026_snapshot_age`) / `fg_proj_cache_*`
+     -> the daily FG scrape `scripts/_oneoff/fg_2026_current.py` (step 0.8).
+     TIGHTENED 2026-07-20: FG is a DAILY step but its Chrome scrape EXITS 0
+     even when chromedriver crashes, so the refresh's fail-soft logs ✓ while
+     the file freezes (canonical: 6d frozen at 7/14). Thresholds are now
+     daily-tight — WARN >2d (≥1 missed scrape), FAIL >5d — and a MISSING
+     current file is FAIL. Fix = rerun the scrape in an interactive shell
+     with a working Chrome; the scrape's exit code is unreliable, trust this
+     tripwire's age instead.
    - `proj_rowcount_delta_7d` -> the model pipeline whose CSV swung
    - `proj_volume_fill_rate` -> volume builders (steps 4.09/4.09b) or
      snapshot-logger ordering (4.10 must run AFTER 4.09)
