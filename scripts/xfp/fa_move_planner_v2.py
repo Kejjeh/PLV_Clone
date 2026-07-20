@@ -20,6 +20,7 @@ import pandas as pd
 
 from plv_clone.projections import PROJECTIONS
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
 RES = ROOT / 'data' / 'research'
@@ -41,7 +42,7 @@ def main():
     from plv_clone.league_state import LeagueState
     ls = LeagueState()
     league = ls._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
 
     rh = PROJECTIONS.rh3()
     rh['nk'] = rh['player_name'].map(_norm)

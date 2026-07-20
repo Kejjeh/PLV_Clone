@@ -50,6 +50,54 @@ SWID      = os.environ.get("ESPN_SWID", "")
 ESPN_S2   = os.environ.get("ESPN_S2", "")
 
 
+def _wrap_free_agents_with_snapshot(league) -> None:
+    """Nightly-refresh network diet (audit 2026-07-19 F3).
+
+    Every refresh step runs as its own subprocess, so the expensive paginated
+    ``free_agents(size=2000)`` pull was re-fetched 5-6x per night (steps 0.7 /
+    2a / 4 / 4.72a / 4.55 ...). When ``PLV_ESPN_SNAPSHOT=1`` — set ONLY by the
+    refresh_dashboards driver — the plain big-pool pull is served from a
+    short-TTL disk pickle so ONE live pull feeds the whole refresh (and every
+    step sees the SAME consistent pool). Interactive/skill use never sets the
+    env var and stays fully live.
+
+    Fail-open by construction: any snapshot problem (missing dir, stale file,
+    unpicklable objects after an espn_api upgrade) falls through to the live
+    call. Filtered pulls (position/position_id kwargs) are never cached.
+    TTL: ``PLV_ESPN_SNAPSHOT_TTL_MIN`` (default 180 min ~ one refresh run).
+    """
+    import pickle
+    import time as _time
+
+    live = league.free_agents
+    snap_dir = Path(__file__).resolve().parents[2] / "data" / "research" / "espn_snapshot"
+    ttl_s = float(os.environ.get("PLV_ESPN_SNAPSHOT_TTL_MIN", "180")) * 60
+
+    def cached_free_agents(*args, **kwargs):
+        # cache ONLY the canonical no-filter pull, keyed by size
+        cacheable = not args and set(kwargs) <= {"size"}
+        if not cacheable:
+            return live(*args, **kwargs)
+        size = kwargs.get("size", 50)
+        p = snap_dir / f"free_agents_{size}.pkl"
+        try:
+            if p.exists() and (_time.time() - p.stat().st_mtime) < ttl_s:
+                with open(p, "rb") as f:
+                    return pickle.load(f)
+        except Exception:
+            pass
+        fas = live(*args, **kwargs)
+        try:
+            snap_dir.mkdir(parents=True, exist_ok=True)
+            with open(p, "wb") as f:
+                pickle.dump(fas, f)
+        except Exception:
+            pass
+        return fas
+
+    league.free_agents = cached_free_agents
+
+
 @lru_cache(maxsize=1)
 def _get_league():
     """Return authenticated ESPN League object (cached for process lifetime)."""
@@ -61,12 +109,32 @@ def _get_league():
         )
     try:
         from espn_api.baseball import League
-        return League(
-            league_id=LEAGUE_ID,
-            year=YEAR,
-            espn_s2=ESPN_S2,
-            swid=SWID,
-        )
+        # Retry with backoff (audit 2026-07-19 M3): the League constructor is
+        # one big authenticated GET and the single most common transient
+        # failure point — an ESPN 5xx here used to abort the whole engine.
+        league = None
+        for _attempt, _delay in ((1, 2), (2, 5), (3, None)):
+            try:
+                league = League(
+                    league_id=LEAGUE_ID,
+                    year=YEAR,
+                    espn_s2=ESPN_S2,
+                    swid=SWID,
+                )
+                break
+            except ImportError:
+                raise
+            except Exception as _le:
+                if _delay is None:
+                    raise
+                import time as _t
+                print(f"  espn: League construction failed "
+                      f"({type(_le).__name__}: {_le}) — retry {_attempt}/2 "
+                      f"in {_delay}s")
+                _t.sleep(_delay)
+        if os.environ.get("PLV_ESPN_SNAPSHOT") == "1":
+            _wrap_free_agents_with_snapshot(league)
+        return league
     except ImportError:
         raise ImportError(
             "espn-api not installed. Run: pip install espn-api"

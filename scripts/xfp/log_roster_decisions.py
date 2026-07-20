@@ -26,8 +26,6 @@ if sys.platform == 'win32':
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(_REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT))
-if str(_REPO_ROOT / 'src') not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT / 'src'))
 
 from scripts.xfp.lib.triangulate_core import triangulate_player  # noqa: E402
 

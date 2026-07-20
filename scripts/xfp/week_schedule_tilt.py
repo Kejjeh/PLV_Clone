@@ -21,6 +21,7 @@ import sys
 sys.path.insert(0, '.')
 
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
 
@@ -76,7 +77,7 @@ def main():
     from plv_clone.league_state import LeagueState
     ls = LeagueState()
     teams = ls.all_teams()
-    ligers = teams[teams['team_name'] == 'New York Ligers']
+    ligers = teams[teams['team_name'] == MY_TEAM_NAME]
 
     # Load supporting data
     park = pd.read_csv(OUT / 'park_player_splits.csv')

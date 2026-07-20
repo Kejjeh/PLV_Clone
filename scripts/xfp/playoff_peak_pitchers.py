@@ -21,6 +21,7 @@ from plv_clone.projections import PROJECTIONS
 import numpy as np
 
 from plv_clone.paths import ROOT
+from plv_clone.league_config import MY_TEAM_NAME
 sys.path.insert(0, str(ROOT))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
@@ -164,7 +165,7 @@ def main():
     # Cross-ref Ligers SPs
     from plv_clone.league_state import LeagueState
     league = LeagueState()._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
     my_names = {p.name for p in my_team.roster
                  if 'SP' in (getattr(p, 'eligibleSlots', None) or [])}
     print(f'\n=== LIGERS SPs — career playoff lift ===')

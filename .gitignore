@@ -64,7 +64,14 @@ data/models/*.pkl
 
 # ── xFP cache: large Statcast parquets (regenerable via build_sp_multiyr.py) ─
 data/research/xfp_cache/*.parquet
-data/research/xfp_cache/*.parquet.bak
+# .bak backups of ANY cache file (the refresh writes them) — the old
+# *.parquet.bak-only rule let a 64 MB rolling_hitters CSV .bak into git
+# (audit 2026-07-19; git rm --cached'd the same day).
+data/research/xfp_cache/*.bak
+
+# ESPN snapshot layer (refresh-run network diet, audit 2026-07-19 F3) —
+# short-TTL pickles/JSON regenerated every refresh; never track.
+data/research/espn_snapshot/
 
 # Disk-cache for the triangulate perf layer (pickled snapshots/decline-lens keyed on
 # statcast mtime,size; rebuilt on demand — binary, rotates per refresh, never track).

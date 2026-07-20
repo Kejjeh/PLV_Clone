@@ -26,7 +26,6 @@ import pandas as pd
 
 # Harness imports
 _root = __import__('pathlib').Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(_root / 'src'))
 sys.path.insert(0, str(_root / 'scripts' / 'xfp'))
 from _rp3_validation_harness import (
     prep_rolling, evaluate_candidate,

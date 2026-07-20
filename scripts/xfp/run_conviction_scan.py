@@ -31,13 +31,14 @@ import unicodedata
 from pathlib import Path
 
 import pandas as pd
+from plv_clone.league_config import MY_TEAM_NAME
 
 _ROOT = Path(__file__).resolve().parents[2]
 for p in (_ROOT, _ROOT / "src", _ROOT / "scripts" / "xfp"):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-MY = "New York Ligers"
+MY = MY_TEAM_NAME
 RES = _ROOT / "data" / "research"
 OUT = _ROOT / "data" / "outputs"
 
@@ -131,9 +132,15 @@ def main():
                 continue
             print(f"-- {hdr} --")
             for _, r in sub.iterrows():
-                print(f"  {str(r['player_name'])[:22]:<22} {r['own']:<18} {key} {int(r['pillar_val']):>2} "
-                      f"(p{r['rating_pct']:.0f})  model {r['model_val']:.2f} (p{r['model_pct']:.0f})  "
-                      f"div {r['divergence']:+.0f}pp")
+                # per-player crash guard (audit 2026-07-19 item 22, collect_cards
+                # pattern): one bad row (NaN cast etc.) must not kill the board.
+                try:
+                    print(f"  {str(r['player_name'])[:22]:<22} {r['own']:<18} {key} {int(r['pillar_val']):>2} "
+                          f"(p{r['rating_pct']:.0f})  model {r['model_val']:.2f} (p{r['model_pct']:.0f})  "
+                          f"div {r['divergence']:+.0f}pp")
+                except Exception as e:
+                    print(f"  WARN conviction row {r.get('player_name', '?')}: "
+                          f"{type(e).__name__}: {e} — skipped")
     if a.csv and frames:
         pd.concat(frames).to_csv(a.csv, index=False)
         print(f"\nwrote {a.csv}")

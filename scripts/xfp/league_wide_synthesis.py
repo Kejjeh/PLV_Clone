@@ -16,12 +16,12 @@ from pathlib import Path
 
 import pandas as pd
 from plv_clone.projections import PROJECTIONS
+from plv_clone.league_config import MY_TEAM_NAME
 
 REPO = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(REPO))
 
-MY_TEAM = "New York Ligers"
+MY_TEAM = MY_TEAM_NAME
 TODAY = date.today().isoformat()
 
 

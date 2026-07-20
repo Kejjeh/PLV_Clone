@@ -26,7 +26,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
-from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
 from plv_clone.league_config import SP_REPLACEMENT_RANK as REPLACEMENT_SP_RANK
 
 warnings.filterwarnings('ignore')
@@ -184,87 +184,35 @@ def apply_shrinkage(df: pd.DataFrame, pop_means: dict, spec: dict) -> pd.DataFra
 _FIT_FP_VERSION = 1
 
 
+# eligibility mask shared by the fit stages (hoisted scaffolding, audit D2)
+def _fit_filter(d: pd.DataFrame):
+    return (d['gs_to'] >= EVAL_GS_MIN) & (d['ros_gs'] >= ROS_GS_MIN) & (d['year'] != 2020)
+
+
 def _fit_fingerprint(rolling: pd.DataFrame, feats: list[str]) -> str:
-    """Content hash of the fit stage's inputs: TRAIN-YEAR rows (immutable slice),
-    FEATS, target, train years. Same fingerprint => byte-identical fit artifacts
-    (warm-skip). Bump _FIT_FP_VERSION when fit LOGIC changes."""
-    import hashlib
-    sub = rolling[rolling['year'].isin(TRAIN_YEARS)]
-    cols = [c for c in sorted(set(feats + [TARGET, 'year', 'split_day'])) if c in sub.columns]
-    h = hashlib.md5()
-    h.update(pd.util.hash_pandas_object(sub[cols].reset_index(drop=True), index=False).values.tobytes())
-    h.update(repr((sorted(feats), TARGET, sorted(TRAIN_YEARS), _FIT_FP_VERSION)).encode())
-    return h.hexdigest()
+    return _engine.fit_fingerprint(
+        rolling, feats, target=TARGET, train_years=TRAIN_YEARS,
+        extra=(TARGET,), fp_version=_FIT_FP_VERSION)
 
 
 def cross_year_eval(df: pd.DataFrame, feats: list[str]):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
-    df = df.dropna(subset=feats + [TARGET]).copy()
-    df = df[(df['gs_to'] >= EVAL_GS_MIN) & (df['ros_gs'] >= ROS_GS_MIN)
-            & (df['year'] != 2020)]
-    per_year, preds_all, acts_all = {}, [], []
-    _details = []
-    for held in TRAIN_YEARS:
-        train = df[df['year'] != held]; test = df[df['year'] == held]
-        if len(train) < 50 or len(test) < 10:
-            continue
-        pipe = Pipeline([('sc', StandardScaler()),
-                         ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=5))])
-        pipe.fit(train[feats].values, train[TARGET].values)
-        preds = pipe.predict(test[feats].values)
-        r = float(np.corrcoef(preds, test[TARGET].values)[0, 1])
-        mae = float(np.mean(np.abs(preds - test[TARGET].values)))
-        per_year[held] = {'r': round(r, 4), 'mae': round(mae, 4), 'n': len(test)}
-        preds_all.extend(preds.tolist()); acts_all.extend(test[TARGET].tolist())
-        _details.append(pd.DataFrame({'pred': preds, 'actual': test[TARGET].values,
-                                      'split_day': test['split_day'].values}))
-    overall_r = float(np.corrcoef(preds_all, acts_all)[0, 1]) if preds_all else np.nan
-    overall_mae = float(np.mean(np.abs(np.array(preds_all) - np.array(acts_all))))
-    detail = (pd.concat(_details, ignore_index=True) if _details
-              else pd.DataFrame(columns=['pred', 'actual', 'split_day']))
-    detail['resid'] = detail['actual'] - detail['pred']
-    return per_year, {'r': round(overall_r, 4), 'mae': round(overall_mae, 4),
-                      'n': len(preds_all)}, detail
+    return _engine.cross_year_eval_ridge(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=_fit_filter, min_train=50, min_test=10)
 
 
 def fit_residual_ci(df: pd.DataFrame, feats: list[str], resid: pd.DataFrame | None = None):
     # `resid`: per-row detail cross_year_eval already produced — the second LOO
     # pass here was fit-for-fit IDENTICAL (audit 2026-07-04, duplicate fitting).
-    if resid is not None and len(resid):
-        res = resid
-    else:
-        sub = df.dropna(subset=feats + [TARGET]).copy()
-        sub = sub[(sub['gs_to'] >= EVAL_GS_MIN) & (sub['ros_gs'] >= ROS_GS_MIN)
-                  & (sub['year'] != 2020)]
-        res = _engine.train_residual_table(
-            df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
-            min_train=50, min_test=10,
-        )
-    out: dict[tuple[int, int], float] = {}
-    for split in sorted(res['split_day'].unique()):
-        sub2 = res[res['split_day'] == split]
-        qs = pd.qcut(sub2['pred'], q=4, duplicates='drop', labels=False)
-        for q in sorted(sub2.groupby(qs).groups.keys()):
-            ix = (qs == q)
-            sigma = float(sub2.loc[ix, 'resid'].std())
-            out[(int(split), int(q))] = sigma
-    overall_sigma = float(res['resid'].std())
-    return out, overall_sigma
+    return _engine.fit_residual_ci_from(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=_fit_filter, min_train=50, min_test=10, resid=resid)
 
 
 def train_final(df: pd.DataFrame, feats: list[str]):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
-    train = df.dropna(subset=feats + [TARGET])
-    train = train[(train['gs_to'] >= EVAL_GS_MIN) & (train['ros_gs'] >= ROS_GS_MIN)
-                  & (train['year'].isin(TRAIN_YEARS))]
-    pipe = Pipeline([('sc', StandardScaler()),
-                     ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=10))])
-    pipe.fit(train[feats].values, train[TARGET].values)
-    return pipe, len(train)
+    return _engine.train_final_ridge(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=lambda d: (d['gs_to'] >= EVAL_GS_MIN) & (d['ros_gs'] >= ROS_GS_MIN))
 
 
 def main():
@@ -288,8 +236,9 @@ def main():
         milb_pri = pd.read_csv(MILB_PRIORS_CSV)[['pitcher', 'projected_fp_per_start']]
         milb_pri = milb_pri.rename(columns={'projected_fp_per_start': 'milb_prior_fp'})
         rolling = rolling.merge(milb_pri, on='pitcher', how='left')
-        # Fill NaN MLB-prior rows in 2026 with MiLB prior where available
-        is_2026 = rolling['year'] == 2026
+        # Fill NaN MLB-prior rows in the current season with MiLB prior where
+        # available (data-driven year — audit R2, no hardcoded 2026)
+        is_2026 = rolling['year'] == int(rolling['year'].max())
         needs_fallback = is_2026 & rolling['prior_fp_per_start'].isna()
         has_milb = needs_fallback & rolling['milb_prior_fp'].notna()
         rolling.loc[has_milb, 'prior_fp_per_start'] = rolling.loc[has_milb, 'milb_prior_fp']
@@ -456,8 +405,10 @@ def main():
             print(f'    {f:<28s} {c:+.4f}')
 
 
-    # Project 2026
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # Project the current season = latest year in the substrate (audit R2:
+    # the old hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
         return
     latest_split = int(df_26['split_day'].max())
@@ -486,7 +437,7 @@ def main():
     IL_PRIOR_MIN_GS = 5  # need ≥5 GS-equivalent of prior history
     projected_ids = set(valid['pitcher'])
     prior_only = prior[~prior['pitcher'].isin(projected_ids)
-                        & (prior['year'] == 2026)
+                        & (prior['year'] == proj_year)
                         & (prior['prior_gs_eff'] >= IL_PRIOR_MIN_GS)].copy()
     if not prior_only.empty:
         prior_only['xfp_rp3_per_start'] = (prior_only['prior_fp_per_start']
@@ -521,10 +472,10 @@ def main():
         pred_buckets[int(split)] = cuts
 
     Z25 = 0.6745
-    sigmas = []
-    for _, row in valid.iterrows():
-        sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
-                                   row['xfp_rp3_per_start'], pred_buckets))
+    # (vectorized 2026-07-19, audit item 21/W2 — latest_split is constant here;
+    # golden A/B verified byte-identical vs the scalar iterrows loop)
+    sigmas = lookup_sigma_vec(ci_table, overall_sigma, latest_split,
+                              valid['xfp_rp3_per_start'].to_numpy(), pred_buckets)
     valid['xfp_rp3_sigma_raw'] = sigmas
     # Empirical sigma recalibration (added 2026-06-03). Raw LOO residual sigma
     # under-covers the per-start panel by ~2.3x. Multiply by alpha_global so
@@ -589,18 +540,17 @@ def main():
     #   marcel_no_data   : gs_to == 0 and not IL — should be rare/empty
     #   marcel_il        : prior_source == 'marcel_il' OR is_on_il_at_split == 1
     #                      (Marcel prior * IL_PRIOR_DISCOUNT, no 2026 form)
-    def _quality_tag(row):
-        gs = float(row.get('gs_to', 0) or 0)
-        src = row.get('prior_source', '')
-        is_il = int(row.get('is_on_il_at_split', 0) or 0)
-        if src == 'marcel_il' or is_il == 1:
-            return 'marcel_il'
-        if gs == 0:
-            return 'marcel_no_data'
-        if gs >= 8:
-            return 'data_driven_full'
-        return 'data_driven_thin'
-    valid['data_quality_tag'] = valid.apply(_quality_tag, axis=1)
+    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
+    # byte-identical vs the row-wise _quality_tag closure)
+    valid['data_quality_tag'] = np.select(
+        [
+            (valid['prior_source'] == 'marcel_il') | (valid['is_on_il_at_split'] == 1),
+            valid['gs_to'] == 0,
+            valid['gs_to'] >= 8,
+        ],
+        ['marcel_il', 'marcel_no_data', 'data_driven_full'],
+        default='data_driven_thin',
+    )
 
     # marcel_baseline — the pure Marcel prior (undiscounted), surfaced
     # explicitly so consumers can show "Marcel says X, 2026 data says Y,
@@ -619,7 +569,27 @@ def main():
         np.nan,
     )
 
-    valid['signal'] = valid.apply(_signal, axis=1)
+    # Add/drop signal (vectorized 2026-07-19, audit item 21/W3 — golden A/B
+    # verified byte-identical vs the row-wise _signal()). Uses the DECISION
+    # band (narrow, raw-sigma) for the add/drop trigger — the wide ×2.41
+    # display band is a coverage-calibrated CI, not a decision band; using it
+    # for add/drop made the signal inert (100% hold, verdict_backtest
+    # 2026-06-11). The is_on_il_at_split test replicates bool() truthiness
+    # (NaN/non-zero -> 'il'); NaN comparisons match row-wise (NaN > x = False).
+    _il = valid['is_on_il_at_split']
+    _repl = valid['replacement_xfp_per_start']
+    _p25 = valid['xfp_rp3_decision_p25']
+    _p75 = valid['xfp_rp3_decision_p75']
+    valid['signal'] = np.select(
+        [
+            _il.isna() | (_il != 0),
+            valid['replacement_delta'].isna() | _repl.isna(),
+            _p25.notna() & (_p25 > _repl),
+            _p75.notna() & (_p75 < _repl),
+        ],
+        ['il', 'hold', 'add', 'drop'],
+        default='hold',
+    )
     valid = valid.sort_values('xfp_rp3_per_start', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
 
@@ -714,6 +684,17 @@ def apply_schedule_strength(valid: pd.DataFrame) -> pd.DataFrame:
 
     team = pd.read_csv(TEAM_STR_CSV)
     sched = pd.read_csv(SCHEDULE_CSV)
+    # Staleness-visibility guard (audit 2026-07-19 R5): a frozen schedule CSV
+    # silently yields schedule_factor=1.0 for everyone. Values unchanged —
+    # just surface the cache's age so undetectable staleness can't recur.
+    try:
+        from datetime import datetime as _dt
+        _age_d = (_dt.now() - _dt.fromtimestamp(SCHEDULE_CSV.stat().st_mtime)).days
+        if _age_d >= 3:
+            print(f'  !! WARNING: pitcher_schedule cache is {_age_d}d old — '
+                  f'schedule_factor is running on a stale probables window')
+    except OSError:
+        pass
     sched = sched.merge(team[['team', 'bat_index']],
                         left_on='opp_team_abbrev', right_on='team',
                         how='left', suffixes=('', '_t'))
@@ -770,28 +751,6 @@ def compute_replacement_delta(df: pd.DataFrame) -> pd.DataFrame:
     df['replacement_xfp_per_start'] = round(repl, 3)
     df['replacement_delta'] = (df['xfp_rp3_per_start'] - repl).round(3)
     return df
-
-
-def _signal(row) -> str:
-    # Use the DECISION band (narrow, raw-sigma) for the add/drop trigger if it
-    # is present, falling back to the displayed band for callers that only
-    # materialize xfp_rp3_p25/p75 (e.g. the verdict backtest). The wide ×2.41
-    # display band is a coverage-calibrated CI, not a decision band — using it
-    # for add/drop made the signal inert (100% hold, verdict_backtest 2026-06-11).
-    delta = row.get('replacement_delta', 0)
-    p25 = row.get('xfp_rp3_decision_p25', row.get('xfp_rp3_p25', None))
-    p75 = row.get('xfp_rp3_decision_p75', row.get('xfp_rp3_p75', None))
-    repl = row.get('replacement_xfp_per_start', None)
-    is_il = bool(row.get('is_on_il_at_split', 0))
-    if is_il:
-        return 'il'
-    if delta is None or pd.isna(delta) or repl is None or pd.isna(repl):
-        return 'hold'
-    if p25 is not None and not pd.isna(p25) and p25 > repl:
-        return 'add'
-    if p75 is not None and not pd.isna(p75) and p75 < repl:
-        return 'drop'
-    return 'hold'
 
 
 if __name__ == '__main__':

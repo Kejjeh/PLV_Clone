@@ -12,7 +12,6 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from plv_clone.data.player_positions import PositionConfig, build_position_map
 

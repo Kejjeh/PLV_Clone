@@ -11,7 +11,13 @@ that needs to bucket pitchers into the correct model.
 
 Role detection priority:
   1. If eligible_slots contains SP but not RP  → 'SP'  (no API call)
-  2. If eligible_slots contains RP but not SP  → 'RP'  (no API call)
+  2. If eligible_slots contains RP but not SP  → 'RP' UNLESS the name appears
+     in the rp3 SP-model output — ESPN's slot grants LAG a mid-season RP→SP
+     conversion (canonical: Griffin Jax 2026 post-trade — RP-only slots for
+     weeks while starting for TB, so cap math ignored his real starts).
+     rp3 membership = strong evidence of real starts → decide on
+     gamesStarted like the dual path. True relievers are never in rp3, so
+     they short-circuit to 'RP' with no API call, exactly as before.
   3. Both SP+RP eligible                       → MLB Stats API gamesStarted
      • gamesStarted / gamesPlayed >= 0.4      → 'SP'
      • else                                   → 'RP'
@@ -132,6 +138,44 @@ def _resolve_pitcher_mlbam(name: str, team: str | None) -> int | None:
         return None
 
 
+@lru_cache(maxsize=1)
+def _rp3_name_keys() -> frozenset:
+    """Safe-keyed player names present in the rp3 SP-model output.
+
+    Membership = the SP pipeline has real starts for this name, regardless of
+    what ESPN's slot list says. Used to escalate an RP-only-eligible pitcher
+    to the gamesStarted check when ESPN lags a conversion (Jax 2026). Degrades
+    to an empty set (→ pre-fix behavior) if the CSV or normalizer is missing.
+    """
+    try:
+        import pandas as pd
+        from plv_clone.utils.name_match import safe_name_key
+        try:
+            from plv_clone.paths import ROOT as _ROOT
+            path = _ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'
+        except Exception:
+            path = 'data/outputs/xfp_rp3_projections.csv'
+        names = pd.read_csv(path, usecols=['player_name'])['player_name'].dropna()
+        return frozenset(safe_name_key(n) for n in names)
+    except Exception as e:
+        _warn('rp3_name_keys', e)
+        return frozenset()
+
+
+def _decide_by_starts(player_or_row, mlbam_id, season, gs_lookup, id_resolver,
+                      fallback: str) -> str:
+    """Shared endgame: resolve an id if needed, decide on real gamesStarted;
+    `fallback` when resolution is exhausted."""
+    pid = mlbam_id
+    if pid is None:
+        resolver = id_resolver or _resolve_pitcher_mlbam
+        pid = resolver(_name_of(player_or_row), _team_of(player_or_row))
+    if pid:
+        gs = gs_lookup or _role_from_mlb_stats
+        return gs(int(pid), season)
+    return fallback
+
+
 # ── public API ────────────────────────────────────────────────────────────────
 
 def detect_pitcher_role(
@@ -141,6 +185,7 @@ def detect_pitcher_role(
     *,
     gs_lookup=None,
     id_resolver=None,
+    rp3_keys=None,
 ) -> str:
     """
     Return 'SP' or 'RP' for a pitcher.
@@ -167,6 +212,9 @@ def detect_pitcher_role(
                      to test the dual-eligible path without the network.
         id_resolver: (name, team) -> int|None. Defaults to the collision-safe
                      CSV+API resolver. Inject to test without CSV/API.
+        rp3_keys:    set of safe-keyed names in the rp3 SP model. Defaults to
+                     the cached CSV loader. Inject to test the RP-only
+                     conversion escalation offline.
     """
     elig = _elig_set(player_or_row)
     has_sp = 'SP' in elig
@@ -175,20 +223,31 @@ def detect_pitcher_role(
     if has_sp and not has_rp:
         return 'SP'
     if has_rp and not has_sp:
+        # ESPN slot grants LAG a mid-season RP→SP conversion (canonical:
+        # Griffin Jax 2026 post-trade — RP-only slots for weeks while starting
+        # for TB, so cap math ignored his real starts). If the SP model (rp3)
+        # knows this name, it has real starts: decide on gamesStarted like the
+        # dual path. True relievers are never in rp3 → short-circuit 'RP'
+        # with no API call, exactly as before.
+        keys = rp3_keys if rp3_keys is not None else _rp3_name_keys()
+        try:
+            from plv_clone.utils.name_match import safe_name_key
+            in_rp3 = safe_name_key(_name_of(player_or_row)) in keys
+        except Exception as e:
+            _warn('rp3_membership', e)
+            in_rp3 = False
+        if in_rp3:
+            return _decide_by_starts(player_or_row, mlbam_id, season,
+                                     gs_lookup, id_resolver, fallback='RP')
         return 'RP'
     if has_sp and has_rp:
         # Dual-eligible: decide on real starts. Use a caller-supplied id if
         # given, otherwise resolve it ourselves — never silently fall back to
         # the stale ESPN .position tag while a real read is obtainable.
-        pid = mlbam_id
-        if pid is None:
-            resolver = id_resolver or _resolve_pitcher_mlbam
-            pid = resolver(_name_of(player_or_row), _team_of(player_or_row))
-        if pid:
-            gs = gs_lookup or _role_from_mlb_stats
-            return gs(int(pid), season)
-        # Resolution exhausted — last resort only.
-        return _position_tag(player_or_row) or 'SP'
+        # Resolution exhausted → tag is the documented last resort.
+        return _decide_by_starts(player_or_row, mlbam_id, season,
+                                 gs_lookup, id_resolver,
+                                 fallback=_position_tag(player_or_row) or 'SP')
 
     # No pitcher eligibility detected in slots — use position tag
     return _position_tag(player_or_row) or 'SP'

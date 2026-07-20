@@ -20,13 +20,14 @@ import argparse
 import sys
 import unicodedata
 from pathlib import Path
+from plv_clone.league_config import MY_TEAM_NAME
 
 _ROOT = Path(__file__).resolve().parents[2]
 for p in (_ROOT, _ROOT / "src", _ROOT / "scripts" / "xfp"):
     if str(p) not in sys.path:
         sys.path.insert(0, str(p))
 
-MY = "New York Ligers"
+MY = MY_TEAM_NAME
 
 
 # _nrm routed to the name_match owner (item 10, 2026-07-04) — symmetric ownership/

@@ -161,12 +161,14 @@ def aggregate_starts(pitches_full: pd.DataFrame) -> pd.DataFrame:
         er=('runs_on_play', 'sum'),
     ).reset_index()
     per_start['ip'] = per_start['outs'] / 3.0
-    per_start['fp'] = (per_start['k']
-                      + per_start['ip'] * 3.3
-                      - per_start['h']
-                      - 2 * per_start['er']
-                      - per_start['bb']
-                      - per_start['hbp'])
+    from plv_clone.fantasy.scoring import pitcher_fp
+    per_start['fp'] = pitcher_fp(          # canonical BrownU weights (audit #4);
+        k=per_start['k'],                  # operand order matches the old inline
+        ip=per_start['ip'],                # expression exactly -> bit-identical
+        h=per_start['h'],
+        er=per_start['er'],
+        bb=per_start['bb'],
+        hbp=per_start['hbp'])
 
     by_pitcher = per_start.groupby('pitcher').agg(
         gs=('game_pk', 'count'),

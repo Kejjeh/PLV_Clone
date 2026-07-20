@@ -40,7 +40,10 @@ PUBLISH_PAGES_PROFILES = ('docs/player_profiles.html', 'docs/player_profiles_dat
 
 def run(label, cmd, cwd=None, timeout=900, env=None):
     """Run a subprocess. `env` is an optional dict of EXTRA env vars merged
-    on top of os.environ for THIS step only (scoped — does not leak)."""
+    on top of os.environ for THIS step only (scoped — does not leak).
+
+    NOTE (audit 2026-07-19 item 16): relying on the implicit 900s default is
+    BANNED for publish-critical steps — pass timeout= explicitly there."""
     print(f'\n{"="*70}\n  {label}\n{"="*70}', flush=True)
     t0 = time.time()
     proc_env = None
@@ -62,6 +65,12 @@ def run(label, cmd, cwd=None, timeout=900, env=None):
 
 
 def main():
+    # ESPN snapshot mode for every child step (audit 2026-07-19 F3): one live
+    # free_agents(size=2000) pull + one injury-detail sweep feed the whole
+    # refresh via short-TTL disk caches (see plv_clone/espn.py and
+    # league_state.injury_details). Interactive/skill runs never set this.
+    os.environ['PLV_ESPN_SNAPSHOT'] = '1'
+    os.environ.setdefault('PLV_ESPN_SNAPSHOT_TTL_MIN', '240')
     ap = argparse.ArgumentParser()
     ap.add_argument('--no-push', action='store_true',
                     help='skip git commit/push at end')
@@ -114,8 +123,11 @@ def main():
               'role classification still live via boxscore GS reconciliation')
 
     if not args.skip_statcast:
+        # explicit timeout (audit 2026-07-19 item 16): the implicit default is
+        # banned for publish-critical steps — same effective value (900s).
         run('1. Refresh statcast (yesterday\'s games)',
-            'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1')
+            'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1',
+            timeout=900)
 
     # 1.05. Statcast gf bridge — fills the SAME 1-2 day Statcast lag at PITCH level
     # (the boxscore bridge only fixes FP actuals; this makes the MODELS same-day
@@ -160,7 +172,7 @@ def main():
               'pulled SB cutoff forward (leakage-safe, but sb_per_pa_to_sh '
               'will lag until the next successful pull)')
 
-    run('1b. Build batter rolling-feature cache',
+    run('1.7 (was 1b). Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 
     # Snapshot rolling caches — feed the Player-Profiles intra-season trajectory
@@ -169,13 +181,13 @@ def main():
     # minutes later with no consumer in between — so run them here ONLY when
     # the model rebuild is being skipped (--no-models fast path).
     if args.no_models:
-        run('1c. Build hitter rolling snapshot cache (weekly cadence 2024-2026)',
+        run('1.75 (was 1c). Build hitter rolling snapshot cache (weekly cadence 2024-2026)',
             'python -X utf8 scripts/xfp/build_rolling_hitters.py',
             timeout=300)
-        run('1d. Build SP rolling snapshot cache (weekly cadence 2024-2026)',
+        run('1.8 (was 1d). Build SP rolling snapshot cache (weekly cadence 2024-2026)',
             'python -X utf8 scripts/xfp/build_rolling_pitchers.py',
             timeout=300)
-        run('1e. Build RP rolling snapshot cache (weekly cadence 2024-2026)',
+        run('1.85 (was 1e). Build RP rolling snapshot cache (weekly cadence 2024-2026)',
             'python -X utf8 scripts/xfp/build_rolling_relievers.py',
             timeout=300)
 
@@ -212,13 +224,19 @@ def main():
             print('  ⚠ bx priors rebuild failed — rh3 (bx_prior_h is a promoted '
                   'feature) will fail loudly if the existing cache is missing/stale')
 
+    # ok_models gates the git publish (steps 5/6): a failed model rebuild means
+    # every downstream dashboard is rendered from STALE projections — publishing
+    # them as "fresh" is the failure mode the audit 2026-07-19 flagged (F2).
+    ok_models = True
     if not args.no_models:
         # --skip-schedule: build_pitcher_schedule already ran as its own step
         # here (dead duplicate probables pull inside refresh_all otherwise).
-        ok = run('2. Rebuild xFP models',
-                 'python -X utf8 scripts/xfp/refresh_all.py --skip-schedule',
-                  timeout=1800)
-        if not ok: print('  → continuing despite model rebuild issue')
+        ok_models = run('2. Rebuild xFP models',
+                        'python -X utf8 scripts/xfp/refresh_all.py --skip-schedule',
+                        timeout=1800)
+        if not ok_models:
+            print('  → continuing (build steps still run) but the PUBLISH will be '
+                  'GATED — dashboards would carry stale projections')
 
     # 2a. Patch stale is_on_il_at_split from live ESPN injury status.
     # The rp3 pipeline's is_on_il_at_split (and the data_quality_tag='marcel_il'
@@ -314,7 +332,7 @@ def main():
     # 2.9. Refresh pitcher probable-starts schedule (next 14 days via MLB Stats
     # API). Consumed by build_matchup_dashboard.py and
     # build_sp_boom_stack_full_pool.py (via lib/boom_stack.py
-    # _component_park_friendly). Must run BEFORE step 4 (matchup) and 4.45
+    # _component_park_friendly). Must run BEFORE step 4 (matchup) and 4.25
     # (full-pool boom_stack). Fail-soft: consumers have inline-API fallbacks
     # and the existing CSV remains if this fails (no partial write — atomic
     # temp+rename in the builder).
@@ -327,8 +345,11 @@ def main():
         print('  ⚠ pitcher_schedule refresh failed — downstream consumers will '
               'use stale cache + inline-API fallbacks')
 
+    # explicit timeout (audit 2026-07-19 item 16): the implicit default is
+    # banned for publish-critical steps — same effective value (900s).
     run('3. Build live_dashboard.html (snapshot)',
-        'python -X utf8 scripts/xfp/live_monitor.py --dashboard')
+        'python -X utf8 scripts/xfp/live_monitor.py --dashboard',
+        timeout=900)
 
     # Incremental backfill of closed-week actuals into predictions_history.csv.
     # Safe to run every day — idempotent (no-op if nothing new closed).
@@ -345,34 +366,53 @@ def main():
 
     # Regenerate the calibration report from whatever's currently backfilled.
     # No-op safe: if no rows are backfilled, the report flags INSUFFICIENT.
-    ok_calib = run(
-        '3.6. Regenerate calibration report',
-        'python -X utf8 scripts/xfp/report_calibration.py',
-        timeout=120,
-    )
-    if not ok_calib:
-        print('  ⚠ calibration report failed — continuing')
+    # Driver-level idle gate (audit 2026-07-19 item 17, same idiom as 1.95):
+    # the report is a pure function of predictions_history.csv, so skip the
+    # subprocess entirely when the report already post-dates its input.
+    _calib_in = ROOT / 'data' / 'outputs' / 'predictions_history.csv'
+    _calib_out = ROOT / 'data' / 'outputs' / 'projection_accuracy_report.md'
+    _calib_fresh = (_calib_out.exists() and _calib_in.exists()
+                    and _calib_out.stat().st_mtime >= _calib_in.stat().st_mtime)
+    if _calib_fresh:
+        print('\n  3.6. calibration report newer than predictions_history.csv — skip')
+    else:
+        ok_calib = run(
+            '3.6. Regenerate calibration report',
+            'python -X utf8 scripts/xfp/report_calibration.py',
+            timeout=120,
+        )
+        if not ok_calib:
+            print('  ⚠ calibration report failed — continuing')
 
-    # 3.7. Per-player backfill panel (slot-aware). Historical 2024+2025 ESPN
-    # box-score data — one-time-ish; only re-runs if the output parquet is
-    # missing. Pass --force to rebuild. Used for slot-aware projection tests
-    # and per-player residual decomposition.
-    ok_pp = run(
-        '3.7. Per-player calibration backfill panel (one-time)',
-        'python -X utf8 scripts/xfp/build_synthetic_calibration_with_slots.py',
-        timeout=900,
-    )
-    if not ok_pp:
-        print('  ⚠ per-player backfill panel failed — continuing (research-only)')
+    # 3.65 (was 3.7 — relabeled, audit 2026-07-19 item 16: label collided with
+    # the live_blend step below). Per-player backfill panel (slot-aware).
+    # Historical 2024+2025 ESPN box-score data — one-time-ish. Pass --force
+    # (to the script) to rebuild. Used for slot-aware projection tests and
+    # per-player residual decomposition.
+    # Driver-level idle gate (audit 2026-07-19 item 17, same idiom as 1.95):
+    # the script itself skips when its output parquet exists, but spawning
+    # python + ESPN imports just to print "skipping" wastes ~10s/day.
+    _pp_parquet = ROOT / 'data' / 'research' / 'calibration_panel_per_player.parquet'
+    if _pp_parquet.exists():
+        print('\n  3.65. per-player calibration panel exists — skip (one-time build)')
+    else:
+        ok_pp = run(
+            '3.65 (was 3.7). Per-player calibration backfill panel (one-time)',
+            'python -X utf8 scripts/xfp/build_synthetic_calibration_with_slots.py',
+            timeout=900,
+        )
+        if not ok_pp:
+            print('  ⚠ per-player backfill panel failed — continuing (research-only)')
 
-    # 2.95. Enrich projection CSVs (rh3/rp3/rprs2) with validated prior-season
+    # 3.67 (was 2.95 — relabeled, audit 2026-07-19 item 16: it EXECUTES here,
+    # after 3.65). Enrich projection CSVs (rh3/rp3/rprs2) with validated prior-season
     # features: slope_3yr_prior, arche_overall_prior, traj_career_low_prior
     # (all three CSVs) + high_k_z_year_prior, shadow_velo_pct_prior,
     # shadow_bb_pct_prior (rp3 only). Joined on mlbam ID, atomic write, NaN
     # propagation (no silent mean-fill). Consumed by the blend scorer.
     # Fail-soft: scorer falls back to NaN handling if enrichment skips.
     ok_enrich = run(
-        '2.95. Enrich projection CSVs with prior-season features',
+        '3.67 (was 2.95). Enrich projection CSVs with prior-season features',
         'python -X utf8 scripts/xfp/enrich_projection_csvs.py',
         timeout=300,
     )
@@ -382,12 +422,12 @@ def main():
 
     # ── PRODUCERS MOVED AHEAD OF CONSUMERS (audit 2026-07-04) ──
     # live_blend feeds matchup.html (step 4); stream_the_stack + hitter_boom_stack
-    # feed triangulate.html (4.7-label), the triangulate universe (4.72) and
-    # player_profiles (4.5). They previously ran AFTER those consumers, so every
+    # feed triangulate.html (4.2), the triangulate universe (4.1) and
+    # player_profiles (4.35). They previously ran AFTER those consumers, so every
     # dashboard rendered yesterday's blend/boom numbers next to today's
     # projections — and the PERMANENT nightly verdict history recorded day-old
     # boom components. Pure block moves, no logic change.
-    # 4.11. Build the within-season weight-blend live projection
+    # 3.7 (was 4.11). Build the within-season weight-blend live projection
     # (live_blend_xfp_<date>.csv + live_blend_xfp_latest.csv). Phase 3 Agent 3,
     # validated 2026-06-04: within-season R^2 doubles vs preseason at split_day=90
     # (H 0.642, SP 0.584, RP 0.398). Display-additive — does NOT replace rh3/rp3/
@@ -402,7 +442,7 @@ def main():
     if not ok_blend:
         print('  ⚠ live_blend_xfp build failed — continuing (display-only)')
 
-    # 4.6. Daily boom-stack streamer scan. Fail-soft: API errors or zero
+    # 3.8 (was 4.6). Daily boom-stack streamer scan. Fail-soft: API errors or zero
     # candidates must not abort the pipeline — outputs land at
     # data/outputs/stream_the_stack_<date>.{md,json}. Depends on rp3
     # projections (step 2) + team_strength cache.
@@ -414,7 +454,7 @@ def main():
     if not ok_stream:
         print('  ⚠ stream_the_stack failed — continuing (non-gating)')
 
-    # 4.7. Daily hitter boom_stack batch. Fail-soft mirror of 4.6 but for
+    # 3.85 (was 4.7). Daily hitter boom_stack batch. Fail-soft mirror of 3.8 but for
     # batters in today+tomorrow's scheduled games. Outputs at
     # data/outputs/hitter_boom_stack_<date>.{md,json}. Consumed by the
     # profiles dashboard Boom/Bust/Variance tab on the next build.
@@ -426,8 +466,11 @@ def main():
     if not ok_hboom:
         print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
 
+    # explicit timeout (audit 2026-07-19 item 16): the implicit default is
+    # banned for publish-critical steps — same effective value (900s).
     run('4. Build matchup.html (weekly H2H)',
-        'python -X utf8 scripts/xfp/build_matchup_dashboard.py')
+        'python -X utf8 scripts/xfp/build_matchup_dashboard.py',
+        timeout=900)
 
     # 4.05. Refresh the offline injury-status cache from live ESPN — powers the
     # triangulate IL caveat (so an injured star isn't surfaced as a naked BUY).
@@ -437,12 +480,13 @@ def main():
     run('4.05. Refresh injury-status cache (ESPN IL flags + return dates)',
         'python -X utf8 scripts/xfp/lib/injury_status.py', timeout=300)
 
-    # 4.7. Build triangulate.html (cyclable three-lens roster report). Depends on
-    # the injury cache above + the archetype/projection panels. Fail-soft.
-    run('4.7. Build triangulate.html (three-lens roster report)',
-        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py', timeout=300)
+    # triangulate.html (now 4.2, was 4.7) MOVED below the nightly batch (now
+    # 4.1, was 4.72) on 2026-07-19: the dashboard now hydrates its FA cards
+    # from the batch's --cards-out store, so it must build AFTER tonight's
+    # store exists. One build, full fidelity — replaces the old 4.7
+    # roster-only build + 4.73 ~50-min --live-fa re-run pair.
 
-    # 4.72. Nightly league-wide triangulate backfill + verdict history append.
+    # 4.1 (was 4.72). Nightly league-wide triangulate backfill + verdict history append.
     # Builds the player universe (roster + my drops + opp churn + FA_TOP with
     # owner_team), triangulates it into a dated snapshot (CSV+JSON+run manifest),
     # then appends those verdicts to triangulate_verdict_history.parquet — the
@@ -455,7 +499,7 @@ def main():
     _tri_json = f'data/research/triangulate_universe/triangulate_{_tri_label}.json'
     _tri_universe = 'data/research/triangulate_universe/master_universe.csv'
     ok_tri_universe = run(
-        '4.72a. Build triangulate player universe (ownership-tagged)',
+        '4.1a (was 4.72a). Build triangulate player universe (ownership-tagged)',
         'python -X utf8 scripts/xfp/build_triangulate_universe.py',
         timeout=600,
     )
@@ -463,18 +507,19 @@ def main():
         print('  ⚠ triangulate universe build failed — skipping nightly backfill')
     else:
         ok_tri_batch = run(
-            '4.72b. Triangulate the full universe -> dated snapshot',
+            '4.1b (was 4.72b). Triangulate the full universe -> dated snapshot',
             f'python -X utf8 scripts/xfp/run_triangulate.py '
             f'--names-file {_tri_universe} --snapshot {_tri_label} '
             f'--run-id {_tri_runid} --csv-out {_tri_json.replace(".json", ".csv")} '
-            f'--json-out {_tri_json}',
+            f'--json-out {_tri_json} '
+            f'--cards-out {_tri_json.replace(".json", "_cards.json")}',
             timeout=1800,
         )
         if not ok_tri_batch:
             print('  ⚠ nightly triangulate batch failed — skipping history append')
         else:
             ok_tri_hist = run(
-                '4.72c. Append verdicts to triangulate_verdict_history.parquet',
+                '4.1c (was 4.72c). Append verdicts to triangulate_verdict_history.parquet',
                 f'python -X utf8 scripts/xfp/build_triangulate_history.py '
                 f'--append {_tri_csv} --run-id {_tri_runid}',
                 timeout=180,
@@ -482,25 +527,41 @@ def main():
             if not ok_tri_hist:
                 print('  ⚠ triangulate history append failed — continuing (non-gating)')
 
-    # 4.45. Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
+    # 4.2 (was 4.7). Build triangulate.html (three-lens roster report + full-fidelity FA
+    # section). Runs AFTER the 4.1 chain so tonight's --cards-out store exists:
+    # roster cards run the live engine (~26 players, fast); FA cards hydrate
+    # from the store — identical schema to live (assemble_result seam), zero
+    # per-FA recompute. Replaced the old-4.73 --live-fa re-run (~45-60 min/night,
+    # ~100% duplicate of 4.1b — audit 2026-07-19 F1). If tonight's batch
+    # failed, the dashboard falls back to the freshest prior store/batch with
+    # its own staleness warning. Fail-soft.
+    ok_tri_page = run(
+        '4.2 (was 4.7). Build triangulate.html (roster live + FA from nightly cards store)',
+        'python -X utf8 scripts/xfp/build_triangulate_dashboard.py',
+        timeout=600,
+    )
+    if not ok_tri_page:
+        print('  ⚠ triangulate.html build failed — prior page stands')
+
+    # 4.25 (was 4.45). Full-pool SP boom_stack pre-batch. Generates per-SP boom/bust/variance
     # records for the ENTIRE rp3 SP universe (~300 SPs), not just the rolling
     # probables window covered by stream_the_stack (~15-25). Lets the profiles
     # dashboard's Boom/Bust tab populate for any rostered SP. Fail-soft.
     ok_full_pool = run(
-        '4.45. Build sp_boom_stack_full_pool (entire SP universe)',
+        '4.25 (was 4.45). Build sp_boom_stack_full_pool (entire SP universe)',
         'python -X utf8 scripts/xfp/build_sp_boom_stack_full_pool.py',
         timeout=300,
     )
     if not ok_full_pool:
         print('  ⚠ sp_boom_stack_full_pool failed — continuing (non-gating)')
 
-    # 4.52. Decision-console payload FALLBACK writer. The matchup build
+    # 4.3 (was 4.52). Decision-console payload FALLBACK writer. The matchup build
     # (step 4) is the authoritative writer of data/outputs/console_data.json
     # (freshest week context); --if-stale makes this a no-op when that
-    # succeeded and a same-day rebuild when it didn't, so xfp_board (4.55)
+    # succeeded and a same-day rebuild when it didn't, so xfp_board (4.4)
     # and index (refresh_all) always have a fresh payload. Fail-soft.
     ok_console = run(
-        '4.52. Decision-console payload (fallback writer, --if-stale)',
+        '4.3 (was 4.52). Decision-console payload (fallback writer, --if-stale)',
         'python -X utf8 scripts/xfp/build_console_data.py --if-stale',
         timeout=300,
     )
@@ -515,19 +576,19 @@ def main():
     # build to republish the shell.
     _pp_shell = os.path.join(ROOT, 'data', 'outputs', 'player_profiles.html')
     _pp_flag = ' --payload-only' if os.path.exists(_pp_shell) else ''
-    ok_profiles = run('4.5. Build player_profiles.html (archetype browser)',
+    ok_profiles = run('4.35 (was 4.5). Build player_profiles.html (archetype browser)',
                       f'python -X utf8 scripts/xfp/build_player_profiles_dashboard.py{_pp_flag}',
                       timeout=420)   # 40MB embed reads the big rolling CSVs; 120s timed
                       # out on the self-hosted runner and killed the whole refresh.
 
-    # 4.55. Build merged xFP boards (SP + 5 hitter buckets) + xfp_board.html.
+    # 4.4 (was 4.55). Build merged xFP boards (SP + 5 hitter buckets) + xfp_board.html.
     # Regenerates data/research/{sp,hitter}_merged_xfp_rank_<date>.csv and the
     # self-contained dashboard at data/outputs/xfp_board.html (mirrored to
     # xfp-model/docs/xfp_board.html). The dashboard builder imports the board
     # engine, so this single step rebuilds both CSVs and the page. Fail-soft:
     # an ESPN/MLB hiccup must not abort the pipeline (non-gating dashboard).
     ok_xfp_board = run(
-        '4.55. Build merged xFP boards + xfp_board.html',
+        '4.4 (was 4.55). Build merged xFP boards + xfp_board.html',
         'python -X utf8 scripts/xfp/build_xfp_board_dashboard.py',
         timeout=300,
     )
@@ -562,50 +623,50 @@ def main():
         print('  ⚠ PL rank history archive failed — continuing (non-gating)')
 
 
-    # 4.09. Build forward-volume projections (validated 2026-07-09, PASS:
+    # 4.91 (was 4.09). Build forward-volume projections (validated 2026-07-09, PASS:
     # pooled Spearman +0.074 vs naive pace, 7/7 years, holdout 2/2 —
     # hitter_volume_model_2026-07-09.md). Volume (PA/starts) explains 3-5x
     # more forward-total-FP variance than projected rate; this companion
     # model converts the rate models into honest RoS totals. Runs before
-    # 4.10 so the snapshot logger can log proj_volume. Fail-soft.
+    # 4.94 so the snapshot logger can log proj_volume. Fail-soft.
     ok_vol = run(
-        '4.09. Build hitter volume projections',
+        '4.91 (was 4.09). Build hitter volume projections',
         'python -X utf8 scripts/xfp/xfp_volume_pipeline.py',
         timeout=600,
     )
     if not ok_vol:
         print('  ⚠ hitter volume projections failed — proj_volume stays NaN today (non-gating)')
 
-    # 4.09b. SP forward-starts volume (validated 2026-07-09, PASS: pooled
+    # 4.92 (was 4.09b). SP forward-starts volume (validated 2026-07-09, PASS: pooled
     # Spearman +0.100 vs naive gs-pace, 7/7 years, holdout 2/2 —
     # sp_volume_model_2026-07-09.md). Fail-soft.
     ok_spvol = run(
-        '4.09b. Build SP volume projections',
+        '4.92 (was 4.09b). Build SP volume projections',
         'python -X utf8 scripts/xfp/xfp_sp_volume_pipeline.py',
         timeout=600,
     )
     if not ok_spvol:
         print('  ⚠ SP volume projections failed — proj_volume stays NaN today (non-gating)')
 
-    # 4.09c. RP forward-appearance volume (validated 2026-07-10, PASS: pooled
+    # 4.93 (was 4.09c). RP forward-appearance volume (validated 2026-07-10, PASS: pooled
     # Spearman +0.127 vs naive g-pace, 6/6 years, holdout 2/2 —
     # rp_volume_model_2026-07-10.md). Completes the volume layer (H/SP/RP).
-    # Must run AFTER rprs2 (name fallback) and BEFORE 4.10 (logger fill).
+    # Must run AFTER rprs2 (name fallback) and BEFORE 4.94 (logger fill).
     # Fail-soft.
     ok_rpvol = run(
-        '4.09c. Build RP volume projections',
+        '4.93 (was 4.09c). Build RP volume projections',
         'python -X utf8 scripts/xfp/xfp_rp_volume_pipeline.py',
         timeout=600,
     )
     if not ok_rpvol:
         print('  ⚠ RP volume projections failed — proj_volume stays NaN today (non-gating)')
 
-    # 4.10. Append today's per-player projection snapshot to the growing
+    # 4.94 (was 4.10). Append today's per-player projection snapshot to the growing
     # panel at data/research/player_projection_history.parquet. Feeds the
     # opponent-action predictor's Δ-rank feature and any future per-player
     # residual analysis. Fail-soft.
     ok_pphist = run(
-        '4.10. Append player projection history',
+        '4.94 (was 4.10). Append player projection history',
         'python -X utf8 scripts/xfp/build_player_projection_history.py',
         # 60→180 (2026-07-11): the A2 lens columns widen the parquet and add
         # offline artifact joins (PL cache, archetype panels, boom pools).
@@ -614,13 +675,13 @@ def main():
     if not ok_pphist:
         print('  ⚠ player projection history append failed — continuing (non-gating)')
 
-    # 4.10a. Emit verdict-level decision records for the user's roster.
+    # 4.94a (was 4.10a). Emit verdict-level decision records for the user's roster.
     # Scoped env var `PLV_LOG_DECISIONS=1` activates the env-gated logging
     # hook inside triangulate_player(). The var is scoped to THIS subprocess
     # only (via run(env=...)) and does not leak to subsequent steps.
     # Fail-soft — decision logging is observability only.
     ok_dec_log = run(
-        '4.10a. Log roster decisions (PLV_LOG_DECISIONS=1)',
+        '4.94a (was 4.10a). Log roster decisions (PLV_LOG_DECISIONS=1)',
         'python -X utf8 scripts/xfp/log_roster_decisions.py',
         timeout=300,
         env={'PLV_LOG_DECISIONS': '1'},
@@ -628,61 +689,61 @@ def main():
     if not ok_dec_log:
         print('  ⚠ roster decision logging failed — continuing (non-gating)')
 
-    # 4.10b. Materialize the verdict-level decision log into a flat panel.
+    # 4.94b (was 4.10b). Materialize the verdict-level decision log into a flat panel.
     # Walks data/research/decisions/ recursively, opportunistically settles
     # hitter decisions whose 21d window has elapsed (using statcast_{yr}.parquet),
     # and writes data/outputs/decisions_panel.csv. SP/RP settlement is not
     # implemented in this driver yet (see scripts/xfp/materialize_decisions.py).
     # NOTE: plan v11 called this "step 0.65 right after step 0.6"; the actual
-    # projection-history persistence runs at step 4.10 (not 0.6), so we wire
-    # immediately after 4.10 here. Fail-soft — panel is observability only.
+    # projection-history persistence runs at step 4.94 (not 0.6), so we wire
+    # immediately after 4.94 here. Fail-soft — panel is observability only.
     ok_decisions = run(
-        '4.10b. Materialize decisions panel',
+        '4.94b (was 4.10b). Materialize decisions panel',
         'python -X utf8 scripts/xfp/materialize_decisions.py',
         timeout=120,
     )
     if not ok_decisions:
         print('  ⚠ decisions panel build failed — continuing (non-gating)')
 
-    # 4.10c. Settle logged decisions vs realized FP + emit daily scorecard.
+    # 4.94c (was 4.10c). Settle logged decisions vs realized FP + emit daily scorecard.
     # Walks data/research/decisions/, pulls actuals from the MLB Stats API
     # gameLog (H FP/PA, SP FP/start, RP FP/app), settles every ripe record,
     # and writes scorecard_{date}.{csv,md}. Idempotent + fail-soft.
     ok_settle = run(
-        '4.10c. Settle decisions + scorecard',
+        '4.94c (was 4.10c). Settle decisions + scorecard',
         'python -X utf8 scripts/xfp/settle_decisions.py',
         timeout=180,
     )
     if not ok_settle:
         print('  ⚠ decision settlement failed — continuing (non-gating)')
 
-    # 4.11. Snapshot FanGraphs RoS projections (steamerr/rzips/ratcdc/
+    # 4.95 (was 4.11). Snapshot FanGraphs RoS projections (steamerr/rzips/ratcdc/
     # rfangraphsdc, bat+pit). Date-keyed accumulation for the ~4-week
     # forward validation of external playing-time/RoS systems. Idempotent
     # (skips combos already pulled today). Cloudflare pass is intermittent
     # -> retries internally; fail-soft.
     ok_fgros = run(
-        '4.11. Snapshot FanGraphs RoS projections',
+        '4.95 (was 4.11). Snapshot FanGraphs RoS projections',
         'python -X utf8 scripts/xfp/pull_fg_ros_projections.py',
         timeout=600,
     )
     if not ok_fgros:
         print('  ⚠ FG RoS projection snapshot failed — continuing (non-gating)')
 
-    # 4.12. Refresh IL transaction history + injury-proneness features
+    # 4.96 (was 4.12). Refresh IL transaction history + injury-proneness features
     # (current month refetch only; historical chunks cached under
     # il_tx_chunks/). Weekly cadence is sufficient — the derived features
     # are as-of-Jan-1. Fail-soft.
     if datetime.now().weekday() == 0:  # Monday, match other weekly steps
         ok_iltx = run(
-            '4.12. Refresh IL transactions + injury proneness',
+            '4.96 (was 4.12). Refresh IL transactions + injury proneness',
             'python -X utf8 scripts/xfp/fetch_il_transactions.py',
             timeout=300,
         )
         if not ok_iltx:
             print('  ⚠ IL transaction refresh failed — continuing (non-gating)')
 
-        # 4.13. Model scorecard + data-health tripwires (Mondays). Forward
+        # 4.97 (was 4.13). Model scorecard + data-health tripwires (Mondays). Forward
         # accuracy per model at 7/14/21/28d anchors + PASS/WARN/FAIL data
         # regression checks (IL join, ros caches, statcast/boxscore lag, FG
         # snapshots, row counts, proj_volume fill). Built 2026-07-10 after
@@ -690,7 +751,7 @@ def main():
         # a scorecard problem must never block the refresh — but exit 1
         # (>=1 FAIL tripwire) is surfaced loudly.
         ok_scorecard = run(
-            '4.13. Model scorecard + data-health tripwires',
+            '4.97 (was 4.13). Model scorecard + data-health tripwires',
             'python -X utf8 scripts/xfp/build_model_scorecard.py',
             timeout=600,
         )
@@ -698,7 +759,29 @@ def main():
             print('  ! model scorecard reported FAIL tripwire(s) — read '
                   'data/outputs/model_scorecard.md (non-gating)')
 
+        # 4.97b (was 4.13b). VERDICT scorecard (Mondays, paired with 4.97). model-health
+        # grades the MODELS; this grades the CALLS — the settled triangulate
+        # verdicts (BUY/HOLD/CAUTION/FADE vs realized FP). Added 2026-07-18:
+        # first full read showed a monotonic hitter ladder but an INVERTED
+        # confidence calibration (1.00-conf hit 7.7% vs 0.75-conf 32.5%) and
+        # SP MIXED missing proj by -5.5/start — both flagged for re-check as
+        # cohorts settle. Fail-soft, non-gating.
+        ok_verdicts = run(
+            '4.97b (was 4.13b). Verdict scorecard (decision-quality, settled calls)',
+            'python -X utf8 scripts/xfp/run_verdict_scorecard.py',
+            timeout=600,
+        )
+        if not ok_verdicts:
+            print('  ! verdict scorecard failed — continuing (non-gating)')
+
     if not args.no_push:
+        if not ok_models:
+            print('\n  ✖ PUBLISH GATED: the model rebuild (step 2) FAILED, so the '
+                  'dashboards above were rendered from STALE projections.\n'
+                  '    Nothing was committed or pushed to xfp-model. Fix the model '
+                  'rebuild and re-run refresh_dashboards.py (or push manually if '
+                  'the staleness is understood and acceptable).')
+            return
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
             return
@@ -717,13 +800,16 @@ def main():
             f'git add {" ".join(pages)} && '
             f'git commit -m "refresh: {timestamp} dashboards"'
         )
-        run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL)
+        # explicit timeouts (audit 2026-07-19 item 16): the implicit default is
+        # banned for publish-critical steps — git ops get a tighter 300s.
+        run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL,
+            timeout=300)
         # Pull-before-push: the cloud live-matchup job also pushes to xfp-model
         # throughout game days, so this local clone is often behind. Reconcile
         # first (this full build wins on conflict) so the push can't be rejected.
         run('6. Push to GitHub Pages',
             'git fetch origin && git merge -X ours --no-edit origin/main && '
-            'git push origin main', cwd=XFP_MODEL)
+            'git push origin main', cwd=XFP_MODEL, timeout=300)
 
     print(f'\n{"="*70}\n  ALL DONE — {datetime.now().strftime("%Y-%m-%d %H:%M")}\n{"="*70}')
     print(f'  Live: https://kejjeh.github.io/xfp-model/live_dashboard.html')

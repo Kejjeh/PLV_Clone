@@ -52,7 +52,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
-from plv_clone.models.xfp.engine import lookup_sigma  # re-export
+from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
 from plv_clone.league_config import RP_REPLACEMENT_RANK as REPLACEMENT_RANK_RP
 
 warnings.filterwarnings('ignore')
@@ -148,17 +148,18 @@ def _dump_coefs(pipe, feats: list[str], fit_type: str, n_train: int,
 _FIT_FP_VERSION = 1
 
 
+# eligibility mask shared by the fit stages (hoisted scaffolding, audit D2).
+# NOTE: cross_year_eval below stays LOCAL by design — its indexed detail frame
+# (for subset masks), coef dumps, and mae rounding differ from the rh3/rp3
+# shape that engine.cross_year_eval_ridge captures.
+def _fit_filter(d: pd.DataFrame):
+    return d['year'].isin(TRAIN_YEARS) & (d['g_to'] >= EVAL_G_MIN)
+
+
 def _fit_fingerprint(rolling: pd.DataFrame, feats: list[str]) -> str:
-    """Content hash of the fit stage inputs (train-year slice + FEATS). Same
-    fingerprint => byte-identical fit artifacts (warm-skip; gates re-run
-    exactly when this changes)."""
-    import hashlib
-    sub = rolling[rolling['year'].isin(TRAIN_YEARS)]
-    cols = [c for c in sorted(set(feats + [TARGET, 'year', 'split_day'])) if c in sub.columns]
-    h = hashlib.md5()
-    h.update(pd.util.hash_pandas_object(sub[cols].reset_index(drop=True), index=False).values.tobytes())
-    h.update(repr((sorted(feats), TARGET, sorted(TRAIN_YEARS), _FIT_FP_VERSION)).encode())
-    return h.hexdigest()
+    return _engine.fit_fingerprint(
+        rolling, feats, target=TARGET, train_years=TRAIN_YEARS,
+        extra=(TARGET,), fp_version=_FIT_FP_VERSION)
 
 
 def cross_year_eval(df: pd.DataFrame, feats: list[str], subset_mask=None,
@@ -228,39 +229,16 @@ def role_change_mask(df: pd.DataFrame) -> pd.Series:
 def fit_residual_ci(df, feats, resid=None):
     # `resid`: detail frame from cross_year_eval — identical fits (same filters,
     # 100/30 mins verified); the second LOO pass was pure duplication.
-    if resid is not None and len(resid):
-        res = resid
-    else:
-        sub = df.dropna(subset=feats + [TARGET]).copy()
-        sub = sub[sub['year'].isin(TRAIN_YEARS) & (sub['g_to'] >= EVAL_G_MIN)]
-        res = _engine.train_residual_table(
-            df=sub, feats=feats, target_col=TARGET, train_years=TRAIN_YEARS,
-            min_train=100, min_test=30,
-        )
-    out: dict[tuple[int, int], float] = {}
-    for split in sorted(res['split_day'].unique()):
-        sub2 = res[res['split_day'] == split]
-        if len(sub2) < 30:
-            continue
-        qs = pd.qcut(sub2['pred'], q=4, duplicates='drop', labels=False)
-        for q in sorted(sub2.groupby(qs).groups.keys()):
-            ix = (qs == q)
-            sigma = float(sub2.loc[ix, 'resid'].std())
-            out[(int(split), int(q))] = sigma
-    overall_sigma = float(res['resid'].std())
-    return out, overall_sigma
+    return _engine.fit_residual_ci_from(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=_fit_filter, min_train=100, min_test=30, resid=resid,
+        min_split_n=30)
 
 
 def train_final(df, feats):
-    from sklearn.pipeline import Pipeline
-    from sklearn.preprocessing import StandardScaler
-    from sklearn.linear_model import RidgeCV
-    train = df.dropna(subset=feats + [TARGET])
-    train = train[train['year'].isin(TRAIN_YEARS) & (train['g_to'] >= EVAL_G_MIN)]
-    pipe = Pipeline([('sc', StandardScaler()),
-                     ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=10))])
-    pipe.fit(train[feats].values, train[TARGET].values)
-    return pipe, len(train)
+    return _engine.train_final_ridge(
+        df, feats, target=TARGET, train_years=TRAIN_YEARS,
+        filter_fn=lambda d: d['g_to'] >= EVAL_G_MIN)
 
 
 def main():
@@ -352,7 +330,10 @@ def main():
 
 
     # Project 2026
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # projection year = latest season in the substrate (audit R2: the old
+    # hardcoded ==2026 would silently no-op on 2027-01-01)
+    proj_year = int(rolling['year'].max())
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
         return
     latest_split = int(df_26['split_day'].max())
@@ -373,15 +354,18 @@ def main():
         pred_buckets[int(split)] = cuts
 
     Z25 = 0.6745
-    sigmas = []
-    for _, row in valid.iterrows():
-        sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
-                                   row['xfp_full_year'], pred_buckets))
-    valid['xfp_sigma'] = sigmas
+    # (vectorized 2026-07-19, audit item 21/W2 — latest_split is constant here;
+    # golden A/B verified byte-identical vs the scalar iterrows loop)
+    valid['xfp_sigma'] = lookup_sigma_vec(
+        ci_table, overall_sigma, latest_split,
+        valid['xfp_full_year'].to_numpy(), pred_buckets)
     valid['xfp_p25'] = (valid['xfp_full_year'] - Z25 * valid['xfp_sigma']).clip(lower=0)
     valid['xfp_p75'] = valid['xfp_full_year'] + Z25 * valid['xfp_sigma']
 
-    cnt = json.loads((COUNTING_DIR / 'pitcher_counting_stats_2026.json').read_text())
+    # counting-stats path follows the projection year (audit R2). NOTE: the
+    # fp_actual_2026 / sv_2026 / hld_2026 COLUMN names are downstream schema
+    # (dashboards read them) and stay fixed regardless of season.
+    cnt = json.loads((COUNTING_DIR / f'pitcher_counting_stats_{proj_year}.json').read_text())
     cnt_df = pd.DataFrame(cnt)
     def parse_ip(v):
         if v is None or pd.isna(v): return np.nan
@@ -391,14 +375,29 @@ def main():
             return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
         return float(v)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
-    cnt_df['fp_actual_2026'] = (
-        cnt_df['strikeOuts'] + cnt_df['ip']*3.3 + cnt_df['saves']*5
-        + cnt_df['holds']*2 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
-        - cnt_df['hits'] - cnt_df['hitByPitch']
+    # canonical BrownU weights via scoring.pitcher_fp (audit #4 — this was one
+    # of ~15 inline re-derivations). A/B-verified vs the old inline expression
+    # 2026-07-19: projections CSV identical.
+    from plv_clone.fantasy.scoring import pitcher_fp as _pfp
+    cnt_df['fp_actual_2026'] = _pfp(
+        k=cnt_df['strikeOuts'], ip=cnt_df['ip'], h=cnt_df['hits'],
+        er=cnt_df['earnedRuns'], bb=cnt_df['baseOnBalls'],
+        hbp=cnt_df['hitByPitch'], sv=cnt_df['saves'], hld=cnt_df['holds'],
     ).round(1)
     cnt_df = cnt_df[['pitcher','name','saves','holds','fp_actual_2026']].rename(
         columns={'name':'name_api','saves':'sv_2026','holds':'hld_2026'})
     valid = valid.merge(cnt_df, on='pitcher', how='left')
+    # Match-rate guard (audit 2026-07-19, same failure shape as the 6-week
+    # rp3 IL-join regression): if the counting-stats id space desyncs from the
+    # rolling substrate, every fp_actual_2026 silently becomes 0 and xfp_ros
+    # collapses to xfp_full_year for the whole board. Fail LOUD instead.
+    _cnt_match = float(valid['fp_actual_2026'].notna().mean()) if len(valid) else 0.0
+    print(f'  counting-stats join match rate: {_cnt_match:.0%} ({valid["fp_actual_2026"].notna().sum()}/{len(valid)})')
+    if len(valid) >= 20 and _cnt_match < 0.5:
+        raise RuntimeError(
+            f'rprs2 counting-stats join matched only {_cnt_match:.0%} of the RP pool '
+            f'— pitcher_counting_stats JSON is stale or id-desynced; refusing to '
+            f'publish an xfp_ros board with the RoS subtraction silently zeroed.')
     valid['fp_actual_2026'] = valid['fp_actual_2026'].fillna(0)
     # xfp_ros is the GENUINE rest-of-season figure: the full-season projection
     # (model target = fp_year_total) MINUS the FP already banked in 2026. This
@@ -418,16 +417,19 @@ def main():
     valid['replacement_xfp'] = round(repl, 1)
     valid['replacement_delta'] = (valid['xfp_full_year'] - repl).round(1)
 
-    def signal(row):
-        rd = row.get('replacement_delta')
-        p25 = row.get('xfp_p25')
-        p75 = row.get('xfp_p75')
-        rep = row.get('replacement_xfp')
-        if pd.isna(rd) or pd.isna(rep): return 'hold'
-        if pd.notna(p25) and p25 > rep: return 'add'
-        if pd.notna(p75) and p75 < rep: return 'drop'
-        return 'hold'
-    valid['signal'] = valid.apply(signal, axis=1)
+    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
+    # byte-identical vs the row-wise signal closure; NaN comparisons match
+    # row-wise semantics, NaN > x = False)
+    _rep = valid['replacement_xfp']
+    valid['signal'] = np.select(
+        [
+            valid['replacement_delta'].isna() | _rep.isna(),
+            valid['xfp_p25'].notna() & (valid['xfp_p25'] > _rep),
+            valid['xfp_p75'].notna() & (valid['xfp_p75'] < _rep),
+        ],
+        ['hold', 'add', 'drop'],
+        default='hold',
+    )
     valid = valid.sort_values('xfp_full_year', ascending=False).reset_index(drop=True)
     valid['rank'] = valid.index + 1
 

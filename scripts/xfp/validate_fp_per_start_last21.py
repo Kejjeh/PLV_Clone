@@ -14,7 +14,6 @@ from pathlib import Path
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).parent))
-sys.path.insert(0, str(Path(__file__).resolve().parents[2] / 'src'))
 from _rp3_validation_harness import prep_rolling, evaluate_candidate, print_report
 
 

@@ -1,14 +1,15 @@
 """8 parametrize cases for the pure period-math helpers (PR 3a).
 
 The pure layer is the unit-test target. The DataFrame adapter has a
-single sanity test at the bottom.
+single sanity test at the bottom. Helpers live in lib/period_meta.py
+(merged from the single-importer lib/period_math.py, audit 2026-07-19).
 """
 from datetime import date
 
 import pandas as pd
 import pytest
 
-from scripts.xfp.lib.period_math import (
+from scripts.xfp.lib.period_meta import (
     adapter_period_closed_from_history_df,
     compute_period_window,
     is_period_closed,

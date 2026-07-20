@@ -34,8 +34,6 @@ import pandas as pd
 warnings.filterwarnings("ignore")
 
 ROOT = Path("c:/Users/Joshua/plv_clone")
-if str(ROOT / "src") not in sys.path:
-    sys.path.insert(0, str(ROOT / "src"))
 
 from plv_clone.models.xfp import rh3 as rh3_mod
 from plv_clone.models.xfp import rp3 as rp3_mod

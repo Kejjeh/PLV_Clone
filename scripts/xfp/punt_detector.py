@@ -27,19 +27,20 @@ sys.path.insert(0, str(ROOT))
 OUT = ROOT / 'data' / 'outputs'
 
 from plv_clone.cap_math import SP_CAP as WEEKLY_SP_CAP  # BrownU 10-starts/week cap (single source)
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def main():
     from plv_clone.league_state import LeagueState
     ls = LeagueState()
     league = ls._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
 
     # Find current matchup
     period = league.currentMatchupPeriod
     opp_team = None
     for m in my_team.schedule:
-        if m.home_team.team_name == 'New York Ligers':
+        if m.home_team.team_name == MY_TEAM_NAME:
             if m.home_team.team_id == my_team.team_id:
                 # check if THIS matchup is current (winner=None, scores still moving)
                 if getattr(m, 'winner', None) is None and getattr(m, 'home_final_score', 0) >= 0:
@@ -48,7 +49,7 @@ def main():
     # Fallback: walk schedule list at index period-1
     if opp_team is None and len(my_team.schedule) >= period:
         m = my_team.schedule[period - 1]
-        opp_team = m.away_team if m.home_team.team_name == 'New York Ligers' else m.home_team
+        opp_team = m.away_team if m.home_team.team_name == MY_TEAM_NAME else m.home_team
     if opp_team is None:
         print('Could not identify current opponent'); return
     print(f'\nThis week: Ligers vs {opp_team.team_name} (matchup period {period})')

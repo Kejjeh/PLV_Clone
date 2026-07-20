@@ -41,7 +41,6 @@ TEAM_OUT = ROOT / 'data' / 'research' / 'calibration_panel_team_rollup.parquet'
 load_dotenv(ROOT / '.env')
 
 # Make the src layout importable.
-sys.path.insert(0, str(ROOT / 'src'))
 from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id  # noqa: E402
 
 BE_SLOTS = {'BE', 'IL', 'IR'}

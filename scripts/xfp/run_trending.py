@@ -10,6 +10,11 @@ Engine + validation: scripts/xfp/lib/trend_signal.py,
 data/research/validation_runs/early_season_bat_speed_2026-06-16.md
 """
 import sys, argparse
+# Windows cp1252 console guard — board prints —/σ arrows etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 sys.path.insert(0, '.')
 import pandas as pd
 from pathlib import Path

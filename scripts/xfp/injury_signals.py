@@ -16,7 +16,6 @@ import pandas as pd
 
 from plv_clone.paths import ROOT
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "src"))
 
 
 # ── injury_class mapping ──────────────────────────────────────────────────────

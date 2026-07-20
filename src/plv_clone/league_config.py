@@ -17,7 +17,7 @@ League size: 8 teams.
 
 Scoring (ESPN standard for this league):
   Hitting: R(+1), TB(+1), RBI(+1), BB(+1), K(-1), HBP(+1), SB(+1)
-  Pitching: IP(+3.3), H(-1), ER(-2), BB(-1), HBP(-1), K(+1), SV(+5), HD(+3)
+  Pitching: IP(+3.3), H(-1), ER(-2), BB(-1), HBP(-1), K(+1), SV(+5), HD(+2)
 
 Replacement-level cutoffs (rank past which a player is on the FA pool):
   These drive replacement_delta calculations across RH3/RP3/RP-RS2 + dashboard.
@@ -28,6 +28,11 @@ Replacement-level cutoffs (rank past which a player is on the FA pool):
   + bench). Pitchers are 9 flex × 8 = 72 owned, split roughly 60/40 SP/RP.
 """
 from __future__ import annotations
+
+# League identity (audit 2026-07-19 item 7): the team name was hardcoded as
+# a string literal in ~30 files. Import from here.
+MY_TEAM_NAME = "New York Ligers"
+SEASON_YEAR = 2026  # bump at rollover; see audit R2 for the data-driven filters
 
 LEAGUE_SIZE = 8
 ROSTER_SIZE = 26
@@ -57,7 +62,9 @@ HITTER_FP_WEIGHTS = {
     'R': 1, 'TB': 1, 'RBI': 1, 'BB': 1, 'K': -1, 'HBP': 1, 'SB': 1,
 }
 PITCHER_FP_WEIGHTS = {
-    'IP': 3.3, 'H': -1, 'ER': -2, 'BB': -1, 'HBP': -1, 'K': 1, 'SV': 5, 'HD': 3,
+    # HD was wrongly 3 here until 2026-07-19 (dormant — no consumer read this
+    # dict) — the league scores holds at 2 (canonical: fantasy/scoring.py hd=2.0).
+    'IP': 3.3, 'H': -1, 'ER': -2, 'BB': -1, 'HBP': -1, 'K': 1, 'SV': 5, 'HD': 2,
 }
 PA_PER_GAME_LEAGUE = 3.5  # league avg, used for PA → game scaling
 SEASON_GAMES = 162

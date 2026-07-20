@@ -17,7 +17,6 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
-sys.path.insert(0, str(ROOT / "src"))
 
 import build_xfp_boards as B
 

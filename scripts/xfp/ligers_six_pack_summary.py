@@ -19,9 +19,10 @@ from plv_clone.paths import ROOT
 OUT = ROOT / 'data' / 'outputs'
 
 from plv_clone.league_state import LeagueState
+from plv_clone.league_config import MY_TEAM_NAME
 ls = LeagueState()
 teams = ls.all_teams()
-ligers = teams[teams['team_name'] == 'New York Ligers']
+ligers = teams[teams['team_name'] == MY_TEAM_NAME]
 hit_names = ligers[~ligers['position'].isin(['SP', 'RP', 'P'])]['player_name'].tolist()
 sp_names = ligers[ligers['position'].isin(['SP', 'P'])]['player_name'].tolist()
 rp_names = ligers[ligers['position'] == 'RP']['player_name'].tolist()

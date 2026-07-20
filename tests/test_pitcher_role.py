@@ -16,7 +16,6 @@ from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(_ROOT))
-sys.path.insert(0, str(_ROOT / "src"))
 sys.path.insert(0, str(_ROOT / "scripts" / "xfp"))
 
 from lib.pitcher_role import detect_pitcher_role
@@ -36,6 +35,51 @@ def test_sp_only_eligible_short_circuits():
 
 def test_rp_only_eligible_short_circuits():
     assert detect_pitcher_role(_Player("Closer", "RP", ["RP"])) == "RP"
+
+
+def test_rp_only_but_in_rp3_escalates_to_gamesstarted():
+    """The Jax regression (2026-07). Post-trade, ESPN kept Griffin Jax
+    RP-only-eligible for weeks while he made real starts for TB — the RP-only
+    branch returned 'RP' without ever consulting gamesStarted, so cap math
+    ignored his starts. When the name appears in the rp3 SP-model output
+    (= the pipeline has real starts for him), the role must be decided on
+    gamesStarted exactly like the dual-eligible path."""
+    from plv_clone.utils.name_match import safe_name_key
+
+    jax = _Player("Griffin Jax", "RP", ["P", "RP", "BE", "IL"], proTeam="TB")
+    role = detect_pitcher_role(
+        jax,
+        rp3_keys={safe_name_key("Jax, Griffin")},        # rp3 spelling variant
+        id_resolver=lambda name, team: 643377,
+        gs_lookup=lambda pid, season: "SP",              # 15 GS / 26 G -> SP
+    )
+    assert role == "SP"
+
+
+def test_rp_only_true_reliever_never_touches_resolver():
+    """A genuine reliever (not in rp3) must short-circuit to 'RP' with zero
+    resolution/API cost — the escalation only fires on rp3 membership."""
+    def _boom(*a, **k):
+        raise AssertionError("resolver must not be called for a true reliever")
+
+    closer = _Player("Jhoan Duran", "RP", ["P", "RP", "BE", "IL"], proTeam="PHI")
+    role = detect_pitcher_role(
+        closer, rp3_keys=frozenset(), id_resolver=_boom, gs_lookup=_boom)
+    assert role == "RP"
+
+
+def test_rp_only_in_rp3_but_unresolvable_stays_rp():
+    """If the escalation fires but the id can't be resolved, fall back to the
+    conservative 'RP' (the slots' own claim), not the position tag."""
+    from plv_clone.utils.name_match import safe_name_key
+
+    ghost = _Player("Griffin Jax", "RP", ["P", "RP"], proTeam="TB")
+    role = detect_pitcher_role(
+        ghost,
+        rp3_keys={safe_name_key("Griffin Jax")},
+        id_resolver=lambda name, team: None,
+    )
+    assert role == "RP"
 
 
 def test_dual_eligible_resolves_to_sp_without_caller_passing_id():

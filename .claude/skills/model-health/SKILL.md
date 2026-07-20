@@ -137,3 +137,17 @@ run turns that 6-week silence into days.
   (promoting fixes), `reference_validated_signals_registry.md` (what is
   allowed to drive decisions), `model_forward_calibration_2026-06-26.md`
   (why forward r ~0.35 is honest, not broken).
+
+## Paired Monday run: /verdict-scorecard (added 2026-07-18)
+
+This skill grades the MODELS; its sibling grades the CALLS. The Monday
+refresh runs both (steps 4.13 + 4.13b). When invoking /model-health
+manually, also read `data/outputs/verdict_scorecard.csv` (or run
+`python scripts/xfp/run_verdict_scorecard.py`) and check the two open
+watch items from the 2026-07-18 first read:
+1. Confidence calibration INVERSION — 1.00-conf calls hit 7.7% vs
+   0.75-conf 32.5%. If it persists at directional n≥10 per bin, the
+   4-of-4-signals confidence formula is overclaiming.
+2. SP MIXED cohort missing projection by −5.5 FP/start (n=5/3 — noise
+   until more settles).
+July decision cohort (Mead/Bennett/Henderson churn) settles ~2026-08-08.

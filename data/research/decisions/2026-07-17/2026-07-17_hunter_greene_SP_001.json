@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-17_hunter_greene_SP_001",
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 64,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 15.446434424906792,
+    "inputs_schema": 2,
+    "live_marginal": 18.46788551799881,
+    "model_rank": 19,
+    "override_tag": null,
+    "pl_rank": 26,
+    "proj_display": 13.419567339928529,
+    "proj_per": 13.419567339928529,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 668881,
+  "player_name": "Hunter Greene",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-17",
+  "verdict_top": "BUY"
+}

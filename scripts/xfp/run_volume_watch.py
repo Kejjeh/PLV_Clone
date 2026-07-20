@@ -24,12 +24,18 @@ Sections:
 Output: console + data/outputs/volume_watch.csv
 """
 import sys, argparse, unicodedata
+# Windows cp1252 console guard — sections print — etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 sys.path.insert(0, '.')
 import numpy as np
 import pandas as pd
 from pathlib import Path
 
 from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst  # shared 'Last, First' flip (audit item 9)
 
 OUT_CSV = Path('data/outputs/volume_watch.csv')
 HIST_PATH = Path('data/research/player_projection_history.parquet')
@@ -49,20 +55,13 @@ except Exception:
 
 def _norm(name):
     """Normalized FULL-name key (accents stripped, 'Last, First' flipped)."""
-    s = str(name).strip()
-    if ',' in s:
-        last, _, first = s.partition(',')
-        s = f"{first.strip()} {last.strip()}"
+    s = _flip_lastfirst(str(name).strip())
     s = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode()
     return ' '.join(s.lower().replace('.', '').split())
 
 
 def display_name(name):
-    s = str(name).strip()
-    if ',' in s:
-        last, _, first = s.partition(',')
-        return f"{first.strip()} {last.strip()}"
-    return s
+    return _flip_lastfirst(str(name).strip())
 
 
 def _is_pitcher(pos):

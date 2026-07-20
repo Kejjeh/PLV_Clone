@@ -29,7 +29,7 @@ NOTES = ROOT / 'data' / 'research' / 'opponent_notes.md'
 AUTO_START = '<!-- AUTO-GENERATED:matchup_history -->'
 AUTO_END = '<!-- /AUTO-GENERATED:matchup_history -->'
 
-MY_TEAM_NAME = 'New York Ligers'
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def fetch_matchup_results(league) -> list[dict]:

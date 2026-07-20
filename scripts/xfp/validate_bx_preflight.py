@@ -24,7 +24,6 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
-sys.path.insert(0, str(ROOT / "src"))
 
 from validate_bx_ensemble import _merge_bx, _gate_eval, _print_cell, OUT_DIR  # noqa: E402
 from _validate_rh3_v3_helper import load_and_prep_rh3_inputs, _cye  # noqa: E402

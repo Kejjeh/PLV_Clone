@@ -260,13 +260,12 @@ def compute_per_start(df: pd.DataFrame, year: int) -> pd.DataFrame:
     per_start = per_start.merge(runs, on=['game_pk','pitcher'], how='left')
     per_start['er_est'] = per_start['runs_on_play'].fillna(0)  # approximation
 
-    # ESPN FP: K + IP*3.3 - H - 2*ER - BB - HBP
-    per_start['fp'] = (per_start['k']
-                       + per_start['ip'] * 3.3
-                       - per_start['h']
-                       - 2 * per_start['er_est']
-                       - per_start['bb']
-                       - per_start['hbp'])
+    # canonical BrownU weights via scoring.pitcher_fp (audit #4); operand order
+    # matches the old inline expression exactly -> bit-identical
+    from plv_clone.fantasy.scoring import pitcher_fp
+    per_start['fp'] = pitcher_fp(
+        k=per_start['k'], ip=per_start['ip'], h=per_start['h'],
+        er=per_start['er_est'], bb=per_start['bb'], hbp=per_start['hbp'])
 
     # Aggregate per-pitcher (across all starts)
     pg = per_start.groupby('pitcher').agg(

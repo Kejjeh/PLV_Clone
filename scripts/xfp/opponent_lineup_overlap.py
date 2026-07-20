@@ -37,7 +37,7 @@ sys.path.insert(0, str(ROOT))
 from plv_clone.cap_math import SP_CAP  # single source for the 10-starts/week cap
 
 OUT = ROOT / 'data' / 'outputs'
-MY_TEAM_NAME = 'New York Ligers'
+from plv_clone.league_config import MY_TEAM_NAME
 
 # Slot fill order matters: fill restrictive slots first, then flex.
 SLOT_FILL_ORDER = [

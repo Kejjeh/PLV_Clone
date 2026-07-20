@@ -21,6 +21,12 @@ import argparse
 import re
 import sys
 import unicodedata
+
+# Windows cp1252 console guard — header prints —/→/· etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
@@ -29,12 +35,12 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-sys.path.insert(0, str(ROOT / "src"))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 
 from plv_clone.league_state import LeagueState                       # noqa: E402
 from lib.period_meta import resolve_current_period_meta, espn_period_meta  # noqa: E402
 from lib.pitcher_role import detect_pitcher_role                     # noqa: E402
+from lib.bucket_dispatch import _flip_lastfirst as _flip             # noqa: E402  shared 'Last, First' flip (audit item 9)
 
 MLB = "https://statsapi.mlb.com/api/v1"
 OUT = ROOT / "data" / "outputs"
@@ -46,13 +52,6 @@ DEFAULT_CADENCE = 5
 def _norm(s: str) -> str:
     s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode()
     return re.sub(r"\s+", " ", re.sub(r"[^a-z ]", "", s.lower())).strip()
-
-
-def _flip(n: str) -> str:
-    if "," in str(n):
-        last, first = str(n).split(",", 1)
-        return f"{first.strip()} {last.strip()}"
-    return str(n)
 
 
 def _get(url, params=None):

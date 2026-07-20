@@ -983,14 +983,11 @@ def _pitcher_mlbam_lookup(name, cache={}):
                 cols = pd.read_csv(csv, nrows=1).columns.tolist()
                 ncol = 'player_name' if 'player_name' in cols else 'name'
                 df = pd.read_csv(csv, usecols=[col, ncol])
+                # _norm is name_match.join_key (order-independent), so the
+                # 'Last, First' spelling already keys identically to
+                # 'First Last' — no hand-rolled flip needed (audit item 9).
                 for _, r in df.drop_duplicates(ncol).iterrows():
-                    nm = str(r[ncol])
-                    keys = {_norm(nm)}
-                    if ',' in nm:
-                        last, _, first = nm.partition(',')
-                        keys.add(_norm(f'{first.strip()} {last.strip()}'))
-                    for k in keys:
-                        cache.setdefault(k, int(r[col]))
+                    cache.setdefault(_norm(str(r[ncol])), int(r[col]))
             except Exception as e:
                 _warn_except('pitcher_mlbam_csv_cache', e)
     return cache.get(_norm(name))

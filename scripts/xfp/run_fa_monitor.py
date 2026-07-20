@@ -27,6 +27,11 @@ Usage:
 """
 
 import sys
+# Windows cp1252 console guard — signal lines print —/→ etc. (item 23)
+try:
+    sys.stdout.reconfigure(encoding='utf-8')
+except Exception:
+    pass
 import argparse
 import unicodedata
 import re

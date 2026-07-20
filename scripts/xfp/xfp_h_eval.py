@@ -197,8 +197,6 @@ def v0_evaluate(df: pd.DataFrame) -> dict:
     Falls back gracefully when master_hitter rows aren't available for both
     sides of a transition.
     """
-    import sys
-    sys.path.insert(0, str(ROOT / 'src'))
     from plv_clone.fantasy.hitter_points import project as hp_project, load_calibration
     from plv_clone.fantasy.scoring import LeagueScoring
 

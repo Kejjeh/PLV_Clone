@@ -1,0 +1,41 @@
+{
+  "sentiment": {
+    "freddy peralta": "🔴↑ Struggles persist (4 of last 5 <5 frames) but 17-whiff 7/11 spark — 'upside unmatched on the wire'; hold-or-drop",
+    "jose soriano": "🔴↓ Curveball-carried; 0-K/2-BB clunker @MIN 7/12 — 'he's not that guy anymore'; hold in doubt",
+    "emmet sheehan": "🟢↑ Velo back ~96, 3 straight ≤4 combined ER — 'buy low while you can'; keep starting",
+    "parker messick": "🔴↓ Velo down to 94, changeup feel gone, BB 4× K — fatigue flag (112 IP) into break",
+    "hunter greene": "🟢↑↑ Return confirmed: 7 IP 0 ER 12 K vs CHC after 8-ER debut — 'He's back, baby!'",
+    "troy melton": "🟢↑↑ Velo/cutter up, 3 straight 12-whiff, career-high 9 K — 'ceiling worth chasing, hold everywhere'",
+    "logan henderson": "🟡→ Back from IL, velo a tick down; soft next slate (MIA/COL/LAA) — 'OH BABY' streaming runway",
+    "carlos rodon": "— IL15 (~7/19 return); no roundup start in the 6/30–7/12 window",
+    "max fried": "— IL (~7/24 return); no roundup start in the 6/30–7/12 window",
+    "tyler glasnow": "— IL (~8/1 return); no roundup start in the 6/30–7/12 window"
+  },
+  "_meta": {
+    "date": "2026-07-15",
+    "window": "sp-roundup 6/30/26 through 7/12/26 (ASG break 7/13-15 = no games)",
+    "source": "pitcherlist.com SP Roundup (fetched via curl 2026-07-15; WebFetch bot-blocked, curl 200)",
+    "roster_context": {
+      "current_sp": [
+        "freddy peralta",
+        "jose soriano",
+        "emmet sheehan",
+        "parker messick",
+        "hunter greene",
+        "carlos rodon",
+        "max fried",
+        "tyler glasnow"
+      ],
+      "pending_swap": {
+        "drop": [
+          "freddy peralta",
+          "jose soriano"
+        ],
+        "add": [
+          "logan henderson",
+          "troy melton"
+        ]
+      }
+    }
+  }
+}

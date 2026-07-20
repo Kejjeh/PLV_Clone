@@ -35,7 +35,6 @@ import requests
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(_REPO_ROOT))
-sys.path.insert(0, str(_REPO_ROOT / 'src'))
 
 from scripts.xfp.lib.hitter_boom_stack import (  # noqa: E402
     compute_hitter_boom_stack,

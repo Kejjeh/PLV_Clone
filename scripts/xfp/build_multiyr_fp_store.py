@@ -4,6 +4,7 @@ Persists data/research/multiyr_boxscore_fp.parquet (mlbam, year, game_date, role
 import sys, requests, time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import pandas as pd, numpy as np
+from plv_clone.fantasy.scoring import pitcher_fp
 
 OUT = 'data/research/multiyr_boxscore_fp.parquet'
 YEARS = list(range(2015, 2027))
@@ -42,10 +43,17 @@ def pitcher_games(pid, yr):
         for s in j.get('stats', [{}])[0].get('splits', []):
             st = s.get('stat', {})
             gs = int(st.get('gamesStarted', 0))
-            fp = (int(st.get('strikeOuts', 0)) + _ip(st.get('inningsPitched', 0)) * 3.3
-                  - int(st.get('hits', 0)) - 2 * int(st.get('earnedRuns', 0))
-                  - int(st.get('baseOnBalls', 0)) - int(st.get('hitByPitch', 0))
-                  + 5 * int(st.get('saves', 0)) + 2 * int(st.get('holds', 0)))
+            # canonical BrownU weights via scoring.pitcher_fp (audit #4);
+            # operand order matches the old inline expression -> bit-identical
+            fp = pitcher_fp(
+                k=int(st.get('strikeOuts', 0)),
+                ip=_ip(st.get('inningsPitched', 0)),
+                h=int(st.get('hits', 0)),
+                er=int(st.get('earnedRuns', 0)),
+                bb=int(st.get('baseOnBalls', 0)),
+                hbp=int(st.get('hitByPitch', 0)),
+                sv=int(st.get('saves', 0)),
+                hld=int(st.get('holds', 0)))
             out.append((pid, yr, s.get('date'), 'SP' if gs else 'RP', gs, float(fp), 0))
         return out
     except Exception:

@@ -60,7 +60,9 @@ surfaces stale `v9/v10/v11`-style duplicates.
   period)`), and read the authoritative banked count from ESPN statId-33
   (`espn_period_meta`). Add a new ASG-style exception by adding one entry to
   `PERIOD_CAP_OVERRIDES` + `PERIOD_WINDOW_OVERRIDES`. Committed 2026-07-11.
-- **RP slots:** cap is **4** active RPs, not 3.
+- **RP slots:** cap is **4** active RPs, not 3. **Josh's standing rule: 4 true
+  RPs is also the FLOOR — never propose an RP drop to absorb an SP return or
+  free a roster spot; RP drops are only RP-for-RP upgrades (2026-07-18).**
 - **Empirical rate:** ~1.19 SP starts per active SP per week.
 
 ### Scoring formulas
@@ -486,7 +488,11 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
    fp/start, not an RP). Always use `detect_pitcher_role(player_or_row)`
    from `scripts/xfp/lib/pitcher_role.py`, which checks `eligible_slots`
    first and falls back to MLB Stats API `gamesStarted` for dual-eligible
-   cases. The rule: SP `eligible_slots` only → SP; RP only → RP; both →
+   cases. The rule: SP `eligible_slots` only → SP; RP only → RP **unless the
+   name is in rp3 (ESPN slot grants lag a mid-season RP→SP conversion —
+   canonical: Griffin Jax 2026 post-trade, RP-only slots for weeks while
+   starting for TB, so cap math ignored his starts; fixed 2026-07-19), then
+   decide on `gamesStarted` like the dual path**; both →
    `gamesStarted / gamesPlayed >= 0.4` → SP. Applied in
    `build_matchup_dashboard.py` and `run_roster_audit.py`; wire it anywhere
    you filter pitchers by role. Canonical fix 2026-06-15.
@@ -548,6 +554,8 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     faint floor, **context-only (Rule 13) — never a number-mover or re-rank reason.** Snapshot
     logger (`build_player_projection_history.py`, refresh step 4.10) re-verified live; re-run the
     retro on logged (not git) snapshots in ~3-4 wks + do a proper single-start rp3 σ-coverage study.
+    **(Both closed: σ-coverage 2026-07-10 NO-CHANGE α=2.41; logged-snapshot retro 2026-07-19
+    CONFIRMED — registry entry same date. New watch: SP volume edge decay, next 4.13 run.)**
 
 ## Don't do these (load-bearing feedback)
 

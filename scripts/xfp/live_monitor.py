@@ -199,6 +199,7 @@ TEAM_ALIASES = {'ARI': 'AZ', 'OAK': 'ATH', 'CHW': 'CWS', 'WSN': 'WSH',
 # the name_match owner (item 10, 2026-07-04). Proven byte-identical, so this is a
 # pure move even though live_monitor produces live_dashboard.html.
 from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def _fetch_json(url):
@@ -418,16 +419,16 @@ def build_team_id_map(team):
 def get_my_team_and_opponent():
     from plv_clone.league_state import LeagueState
     league = LeagueState()._get_league()
-    my_team = next(t for t in league.teams if t.team_name == 'New York Ligers')
+    my_team = next(t for t in league.teams if t.team_name == MY_TEAM_NAME)
     # current matchup period → find opponent
     period = league.currentMatchupPeriod
     opponent = None
     try:
         for bs in league.box_scores(matchup_period=period):
-            if bs.home_team and bs.home_team.team_name == 'New York Ligers':
+            if bs.home_team and bs.home_team.team_name == MY_TEAM_NAME:
                 opponent = bs.away_team
                 break
-            if bs.away_team and bs.away_team.team_name == 'New York Ligers':
+            if bs.away_team and bs.away_team.team_name == MY_TEAM_NAME:
                 opponent = bs.home_team
                 break
     except Exception as e:

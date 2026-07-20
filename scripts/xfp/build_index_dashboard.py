@@ -23,6 +23,7 @@ from pathlib import Path
 
 import joblib
 import pandas as pd
+from plv_clone.league_config import MY_TEAM_NAME
 
 ROOT = Path(__file__).resolve().parents[2]
 # V12 is now the primary pitcher projection (V11 + il_60_stints_lag1).
@@ -103,7 +104,7 @@ def find_xfp_record(plv_name: str, by_key: dict) -> dict | None:
 # ─── ESPN payload extraction (from PLV dashboard) ─────────────────────────────
 
 def _label_roster_status(records: list[dict], name_key_fn,
-                          my_team_name: str = 'New York Ligers') -> None:
+                          my_team_name: str = MY_TEAM_NAME) -> None:
     """In-place: set rec['roster'] to 'mine' | 'taken' | 'fa' based on ESPN league rosters.
 
     Default-fall-through is 'fa'. Player on my team -> 'mine'.
@@ -4525,7 +4526,7 @@ def build_team_audit() -> dict:
         return out
 
     # Determine MY_TEAM
-    my_team_name = 'New York Ligers'
+    my_team_name = MY_TEAM_NAME
     rostered_keys = set(teams['player_name'].apply(_norm_audit))
 
     # Compute roster_buckets for EVERY team (mine + 7 opponents)

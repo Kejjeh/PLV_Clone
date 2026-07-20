@@ -147,6 +147,29 @@ cold arm with rising velo / K-BB% stays rostered and just sits the one start.
 
 ---
 
+## Step 3c — active decision gates (check + report, then prune when settled)
+
+Standing pre-registered gates from in-flight roster plans. Each Monday: pull
+the evidence, print the gate's status (OPEN / TRIGGERED / CLEARED), and delete
+a gate here once its decision executes. Current gates:
+
+1. **Messick post-break velo (forced-drop gate #1, decides the 7/27 Fried cut).**
+   His first period-16 start (~7/20 vs MIN): compare FB velo vs his 95.5+
+   season norm (statcast, `release_speed` FF/SI mean). Still ~94 → fatigue flag
+   REAL → **Messick is the 7/27 drop**. Rebounded → keep; gate 2 decides.
+2. **Peralta 2H thesis (fallback for the same cut).** His ~2 starts before
+   7/27: the career-2H case predicts an IMMEDIATE K% jump (career 2H 29.9%).
+   Two more cold starts (≤8 FP, K% <22%) → thesis weakened → **Peralta is the
+   7/27 drop** instead.
+   Context: 4-RP floor is absolute (CLAUDE.md) — the cut MUST be an SP.
+3. **Canzone vs Mead (8/7 Judge hitter cut).** Track both L21; Canzone July
+   xwOBAcon-vsR was .298 (earmarked) — flip to Mead only if Mead idles while
+   Canzone rebounds. Verdict cohort settles 2026-08-08.
+4. **Clemens PT watch (waiver reclaim).** If he starts 5 of the Twins' next 6,
+   his playing-time premise flipped → claim-back candidate.
+
+---
+
 ## Step 4 — fa-monitor (condensed)
 
 Using `fa_all` and `rh3_idx` from shared data, run all 6 signals.

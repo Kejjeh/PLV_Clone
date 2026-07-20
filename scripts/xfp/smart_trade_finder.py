@@ -40,7 +40,7 @@ from scripts.xfp.opponent_lineup_overlap import (
 )
 
 OUT = ROOT / 'data' / 'outputs'
-MY_TEAM_NAME = 'New York Ligers'
+from plv_clone.league_config import MY_TEAM_NAME
 
 
 def build_team_players(league_team, h_lookup, p_lookup, ytd_lookup):

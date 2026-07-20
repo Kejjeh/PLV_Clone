@@ -1,0 +1,49 @@
+{
+ "sentiment": {
+  "freddy peralta": "🟡→ wk17 List #57 'rough as anything… hasn't looked terribly off from previous' — hold-lean improves vs 7/12 read",
+  "jose soriano": "🔴↓ wk17 #78 'wonderful start to the year… erratic and harmful since' — off streamer board; sell",
+  "emmet sheehan": "🟡↑ wk17 #44 'shallow numbers aren't pretty but the skills sure are — trust the positive regression, destined for 25-30% K' | streamer QUES today @NYY 'Yikes'",
+  "parker messick": "🟢→ wk17 #40 'still a solid play you should generally slot into your lineup'",
+  "hunter greene": "🟢↑ wk17 #19 'looked like Greene' post-IL",
+  "troy melton": "🟢↑ R7/17 9K career high, 18 whiffs 38% CSW — 'keeps one-upping himself'",
+  "logan henderson": "🟢↑ wk17 #31 + R7/17 5IP 1ER vs MIA: 'case of the missing velocity SOLVED' — 93+, near-peak vert, elite HAVAA",
+  "carlos rodon": "— IL15 (~7/19 return); no roundup start in the 6/30–7/12 window",
+  "max fried": "— IL (~7/24 return); no roundup start in the 6/30–7/12 window",
+  "tyler glasnow": "— IL (~8/1 return); no roundup start in the 6/30–7/12 window",
+  "shota imanaga": "🟢→ wk17 #41 'rock solid command; 5 HR in last 6 games'",
+  "eury perez": "🟡→ wk17 #48 'fantastic heater, still figuring out how to get there'",
+  "jake bennett": "🟢↓ wk17 #45 'premium SWATCH' + R7/17 W 6IP 0ER 1H but 'didn't look his best' — velo down 1-2 ticks, 77% FB mix, changeup missing",
+  "griffin jax": "🟡↑ R7/17 (7 ER @BOS): 'Don't give up on Jax! A+ stuff, 15 whiffs, all poor batted-ball luck' — 6 of 8 hits singles",
+  "kyle bradish": "🟢↑ wk17 #38 'slider+curveball key to everything… wagering he'll have them in the 2H and massively help your fantasy teams' (sub-50% strikes w/ breakers last start = the risk)",
+  "trevor rogers": "🟢→ wk17 #46 + streamer PROB today 'cruising with high 94/95 four-seamers, go for it'",
+  "roki sasaki": "🟢🔥 R7/17 5.2IP 0ER @NYY: returned SITTING 100 MPH (+3.5 ticks vs 2025), +1 tick on everything — 16 whiffs; watch closely"
+ },
+ "_meta": {
+  "date": "2026-07-15",
+  "window": "sp-roundup 6/30/26 through 7/12/26 (ASG break 7/13-15 = no games)",
+  "source": "pitcherlist.com SP Roundup (fetched via curl 2026-07-15; WebFetch bot-blocked, curl 200)",
+  "roster_context": {
+   "current_sp": [
+    "freddy peralta",
+    "jose soriano",
+    "emmet sheehan",
+    "parker messick",
+    "hunter greene",
+    "carlos rodon",
+    "max fried",
+    "tyler glasnow"
+   ],
+   "pending_swap": {
+    "drop": [
+     "freddy peralta",
+     "jose soriano"
+    ],
+    "add": [
+     "logan henderson",
+     "troy melton"
+    ]
+   }
+  },
+  "updated": "2026-07-18 (wk17 List + roundups 7/16-7/17 + wknd streamers spliced)"
+ }
+}

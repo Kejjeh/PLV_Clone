@@ -32,7 +32,6 @@ from scipy.stats import spearmanr
 AS_OF = date(2026, 6, 9)
 
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / "src"))
 
 import joblib
 

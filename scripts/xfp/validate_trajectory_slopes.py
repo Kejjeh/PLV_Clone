@@ -25,7 +25,6 @@ from scipy.stats import linregress
 
 # Repo root
 ROOT = Path(__file__).resolve().parents[2]
-sys.path.insert(0, str(ROOT / 'src'))
 sys.path.insert(0, str(ROOT))
 
 from scripts.xfp._rp3_validation_harness import (

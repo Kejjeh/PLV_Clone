@@ -5,7 +5,6 @@ import importlib
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 
 def test_root_resolves_to_repo_with_data_dir():
