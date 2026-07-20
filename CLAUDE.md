@@ -426,6 +426,33 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     K% −4.7pp / SwStr −2.4pp, TRENDING_DOWN slope −4.5, comps avg 10.7 FP/start
     T+1 = real decline, not luck). See `/sp-stuff-board` mandatory cross-check +
     `reference_lens_merge_protocol.md` SP conflict rule #6.
+15. **Don't execute/recommend a drop on a "declining" skill read from a SINGLE
+    window** (one bad week of xwOBACON, K%, or bat speed). Require the decline
+    to show in ≥2 non-overlapping windows (e.g. L7 AND L21, or L21 AND the
+    trailing month) before it counts as a real trend — a one-week dip can look
+    exactly like a trend and reverse completely within 2 weeks. **Canonical:
+    Trea Turner** — dropped 2026-06-19 on xwOBACON/K% "decline," but the whole
+    read traced to one bad week (6/8: bat speed 68.7mph, K% 37%) that had
+    already partially recovered by the drop date (6/15: 70.9mph) and fully
+    reversed by July (K% 19.3%, bat speed 70.2mph — his best month of the
+    season). The call matched the data in hand at the time; the fix is
+    requiring a second confirming window before the data counts as a trend,
+    not blaming the read in hindsight. Apply this before any drop recommendation
+    in `/moves`, `/roster-audit`, `/forced-drop-planner`, or `/decision-gates`.
+16. **Don't let a short-hold FA add/drop (<48h, a same-day scouting look) go
+    unchecked forever.** A player added and dropped within a day or two gets
+    zero real evaluation — if he breaks out weeks later you'll never know
+    unless something re-scans him. **Canonical: Louis Varland** — added/dropped
+    same week 2026-04-19/20 by the Ligers, claimed by an opponent 8 days later,
+    now rprs2 **#4 overall** (+136.2 replacement_delta) — a top-5 league-wide
+    reliever that got a one-day look. **Bryan Baker** is the same pattern one
+    level over: never rostered at all, now rprs2 **#5** (+114.7). Signal D
+    (Drafted-Then-Dropped Comeback) in `/fa-monitor` only checks prior-YEAR
+    draft history — it does not catch same-season short-hold churn. Signal P
+    (Short-Hold Churn Re-scan, added 2026-07-20) closes this gap: it re-checks
+    every player added-then-dropped within 48h by ANY team in the last 30 days
+    against current rp3/rh3/rprs2 rank, 3+ weeks after the churn event so real
+    signal has had time to show. Run as part of the regular `/fa-monitor` sweep.
 
 ## Memory pointers (for context-dense lookups)
 

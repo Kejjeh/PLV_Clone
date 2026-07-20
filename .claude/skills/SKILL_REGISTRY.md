@@ -111,7 +111,7 @@ resolve through it.
 | **fa-pitcher-pool** | active | CANONICAL FA pitcher pool — `--role {sp\|rp}` |
 | fa-sp-pool | alias | → `/fa-pitcher-pool --role sp` (holds SP recipe) |
 | fa-rp-pool | alias | → `/fa-pitcher-pool --role rp` (holds RP recipe) |
-| fa-monitor | active | Weekly 12-signal wire scan (A-F + J-O incl. rating-arc riser) |
+| fa-monitor | active | Weekly 13-signal wire scan (A-F + J-O incl. rating-arc riser + Signal P short-hold churn re-scan) |
 | fa-pickup-deep-dive | active | Single-FA deep dive → PASS/CONSIDER/SKIP |
 | fa-replacement-pool | alias | → `/hitter-board --mode replace` (holds the recipe; P drops dispatch to fa-pitcher-pool) |
 

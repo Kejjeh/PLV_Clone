@@ -1,18 +1,20 @@
 ---
 name: fa-monitor
-description: Proactive weekly scan of the FA pool across 12 signal types — 6 core (A-F: SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) + 6 extended (J-O: leverage-rise, new-closer, fireman-breakout, velo-spike, multi-inning value, rating-arc riser) — outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
+description: Proactive weekly scan of the FA pool across 13 signal types — 6 core (A-F: SP first-start fp_proxy, RP closer/setup opportunity, hitter sustained xwOBA, drafted-then-dropped comeback, IL return timing, role-change RP) + 6 extended (J-O: leverage-rise, new-closer, fireman-breakout, velo-spike, multi-inning value, rating-arc riser) + Signal P (short-hold churn re-scan) — outputting HIGH/MED/LOW alerts. Run Monday mornings or after significant league transactions. Script: scripts/xfp/run_fa_monitor.py. For multi-lens deep-dive on any flagged alert, hand off to `/triangulate` or `/fa-pickup-deep-dive`.
 ---
 
 # fa-monitor
 
-Proactive weekly scan of the FA pool across 12 signal types (6 core, A-F — SP early-start
+Proactive weekly scan of the FA pool across 13 signal types (6 core, A-F — SP early-start
 performance, RP closer opportunity, hitter sustained xwOBA, drafted-then-dropped, IL
 return, role-change RP; + 6 extended, J-O — leverage-rise, new-closer, fireman-breakout,
-velo-spike, multi-inning value, rating-arc riser) — to surface
-high-value pickups before opponents act. Designed to catch the gaps identified
+velo-spike, multi-inning value, rating-arc riser; + Signal P — short-hold churn re-scan)
+— to surface high-value pickups before opponents act. Designed to catch the gaps identified
 in the 2026 retroactive analysis: Paul Sewald (RP, +0.133 fp_proxy ignored for
 weeks), JJ Bleday (0.408 xwOBA for 2 months on wire), Kyle Harrison (first-start
-signal available before anyone added him).
+signal available before anyone added him), Louis Varland / Bryan Baker (same-week
+add-then-drop churn that turned into rprs2 top-5 relievers, caught retroactively
+2026-07-20 — Signal P exists so this doesn't need a retroactive catch again).
 
 **Trigger phrases:** "what FAs am I missing", "weekly FA scan", "anything available
 I should grab", "monitor the wire", "run the FA monitor", or as a scheduled
@@ -62,6 +64,7 @@ blind spots. The diagnostic value is in *which* lens fired (and which didn't).
 | L — FIREMAN_BREAKOUT | rp_archetype FIREMAN tag 2025→2026 | IS%/IR% thresholds calibrated on 2017-2025; 2026 in-flight |
 | M — VELO_SPIKE_RP | 20-80 VELO rating Δ + swstr% Δ | Velo measurement noise early in season |
 | N — MULTI_INNING_BULK_VALUE | rp_archetype MIB tag + rprs2 rank | Bulk role ≠ closer value (different scoring profile) |
+| P — Short-Hold Churn Re-scan | `league.recent_activity()` add+drop pairs <48h apart, any team, trailing 30d | Needs a 3+ week lag before re-checking — too soon and there's no new signal yet |
 
 When two lenses disagree (e.g., Signal A HIGH but Signal H doesn't fire because
 the user's floor is already strong), the disagreement is the insight: a real
@@ -90,6 +93,7 @@ All signals live here. Add new signals to this table when validated.
 | M | VELO_SPIKE_RP | RP | VELO rating (20-80 scale) +5 vs 2025 AND swstr_pct +0.5pp vs 2025 | HIGH if VELO Δ ≥ 8 AND swstr Δ ≥ 1.5pp; MED if VELO Δ ≥ 5 AND swstr Δ ≥ 1.0pp; LOW otherwise | 2026-05-30 |
 | N | MULTI_INNING_BULK_VALUE | RP | MULTI_INNING_BULK_26 True AND rprs2 rank ≤ 80 | HIGH if rprs2 ≤ 50 + gmLI ≥ 1.2 OR new MIB role; MED if rank ≤ 60; LOW otherwise | 2026-05-30 |
 | O | RATING_ARC_RISER | SP/H | FA whose validated key pillar (SP STUFF / hitter CONTACT) rose ≥ +5 rating pts over ~4wks (lib/rating_arc owner) | HIGH if Δ ≥ +8; MONITOR if ≥ +5. Rule 13: triggers /triangulate, never ranks | 2026-07-04 |
+| P | Short-Hold Churn Re-scan | ALL | Added+dropped by ANY team <48h apart, trailing 30 days, event ≥21 days old, current rp3/rh3/rprs2 rank ≤ 80 | HIGH if rank ≤ 30; MONITOR if rank ≤ 80 | 2026-07-20 |
 
 ---
 
@@ -835,6 +839,99 @@ with HIGH/MED/LOW subsections, distinct from the A-F report above.
 
 ---
 
+## Signal P — Short-Hold Churn Re-scan (added 2026-07-20)
+
+Catches players ANY team (including yours) added and dropped within 48h — a
+same-day scouting look that got zero real evaluation — then re-checks their
+CURRENT model rank once enough time has passed for real signal to emerge.
+This is the gap Signal D (draft-history comeback) doesn't cover: D only
+catches players dropped since a PRIOR YEAR's draft; P catches in-season
+waiver churn, which moves much faster and is invisible unless something
+re-scans it. **Canonical misses (2026-07-20 retroactive catch):** Louis
+Varland (Ligers held him 4/19→4/20, one day, dropped; claimed by an
+opponent 8 days later; now rprs2 **#4 overall**, +136.2 replacement_delta)
+and Bryan Baker (never rostered by anyone who looked closely; now rprs2
+**#5**, +114.7).
+
+```python
+from app.espn_connector import _get_league
+from datetime import datetime, timedelta
+
+league = _get_league()
+acts = league.recent_activity(size=300)  # trailing ~30-45 days depending on league volume
+
+# Step 1: find add+drop pairs <48h apart, same team, same player, in the last 30 days
+cutoff = datetime.now() - timedelta(days=30)
+min_age = datetime.now() - timedelta(days=21)  # need 3 weeks for real signal to show
+
+by_player = {}  # player_name -> list of (dt, team, kind)
+for a in acts:
+    dt = datetime.fromtimestamp(a.date / 1000)
+    if dt < cutoff:
+        continue
+    for team, kind, player in a.actions:
+        by_player.setdefault(player, []).append((dt, str(team), kind))
+
+churn_candidates = []
+for player, events in by_player.items():
+    events.sort()
+    for i in range(len(events) - 1):
+        dt1, team1, kind1 = events[i]
+        dt2, team2, kind2 = events[i + 1]
+        added = 'ADD' in kind1.upper()
+        dropped = kind2.upper() == 'DROPPED'
+        if added and dropped and team1 == team2 and (dt2 - dt1) <= timedelta(hours=48):
+            if dt2 <= min_age:  # only re-scan once enough time has passed
+                churn_candidates.append({'player': player, 'team': team1, 'dropped_at': dt2})
+
+# Step 2: check current ownership (skip if now rostered — not actionable) + model rank
+from app.espn_connector import get_all_teams
+rostered_now = set(get_all_teams()['player_name'])
+
+rp3 = pd.read_csv(REPO / 'data/outputs/xfp_rp3_projections.csv')
+rh3 = pd.read_csv(REPO / 'data/outputs/xfp_rh3_projections.csv')
+rprs2 = pd.read_csv(REPO / 'data/outputs/xfp_rprs2_projections.csv')
+
+results_p = []
+for c in churn_candidates:
+    name = c['player']
+    if name in rostered_now:
+        continue  # someone else already caught it — informational only, not actionable
+    last = name.split()[-1]
+    rp3_m = rp3[rp3['player_name'].str.contains(last, case=False, na=False)]
+    rh3_m = rh3[rh3['player_name'].str.contains(last, case=False, na=False)]
+    rprs2_m = rprs2[rprs2['name_api'].str.contains(last, case=False, na=False)]
+    best_rank = min(
+        int(rp3_m['rank'].iloc[0]) if len(rp3_m) else 999,
+        int(rh3_m['rank'].iloc[0]) if len(rh3_m) else 999,
+        int(rprs2_m['rank'].iloc[0]) if len(rprs2_m) else 999,
+    )
+    if best_rank <= 80:
+        priority = 'HIGH' if best_rank <= 30 else 'MONITOR'
+        results_p.append({
+            'player': name, 'dropped_by': c['team'],
+            'dropped_at': c['dropped_at'].date().isoformat(),
+            'best_rank': best_rank, 'priority': priority,
+        })
+
+results_p.sort(key=lambda x: x['best_rank'])
+```
+
+**Output tier:**
+- `best_rank <= 30` → HIGH — genuine miss, still unrostered, deep-dive and add now
+- `best_rank <= 80` → MONITOR — worth a look
+- Still rostered by whoever claimed them → informational only (log it, don't
+  chase — not actionable, but worth noting for next time)
+
+**Why the 21-day floor:** re-scanning immediately after a churn event just
+re-runs the same thin sample that caused the miss in the first place. The
+whole point is giving real signal time to accumulate before judging it —
+same principle as rule #15 (Turner) but pointed the other direction: don't
+overreact to one bad week on a drop, and don't dismiss one good week on a
+add/pass either. Wait for the second window.
+
+---
+
 ## Step 2 — Output
 
 ```
@@ -866,6 +963,11 @@ with HIGH/MED/LOW subsections, distinct from the A-F report above.
 ## Hitter roster upgrades available (Signal I)
 [HIGH PRIORITY] H: <name> — xwOBA <X> (xwOBACON <X>), <N> PA, rh3 #<R>, gap vs your floor: +<gap> → run /fa-pickup-deep-dive
 [MONITOR]       H: <name> — xwOBA <X> (xwOBACON <X>), <N> PA, rh3 #<R>, gap vs your floor: +<gap>
+
+## Short-hold churn re-scan (Signal P)
+[HIGH]    <name> — <team> held <48h, dropped <date>, now rank #<R> and still FA → deep-dive + add now
+[MONITOR] <name> — <team> held <48h, dropped <date>, now rank #<R> and still FA
+[INFO]    <name> — <team> held <48h, dropped <date>, now rank #<R> but claimed by <other team> — not actionable, note for next time
 ```
 
 ---
@@ -884,9 +986,12 @@ with HIGH/MED/LOW subsections, distinct from the A-F report above.
 | `/hitter-compare` | Multi-player comparison when Signal I surfaces 2+ upgrade candidates |
 | `/slump-or-decline` | Check user's weakest hitter (upgrade floor) before dropping for Signal I target |
 | `build_sp_alerts.py` | Should also compute Signal I hitter alerts, output under `"hitter_alerts"` key in sp_alerts.json |
+| `/player-verdict` | Follow-up when Signal P surfaces 2+ churn candidates worth a head-to-head |
 
 **Run cadence:** Monday morning before setting lineups. Takes ~3-5 minutes.
-Secondary run: after any waiver wire news (closer change, IL activation).
+Secondary run: after any waiver wire news (closer change, IL activation). Signal
+P specifically needs the Monday cadence to work — it's a rolling 30-day window,
+so a miss caught late is still caught within about 4 weeks of the churn event.
 
 ---
 
@@ -908,6 +1013,12 @@ Secondary run: after any waiver wire news (closer change, IL activation).
    `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`.
    See `/player-id-resolve` for the canonical resolution helper and
    `KNOWN_COLLISIONS` dict (single source of truth).
+7. **Re-scanning Signal P too early** — a churn event needs ≥21 days before
+   re-checking rank; anything sooner is judging the same thin sample that
+   caused the original miss. Don't shortcut the wait to "catch it faster."
+8. **Chasing a Signal P hit that's already rostered elsewhere** — log it as
+   informational (a lesson for next time) and move on; it is not an
+   actionable add. Don't spend a deep-dive on a player you can't claim.
 
 ---
 
@@ -944,6 +1055,11 @@ Signals calibrated from 2026 retroactive analysis (2026-05-25):
   Webb +5/+3.7pp), N=3 alerts (1 HIGH: Sam Bachman, new MIB role). Designed
   signals — not yet calibrated against forward outcomes; treat MED/LOW tiers
   as watchlist until 2026 season completes.
+- Signal P added 2026-07-20 (Varland/Baker retroactive miss): thresholds
+  (rank ≤ 30 HIGH, ≤ 80 MONITOR) picked to match the canonical cases —
+  Varland landed at rprs2 #4, Baker at #5, both would fire HIGH under this
+  bar. Not yet calibrated against a full season of churn events; treat as
+  MONITOR-tier confidence like Signals D-F until validated.
 
 ---
 
@@ -969,6 +1085,18 @@ Signals calibrated from 2026 retroactive analysis (2026-05-25):
 - **Same-name collisions.** All rh3/rp3/rprs2 joins must use
   `(norm_name, pro_team)` tuple keys or `resolve_batter_id`. See
   `/player-id-resolve`.
+- **Signal P name-matching is last-name `.str.contains`, same weakness as
+  Signals D/H/I use elsewhere in this file** — a churned player who collides
+  on last name with someone else could misattribute rank. Low risk (churn
+  events are infrequent) but worth a team-hint check if a Signal P hit looks
+  surprisingly good or bad.
+- **Signal P's `league.recent_activity(size=300)` window is finite** — it's a
+  rolling ~30-45 day lookback depending on league transaction volume, not a
+  full-season log. A churn event older than that falls out of range and
+  won't be caught. This is acceptable for a weekly-cadence signal (nothing
+  should sit unscanned that long) but means a one-time historical sweep
+  (like the 2026-07-20 Varland/Baker catch) needed a wider `size=` to reach
+  back to April.
 
 
 ---
