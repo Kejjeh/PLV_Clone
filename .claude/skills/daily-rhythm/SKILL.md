@@ -38,6 +38,14 @@ deduplicated, cap-aware, 4-RP-floor respected.
 
 ## Hard rules
 
+0. **Rollover mornings** (first day of a new period, before ESPN flips
+   `currentMatchupPeriod` — lags until ~mid-morning): cap/matchup engines
+   report the CLOSED period. Resolve the new period explicitly
+   (`resolve_period_meta(league, period+1)`) and label both windows.
+   (Found in live QA 2026-07-20 at 2am: everything said "period 15".)
+0b. Pull-once is BEST-EFFORT across legs: chained engines pull internally
+   (no injection seams yet — registry backlog). Thread shared frames for
+   inline steps only; don't fight the engines.
 1. Leg ordering is load-bearing: whats-new FIRST (it diffs against last_seen
    before anything else mutates caches), then decisions.
 2. A leg failing is fail-soft: report the failure line and continue (the

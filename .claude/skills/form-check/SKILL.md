@@ -16,9 +16,14 @@ The form-domain master: every validated form lens, whole roster, one pass.
 2. **Hitter side — `/hitter-form --scope roster`** (9-marker sustainability
    sweep) + `--lens career` (L150 career-percentile position). Add
    `--scope fa` when the ask includes the pool.
-3. **Route the flags** — every RED/DOWN flag → `/slump-or-decline` candidate;
-   every hot flag → `/breakout-sustainability` candidate. List them; run the
-   deep-dives only for names the user confirms (they're long).
+3. **Route the flags** — hitters: RED/DOWN → `/slump-or-decline`, hot →
+   `/breakout-sustainability`. SPs/RPs: ALL flags (either direction) →
+   `/triangulate` (the SP deep-dive route; QA 2026-07-20). List them; run
+   the deep-dives only for names the user confirms (they're long).
+   Note: the breakout lens is an inline recipe (no engine script) — follow
+   sp-breakout-signal's SKILL.md steps; NEGATIVE outranks NOISE when tiers
+   conflict. Rookie caveat: STUFF-DECLINE requires a real prior-year sample
+   (memo #11) — never auto-fire it from the in-season split alone.
 
 ## Pull-once contract
 

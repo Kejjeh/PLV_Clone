@@ -39,6 +39,11 @@ statcast/boxscore stores, no ESPN.
 
 ## Hard rules
 
+0. **Rollover mornings**: `weekly_cap_check.py` follows ESPN's lagging
+   `currentMatchupPeriod` — on period day 1 it reports the CLOSED period.
+   Resolve the new period explicitly (`resolve_period_meta(league,
+   period+1)`) and state both ("p15 closed UNDER by N; p16 opens 0 banked
+   vs cap C"). Pull-once is best-effort (engines pull internally).
 1. **Verify-first (Rule 11/gotcha 4):** every EXECUTED/MISSED claim comes
    from the live `get_all_teams()` scan, never from session memory. Waivers
    lag 24-48h — a dropped player still showing rostered is PENDING-WAIVER,

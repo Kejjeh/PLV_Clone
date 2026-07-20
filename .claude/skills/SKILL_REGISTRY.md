@@ -252,6 +252,7 @@ scripts · 73-copy name-normalizer collapse.
 | 3 | 🟠 HIGH | Delete 2 inline `PARK_FACTORS` dicts; point `boom_stack:54` at `extra_lenses` | ⬜ pending (validate_drift_v5_*, boom_stack) |
 | 4 | 🟠 HIGH | Collapse 73 name-normalizer copies → `name_match` | ⬜ pending (isolated workflow) |
 | 7 | 🟠 HIGH | `STARTS_PER_SP_PER_WEEK` — route remaining engines | ⬜ partial (owner + 4 skills done 2026-07-04) |
+| 10 | 🟠 HIGH | Domain-master QA 2026-07-20 findings: (a) rookie STUFF-DECLINE fires from in-season split alone in `stuff_command_lens` — add the prior-year gate at the OWNER (memo #11); (b) pool/roster injection seams for `run_streamer_board` + `run_fa_monitor` (pull-once currently best-effort); (c) `resolve_pitcher_id` accent/suffix misses (Eury Pérez, Luis García Jr.) — extend KNOWN_COLLISIONS/normalizer; (d) rollover-morning period lag handled in skill docs — consider `weekly_cap_check --period` flag | ⬜ pending (docs patched in the 5 masters same day) |
 | 9 | 🟡 MED | Doc drift fixed 2026-07-10: fa-monitor 12-signal count, hitter-slate-grid boom cutoffs (10/2→5/0), monday-morning chain description | ✅ done |
 
 **Legend:** ✅ shipped · ⬜ pending · 🔴 needs validated migration.

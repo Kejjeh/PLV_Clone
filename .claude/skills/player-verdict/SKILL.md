@@ -43,6 +43,10 @@ What would flip it (the watch-list trigger)
    ranked by Stuff+ `proj_ros_fp`, not rp3.
 4. **User-veto slot** — a stated veto ("I don't trust X vs the Yankees")
    eliminates that option; re-rank the remainder rather than arguing.
+5. **Rookie STUFF-DECLINE gate (QA 2026-07-20)** — for a no-prior-year
+   rookie, the DECLINE-RISK auto-veto never fires from the in-season split
+   alone (the lens is prior-year-gated, memo #11); route to the ≥2-of-3
+   corroboration check (archetype slope + K/SwStr decomp + comp T+1).
 
 ## When NOT to use
 

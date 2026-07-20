@@ -17,12 +17,22 @@ The browse-domain master: every board, one pass, one FA pool pull.
    pools (rp for the RP-for-RP-upgrade-only lane; 4-RP floor context).
 5. **fa-monitor** — HIGH-priority alerts only (MONITOR tier collapsed).
 
-## Pull-once contract
+## Pull-once contract (best-effort — QA'd 2026-07-20)
 
-ONE `league.free_agents(size=2000)` + ONE `get_all_teams()` serve all five
-steps (gotcha 6: never per-position size=300 pulls; the Connelly-Early /
-Sheehan availability rules apply — boards verify against the roster scan,
-never percent_owned). Probables pulled once from the schedule owner.
+ONE `league.free_agents(size=2000)` + ONE `get_all_teams()` for every
+INLINE join (gotcha 6: never per-position pulls; Connelly-Early/Sheehan
+availability rules — roster scan, never percent_owned). The standalone
+engines (`run_streamer_board.py`, `run_fa_monitor.py`) re-pull internally
+(no injection seam yet — registry backlog); accept it, don't monkeypatch.
+
+Meta-pass scope: carry each board's TABLE layers only — skip the per-player
+deep layers (triangulate/sustainability/live-marginal/PL WebFetch refresh)
+that the alias recipes describe for standalone runs. fa-monitor: the engine
+takes `--signals` (default A-F + J-O; G/H/I are compute-heavy opt-ins);
+there is no `--priority` flag — apply the HIGH filter in the report.
+marcel_il SPs with NO FG Stuff+ row: tag NO-STUFF-DATA (never rp3-rank
+them). Roster-side tables bucket via `detect_pitcher_role`, never ESPN
+position (Detmers).
 
 ## Output format
 
