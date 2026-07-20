@@ -1,6 +1,6 @@
 # Model scorecard — 2026-07-20
 
-**Data health:** 21 PASS / 0 WARN / 0 FAIL / 0 SKIP
+**Data health:** 20 PASS / 1 WARN / 0 FAIL / 0 SKIP
 **Pipeline staleness:** 10 PASS / 0 WARN / 0 FAIL / 0 SKIP
 
 ## Data-health tripwires
@@ -14,13 +14,13 @@
 | il_grid_coverage | rolling_relievers | 0 | PASS | 0/175 substrate grid cells absent from IL cache |
 | il_tx_json_freshness | file_mtime | 1 | PASS | proves the STALE_AFTER_DAYS self-refresh is running (in-season natural cycle ~4d) |
 | il_tx_json_freshness | newest_event | 3 | PASS | newest IL event 2026-07-17 (WARN-only: ASG break / transaction lulls are legitimate) |
-| ros_opp_xwoba_nan_rate | 2026 | 0.1461 | PASS | fraction of 2026 rolling rows with no schedule-strength value pre-fill (n=2245) |
-| ros_cache_split_day_lag | vs_rolling_grid | 2 | PASS | rolling 2026 max split_day=116; ros max split_day=114, season day=116 |
-| ros_cache_split_day_lag | vs_calendar | 2 | PASS | ros max split_day=114, season day=116 (weekly grid: some lag is normal) |
+| ros_opp_xwoba_nan_rate | 2026 | 0.1336 | PASS | fraction of 2026 rolling rows with no schedule-strength value pre-fill (n=2245) |
+| ros_cache_split_day_lag | vs_rolling_grid | 0 | PASS | rolling 2026 max split_day=116; ros max split_day=116, season day=116 |
+| ros_cache_split_day_lag | vs_calendar | 0 | PASS | ros max split_day=116, season day=116 (weekly grid: some lag is normal) |
 | statcast_max_date_lag_days | all | 1 | PASS | max date 2026-07-19 (gf bridge should keep this at ~1 day) |
 | boxscore_hitters_lag_days | all | 1 | PASS | max date 2026-07-19 |
 | boxscore_pitchers_lag_days | all | 1 | PASS | max date 2026-07-19 |
-| fg_2026_snapshot_age_days | fg_pit_2026_current.csv | 5 | PASS | mtime-based |
+| fg_2026_snapshot_age_days | fg_pit_2026_current.csv | 6 | WARN | mtime-based |
 | fg_proj_cache_missing_days_14d | all | 0 | PASS | missing: none (window truncated to inception 2026-07-09: 12d observed) |
 | fg_proj_cache_systems_latest | 2026-07-20 | 8 | PASS | 8/8 systems; absent: none |
 | proj_rowcount_delta_7d | rh3 | 0.0086 | PASS | 463 rows @ 2026-07-13 -> 467 rows @ 2026-07-20 |
@@ -34,13 +34,13 @@
 | check | segment | value | status | note |
 |---|---|---|---|---|
 | console_data_freshness | all | 0.0 | PASS | console_data.json vs newest input xfp_rprs2_projections.csv; hours behind (>0 = stale decision console — the 2026-07-18 trap) |
-| tri_nightly_freshness | nightly_json | 0.1 | PASS | freshest triangulate_nightly_2026-07-20.json; age hours (>=26h = nightly not running) |
+| tri_nightly_freshness | nightly_json | 0.0 | PASS | freshest triangulate_nightly_2026-07-20.json; age hours (>=26h = nightly not running) |
 | tri_nightly_freshness | cards_sidecar | 1 | PASS | triangulate_nightly_2026-07-20_cards.json present |
 | publish_freshness | index | 0.1 | PASS | hours behind console_data.json (>26h = stuck publish) |
 | publish_freshness | matchup | 0.0 | PASS | hours behind console_data.json (>26h = stuck publish) |
 | publish_freshness | triangulate | 0.0 | PASS | hours behind console_data.json (>26h = stuck publish) |
 | publish_freshness | xfp_board | 0.0 | PASS | hours behind console_data.json (>26h = stuck publish) |
-| espn_snapshot_ttl | all | 23.0 | PASS | oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering) |
+| espn_snapshot_ttl | all | 19.0 | PASS | oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering) |
 | trajectory_endpoint | all | 0 | PASS | max endpoint 2026-07-20 vs file date 2026-07-20 via traj_last_label MM-DD endpoints (gap >3d = frozen 04-25->06-20 trajectory class) |
 | golden_stash_leftover | all | 0 | PASS | no .golden_stash dir (nothing stashed) |
 

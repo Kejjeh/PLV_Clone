@@ -1,0 +1,34 @@
+{
+  "bucket": "RP",
+  "confidence": 1.0,
+  "decision_id": "2026-06-15_jhoan_duran_RP_001",
+  "inputs": {
+    "archetype_label": "LATE_INNING_STUFF_CTRL",
+    "archetype_overall": 80,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 4.136567735981263,
+    "live_marginal": 42.0,
+    "model_rank": 3,
+    "override_tag": null,
+    "pl_rank": 8,
+    "proj_per": 176.1,
+    "replacement_delta": 135.3
+  },
+  "mlbam_id": 661395,
+  "player_name": "Jhoan Duran",
+  "reason_tag": "strong_hold",
+  "settled_at": "2026-07-20",
+  "settlement": {
+    "actual_fp_per_unit": 6.9,
+    "classification": "UNSETTLEABLE_V1_UNITS",
+    "event_unit": "appearances",
+    "n_events": 10,
+    "proj_per": null,
+    "proj_units_note": "v1_rp_units_unrecoverable",
+    "residual": null,
+    "threshold": 0.5,
+    "window_days": 35
+  },
+  "snapshot_date": "2026-06-15",
+  "verdict_top": "BUY"
+}
