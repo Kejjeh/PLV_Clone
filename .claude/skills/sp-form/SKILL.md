@@ -18,7 +18,7 @@ show the disagreement (Rule 12) and reconcile per
 
 | Ask | Lens | Complete recipe lives in | Engine |
 |---|---|---|---|
-| "is X on a hot streak", "trust his last 3-5 starts?", streamer cited on recent form | **`breakout`** | `/sp-breakout-signal` SKILL.md | inline duckdb rolling-window over `statcast_2026.parquet` (+ Signal A, stuff_contact_composite) |
+| "is X on a hot streak", "trust his last 3-5 starts?", streamer cited on recent form | **`breakout`** | `/sp-breakout-signal` SKILL.md | `scripts/xfp/run_sp_breakout.py` (codified 2026-07-20 — `--names "A,B"` or default my-roster healthy SPs; tier table worst→best, + Signal A / SigStuff / MODEL-LAG? flags; NEGATIVE outranks NOISE) |
 | "is X declining", "who's fading", "will his results hold?", "sell-high SP", "catch a Framber early" | **`decline`** | `/sp-decline` SKILL.md | `scripts/xfp/sp_decline_model.py` |
 | "was that monster game real?", "audit my staff for regression risk / buy-low", "FA SP skill confirmation" | **`sustainability`** | `/pitcher-sustainability` SKILL.md | `scripts/xfp/pitcher_sustainability.py` |
 | "is rookie X any good", rp3 + archetype both blank, stale archetype vs live Statcast (Ben Brown) | **`shadow`** | `/shadow-scout` SKILL.md | `scripts/xfp/lib/shadow_scout.py` |

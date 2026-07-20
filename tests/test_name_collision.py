@@ -65,6 +65,51 @@ def test_resolve_pitcher_id_distinguishes_warrens():
                               sp_multiyr=spm, rp_multiyr=rpm) == 681810
 
 
+def test_resolver_accent_and_suffix_forces_2026_07_20():
+    """2026-07-20 QA regression: accent/suffix spellings that live-failed.
+
+    - "Eury Perez" (unaccented) missed the SP cache's "Pérez, Eury" row via
+      the accent-SENSITIVE exact match → KNOWN_PITCHER_COLLISIONS force.
+    - "Luis Garcia Jr." (unaccented Jr.) fell through the collision gate
+      (only the accented key existed) → unaccented KNOWN_COLLISIONS keys.
+    These hit the collision tables before any cache read, so no fixtures.
+    """
+    from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+    # Eury Pérez, MIA SP — both hinted forms and the hintless single-
+    # candidate force resolve to 691587 (NOT the retired OF 516811).
+    assert resolve_pitcher_id("Eury Perez", team="MIA") == 691587
+    assert resolve_pitcher_id("Perez, Eury", role="SP") == 691587
+    assert resolve_pitcher_id("Eury Perez") == 691587       # hintless force
+    assert resolve_pitcher_id("Eury Perez", team="NYY") is None  # wrong hint refuses
+    # Jose Soriano keeps working, now also hintless (single-candidate force).
+    assert resolve_pitcher_id("Jose Soriano", team="LAA") == 667755
+    assert resolve_pitcher_id("Jose Soriano") == 667755
+    # Luis García Jr., WSH 2B — accented and unaccented, with team hint.
+    assert resolve_batter_id("Luis Garcia Jr.", team="WSH") == 671277
+    assert resolve_batter_id("Luis Garcia Jr", team="WSH") == 671277
+    assert resolve_batter_id("Luis García Jr.", team="WSH") == 671277
+    # Multi-candidate Garcias still refuse to guess without a hint.
+    assert resolve_batter_id("Luis Garcia Jr.") is None
+    # Multi-candidate collisions (Muncy) still refuse hintless too — the
+    # single-candidate fallthrough must not weaken the Muncy guard.
+    assert resolve_batter_id("Max Muncy") is None
+    assert resolve_batter_id("Max Muncy", team="LAD") == 571970
+
+
+def test_accented_pitcher_cache_spelling_still_resolves():
+    """The accented spelling resolves via the cache path (the force entries
+    must not shadow it)."""
+    from plv_clone.utils.name_match import resolve_pitcher_id
+    cache = ROOT / "data" / "research" / "xfp_cache"
+    spm_p = cache / "sp_multiyr_2015_2025.csv"
+    rpm_p = cache / "relievers_multiyr_2018_2026.csv"
+    if not (spm_p.exists() and rpm_p.exists()):
+        pytest.skip("multiyr frames unavailable")
+    spm, rpm = pd.read_csv(spm_p), pd.read_csv(rpm_p)
+    assert resolve_pitcher_id("Eury Pérez", team="MIA",
+                              sp_multiyr=spm, rp_multiyr=rpm) == 691587
+
+
 def test_fa_join_does_not_inherit_star_row_by_surname_similarity():
     """2026-07-19 regression: the roster-audit FA board joined the FA pool onto
     projections with fuzzy_match_name (difflib 0.78), so FA prospect 'Hayden

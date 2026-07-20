@@ -5,7 +5,11 @@ after C pitches") AND closes the gap that cost a banked start on 2026-07-19:
 the planned Soriano→Bradish→Bennett churn silently never executed, and
 nothing checked. `plan` turns the sequence into an ordered checklist with ET
 deadlines; `verify` reconciles the plan against the LIVE roster and calls
-out EXECUTED / PARTIAL / PENDING / MISSED per step.
+out EXECUTED / PENDING-WAIVER / PARTIAL / PENDING / MISSED per step.
+PENDING-WAIVER = drop confirmed executed but the add hasn't cleared and the
+drop is <48h old (the add is likely still inside BrownU's ~24-48h waiver
+window). A condition with no posted probable prints "deadline unresolved —
+re-verify when <player>'s next probable posts" rather than a bare PENDING.
 
 Usage:
   python scripts/xfp/run_churn_plan.py plan \
@@ -257,6 +261,11 @@ def cmd_verify(args) -> int:
     anywhere = set(teams['player_name'].map(_norm))
     now = datetime.now(ET)
 
+    try:
+        plan_created = datetime.fromisoformat(plan['created'])
+    except (KeyError, ValueError):
+        plan_created = None
+
     print(f"CHURN VERIFY — {now.isoformat(timespec='minutes')}  vs {path.name}")
     print('=' * 72)
     any_missed = False
@@ -267,13 +276,33 @@ def cmd_verify(args) -> int:
                               add_done if mv['add'] else None) if c is not None]
         deadline = mv.get('deadline_et')
         past = False
+        deadline_dt = None
         if deadline and not deadline.endswith(')'):
             try:
-                past = datetime.fromisoformat(deadline) < now
+                deadline_dt = datetime.fromisoformat(deadline)
+                past = deadline_dt < now
             except ValueError:
                 past = False
+        # Deadline unresolved = the move HAS a start-condition but plan-time
+        # found no posted probable for the condition player (no clock at all).
+        unresolved = (mv.get('when') is not None
+                      and mv['when'].get('start') is None
+                      and not deadline and not mv.get('earliest_et'))
+        # PENDING-WAIVER: drop confirmed executed but the add hasn't cleared,
+        # and the drop is recent enough (<48h) that the ADD target may simply
+        # still be inside BrownU's ~24-48h waiver window (faab=False). We
+        # don't log drop-execution timestamps, so the best available proxy is
+        # the moment the drop became due/possible: the move deadline if past,
+        # else plan creation time.
+        in_waiver_window = False
+        if drop_done and mv['add'] and not add_done:
+            ref = deadline_dt if (deadline_dt is not None and past) else plan_created
+            if ref is not None:
+                in_waiver_window = (now - ref) < timedelta(hours=48)
         if all(checks):
             status = 'EXECUTED ✓'
+        elif in_waiver_window:
+            status = 'PENDING-WAIVER ⏳'
         elif any(checks):
             status = 'PARTIAL ◐'
         elif past:
@@ -285,6 +314,13 @@ def cmd_verify(args) -> int:
         print(f"{mv['seq']}. [{status}] {desc}"
               + (f"   (deadline was {deadline})" if past else
                  f"   (deadline {deadline})" if deadline else ''))
+        if status == 'PENDING-WAIVER ⏳':
+            print(f"     ⏳ drop confirmed off roster; {mv['add']} not yet mine — "
+                  f"likely clearing BrownU's ~24-48h waivers. Re-verify after the "
+                  f"window; if still missing, treat as PARTIAL and re-plan.")
+        if status.startswith('PENDING') and unresolved:
+            print(f"     ⏰ deadline unresolved — re-verify when "
+                  f"{mv['when']['player']}'s next probable posts")
         if mv['add'] and not add_done and _norm(mv['add']) in anywhere:
             owner = teams.loc[teams['player_name'].map(_norm) == _norm(mv['add']),
                               'team_name'].iloc[0]

@@ -620,7 +620,13 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     if actuals is None:
         from scripts.xfp.lib.triangulate_core import compute_actuals as _ca
         actuals = _ca(int(player['id']), bucket)
-    _thr = {'SP': '≥20 / <5', 'RP': '≥6 / <0', 'H': '≥10 / <2'}.get(bucket, '')
+    # thresholds from the OWNER (lib/boom_bust) — a hardcoded copy here went
+    # stale after the 2026-06-28 recalibration (displayed ≥20/<5 while
+    # computing ≥17/<5; QA 2026-07-20)
+    from scripts.xfp.lib.boom_bust import (SP_BOOM, SP_BUST, RP_BOOM, RP_BUST,
+                                           H_BOOM, H_BUST)
+    _thr = {'SP': f'≥{SP_BOOM} / <{SP_BUST}', 'RP': f'≥{RP_BOOM} / <{RP_BUST}',
+            'H': f'≥{H_BOOM} / <{H_BUST}'}.get(bucket, '')
     bb = actuals.get('boom_bust')
     win = actuals.get('boom_window') or ''
     thr = _thr

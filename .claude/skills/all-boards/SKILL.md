@@ -19,11 +19,20 @@ The browse-domain master: every board, one pass, one FA pool pull.
 
 ## Pull-once contract (best-effort — QA'd 2026-07-20)
 
-ONE `league.free_agents(size=2000)` + ONE `get_all_teams()` for every
-INLINE join (gotcha 6: never per-position pulls; Connelly-Early/Sheehan
-availability rules — roster scan, never percent_owned). The standalone
-engines (`run_streamer_board.py`, `run_fa_monitor.py`) re-pull internally
-(no injection seam yet — registry backlog); accept it, don't monkeypatch.
+Set the ESPN snapshot env for the WHOLE chain — this is the injection seam
+(the refresh pipeline's disk-cache layer, reused; QA fix 2026-07-20):
+
+```bash
+export PLV_ESPN_SNAPSHOT=1 PLV_ESPN_SNAPSHOT_TTL_MIN=45
+```
+
+With it set, every engine's `league.free_agents(size=2000)` after the first
+is served from the shared disk pickle, and injury-detail sweeps accumulate
+in one cache — one live pull feeds all five steps with NO engine changes or
+monkeypatching. (45-min TTL = one chain's lifetime; interactive freshness
+unaffected because only this chain sets it.) Inline joins still follow
+gotcha 6 (never per-position pulls) and the Connelly-Early/Sheehan
+availability rules (roster scan, never percent_owned).
 
 Meta-pass scope: carry each board's TABLE layers only — skip the per-player
 deep layers (triangulate/sustainability/live-marginal/PL WebFetch refresh)

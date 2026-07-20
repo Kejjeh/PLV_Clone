@@ -43,9 +43,11 @@ deduplicated, cap-aware, 4-RP-floor respected.
    report the CLOSED period. Resolve the new period explicitly
    (`resolve_period_meta(league, period+1)`) and label both windows.
    (Found in live QA 2026-07-20 at 2am: everything said "period 15".)
-0b. Pull-once is BEST-EFFORT across legs: chained engines pull internally
-   (no injection seams yet — registry backlog). Thread shared frames for
-   inline steps only; don't fight the engines.
+0b. Pull-once mechanism (QA fix 2026-07-20): set
+   `PLV_ESPN_SNAPSHOT=1 PLV_ESPN_SNAPSHOT_TTL_MIN=45` for the whole chain —
+   the refresh pipeline's disk-cache layer then serves every engine's
+   `free_agents(2000)` + injury sweeps from ONE live pull, across all
+   subprocess boundaries, no engine changes. Thread inline frames as before.
 1. Leg ordering is load-bearing: whats-new FIRST (it diffs against last_seen
    before anything else mutates caches), then decisions.
 2. A leg failing is fail-soft: report the failure line and continue (the

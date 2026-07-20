@@ -938,6 +938,11 @@ def main():
     parser = argparse.ArgumentParser(description="Weekly FA monitor — 11 signals")
     parser.add_argument("--signals", default="A,B,C,D,E,F,J,K,L,M,N,O",
                         help="Comma-separated list of signals to run (default: all)")
+    parser.add_argument("--high-only", action="store_true",
+                        help="print HIGH-priority alerts only (meta-skill "
+                             "passes — /all-boards, /monday-morning — QA "
+                             "2026-07-20; replaces the never-existing "
+                             "--priority flag some docs cited)")
     args = parser.parse_args()
 
     active = set(s.strip().upper() for s in args.signals.split(","))
@@ -1006,6 +1011,10 @@ def main():
         print("Running Signal O (RATING_ARC_RISER — in-season STUFF/CONTACT arc)...")
         all_results += signal_o_rating_arc(fa_sps, fa_hits)
 
+    if args.high_only:
+        n_all = len(all_results)
+        all_results = [r for r in all_results if r.get("priority") == "HIGH"]
+        print(f"\n--high-only: {len(all_results)}/{n_all} alerts kept")
     print_results(all_results)
 
 

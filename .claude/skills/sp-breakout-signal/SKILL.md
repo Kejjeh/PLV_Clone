@@ -8,6 +8,12 @@ description: ALIAS → /sp-form --lens breakout. Recipe lives below; routing/tri
 > stuff_contact_composite) and stays live as the delegate; new invocations
 > should prefer `/sp-form --lens breakout` (routing + trigger phrases live on
 > the canonical).
+>
+> **Engine: `scripts/xfp/run_sp_breakout.py`** (codified 2026-07-20 — no more
+> inline rebuilds). `--names "A,B"` or default my-roster healthy SPs (live
+> pull, `detect_pitcher_role`); prints the tier table worst→best with rp3
+> cross-ref + Signal A / SigStuff / MODEL-LAG? flags. Tier precedence:
+> NEGATIVE (0/N) outranks NOISE when both fire (documented in `--help`).
 
 # sp-breakout-signal
 

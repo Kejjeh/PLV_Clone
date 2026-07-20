@@ -109,13 +109,20 @@ def player_row(name: str, pid: int, kind: str, role: str, owner: str) -> dict | 
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--extra', default='', help='comma-separated extra names (tagged FA/EXT)')
-    ap.add_argument('--names', default='', help='explicit list instead of roster')
+    ap.add_argument('--names', default='', help='explicit list instead of roster (implies --no-roster; add --with-roster to keep both)')
     ap.add_argument('--no-roster', action='store_true')
+    ap.add_argument('--with-roster', action='store_true',
+                    help='with --names: ALSO include the roster sweep')
     args = ap.parse_args()
+
+    # QA fix 2026-07-20: --names previously ALSO dumped the whole roster
+    # (one focused 2-pitcher compare pulled ~26 extra API sweeps). --names now
+    # means "just these names" unless --with-roster is explicit.
+    skip_roster = args.no_roster or (bool(args.names.strip()) and not args.with_roster)
 
     from lib.pitcher_role import detect_pitcher_role
     targets = []  # (name, kind H/P, role, owner)
-    if not args.no_roster:
+    if not skip_roster:
         from app.espn_connector import get_my_roster_with_injuries
         my = get_my_roster_with_injuries()
         for _, r in my.iterrows():
