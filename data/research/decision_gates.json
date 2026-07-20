@@ -78,7 +78,8 @@
       "expires": "2026-07-27",
       "notes": "Affects 4-RP-floor arithmetic in /moves + forced-drop cascade",
       "criteria": "detect_pitcher_role flipped Detmers to RP on live recent-usage 2026-07-20 \u2014 verify his NEXT appearance by eye (relief or start)",
-      "created": "2026-07-20T11:47:00"
+      "created": "2026-07-20T11:47:00",
+      "resolved_at": "2026-07-20T13:23:36"
     },
     {
       "id": "fried-vs-incumbent",
