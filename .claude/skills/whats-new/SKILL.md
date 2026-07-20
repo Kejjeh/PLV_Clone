@@ -41,6 +41,7 @@ Engine: `scripts/xfp/run_whats_new.py`. State:
 | 4 | Injury changes (diff vs stored IL map) | `xfp_cache/injury_status.json` |
 | 5 | PL rank deltas (SP100 / H150 / Closers) | `pl_cache/pl_*_<date>.json` editions |
 | 6 | FA standouts: volume risers + velo risers | `volume_watch.csv` + `lib/trend_signal` |
+| 7 | Josh's inbox (Obsidian vault trial 2026-07-20) | `C:\Users\Joshua\Obsidian\Brain\inbox.md` |
 
 ## last_seen semantics
 
@@ -63,3 +64,10 @@ Engine: `scripts/xfp/run_whats_new.py`. State:
    normalized FULL-name only — never last-name contains.
 4. Boom/bust flags use the canonical `lib/boom_bust` display cutoffs
    (SP 17/5, H 5/0, RP 6/0) — display lens, imported not re-typed.
+5. **Inbox triage (section 7) is Claude's job, not the engine's.** The
+   engine only prints the note. When items appear: user vetoes →
+   `/decision-gates add` (manual gate), lessons/standing rules → CLAUDE.md
+   with a linked enforcement artifact, questions → answer them in the
+   briefing. Then mark items ✔ (edit the note) or tell Josh they're
+   handled. The vault is capture-only — nothing decision-binding may live
+   ONLY there (see the vault's Home.md contract).

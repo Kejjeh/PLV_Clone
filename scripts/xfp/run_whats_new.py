@@ -511,6 +511,45 @@ def sec_fa_standouts(last_seen: datetime, own_map: dict[int, str],
 # main
 # ---------------------------------------------------------------------------
 
+INBOX_MD = Path(r"C:\Users\Joshua\Obsidian\Brain\inbox.md")
+
+
+def sec_inbox(last_seen) -> None:
+    """Josh's Obsidian capture note (vault trial 2026-07-20). Fail-soft view:
+    prints the inbox body when the file changed since last_seen (else a quiet
+    'unchanged' line). The CALLER (Claude, in /whats-new or /daily-rhythm)
+    triages items — vetoes -> decision-gates, lessons -> rules, questions ->
+    answers — and marks/clears them; this section only surfaces the text."""
+    if not INBOX_MD.exists():
+        print("  (no Obsidian inbox at "
+              f"{INBOX_MD} — vault trial not set up on this machine)")
+        return
+    from datetime import datetime as _dt
+    mtime = _dt.fromtimestamp(INBOX_MD.stat().st_mtime)
+    body = [ln.rstrip() for ln in
+            INBOX_MD.read_text(encoding="utf-8").splitlines()]
+    # strip the header/instructions block (everything through the first ---)
+    if "---" in body:
+        body = body[body.index("---") + 1:]
+    items = [ln for ln in body if ln.strip()]
+    try:
+        changed = mtime > last_seen.replace(tzinfo=None)
+    except Exception:
+        changed = True
+    if not items:
+        print("  (inbox empty)")
+        return
+    if not changed:
+        print(f"  inbox unchanged since last look ({len(items)} item(s) "
+              f"pending triage — edited {mtime:%m-%d %H:%M})")
+        return
+    print(f"  inbox edited {mtime:%m-%d %H:%M} — items:")
+    for ln in items:
+        print(f"    {ln}")
+    print("  -> triage: vetoes -> /decision-gates add, lessons -> rules, "
+          "questions get answered; mark items ✔ or clear after")
+
+
 def main() -> int:
     _utf8_stdout()
     ap = argparse.ArgumentParser(description="/whats-new delta briefing")
@@ -561,6 +600,7 @@ def main() -> int:
         ("4. INJURY CHANGES", lambda: sec_injuries(prev_il, roster, new_state)),
         ("5. PL RANK CHANGES", lambda: sec_pl(markers, new_markers)),
         ("6. FA STANDOUTS", lambda: sec_fa_standouts(last_seen, own_map, vw_names, new_markers, markers)),
+        ("7. JOSH'S INBOX (Obsidian)", lambda: sec_inbox(last_seen)),
     ]
     for title, fn in sections:
         _header(title)
