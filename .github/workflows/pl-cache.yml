@@ -41,16 +41,31 @@ jobs:
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             $stamp = Get-Date -Format 'yyyy-MM-dd'
-            git commit -m "pl-cache: auto-pull rankings $stamp"
-            # Integrate commits the other self-hosted job (daily-refresh) and any
-            # interactive work pushed since checkout, so the push can't be
-            # rejected non-fast-forward.
-            git pull --rebase --autostash origin main
-            if ($LASTEXITCODE -ne 0) {
-              git rebase --abort
-              git pull --no-rebase --no-edit -X ours origin main
+            # BRANCH-AWARE (root-caused 2026-07-21): this job runs in Josh's
+            # live working tree, which usually sits on a FEATURE branch. The
+            # old `pull --rebase origin main` + `push origin main` combo (a)
+            # rebased the feature branch onto main, re-hashing every already-
+            # pushed branch commit (the recurring nightly divergence), and (b)
+            # pushed the stale local `main` ref, so the job's own commit never
+            # landed anywhere. Always reconcile + push the CURRENT branch.
+            $branch = git branch --show-current
+            if (-not $branch) {
+              Write-Host "WARN: detached HEAD — skipping commit/push, reconcile manually."
+              exit 0
             }
-            git push origin main
+            git commit -m "pl-cache: auto-pull rankings $stamp"
+            git fetch origin $branch
+            if ($LASTEXITCODE -eq 0) {
+              git pull --rebase --autostash origin $branch
+              if ($LASTEXITCODE -ne 0) {
+                # Fail-soft: keep the commit local and say so loudly. Never
+                # fall back to -X ours merges — that silently mangles history.
+                git rebase --abort
+                Write-Host "WARN: rebase onto origin/$branch failed — commit left LOCAL for manual reconcile."
+                exit 0
+              }
+            }
+            git push origin HEAD
           } else {
             Write-Host "No PL cache changes to commit."
           }
