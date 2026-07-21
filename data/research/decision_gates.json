@@ -30,7 +30,8 @@
       "expires": "2026-07-27",
       "notes": "2H thesis predicts immediate K% jump (career 29.9%); eyeball K%<22% too. 4-RP floor absolute \u2014 the cut MUST be an SP",
       "criteria": null,
-      "created": "2026-07-20T00:50:18"
+      "created": "2026-07-20T00:50:18",
+      "resolved_at": "2026-07-20T20:36:56"
     },
     {
       "id": "canzone-mead",
@@ -46,7 +47,8 @@
       "expires": "2026-08-08",
       "notes": null,
       "criteria": "Track both L21; flip earmark to Mead ONLY if Mead idles while Canzone rebounds (July xwOBAcon-vsR .298)",
-      "created": "2026-07-20T00:50:18"
+      "created": "2026-07-20T00:50:18",
+      "resolved_at": "2026-07-21T01:00:13"
     },
     {
       "id": "clemens-pt",
@@ -112,6 +114,118 @@
       "notes": "Pairs with the Canzone-upgrade decision; canzone-mead 8/7 earmark unchanged",
       "criteria": "DTD elbow (DD, listed return 7/20). Check lineups: did he start tonight/tomorrow? Note he is also -3.57sigma cold (form-check 7/20) \u2014 injury may explain the slump",
       "created": "2026-07-20T17:31:09"
+    },
+    {
+      "id": "soriano-command-2",
+      "player": "Jos\u00e9 Soriano",
+      "bucket": "SP",
+      "mlbam": 667755,
+      "metric": "fp_lastN",
+      "cmp": ">=",
+      "threshold": 10.0,
+      "window_n": 2,
+      "decision": "Command held across 2 FRESH starts -> keep confidently, off the drop-candidate list. Reverts -> original cut rationale (2.65 BB/start, luck-flattered, framing tax) applies at next crunch.",
+      "check_from": "2026-08-01",
+      "expires": "2026-08-10",
+      "notes": "REBUILD of soriano-command-watch, which false-triggered off pre-7/20 starts (fp_lastN ignores check-from for windowing; check-from only delays measurement). check-from 8/1 = his next 2 starts (~7/26, ~8/1) ARE the window by then. fp is a proxy: verify BB/start by eye at check (baseline 2.65/start; 7/20 was 1 BB in 7 IP).",
+      "criteria": null,
+      "created": "2026-07-21T01:00:05"
+    },
+    {
+      "id": "judge-return-cut",
+      "player": "Aaron Judge",
+      "bucket": "H",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Judge activation ~8/7 needs a hitter cut: earmark is now MAX MUNCY (weakest non-breakout hitter after Canzone left). Flip to Bichette ONLY if his bounce gate fails AND Muncy's L21 rebounds.",
+      "check_from": null,
+      "expires": "2026-08-08",
+      "notes": null,
+      "criteria": "Replaces canzone-mead (premise died 7/20: Canzone dropped for Grisham, ahead of schedule). Current droppable order: Muncy (rh3 #68, in-season arc 63->57 declining, luck ALIGNED = no bounce coming) > Bichette (#71 but bounce-due) > Mead (#131 but BREAKOUT, do not cut). Re-verify with /player-verdict before executing.",
+      "created": "2026-07-21T01:00:13"
+    },
+    {
+      "id": "rasmussen-claim-verify",
+      "player": "Drew Rasmussen",
+      "bucket": "SP",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Rasmussen landed -> resolve, done. Claim missed -> execute the pre-agreed switch: Peralta drop still stands, add KYLE BRADISH instead (rp3 #61, PL #36, 62% boom L8).",
+      "check_from": null,
+      "expires": "2026-07-24",
+      "notes": null,
+      "criteria": "DID-IT-EXECUTE check (gotcha #4: Weathers 2026-06-11 showed dropped but was still rostered; Canzone/Grisham lagged a day). Verify via get_all_teams(): (a) Peralta OFF the Ligers, (b) Rasmussen ON. BrownU waivers run ~24-48h, so check 7/22 AND 7/23.",
+      "created": "2026-07-21T01:00:26"
+    },
+    {
+      "id": "detmers-velo-2",
+      "player": "Reid Detmers",
+      "bucket": "SP",
+      "mlbam": 672282,
+      "metric": "fb_velo_last_start",
+      "cmp": "<",
+      "threshold": 93.5,
+      "window_n": null,
+      "decision": "Second confirming velo window fires -> the -1.7mph flag graduates from watch to real decline; Detmers becomes a legitimate cut candidate at the next roster crunch (7/27 Fried or 8/2 Glasnow). Holds 93.5+ -> keep, he stays the best-profiled arm (rp3 #43, SAFE floor, T+1 13.3).",
+      "check_from": "2026-07-21",
+      "expires": "2026-08-03",
+      "notes": "Two-window confirmation rule (CLAUDE.md #15, the Trea lesson). Window 1 = the existing -1.7mph/-2.2sigma trend flag. His L8 start-velos ran 93.5-95.2 (stable); a LAST-start mean below 93.5 = a new low = the second window. mlbam 672282.",
+      "criteria": null,
+      "created": "2026-07-21T01:00:27"
+    },
+    {
+      "id": "glasnow-return-cut",
+      "player": "Tyler Glasnow",
+      "bucket": "SP",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Before activating Glasnow ~8/2, run /player-verdict 'Tyler Glasnow' vs the two weakest incumbent SPs at that date. If the lens stack reads him below an incumbent, the activation itself is the cut decision \u2014 do NOT auto-drop a performing arm for the name.",
+      "check_from": null,
+      "expires": "2026-08-03",
+      "notes": null,
+      "criteria": "Mirror of fried-vs-incumbent (the 7/27 twin). Gotcha #1: an IL-at-split returner can carry a marcel-suppressed rp3 row \u2014 if data_quality_tag=marcel_il, rank him by Stuff+ proj_ros_fp, NOT rp3. Current staff snapshot 7/20: Glasnow Stuff+ 114 / 15.25 per-start (best on roster IF healthy). Also fold in detmers-velo-2 and henderson-forearm outcomes \u2014 whoever holds a live health flag is the weaker incumbent.",
+      "created": "2026-07-21T01:00:56"
+    },
+    {
+      "id": "bichette-bounce",
+      "player": "Bo Bichette",
+      "bucket": "H",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "L21d xwOBA recovered toward expected (~0.33) -> bounce thesis confirmed, hold firmly. Still stuck ~0.30 or below after 2 weeks -> the luck excuse expires; he drops BELOW Muncy in the droppable order and judge-return-cut re-earmarks to him.",
+      "check_from": null,
+      "expires": "2026-08-04",
+      "notes": null,
+      "criteria": "7/20 baseline: actual xwOBA 0.299 vs expected 0.328 (gap -0.029, UNDERPERFORMING = bounce due), L21d xwOBACON 0.294 vs 0.370 season. Check via /triangulate 'Bo Bichette' \u2014 the luck line and L21d row. Two-window rule applies in BOTH directions: don't cut on the cold window alone, and don't keep forever on an unrealized bounce thesis.",
+      "created": "2026-07-21T01:00:56"
+    },
+    {
+      "id": "henderson-forearm",
+      "player": "Logan Henderson",
+      "bucket": "SP",
+      "mlbam": null,
+      "metric": "manual",
+      "cmp": null,
+      "threshold": null,
+      "window_n": null,
+      "decision": "Makes his next start on turn at normal velo -> clear the flag, he stays the strong Fried-comparison incumbent (stuff 108.2, T+1 14.5). Start skipped/shortened or velo down -> health concern is real; he becomes the vulnerable incumbent in fried-vs-incumbent instead of the protected one.",
+      "check_from": null,
+      "expires": "2026-07-28",
+      "notes": null,
+      "criteria": "PL wk18 (7/20) docked him -2 for being pulled with a FOREARM CRAMP \u2014 new info, not yet in any model layer. Forearm issues are the classic UCL precursor; verify next scheduled start (he lines up ~7/22-7/24) via probables + live velo. Feeds directly into fried-vs-incumbent (he is currently the incumbent Fried must beat).",
+      "created": "2026-07-21T01:00:56"
     }
   ]
 }

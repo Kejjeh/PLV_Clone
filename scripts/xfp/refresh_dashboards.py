@@ -855,6 +855,20 @@ def main():
             'git fetch origin && git merge -X ours --no-edit origin/main && '
             'git push origin main', cwd=XFP_MODEL, timeout=300)
 
+    # 7. PL cache freshness — the SINGLE loud checkpoint (2026-07-20). The PL
+    # rank/streamer caches can't be auto-refreshed here (they need a live
+    # WebSearch/WebFetch of pitcherlist.com — an agent capability, not a
+    # headless scrape; deliberately NOT another FG-style Chrome scrape). This
+    # prints the cadence-aware staleness report + exact refresh steps once per
+    # daily run, so staleness surfaces at the maintenance moment instead of
+    # only as per-call WARNs on every triangulate. Fail-soft, display-only.
+    print(f'\n{"="*70}\n  7. PL cache freshness (manual refresh — agent WebFetch)\n{"="*70}')
+    try:
+        from scripts.xfp.lib.pl_cache import print_refresh_instructions
+        print_refresh_instructions()
+    except Exception as e:
+        print(f'  ! PL cache freshness check failed — continuing (non-gating): {e}')
+
     print(f'\n{"="*70}\n  ALL DONE — {datetime.now().strftime("%Y-%m-%d %H:%M")}\n{"="*70}')
     print(f'  Live: https://kejjeh.github.io/xfp-model/live_dashboard.html')
     print(f'  Matchup: https://kejjeh.github.io/xfp-model/matchup.html')
