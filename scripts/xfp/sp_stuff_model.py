@@ -163,13 +163,51 @@ def fit_model():
 
 def load_2026():
     fpath = FG / "fg_pit_2026_current.csv"
-    _warn_if_fg_stale(fpath)
+    age = _warn_if_fg_stale(fpath)
     d = pd.read_csv(fpath)
     d["gs"] = pd.to_numeric(d["gs"], errors="coerce")
     d["g"] = pd.to_numeric(d["g"], errors="coerce")
     for c in ["k_pct", "bb_pct", "swstr_pct", "siera", "stuff_plus",
               "location_plus", "pitching_plus", "pb_stuff", "pb_command"]:
         d[c] = pd.to_numeric(d[c], errors="coerce")
+    # ── In-house stuff fallback (2026-07-20) ────────────────────────────
+    # When the FG scrape is stale (Cloudflare-gated, silently freezes — see
+    # model-health `fg_scrape_silent_fail`), override stuff_plus with the
+    # SAME-DAY in-house score (archetype STUFF quantile-mapped to the FG
+    # scale, PLV filling rookies) from build_inhouse_stuff.py. This
+    # implements the REGISTERED verdict of the 2026-06-06 head-to-head
+    # (archetype_stuff_replacement: predictively equal, FALLBACK-ONLY).
+    # FG stays the untouched primary whenever it is fresh. Every row carries
+    # `stuff_source` provenance: fg | arch | plv | fg_frozen.
+    d["stuff_source"] = "fg"
+    if age is not None and age > FG_STALE_DAYS:
+        inh_path = FG / "stuff_inhouse_2026.csv"
+        try:
+            inh = pd.read_csv(inh_path)[
+                ["mlb_id", "stuff_plus_inhouse", "stuff_source"]
+            ].rename(columns={"stuff_source": "_inh_src"})
+            d = d.merge(inh, on="mlb_id", how="left")
+            hit = d["stuff_plus_inhouse"].notna()
+            d.loc[hit, "stuff_plus"] = d.loc[hit, "stuff_plus_inhouse"]
+            d.loc[hit, "stuff_source"] = d.loc[hit, "_inh_src"]
+            d.loc[~hit & d["stuff_plus"].notna(), "stuff_source"] = "fg_frozen"
+            import time as _t
+            inh_age_h = (_t.time() - inh_path.stat().st_mtime) / 3600.0
+            n_arch = int((d.loc[hit, "_inh_src"] == "arch").sum())
+            n_plv = int((d.loc[hit, "_inh_src"] == "plv").sum())
+            print(f"*** IN-HOUSE STUFF fallback ACTIVE (FG {age:.0f}d stale): "
+                  f"stuff_plus overridden for {int(hit.sum())} pitchers "
+                  f"(arch={n_arch}, plv={n_plv}; in-house file "
+                  f"{inh_age_h:.0f}h old); un-covered rows tagged fg_frozen ***",
+                  file=sys.stderr)
+            if inh_age_h > 48:
+                print("WARN: in-house stuff file itself >48h old — run "
+                      "scripts/xfp/build_inhouse_stuff.py", file=sys.stderr)
+            d = d.drop(columns=["stuff_plus_inhouse", "_inh_src"])
+        except OSError:
+            print("WARN: FG stale AND stuff_inhouse_2026.csv missing — "
+                  "stuff_plus stays frozen. Run "
+                  "scripts/xfp/build_inhouse_stuff.py", file=sys.stderr)
     # Reconcile GS/apps from the daily boxscore so the SP gate is NEVER driven
     # by a stale FG snapshot. Season gs/g>=0.7 keeps clean starters; the OR on
     # recent_start_ratio admits mid-season converters (Jax: cum 13/24=0.54 fails

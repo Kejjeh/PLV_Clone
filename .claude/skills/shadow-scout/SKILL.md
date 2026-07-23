@@ -1,7 +1,12 @@
 ---
 name: shadow-scout
-description: Build a process-grade scouting card for SPs without rp3 projection or archetype panel rows. Pulls 2026 MLB Statcast and percentile-ranks FB velo, K%, BB%, whiff%, CSW% vs the live 432-SP population (>=200 pitches), outputs 20-80 grades + verdict (PLUS_PROCESS / AVG_PROCESS / BELOW_AVG / NO_MLB_DATA). Use when triangulating a rookie or recently-promoted pitcher who shows blank for the model + archetype lenses ("Logan Henderson" / "Roki Sasaki" / "Ben Brown" pattern). Also use when the archetype lens is stale and disagrees with live Statcast (Ben Brown 2026-06-04 case — archetype said CAREER_LOW, shadow lens said PLUS_PROCESS at 759 pitches).
+description: ALIAS → /sp-form --lens shadow. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/sp-form --lens shadow`.** This SKILL holds the
+> complete shadow-scout recipe (20-80 grades vs the live SP population,
+> verdict table) and stays live as the delegate; new invocations should prefer
+> `/sp-form --lens shadow` (routing + trigger phrases live on the canonical).
 
 # shadow-scout
 

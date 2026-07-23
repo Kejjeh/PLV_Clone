@@ -562,7 +562,10 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     exp = model.get('expected') or {}
     if exp and exp.get('gap') is not None:
         g = exp['gap']; lab = 'xwOBA-allowed' if bucket in ('SP', 'RP') else 'xwOBA'
-        tail = {'OVERPERFORMING': (' — regression UP coming' if bucket in ('SP', 'RP') else ' — due for negative regression'),
+        # pitcher phrasing fix (staff sweep 2026-07-20): "regression UP coming"
+        # read as bullish for a PITCHER — for SP/RP overperforming means the
+        # allowed-xwOBA regresses UP, i.e. results should WORSEN. Say that.
+        tail = {'OVERPERFORMING': (' — results luck-flattered; ratios should worsen' if bucket in ('SP', 'RP') else ' — due for negative regression'),
                 'UNDERPERFORMING': (' — ratios should improve' if bucket in ('SP', 'RP') else ' — bounce due'),
                 'ALIGNED': ''}.get(exp['regression'], '')
         lines.append(f"\n🎲 **Expected (luck)** {lab} {exp['xwoba']:.3f} vs actual {exp['woba']:.3f} "
@@ -598,6 +601,16 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                'STUFF-DECLINE': 'swing-and-miss/velo eroding — STRUCTURAL decline (sell candidate)'}.get(scd['tag'], '')
         _yoy = scd.get('yoy_swstr_d')
         _yoystr = f" · SwStr YoY {_yoy:+.1f}pp" if _yoy is not None else ""
+        # Leg-conflict caveat (staff sweep 2026-07-20, Imanaga case): the
+        # classifier's in-season OR YoY design is validated and unchanged —
+        # but when the tag fired on the IN-SEASON leg while YoY SwStr is
+        # clearly POSITIVE, the season-level evidence CONTRADICTS "structural"
+        # and the display must say so (Rule 12: show the conflict, don't let
+        # one leg headline unopposed). Display-only; classifier untouched.
+        if scd['tag'] == 'STUFF-DECLINE' and _yoy is not None and _yoy >= 1.0:
+            _nt += (f" ⚠ LEG CONFLICT: YoY SwStr {_yoy:+.1f}pp is POSITIVE — "
+                    f"the in-season dip alone fired this tag; season-level "
+                    f"stuff is holding. Treat as WATCH, not a structural sell")
         lines.append(f"\n{_ic} **Stuff-vs-command ({scd['tag']}):** SwStr {scd['swstr_d']:+.1f}pp · "
                      f"FBvelo {scd['velo_d']:+.1f} · BB {scd['bb_d']:+.1f}pp (early→recent 2026){_yoystr} — {_nt}")
     nxt = model.get('next_start') or {}
@@ -620,7 +633,13 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     if actuals is None:
         from scripts.xfp.lib.triangulate_core import compute_actuals as _ca
         actuals = _ca(int(player['id']), bucket)
-    _thr = {'SP': '≥20 / <5', 'RP': '≥6 / <0', 'H': '≥10 / <2'}.get(bucket, '')
+    # thresholds from the OWNER (lib/boom_bust) — a hardcoded copy here went
+    # stale after the 2026-06-28 recalibration (displayed ≥20/<5 while
+    # computing ≥17/<5; QA 2026-07-20)
+    from scripts.xfp.lib.boom_bust import (SP_BOOM, SP_BUST, RP_BOOM, RP_BUST,
+                                           H_BOOM, H_BUST)
+    _thr = {'SP': f'≥{SP_BOOM} / <{SP_BUST}', 'RP': f'≥{RP_BOOM} / <{RP_BUST}',
+            'H': f'≥{H_BOOM} / <{H_BUST}'}.get(bucket, '')
     bb = actuals.get('boom_bust')
     win = actuals.get('boom_window') or ''
     thr = _thr

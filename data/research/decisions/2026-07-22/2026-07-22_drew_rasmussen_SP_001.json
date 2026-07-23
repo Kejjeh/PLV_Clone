@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-22_drew_rasmussen_SP_001",
+  "inputs": {
+    "archetype_label": "MOVE_CTRL_ACE",
+    "archetype_overall": 61,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 13.032748514631496,
+    "inputs_schema": 2,
+    "live_marginal": -191.3371498091406,
+    "model_rank": 28,
+    "override_tag": null,
+    "pl_rank": 12,
+    "proj_display": 12.764834630066105,
+    "proj_per": 12.764834630066105,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 656876,
+  "player_name": "Drew Rasmussen",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-22",
+  "verdict_top": "BUY"
+}

@@ -111,20 +111,27 @@ CANONICAL_CASES = [
     #   these off MIXED. Suárez/Turner now PL-ranked well above model -> FADE (PL
     #   chasing outcomes); Schmitt's archetype-breakout rule fires with the fresh
     #   PL rank + model lag. Data-driven (cache refresh), not a code change.
-    # 2026-07-19 refresh: Suárez FADE -> MIXED (the FADE rule needs PL rank well
-    #   above model; the gap closed with fresh Wk16 data). Same FADE/MIXED
-    #   boundary churn as Turner below — re-pinned once; if he flips again,
-    #   downgrade to a bucket-only lock.
-    ("Eugenio Suárez",   "MIXED — see profile",    "H",  "MIXED", None),
+    # 2026-07-19 refresh: Suárez FADE -> MIXED; 2026-07-20 he flipped BACK to
+    #   FADE (the AAA-callup prior blend shifted rh3 ranks around him, and his
+    #   model-vs-PL gap re-crossed the FADE threshold). Second flip in 24h —
+    #   executing yesterday's pre-committed remedy: bucket-only lock (same
+    #   FADE/MIXED boundary treatment as Turner below).
+    ("Eugenio Suárez",   None,                     "H",  None,    None),
     # 2026-06-20 refresh: Schmitt's BUY sub-reason drifted archetype-breakout ->
     #   process-upgrade (rh3/archetype data shift; still BUY top). Data-driven.
     # 2026-07-19: sub-reason oscillated BACK to archetype-breakout (2nd swing
     #   between the two BUY rules). Lock the BUY top only; drop the sub-reason
     #   lock — it flips on which BUY rule fires first, not on conviction.
-    ("Casey Schmitt",   None,                      "H",  "BUY",   None),
+    # 2026-07-20: the AAA-callup prior blend (rh3 ship) moved his model rank
+    #   enough to flip the TOP itself, BUY -> MIXED. He sits on the BUY/MIXED
+    #   boundary like Weathers/Detmers — same remedy: bucket-only lock.
+    ("Casey Schmitt",   None,                      "H",  None,    None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
     ("Bryan Woo",       "STRONG HOLD/BUY",         "SP", None,      None),
-    ("Kyle Bradish",    "CAUTION",                 "SP", "CAUTION", None),
+    # 2026-07-20: Bradish CAUTION -> MIXED on NEW DATA (his 2026-07-19 start
+    #   @HOU landed in the overnight refresh; the post-TJ sample grew again).
+    #   Re-pinned once; if he churns again, bucket-only lock per precedent.
+    ("Kyle Bradish",    "MIXED — see profile",     "SP", "MIXED", None),
     # Trea Turner sits ON the FADE/MIXED boundary: the FADE rule needs model−PL
     # gap > 60, and his gap swings across 60 with small model-rank moves on each
     # data refresh (2026-06-19 gap 86 → FADE; 2026-06-22 statcast/archetype rebuild

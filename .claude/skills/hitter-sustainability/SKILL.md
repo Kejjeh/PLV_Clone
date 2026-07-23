@@ -1,7 +1,12 @@
 ---
 name: hitter-sustainability
-description: Augments rh3 (the validated ROS hitter projection) with a 9-marker Statcast skill decomposition (avg_ev, ev90, hard_hit_pct, barrel_pct, xwoba_on_contact, k_pct, bb_pct, chase_pct, sweet_spot_pct). Headline ROS number is rh3.per_game. Outputs LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS buckets as the CONFIDENCE LAYER on rh3, plus BUY-LOW / SELL-HIGH divergence signals when sustainability decomp disagrees with rh3 by >0.4 FP/game. Sweep mode (my-roster or fa-pool) is its main value over `/breakout-sustainability` which is a deep-dive single-player skill. Use to (a) audit your full hitter roster for who's truly sustainable vs running hot, (b) surface FA pool hitters whose Statcast underlyings are ahead of rh3, (c) compare 2-6 hitters head-to-head with structured marker decomp.
+description: ALIAS → /hitter-form --scope roster|fa. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/hitter-form --scope roster` / `--scope fa`.** This
+> SKILL holds the complete 9-marker sweep recipe (my-roster, fa-pool, and
+> `--players` list modes) and stays live as the delegate; new invocations should
+> prefer `/hitter-form` (routing + trigger phrases live on the canonical).
 
 # hitter-sustainability
 

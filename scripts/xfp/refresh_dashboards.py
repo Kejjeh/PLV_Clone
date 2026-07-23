@@ -224,6 +224,36 @@ def main():
             print('  ⚠ bx priors rebuild failed — rh3 (bx_prior_h is a promoted '
                   'feature) will fail loudly if the existing cache is missing/stale')
 
+    # 1.96/1.97. Context-lens trending caches (Rule 13 display-only). These read
+    # the statcast cache refreshed in step 1/1.05 and are cheap (seconds each).
+    # Historically NOT wired into any pipeline, so they silently drifted 1-2
+    # months stale while rp3/rh3/rprs2 stayed same-day (fixed 2026-07-20). Both
+    # fail-soft — they feed /trending and Section B of the daily-edge briefing,
+    # no model consumes them.
+    run('1.96. Rebuild SP fastball-velocity trend cache (sp_velocity_trend.csv)',
+        'python -X utf8 scripts/xfp/sp_velocity_trend.py',
+        timeout=300)
+    run('1.97. Rebuild bat-speed trending cache (bat_speed_trending_2026.csv)',
+        'python -X utf8 scripts/xfp/research/early_season_trending_2026.py',
+        timeout=300)
+
+    # 1.98. PLV target boards (hitter_pre_breakout / breakout_flags + master_*,
+    # process_plus_rolling). `plv update` does a full-season pitch-feature
+    # rebuild (heavy, ~minutes), so it runs on a WEEKLY cadence via an mtime gate
+    # on its pre_breakout output — same pattern as the bx priors (1.95). Skipped
+    # on --no-models (the fast path never does the heavy PLV rebuild). Fail-soft:
+    # these are display-only boards; no publish-critical dashboard gates on them.
+    if not args.no_models:
+        _pb_csv = ROOT / 'data' / 'outputs' / 'hitter_pre_breakout_2026.csv'
+        _pb_fresh = (_pb_csv.exists()
+                     and (time.time() - _pb_csv.stat().st_mtime) < 7 * 86400)
+        if _pb_fresh:
+            print('\n  1.98. PLV target boards fresh (<7 days) — skip weekly rebuild')
+        else:
+            run('1.98. Rebuild PLV target boards (plv update, weekly, mtime-gated)',
+                'python -X utf8 -m plv_clone.cli update --year 2026',
+                timeout=1800)
+
     # ok_models gates the git publish (steps 5/6): a failed model rebuild means
     # every downstream dashboard is rendered from STALE projections — publishing
     # them as "fresh" is the failure mode the audit 2026-07-19 flagged (F2).
@@ -280,6 +310,20 @@ def main():
     run('2.6. Build SP archetype ratings panel (20-80 + trajectories)',
         'python -X utf8 scripts/xfp/build_sp_archetypes.py',
         timeout=120)
+
+    # 2.62. In-house Stuff+ fallback (2026-07-20): archetype STUFF (step 2.6,
+    # same-day) + PLV quantile-mapped onto the FG stuff_plus scale. Consumed
+    # by sp_stuff_model.load_2026 ONLY when the FG scrape (step 0.8) is stale
+    # — which it silently is whenever chromedriver flakes (model-health
+    # tripwire fg_scrape_silent_fail). Fail-soft: without this file a stale
+    # FG just stays frozen (pre-fallback behavior).
+    ok_inh_stuff = run(
+        '2.62. Build in-house Stuff+ fallback (arch+PLV, FG-scale)',
+        'python -X utf8 scripts/xfp/build_inhouse_stuff.py',
+        timeout=120)
+    if not ok_inh_stuff:
+        print('  ⚠ in-house stuff build failed — stuff lens falls back to '
+              'frozen FG when stale (non-gating)')
 
     # Lineup-spot context (structural-leverage signal, gmLI analog for hitters).
     # Display-only; joined into the hitter master in step 2.7 below. Must run
@@ -810,6 +854,20 @@ def main():
         run('6. Push to GitHub Pages',
             'git fetch origin && git merge -X ours --no-edit origin/main && '
             'git push origin main', cwd=XFP_MODEL, timeout=300)
+
+    # 7. PL cache freshness — the SINGLE loud checkpoint (2026-07-20). The PL
+    # rank/streamer caches can't be auto-refreshed here (they need a live
+    # WebSearch/WebFetch of pitcherlist.com — an agent capability, not a
+    # headless scrape; deliberately NOT another FG-style Chrome scrape). This
+    # prints the cadence-aware staleness report + exact refresh steps once per
+    # daily run, so staleness surfaces at the maintenance moment instead of
+    # only as per-call WARNs on every triangulate. Fail-soft, display-only.
+    print(f'\n{"="*70}\n  7. PL cache freshness (manual refresh — agent WebFetch)\n{"="*70}')
+    try:
+        from scripts.xfp.lib.pl_cache import print_refresh_instructions
+        print_refresh_instructions()
+    except Exception as e:
+        print(f'  ! PL cache freshness check failed — continuing (non-gating): {e}')
 
     print(f'\n{"="*70}\n  ALL DONE — {datetime.now().strftime("%Y-%m-%d %H:%M")}\n{"="*70}')
     print(f'  Live: https://kejjeh.github.io/xfp-model/live_dashboard.html')

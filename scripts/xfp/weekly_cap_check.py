@@ -171,6 +171,11 @@ def _project_starts(mlbam, last, cad, confirmed, game_days, win_start, win_end):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--date", help="as-of date YYYY-MM-DD (default: today)")
+    ap.add_argument("--period", type=int, default=None,
+                    help="explicit matchup period (QA 2026-07-20: on rollover "
+                         "mornings ESPN's currentMatchupPeriod lags and the "
+                         "default resolves the CLOSED period — pass the new "
+                         "period number to plan the week that just started)")
     args = ap.parse_args()
     today = date.fromisoformat(args.date) if args.date else datetime.now().date()
 
@@ -179,7 +184,21 @@ def main():
     me = ls._find_my_team()
     myteam = next(t for t in lg.teams if t.team_name == me.team_name)
 
-    pm = resolve_current_period_meta(lg, today=today)
+    if args.period is not None:
+        from lib.period_meta import resolve_period_meta
+        pm = resolve_period_meta(lg, args.period)
+    else:
+        pm = resolve_current_period_meta(lg, today=today)
+        # rollover tripwire: if the resolved window ENDED before today, ESPN's
+        # currentMatchupPeriod is lagging — say so instead of a moot verdict
+        try:
+            if date.fromisoformat(str(pm["week_end"])) < today:
+                print(f"  !! period {pm['period']} window ended "
+                      f"{pm['week_end']} (< today) — ESPN period pointer is "
+                      f"lagging; re-run with --period {pm['period'] + 1} for "
+                      f"the week that just started")
+        except Exception:
+            pass
     cap = pm["sp_cap"]
     ws, we = date.fromisoformat(str(pm["week_start"])), date.fromisoformat(str(pm["week_end"]))
     banked = espn_period_meta(lg, pm["period"], me.team_id, None).get("my_banked")

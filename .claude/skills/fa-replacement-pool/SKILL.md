@@ -1,8 +1,13 @@
 ---
 name: fa-replacement-pool
-description: Build a ranked FA replacement pool for a player being dropped. Pulls all hitters or pitchers above a season-FP threshold from ESPN, joins with our model (rh3/rp3/rprs2), computes Δ vs drop target, flags positional-flex match. Use whenever the user says "I'm dropping X, who do I pick up?", "find me a replacement for Y", or "show all FAs above N FP". Different from /fa-pickup-deep-dive (single-player deep-dive) — this is the BROAD scan.
+description: ALIAS → /hitter-board --mode replace. Recipe lives below; routing/triggers live on the canonical.
 maturity: legacy-lens-stack
 ---
+
+> **⚠ MERGED (2026-07-20) → `/hitter-board --mode replace`.** This SKILL holds
+> the complete replacement-pool recipe (all buckets, incl. SP/RP drop targets)
+> and stays live as the delegate; new invocations should prefer
+> `/hitter-board --mode replace` (routing + trigger phrases live on the canonical).
 
 # fa-replacement-pool
 

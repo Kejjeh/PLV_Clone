@@ -143,3 +143,38 @@ def test_pandas_series_row_reads_player_name_not_index():
         id_resolver=lambda name, team: 12345 if name == "Reid Detmers" else None,
     )
     assert role == "SP"
+
+
+# ── Slotless-row degrade (caught live 2026-07-20) ────────────────────────────
+# get_all_teams() rows carry NO eligible_slots column (gotcha #3). The old
+# final branch returned the bare ESPN position tag for such rows — a slotless
+# Detmers (ESPN 'RP', 20-of-20 starts, in rp3) came back 'RP', bypassing the
+# rp3-membership escalation. These lock the fixed behavior.
+
+def test_slotless_rp_tag_in_rp3_escalates_to_starts():
+    """Slotless row + ESPN RP tag + name in rp3 -> decide on real starts (SP)."""
+    from plv_clone.utils.name_match import safe_name_key
+    row = {'player_name': 'Reid Detmers', 'position': 'RP', 'pro_team': 'LAA'}
+    role = detect_pitcher_role(
+        row, mlbam_id=672282,
+        gs_lookup=lambda pid, season: 'SP',        # 20/20 starts
+        rp3_keys=frozenset({safe_name_key('Detmers, Reid')}),
+    )
+    assert role == 'SP'
+
+
+def test_slotless_rp_tag_not_in_rp3_stays_rp_no_api():
+    """Slotless true reliever: RP tag + not in rp3 -> 'RP', zero API calls."""
+    def _boom(pid, season):
+        raise AssertionError('gs_lookup must not be called for a true RP')
+    row = {'player_name': 'Jhoan Duran', 'position': 'RP', 'pro_team': 'PHI'}
+    role = detect_pitcher_role(row, gs_lookup=_boom, rp3_keys=frozenset())
+    assert role == 'RP'
+
+
+def test_slotless_sp_tag_short_circuits():
+    """Slotless SP tag -> 'SP' directly (mislabel risk runs RP->SP only)."""
+    row = {'player_name': 'Hunter Greene', 'position': 'SP', 'pro_team': 'CIN'}
+    def _boom(pid, season):
+        raise AssertionError('no API call expected for an SP tag')
+    assert detect_pitcher_role(row, gs_lookup=_boom, rp3_keys=frozenset()) == 'SP'

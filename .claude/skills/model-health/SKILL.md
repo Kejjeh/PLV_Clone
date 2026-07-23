@@ -64,8 +64,15 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    - `statcast_max_date_lag_days` -> gf bridge
      (`build_statcast_gf_bridge.py`, refresh step 1.05)
    - `boxscore_*_lag_days` -> `refresh_boxscores.py` (step 1.5)
-   - `fg_2026_snapshot_age` / `fg_proj_cache_*` -> FG snapshotter
-     (refresh step 4.11)
+   - `fg_scrape_silent_fail` (was `fg_2026_snapshot_age`) / `fg_proj_cache_*`
+     -> the daily FG scrape `scripts/_oneoff/fg_2026_current.py` (step 0.8).
+     TIGHTENED 2026-07-20: FG is a DAILY step but its Chrome scrape EXITS 0
+     even when chromedriver crashes, so the refresh's fail-soft logs ✓ while
+     the file freezes (canonical: 6d frozen at 7/14). Thresholds are now
+     daily-tight — WARN >2d (≥1 missed scrape), FAIL >5d — and a MISSING
+     current file is FAIL. Fix = rerun the scrape in an interactive shell
+     with a working Chrome; the scrape's exit code is unreliable, trust this
+     tripwire's age instead.
    - `proj_rowcount_delta_7d` -> the model pipeline whose CSV swung
    - `proj_volume_fill_rate` -> volume builders (steps 4.09/4.09b) or
      snapshot-logger ordering (4.10 must run AFTER 4.09)
@@ -85,6 +92,38 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    models degrading vs stable (with trend), volume-model referee status,
    and any "insufficient data yet" notes (e.g. volume skill needs ~5+
    forward days past 2026-07-10, the first snapshot carrying proj_volume).
+
+## Pipeline staleness section (added 2026-07-20)
+
+Third scorecard section (`pipeline_staleness`), same PASS/WARN/FAIL pattern,
+FAILs count into the exit code. Charter: **model-health owns DATA/PIPELINE
+runtime health; /production-audit owns CODE/SKILL/registry drift.** Each check
+is fail-soft (an errored check reports WARN, never crashes the scorecard).
+
+1. `console_data_freshness` — WARN = `console_data.json` is older than a
+   model input (rh3/rp3/rprs2 CSV or boxscore_hitters) → the decision console
+   is serving stale numbers (the 2026-07-18 trap). Fix: regenerate the console
+   (the refresh step that builds `data/outputs/console_data.json`).
+2. `tri_nightly_freshness` — FAIL = freshest
+   `triangulate_nightly_*.json` ≥26h old (nightly not running; rerun the
+   triangulate nightly builder). WARN = `_cards.json` sidecar missing
+   (first-night tolerance; FA cards fall back to the flat batch).
+3. `publish_freshness` — WARN = a GitHub Pages artifact
+   (`xfp-model/docs/{index,matchup,triangulate,xfp_board}.html`) lags
+   `console_data.json` by >26h → stuck publish. Fix: rerun the publish step /
+   `/refresh-matchup` push. SKIP if the xfp-model sibling isn't checked out.
+4. `espn_snapshot_ttl` — WARN = a `data/research/espn_snapshot/` file is
+   older than 4× its TTL (env `PLV_ESPN_SNAPSHOT_TTL_MIN`, default 240 min)
+   → a refresh crashed mid-flight and left its snapshot behind. Fix: delete
+   the stale snapshot (it only exists refresh-side).
+5. `trajectory_endpoint` — WARN = the freshest nightly CSV's
+   `traj_last_label` MM-DD endpoints max out >3 days before the file's own
+   date (the frozen 04-25→06-20 trajectory class). Fix: rebuild the archetype
+   trajectory panels feeding the nightly.
+6. `golden_stash_leftover` — FAIL = `data/models/.golden_stash/` has a
+   subdir → a crashed /golden-run left model pkls stashed (production may be
+   running swapped-in goldens). Fix:
+   `python scripts/ci/golden_run.py --restore`.
 
 ## Reading the output
 

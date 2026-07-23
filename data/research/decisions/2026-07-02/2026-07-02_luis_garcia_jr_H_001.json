@@ -17,8 +17,18 @@
   "mlbam_id": 671277,
   "player_name": "Luis Garc\u00eda Jr.",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.6491228070175439,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 57,
+    "proj_per": 0.6142857142857142,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.034837092731829666,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-02",
   "verdict_top": "MIXED"
 }

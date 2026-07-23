@@ -206,15 +206,26 @@ def floor_flag(penalty_fp, tier=None):
 # decline (Framber: SwStr collapsed 12->8). Context-only (Rule 13): NEVER moves the
 # headline, floor_adj, or verdict — it surfaces the *type* of decline as conviction color.
 
-def classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d=0.0):
+def classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d=0.0,
+                           prior_ok=True):
     """Pure, unit-testable classifier of an SP's process divergence. Within-season deltas
     (recent minus early, 2026) PLUS a year-over-year SwStr delta (2026 minus 2025, pp) so a
     stuff decline that happened *across* seasons (Framber: SwStr 12.4->10.1 YoY) is caught
     even when 2026 looks flat. Returns:
       'STUFF-DECLINE'  swing-and-miss/velo eroding in-season OR YoY -> structural (sell cand.)
       'COMMAND-WATCH'  stuff intact (in-season AND YoY) but walks up / zone% down -> reversible
-      None             no clear divergence."""
-    stuff_eroding = (swstr_d <= -2.0) or (velo_d <= -1.5) or (yoy_swstr_d <= -2.0)
+      None             no clear divergence.
+
+    `prior_ok` (QA fix 2026-07-20): False when the arm has NO real prior-year
+    sample (rookies/first-full-season — the memo-#11 gate that already guards
+    the YoY leg). Without an established baseline, a single in-season signal
+    is debut-adjustment noise, not structural decline (false-fired on Bennett
+    and Messick): STUFF-DECLINE then requires BOTH in-season stuff signals
+    (SwStr AND velo eroding) to fire."""
+    if prior_ok:
+        stuff_eroding = (swstr_d <= -2.0) or (velo_d <= -1.5) or (yoy_swstr_d <= -2.0)
+    else:
+        stuff_eroding = (swstr_d <= -2.0) and (velo_d <= -1.5)
     stuff_intact = (swstr_d >= -1.5) and (velo_d >= -1.0) and (yoy_swstr_d >= -1.0)
     command_eroding = (bb_d >= 2.5) or (zone_d <= -2.5)
     if stuff_eroding:
@@ -296,12 +307,14 @@ def stuff_command_lens(mlbam, season=2026):
     # real sample (>=10 GS), else 0.0 so post-injury/TJ arms (Bradish) don't false-flag.
     yoy = _yoy_swstr_lookup().get(int(mlbam), {})
     cur, prev = yoy.get(season), yoy.get(season - 1)
-    yoy_swstr_d = round((cur[0] - prev[0]) * 100, 1) if (cur and prev and prev[1] >= 10) else 0.0
-    tag = classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d)
+    prior_ok = bool(prev and prev[1] >= 10)   # real prior-year sample (memo #11 gate)
+    yoy_swstr_d = round((cur[0] - prev[0]) * 100, 1) if (cur and prior_ok) else 0.0
+    tag = classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d,
+                                 prior_ok=prior_ok)
     if tag is None:
         return None
     return {'tag': tag, 'swstr_d': swstr_d, 'velo_d': velo_d, 'bb_d': bb_d, 'zone_d': zone_d,
-            'yoy_swstr_d': yoy_swstr_d}
+            'yoy_swstr_d': yoy_swstr_d, 'prior_ok': prior_ok}
 
 
 # --------------------------------------------------------------------------

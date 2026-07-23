@@ -249,8 +249,30 @@ def detect_pitcher_role(
                                  gs_lookup, id_resolver,
                                  fallback=_position_tag(player_or_row) or 'SP')
 
-    # No pitcher eligibility detected in slots — use position tag
-    return _position_tag(player_or_row) or 'SP'
+    # No pitcher eligibility detected in slots — common for SLOTLESS roster
+    # frames (get_all_teams() carries no eligible_slots column, gotcha #3).
+    # Absence of slot data is absence of EVIDENCE, not evidence of 'RP': the
+    # bare ESPN tag here is exactly the Detmers mislabel this module exists to
+    # defeat (caught live 2026-07-20 — a slotless get_all_teams row returned
+    # 'RP' for a 20-of-20-starts Detmers, bypassing every safety net below the
+    # slot checks). Mirror the RP-only branch: an RP tag is trusted only for
+    # names the SP model doesn't know; rp3 membership escalates to real
+    # gamesStarted. SP tags short-circuit (the mislabel risk runs RP->SP, not
+    # the reverse), and true relievers still cost no API call.
+    tag = _position_tag(player_or_row)
+    if tag != 'RP':
+        return tag or 'SP'
+    keys = rp3_keys if rp3_keys is not None else _rp3_name_keys()
+    try:
+        from plv_clone.utils.name_match import safe_name_key
+        in_rp3 = safe_name_key(_name_of(player_or_row)) in keys
+    except Exception as e:
+        _warn('rp3_membership_slotless', e)
+        in_rp3 = False
+    if in_rp3:
+        return _decide_by_starts(player_or_row, mlbam_id, season,
+                                 gs_lookup, id_resolver, fallback='RP')
+    return 'RP'
 
 
 def build_role_lookup(

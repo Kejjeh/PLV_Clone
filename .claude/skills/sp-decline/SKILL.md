@@ -1,7 +1,12 @@
 ---
 name: sp-decline
-description: SP rest-of-season FP DECLINE-RISK board — flags starting pitchers whose results are propped above their whiff/K stuff LEVEL and are likely to regress DOWN, the "catch a Framber before the crater" lens. Complements Stuff+ (mean) and sp-floor (per-start bust). Triggers: "is X declining", "who on my staff is fading", "decline risk", "catch a Framber early", "which of my SPs will regress", "sell-high SP", "is X's good results sustainable".
+description: ALIAS → /sp-form --lens decline. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/sp-form --lens decline`.** This SKILL holds the
+> complete DECLINE-RISK board recipe (whiff/K LEVEL basis, vYoY/vIn/v2y velo
+> flags, tiers) and stays live as the delegate; new invocations should prefer
+> `/sp-form --lens decline` (routing + trigger phrases live on the canonical).
 
 # sp-decline
 

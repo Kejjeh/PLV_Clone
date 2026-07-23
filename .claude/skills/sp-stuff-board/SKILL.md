@@ -59,6 +59,16 @@ snapshot WITH counting stats). Pull it via `python scripts/_oneoff/fg_2026_curre
 Cloudflare 403s the clean API path; the visible-browser scrape is the working route.
 Re-pull weekly. Historical training snapshots live in `data/research/fg_asof/`.
 
+**In-house fallback (2026-07-20):** when FG is >2d stale, `load_2026()`
+auto-overrides `stuff_plus` from `stuff_inhouse_2026.csv` (archetype STUFF +
+PLV quantile-mapped to the FG scale, rebuilt nightly at refresh step 2.62 —
+implements the registered `archetype_stuff_replacement_2026-06-06`
+FALLBACK-ONLY verdict). Every row carries `stuff_source` (fg | arch | plv |
+fg_frozen) — SURFACE it on the board when the fallback is active, and note
+that in-house stuff ranks agree with FG only ~0.62 Spearman (predictively
+equal on forward FP, but individual ranks differ — don't quote an in-house
+number as "FanGraphs Stuff+").
+
 ---
 
 ## ⚠ MANDATORY DECLINE CROSS-CHECK (before headlining any "buy-low")

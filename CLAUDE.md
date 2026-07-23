@@ -163,278 +163,50 @@ python scripts/ci/run_summary.py -- python scripts/xfp/refresh_dashboards.py
 Exit code passes through unchanged, so failures still register. Only read
 the printed full-log path when the summary doesn't have enough detail.
 
-## Skills available (repo-level)
+## Skills — decision-moment cheat sheet (resynced 2026-07-20)
 
-- `/validate-feature` — codified 9-rule multi-testing protocol with
-  Step 2.5 data-coverage pre-check. Use before promoting any signal
-  to a ranker.
-- `/roster-audit` — weekly slot occupancy + IL/return timeline + SP
-  cap math + drop/add candidates.
-- `/pregame-check` — morning-of (before lineup lock) daily decision
-  skill. For each SP starting today: START vs CAP-BENCH verdict using
-  **empirically validated v2 conservative rules** (2026-06-06 backtest
-  n=13,716 starts REJECTED the v1 aggressive bench rules — even
-  flagged starts avg 9-11 FP, well above replacement ~5 FP). Default
-  START unless cap overflow + lowest-EV start, OR blend ≤7 + opp_bat
-  ≥1.10 + Tier B NOISE/REGRESS. Always START on SOFT opp_bat (<0.95).
-  Also pre-scans opponent's confirmed SPs and flags my hitters facing
-  high boom_stack opp pitchers. Pulls live matchup state + win prob.
-  Built 2026-06-06 after Bradish/Leiter Saturday bombs that the merge
-  protocol predicted at the ROSTER level but couldn't enforce daily.
-  See `bench_rule_validation_2026-06-06.md`.
-- `/refresh-and-commit-and-push` — daily refresh ritual wrapped end-to-end.
-- `/fa-pickup-deep-dive` — single-player deep dive: model projection
-  + recent Statcast + injury + ownership + recommendation.
-- `/fa-monitor` — proactive weekly scan across 12 signal types (A-F +
-  J-O: SP first-start fp_proxy, RP closer/setup opportunity, hitter
-  sustained xwOBA, drafted-then-dropped comeback, IL return timing,
-  role-change RP, plus leverage-rise / new-closer / fireman-breakout /
-  velo-spike / MiB-value / rating-arc). Run Monday mornings.
-  Script: `scripts/xfp/run_fa_monitor.py`.
-- `/fa-replacement-pool` — broad scan: given a player to drop, returns
-  ranked FA replacement candidates above a season-FP threshold with
-  rh3 join, Δ vs drop target, and positional-flex match. Uses the
-  unfiltered `size=2000` pattern (see `feedback_fa_pool_size_cap.md`).
-- `/hitter-compare` — 2-6 player head-to-head: Statcast L21d/season
-  table, rh3 row, lineup spot, ESPN counting stats per player, plus
-  a comparative verdict. Fills the gap that `/fa-pickup-deep-dive`
-  explicitly flags.
-- `/boom-bust-history` — variance-aware historical actuals across last
-  N games per player. SP L8 / hitter L21 / RP L15 windows; pulls MLB
-  Stats API gameLogs and computes BrownU FP per game. Surfaces
-  L8/L5/L3 averages + trend arrow + std + **boom% (SP ≥17 / H ≥5 /
-  RP ≥6) + bust% (SP <5 / H <0 / RP <0)** (recalibrated 2026-06-28 to
-  empirical p~78/p~22 quantiles; old H ≥10/<2 fired 3%/57% = useless,
-  SP ≥20 missed top-quartile starts like a 17.7; see
-  `boom_bust_cutoff_recalibration_2026-06-28.md`) with auto-fallback to prior
-  year for IL60+ stashes (Hunter Greene 2025 surfaces automatically).
-  Status tags: HOT STREAK / CAP FODDER / DECLINING / RAMP / VOLATILE
-  / FLOOR / STASH. Default scope = full roster (split by position);
-  optional `--names "A,B,C"` for any list. The lens that catches
-  Bradish blend 5.98 vs L5 actuals 17.88 = model 12 FP behind reality.
-  Canonical companion to `/sp-slate-grid`, `/hitter-slate-grid`,
-  `/triangulate`, `/sp-week-plan`.
-- `/hitter-slate-grid` — multi-day FA-hitter decision board (parallel
-  of `/sp-slate-grid`). Joins all 14 hitter model layers: Blended xFP
-  + CI, rh3, live_marginal + value_tier (same-position bucket
-  C/1B/2B/3B/SS/OF/DH with H-scaled cuts ±100/±40), Triangulate
-  verdict, Sustainability bucket (with **BUY-LOW REJECTED** caveat at
-  −0.069 FP/PA per `705defc` — display for diagnosis only, not
-  additive lift), **xwOBA L21d vs 2025 baseline diagnostic** (required
-  pre-check per memory), **xwOBACON YoY trajectory**, hitter archetype
-  master + T+1 + 5 comps, hitter boom_stack with 4 components
-  including lineup_amp_hitter, process panel composite (PR 8), PL Top
-  150, lineup confirmation, park + vs LHP/RHP, positional eligibility.
-  **Mandatory KNOWN_COLLISIONS check** via `resolve_batter_id(name,
-  team=..., position=...)` to prevent Max Muncy LAD-vs-ATH style bugs.
-  All joins by MLBAM batter_id, never name. Drop-target rule
-  (parallel of SP version): rank user's full hitter staff by Blended
-  xFP before naming any drop.
-- `/pl-cross-reference` — fetches current week's Pitcher List rankings
-  via WebFetch and cross-references against our model picks, surfacing
-  divergence with bias context (PL is rate-stat / 12-team mindset).
-- `/sp-week-plan` — Monday-morning pitcher planning: projects week's
-  starts against 10-SP cap, identifies weakest start to bench, flags
-  long-IL SPs as drop candidates.
-- `/fa-sp-pool` — mirror of /fa-replacement-pool for SPs: pulls FA
-  SP pool, cross-references with PL Top 100 (and streamer ranks for
-  the current week), compares against user's rostered SPs, includes
-  mandatory `get_all_teams()` verification (Connelly Early bug).
-- `/sp-slate-grid` — full-slate SP scan over a date window
-  (default today+tomorrow). Pulls EVERY scheduled SP start from MLB
-  Stats API, joins six model layers (rp3 + per_start band, SP
-  archetype OVERALL/traj/T+1, live boom_stack + boom%/bust%/E[FP],
-  PL Top 100, PL daily streamers with auto-fresh WebFetch when stale),
-  tags ownership (MINE / opp team name / FA), renders a time-sorted
-  grid with FA highlighted and decision-deadline header, then
-  synthesizes a boom-layer-aware recommendation that can DOWNGRADE
-  high-rp3 picks when live boom disagrees (canonical: Sheehan
-  6/7/26 rp3 #55 but boom 9/18 said skip). Distinct from
-  `/fa-sp-pool` (FA-only flat list), `/sp-week-plan` (my-roster cap
-  math), `/stream-the-stack` (my-eligible-pool only). All joins by
-  MLBAM pitcher_id — never name.
-- `/slump-or-decline` — diagnose a hitter slump: career/2025/2026/L21d
-  decomposition + xwOBACON/shrinkage/anchor-in-CI + process metrics +
-  **year-over-year xwOBACON trajectory** (distinguishes valid prior-trough
-  recovery templates from structural decline where recovery ceiling is lower) +
-  three-test convergence panel (MC bounce 10k sims, Bayesian posterior
-  talent, historical comp matcher 54k snapshots). DROP requires all
-  3 tests to agree. Outputs HOLD / SELL-HIGH / DROP / NOT-SLUMPING-STRUCTURAL.
-- `/league-deep-audit` — full 8-team league-wide statistical audit v4
-  (11 layers, calibrated ECE=0.0197): career-form, 9-marker sustainability,
-  xwOBACON/shrinkage/anchor-in-CI, process metrics, K%-decomp, PEAK validator,
-  injury signals (ESPN DTD/IL), MC bounce (10k sims, λ=0.20 recency decay),
-  Bayesian posterior talent (recency-weighted), historical comp matcher (54k
-  snapshots, age-matched ±3yr), peak decay survival curves with Wilson CIs,
-  SP velo/k-form. Power ranking, per-team breakdown, slump cards with
-  4-signal convergence, trade targets, sell-high alerts.
-  Script: `league_wide_full_audit.py`.
-- `/breakout-sustainability` — diagnose if a hot hitter's recent
-  L21d is skill change vs outcome luck. Decomposes bat tracking,
-  discipline, contact quality across 2025/season/L21d windows,
-  classifies fantasy archetype, and outputs SUSTAINABLE / NARROW /
-  HOT-STREAK verdict.
-- `/sp-breakout-signal` — evaluate whether a starting pitcher's recent
-  hot stretch is persistent skill or outcome noise. Uses rolling-window
-  good-start methodology (33,063 SP starts, 2018-2025 calibration;
-  threshold: fp_proxy_per_bf ≥ −0.0476). Triggered by "is X on a hot
-  streak", "should I trust X's recent starts", or any FA SP where last
-  3-5 starts are cited as evidence.
-- `/sp-archetype` — profile any SP by 20-80 scouting ratings on
-  Stuff/Movement/Control with archetype label (27-cell matrix), career
-  trajectory, and historical comp matching (Euclidean distance over
-  1,353 SP-years 2015-2026). Three modes: `profile <name>` for single-
-  pitcher deep dive, `scan` for league-wide trajectory shifts (upward/
-  downward archetype transitions), `comps <name>` for K=5-8 closest
-  historical SP-seasons with T+1/T+2 outcomes. Built on calibrated
-  archetype stickiness (retention rates 0-69% depending on streak) and
-  honest decline base rates (59% T+1 decline among elite, no actionable
-  warning signs). Complementary to `/sp-breakout-signal` (outcome-based)
-  — this is process-based. Triggered by "what kind of pitcher is X",
-  "who does X compare to", "is X breaking out / declining". Daily
-  refresh via `build_sp_archetypes.py` (step 2.6 of refresh_dashboards).
-- `/hitter-archetype` — hitter parallel to `/sp-archetype`: profile any
-  hitter by 20-80 ratings on Contact/Power/Discipline + SB overlay (27-cell
-  C/P/D matrix; SB is rated but excluded from the archetype label and from
-  comp-matching distance). Three modes (profile/scan/comps). Built on 3,485
-  batter-years 2015-2026, PA floor 250 (80 in-progress), age tiers
-  PRE_PEAK ≤25 / PEAK 26-30 / POST_PEAK 31+ (hitters peak earlier than SPs).
-  Boundary tier retention validated EDGE 28.5% / SOLID 56.1% (~2× spread).
-  Triggered by "what kind of hitter is X", "who does X compare to", "is X
-  breaking out / declining". Daily refresh via `build_hitter_archetypes.py`
-  (step 2.7 of refresh_dashboards). Complementary to `/breakout-sustainability`
-  and `/hitter-sustainability` (outcome-based) — this is process-based.
-- `/savant-compare` — Baseball Savant percentile side-by-side for
-  2-6 players. WebFetches each player's profile, extracts percentile
-  rankings, builds comparison table, identifies archetypes. Supports
-  historical-season anchors (e.g., Suárez 2025 as power-or-bust comp).
-- `/refresh-matchup` — light weekly refresh: rerun
-  `build_matchup_dashboard.py`, sanity-check, commit + push both
-  plv_clone + xfp-model (GitHub Pages). 30-second flow vs full
-  refresh's 3-30 min.
-- `/matchup-audit` — cross-check matchup.html projections against
-  MLB Stats API + ESPN roster. Catches the 4 known SP-projection bug
-  patterns (IL'd projected, undercount, mlbam=None false-positive,
-  today excluded). See `reference_matchup_dashboard_sp_gotchas.md`.
-- `/player-id-resolve` — name-collision prevention for same-name MLB
-  players (canonical: Max Muncy LAD 3B vs ATH C). Use
-  `resolve_batter_id(name, team=..., position=...)` from
-  `plv_clone.utils.name_match`; builds `(norm_name, pro_team)` tuple
-  keys and consults `KNOWN_COLLISIONS`. Required before any dict-keyed
-  batter lookup in audit, compare, or FA scan contexts.
-- `/roster-verify` — hard pre-condition before labeling ANY player as
-  "yours." Calls `get_my_roster_with_injuries()` live, builds a
-  normalized name set, applies `my_tag()` to every row. Exists because
-  on 2026-05-25 Weathers (Late Night Bettsing) and Rasmussen (2015
-  Draft First Round) were labeled "Your SP" from stale session context.
-  Required before: SP/RP/hitter evals, drop/add recs, matchup previews,
-  any Statcast pull filtered by roster membership.
-- `/monday-morning` — **meta-skill**: chains roster-verify → roster-audit
-  → sp-week-plan → fa-monitor into one unified Monday report. Pulls
-  roster/FA data once and passes through all steps. Replaces 4 separate
-  invocations with manual handoff.
-- `/fa-signal-to-decision` — **meta-skill**: fa-monitor HIGH alerts →
-  fa-pickup-deep-dive (≤3 players) → ranked add recommendation. Replaces
-  the manual "signal fired, should I deep-dive it?" loop.
-- `/forced-drop-planner` — compute exact date the 10-SP cap will be
-  breached by upcoming IL activations, pre-identify cut candidates from
-  rp3 rankings, simulate full IL return cascade. Use when multiple IL
-  starters (Glasnow/Fried pattern) are returning in close succession.
-- `/triangulate` — unified three-lens player analysis: PL rank + our
-  model (rh3/rp3/rprs2) + archetype model (20-80 ratings + cell +
-  trajectory + T+1) in a single card per player, with auto-synthesized
-  verdict from the agreement/disagreement pattern. Works on H/SP/RP via
-  position auto-detect. PL ranks cached in `data/research/pl_cache/`
-  (refresh weekly for Top150/Top100/Closers, daily for streamers).
-  Engine: `scripts/xfp/run_triangulate.py`.
-- `/stream-the-stack` — daily ranked FA SP streamer recommender filtered
-  by boom_stack tier (≥2/4). Confirmed probables in next 3 days,
-  Connelly-Early-verified FA pool, tier-aware thresholds, σ-rescaled
-  rp3 variance bands.
-- `/sp-stash-finder` — find IL'd SPs available in the FA pool whose ESPN
-  return date arrives before playoffs end, ranked by playoff xFP and IL-slot
-  cost. Combines PL Top 100 + PL injury table + ESPN return dates + rp3 +
-  archetype + (when needed) shadow-scout. Canonical discovery 2026-06-04:
-  Blake Snell IL60 elbow / return 7/17 / per_start 13.02 / 0.1% owned. Also
-  surfaced Pivetta, Boyd, Henderson, Eury Pérez. Engine: WebFetch PL article
-  + `app.espn_connector.get_injury_details`.
-- `/shadow-scout` — process-grade scouting card for SPs with no rp3 + no
-  archetype (rookies / small-sample post-callup). Pulls 2026 MLB Statcast,
-  percentile-ranks FB velo / K% / BB% / whiff% / CSW% vs the live 432-SP
-  population, outputs 20-80 grades + PLUS_PROCESS / AVG_PROCESS / BELOW_AVG /
-  NO_MLB_DATA verdict. Built 2026-06-04 to triangulate Henderson-class FAs
-  the engine missed; canonical disagreement Ben Brown: archetype CAREER_LOW
-  vs shadow PLUS_PROCESS (g61 at 759 pitches) — shadow wins when archetype is
-  stale. Module: `scripts/xfp/lib/shadow_scout.py`.
-- `/opp-watch` — predict an opponent's next roster move (transact / add /
-  drop) before they make it. Per-team behavioral profiles derived from the
-  manager-rating audit (PL-weighted, outcome-chaser, save-chaser, etc.).
-  Backtest-validated: under Late Night Bettsing's profile their actual
-  archetype_breakout adds (Max Meyer, Weathers, Ashcraft) surface in the
-  predictor's top-12. **v2 (2026-07-10): weights refit from the accumulated
-  projection panel + date-keyed pl_cache** — held-out top-12 hit rate 58.8%
-  vs v1's 17.6% (17-event test, direction decisive). v2 is the default;
-  `--weights v1` falls back to the hardcoded profiles. Refit harness
-  `scripts/xfp/refit_opp_watch_v2.py` (rerun checkpoint ~2026-08-07);
-  weights `data/research/opp_watch_v2_weights.json`. Engine:
-  `scripts/xfp/opponent_action_predictor.py`.
-- `/boom-stack-explain` — decompose a single player's current
-  boom_stack tag (SP or hitter) into components with status, value,
-  threshold, tier outcome lookup, and verdict. Use when asked "why is
-  X's boom_stack 2/4" or "decompose this tag". Explanatory only —
-  headline number is still rp3/rh3.
-- `/sp-stuff-board` — SP breakout / FA-filter board driven by the
-  VALIDATED FanGraphs **Stuff+** in-season signal (validated 2026-06-06,
-  `fg_pitch_modeling_inseason_2026-06-06.md`; partial r 0.30 predicting
-  RoS FP/start). Projects every 2026 SP's RoS FP/start, tags MINE/opp/FA
-  (live ESPN), flags breakout candidates (elite Stuff+, lagging results).
-  **Location+/command REJECTED for points scoring** — don't penalize a
-  high-Stuff+ arm for walks (Eury Pérez canonical: 98th-pct Stuff+,
-  7th-pct Loc+, still a BUY). Single-lens — feed picks into `/triangulate`.
-  Engine `scripts/xfp/sp_stuff_model.py`. Companion decline monitor:
-  `scripts/xfp/sp_stuff_alert.py` (rolling velo/whiff drop, NOT a ranker).
-- `/sp-floor` — SP FLOOR / bust-risk board: P(start busts, <5 FP) — the
-  "avoid bad days" lens (Stuff+ = mean, this = downside). Validated
-  2026-06-06 (`sp_floor_model_2026-06-06.md`): the floor is **K−BB%**, not
-  stuff (season model: K% −6.3pp bust/SD dominant, BB% +2.5, barrel% +1.5,
-  GB%/stuff ~0). Per-start AUC 0.601 — modest/calibrated, riskiest quintile
-  busts 2.1× the safest. Tiers SAFE/MODERATE/RISKY; bench-priority tilt, NOT a
-  game predictor. ~85% command so needs no live matchup. Engine
-  `scripts/xfp/sp_floor_model.py`. Cross-check outliers (measured≫predicted
-  bust = shape/contact, e.g. Soriano) via `/pitcher-sustainability`.
-- `/trending` — physical getting-better/worse detector from fast-stabilizing
-  signals. **Hitters = 3-axis** (bat speed + attack angle toward ~15° band +
-  fast-swing% intent), each non-redundant, OOS CV R² 0.495→0.536; **pitchers =
-  FB velo** (induced bat speed REJECTED for pitchers). 2026-to-date vs prior-yr
-  baseline, z-scored, contact/results column as confirmation. Default = my roster
-  + FA risers; `--names "A,B"` for cards. **DISPLAY/CONTEXT ONLY** (Rule 13 — never
-  moves rh3/rp3); necessary-not-sufficient; attack angle is direction-aware (toward
-  band, NOT "up=good"). Built on the bat-tracking stabilization insight: bat speed
-  trustworthy in ~20 swings vs 6-12 wks for rate stats, so it's an EARLY read.
-  Engine `scripts/xfp/lib/trend_signal.py`, runner `scripts/xfp/run_trending.py`.
-  Validation `early_season_bat_speed_2026-06-16.md`. Rejected forward-ranker
-  promotion (sample-blocked to 2027) — `bat_tracking_fp_family_2026-06-16.md`.
+Canonical names only; ~16 aliases still resolve (old names redirect). The
+FULL enforced catalog + ownership seams live in
+`.claude/skills/SKILL_REGISTRY.md` (`tests/test_skills_registered.py` keeps
+it in sync with disk — trust it over this summary). Depth lives in each
+SKILL.md; this table routes.
 
-- `/model-health` — model scorecard + data-health tripwires: forward
-  accuracy per model (7/14/21/28d anchors, model-vs-prior delta, volume
-  skill) + PASS/WARN/FAIL regression checks (IL-join match rate, frozen
-  caches, snapshot lag). Monday refresh step 4.13; run after any pipeline
-  refactor. Born 2026-07-10 from the 6-week-silent rp3 IL-join regression.
-- `/volume-watch` — playing-time RISERS/FADERS off the validated volume
-  layer (model volume vs naive pace, ranked by gap × rate), live ownership
-  overlay. Volume parallel of `/trending`; dual-list riser = strongest
-  pickup signal. Rule 13.
-- `/consensus-diff` — ours-vs-market divergence (Steamer/ZiPS/ATC/FG-DC
-  RoS, daily snapshots) with volume-vs-rate decomposition. Rule 13, routes
-  to `/triangulate`; ensemble-feature validation unlocks ≈2026-08-06.
-- `/matchup-leverage` — H2H win-prob Monte Carlo: P(win) + regime
-  (TRAILING→boom / LEADING→floor / CLOSE→E[FP]) + ΔP(win)-ranked moves.
-  Sets the OBJECTIVE for `/pregame-check` and `/sp-week-plan`. Rule 13.
+**Guards — ALWAYS, before any claim:** `/roster-verify` (is-mine),
+`/player-id-resolve` (name collisions), `/pitcher-role` (SP/RP truth incl.
+the Jax RP-slot-lag rule).
 
-This list is NOT exhaustive — more repo-level skills exist than are
-described above. The canonical index (ownership seams + backlog) is
-`.claude/skills/SKILL_REGISTRY.md`; check it before concluding a skill
-doesn't exist.
+**Domain masters (2026-07-20) — one command runs a whole domain:**
+`/daily-rhythm` (whats-new → daily-edge → monday-morning, day-aware) ·
+`/moves` (gates → churn verify → cap → forced-drop) · `/player-verdict <names>`
+(triangulate → bucket-correct compare → boom-bust → ONE answer) ·
+`/all-boards` (every board, one FA pull) · `/form-check` (all form lenses,
+roster-wide, flag-routed deep-dive queue).
+
+| Moment | Reach for |
+|---|---|
+| **Catch-up** ("what's new / any standouts?") | `/whats-new` (delta since last look: transactions, my lines, rank movers, injuries, PL, FA standouts) |
+| **Game-day morning** | `/daily-edge` (= roster-verify → pregame-check → streamer-precision-board); pieces: `/pregame-check`, `/streamer-precision-board` |
+| **Monday** | `/monday-morning` (verify → roster-audit → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan; Step 3c = decision-gates check) + `/model-health` + `/verdict-scorecard` |
+| **Executing moves** | `/churn-plan` (sequenced deadlines + DID-IT-EXECUTE verify); deferred decisions → `/decision-gates` |
+| **Cap crunch / IL returns** | `/cap-check` (exact banked math) · `/sp-week-plan` · `/forced-drop-planner` · `/sp-bench-mc` |
+| **"Which of these N players?"** | `/pitcher-compare` (SP/RP, firm verdict) · `/hitter-compare` |
+| **One player, full picture** | `/triangulate` (reference 3-lens card) · `/boom-bust-history` (actuals variance) · `/fa-pickup-deep-dive` (FA verdict) |
+| **Form / sustainability** | `/sp-form --lens {breakout\|decline\|sustainability\|shadow}` · `/hitter-form --scope {roster\|fa\|league}` (+`--lens career`) · deep-dives: `/slump-or-decline`, `/breakout-sustainability` |
+| **Archetypes / process** | `/sp-archetype` · `/hitter-archetype` · `/rp-archetype` · `/savant-compare` |
+| **FA boards** | `/hitter-board --mode {slate\|level\|replace}` · `/sp-board --scope {slate\|roster}` · `/fa-pitcher-pool --role {sp\|rp}` · `/xfp-board` (cross-position merged) · single lenses `/sp-stuff-board`, `/sp-floor` |
+| **FA monitoring** | `/fa-monitor` (12 signals) → `/fa-signal-to-decision` · IL stashes `/sp-stash-finder`, `/sp-rehab-tracker` |
+| **Matchup strategy** | `/matchup-leverage` (P(win) regime) · `/opp-watch` (opponent's next move) |
+| **Trade** | `/trade-deadline` (meta) → `/league-deep-audit`, `/trade-target-scan`, `/scouting-report` |
+| **Playoffs** | `/playoff-war-room` (meta) → `/playoff-team-build`, `/season-sim` |
+| **Roster sweeps** | `/roster-audit` (slots/cap/IL) · `/roster-health` (alerts) · `/roster-deep-audit` (agreement matrix) |
+| **External sanity** | `/pl-cross-reference` |
+| **Maintenance / model work** | `/validate-feature` (Rule 9 gate) · `/golden-run` (A/B refactor proof) · `/production-audit` (code audit) · `/model-health` (data+pipeline tripwires) · `/refresh-and-commit-and-push` · `/refresh-matchup` · `/matchup-audit` |
+
+**Context lenses (Rule 13 — display only, never move rh3/rp3/rprs2; each
+separately validated, deliberately separate):** `/trending` (bat speed / FB
+velo) · `/volume-watch` (playing time) · `/rating-arc` (pillar arc) ·
+`/conviction-scan` (ours-vs-process) · `/consensus-diff` (ours-vs-market) ·
+`/decision-trend` (swing decisions) · `/second-half-splits` (career 2H).
 
 Global skills also used here: `/safe-commit` (universal commit flow with
 multi-repo awareness and opt-in push), `/init`, `/security-review`,
@@ -654,6 +426,33 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     K% −4.7pp / SwStr −2.4pp, TRENDING_DOWN slope −4.5, comps avg 10.7 FP/start
     T+1 = real decline, not luck). See `/sp-stuff-board` mandatory cross-check +
     `reference_lens_merge_protocol.md` SP conflict rule #6.
+15. **Don't execute/recommend a drop on a "declining" skill read from a SINGLE
+    window** (one bad week of xwOBACON, K%, or bat speed). Require the decline
+    to show in ≥2 non-overlapping windows (e.g. L7 AND L21, or L21 AND the
+    trailing month) before it counts as a real trend — a one-week dip can look
+    exactly like a trend and reverse completely within 2 weeks. **Canonical:
+    Trea Turner** — dropped 2026-06-19 on xwOBACON/K% "decline," but the whole
+    read traced to one bad week (6/8: bat speed 68.7mph, K% 37%) that had
+    already partially recovered by the drop date (6/15: 70.9mph) and fully
+    reversed by July (K% 19.3%, bat speed 70.2mph — his best month of the
+    season). The call matched the data in hand at the time; the fix is
+    requiring a second confirming window before the data counts as a trend,
+    not blaming the read in hindsight. Apply this before any drop recommendation
+    in `/moves`, `/roster-audit`, `/forced-drop-planner`, or `/decision-gates`.
+16. **Don't let a short-hold FA add/drop (<48h, a same-day scouting look) go
+    unchecked forever.** A player added and dropped within a day or two gets
+    zero real evaluation — if he breaks out weeks later you'll never know
+    unless something re-scans him. **Canonical: Louis Varland** — added/dropped
+    same week 2026-04-19/20 by the Ligers, claimed by an opponent 8 days later,
+    now rprs2 **#4 overall** (+136.2 replacement_delta) — a top-5 league-wide
+    reliever that got a one-day look. **Bryan Baker** is the same pattern one
+    level over: never rostered at all, now rprs2 **#5** (+114.7). Signal D
+    (Drafted-Then-Dropped Comeback) in `/fa-monitor` only checks prior-YEAR
+    draft history — it does not catch same-season short-hold churn. Signal P
+    (Short-Hold Churn Re-scan, added 2026-07-20) closes this gap: it re-checks
+    every player added-then-dropped within 48h by ANY team in the last 30 days
+    against current rp3/rh3/rprs2 rank, 3+ weeks after the churn event so real
+    signal has had time to show. Run as part of the regular `/fa-monitor` sweep.
 
 ## Memory pointers (for context-dense lookups)
 

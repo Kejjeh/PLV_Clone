@@ -73,6 +73,13 @@ data/research/xfp_cache/*.bak
 # short-TTL pickles/JSON regenerated every refresh; never track.
 data/research/espn_snapshot/
 
+# Skill-engine scratch state (2026-07-20): churn plans + whats-new marker are
+# ephemeral; golden-run holds prod-output copies mid-verification. NOTE:
+# decision_gates.json is deliberately TRACKED (durable decision state).
+data/research/churn_plans/
+data/research/whats_new_last_seen.json
+data/research/.golden_run/
+
 # Disk-cache for the triangulate perf layer (pickled snapshots/decline-lens keyed on
 # statcast mtime,size; rebuilt on demand — binary, rotates per refresh, never track).
 data/research/xfp_cache/.build_cache/

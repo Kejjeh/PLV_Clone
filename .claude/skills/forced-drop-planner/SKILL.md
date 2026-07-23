@@ -36,10 +36,13 @@ Parker Messick (rookie, no rp3 yet — cleanest drop).
 SP is meanwhile dropped voluntarily. Plan all three cuts together, not three
 separate scrambles.
 
-The Greene case also illustrates why **forced-drop-planner should propagate
-the running active-SP count across cascading returns** — Step 2 below currently
-recomputes the gap independently per return; a single drop "absorbs" one
-return but the next return resets the counter. Fix in TODO list.
+The Greene case also illustrates why **forced-drop-planner propagates the
+running active-SP count across cascading returns** (TODO resolved 2026-07-20):
+Step 2 carries ONE `running_healthy` counter through the whole cascade — each
+return increments it for the NEXT breach computation, and each drop already
+executed (or committed in this plan) decrements it. The gap is never recomputed
+independently per return, so a single drop "absorbs" exactly one return and the
+next return sees the post-drop count, not a reset baseline.
 
 ---
 
@@ -85,27 +88,46 @@ value in Step 2's over-cap test, not a hardcoded 10.
 
 ---
 
-## Step 2 — Simulate each IL return
+## Step 2 — Simulate each IL return (running-count cascade)
 
-For each injured SP with a return date, compute what happens when they activate:
+For each injured SP with a return date, compute what happens when they
+activate. **The load-bearing rule: ONE `running_healthy` counter threads the
+entire cascade.** Each return increments it *and that incremented value is the
+baseline for the NEXT return's breach test*; each drop already executed (or
+committed as part of this plan, dated before the next return) decrements it.
+Never restart from `n_healthy` per return — that was the pre-2026-07-20 bug
+("a single drop absorbs one return but the next return resets the counter").
 
 ```python
 il_sps = sps[sps['injured'] == True].sort_values('days_until_return')
 
-cumulative_healthy = n_healthy
+# Drops already committed (e.g. via /churn-plan) as (date_iso, name) — dated
+# drops are consumed by the cascade in date order and DECREMENT the running
+# count before any return on a later date is evaluated.
+planned_drops = []   # e.g. [('2026-07-30', 'Parker Messick')]
+
+running_healthy = n_healthy          # the ONE counter — never reset mid-loop
 events = []
 
 for _, r in il_sps.iterrows():
-    cumulative_healthy += 1
-    proj = projected_starts(cumulative_healthy)
+    # Consume any committed drop dated on/before this return first.
+    while planned_drops and planned_drops[0][0] <= str(r['return_date']):
+        d_date, d_name = planned_drops.pop(0)
+        running_healthy -= 1
+        events.append({'player': f'(drop {d_name})', 'return_date': d_date,
+                       'new_healthy_count': running_healthy,
+                       'new_proj_starts': projected_starts(running_healthy),
+                       'over_cap': False, 'forced_drop': False})
+    running_healthy += 1             # this return increments the count …
+    proj = projected_starts(running_healthy)
     over = proj >= SP_CAP
     events.append({
         'player': r['player_name'],
         'return_date': r['return_date'],
         'days_until': r['days_until_return'],
         'il_type': r['injury_status'],
-        'new_healthy_count': cumulative_healthy,
-        'new_proj_starts': proj,
+        'new_healthy_count': running_healthy,   # … and the NEXT breach test
+        'new_proj_starts': proj,                #     starts from this value
         'over_cap': over,
         'forced_drop': over  # need a cut on or before this date
     })
@@ -115,7 +137,42 @@ for e in events:
     print(f"{e['return_date']:12s} {e['player']:25s} → {e['new_healthy_count']} SPs → {e['new_proj_starts']:.2f}/wk{flag}")
 ```
 
+**Worked example (running count carried explicitly).** Roster sits at
+**8 healthy SPs** today. Fried returns 7/27, Glasnow returns 8/2:
+
+| Date | Event | Running healthy-SP count | Proj starts/wk (×1.19) | Breach? |
+|---|---|---|---|---|
+| today | baseline | **8** | 9.5 | under 10-cap |
+| 7/27 | Fried activates | 8 → **9** | 10.7 | **FORCED DROP by 7/27** |
+| 8/2 | Glasnow activates | 9 → **10** | 11.9 | **SECOND FORCED DROP by 8/2** |
+
+Glasnow's row is evaluated from **9** (the post-Fried count), not from the
+8-SP baseline — each return increments the count for the next breach
+computation. If the 7/27 forced drop executes on 7/27 (add it to
+`planned_drops`), the cascade decrements back to 8 before Glasnow's row,
+which then lands on 9 → still a breach, one day of slack at most: two returns
+still cost two drops. The counter makes that arithmetic explicit instead of
+letting the second return silently "reset" to the baseline.
+
 ---
+
+## Step 2b — RETURNER-vs-INCUMBENT check (added 2026-07-20, the Fried case)
+
+An IL activation is a roster CHOICE, not an obligation. Before Step 3
+pre-identifies a cut from the incumbents, run the RETURNER through the lens
+stack too (`/player-verdict <returner> <bottom 2 incumbents>` or read their
+triangulate cards): if the returner's forward read (T+1, stuff, decline
+flags) is WORSE than the arm he would displace, the correct "cut" may be
+the returner himself (drop on activation, or hold the IL slot if eligible).
+
+Canonical (2026-07-20 staff sweep): Fried returning 7/27 carried a
+DECLINE-VETO card — stuff 97.2, breakout gap −42 (whiff/K propped), T+1
+10.7 — while the squeeze victim Henderson carried stuff 108.2 / SAFE floor /
+T+1 14.5. The cascade math said "Fried in, cut a rookie"; the lens stack
+said the returner was the weakest forward read on the staff. Surface both —
+the gate decides the default, the returner-check decides whether the
+default is sane. (Marcel-suppressed rp3 ranks on IL arms overstate
+returners — compare on Stuff+ proj / T+1 / archetype, per gotcha #1.)
 
 ## Step 3 — Identify cut candidates
 

@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-07-02_kody_clemens_H_001",
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 58,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 1.905229838787962,
+    "live_marginal": -23.60000000000001,
+    "model_rank": 118,
+    "override_tag": null,
+    "pl_rank": 139,
+    "proj_per": 1.83,
+    "replacement_delta": null
+  },
+  "mlbam_id": 665019,
+  "player_name": "Kody Clemens",
+  "reason_tag": "no_convergence",
+  "settled_at": "2026-07-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.5,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 64,
+    "proj_per": 0.5228571428571429,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.02285714285714291,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-07-02",
+  "verdict_top": "MIXED"
+}

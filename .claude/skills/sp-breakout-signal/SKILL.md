@@ -1,7 +1,19 @@
 ---
 name: sp-breakout-signal
-description: Evaluate whether a starting pitcher's recent hot stretch represents persistent skill or outcome noise, using an empirically validated rolling-window good-start methodology (33k SP starts, 2018-2025 calibration). Threshold fp_proxy_per_bf ≥ −0.0476 separates "good start" from noise. Outputs NOISE/WATCH/ACTIONABLE/STRONG/LOCK tiers. Use whenever the user asks "is X on a hot streak", "should I trust X's recent starts", or any FA SP whose last 3-5 starts are cited as evidence.
+description: ALIAS → /sp-form --lens breakout. Recipe lives below; routing/triggers live on the canonical.
 ---
+
+> **⚠ MERGED (2026-07-20) → `/sp-form --lens breakout`.** This SKILL holds the
+> complete rolling-window good-start recipe (persistence tables, Signal A,
+> stuff_contact_composite) and stays live as the delegate; new invocations
+> should prefer `/sp-form --lens breakout` (routing + trigger phrases live on
+> the canonical).
+>
+> **Engine: `scripts/xfp/run_sp_breakout.py`** (codified 2026-07-20 — no more
+> inline rebuilds). `--names "A,B"` or default my-roster healthy SPs (live
+> pull, `detect_pitcher_role`); prints the tier table worst→best with rp3
+> cross-ref + Signal A / SigStuff / MODEL-LAG? flags. Tier precedence:
+> NEGATIVE (0/N) outranks NOISE when both fire (documented in `--help`).
 
 # sp-breakout-signal
 

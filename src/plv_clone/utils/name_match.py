@@ -220,6 +220,20 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
+    # Unaccented "Jr." spelling (ESPN drift) — 2026-07-20 QA found it fell
+    # through the collision gate (only the accented key existed) and then
+    # missed the accent-SENSITIVE exact match against the multiyr cache's
+    # "Luis García Jr." rows, returning None. Same candidate list.
+    "Luis Garcia Jr.": [
+        ("WSH", "2B", 671277),
+        ("HOU", "IF", 677651),
+        ("PHI", "IF", 472610),
+    ],
+    "Luis Garcia Jr": [
+        ("WSH", "2B", 671277),
+        ("HOU", "IF", 677651),
+        ("PHI", "IF", 472610),
+    ],
 }
 
 # Pitcher-side equivalent. Same shape as KNOWN_COLLISIONS:
@@ -256,6 +270,18 @@ KNOWN_PITCHER_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
     ],
     "Soriano, Jose": [
         ("LAA", "SP", 667755),
+    ],
+    # Eury Pérez (MIA SP, 691587). Same accent-drift RESOLUTION FORCE as
+    # Soriano (2026-07-20 QA): the SP cache spells him "Pérez, Eury", so the
+    # accent-free "Eury Perez" / "Perez, Eury" never exact-matched and
+    # returned None (the accented spelling still resolves via the cache
+    # path — different dict key, not shadowed). NOT the retired OF Eury
+    # Pérez (516811, hitter cache only) — pitcher-scoped, so unambiguous.
+    "Eury Perez": [
+        ("MIA", "SP", 691587),
+    ],
+    "Perez, Eury": [
+        ("MIA", "SP", 691587),
     ],
 }
 
@@ -462,6 +488,12 @@ def resolve_pitcher_id(
             for cand_team, cand_role, mlbam in candidates:
                 if cand_role.upper() == role.upper():
                     return mlbam
+        # Single-candidate RESOLUTION-FORCE entries (Soriano / Eury Pérez
+        # accent-drift) are unambiguous by construction — resolve them even
+        # with no hints so hintless callers don't fall through to wrong-ID
+        # fallbacks. A provided-but-mismatched hint still refuses (above).
+        if team is None and role is None and len(candidates) == 1:
+            return candidates[0][2]
         return None
 
     # "First Last" -> "Last, First" alternate form for the SP cache.
