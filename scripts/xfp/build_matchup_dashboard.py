@@ -18,6 +18,7 @@ import os
 import json
 import math
 import shutil
+import traceback
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from urllib.request import urlopen, Request
@@ -49,6 +50,23 @@ def _warn_except(section: str, exc: BaseException) -> None:
     makes the suppression visible in the build log.
     """
     print(f'  ⚠ [{section}] suppressed {type(exc).__name__}: {exc}', file=sys.stderr)
+
+
+def _section_error(heading: str, exc: BaseException) -> str:
+    """Fallback HTML for a section builder that threw — WITH a full traceback
+    to stderr so the root cause is visible in the CI log.
+
+    The publish-integrity guard (see main()) detects the 'error:' marker this
+    emits and fails the build. Historically the marker was all you got: the
+    guard would abort with no way to tell WHICH section broke or WHY, because
+    each handler swallowed its exception straight into HTML. Logging the
+    traceback here — and naming the section in the guard — turns a bare
+    'a section is throwing' into an actionable stack trace. `heading` is the
+    exact <h2> text so the guard can attribute the failure back to it.
+    """
+    print(f'[section-error] {heading}: {type(exc).__name__}: {exc}', file=sys.stderr)
+    traceback.print_exc()
+    return f'<h2>{heading}</h2><p class="muted">error: {h(str(exc))}</p>'
 
 # Layered display-tag library (validated 2026-06-03). All defensive — every
 # compute_* call returns sentinel-tagged dicts on failure so the dashboard
@@ -1583,7 +1601,7 @@ def render_position_competition(rh3_map):
         out.append('</tbody></table>')
         return '\n'.join(out)
     except Exception as e:
-        return f'<h2>📍 Position Competition</h2><p class="muted">error: {h(str(e))}</p>'
+        return _section_error('📍 Position Competition', e)
 
 
 def render_injury_alerts(my_lineup):
@@ -1690,7 +1708,7 @@ def render_power_rankings():
         out.append('</tbody></table>')
         return '\n'.join(out)
     except Exception as e:
-        return f'<h2>🏆 League Power Rankings</h2><p class="muted">error: {h(str(e))}</p>'
+        return _section_error('🏆 League Power Rankings', e)
 
 
 def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
@@ -2042,7 +2060,7 @@ def render_2start_gems(schedules_by_team=None, today=None, week_end=None,
         out.append('</tbody></table>')
         return '\n'.join(out)
     except Exception as e:
-        return f'<h2>💎 Streamer Targets</h2><p class="muted">error: {h(str(e))}</p>'
+        return _section_error('💎 Streamer Targets', e)
 
 
 def _get_player_add_dates(league, team_name, since_date):
@@ -2272,7 +2290,7 @@ def _render_closer_tracker_simple():
         out.append('</tbody></table>')
         return '\n'.join(out)
     except Exception as e:
-        return f'<h2>🔒 Closer Tracker</h2><p class="muted">error: {h(str(e))}</p>'
+        return _section_error('🔒 Closer Tracker', e)
 
 
 # MLB team-id → ESPN-style abbreviation. Inverse of ESPN_TO_MLB_TEAM.
@@ -2554,6 +2572,10 @@ def render_closer_tracker():
         return '\n'.join(out)
     except Exception as e:
         # Any unexpected failure → fall back to the original simple table.
+        # Non-fatal (the simple table still renders), but log the traceback so
+        # a silently-degraded closer tracker is visible in the build log.
+        _warn_except('Closer Tracker leverage enrichment', e)
+        traceback.print_exc()
         fallback = _render_closer_tracker_simple()
         return (fallback
                 + f'\n<p class="notes muted">leverage enrichment error: '
@@ -2960,7 +2982,7 @@ def render_boom_bust_scan(my_lineup, opp_lineup):
 
         return '\n'.join(out)
     except Exception as e:
-        return f'<h2>🎯 Boom / Bust Scan</h2><p class="muted">error: {h(str(e))}</p>'
+        return _section_error('🎯 Boom / Bust Scan', e)
 
 
 def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
@@ -3939,11 +3961,23 @@ document.querySelector('.toc').appendChild(collapseBtn);
     # try/except-to-HTML pattern means a dead section ships silently as a
     # literal 'error: ...' block — that ran for 17 DAYS after a helper was
     # deleted. Fail the build loudly instead.
-    _err_markers = [m for m in ('<p class="muted">error:', '>error: name', 'NameError')
-                    if m in html]
-    if _err_markers:
-        raise RuntimeError(f'matchup.html contains rendered error sections: {_err_markers} '
-                           '— a section builder is throwing; fix before publishing')
+    #
+    # Traceability (2026-07-23): attribute each marker back to its <h2> so the
+    # failure message names the SECTION and the error text, not just the raw
+    # marker. Section builders now also log a full traceback via
+    # _section_error() — so the CI log shows the root cause above this abort.
+    import re as _re
+    _err_sections = _re.findall(
+        r'<h2>([^<]*)</h2>\s*<p class="muted">error:\s*([^<]*)', html)
+    _legacy_markers = [m for m in ('>error: name', 'NameError') if m in html]
+    if _err_sections or _legacy_markers:
+        detail = '; '.join(f'{t.strip()} → {e.strip()}' for t, e in _err_sections)
+        if _legacy_markers:
+            detail = (detail + '; ' if detail else '') + f'legacy markers {_legacy_markers}'
+        raise RuntimeError(
+            f'matchup.html contains rendered error sections: {detail} '
+            '— a section builder is throwing; see the [section-error] traceback '
+            'above for the root cause')
     local = OUT / 'matchup.html'
     local.write_text(html, encoding='utf-8')
     print(f'  wrote {local}')

@@ -236,6 +236,18 @@ def _load_starts_2026() -> pd.DataFrame:
     PA filter >= 5 to exclude reliever stints mislabeled as starts.
     """
     cols = ['game_pk', 'game_date', 'pitcher', 'events']
+    if not os.path.exists(_STATCAST_2026):
+        # Light builds (the cloud live-matchup job) check out scripts + the
+        # committed CSVs only; the large statcast parquet is gitignored and
+        # therefore absent. boom_stack is a Rule-13 DISPLAY overlay, so degrade
+        # the skill_spike component to neutral (empty panel -> <5 starts -> 0)
+        # instead of raising and tripping the publish-integrity guard. Only a
+        # MISSING file is tolerated here; a genuine read error still propagates.
+        import sys as _sys
+        print(f'  ⚠ [boom_stack] statcast parquet absent ({_STATCAST_2026}); '
+              'skill_spike component disabled for this build', file=_sys.stderr)
+        return pd.DataFrame(
+            columns=['pitcher', 'game_pk', 'game_date', 'pa', 'k', 'bb'])
     sc = pd.read_parquet(_STATCAST_2026, columns=cols)
     g = (
         sc.groupby(['pitcher', 'game_pk', 'game_date'])

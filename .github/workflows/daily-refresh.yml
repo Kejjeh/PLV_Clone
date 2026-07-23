@@ -58,7 +58,7 @@ jobs:
             # landed anywhere. Always reconcile + push the CURRENT branch.
             $branch = git branch --show-current
             if (-not $branch) {
-              Write-Host "WARN: detached HEAD — skipping commit/push, reconcile manually."
+              Write-Host "WARN: detached HEAD - skipping commit/push, reconcile manually."
               exit 0
             }
             git commit -m "refresh: daily auto-refresh $stamp"
@@ -67,13 +67,36 @@ jobs:
               git pull --rebase --autostash origin $branch
               if ($LASTEXITCODE -ne 0) {
                 # Fail-soft: keep the commit local and say so loudly. Never
-                # fall back to -X ours merges — that silently mangles history.
+                # fall back to -X ours merges - that silently mangles history.
                 git rebase --abort
-                Write-Host "WARN: rebase onto origin/$branch failed — commit left LOCAL for manual reconcile."
+                Write-Host "WARN: rebase onto origin/$branch failed - commit left LOCAL for manual reconcile."
                 exit 0
               }
             }
             git push origin HEAD
           } else {
             Write-Host "No data changes to commit."
+          }
+
+      - name: Job summary (traceability)
+        # Purely additive: never touches the push logic. Surfaces, on the run's
+        # Actions page, whether the job's commit actually LANDED on origin - the
+        # exact failure mode that was silently emailing red (push rejected, work
+        # done locally but never pushed). `always()` so it reports even if an
+        # earlier step failed.
+        if: always()
+        run: |
+          $head   = (git rev-parse --short HEAD)
+          $branch = (git branch --show-current)
+          $remote = (git rev-parse --short "origin/$branch" 2>$null)
+          $sum = $env:GITHUB_STEP_SUMMARY
+          if ($sum) {
+            "## Daily full refresh"        | Out-File $sum -Append -Encoding utf8
+            "- branch: $branch @ $head"    | Out-File $sum -Append -Encoding utf8
+            "- origin/${branch}: $remote"    | Out-File $sum -Append -Encoding utf8
+            if ($head -eq $remote) {
+              "- OK: local HEAD is on origin (push landed)"                         | Out-File $sum -Append -Encoding utf8
+            } else {
+              "- WARN: local HEAD NOT on origin (commit left local or push failed)" | Out-File $sum -Append -Encoding utf8
+            }
           }
