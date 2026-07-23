@@ -9,9 +9,6 @@ from __future__ import annotations
 from .dashboard_chrome import topnav as _topnav
 
 _CSS = """
-:root{--bg:#1a1815;--panel:#211e1a;--stripe:#1d1b17;--border:#34302a;
---text:#f5f1ea;--dim:#a89e8a;--faint:#3a352e;--accent:#d97757;
---pos:#7fb069;--neg:#c1666b;--warn:#d4a945;--info:#8aa8c4;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);
 font-family:'Source Serif 4','Iowan Old Style',Georgia,serif;font-size:16px;line-height:1.55}
@@ -43,7 +40,7 @@ border:0;color:var(--text);padding:7px 16px;cursor:pointer;font-family:inherit;f
 .cyc button{background:var(--panel);border:1px solid var(--border);color:var(--text);
 border-radius:3px;padding:6px 13px;cursor:pointer;font-family:inherit}
 .cyc button:hover{border-color:var(--accent);color:var(--accent)}.cyc .pos{color:var(--dim)}
-.card{display:none;max-width:1320px}.card.show{display:block}
+.card{display:none;max-width:none}.card.show{display:block}
 .vhead{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-bottom:4px}
 .vhead h2{margin:0;font-size:30px;font-weight:600}
 .vhead .team{color:var(--dim);font-family:'IBM Plex Mono',monospace;font-size:12.5px}

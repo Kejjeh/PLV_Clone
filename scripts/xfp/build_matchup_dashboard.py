@@ -38,7 +38,10 @@ from plv_clone.utils.name_match import (  # noqa: E402
     KNOWN_PITCHER_COLLISIONS as _KNOWN_PITCHER_COLLISIONS,
 )
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
-from scripts.xfp.lib.dashboard_chrome import topnav  # noqa: E402  (unified nav owner, item 8)
+from scripts.xfp.lib.dashboard_chrome import (  # noqa: E402  (unified nav + theme owner)
+    topnav, topnav_css, theme_css, theme_boot_js, theme_toggle_html,
+    column_toggle_js,
+)
 
 
 def _warn_except(section: str, exc: BaseException) -> None:
@@ -1434,10 +1437,10 @@ def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob,
     # Win prob extremes
     if win_prob < 0.40:
         items.append({'urgency': 'high', 'icon': '🚨',
-                       'text': f'Trailing scenario — win probability {win_prob*100:.0f}%. Aggressive streaming + lineup tweaks needed.'})
+                       'text': f'Trailing scenario — win probability {_fmt_winprob(win_prob)}. Aggressive streaming + lineup tweaks needed.'})
     elif win_prob > 0.85:
         items.append({'urgency': 'low', 'icon': '🟢',
-                       'text': f'Strong position — win prob {win_prob*100:.0f}%. Hold steady.'})
+                       'text': f'Strong position — win prob {_fmt_winprob(win_prob)}. Hold steady.'})
 
     if not items:
         items.append({'urgency': 'low', 'icon': '✅',
@@ -1450,20 +1453,31 @@ def synthesize_action_items(my_proj, my_lineup, schedules_by_team, win_prob,
     return '\n'.join(out)
 
 
+def _fmt_winprob(win_prob):
+    """Headline win-probability DISPLAY string. Caps the extremes so a
+    bootstrap 1.000 / 0.000 doesn't read as a broken '100%' / '0%'. Use only
+    for headline surfaces (gauge, action items) — history/accuracy tables keep
+    the raw value since they're data, not a call."""
+    p = win_prob * 100
+    if p >= 99.5:
+        return '>99%'
+    if p <= 0.5:
+        return '<1%'
+    return f'{p:.0f}%'
+
+
 def render_win_prob_gauge(win_prob):
     """CSS conic-gradient gauge with prominent display."""
     pct = win_prob * 100
-    # Color: green if >70, yellow 50-70, red <50 — editorial palette tokens
-    if pct >= 70: color = '#7fb069'      # var(--pos)
-    elif pct >= 55: color = '#7fb069'
-    elif pct >= 45: color = '#d4a945'    # var(--warn)
-    elif pct >= 30: color = '#c1666b'    # var(--neg) toned
-    else: color = '#c1666b'
+    # Theme-var colors so the gauge tracks light/dark (was hardcoded hexes).
+    if pct >= 55: color = 'var(--pos)'
+    elif pct >= 45: color = 'var(--warn)'
+    else: color = 'var(--neg)'
 
     return f'''<div class="gauge-wrap">
-  <div class="gauge" style="background: conic-gradient({color} 0% {pct}%, #34302a {pct}% 100%);">
+  <div class="gauge" style="background: conic-gradient({color} 0% {pct}%, var(--faint) {pct}% 100%);">
     <div class="gauge-inner">
-      <div class="gauge-pct">{pct:.0f}%</div>
+      <div class="gauge-pct">{_fmt_winprob(win_prob)}</div>
       <div class="gauge-label">win probability</div>
     </div>
   </div>
@@ -3033,7 +3047,7 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
            f'rest <b class="proj">{total_rest:.1f}</b>'
            f'{f" <small>(−{capped_fp:.1f} capped)</small>" if capped_fp > 0 else ""} · '
            f'total <b class="total">{total_proj:.1f}</b></span></h2>']
-    out.append('<table class="player-table"><thead><tr>'
+    out.append('<table class="player-table" data-cols="roster" data-col-lock="2"><thead><tr>'
                 '<th>Player</th><th>Pos</th><th>WTD</th>'
                 '<th>Units</th><th>Rest</th><th>Total</th><th></th></tr></thead><tbody>')
     for r in rows:
@@ -3496,25 +3510,16 @@ def main():
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root {{
-  --bg: #1a1815;
-  --panel: #211e1a;
-  --stripe: #1d1b17;
-  --border: #34302a;
-  --text: #f5f1ea;
-  --dim: #a89e8a;
-  --faint: #3a352e;
-  --accent: #d97757;
-  --pos: #7fb069;
-  --neg: #c1666b;
-  --warn: #d4a945;
-}}
+{theme_css()}
 * {{ box-sizing: border-box; }}
 html, body {{ margin: 0; padding: 0; }}
 body {{ font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
        background: var(--bg); color: var(--text);
        font-size: 16px; line-height: 1.6; }}
-.wrap {{ max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }}
+.wrap {{ max-width: none; width: 100%; margin: 0; padding: 0 2em 4em 2em; }}
+@media (min-width: 1600px) {{ .wrap {{ padding: 0 3em 4em 3em; }} }}
+@media (min-width: 2100px) {{ .wrap {{ padding: 0 4em 4em 4em; }} }}
+.notes, p {{ max-width: 95ch; }}
 .mono {{ font-family: 'IBM Plex Mono', ui-monospace, monospace; }}
 
 header {{ border-bottom: 1px solid var(--border); padding: .9em 0;
@@ -3536,17 +3541,7 @@ h2 .totals .wtd {{ color: var(--pos); }}
 h2 .totals .proj {{ color: var(--accent); }}
 h2 .totals .total {{ color: var(--accent); font-size: 1.2em; }}
 
-nav.topnav {{ display: flex; align-items: center; gap: 0;
-             font-family: 'IBM Plex Mono', monospace;
-             font-size: .72em; text-transform: uppercase; letter-spacing: .15em;
-             margin-top: .4em; }}
-nav.topnav a {{ color: var(--dim); text-decoration: none; padding: .35em .9em;
-               border: 1px solid var(--border); border-right: 0;
-               cursor: pointer; }}
-nav.topnav a:first-child {{ border-radius: 3px 0 0 3px; }}
-nav.topnav a:last-child  {{ border-radius: 0 3px 3px 0; border-right: 1px solid var(--border); }}
-nav.topnav a:hover {{ color: var(--text); background: var(--panel); }}
-nav.topnav a.current {{ color: var(--accent); background: var(--panel); border-color: var(--accent); }}
+{topnav_css()}
 
 .scoreboard {{ background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
               padding: 1.5em; margin: 1em 0; }}
@@ -3778,6 +3773,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
   nav.topnav a {{ padding: .3em .65em; }}
 }}
 </style>
+{theme_boot_js()}
 </head><body>
 <div class="wrap">
 <header>
@@ -3786,6 +3782,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
       <h1>Ligers Weekly Matchup</h1>
       {topnav("matchup")}
     </div>
+    {theme_toggle_html()}
   </div>
 </header>
 
@@ -3922,12 +3919,23 @@ document.querySelectorAll('table').forEach(table => {{
     th.classList.add('sortable');
     th.addEventListener('click', () => {{
       const tbody = table.querySelector('tbody');
-      const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => !r.classList.contains('breakdown'));
+      // Group each data row with the breakdown sub-rows that follow it, so the
+      // sub-rows travel WITH their parent. Fix 2026-07-23: the old
+      // filter+innerHTML='' path silently DELETED every .breakdown row on the
+      // first sort click.
+      const groups = [];
+      Array.from(tbody.querySelectorAll('tr')).forEach(r => {{
+        if (r.classList.contains('breakdown')) {{
+          if (groups.length) groups[groups.length - 1].extra.push(r);
+        }} else {{
+          groups.push({{ main: r, extra: [] }});
+        }}
+      }});
       const dir = th.dataset.sortDir === 'asc' ? 'desc' : 'asc';
       th.dataset.sortDir = dir;
-      rows.sort((a, b) => {{
-        const av = a.children[idx]?.innerText.trim() || '';
-        const bv = b.children[idx]?.innerText.trim() || '';
+      groups.sort((a, b) => {{
+        const av = a.main.children[idx]?.innerText.trim() || '';
+        const bv = b.main.children[idx]?.innerText.trim() || '';
         const an = parseFloat(av.replace(/[^\\d.+-]/g, ''));
         const bn = parseFloat(bv.replace(/[^\\d.+-]/g, ''));
         if (!isNaN(an) && !isNaN(bn)) {{
@@ -3935,9 +3943,8 @@ document.querySelectorAll('table').forEach(table => {{
         }}
         return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
       }});
-      // Re-insert in new order (keeping breakdown rows attached)
       tbody.innerHTML = '';
-      rows.forEach(r => tbody.appendChild(r));
+      groups.forEach(g => {{ tbody.appendChild(g.main); g.extra.forEach(e => tbody.appendChild(e)); }});
     }});
   }});
 }});
@@ -3945,7 +3952,7 @@ document.querySelectorAll('table').forEach(table => {{
 // Expand/collapse all controls
 const expandBtn = document.createElement('button');
 expandBtn.textContent = 'Expand all';
-expandBtn.style.cssText = 'margin: 1em .5em; padding: .4em 1em; background: #211e1a; color: #f5f1ea; border: 1px solid #34302a; border-radius: 3px; cursor: pointer; font-family: \\'IBM Plex Mono\\', monospace; font-size: .8em; text-transform: uppercase; letter-spacing: .12em;';
+expandBtn.style.cssText = 'margin: 1em .5em; padding: .4em 1em; background: var(--panel); color: var(--text); border: 1px solid var(--border); border-radius: 3px; cursor: pointer; font-family: \\'IBM Plex Mono\\', monospace; font-size: .8em; text-transform: uppercase; letter-spacing: .12em;';
 expandBtn.onclick = () => document.querySelectorAll('details').forEach(d => d.open = true);
 const collapseBtn = document.createElement('button');
 collapseBtn.textContent = 'Collapse all';
@@ -3954,6 +3961,7 @@ collapseBtn.onclick = () => document.querySelectorAll('details').forEach(d => d.
 document.querySelector('.toc').appendChild(expandBtn);
 document.querySelector('.toc').appendChild(collapseBtn);
 </script>
+{column_toggle_js("matchup")}
 </body></html>
 '''
 

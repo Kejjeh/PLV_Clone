@@ -1128,13 +1128,16 @@ def _bucket_recs(bkey, players, pair_week_deltas, strong, modest):
 # ═════════════════════════════════════════════════════════════════════════════
 from html import escape as _h
 
-# matchup.html and xfp_board.html share the warm-dark palette; the theme param
-# stays so a future host page can diverge without touching call sites.
+# The console inherits its HOST PAGE's theme by pointing every --dc-* token at
+# the page-level CSS var (matchup.html / xfp_board.html both define the full
+# light+dark palette via dashboard_chrome.theme_css). So the console now tracks
+# the light/dark toggle instead of being a hardcoded-dark island (2026-07-23).
+# The theme param stays so a future host could pass an explicit override map.
 _THEMES = {
-    "board":   {"bg": "#1a1815", "panel": "#211e1a", "stripe": "#1d1b17",
-                "border": "#34302a", "text": "#f5f1ea", "dim": "#a89e8a",
-                "accent": "#d97757", "pos": "#7fb069", "neg": "#c1666b",
-                "warn": "#d4a945", "mine": "#2a3320"},
+    "board":   {"bg": "var(--bg)", "panel": "var(--panel)", "stripe": "var(--stripe)",
+                "border": "var(--border)", "text": "var(--text)", "dim": "var(--dim)",
+                "accent": "var(--accent)", "pos": "var(--pos)", "neg": "var(--neg)",
+                "warn": "var(--warn)", "mine": "var(--mine)"},
 }
 _THEMES["matchup"] = _THEMES["board"]
 
