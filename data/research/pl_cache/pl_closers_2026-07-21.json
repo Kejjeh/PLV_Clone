@@ -1,0 +1,588 @@
+{
+  "fetched": "2026-07-21",
+  "source_url": "https://pitcherlist.com/fantasy-reliever-rankings-closers-holds-solds-7-21/",
+  "ranks": {
+    "Cade Smith": 1,
+    "Jhoan Duran": 2,
+    "Josh Hader": 3,
+    "Mason Miller": 4,
+    "Andrés Muñoz": 5,
+    "Jacob Latz": 6,
+    "Emilio Pagán": 7,
+    "David Bednar": 8,
+    "Bryan Baker": 9,
+    "Louis Varland": 10,
+    "Paul Sewald": 11,
+    "Raisel Iglesias": 12,
+    "Devin Williams": 13,
+    "Kenley Jansen": 14,
+    "Riley O’Brien": 15,
+    "Hogan Harris": 16,
+    "Pete Fairbanks": 17,
+    "Erik Miller": 18,
+    "Aroldis Chapman": 19,
+    "Jordan Romano": 20,
+    "Mason Montgomery": 21,
+    "Gregory Soto": 22,
+    "Antonio Senzatela": 23,
+    "Juan Mejia": 24,
+    "Victor Vodnik": 25,
+    "Tanner Scott": 26,
+    "Tyler Wells": 27,
+    "Jacob Webb": 28,
+    "Yoendrys Gómez": 29,
+    "Alex Lange": 30,
+    "Ryan Zeferjahn": 31,
+    "Elvis Alvarado": 32,
+    "Michael Petersen": 33,
+    "Andrew Kittredge": 34,
+    "Steven Cruz": 35,
+    "Andrew Morris": 36,
+    "Caleb Kilian": 37,
+    "George Soriano": 38,
+    "Caleb Thielbar": 39,
+    "Kyle Finnegan": 40,
+    "Daniel Lynch IV": 41,
+    "Sam Bachman": 42,
+    "Orlando Ribalta": 43,
+    "Trent Thornton": 44,
+    "Tejay Antone": 45,
+    "Abner Uribe": 46,
+    "Luke Weaver": 47,
+    "Dylan Lee": 48,
+    "Didier Fuentes": 49,
+    "Rico Garcia": 50,
+    "Garrett Whitlock": 51,
+    "Tyler Holton": 52,
+    "Alex Vesia": 53,
+    "Edgardo Henriquez": 54,
+    "Calvin Faucher": 55,
+    "Taylor Rogers": 56,
+    "Fernando Cruz": 57,
+    "Adrian Morejon": 58,
+    "Sam Hentges": 59,
+    "Gabe Speier": 60,
+    "Ryne Stanek": 61,
+    "Kevin Kelly": 62,
+    "Garrett Cleavinger": 63,
+    "Jakob Junis": 64,
+    "Tyler Rogers": 65,
+    "Jeff Hoffman": 66,
+    "Riley Cornelio": 67,
+    "Juan Morillo": 68,
+    "Jonathan Loáisiga": 69,
+    "Justin Slaten": 70,
+    "Brock Burke": 71,
+    "Colin Holderman": 72,
+    "Steven Okert": 73,
+    "Bennett Sousa": 74,
+    "Aaron Ashby": 75,
+    "Brooks Raley": 76,
+    "Brent Headrick": 77,
+    "Jonathan Bowlan": 78,
+    "Orion Kerkering": 79,
+    "Bradgley Rodriguez": 80,
+    "Eduard Bazardo": 81,
+    "Tyler Alexander": 82,
+    "Luis Medina": 83,
+    "Yennier Cano": 84,
+    "Ryan Rolison": 85,
+    "John Schreiber": 86,
+    "José Fermín": 87,
+    "Evan Phillips": 88,
+    "Carmen Mlodzinski": 89,
+    "Tom Cosgrove": 90,
+    "Brandyn Garcia": 91,
+    "José Suarez": 92,
+    "Dylan Dodd": 93,
+    "Tyron Guerrero": 94,
+    "Pierce Johnson": 95,
+    "Erik Sabrowski": 96,
+    "Drew Anderson": 97,
+    "Enyel De Los Santos": 98,
+    "Lake Bachar": 99,
+    "Grant Anderson": 100,
+    "Tommy Nance": 101,
+    "Huascar Brazobán": 102,
+    "Camilo Doval": 103,
+    "José Alvarado": 104,
+    "Yuki Matsui": 105,
+    "Dylan Smith": 106,
+    "Jose A. Ferrer": 107,
+    "Luis Gastelum": 108,
+    "Craig Kimbrel": 109,
+    "Peyton Gray": 110,
+    "Braydon Fisher": 111,
+    "Grant Taylor": 112,
+    "Sean Newcomb": 113,
+    "Bryan Hudson": 114,
+    "Jordan Hicks": 115,
+    "Yohan Ramírez": 116
+  },
+  "roles": {
+    "Cade Smith": {
+      "role": "Closer",
+      "save_pct": 85
+    },
+    "Jhoan Duran": {
+      "role": "Closer",
+      "save_pct": 85
+    },
+    "Josh Hader": {
+      "role": "Closer",
+      "save_pct": 80
+    },
+    "Mason Miller": {
+      "role": "Closer",
+      "save_pct": 80
+    },
+    "Andrés Muñoz": {
+      "role": "Closer",
+      "save_pct": 80
+    },
+    "Jacob Latz": {
+      "role": "Closer",
+      "save_pct": 80
+    },
+    "Emilio Pagán": {
+      "role": "Closer",
+      "save_pct": 75
+    },
+    "David Bednar": {
+      "role": "Closer",
+      "save_pct": 75
+    },
+    "Bryan Baker": {
+      "role": "Closer",
+      "save_pct": 75
+    },
+    "Louis Varland": {
+      "role": "Closer",
+      "save_pct": 75
+    },
+    "Paul Sewald": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Raisel Iglesias": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Devin Williams": {
+      "role": "Closer",
+      "save_pct": 70
+    },
+    "Kenley Jansen": {
+      "role": "Closer",
+      "save_pct": 60
+    },
+    "Riley O’Brien": {
+      "role": "Closer",
+      "save_pct": 60
+    },
+    "Hogan Harris": {
+      "role": "Closer",
+      "save_pct": 50
+    },
+    "Pete Fairbanks": {
+      "role": "Closer",
+      "save_pct": 50
+    },
+    "Erik Miller": {
+      "role": "Closer",
+      "save_pct": 50
+    },
+    "Aroldis Chapman": {
+      "role": "Closer",
+      "save_pct": 0
+    },
+    "Jordan Romano": {
+      "role": "Co-Closer",
+      "save_pct": 50
+    },
+    "Mason Montgomery": {
+      "role": "Co-Closer",
+      "save_pct": 40
+    },
+    "Gregory Soto": {
+      "role": "Co-Closer",
+      "save_pct": 30
+    },
+    "Antonio Senzatela": {
+      "role": "Co-Closer",
+      "save_pct": 10
+    },
+    "Juan Mejia": {
+      "role": "Co-Closer",
+      "save_pct": 10
+    },
+    "Victor Vodnik": {
+      "role": "Co-Closer",
+      "save_pct": 10
+    },
+    "Tanner Scott": {
+      "role": "Interim Closer",
+      "save_pct": 60
+    },
+    "Tyler Wells": {
+      "role": "Interim Closer",
+      "save_pct": 50
+    },
+    "Jacob Webb": {
+      "role": "Interim Closer",
+      "save_pct": 50
+    },
+    "Yoendrys Gómez": {
+      "role": "Closer?",
+      "save_pct": 50
+    },
+    "Alex Lange": {
+      "role": "Closer?",
+      "save_pct": 40
+    },
+    "Ryan Zeferjahn": {
+      "role": "Closer?",
+      "save_pct": 30
+    },
+    "Elvis Alvarado": {
+      "role": "Setup Role",
+      "save_pct": 30
+    },
+    "Michael Petersen": {
+      "role": "Setup Role",
+      "save_pct": 30
+    },
+    "Andrew Kittredge": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "Steven Cruz": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "Andrew Morris": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "Caleb Kilian": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "George Soriano": {
+      "role": "Setup Role",
+      "save_pct": 25
+    },
+    "Caleb Thielbar": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Kyle Finnegan": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Daniel Lynch IV": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Sam Bachman": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Orlando Ribalta": {
+      "role": "Setup Role",
+      "save_pct": 20
+    },
+    "Trent Thornton": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Tejay Antone": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Abner Uribe": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Luke Weaver": {
+      "role": "Setup Role",
+      "save_pct": 15
+    },
+    "Dylan Lee": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Didier Fuentes": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Rico Garcia": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Garrett Whitlock": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Tyler Holton": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Alex Vesia": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Edgardo Henriquez": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Calvin Faucher": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Taylor Rogers": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Fernando Cruz": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Adrian Morejon": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Sam Hentges": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Gabe Speier": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Ryne Stanek": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Kevin Kelly": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Garrett Cleavinger": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Jakob Junis": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Tyler Rogers": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Jeff Hoffman": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Riley Cornelio": {
+      "role": "Setup Role",
+      "save_pct": 10
+    },
+    "Juan Morillo": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Jonathan Loáisiga": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Justin Slaten": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Brock Burke": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Colin Holderman": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Steven Okert": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Bennett Sousa": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Aaron Ashby": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Brooks Raley": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Brent Headrick": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Jonathan Bowlan": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Orion Kerkering": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Bradgley Rodriguez": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Eduard Bazardo": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Tyler Alexander": {
+      "role": "Setup Role",
+      "save_pct": 5
+    },
+    "Luis Medina": {
+      "role": "Setup Role",
+      "save_pct": 0
+    },
+    "Yennier Cano": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Ryan Rolison": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "John Schreiber": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "José Fermín": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Evan Phillips": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Carmen Mlodzinski": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Tom Cosgrove": {
+      "role": "Middle Relief",
+      "save_pct": 10
+    },
+    "Brandyn Garcia": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "José Suarez": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Dylan Dodd": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Tyron Guerrero": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Pierce Johnson": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Erik Sabrowski": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Drew Anderson": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Enyel De Los Santos": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Lake Bachar": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Grant Anderson": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Tommy Nance": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Huascar Brazobán": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Camilo Doval": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "José Alvarado": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Yuki Matsui": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Dylan Smith": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Jose A. Ferrer": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Luis Gastelum": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Craig Kimbrel": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Peyton Gray": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Braydon Fisher": {
+      "role": "Middle Relief",
+      "save_pct": 5
+    },
+    "Grant Taylor": {
+      "role": "Co-Closer?",
+      "save_pct": 40
+    },
+    "Sean Newcomb": {
+      "role": "Co-Closer?",
+      "save_pct": 25
+    },
+    "Bryan Hudson": {
+      "role": "Co-Closer?",
+      "save_pct": 15
+    },
+    "Jordan Hicks": {
+      "role": "Co-Closer?",
+      "save_pct": 10
+    },
+    "Yohan Ramírez": {
+      "role": "Setup Role?",
+      "save_pct": 10
+    }
+  }
+}
