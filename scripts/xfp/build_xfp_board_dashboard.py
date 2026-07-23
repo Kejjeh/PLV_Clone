@@ -99,7 +99,7 @@ def _topn_plus_mine(df: pd.DataFrame, sortcol: str, n: int) -> pd.DataFrame:
     return top
 
 
-def _sp_table(df: pd.DataFrame, sortcol: str, n: int) -> str:
+def _sp_table(df: pd.DataFrame, sortcol: str, n: int, table_id: str = "sp") -> str:
     v = _topn_plus_mine(df, sortcol, n)
     head = (
         "<tr><th>#</th><th>Pitcher</th><th>Own</th><th>Team</th><th>Own%</th>"
@@ -125,10 +125,11 @@ def _sp_table(df: pd.DataFrame, sortcol: str, n: int) -> str:
             f'<td>{_fmt(r.get("xfp_po"))}</td>'
             f"</tr>"
         )
-    return f"<table><thead>{head}</thead><tbody>{''.join(body)}</tbody></table>"
+    return (f'<table data-cols="{h(table_id)}" data-col-lock="2">'
+            f"<thead>{head}</thead><tbody>{''.join(body)}</tbody></table>")
 
 
-def _hitter_table(df: pd.DataFrame, n: int) -> str:
+def _hitter_table(df: pd.DataFrame, n: int, table_id: str = "hitters") -> str:
     v = _topn_plus_mine(df, "xfp_ros", n)
     head = (
         "<tr><th>#</th><th>Hitter</th><th>Own</th><th>Team</th><th>Own%</th>"
@@ -156,7 +157,8 @@ def _hitter_table(df: pd.DataFrame, n: int) -> str:
             f'<td>{_fmt(r.get("xfp_po"))}</td>'
             f"</tr>"
         )
-    return f"<table><thead>{head}</thead><tbody>{''.join(body)}</tbody></table>"
+    return (f'<table data-cols="{h(table_id)}" data-col-lock="2">'
+            f"<thead>{head}</thead><tbody>{''.join(body)}</tbody></table>")
 
 
 def _console_block(sp, hit, inputs) -> str:
@@ -266,7 +268,12 @@ def _context_block(sp) -> str:
 
 
 def build_html() -> str:
-    from lib.dashboard_chrome import topnav as _topnav, topnav_css as _topnav_css  # unified nav owner (item 8)
+    from lib.dashboard_chrome import (  # unified nav + theme owner
+        topnav as _topnav, topnav_css as _topnav_css,
+        theme_css as _theme_css, theme_boot_js as _theme_boot_js,
+        theme_toggle_html as _theme_toggle, column_toggle_js as _column_toggle_js,
+        details_note as _details_note,
+    )
     inputs = B.fetch_board_inputs()   # ONE roster + ONE free_agents(2000) pull for both boards
     sp = B.build_sp_board(roster=inputs["roster"], fas=inputs["fas"],
                           injury_details=inputs["injury_details"])
@@ -306,9 +313,9 @@ def build_html() -> str:
         f'<h2>Starting Pitchers <span class="totals">'
         f'{len(sp)} ranked · {n_sp_mine} MINE · {n_tp_sp} LOW-CONF · {n_vol_sp} ·vol · {n_dock_sp} ·flat↓</span></h2>'
         f'<h3>Rank by xFP — Rest of Season</h3>'
-        f'{_sp_table(sp, "xfp_ros", SP_TABLE_N)}'
+        f'{_sp_table(sp, "xfp_ros", SP_TABLE_N, "sp_ros")}'
         f'<h3>Rank by xFP — Playoffs ({B.PLAYOFF_START.isoformat()}→{B.SEASON_END.isoformat()})</h3>'
-        f'{_sp_table(sp, "xfp_po", SP_TABLE_N)}'
+        f'{_sp_table(sp, "xfp_po", SP_TABLE_N, "sp_po")}'
     )
 
     # Hitter buckets
@@ -323,42 +330,53 @@ def build_html() -> str:
         bucket_html.append(
             f'<h3>{h(label)} <span class="sub">'
             f'{len(sub)} ranked · {n_mine} MINE</span></h3>'
-            f'{_hitter_table(sub, n)}'
+            f'{_hitter_table(sub, n, f"hitters_{bkey}")}'
         )
 
-    method = (
-        "Headline numbers: SP per_start (Stuff+ proj &gt; rp3 data-driven &gt; "
-        "rp3 Marcel) and hitter per_game (rh3, MLBAM-id-joined collision-safe). "
-        f"<b>xFP RoS</b> projects to season end ({B.SEASON_END.isoformat()}). "
-        "<b>Volume-sourced rows (src ·vol)</b> use the validated forward-volume "
-        "models (2026-07-09): hitter RoS = per_PA × projected PA/team-game × "
-        "team games in window; SP RoS = per_start × projected starts/team-game "
-        "× team games. The <b>Vol</b> column shows the per-teamgame number "
-        f"(flat equivalents: hitter {B.FLAT_PA_PER_TEAMGAME} PA/tg, SP "
-        f"{B.FLAT_GS_PER_TEAMGAME:.3f} GS/tg). Rows without a volume row keep "
-        f"the flat rates — SP ≈ per_start × {B.RATE*7:.2f}/wk; hitter ≈ "
-        f"per_game × {B.GPW} g/wk. "
+    # Methodology + legend as bullets, collapsed into a <details> expander
+    # (was two dense always-open prose blocks; audit 2026-07-23).
+    _flat_dock = (
+        (f'SP ×{sp_p75:.3f}' if sp_p75 is not None else 'SP ×—')
+        + (f', hitters ×{hit_p75:.3f}' if hit_p75 is not None else ', hitters ×—'))
+    method_bullets = [
+        "<b>Headline numbers</b>: SP per_start (Stuff+ proj &gt; rp3 data-driven "
+        "&gt; rp3 Marcel); hitter per_game (rh3, MLBAM-id-joined, collision-safe).",
+        f"<b>xFP RoS</b> projects to season end ({B.SEASON_END.isoformat()}).",
         f"<b>xFP PO</b> = the {B.PLAYOFF_START.isoformat()}→{B.SEASON_END.isoformat()} "
         "fantasy-playoff window, availability-scaled. Live IL return dates "
-        "(ESPN injury_details) are folded into availability; where no date "
-        "exists a coarse status heuristic is used — <b>surgery / season-ending "
-        "cases are over-estimated</b>, so treat long-IL rows as ranking aids."
-    )
-    legend = (
+        "(ESPN injury_details) fold into availability; with no date, a coarse "
+        "status heuristic applies — <b>surgery / season-ending cases are "
+        "over-estimated</b>, so treat long-IL rows as ranking aids.",
+        "<b>Volume-sourced rows (src ·vol)</b> use the validated forward-volume "
+        "models (2026-07-09): hitter RoS = per_PA × proj PA/team-game × team "
+        "games; SP RoS = per_start × proj starts/team-game × team games.",
+        f"The <b>Vol</b> column is the per-teamgame number (flat equivalents: "
+        f"hitter {B.FLAT_PA_PER_TEAMGAME} PA/tg, SP {B.FLAT_GS_PER_TEAMGAME:.3f} "
+        f"GS/tg). Rows without a volume row keep flat rates — SP ≈ per_start × "
+        f"{B.RATE*7:.2f}/wk; hitter ≈ per_game × {B.GPW} g/wk.",
+    ]
+    legend_bullets = [
         '<span class="lc">LOW-CONF*</span> = talent-prior fallback (Marcel '
-        'if-healthy estimate for players the in-season model can\'t score: '
-        'Judge / Greene / Snell-class IL stashes). NOT a real in-season read — '
-        'a conviction sorter, not a point forecast. '
-        '<span class="own-mine">MINE</span> rows are highlighted. '
+        "if-healthy estimate for players the in-season model can't score: "
+        "Judge / Greene / Snell-class IL stashes). A conviction sorter, NOT a "
+        "point forecast.",
+        '<span class="own-mine">MINE</span> rows are highlighted.',
         '<span class="src">·vol</span> in Src = RoS/PO totals use the player\'s '
-        'projected per-teamgame volume (Vol column) instead of the flat league rate. '
+        "projected per-teamgame volume (Vol column), not the flat league rate.",
         '<span class="src">·flat↓</span> = IL / prior-only row with no volume '
-        'projection, docked to the top-quartile (p75) volume ratio of modeled '
-        'rows in its universe'
-        + (f' (SP ×{sp_p75:.3f}' if sp_p75 is not None else ' (SP ×—')
-        + (f', hitters ×{hit_p75:.3f})' if hit_p75 is not None else ', hitters ×—)')
-        + ' so unmodeled stashes aren\'t credited more volume than any modeled player.'
-    )
+        f"projection, docked to the top-quartile (p75) volume ratio of modeled "
+        f"rows in its universe ({_flat_dock}) so unmodeled stashes aren't "
+        "credited more volume than any modeled player.",
+    ]
+    method_html = ("<ul>" + "".join(f"<li>{b}</li>" for b in method_bullets)
+                   + "</ul>" + "<ul>"
+                   + "".join(f"<li>{b}</li>" for b in legend_bullets) + "</ul>")
+
+    # Precompute chrome blocks (avoids nested-brace f-string hazards below).
+    _theme_block = _theme_css(
+        extra_dark={'--mine': '#2a3320', '--mine-hover': '#33401f'},
+        extra_light={'--mine': '#e7ecd9', '--mine-hover': '#dde5c8'})
+    _method_details = _details_note('Methodology &amp; legend', method_html)
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head>
@@ -369,16 +387,15 @@ def build_html() -> str:
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root {{
-  --bg:#1a1815; --panel:#211e1a; --stripe:#1d1b17; --border:#34302a;
-  --text:#f5f1ea; --dim:#a89e8a; --faint:#3a352e; --accent:#d97757;
-  --pos:#7fb069; --neg:#c1666b; --warn:#d4a945; --mine:#2a3320;
-}}
+{_theme_block}
 * {{ box-sizing:border-box; }}
 html, body {{ margin:0; padding:0; }}
 body {{ font-family:'Source Serif 4','Iowan Old Style',Georgia,serif;
        background:var(--bg); color:var(--text); font-size:15px; line-height:1.55; }}
-.wrap {{ max-width:1480px; margin:0 auto; padding:0 1.2em 4em 1.2em; }}
+.wrap {{ max-width:none; width:100%; margin:0; padding:0 2em 4em 2em; }}
+@media (min-width:1600px) {{ .wrap {{ padding:0 3em 4em 3em; }} }}
+@media (min-width:2100px) {{ .wrap {{ padding:0 4em 4em 4em; }} }}
+.note, .legend, p {{ max-width:95ch; }}
 header {{ border-bottom:1px solid var(--border); padding:.9em 0 .6em; margin-bottom:1em; }}
 h1 {{ color:var(--accent); margin:0; font-size:1.9em; font-weight:700; letter-spacing:.01em; }}
 .gen {{ color:var(--dim); font-family:'IBM Plex Mono',monospace; font-size:.8em; margin-top:.2em; }}
@@ -405,7 +422,7 @@ td {{ padding:.42em .7em; border-bottom:1px solid var(--faint);
 tbody tr:nth-child(even) td {{ background:var(--stripe); }}
 tbody tr:hover td {{ background:var(--panel); }}
 tbody tr.mine td {{ background:var(--mine); }}
-tbody tr.mine:hover td {{ background:#33401f; }}
+tbody tr.mine:hover td {{ background:var(--mine-hover); }}
 .muted {{ color:var(--dim); }}
 .acc {{ color:var(--accent); font-weight:600; }}
 .src {{ color:var(--dim); font-size:.92em; }}
@@ -421,20 +438,22 @@ tbody tr.mine:hover td {{ background:#33401f; }}
 .meta {{ color:var(--dim); font-size:.78em; margin-top:2.5em; text-align:center;
         border-top:1px solid var(--border); padding-top:1em; }}
 {_topnav_css()}
-</style></head>
+</style>
+{_theme_boot_js()}
+</head>
 <body><div class="wrap">
 <header>
   <h1>Merged xFP Boards</h1>
-  {_topnav("xfp_board")}
+  <div style="display:flex; align-items:center; gap:.5em; flex-wrap:wrap;">{_topnav("xfp_board")}{_theme_toggle()}</div>
   <div class="gen">Generated {h(gen)} · MINE + every FA · dual-ranked RoS / Playoffs</div>
 </header>
-<div class="note">{method}</div>
-<div class="legend">{legend}</div>
+{_method_details}
 {console_html}
 {sp_html}
 {context_html}
 {''.join(bucket_html)}
 <div class="meta">{MY_TEAM_NAME} · plv_clone · engine: scripts/xfp/build_xfp_boards.py · skill: /xfp-board</div>
+{_column_toggle_js("xfp_board")}
 </div></body></html>
 """
 
