@@ -28,19 +28,7 @@ HEAD = r"""<!doctype html>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
 <style>
-:root {
-  --bg: #1a1815;
-  --panel: #211e1a;
-  --stripe: #1d1b17;
-  --border: #34302a;
-  --text: #f5f1ea;
-  --dim: #a89e8a;
-  --faint: #3a352e;
-  --accent: #d97757;
-  --pos: #7fb069;
-  --neg: #c1666b;
-  --warn: #d4a945;
-}
+__THEME_CSS__
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; }
 body { font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
@@ -589,6 +577,7 @@ header.collapsed nav.topnav a { padding-top: .25em; padding-bottom: .25em; }
 .domain-tooltip .dom-sub b { color: var(--accent); }
 .domain-tooltip .dom-sub .name { color: var(--dim); }
 </style>
+__THEME_BOOT__
 </head>
 """
 
@@ -604,8 +593,8 @@ BODY_HEADER = """
   <div>
     <h1>Player Profiles <span class="page-tagline">Expected Performance</span></h1>
     <p class="page-subtitle">What a player's underlying skill says to <b>expect</b> — from Statcast, bat tracking, Stuff+, the 20-80 archetype ratings, and the rh3/rp3/rprs2 model projections.</p>
-    <p class="page-scopenote"><b>What this is:</b> talent &amp; process, forward-looking. &nbsp;<b>What this is NOT:</b> a box score — no realized HR/RBI/R, W/L, ERA, or actual FP totals. Columns tagged <span class="col-actual">· actual</span> appear only as validation / usage context. &nbsp;·&nbsp; <b>Distinct from the xFP board</b> (<code>index.html</code> — "V12 · SP xFP Model"): that board <i>ranks</i> your roster + FAs + league by projected fantasy points for start / add / drop calls; this page is the <b>scouting layer beneath it</b> — the expected-skill ratings &amp; archetype process that explain why a player projects the way they do.</p>
-    __TOPNAV__PROFILES__
+    <p class="page-scopenote"><b>What this is:</b> talent &amp; process, forward-looking. &nbsp;<b>What this is NOT:</b> a box score — no realized HR/RBI/R, W/L, ERA, or actual FP totals. Columns tagged <span class="col-actual">· actual</span> appear only as validation / usage context. &nbsp;·&nbsp; <b>Distinct from the xFP board</b> (<code>index.html</code> — "xFP Model"): that board <i>ranks</i> your roster + FAs + league by projected fantasy points for start / add / drop calls; this page is the <b>scouting layer beneath it</b> — the expected-skill ratings &amp; archetype process that explain why a player projects the way they do.</p>
+    __TOPNAV__PROFILES__ __THEME_TOGGLE__
   </div>
   <div class="search-wrap">
     <input id="search-input" type="text" placeholder="Search any hitter or pitcher…" autocomplete="off">
@@ -4613,10 +4602,16 @@ def render_page(payload: dict, external_data_src: str | None = None) -> str:
             '+" hitter-years \\u00b7 "+d.sps.length+" SP-years \\u00b7 "'
             '+((d.rps&&d.rps.length)||0)+" RP-years \\u00b7 years "+d.years[0]'
             '+"\\u2013"+d.years[d.years.length-1];});</script>')
-    from lib.dashboard_chrome import topnav as _topnav
-    return (HEAD
+    from lib.dashboard_chrome import (topnav as _topnav, theme_css as _theme_css,
+                                       theme_boot_js as _theme_boot_js,
+                                       theme_toggle_html as _theme_toggle)
+    # Plotly charts keep their hardcoded dark canvas (paper/plot_bgcolor) even in
+    # light mode — chart theming is set in JS at plot time and is out of scope for
+    # this pass; the surrounding page themes fully. (v1 compromise, 2026-07-23.)
+    return (HEAD.replace('__THEME_CSS__', _theme_css()).replace('__THEME_BOOT__', _theme_boot_js())
             + '<body>\n'
             + BODY_HEADER.replace('__TOPNAV__PROFILES__', _topnav('player_profiles'))
+                         .replace('__THEME_TOGGLE__', _theme_toggle())
             + HOME_TAB
             + HITTERS_TAB
             + SPS_TAB

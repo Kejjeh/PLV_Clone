@@ -725,6 +725,23 @@ def build_h2_meta() -> dict:
     }
 
 
+def _compute_data_thru() -> str | None:
+    """Latest FINALIZED game date in the statcast panel, for the masthead's
+    'DATA THRU' stamp. Excludes the gf_provisional bridge rows (same-day
+    in-progress feed) so the stamp matches the 'data through yesterday'
+    doctrine. Returns 'YYYY-MM-DD' or None on any read problem."""
+    try:
+        p = ROOT / 'data' / 'research' / 'xfp_cache' / 'statcast_2026.parquet'
+        if not p.exists():
+            return None
+        df = pd.read_parquet(p, columns=['game_date', 'source'])
+        final = df[df['source'].astype(str) != 'gf_provisional']
+        gd = (final if len(final) else df)['game_date']
+        return str(pd.to_datetime(gd).max().date())
+    except Exception:
+        return None
+
+
 def build_meta() -> dict:
     bundle = joblib.load(MODEL_PKL)
     pipe = bundle['pipeline']
@@ -746,6 +763,7 @@ def build_meta() -> dict:
         'scoreT1': round(float(bundle['score_tolerance_T1']), 3),
         'formula': bundle['formula'],
         'trainedDate': bundle['trained_date'],
+        'dataThru': _compute_data_thru(),
         'nTrain': int(bundle['n_train']),
         'trainingYears': bundle.get('training_years', '2020-2025'),
         'ytdR': round(float(bundle.get('ytd_r_2026', 0)), 3),
@@ -758,32 +776,38 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>SP xFP Model — V11 Production</title>
+<title>xFP Model — Ligers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
 <style>html,body{margin:0;padding:0;}*{box-sizing:border-box;}
-/* Top-nav strip — mirrors the structure used on player_profiles.html so the
-   four dashboards share a single navigation pattern. Class names are the
-   canonical `nav.topnav` from the profiles template; colors are inlined here
-   to fit the existing xFP GitHub-dark palette without introducing new CSS
-   custom properties (no var(--accent) etc. defined on this page). The
-   wrapper `.xfp-topnav-bar` is uniquely prefixed to avoid colliding with any
-   React-rendered class names elsewhere in this file. */
-.xfp-topnav-bar { background:#161b22; border-bottom:1px solid #30363d;
+/* Pre-React shell paint (2026-07-23): the React app mounts a beat after Babel
+   transpiles, so paint the correct theme background immediately to avoid a
+   white flash. Dark is the default; the boot script sets [data-theme=light]
+   from the shared xfp_theme key before first paint. */
+body{background:#1a1815;color:#f5f1ea;}
+html[data-theme="light"] body{background:#f7f3ec;color:#1a1815;}
+/* Top-nav strip — now uses the shared suite palette (was a third, GitHub-dark
+   palette; audit 2026-07-23) with a light-theme override so it tracks the toggle. */
+.xfp-topnav-bar { background:#211e1a; border-bottom:1px solid #34302a;
   padding:.55em 1em; display:flex; justify-content:flex-end; }
 .xfp-topnav-bar nav.topnav { display:flex; align-items:center; gap:0;
   font-family:'IBM Plex Mono', ui-monospace, monospace; font-size:.72em;
   text-transform:uppercase; letter-spacing:.15em; }
-.xfp-topnav-bar nav.topnav a { color:#8b949e; text-decoration:none;
-  padding:.35em .9em; border:1px solid #30363d; border-right:0; }
+.xfp-topnav-bar nav.topnav a { color:#b3a996; text-decoration:none;
+  padding:.35em .9em; border:1px solid #34302a; border-right:0; }
 .xfp-topnav-bar nav.topnav a:first-child { border-radius:3px 0 0 3px; }
 .xfp-topnav-bar nav.topnav a:last-child  { border-radius:0 3px 3px 0;
-  border-right:1px solid #30363d; }
-.xfp-topnav-bar nav.topnav a:hover { color:#c9d1d9; background:#0d1117; }
-.xfp-topnav-bar nav.topnav a.current { color:#58a6ff; background:#0d1117;
-  border-color:#58a6ff; }
+  border-right:1px solid #34302a; }
+.xfp-topnav-bar nav.topnav a:hover { color:#f5f1ea; background:#1a1815; }
+.xfp-topnav-bar nav.topnav a.current { color:#d97757; background:#1a1815;
+  border-color:#d97757; }
+html[data-theme="light"] .xfp-topnav-bar { background:#fdfaf3; border-bottom-color:#e3dccb; }
+html[data-theme="light"] .xfp-topnav-bar nav.topnav a { color:#6e6654; border-color:#e3dccb; }
+html[data-theme="light"] .xfp-topnav-bar nav.topnav a:hover { color:#1a1815; background:#f7f3ec; }
+html[data-theme="light"] .xfp-topnav-bar nav.topnav a.current { color:#a8421f; background:#f7f3ec; border-color:#a8421f; }
 </style>
+__THEME_BOOT__
 <script>
 window.XFP_META = __META_JSON__;
 window.XFP_H2_META = __H2_META_JSON__;
@@ -957,9 +981,9 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
             <SortTh col="xfpRoSSched" label="Sched"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="recencyGap" label="L21Δ"    width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="gsToDate" label="GS-to"     width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpV12"   label="xFP V12"   width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpV12"   label="xFP"       width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="replDelta" label="Δ Repl/St" width={70}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
-            <SortTh col="xfpV11"   label="V11"       width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
+            <SortTh col="xfpV11"   label="prev"      width={56}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="il60Lag1" label="IL60"      width={48}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="fpTotal"  label="FP Total"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
             <SortTh col="delta"    label="Δ vs Act"  width={64}  sortCol={sortCol} sortDir={sortDir} onSort={onSort} colors={colors} />
@@ -1157,7 +1181,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                         <div>
                           <div style={{ fontSize:9, letterSpacing:2, textTransform:'uppercase', color:colors.dim, fontFamily:MONO, marginBottom:6 }}>Tier · {tier}</div>
                           <div style={{ fontSize:13, fontStyle:'italic', color:colors.text }}>
-                            xFP V11 of <span style={{ color:tierColor, fontWeight:600 }}>{fmt(p.xfpV11, 2)}</span> ranks {p.name} #{p.rank} on the pre-season board.
+                            prior-season xFP of <span style={{ color:tierColor, fontWeight:600 }}>{fmt(p.xfpV11, 2)}</span> ranks {p.name} #{p.rank} on the pre-season board.
                           </div>
                           <div style={{ marginTop:8, fontSize:11, color:colors.dim, fontFamily:MONO }}>
                             Stuff-only baseline: {fmt(p.stuffXfp, 2)} ·
@@ -1635,11 +1659,11 @@ function Dashboard({ dark }) {
                     display:'flex', alignItems:'baseline', justifyContent:'space-between', gap:24, flexWrap:'wrap' }}>
         <div>
           <div style={{ fontSize:9, letterSpacing:4, textTransform:'uppercase', color:colors.dim, fontFamily:MONO }}>
-            V12 PRODUCTION (V11 + IL) · 2026 SEASON · BUILD {meta.trainedDate}
+            XFP MODEL · 2026 SEASON · MODEL FIT {meta.trainedDate}{meta.dataThru ? ` · DATA THRU ${meta.dataThru}` : ''}
             {hasMyTeam && <span style={{ color:colors.accent, marginLeft:10 }}>· {myTeam.teamName}</span>}
           </div>
           <h1 style={{ fontSize:32, fontWeight:400, margin:'2px 0 0', letterSpacing:-0.5, fontStyle:'italic', whiteSpace:'nowrap' }}>
-            SP xFP Model
+            xFP Model
           </h1>
           <div style={{ fontSize:12, color:colors.dim, fontStyle:'italic', margin:'5px 0 0', maxWidth:'72ch', lineHeight:1.45 }}>
             Roster-decision board — ranks your team, the FA pool and the league by <b>projected fantasy points</b> (rh3 hitters · rp3 SPs) to call starts, adds and drops. The scouting layer behind these numbers — the 20-80 expected-skill ratings and archetype process — lives on <a href="player_profiles.html" style={{ color:colors.accent, textDecoration:'none' }}>Player Profiles</a>.
@@ -1973,7 +1997,7 @@ function AnalysisTab({ rows, ytdRows, colors, hoverId, setHoverId }) {
         right={`2026 YTD · n=${ytdRows.length} (gs ≥ 5)`} colors={colors} />
       <div style={{ padding:'0 32px 18px' }}>
         <QuadrantChart data={ytdRows} xKey="xfpV11" yKey="fpActual"
-          xLabel="xFP V11 (projected FP/start)" yLabel="2026 actual FP/start"
+          xLabel="prior-season xFP (projected FP/start)" yLabel="2026 actual FP/start"
           colors={colors} highlightId={hoverId} onHighlight={setHoverId}
           xDp={2} yDp={2}
           quadLabels={{ tr:'DELIVERING', tl:'OUTPERFORMING', br:'UNDERPERFORMING', bl:'AVOID' }} />
@@ -2367,7 +2391,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
             </span> RP
           </h2>
           <p style={{ fontSize:13, color:colors.dim, margin:'8px 0 0', fontStyle:'italic', lineHeight:1.5 }}>
-            Rotation averages an xFP V11 of{' '}
+            Rotation averages an xFP of{' '}
             <span style={{ color:colors.accent, fontVariantNumeric:'tabular-nums' }}>
               {meanXfp == null ? '—' : meanXfp.toFixed(2)}
             </span>{' '}FP/start across {matched.length} of {rotation.length} arms with V11 coverage.
@@ -2425,7 +2449,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
                            fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
               <SortTh col="name"      label="Pitcher"   align="l" width={170} sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
               <SortTh col="proTeam"   label="Team"      align="l" width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
-              <SortTh col="xfpV11"    label="xFP V11"   width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
+              <SortTh col="xfpV11"    label="xFP prev"  width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
               <SortTh col="xfpRank"   label="Rank"      width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
               <SortTh col="kPct"      label="K%"        width={50}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
               <SortTh col="ipTrend"   label="Trend"     width={70}  sortCol={rotSort.col} sortDir={rotSort.dir} onSort={handleRotSort} colors={colors} />
@@ -2496,7 +2520,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
                       <span style={{ color:colors.warn, fontSize:9, fontFamily:MONO,
                                      letterSpacing:1, padding:'1px 6px',
                                      border:`1px solid ${colors.warn}`, borderRadius:2 }}>
-                        NO V11
+                        NO PRIOR
                       </span>
                     ) : (
                       <span style={{ color:colors.faint, fontSize:9, fontFamily:MONO }}>—</span>
@@ -2509,7 +2533,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
         </table>
         <div style={{ paddingTop:6, fontSize:10, color:colors.dim, fontFamily:MONO,
                       letterSpacing:1, fontStyle:'italic' }}>
-          ↳ "NO V11" tag = pitcher not in V11 universe (rookie debut without FG Pitching+ history)
+          ↳ "NO PRIOR" tag = pitcher not in the prior-season model universe (rookie debut without FG Pitching+ history)
         </div>
       </div>
 
@@ -2575,7 +2599,7 @@ function MyTeamTab({ myTeam, allRows, colors, editorialHeat, favorites, toggleFa
               <th style={{ padding:'8px 8px', textAlign:'left', fontSize:9, color:colors.dim,
                            fontFamily:MONO, letterSpacing:1.5, textTransform:'uppercase', fontWeight:600 }}>#</th>
               <SortTh col="name"     label="Pitcher"   align="l" width={170} sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
-              <SortTh col="xfpV11"   label="xFP V11"   width={70}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
+              <SortTh col="xfpV11"   label="xFP prev"  width={70}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
               <SortTh col="stuffXfp" label="Stuff"     width={56}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
               <SortTh col="ipPremium" label="IP Prem"  width={64}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
               <SortTh col="ipTrend"  label="Trend"     width={70}  sortCol={availSort.col} sortDir={availSort.dir} onSort={handleAvailSort} colors={colors} />
@@ -3073,7 +3097,18 @@ function ThemeToggle({ dark, setDark }) {
 }
 
 function App() {
-  const [dark, setDark] = React.useState(false);
+  // Shared cross-dashboard theme: read/write the same `xfp_theme` localStorage
+  // key every other page uses, and mirror it onto <html data-theme> so the
+  // pre-React shell + top-nav strip (static CSS) stay in sync. Default DARK to
+  // match the rest of the suite (2026-07-23).
+  const [dark, setDark] = React.useState(() => {
+    try { return localStorage.getItem('xfp_theme') !== 'light'; } catch (e) { return true; }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem('xfp_theme', dark ? 'dark' : 'light'); } catch (e) {}
+    if (dark) document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', 'light');
+  }, [dark]);
   return (
     <div style={{ position:'relative', minHeight:'100vh' }}>
       <ThemeToggle dark={dark} setDark={setDark} />
@@ -4916,9 +4951,10 @@ def main():
     except Exception as _e:
         print(f"  decision console payload unavailable ({type(_e).__name__}) — Decision tab shows notice")
 
-    from lib.dashboard_chrome import topnav as _topnav
+    from lib.dashboard_chrome import topnav as _topnav, theme_boot_js as _theme_boot_js
     html = (HTML_TEMPLATE
             .replace('__TOPNAV__', _topnav('index'))
+            .replace('__THEME_BOOT__', _theme_boot_js())
             .replace('__PROJECTIONS_JSON__', proj_json)
             .replace('__META_JSON__', meta_json)
             .replace('__H2_META_JSON__', h2_meta_json)

@@ -600,7 +600,7 @@ def _render_sp_alerts_html() -> str:
 <h2>Hitter Upgrade Alerts
   <span style="float:right;font-size:0.6em;font-weight:400;color:var(--dim);font-family:'IBM Plex Mono',monospace;">floor xwOBA={hit_floor:.3f}</span>
 </h2>
-<table>
+<table data-cols="live_hit_alerts" data-col-lock="1">
 <thead><tr>
   <th>Player</th><th>Tier</th><th>PA</th><th>xwOBA</th>
   <th>vs floor</th><th>xwOBACON</th><th>rh3</th>
@@ -614,7 +614,7 @@ def _render_sp_alerts_html() -> str:
     floor={floor:+.4f} · {h(generated)}
   </span>
 </h2>
-<table>
+<table data-cols="live_sp_alerts" data-col-lock="1">
 <thead><tr>
   <th>Player</th><th>Tier</th><th>GS</th><th>fpp</th>
   <th>vs floor</th><th>L4</th><th>Whiff</th><th>xCON</th><th>rp3</th><th>Signals</th>
@@ -632,7 +632,7 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
         if not rows:
             out.append('<p class="empty">No players in active games yet.</p>')
             return '\n'.join(out)
-        out.append('<table>')
+        out.append('<table data-cols="live_lines" data-col-lock="1">')
         out.append('<thead><tr><th>Player</th><th>R</th><th>FP</th><th>Status</th>'
                    '<th>Line</th><th>Highlights</th><th>Pre-Game</th></tr></thead><tbody>')
         for r in rows:
@@ -654,7 +654,10 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
 
     from zoneinfo import ZoneInfo
     now = datetime.now(ZoneInfo('America/New_York')).strftime('%Y-%m-%d %H:%M:%S') + ' ET'
-    from lib.dashboard_chrome import topnav  # unified nav owner (item 8)
+    from lib.dashboard_chrome import (  # unified nav + theme owner
+        topnav, topnav_css, theme_css, theme_boot_js, theme_toggle_html,
+        column_toggle_js,
+    )
     html = f'''<!DOCTYPE html>
 <html lang="en"><head>
 <meta charset="utf-8">
@@ -665,25 +668,15 @@ def render_dashboard_html(d, my_rows, opp_rows, my_name, opp_name, refresh_secs=
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Serif+4:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-:root {{
-  --bg: #1a1815;
-  --panel: #211e1a;
-  --stripe: #1d1b17;
-  --border: #34302a;
-  --text: #f5f1ea;
-  --dim: #a89e8a;
-  --faint: #3a352e;
-  --accent: #d97757;
-  --pos: #7fb069;
-  --neg: #c1666b;
-  --warn: #d4a945;
-}}
+{theme_css()}
 * {{ box-sizing: border-box; }}
 html, body {{ margin: 0; padding: 0; }}
 body {{ font-family: 'Source Serif 4', 'Iowan Old Style', Georgia, serif;
        background: var(--bg); color: var(--text);
        font-size: 16px; line-height: 1.6; }}
-.wrap {{ max-width: 1480px; margin: 0 auto; padding: 0 1.2em 4em 1.2em; }}
+.wrap {{ max-width: none; width: 100%; margin: 0; padding: 0 2em 4em 2em; }}
+@media (min-width: 1600px) {{ .wrap {{ padding: 0 3em 4em 3em; }} }}
+.empty, p {{ max-width: 95ch; }}
 
 header {{ border-bottom: 1px solid var(--border); padding: .9em 0;
          position: sticky; top: 0; background: var(--bg); z-index: 100;
@@ -703,17 +696,7 @@ h2 {{ color: var(--text); margin-top: 2em; font-size: 1.4em; font-weight: 600;
 .total {{ float: right; font-size: .65em; font-weight: 400; color: var(--accent);
          font-family: 'IBM Plex Mono', monospace; }}
 
-nav.topnav {{ display: flex; align-items: center; gap: 0;
-             font-family: 'IBM Plex Mono', monospace;
-             font-size: .72em; text-transform: uppercase; letter-spacing: .15em;
-             margin-top: .4em; }}
-nav.topnav a {{ color: var(--dim); text-decoration: none; padding: .35em .9em;
-               border: 1px solid var(--border); border-right: 0;
-               cursor: pointer; }}
-nav.topnav a:first-child {{ border-radius: 3px 0 0 3px; }}
-nav.topnav a:last-child  {{ border-radius: 0 3px 3px 0; border-right: 1px solid var(--border); }}
-nav.topnav a:hover {{ color: var(--text); background: var(--panel); }}
-nav.topnav a.current {{ color: var(--accent); background: var(--panel); border-color: var(--accent); }}
+{topnav_css()}
 
 .scoreboard {{ background: var(--panel); border: 1px solid var(--border); border-radius: 6px;
               padding: 1.2em 1.5em; margin: 1em 0; font-size: 1.2em; text-align: center; }}
@@ -786,7 +769,9 @@ tbody tr:hover td {{ background: var(--panel); }}
   th, td {{ padding: .45em .55em; }}
   .tags {{ font-size: .7em; }}
 }}
-</style></head><body>
+</style>
+{theme_boot_js()}
+</head><body>
 <div class="wrap">
 <header>
   <div class="header-row">
@@ -794,6 +779,7 @@ tbody tr:hover td {{ background: var(--panel); }}
       <h1>Ligers Live <span class="date-tag">{h(d)}</span></h1>
       {topnav("live")}
     </div>
+    {theme_toggle_html()}
   </div>
 </header>
 <div class="scoreboard">
@@ -805,6 +791,7 @@ tbody tr:hover td {{ background: var(--panel); }}
   <div>{block_html(f"{opp_name or 'Opponent'} — Today's Lines", opp_rows)}</div>
 </div>
 <p class="meta">Last refresh: {h(now)} · auto-refresh every {refresh_secs}s · MLB Stats API live feed</p>
+{column_toggle_js("live")}
 </div>
 </body></html>
 '''

@@ -34,6 +34,10 @@ from plv_clone.positions import (  # noqa: E402
 
 # Split modules — names re-exported so external callers can keep importing them
 # from build_triangulate_dashboard (e.g. tests import build_card_data here).
+from scripts.xfp.lib.dashboard_chrome import (  # noqa: E402  (shared theme owner)
+    theme_css as _theme_css, theme_boot_js as _theme_boot_js,
+    theme_toggle_html as _theme_toggle,
+)
 from scripts.xfp.lib.triangulate_dashboard_style import (  # noqa: E402, F401  (re-export)
     _CSS, _FA_CSS, _JS, _NAV,
 )
@@ -138,10 +142,12 @@ def render_page(cards: list[dict], fa_rows: list[dict] | None = None) -> str:
 <title>Triangulate — Ligers</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
-<style>{_CSS}{_FA_CSS}</style></head>
+<style>{_theme_css()}{_CSS}{_FA_CSS}</style>
+{_theme_boot_js()}
+</head>
 <body>
 <div class="topbar"><h1>🔱 Triangulate</h1>
-<span class="sub">{len(cards)} roster · {len(fa_rows)} FA · {n_il} on IL · three-lens read · {today}</span>{_NAV}</div>
+<span class="sub">{len(cards)} roster · {len(fa_rows)} FA · {n_il} on IL · three-lens read · {today}</span>{_NAV}{_theme_toggle()}</div>
 {body}
 <script>{_JS}</script></body></html>"""
 
