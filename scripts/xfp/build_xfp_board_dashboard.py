@@ -266,7 +266,7 @@ def _context_block(sp) -> str:
 
 
 def build_html() -> str:
-    from lib.dashboard_chrome import topnav as _topnav  # unified nav owner (item 8)
+    from lib.dashboard_chrome import topnav as _topnav, topnav_css as _topnav_css  # unified nav owner (item 8)
     inputs = B.fetch_board_inputs()   # ONE roster + ONE free_agents(2000) pull for both boards
     sp = B.build_sp_board(roster=inputs["roster"], fas=inputs["fas"],
                           injury_details=inputs["injury_details"])
@@ -420,6 +420,7 @@ tbody tr.mine:hover td {{ background:#33401f; }}
         background:rgba(212,169,69,.18); color:var(--warn); font-weight:600; }}
 .meta {{ color:var(--dim); font-size:.78em; margin-top:2.5em; text-align:center;
         border-top:1px solid var(--border); padding-top:1em; }}
+{_topnav_css()}
 </style></head>
 <body><div class="wrap">
 <header>
