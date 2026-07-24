@@ -17,8 +17,18 @@
   "mlbam_id": 571970,
   "player_name": "Max Muncy",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-24",
+  "settlement": {
+    "actual_fp_per_unit": 0.4782608695652174,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 46,
+    "proj_per": 0.5828571428571429,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.10459627329192545,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-03",
   "verdict_top": "MIXED"
 }
