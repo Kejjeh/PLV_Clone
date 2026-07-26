@@ -1,0 +1,27 @@
+{
+  "bucket": "H",
+  "confidence": 1.0,
+  "decision_id": "2026-07-26_pete_alonso_H_001",
+  "inputs": {
+    "archetype_label": "POWER_EYE",
+    "archetype_overall": 64,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.014639501386309,
+    "inputs_schema": 2,
+    "live_marginal": 17.200000000000003,
+    "model_rank": 75,
+    "override_tag": null,
+    "pl_rank": 21,
+    "proj_display": 2.04,
+    "proj_per": 0.5814773755668918,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 624413,
+  "player_name": "Pete Alonso",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-26",
+  "verdict_top": "MIXED"
+}

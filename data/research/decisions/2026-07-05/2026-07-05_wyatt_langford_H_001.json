@@ -17,8 +17,18 @@
   "mlbam_id": 694671,
   "player_name": "Wyatt Langford",
   "reason_tag": "process_red_flag",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-26",
+  "settlement": {
+    "actual_fp_per_unit": 0.6595744680851063,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 47,
+    "proj_per": 0.5428571428571428,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.11671732522796352,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-05",
   "verdict_top": "CAUTION"
 }
