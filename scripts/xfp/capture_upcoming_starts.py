@@ -50,6 +50,7 @@ from __future__ import annotations
 import argparse
 import csv
 import sys
+import unicodedata
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -102,6 +103,12 @@ def load_rp3(path: Path = RP3_CSV) -> dict[int, dict]:
     return out
 
 
+def fold(text: str) -> str:
+    """Casefold + strip accents — apps print 'R. Suarez' for 'Ranger Suárez'."""
+    return "".join(c for c in unicodedata.normalize("NFKD", text)
+                   if not unicodedata.combining(c)).casefold()
+
+
 def norm_abbr(abbr: str | None) -> str:
     a = (abbr or "").strip().upper()
     return ABBR_ALIASES.get(a, a)
@@ -136,15 +143,15 @@ def resolve_observed_name(
     parts = [p for p in name.replace(".", " ").split() if p]
     if not parts:
         return None, name
-    last = parts[-1].casefold()
-    initial = parts[0][0].casefold() if len(parts) > 1 else ""
+    last = fold(parts[-1])
+    initial = fold(parts[0][0]) if len(parts) > 1 else ""
     hits = []
     for p in roster_fetch(team_abbr):
         full = p.get("full_name") or ""
         toks = full.split()
-        if not toks or toks[-1].casefold() != last:
+        if not toks or fold(toks[-1]) != last:
             continue
-        if initial and toks[0][:1].casefold() != initial:
+        if initial and fold(toks[0][:1]) != initial:
             continue
         hits.append(p)
     if len(hits) != 1:
