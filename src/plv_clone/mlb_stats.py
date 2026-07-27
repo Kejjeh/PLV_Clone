@@ -191,6 +191,21 @@ def get_probables(
 
 _SCHEDULE_CACHE: dict[tuple[str, str], list[dict]] = {}
 
+_ET = "America/New_York"
+
+
+def _et_clock(game_date_utc: str | None) -> str | None:
+    """'2026-07-27T23:40:00Z' -> '7:40PM' (ET). None for missing/unparseable."""
+    if not game_date_utc:
+        return None
+    try:
+        from zoneinfo import ZoneInfo
+        dt = datetime.fromisoformat(str(game_date_utc).replace("Z", "+00:00"))
+        et = dt.astimezone(ZoneInfo(_ET))
+    except Exception:  # no tzdata / malformed feed value — degrade, never raise
+        return None
+    return f"{et.hour % 12 or 12}:{et.minute:02d}{'AM' if et.hour < 12 else 'PM'}"
+
 
 def get_schedule(
     start_date: date | str,
@@ -203,9 +218,15 @@ def get_schedule(
     posted probable pitcher — one dict per game:
 
         {date, game_pk, game_type, game_state, venue_name,
+         game_datetime_utc, first_pitch_et,
          home_id, away_id, home_abbr, away_abbr,
          home_probable_id, home_probable_name,
          away_probable_id, away_probable_name}
+
+    ``game_datetime_utc`` is the raw ISO ``gameDate`` from the feed;
+    ``first_pitch_et`` is that instant rendered in America/New_York ("7:40PM")
+    — the deadline clock every streamer/churn decision is stated in. Both are
+    None for a TBD game time.
 
     Companion to :func:`get_probables` (which emits one row per *probable* and
     skips games/sides with no probable). This is the owner for the "all games,
@@ -252,6 +273,8 @@ def get_schedule(
                 "game_type": g.get("gameType"),
                 "game_state": g.get("status", {}).get("abstractGameState", ""),
                 "venue_name": (g.get("venue") or {}).get("name"),
+                "game_datetime_utc": g.get("gameDate"),
+                "first_pitch_et": _et_clock(g.get("gameDate")),
                 "home_id": int(home_id) if home_id else None,
                 "away_id": int(away_id) if away_id else None,
                 "home_abbr": hab,
@@ -263,6 +286,52 @@ def get_schedule(
             })
     if use_cache and fetched_ok:
         _SCHEDULE_CACHE[key] = out
+    return out
+
+
+_TEAM_PITCHERS_CACHE: dict[tuple[str, int], list[dict]] = {}
+
+
+def get_team_pitchers(
+    team_abbr: str,
+    *,
+    season: int | None = None,
+    http_get: Callable[..., Any] = _default_http_get,
+    use_cache: bool = True,
+) -> list[dict]:
+    """Every pitcher on ``team_abbr``'s full-season roster: [{id, full_name}].
+
+    The team-SCOPED counterpart to :func:`resolve_mlbam` (which searches the
+    whole league by name). Resolving an abbreviated observation like
+    "M. Liberatore" league-wide is exactly the same-surname trap as gotcha #10;
+    scoped to one team's pitchers, a (last name + first initial) match is safe
+    and can be skipped when still ambiguous.
+
+    Returns [] on a fetch failure or an unknown abbreviation (never raises).
+    """
+    season = season or date.today().year
+    key = (team_abbr.upper(), season)
+    if use_cache and key in _TEAM_PITCHERS_CACHE:
+        return _TEAM_PITCHERS_CACHE[key]
+    team_id = next((tid for tid, ab in _team_abbr_map(http_get).items()
+                    if ab.upper() == team_abbr.upper()), None)
+    if team_id is None:
+        return []
+    url = (f"{_STATSAPI}/teams/{team_id}/roster"
+           f"?rosterType=fullSeason&season={season}")
+    try:
+        data = http_get(url).json()
+    except Exception as exc:
+        import sys as _sys
+        print(f"WARN get_team_pitchers({team_abbr}): fetch failed — {exc}",
+              file=_sys.stderr)
+        return []
+    out = [{"id": int(p["person"]["id"]), "full_name": p["person"].get("fullName", "")}
+           for p in data.get("roster", [])
+           if (p.get("position") or {}).get("abbreviation") == "P"
+           and (p.get("person") or {}).get("id")]
+    if use_cache:
+        _TEAM_PITCHERS_CACHE[key] = out
     return out
 
 
