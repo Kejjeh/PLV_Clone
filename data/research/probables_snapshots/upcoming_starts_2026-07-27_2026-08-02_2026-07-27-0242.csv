@@ -1,0 +1,195 @@
+captured_at,date,first_pitch_et,pitcher_name,pitcher_id,team,opp,home_away,park,game_pk,game_state,source,observed_source,rp3_rank,rp3_per_start,dq
+2026-07-27T02:42:48+00:00,2026-07-27,2:35PM,George Kirby,669923,SEA,TEX,away,TEX,822868,Preview,mlb_api,,36,12.91,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,2:35PM,Kumar Rocker,677958,TEX,SEA,home,TEX,822868,Preview,mlb_api,,207,8.54,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Kyle Bradish,680694,BAL,DET,away,DET,824245,Preview,mlb_api,,86,11.00,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Keider Montero,672456,DET,BAL,home,DET,824245,Preview,mlb_api,,119,10.13,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Zack Wheeler,554430,PHI,MIA,away,MIA,823839,Preview,mlb_api,,5,15.38,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Tyler Phillips,663969,MIA,PHI,home,MIA,823839,Preview,mlb_api,,201,8.60,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Merrill Kelly,518876,AZ,PIT,away,PIT,823353,Preview,mlb_api,,313,6.63,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:40PM,Mitch Keller,656605,PIT,AZ,home,PIT,823353,Preview,mlb_api,,197,8.68,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,6:45PM,Max Scherzer,453286,TOR,WSH,away,WSH,822705,Preview,mlb_api,,233,8.06,marcel_il
+2026-07-27T02:42:48+00:00,2026-07-27,6:45PM,Andrew Alvarez,674841,WSH,TOR,home,WSH,822705,Preview,mlb_api,,159,9.27,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-27,7:10PM,Slade Cecconi,677944,CLE,CIN,away,CIN,824490,Preview,mlb_api,,131,9.88,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:10PM,Chase Burns,695505,CIN,CLE,home,CIN,824490,Preview,mlb_api,,50,12.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:10PM,Martín Pérez,527048,ATL,NYM,away,NYM,823597,Preview,mlb_api,,303,6.83,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:10PM,Zac Thornton,804267,NYM,ATL,home,NYM,823597,Preview,mlb_api,,331,6.21,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-27,7:40PM,Max Fried,608331,NYY,CWS,away,CWS,824570,Preview,mlb_api,,33,12.97,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:40PM,Noah Schultz,702273,CWS,NYY,home,CWS,824570,Preview,mlb_api,,238,8.00,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:45PM,David Peterson,656849,CHC,STL,away,STL,823025,Preview,mlb_api,,345,4.80,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,7:45PM,Matthew Liberatore,669461,STL,CHC,home,STL,823025,Preview,observed,scoreboard_app_screenshot,191,8.74,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,9:38PM,Tatsuya Imai,837227,HOU,LAA,away,LAA,824001,Preview,mlb_api,,144,9.55,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,9:38PM,Walbert Ureña,700712,LAA,HOU,home,LAA,824001,Preview,mlb_api,,51,12.29,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,9:40PM,Payton Tolle,801139,BOS,ATH,away,ATH,824977,Preview,mlb_api,,6,15.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,9:40PM,Jack Perkins,678022,ATH,BOS,home,ATH,824977,Preview,mlb_api,,87,10.97,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-27,9:45PM,Brandon Sproat,687075,MIL,SF,away,SF,823195,Preview,mlb_api,,83,11.13,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-27,9:45PM,Tyler Mahle,641816,SF,MIL,home,SF,823195,Preview,mlb_api,,100,10.61,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Dean Kremer,665152,BAL,DET,away,DET,824243,Preview,mlb_api,,122,10.07,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Troy Melton,675512,DET,BAL,home,DET,824243,Preview,mlb_api,,65,11.75,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Aaron Nola,605400,PHI,MIA,away,MIA,823838,Preview,mlb_api,,120,10.12,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Sandy Alcantara,645261,MIA,PHI,home,MIA,823838,Preview,mlb_api,,72,11.40,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Brandon Pfaadt,694297,AZ,PIT,away,PIT,823350,Preview,mlb_api,,262,7.68,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Bubba Chandler,696149,PIT,AZ,home,PIT,823350,Preview,mlb_api,,161,9.25,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Cal Quantrill,615698,TEX,TB,away,TB,822949,Preview,observed,scoreboard_app_screenshot,324,6.47,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-28,6:40PM,Griffin Jax,643377,TB,TEX,home,TB,822949,Preview,mlb_api,,41,12.67,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,6:45PM,Shane Bieber,669456,TOR,WSH,away,WSH,822703,Preview,mlb_api,,213,8.44,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-28,6:45PM,Cade Cavalli,676917,WSH,TOR,home,WSH,822703,Preview,mlb_api,,68,11.50,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:10PM,Gavin Williams,668909,CLE,CIN,away,CIN,824489,Preview,mlb_api,,4,15.53,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:10PM,Brady Singer,663903,CIN,CLE,home,CIN,824489,Preview,mlb_api,,162,9.24,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:10PM,Chris Sale,519242,ATL,NYM,away,NYM,823598,Preview,mlb_api,,10,15.12,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:10PM,Christian Scott,681035,NYM,ATL,home,NYM,823598,Preview,mlb_api,,286,7.33,marcel_il
+2026-07-27T02:42:48+00:00,2026-07-28,7:40PM,Gerrit Cole,543037,NYY,CWS,away,CWS,824569,Preview,mlb_api,,28,13.28,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:40PM,Anthony Kay,641743,CWS,NYY,home,CWS,824569,Preview,mlb_api,,210,8.47,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:40PM,Seth Lugo,607625,KC,MIN,away,MIN,823676,Preview,mlb_api,,220,8.29,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:40PM,Taj Bradley,671737,MIN,KC,home,MIN,823676,Preview,mlb_api,,43,12.62,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:45PM,Colin Rea,607067,CHC,STL,away,STL,823026,Preview,mlb_api,,231,8.10,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,7:45PM,Michael McGreevy,700241,STL,CHC,home,STL,823026,Preview,observed,scoreboard_app_screenshot,296,7.09,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:38PM,Peter Lambert,663567,HOU,LAA,away,LAA,824003,Preview,mlb_api,,134,9.76,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:38PM,Reid Detmers,672282,LAA,HOU,home,LAA,824003,Preview,mlb_api,,38,12.80,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:40PM,Jake Bennett,687562,BOS,ATH,away,ATH,824976,Preview,mlb_api,,44,12.61,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:40PM,Gage Jump,695611,ATH,BOS,home,ATH,824976,Preview,mlb_api,,107,10.34,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:40PM,Michael Lorenzen,547179,COL,SD,away,SD,823275,Preview,mlb_api,,246,7.87,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:40PM,Michael King,650633,SD,COL,home,SD,823275,Preview,mlb_api,,69,11.50,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:45PM,Logan Henderson,701656,MIL,SF,away,SF,823193,Preview,mlb_api,,42,12.65,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,9:45PM,Landen Roupp,694738,SF,MIL,home,SF,823193,Preview,mlb_api,,81,11.18,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,10:10PM,Luis Castillo,622491,SEA,LAD,away,LAD,823923,Preview,observed,scoreboard_app_screenshot,64,11.79,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-28,10:10PM,Eric Lauer,641778,LAD,SEA,home,LAD,823923,Preview,observed,scoreboard_app_screenshot,203,8.59,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,12:10PM,Jesús Luzardo,666200,PHI,MIA,away,MIA,823837,Preview,mlb_api,,15,14.05,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,12:10PM,-,,MIA,PHI,home,MIA,823837,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-07-29,12:35PM,Eduardo Rodriguez,593958,AZ,PIT,away,PIT,823351,Preview,mlb_api,,323,6.48,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,12:35PM,Jared Jones,683003,PIT,AZ,home,PIT,823351,Preview,mlb_api,,21,13.71,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:05PM,Trey Yesavage,702056,TOR,WSH,away,WSH,822702,Preview,mlb_api,,60,11.92,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:05PM,Zack Littell,641793,WSH,TOR,home,WSH,822702,Preview,mlb_api,,245,7.87,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:10PM,Trevor Rogers,669432,BAL,DET,away,DET,824242,Preview,mlb_api,,103,10.45,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:10PM,Tarik Skubal,669373,DET,BAL,home,DET,824242,Preview,mlb_api,,2,16.96,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:10PM,Grant Holmes,656550,ATL,NYM,away,NYM,823596,Preview,mlb_api,,153,9.43,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,1:10PM,Sean Manaea,640455,NYM,ATL,home,NYM,823596,Preview,mlb_api,,330,6.25,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-29,3:45PM,Shane Drohan,675660,MIL,SF,away,SF,823192,Preview,mlb_api,,48,12.40,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,3:45PM,Logan Webb,657277,SF,MIL,home,SF,823192,Preview,mlb_api,,52,12.25,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,4:10PM,Gabriel Hughes,687312,COL,SD,away,SD,823273,Preview,mlb_api,,113,10.26,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-29,4:10PM,Griffin Canning,656288,SD,COL,home,SD,823273,Preview,observed,scoreboard_app_screenshot,133,9.84,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,6:40PM,MacKenzie Gore,669022,TEX,TB,away,TB,822947,Preview,observed,scoreboard_app_screenshot,73,11.39,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,6:40PM,Ian Seymour,693855,TB,TEX,home,TB,822947,Preview,observed,scoreboard_app_screenshot,40,12.68,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-29,7:10PM,Joey Cantillo,676282,CLE,CIN,away,CIN,824487,Preview,mlb_api,,54,12.23,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:10PM,Rhett Lowder,695076,CIN,CLE,home,CIN,824487,Preview,mlb_api,,283,7.35,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:40PM,Cam Schlittler,693645,NYY,CWS,away,CWS,824567,Preview,mlb_api,,8,15.18,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:40PM,Davis Martin,663436,CWS,NYY,home,CWS,824567,Preview,mlb_api,,114,10.24,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:40PM,Randy Dobnak,677976,KC,MIN,away,MIN,823677,Preview,observed,scoreboard_app_screenshot,261,7.68,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-29,7:40PM,Joe Ryan,657746,MIN,KC,home,MIN,823677,Preview,mlb_api,,18,13.83,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:45PM,Matthew Boyd,571510,CHC,STL,away,STL,823022,Preview,mlb_api,,129,9.92,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,7:45PM,Dustin May,669160,STL,CHC,home,STL,823022,Preview,observed,scoreboard_app_screenshot,109,10.33,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,9:38PM,-,,HOU,LAA,away,LAA,824002,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-07-29,9:38PM,Grayson Rodriguez,680570,LAA,HOU,home,LAA,824002,Preview,mlb_api,,237,8.02,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,9:40PM,Patrick Sandoval,663776,BOS,ATH,away,ATH,824973,Preview,mlb_api,,174,8.98,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-29,9:40PM,Jacob Lopez,682052,ATH,BOS,home,ATH,824973,Preview,mlb_api,,194,8.71,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,10:10PM,Emerson Hancock,676106,SEA,LAD,away,LAD,823924,Preview,observed,scoreboard_app_screenshot,111,10.31,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-29,10:10PM,Justin Wrobleski,680736,LAD,SEA,home,LAD,823924,Preview,observed,scoreboard_app_screenshot,116,10.19,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,12:10PM,Nathan Eovaldi,543135,TEX,TB,away,TB,822946,Preview,observed,scoreboard_app_screenshot,25,13.55,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,12:10PM,Shane McClanahan,663556,TB,TEX,home,TB,822946,Preview,observed,scoreboard_app_screenshot,34,12.95,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,1:40PM,Noah Cameron,702070,KC,MIN,away,MIN,823674,Preview,observed,scoreboard_app_screenshot,156,9.33,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,1:40PM,Bailey Ober,641927,MIN,KC,home,MIN,823674,Preview,mlb_api,,185,8.85,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,2:10PM,Ryan Weathers,677960,NYY,CWS,away,CWS,824568,Preview,mlb_api,,91,10.84,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,2:10PM,Sean Burke,680732,CWS,NYY,home,CWS,824568,Preview,mlb_api,,79,11.29,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,2:15PM,Shota Imanaga,684007,CHC,STL,away,STL,823023,Preview,mlb_api,,57,11.97,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,2:15PM,Andre Pallante,669467,STL,CHC,home,STL,823023,Preview,observed,scoreboard_app_screenshot,181,8.92,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,7:10PM,Paul Skenes,694973,PIT,CIN,away,CIN,824488,Preview,observed,scoreboard_app_screenshot,7,15.19,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,7:10PM,Hunter Greene,668881,CIN,PIT,home,CIN,824488,Preview,mlb_api,,32,12.98,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-30,7:10PM,Eury Pérez,691587,MIA,NYM,away,NYM,823595,Preview,observed,scoreboard_app_screenshot,30,13.19,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,7:10PM,Nolan McLean,690997,NYM,MIA,home,NYM,823595,Preview,observed,scoreboard_app_screenshot,182,8.89,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,7:15PM,Foster Griffin,656492,WSH,ATL,away,ATL,824894,Preview,observed,scoreboard_app_screenshot,96,10.75,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,7:15PM,Bryce Elder,693821,ATL,WSH,home,ATL,824894,Preview,observed,scoreboard_app_screenshot,165,9.19,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,9:40PM,Sonny Gray,543243,BOS,ATH,away,ATH,824974,Preview,mlb_api,,22,13.65,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,9:40PM,-,,ATH,BOS,home,ATH,824974,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-07-30,9:40PM,Robbie Ray,592662,SF,SD,away,SD,823271,Preview,observed,scoreboard_app_screenshot,98,10.66,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,9:40PM,Germán Márquez,608566,SD,SF,home,SD,823271,Preview,observed,scoreboard_app_screenshot,289,7.22,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,10:10PM,Bryce Miller,682243,SEA,LAD,away,LAD,823921,Preview,observed,scoreboard_app_screenshot,14,14.06,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-30,10:10PM,Roki Sasaki,808963,LAD,SEA,home,LAD,823921,Preview,observed,scoreboard_app_screenshot,97,10.75,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,2:20PM,Will Warren,701542,NYY,CHC,away,CHC,824651,Preview,observed,scoreboard_app_screenshot,145,9.53,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,2:20PM,Jameson Taillon,592791,CHC,NYY,home,CHC,824651,Preview,observed,scoreboard_app_screenshot,173,9.00,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,6:10PM,Braxton Ashcraft,677952,PIT,CIN,away,CIN,824486,Preview,observed,scoreboard_app_screenshot,62,11.86,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,6:10PM,Andrew Abbott,671096,CIN,PIT,home,CIN,824486,Preview,observed,scoreboard_app_screenshot,169,9.16,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:05PM,-,,PHI,BAL,away,BAL,824809,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-07-31,7:05PM,Brandon Young,687064,BAL,PHI,home,BAL,824809,Preview,observed,scoreboard_app_screenshot,227,8.19,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:07PM,Kyle Leahy,681517,STL,TOR,away,TOR,822782,Preview,observed,scoreboard_app_screenshot,212,8.46,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:07PM,Dylan Cease,656302,TOR,STL,home,TOR,822782,Preview,observed,scoreboard_app_screenshot,3,16.62,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Mitch Bratt,683352,AZ,CLE,away,CLE,824407,Preview,observed,scoreboard_app_screenshot,326,6.39,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Tanner Bibee,676440,CLE,AZ,home,CLE,824407,Preview,observed,scoreboard_app_screenshot,76,11.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Janson Junk,676083,MIA,NYM,away,NYM,823593,Preview,observed,scoreboard_app_screenshot,188,8.80,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Freddy Peralta,642547,NYM,MIA,home,NYM,823593,Preview,observed,scoreboard_app_screenshot,205,8.57,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Erick Fedde,607200,CWS,TB,away,TB,822945,Preview,observed,scoreboard_app_screenshot,221,8.29,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:10PM,Nick Martinez,607259,TB,CWS,home,TB,822945,Preview,observed,scoreboard_app_screenshot,102,10.51,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:15PM,Miles Mikolas,571945,WSH,ATL,away,ATL,824892,Preview,observed,scoreboard_app_screenshot,298,7.08,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,7:15PM,Reynaldo López,625643,ATL,WSH,home,ATL,824892,Preview,observed,scoreboard_app_screenshot,163,9.21,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,8:15PM,Jacob deGrom,594798,TEX,HOU,away,HOU,824164,Preview,observed,scoreboard_app_screenshot,11,15.06,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,8:15PM,Hunter Brown,686613,HOU,TEX,home,HOU,824164,Preview,observed,scoreboard_app_screenshot,77,11.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,8:40PM,Michael Wacha,608379,KC,COL,away,COL,824325,Preview,observed,scoreboard_app_screenshot,124,10.06,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,8:40PM,Tomoyuki Sugano,608372,COL,KC,home,COL,824325,Preview,observed,scoreboard_app_screenshot,337,5.77,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,9:38PM,Robert Gasser,688107,MIL,LAA,away,LAA,823999,Preview,observed,scoreboard_app_screenshot,95,10.79,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,9:38PM,Ryan Johnson,696270,LAA,MIL,home,LAA,823999,Preview,observed,scoreboard_app_screenshot,170,9.09,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,9:40PM,Casey Mize,663554,DET,ATH,away,ATH,824975,Preview,observed,scoreboard_app_screenshot,47,12.46,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,9:40PM,Jeffrey Springs,605488,ATH,DET,home,ATH,824975,Preview,observed,scoreboard_app_screenshot,189,8.77,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,9:45PM,Carson Whisenhunt,687931,SF,SD,away,SD,823272,Preview,observed,scoreboard_app_screenshot,215,8.39,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-31,9:45PM,JP Sears,676664,SD,SF,home,SD,823272,Preview,observed,scoreboard_app_screenshot,175,8.98,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-07-31,10:10PM,Ranger Suarez,624133,BOS,LAD,away,LAD,823922,Preview,observed,scoreboard_app_screenshot,24,13.59,marcel_il
+2026-07-27T02:42:48+00:00,2026-07-31,10:10PM,Yoshinobu Yamamoto,808967,LAD,BOS,home,LAD,823922,Preview,observed,scoreboard_app_screenshot,16,13.95,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,10:10PM,Zebby Matthews,805673,MIN,SEA,away,SEA,823111,Preview,observed,scoreboard_app_screenshot,157,9.33,data_driven_full
+2026-07-27T02:42:48+00:00,2026-07-31,10:10PM,Bryan Woo,693433,SEA,MIN,home,SEA,823111,Preview,observed,scoreboard_app_screenshot,17,13.94,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,3:07PM,Matthew Liberatore,669461,STL,TOR,away,TOR,822781,Preview,observed,scoreboard_app_screenshot,191,8.74,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,3:07PM,Kevin Gausman,592332,TOR,STL,home,TOR,822781,Preview,observed,scoreboard_app_screenshot,26,13.44,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Tyler Phillips,663969,MIA,NYM,away,NYM,823594,Preview,observed,scoreboard_app_screenshot,201,8.60,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Zac Thornton,804267,NYM,MIA,home,NYM,823594,Preview,observed,scoreboard_app_screenshot,331,6.21,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Connor Prielipp,687570,MIN,SEA,away,SEA,823109,Preview,observed,scoreboard_app_screenshot,139,9.63,marcel_il
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Logan Gilbert,669302,SEA,MIN,home,SEA,823109,Preview,observed,scoreboard_app_screenshot,9,15.17,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Noah Schultz,702273,CWS,TB,away,TB,822944,Preview,observed,scoreboard_app_screenshot,238,8.00,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,4:10PM,Drew Rasmussen,656876,TB,CWS,home,TB,822944,Preview,observed,scoreboard_app_screenshot,12,14.57,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,6:40PM,Mitch Keller,656605,PIT,CIN,away,CIN,824485,Preview,observed,scoreboard_app_screenshot,197,8.68,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,6:40PM,Chase Burns,695505,CIN,PIT,home,CIN,824485,Preview,observed,scoreboard_app_screenshot,50,12.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:05PM,Cristopher Sánchez,650911,PHI,BAL,away,BAL,824808,Preview,observed,scoreboard_app_screenshot,13,14.55,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:05PM,Shane Baz,669358,BAL,PHI,home,BAL,824808,Preview,observed,scoreboard_app_screenshot,108,10.34,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:10PM,Kumar Rocker,677958,TEX,HOU,away,HOU,824162,Preview,observed,scoreboard_app_screenshot,207,8.54,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:10PM,Ronel Blanco,669854,HOU,TEX,home,HOU,824162,Preview,observed,scoreboard_app_screenshot,55,12.12,marcel_il
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,Andrew Alvarez,674841,WSH,ATL,away,ATL,824890,Preview,observed,scoreboard_app_screenshot,159,9.27,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,Martín Pérez,527048,ATL,WSH,home,ATL,824890,Preview,observed,scoreboard_app_screenshot,303,6.83,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,Max Fried,608331,NYY,CHC,away,CHC,824649,Preview,observed,rest_math_correction,33,12.97,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,David Peterson,656849,CHC,NYY,home,CHC,824649,Preview,observed,scoreboard_app_screenshot,345,4.80,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,-,,AZ,CLE,away,CLE,824405,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-01,7:15PM,Parker Messick,800048,CLE,AZ,home,CLE,824405,Preview,observed,scoreboard_app_screenshot,49,12.39,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,8:10PM,Luinder Avila,679883,KC,COL,away,COL,824326,Preview,observed,scoreboard_app_screenshot,206,8.54,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,8:10PM,Ryan Feltner,663372,COL,KC,home,COL,824326,Preview,observed,scoreboard_app_screenshot,243,7.91,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,8:40PM,Tyler Mahle,641816,SF,SD,away,SD,823269,Preview,observed,scoreboard_app_screenshot,100,10.61,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,8:40PM,Walker Buehler,621111,SD,SF,home,SD,823269,Preview,observed,scoreboard_app_screenshot,178,8.94,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:10PM,Payton Tolle,801139,BOS,LAD,away,LAD,823920,Preview,observed,scoreboard_app_screenshot,6,15.32,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:10PM,Emmet Sheehan,686218,LAD,BOS,home,LAD,823920,Preview,observed,scoreboard_app_screenshot,61,11.88,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:38PM,Jacob Misiorowski,694819,MIL,LAA,away,LAA,824000,Preview,observed,scoreboard_app_screenshot,1,19.66,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:38PM,José Soriano,667755,LAA,MIL,home,LAA,824000,Preview,observed,scoreboard_app_screenshot,37,12.89,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:40PM,Framber Valdez,664285,DET,ATH,away,ATH,824972,Preview,observed,scoreboard_app_screenshot,78,11.31,data_driven_full
+2026-07-27T02:42:48+00:00,2026-08-01,9:40PM,Jack Perkins,678022,ATH,DET,home,ATH,824972,Preview,observed,scoreboard_app_screenshot,87,10.97,data_driven_thin
+2026-07-27T02:42:48+00:00,2026-08-02,1:35PM,-,,WSH,ATL,away,ATL,824891,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:35PM,-,,ATL,WSH,home,ATL,824891,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:35PM,-,,PHI,BAL,away,BAL,824807,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:35PM,-,,BAL,PHI,home,BAL,824807,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:37PM,-,,STL,TOR,away,TOR,822783,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:37PM,-,,TOR,STL,home,TOR,822783,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,PIT,CIN,away,CIN,824483,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,CIN,PIT,home,CIN,824483,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,AZ,CLE,away,CLE,824404,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,CLE,AZ,home,CLE,824404,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,MIA,NYM,away,NYM,823592,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,NYM,MIA,home,NYM,823592,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,CWS,TB,away,TB,822943,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,1:40PM,-,,TB,CWS,home,TB,822943,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,2:10PM,-,,TEX,HOU,away,HOU,824163,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,2:10PM,-,,HOU,TEX,home,HOU,824163,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,2:20PM,-,,NYY,CHC,away,CHC,824648,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,2:20PM,-,,CHC,NYY,home,CHC,824648,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,3:10PM,-,,KC,COL,away,COL,824323,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,3:10PM,-,,COL,KC,home,COL,824323,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,3:15PM,-,,MIL,LAA,away,LAA,823996,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,3:15PM,-,,LAA,MIL,home,LAA,823996,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:05PM,-,,DET,ATH,away,ATH,824971,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:05PM,-,,ATH,DET,home,ATH,824971,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:10PM,-,,SF,SD,away,SD,823270,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:10PM,-,,SD,SF,home,SD,823270,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:10PM,-,,MIN,SEA,away,SEA,823107,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,4:10PM,-,,SEA,MIN,home,SEA,823107,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,7:20PM,-,,BOS,LAD,away,LAD,823919,Preview,,,,,
+2026-07-27T02:42:48+00:00,2026-08-02,7:20PM,-,,LAD,BOS,home,LAD,823919,Preview,,,,,

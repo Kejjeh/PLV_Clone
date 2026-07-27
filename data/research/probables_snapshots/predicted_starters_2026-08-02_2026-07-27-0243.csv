@@ -1,0 +1,31 @@
+predicted_at,date,first_pitch_et,team,opp,home_away,park,predicted_pitcher,predicted_pitcher_id,confidence,rest_days,starts_in_window,clean_cycle,last_start,runner_up,rp3_rank,rp3_per_start,dq
+2026-07-27T02:43:07+00:00,2026-08-02,1:35PM,WSH,ATL,away,ATL,Cade Cavalli,676917,HIGH,5,6,True,2026-07-28,Zack Littell,68,11.50,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:35PM,ATL,WSH,home,ATL,Chris Sale,519242,HIGH,5,6,True,2026-07-28,Grant Holmes,10,15.12,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:35PM,PHI,BAL,away,BAL,Aaron Nola,605400,LOW,5,6,False,2026-07-28,Jesús Luzardo,120,10.12,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:35PM,BAL,PHI,home,BAL,Kyle Bradish,680694,HIGH,6,6,True,2026-07-27,Dean Kremer,86,11.00,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:37PM,STL,TOR,away,TOR,Michael McGreevy,700241,HIGH,5,5,True,2026-07-28,Dustin May,296,7.09,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:37PM,TOR,STL,home,TOR,Max Scherzer,453286,LOW,6,1,True,2026-07-27,Shane Bieber,233,8.06,marcel_il
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,PIT,CIN,away,CIN,Bubba Chandler,696149,HIGH,5,6,True,2026-07-28,Jared Jones,161,9.25,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,CIN,PIT,home,CIN,Brady Singer,663903,HIGH,5,6,True,2026-07-28,Rhett Lowder,162,9.24,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,AZ,CLE,away,CLE,Kohl Drake,684442,LOW,7,2,True,2026-07-26,Brandon Pfaadt,,,
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,CLE,AZ,home,CLE,Slade Cecconi,677944,HIGH,6,4,True,2026-07-27,Gavin Williams,131,9.88,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,MIA,NYM,away,NYM,Sandy Alcantara,645261,LOW,5,6,False,2026-07-28,,72,11.40,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,NYM,MIA,home,NYM,Christian Scott,681035,HIGH,5,5,True,2026-07-28,Sean Manaea,286,7.33,marcel_il
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,CWS,TB,away,TB,Anthony Kay,641743,HIGH,5,6,True,2026-07-28,Davis Martin,210,8.47,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,1:40PM,TB,CWS,home,TB,Griffin Jax,643377,HIGH,5,6,True,2026-07-28,Ian Seymour,41,12.67,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,2:10PM,TEX,HOU,away,HOU,Cal Quantrill,615698,HIGH,5,4,True,2026-07-28,MacKenzie Gore,324,6.47,data_driven_thin
+2026-07-27T02:43:07+00:00,2026-08-02,2:10PM,HOU,TEX,home,HOU,Peter Lambert,663567,LOW,5,6,False,2026-07-28,Tatsuya Imai,134,9.76,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,2:20PM,NYY,CHC,away,CHC,Gerrit Cole,543037,HIGH,5,5,True,2026-07-28,Cam Schlittler,28,13.28,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,2:20PM,CHC,NYY,home,CHC,Colin Rea,607067,HIGH,5,5,True,2026-07-28,Matthew Boyd,231,8.10,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,3:10PM,KC,COL,away,COL,Seth Lugo,607625,HIGH,5,6,True,2026-07-28,Randy Dobnak,220,8.29,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,3:10PM,COL,KC,home,COL,Kyle Freeland,607536,LOW,7,5,True,2026-07-26,Michael Lorenzen,199,8.63,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,3:15PM,MIL,LAA,away,LAA,Brandon Sproat,687075,HIGH,6,6,True,2026-07-27,Logan Henderson,83,11.13,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,3:15PM,LAA,MIL,home,LAA,Walbert Ureña,700712,HIGH,6,4,True,2026-07-27,Reid Detmers,51,12.29,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:05PM,DET,ATH,away,ATH,Keider Montero,672456,LOW,6,2,True,2026-07-27,Troy Melton,119,10.13,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:05PM,ATH,DET,home,ATH,Gage Jump,695611,LOW,5,6,False,2026-07-28,Jacob Lopez,107,10.34,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:10PM,SF,SD,away,SD,Landen Roupp,694738,HIGH,5,5,True,2026-07-28,Logan Webb,81,11.18,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:10PM,SD,SF,home,SD,Michael King,650633,HIGH,5,6,True,2026-07-28,Griffin Canning,69,11.50,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:10PM,MIN,SEA,away,SEA,Taj Bradley,671737,HIGH,5,6,True,2026-07-28,Joe Ryan,43,12.62,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,4:10PM,SEA,MIN,home,SEA,Luis Castillo,622491,HIGH,5,4,True,2026-07-28,Emerson Hancock,64,11.79,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,7:20PM,BOS,LAD,away,LAD,Jake Bennett,687562,HIGH,5,5,True,2026-07-28,Patrick Sandoval,44,12.61,data_driven_full
+2026-07-27T02:43:07+00:00,2026-08-02,7:20PM,LAD,BOS,home,LAD,Eric Lauer,641778,HIGH,5,4,True,2026-07-28,Justin Wrobleski,203,8.59,data_driven_full
