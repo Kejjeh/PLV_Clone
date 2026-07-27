@@ -17,8 +17,18 @@
   "mlbam_id": 696100,
   "player_name": "Hunter Goodman",
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-27",
+  "settlement": {
+    "actual_fp_per_unit": 0.5535714285714286,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 56,
+    "proj_per": 0.58,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.026428571428571357,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-06",
   "verdict_top": "BUY"
 }

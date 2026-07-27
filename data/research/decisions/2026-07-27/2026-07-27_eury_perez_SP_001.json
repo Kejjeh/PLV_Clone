@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 1.0,
+  "decision_id": "2026-07-27_eury_perez_SP_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_4_5",
+    "archetype_overall": 52,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 14.17327322877318,
+    "inputs_schema": 2,
+    "live_marginal": -187.30313909770413,
+    "model_rank": 22,
+    "override_tag": "PROCESS_INTACT",
+    "pl_rank": 32,
+    "proj_display": 13.121832789932744,
+    "proj_per": 13.121832789932744,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 691587,
+  "player_name": "Eury P\u00e9rez",
+  "reason_tag": "process_intact",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-27",
+  "verdict_top": "HOLD"
+}
