@@ -50,11 +50,19 @@ def _nm(s):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--date', default='2026-06-30')
+    # The triangulate results CSV carries whichever PL edition the nightly last
+    # consumed — once the nightly picks up the new List, its pl_rank IS new_pl and
+    # every move renders as 0. Point this at the PRIOR edition's json to get the
+    # real ▲▼ move. Default = old behaviour (old_pl from the results CSV).
+    ap.add_argument('--old-pl-json', default=None,
+                    help='prior-edition pl_*top100_<date>.json for the old_pl/move columns')
     a = ap.parse_args()
     d = a.date
     UNI = 'data/research/triangulate_universe'
     top = json.load(open(f'data/research/pl_cache/pl_top100_{d}.json', encoding='utf-8'))['ranks']
     NEWPL = {_nm(k): v for k, v in top.items()}
+    OLDPL = ({_nm(k): v for k, v in json.load(open(a.old_pl_json, encoding='utf-8'))['ranks'].items()}
+             if a.old_pl_json else None)
     sent = json.load(open(f'{UNI}/nick_sentiment_{d}.json', encoding='utf-8'))['sentiment']
     _res_cands = [Path(UNI) / f'results_{d}.csv', Path(UNI) / f'triangulate_nightly_{d}.csv']
     _res_path = next((p for p in _res_cands if p.exists()), _res_cands[-1])
@@ -112,7 +120,8 @@ def main():
             continue
         rr = R.get(k); pid = name2id.get(k); ac = actuals(pid) if pid else {}
         get = (lambda c: rr[c] if (rr is not None and pd.notna(rr.get(c))) else None) if rr is not None else (lambda c: None)
-        opl = get('pl_rank'); fl = []
+        opl = OLDPL.get(k) if OLDPL is not None else get('pl_rank')
+        fl = []
         for cc in ('velo_severity', 'decline_tier'):
             v = get(cc)
             if v is not None and str(v) not in ('STABLE', ''):
@@ -158,7 +167,13 @@ def main():
             'PL ▲▼ (old)': pl_cell(r),
             'Own': '⭐' if r['owner'] == 'MINE' else 'FA',
             'Pitcher': r['player'],
-            'rp3·verdict·xFP': ('—' if pd.isna(r['rp3']) else
+            # 'baseline' not 'xFP' (2026-07-28): the third value is the
+            # prior-anchored TALENT read, not a second in-season projection.
+            # rp3 is the headline; a wide gap is the two answering different
+            # questions, not a disagreement to arbitrate. ("talent prior" was
+            # rejected — `lib/talent_prior.py` owns that name for the LOW-CONF
+            # Marcel fallback.) Column KEY in the CSV stays `xfp`.
+            'rp3·verdict·baseline': ('—' if pd.isna(r['rp3']) else
                                 f"#{int(r['rp3'])} {r['verdict'] if (isinstance(r['verdict'], str)) else '—'} {g(r['xfp'], 1)}"),
             'L1/L3/L5/L8/Sea': '/'.join(g(r[c], 1) for c in ('L1', 'L3', 'L5', 'L8', 'season')),
             'boom%/bust%(net)': bb,
