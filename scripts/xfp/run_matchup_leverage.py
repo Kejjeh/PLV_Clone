@@ -5,7 +5,7 @@ P(my_total > opp_total). When TRAILING, variance is an ASSET (prefer boom/bust);
 when LEADING, variance is a LIABILITY (prefer floor); when CLOSE, E[FP] is ~right.
 Nothing else in the repo reasons this way.
 
-RULE 13 (decision layer only): this NEVER touches rh3/rp3/rprs2/Blended xFP.
+RULE 13 (decision layer only): this NEVER touches rh3/rp3/rprs2/baseline xFP.
 It converts existing projections + empirical game-log distributions into
 P(win) and Delta-P(win) for the decisions Josh can actually make this period.
 

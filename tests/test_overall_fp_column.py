@@ -5,7 +5,7 @@ that don't match forward FP value (hitter .55/.35/.10 forward r=.477 < the
 raw-FP carry .510; SP MOVEMENT 3x overweighted; RP CONTROL/BATTED_BALL dead).
 OVERALL_FP is the refit-weights composite added as a PARALLEL column at the
 dashboard payload layer — the shipped OVERALL is untouched because
-arche_overall_prior feeds Blended xFP (changing it needs /validate-feature).
+arche_overall_prior feeds baseline xFP (changing it needs /validate-feature).
 
 Weights (research 2026-07-04, rating_reimagine memo):
   hitter: .58 CONTACT + .17 POWER + .17 SB + .08 DISCIPLINE   (fwd .515 vs .477)

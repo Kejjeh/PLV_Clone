@@ -1,6 +1,6 @@
 ---
 name: boom-bust-history
-description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 2*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥17 / bust <5; hitter — boom ≥5 / bust <0; RP — boom ≥6 / bust <0; recalibrated 2026-06-28 to empirical ~p78/p22 quantiles — SP boom lowered 20→17 so a top-quartile 17.7 start counts; hitter was 10/2 = a useless 3%/57%; see boom_bust_cutoff_recalibration_2026-06-28.md) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, Blended xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (Blended xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
+description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 2*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥17 / bust <5; hitter — boom ≥5 / bust <0; RP — boom ≥6 / bust <0; recalibrated 2026-06-28 to empirical ~p78/p22 quantiles — SP boom lowered 20→17 so a top-quartile 17.7 start counts; hitter was 10/2 = a useless 3%/57%; see boom_bust_cutoff_recalibration_2026-06-28.md) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, baseline xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (baseline xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
 ---
 
 # boom-bust-history
@@ -33,7 +33,7 @@ This is the diagnostic companion to the roster-wide actuals view: the table
 shows *how variable* a player has been; `--explain` shows *why the model's
 boom tag is what it is* for one player.
 
-The skill exists because the model layers (Blended xFP, rp3, rh3,
+The skill exists because the model layers (baseline xFP, rp3, rh3,
 archetype) anchor on career-long signal. Recent actuals can diverge
 sharply — Bradish's blend says 5.98 (streamer tier) but his actual L5
 is 17.88 FP/start with 37% boom rate. Without the actuals, the user
@@ -65,7 +65,7 @@ For each player in scope:
 | **Min / Max** | Single-game extremes within the window |
 | **Boom%** | % of games meeting position-specific boom threshold |
 | **Bust%** | % of games meeting position-specific bust threshold |
-| **Model cross-ref** | Blended xFP per_pa/per_start + confidence_tier — shows where actuals disagree with model |
+| **Model cross-ref** | baseline xFP per_pa/per_start + confidence_tier — shows where actuals disagree with model |
 | **Status note** | Optional flag: HOT STREAK / CAP FODDER / DECLINING / RAMP / VOLATILE |
 
 ## Position-aware thresholds (the calibration that makes this skill work)
@@ -105,9 +105,9 @@ user needs custom thresholds for a specific decision, surface that as
 a one-time "you can compute X% above N from the detail table" rather
 than re-running with new cutoffs.
 
-## Bayesian shrinkage to prior year (when Blended xFP unavailable)
+## Bayesian shrinkage to prior year (when baseline xFP unavailable)
 
-When projecting forward FP for a player whose Blended xFP is missing
+When projecting forward FP for a player whose baseline xFP is missing
 (MED conf / no_blend / rookie thin sample), this skill applies Bayesian
 shrinkage to combine L21 actuals with prior-year baseline:
 
@@ -133,9 +133,9 @@ whenever both prior seasons exist for the player.
 **Season progress doesn't matter.** Early/mid/late as_of dates show
 <0.01 MAE difference — no time-of-season adjustment needed.
 
-### When to prefer Blended xFP over manual shrinkage
+### When to prefer baseline xFP over manual shrinkage
 
-If a player has a HIGH-confidence Blended xFP row in
+If a player has a HIGH-confidence baseline xFP row in
 `live_blend_xfp_latest.csv`, **prefer the blend over manual shrinkage**.
 The Phase 3 blend weights are learned from a multi-feature holdout
 backtest and incorporate prior + slope_3yr + archetype + recent rh3 + PL
@@ -147,7 +147,7 @@ rookies, cross-validation when blend looks wrong, IL stashes using
 prior-year data.
 
 Canonical failure (2026-06-06): I applied k=80 to Willy Adames and got
-15.4 FP/wk. His Blended xFP HIGH said 10.27. The blend was right — it
+15.4 FP/wk. His baseline xFP HIGH said 10.27. The blend was right — it
 weighted his multi-year decline; my 2-feature shrinkage just used 2025
 baseline + 2026 L21, missing the 2024 trend. **Trust the blend when
 available.**
@@ -366,8 +366,8 @@ actuals diverge:
 
 | Bucket | Model col | File |
 |---|---|---|
-| SP | `xfp_rp3_per_start` + Blended xFP + confidence_tier | `xfp_rp3_projections.csv` + `live_blend_xfp_latest.csv` |
-| H | `xfp_rh3_per_game` + Blended xFP + confidence_tier | `xfp_rh3_projections.csv` + `live_blend_xfp_latest.csv` |
+| SP | `xfp_rp3_per_start` + baseline xFP + confidence_tier | `xfp_rp3_projections.csv` + `live_blend_xfp_latest.csv` |
+| H | `xfp_rh3_per_game` + baseline xFP + confidence_tier | `xfp_rh3_projections.csv` + `live_blend_xfp_latest.csv` |
 | RP | `xfp_ros` + leverage_tier | `xfp_rprs2_projections.csv` |
 
 Highlight rows where:
@@ -477,7 +477,7 @@ conflict-rule provenance:
 ```
 RECOMMENDATION: <action> <player>
    Confidence: HIGH | MEDIUM | LOW (per **empirically calibrated** 8-lens count — HIGH ≥5 of 8 NOT ≥6, per 2026-06-06 calibration `confidence_label_calibration_2026-06-06.md`. **Conflict Rule 4** REJECTED at HIGH_CONFIDENCE per `conflict_rule_lift_2026-06-06.md` — triple-signal drops downgrade to MODERATE with bounce-back caveat.)
-   Tier A (model): rh3=<v> | Blended xFP=<v>
+   Tier A (model): rh3=<v> | baseline xFP=<v>
    Tier B (process gate): xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
    Tier C (variance): boom-bust=<v> | boom_stack=<v>
    Tier D (context): archetype=<v> | PL=<v>
@@ -497,7 +497,7 @@ question.
 
 <!-- TIER_C_POSITIONING_BLOCK_START -->
 Boom-bust-history is a **Tier C (variance check)** lens. It does NOT
-override Tier A (primary model — rh3/rp3/rprs2 + Blended xFP) and it
+override Tier A (primary model — rh3/rp3/rprs2 + baseline xFP) and it
 does NOT override Tier B (process gate — xwOBA L21d, xwOBACON YoY,
 sustainability decomp, velo/SwStr/CSW for SPs, leverage_tier for RPs).
 
@@ -530,14 +530,14 @@ Group by position, sort by L5 avg descending within group.
 For SPs:
 
 ```
-| Rk | SP | Status | Yr | N | L8 avg | L5 avg | L3 avg | Trend | Std | Min | Max | Boom% | Bust% | Blended xFP | Note |
+| Rk | SP | Status | Yr | N | L8 avg | L5 avg | L3 avg | Trend | Std | Min | Max | Boom% | Bust% | baseline xFP | Note |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 ```
 
 For Hitters:
 
 ```
-| Rk | Hitter | Status | Yr | N | L21 avg | L7 avg | L3 avg | Trend | Std | Min | Max | Boom% | Bust% | Blended xFP | Note |
+| Rk | Hitter | Status | Yr | N | L21 avg | L7 avg | L3 avg | Trend | Std | Min | Max | Boom% | Bust% | baseline xFP | Note |
 ```
 
 For RPs:
@@ -615,7 +615,7 @@ is comparing across positions.
 
 ## Anti-patterns this skill exists to prevent
 
-- **Trusting model projections (Blended xFP, rp3) without checking
+- **Trusting model projections (baseline xFP, rp3) without checking
   recent actuals.** Bradish blend 5.98 vs actuals L5 17.88 = the
   model is 12 FP behind reality.
 - **Comparing players across different windows.** L8 SP vs L21 hitter

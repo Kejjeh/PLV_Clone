@@ -1072,7 +1072,7 @@ def annotate_context_lenses(records: list[dict], role: str, current_year: int) -
 
 # FP-faithful parallel composite (rating_reimagine study 2026-07-04). DISPLAY
 # LAYER ONLY — the shipped OVERALL is untouched because arche_overall_prior
-# feeds Blended xFP (changing its construction requires /validate-feature;
+# feeds baseline xFP (changing its construction requires /validate-feature;
 # queue items #1/#7). The weights + annotate logic now live in the ONE owner
 # module lib/rating_weights.py (item 3, 2026-07-04) so /triangulate,
 # /scouting-report and /fa-pickup-deep-dive share them instead of re-deriving.

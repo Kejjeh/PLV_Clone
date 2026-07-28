@@ -1,6 +1,6 @@
 ---
 name: sp-pl-board
-description: The master SP decision board for the BrownU roster + FA pool. One row per Pitcher-List-ranked starter that is MINE or FA, integrating our validated models (rp3 rank, triangulate verdict, blended xFP), recent-form actuals (L1/L3/L5/L8/season FP per start), the HR structural lens (HR/9 2026 vs career), the reliable-boomer lens (boom%/bust%/net), K%, velo/decline flags, AND the full Pitcher List stack — The List Top-100 rank + move, SP Streamer previews, SP Roundup recaps — distilled into Nick Pollack's chronological sentiment per pitcher. Use when the user asks to "build/restate the SP board", "integrate the PL list", "what does Nick say about my SPs + FA", "add the new PL Top 100", or wants a one-look board to pick a streamer / SP add / drop.
+description: The master SP decision board for the BrownU roster + FA pool. One row per Pitcher-List-ranked starter that is MINE or FA, integrating our validated models (rp3 rank, triangulate verdict, baseline xFP), recent-form actuals (L1/L3/L5/L8/season FP per start), the HR structural lens (HR/9 2026 vs career), the reliable-boomer lens (boom%/bust%/net), K%, velo/decline flags, AND the full Pitcher List stack — The List Top-100 rank + move, SP Streamer previews, SP Roundup recaps — distilled into Nick Pollack's chronological sentiment per pitcher. Use when the user asks to "build/restate the SP board", "integrate the PL list", "what does Nick say about my SPs + FA", "add the new PL Top 100", or wants a one-look board to pick a streamer / SP add / drop.
 maturity: models-actuals-hr-pl-sentiment
 ---
 
@@ -33,7 +33,7 @@ ours" → "real MLB data, our calc, verified == ESPN."
 
 ## Columns (the full set — never drop one when restating)
 `new_pl` · `old_pl` · `move` (▲ rose / ▼ fell) · `owner` (MINE⭐/FA) · `player` ·
-`rp3` (validated rank — HEADLINE) · `verdict` (triangulate) · `xfp` (blended) ·
+`rp3` (validated rank — HEADLINE) · `verdict` (triangulate) · `xfp` (**baseline xFP**) ·
 `L1 L3 L5 L8 season` (FP/start actuals) · `boom_pct boom%≥17` · `bust_pct bust%<5` ·
 `net_boom` · `hr9_2026` · `hr9_career` · `k_pct` · `flags` (velo SEVERE/LOW-VELO,
 DECLINE-RISK, RISING) · `nick_sentiment`.
@@ -113,6 +113,16 @@ rostered by opponents. The engine does this from the JSON; verify the count look
    match; never last-name `contains` (Will vs Austin Warren).
 6. **Verdict stability** (gotcha #12): keep the headline stable across turns; a verdict changes
    only on new data or a corrected error — say WHY.
+7. **The third value is a BASELINE, not a second projection** (relabelled 2026-07-28).
+   Every input to `blended_xfp` is a `*_prior` — prior-year rate, archetype, trajectory, age —
+   so it answers *"what is this player's established talent level"*, while rp3 answers *"what is
+   he producing this season"*. Mid-season those legitimately diverge (corr 0.43 H / 0.59 SP; rp3
+   is also deliberately shrunk while the prior carries unshrunk historical spread). **A wide gap
+   is the two answering different questions, NOT a disagreement to arbitrate** — read it as
+   "veteran in a down year" (prior ≫ rp3) or "breakout beyond his prior" (rp3 ≫ prior) and route
+   to `/conviction-scan`. rp3 stays the headline (Rule 13). Only a gap past **2.0x** means
+   something is broken; the engine already caps `blend_confidence` at `low` there. Column KEY in
+   the CSV is still `xfp` (schema-pinned) — only the display label changed.
 
 ## Output
 Present the board sorted by new PL (⭐ = mine), then a short **decision synthesis**: the
@@ -130,7 +140,7 @@ Show **every PL-ranked MINE/FA pitcher (all rows — never a "decision-relevant 
 | `PL ▲▼ (old)` | new_pl + move (▲ rose / ▼ fell) + old_pl, e.g. `33 ▼4 (29)` / `27 new` |
 | `Own` | ⭐ MINE / FA |
 | `Pitcher` | player |
-| `rp3·verdict·xFP` | model rank + triangulate verdict + blended xFP, e.g. `#23 BUY 9.5` |
+| `rp3·verdict·baseline` | model rank + triangulate verdict + **baseline xFP** (the `blended_xfp` value), e.g. `#23 BUY 9.5`. Relabelled 2026-07-28 — see gotcha 7. |
 | `L1/L3/L5/L8/Sea` | the five FP-per-start windows, e.g. `11.9/11.4/11.9/6.5/12.6` |
 | `boom/bust(net)` | boom% / bust% (net), e.g. `41/18 (+23)` |
 | `HR 26/car` | hr9_2026 / hr9_career, e.g. `1.92/1.81` |

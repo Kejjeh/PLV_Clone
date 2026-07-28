@@ -129,7 +129,7 @@ lens, and the mandatory Tier 3 xwOBA gate shipped on 2026-06-06.
    streamers, ownership tag (MINE / opp / FA), HIGH-K ARM, catcher framing,
    IL_RETURN. Surfaces both YOUR-staff weak links and FA SP upgrades.
 2. **Step 2 — `/hitter-slate-grid`** — full hitter FA picture. 14 layers:
-   Blended xFP + 95% CI, rh3, live_marginal + value_tier (same-position
+   Baseline xFP + 95% CI, rh3, live_marginal + value_tier (same-position
    pool delta), Triangulate verdict, Sustainability bucket (with BUY-LOW
    REJECTED caveat — display only), xwOBA L21d vs 2025 diagnostic,
    xwOBACON YoY trajectory, archetype master + T+1 + 5 comps, hitter
@@ -166,13 +166,13 @@ One row per candidate (roster member being considered for drop OR FA being
 considered for add):
 
 ```
-| Player | rh3 signal | Blended xFP | boom-bust | sustainability | xwOBA L21d | xwOBACON YoY | breakout | Triangulate | Final |
+| Player | rh3 signal | baseline xFP | boom-bust | sustainability | xwOBA L21d | xwOBACON YoY | breakout | Triangulate | Final |
 |--------|------------|-------------|-----------|----------------|------------|--------------|----------|-------------|-------|
 ```
 
 Cell values:
 - **rh3 signal** — rh3 rank tier (TOP25 / TOP50 / TOP100 / streamer / fodder)
-- **Blended xFP** — point estimate + 95% CI band from blend_score.py
+- **Baseline xFP** — point estimate + 95% CI band from blend_score.py
 - **boom-bust** — boom% / bust% from `/boom-bust-history` actuals window
 - **sustainability** — LEGIT / IMPROVING / STABLE / MIXED / NOISE / BAD_LUCK / REGRESS
 - **xwOBA L21d** — gap vs 2025 baseline (signed FP-equivalent)
@@ -200,7 +200,7 @@ be recommended for drop regardless of other lenses.
 The v2 final report has TWO joined tables, not the four legacy tables:
 
 1. **Unified roster + FA board** — one row per player (your roster + every
-   meaningful FA), all 8 v2 lenses as columns, sorted by Blended xFP
+   meaningful FA), all 8 v2 lenses as columns, sorted by baseline xFP
    within position group.
 2. **Top 5 swap recommendations** — ranked by `agreement_count × FP/wk delta`,
    each row showing drop target, add target, agreement count, FP/wk delta,
@@ -228,9 +228,9 @@ the rule below by name — do not freelance the synthesis.
   optionality.** YoY trajectory veto on a stale L21d slump. Canonical case:
   **Muncy** (L21d decline, xwOBACON RISING → hold, optionally market as sell-high).
 - **Rule 4 — Sustainability REGRESS + CAP_FODDER + replacement-level
-  Blended xFP → HIGH_CONFIDENCE DROP.** Three Tier A/B lenses agreeing on
+  Baseline xFP → HIGH_CONFIDENCE DROP.** Three Tier A/B lenses agreeing on
   decline + no FP floor = drop. Canonical case: **Valdez** (REGRESS +
-  0% boom 25% bust + Blended xFP at replacement level).
+  0% boom 25% bust + baseline xFP at replacement level).
 - **Rule 5 — Hot streak + discipline capped + xwOBACON RISING → NARROW
   BREAKOUT, expect revert.** Surface the hot streak but tag it as narrow;
   do not promote to HIGH_CONFIDENCE add. Canonical case: **Goodman**
@@ -298,7 +298,7 @@ Recommendations missing this block are invalid and must be regenerated.
 ```
 RECOMMENDATION: <action> <player>
    Confidence: HIGH | MEDIUM | LOW
-   Lens votes: rh3=<v> | Blended xFP=<v> | boom-bust=<v> | sustainability=<v> | xwOBA L21d=<v> | xwOBACON YoY=<v> | Triangulate=<v> | PL=<v>
+   Lens votes: rh3=<v> | baseline xFP=<v> | boom-bust=<v> | sustainability=<v> | xwOBA L21d=<v> | xwOBACON YoY=<v> | Triangulate=<v> | PL=<v>
    Agreement: N of 8
    Tier B veto: PASSED | DOWNGRADED (cite which Tier B lens triggered)
    Conflict rule applied: Rule #N (per reference_lens_merge_protocol.md) | none
@@ -325,7 +325,7 @@ prevents lens overload — a streamer pick doesn't need archetype T+2; a
 trade target doesn't need boom_stack.
 
 Example: For the **streamer pick** decision type, the registry says
-boom_stack tier + PL daily + L5 = primary. Skip Blended xFP (wrong horizon),
+boom_stack tier + PL daily + L5 = primary. Skip baseline xFP (wrong horizon),
 skip archetype (RoS lens). Audit time drops from ~60s to ~10s.
 
 The decision type is then echoed verbatim in the `Decision type:` line of

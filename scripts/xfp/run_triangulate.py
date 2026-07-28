@@ -67,7 +67,7 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
     except Exception:
         pass
 
-    # Blended xFP (Phase 3, additive — does NOT override verdict).
+    # Baseline xFP (Phase 3, additive — does NOT override verdict).
     try:
         from scripts.xfp.lib.blend_score import compute_blended_xfp
         blend = compute_blended_xfp(
@@ -125,13 +125,22 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 else:
                     # Fallback: rprs2 ROS unavailable.
                     lines.append(
-                        f"**Blended xFP (per-G only):** {blend['blended_xfp']:.2f} FP/G "
+                        f"**Baseline xFP (per-G only):** {blend['blended_xfp']:.2f} FP/G "
                         f"[95% CI {blend['ci_lower_95']:.2f}-{blend['ci_upper_95']:.2f}] "
                         f"← confidence: {ct} · *rprs2 ROS unavailable*\n"
                     )
             else:
                 lines.append(
-                    f"**Blended xFP:** {blend['blended_xfp']:.2f} {unit} "
+                    # Labelled "Baseline xFP", not "Blended xFP" (2026-07-28):
+                    # every input is a *_prior, so this answers "established
+                    # talent level", NOT "what is he doing this season" —
+                    # that's rh3/rp3's job. Mid-season the two legitimately
+                    # diverge (corr 0.43 H / 0.59 SP) and readers were taking
+                    # the gap for a rival projection. NB "talent prior" was
+                    # rejected as the label: `lib/talent_prior.py` already owns
+                    # that name for the LOW-CONF Marcel fallback. Underlying key
+                    # stays `blended_xfp` (schema-pinned).
+                    f"**Baseline xFP (blended):** {blend['blended_xfp']:.2f} {unit} "
                     f"(95% CI [{blend['ci_lower_95']:.2f}, {blend['ci_upper_95']:.2f}]) "
                     f"  ← confidence: {ct}\n"
                 )
@@ -360,7 +369,7 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
                 lines.append(
                     f"\n{icon} *RECFORM {rf_tag2} ({rfz2_s}){rf_ts_s}{rf_mfp_s}:* "
                     f"trailing-5-start fp_proxy z-score; correlated with "
-                    f"`fp_per_start_to` and absorbed by the blended xFP — "
+                    f"`fp_per_start_to` and absorbed by the baseline xFP — "
                     f"surfaced here as explanatory color, not as a verdict modifier."
                 )
 
@@ -1082,7 +1091,7 @@ def main():
             'confidence': confidence, 'n_aligned': n_aligned, 'n_avail': n_avail,
             'watch_list': watch_list, 'actuals': actuals,
         })
-        # Blended xFP for batch parity — the card leads with it; surface it (and an
+        # Baseline xFP for batch parity — the card leads with it; surface it (and an
         # explicit headline_source) in batch output so CSV/JSON consumers headline the
         # same Tier-A number the cards/slate-grids do (feedback #12). Display-only.
         try:

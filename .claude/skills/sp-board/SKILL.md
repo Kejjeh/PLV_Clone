@@ -1,6 +1,6 @@
 ---
 name: sp-board
-description: Unified SP decision board with `--scope {slate|roster}`. `--scope slate` = full-slate scan over a date window (every scheduled SP start, FA highlighted, joins all model + boom + PL-streamer layers, decision-deadline header) — the old /sp-slate-grid. `--scope roster` = one row per Pitcher-List-ranked starter that is MINE or FA, integrating rp3/triangulate/blended xFP + recent-form L1/L3/L5/L8/season + the HR/9 structural lens + boom%/bust%/net + K/st (K-FED/IP-FED) + velo/decline flags + the full Pitcher List stack distilled into Nick Pollack's chronological sentiment — the old /sp-pl-board. Use for "SP board", "which streamer/start today", "what does Nick say about my SPs+FA", "every SP start tomorrow", "restate the SP board", "integrate the PL list". Merges /sp-slate-grid + /sp-pl-board (item 15, 2026-07-04).
+description: Unified SP decision board with `--scope {slate|roster}`. `--scope slate` = full-slate scan over a date window (every scheduled SP start, FA highlighted, joins all model + boom + PL-streamer layers, decision-deadline header) — the old /sp-slate-grid. `--scope roster` = one row per Pitcher-List-ranked starter that is MINE or FA, integrating rp3/triangulate/baseline xFP + recent-form L1/L3/L5/L8/season + the HR/9 structural lens + boom%/bust%/net + K/st (K-FED/IP-FED) + velo/decline flags + the full Pitcher List stack distilled into Nick Pollack's chronological sentiment — the old /sp-pl-board. Use for "SP board", "which streamer/start today", "what does Nick say about my SPs+FA", "every SP start tomorrow", "restate the SP board", "integrate the PL list". Merges /sp-slate-grid + /sp-pl-board (item 15, 2026-07-04).
 maturity: unified-sp-board
 ---
 
@@ -27,7 +27,7 @@ whenever the user names a date window or asks about "every"/"all" starts.
 
 Run the full `/sp-slate-grid` protocol (that SKILL.md holds the complete recipe):
 probables from MLB Stats API over the date window (default today+tomorrow), join
-ALL model layers (Blended xFP + CI, rp3 + per_start band + opp_bat_index, live_marginal
+ALL model layers (baseline xFP + CI, rp3 + per_start band + opp_bat_index, live_marginal
 + value_tier, Triangulate verdict, Sustainability, SP archetype OVERALL/traj/T+1,
 shadow_scout for no-rp3 rookies, boom_stack 0-4 + boom%/bust%/E[FP] + secondary tags,
 process panel, PL Top 100, PL daily streamers with auto-fresh WebFetch), tag ownership
@@ -43,7 +43,9 @@ display-only (Rule 13).
 
 Run the `/sp-pl-board` engine — `python scripts/xfp/build_sp_pl_board.py --date <today>`.
 One row per PL-ranked starter that is MINE or FA, folding in: rp3 rank + triangulate
-verdict + blended xFP; recent-form L1/L3/L5/L8/season FP-per-start; the **HR/9 structural
+verdict + **baseline xFP** (`blended_xfp`; prior-anchored talent read, NOT a second in-season
+projection — a wide gap vs rp3 is the two answering different questions, see /sp-pl-board gotcha 7);
+recent-form L1/L3/L5/L8/season FP-per-start; the **HR/9 structural
 lens** (2026 vs career); the reliable-boomer lens (boom%/bust%/net); K% and **K/st (src)**
 = K-FED/IP-FED (item 4, `k_share=K/(K+3.3·IP)`); velo/decline flags; and the full Pitcher
 List stack distilled into **Nick Pollack's chronological sentiment** per pitcher. Emits

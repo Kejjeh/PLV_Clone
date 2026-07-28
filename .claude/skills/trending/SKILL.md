@@ -51,7 +51,7 @@ own data why this skill reads bat speed in a short window when nothing else can:
 
 ## Hard rules
 
-1. **Display/context ONLY.** Never use to move an rh3/rp3/Blended xFP projection
+1. **Display/context ONLY.** Never use to move an rh3/rp3/baseline xFP projection
    (Rule 13 — lenses are conviction/conflict surfacing, not additive point lift).
    Headline number stays the model's.
 2. **Necessary, not sufficient.** A bat-speed/velo rise flags the physical tool

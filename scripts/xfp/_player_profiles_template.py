@@ -696,7 +696,7 @@ HOME_TAB = """
       better than the shipped Overall (hitters .515 vs .477, SPs .577 vs .551).
       <b>FPwt·s</b> is the sub-rating-level variant (better still — SPs .590,
       hitters .548). <b>Display/context only (Rule 13)</b> — a diagnostic beside
-      Overall, never a projection; the headline stays rh3/rp3/rprs2 / Blended xFP.</p>
+      Overall, never a projection; the headline stays rh3/rp3/rprs2 / baseline xFP.</p>
       <p><b>Reliever role tags.</b> CLOSER / SETUP / HIGH-LEVERAGE / FIREMAN /
       MULTI-INNING-BULK describe how a reliever is <i>used</i> — derived from
       saves, holds, leverage and innings-per-appearance. They contextualize
@@ -3109,7 +3109,7 @@ const COL_TOOLTIPS = {
   fp_per_start: 'Fantasy points per start: (K+IP*3.3−H−2*ER−BB−HBP) / GS',
   t1_fp_projection: 'Next-year FP rate projection (T+1) from OLS on sub-domain ratings + age. Hitters: 12 sub-domains + age + mean_lineup_spot, R²=0.34 on n=1,150 pairs. SP: R²=0.41. RP: R²=0.36.',
   t2_fp_projection: 'Two-year-out FP rate projection (T+2). Hitters: R²=0.28 on n=531 pairs (age coefficient sharper than T+1). SP R²=0.39. RP R²=0.26. Directional for dynasty/keeper.',
-  OVERALL: 'Composite 20-80 rating: 0.55*CONTACT + 0.35*POWER + 0.10*DISCIPLINE (hitters) or empirical weights (pitchers). CAVEAT (2026-07-04 study): these weights describe SKILL, not fantasy value — the hitter version forward-predicts FP worse than last year FP alone. For FP-faithful weighting see FPwt. Feeds Blended xFP as a fitted prior — construction frozen pending /validate-feature.',
+  OVERALL: 'Composite 20-80 rating: 0.55*CONTACT + 0.35*POWER + 0.10*DISCIPLINE (hitters) or empirical weights (pitchers). CAVEAT (2026-07-04 study): these weights describe SKILL, not fantasy value — the hitter version forward-predicts FP worse than last year FP alone. For FP-faithful weighting see FPwt. Feeds baseline xFP as a fitted prior — construction frozen pending /validate-feature.',
   OVERALL_FP: 'FP-faithful parallel composite (display-only, rating_reimagine 2026-07-04). Hitters .58*CONTACT+.17*POWER+.17*SB+.08*DISC (fwd r .515 vs OVERALL .477). SP .76*STUFF+.14*MOVE+.10*CTRL (fwd .577 vs .551). RP role-first .55*z(SV)+.35*STUFF+.10*z(FP/g) — CONTROL/BATTED_BALL carry zero forward FP and holds are anti-signal. Rule 13: context lens, never a ranker; rp3/rh3/rprs2 stay the headline.',
   OVERALL_FP_SUB: 'EXPERIMENTAL sub-rating FPwt variant (item 7, display-only). Reweights the finer SUB-ratings instead of the pillars — SP is SWING_MISS-dominant (fwd r .590 vs FPwt-pillars .577); hitter uses RAW_POWER+K_AVOIDANCE leads (fwd .548 vs .515). A DIAGNOSTIC beside FPwt: when it disagrees with FPwt the sub-tools and the pillar rollup are telling different stories. Rule 13: context only, never a ranker. (No RP variant — RP FP is job-security-driven.)',
   CONTACT: 'Contact domain 20-80 rating — within-year z-score of (Z-contact + Chase-contact + K-avoid + Quality + Spray). Higher = better. THE load-bearing hitter pillar for FP (fwd r .47; carries ~58% of FP-faithful weight).',

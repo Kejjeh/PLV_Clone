@@ -18,7 +18,7 @@ of that win — and of variance itself — depends on the standings race:
 | Longshot | entry is the bottleneck | maximize everywhere |
 
 **Rule 13 statement:** this is a DECISION layer only. It never touches
-rh3/rp3/rprs2/Blended xFP, never re-ranks a projection, and its
+rh3/rp3/rprs2/baseline xFP, never re-ranks a projection, and its
 probabilities/sensitivities are strategy weights, not forecasts. The
 headline projection stays the model's.
 

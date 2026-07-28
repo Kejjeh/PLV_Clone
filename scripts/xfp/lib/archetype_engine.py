@@ -241,7 +241,7 @@ def compute_stickiness(qual, *, id_col: str, fp_col: str, ndigits: int,
     SP/RP 2dp), and whether an empty next-arch subset yields ``None`` (RP) vs
     ``NaN`` (H/SP) — all captured by the four parameters. Writes the
     ``*_archetype_stickiness.json`` tables (NOT the ratings master, so it does
-    not touch the frozen Blended-xFP prior). Equivalence pinned by
+    not touch the frozen baseline xFP prior). Equivalence pinned by
     tests/test_archetype_engine.py against reference copies of all three.
     """
     careers = qual.sort_values([id_col, 'year']).reset_index(drop=True)

@@ -88,7 +88,7 @@ python scripts/xfp/run_level_board.py --names "Luis Garcia Jr., Michael Busch"
 
 ## Hard rules
 
-1. **Display/context ONLY** — never moves rh3/Blended xFP (Rule 13). Headline stays the model.
+1. **Display/context ONLY** — never moves rh3/baseline xFP (Rule 13). Headline stays the model.
 2. **Rank by the RATE, never the total** — total FP rewards playing time (validated worst).
 3. **No recency weighting** — validated worse than the flat mean; recency is already in the level.
 4. **All joins by MLBAM** via `resolve_batter_id` + rh3 fallback — never name-only.

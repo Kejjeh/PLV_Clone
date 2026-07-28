@@ -1,13 +1,13 @@
 ---
 name: playoff-team-build
-description: Build the user's ideal playoff roster across all positions using blended xFP for ranking, sp-stash-finder for IL stashes, and opponent_profiler for race-timing. Chains roster-verify → playoff-xFP rank → stash-finder → action list. Use when the user asks "what's my ideal playoff team", "playoff roster plan", "playoff prep", or as a quarterly checkpoint before periods 18+. Built 2026-06-05 after we ran the workflow twice manually in one session.
+description: Build the user's ideal playoff roster across all positions using baseline xFP for ranking, sp-stash-finder for IL stashes, and opponent_profiler for race-timing. Chains roster-verify → playoff-xFP rank → stash-finder → action list. Use when the user asks "what's my ideal playoff team", "playoff roster plan", "playoff prep", or as a quarterly checkpoint before periods 18+. Built 2026-06-05 after we ran the workflow twice manually in one session.
 ---
 
 # playoff-team-build
 
 You are designing the user's optimal roster for playoffs (BrownU weeks 21-23,
 ~mid-Aug through early Sept) by combining all the validated production layers:
-roster verification + blended xFP + sp-stash-finder + opponent profiles.
+roster verification + baseline xFP + sp-stash-finder + opponent profiles.
 
 ## Why this skill exists
 
@@ -26,7 +26,7 @@ player's current `lineup_slot`, `injured` flag, eligible positions.
 
 ### Step 2 — Compute playoff xFP for every roster slot
 
-For each player on the roster, pull their **blended xFP** from
+For each player on the roster, pull their **baseline xFP** from
 `scripts/xfp/lib/blend_score.py` (it already incorporates rh3/rp3/rprs2 +
 archetype + PL + slope_3yr + HIGH-K + shadow features).
 
@@ -134,14 +134,14 @@ acting BEFORE their peak day, NOT on it.
 
 - DON'T propose a stash claim without checking the IL slot cascade
 - DON'T forget `/roster-verify` first — labeling current roster wrong wastes the analysis
-- DON'T use raw rp3/rh3 per_start — use blended xFP (incorporates archetype + PL + new features per Phase 3 backtest validation)
+- DON'T use raw rp3/rh3 per_start — use baseline xFP (incorporates archetype + PL + new features per Phase 3 backtest validation)
 - DON'T ignore the timing-of-claim guidance from opponent_profiler — for IL stashes specifically, claim BEFORE PL Monday refresh
 - DON'T overcount your hitters — confirm the lineup slot count (13 active hitters in BrownU per the league rules memory)
 
 ## Related
 
 - `/sp-stash-finder` — IL stash discovery layer
-- `/triangulate` — per-player blended_xfp lens (3-source verdict + blended xFP)
+- `/triangulate` — per-player blended_xfp lens (3-source verdict + baseline xFP)
 - `/blend-score` (if exists) — direct blended_xfp wrapper
 - `/opp-watch` — predicted opponent moves
 - `/roster-verify` — mandatory first step

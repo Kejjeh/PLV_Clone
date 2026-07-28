@@ -50,10 +50,10 @@ drop-target comparison):
 |---|---|---|---|
 | **MLB API lineup** | Confirmed / projected starter, batting order spot, vs LHP/RHP | `https://statsapi.mlb.com/api/v1/schedule?date=DATE&hydrate=lineups,team` | net |
 | **Ownership** | MINE / `<opp team name>` / FA | `league.teams` roster walk + KNOWN_COLLISIONS guard | API |
-| **Blended xFP (H)** | Production headline FP/PA + bootstrap CI + confidence_tier | `data/outputs/live_blend_xfp_latest.csv` filter `player_type='H'`, keyed on `mlbam_id` | file |
+| **Baseline xFP (H)** | Production headline FP/PA + bootstrap CI + confidence_tier | `data/outputs/live_blend_xfp_latest.csv` filter `player_type='H'`, keyed on `mlbam_id` | file |
 | **rh3** | Rank, per_pa, per_game, expected_total_fp_remaining, replacement_delta, signal, slump_pct_rank | `data/outputs/xfp_rh3_projections.csv` keyed on `batter` (MLBAM) | file |
 | **live_marginal + value_tier (H)** | Phase 2.5 same-position FA-pool-relative delta (C/1B/2B/3B/SS/OF/DH bucket). Tier cuts H-bucket-scaled: ±100/±40 (vs SP's ±40/±15). Tiers: OWN_THE_ROLE / COMFORTABLE_HOLD / REPLACEABLE / DOWNGRADE / ACTIVE_LOSS | `scripts/xfp/lib/blend_score.py::_compute_live_marginal_h` (Phase 2.5). Snapshot: `data/research/fa_snapshots/fa_pool_H_latest.parquet` | compute |
-| **Triangulate verdict (H)** | Synthesized BUY/HOLD/CAUTION/FADE/MIXED + reason_tag + confidence (4-lens vote: PL150 + rh3 + archetype + traj/T+1) | `scripts/xfp/lib/triangulate_core.py::triangulate_player(name)` auto-detects bucket='H'. **Compute only for shortlisted top-15 FAs** by Blended xFP | compute |
+| **Triangulate verdict (H)** | Synthesized BUY/HOLD/CAUTION/FADE/MIXED + reason_tag + confidence (4-lens vote: PL150 + rh3 + archetype + traj/T+1) | `scripts/xfp/lib/triangulate_core.py::triangulate_player(name)` auto-detects bucket='H'. **Compute only for shortlisted top-15 FAs** by baseline xFP | compute |
 | **Sustainability bucket (H)** | LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS confidence layer on rh3 + BUY-LOW/SELL-HIGH divergence flag (>0.4 FP/g gap). **CRITICAL CAVEAT**: hitter BUY-LOW REJECTED in PR 8 backtest (commit 705defc, pooled mean residual −0.069 FP/PA, 95% CI [−0.114, −0.023] fully below zero, both 2024 and 2025 negative). Display the divergence flag for diagnosis only, do NOT treat as actionable signal | `scripts/xfp/hitter_sustainability.py::classify(rows)` | compute |
 | **xwOBA L21d vs 2025 diagnostic** | Single most useful luck-vs-skill diagnostic per memory `reference_xwoba_l21d_vs_2025_diagnostic.md`. Gap of ±0.020 = skill holding; gap of < −0.060 = real decline; intermediate = mixed | Compute directly from `data/research/xfp_cache/statcast_2025.parquet` and `statcast_2026.parquet` over a [as_of−21d, as_of] window for L21d | compute |
 | **xwOBACON YoY trajectory** | RISING / STABLE / DECLINING across 2022→2026. Distinguishes "valid prior-trough recovery template" (xwOBACON stable across years) from "structural decline where recovery ceiling is lower" (declining each year) | Aggregate per-year xwOBACON from `statcast_{yr}.parquet` for years in {2022, 2023, 2024, 2025, 2026}; compute the per-year delta and label | compute |
@@ -68,7 +68,7 @@ drop-target comparison):
 
 **Performance budget:** ~9 file joins (cheap, <2s for ~500 FAs). On-demand
 compute layers (Triangulate / Sustainability / xwOBA-L21d / xwOBACON-YoY)
-only for **top-15 FAs by Blended xFP**. Total runtime ~30-90s depending
+only for **top-15 FAs by baseline xFP**. Total runtime ~30-90s depending
 on Statcast parquet size.
 
 ---
@@ -125,7 +125,7 @@ rh3_lookup = rh3.set_index('batter')[[
     'arche_overall_prior','slope_3yr_prior','traj_career_low_prior',
 ]].to_dict('index')
 
-# Layer 2: Blended xFP (H rows only)
+# Layer 2: baseline xFP (H rows only)
 blend = pd.read_csv('data/outputs/live_blend_xfp_latest.csv')
 blend = blend[blend['player_type']=='H']
 blend_lookup = blend.set_index('mlbam_id')[[
@@ -158,7 +158,7 @@ with open('data/research/pl_cache/pl_hitters_top150.json') as f:
     pl_top = json.load(f).get('ranks', {})
 
 # Layer 7: Conviction context column (item 1) — model-vs-process divergence.
-# Display-only (Rule 13): never moves rh3 / Blended xFP / the ranking.
+# Display-only (Rule 13): never moves rh3 / baseline xFP / the ranking.
 #   Conv: PROCESS>MODEL (CONTACT pct > model pct) / MODEL>PROCESS / blank.
 # CAVEAT — the hitter buy-low flavor (PROCESS>MODEL) was REJECTED as an
 # additive signal (-0.069 FP/PA, 705defc); show it for CONTEXT/conflict only,
@@ -170,7 +170,7 @@ def conv_col(mlbam):
     return _conv.get(int(mlbam)) if mlbam else None   # CONTEXT ONLY for hitters
 ```
 
-## Step 4 — Compute on-demand layers for top-15 FAs by Blended xFP
+## Step 4 — Compute on-demand layers for top-15 FAs by baseline xFP
 
 ```python
 from scripts.xfp.lib.blend_score import _compute_live_marginal_h
@@ -277,13 +277,13 @@ than blank, so the user knows the player MIGHT not start.
 
 Group by position bucket (C / 1B / 2B / 3B / SS / OF / DH-UTIL) so the
 user can scan for the position they want to fill. Within each group,
-sort by Blended xFP descending.
+sort by baseline xFP descending.
 
 Primary grid columns (cheap layers, every row):
 
 `Pos | Player | Team | Own | xFP [CI] | conf | rh3 # | per_pa / per_game | Arche (C/P/D/SB) | OVERALL | ProcZ | level_pct | BoomStk | Boom%/Bust% | E[FP] | L5 | Boom% | Bust% | PL | Lineup`
 
-FA shortlist deep-dive table (top 15 FAs by Blended xFP):
+FA shortlist deep-dive table (top 15 FAs by baseline xFP):
 
 `Player | Verdict (conf) | Reason | live_marginal | value_tier | Sust bucket | xwOBA L21d-vs-2025 | xwOBACON YoY traj`
 
@@ -301,7 +301,7 @@ Canonical groups, in `GROUP_ORDER`: **C · 1B/3B · 2B/SS · OF · UTIL · DH** 
 CLOSER · SETUP groups are the SP/RP boards). DH is a DISTINCT bucket (UTIL = flex
 membership; DH = no-fielding fallback). This matches the house style in
 `/triangulate` "Canonical roster + FA report format" — render groups in
-`order_groups(...)` order, FAs sorted by Blended xFP within each.
+`order_groups(...)` order, FAs sorted by baseline xFP within each.
 
 ---
 
@@ -321,7 +321,7 @@ a free-text verdict is not allowed. Use this template verbatim:
 RECOMMENDATION: <action> <player>
    Confidence: HIGH | MEDIUM | LOW (per **empirically calibrated** 8-lens count from reference_lens_merge_protocol.md — HIGH ≥5 of 8 NOT ≥6, per 2026-06-06 calibration. **Conflict Rule 4** REJECTED at HIGH_CONFIDENCE per `conflict_rule_lift_2026-06-06.md` — downgrade triple-signal drops to MODERATE with bounce-back caveat.)
    Lens votes:
-     Tier A: rh3=<v> | Blended xFP=<v> [conf] | rp3/rprs2 if SP=<v>
+     Tier A: rh3=<v> | baseline xFP=<v> [conf] | rp3/rprs2 if SP=<v>
      Tier B: xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
      Tier C: boom-bust L5/L21=<v> | boom_stack=<v>
      Tier D: archetype=<v> | PL Top 100/150=<v>
@@ -356,7 +356,7 @@ NOT override Tier B — the merge protocol treats Tier B as the
 sustainability gate.
 
 **Canonical case (Hitter)**: Muncy L21d gap **−0.123** (REAL_DECLINE)
-would normally trigger DROP from Tier A (Blended xFP below replacement)
+would normally trigger DROP from Tier A (baseline xFP below replacement)
 + Tier C (boom_stack 0/4, boom-bust L21 bust% spike). However, the
 xwOBACON YoY trajectory is **RISING** with a career-high **0.483** —
 that single Tier B lens partially saves the verdict. Apply
@@ -379,7 +379,7 @@ empirical citations exist they're listed; where they don't, `[qual]`.
 
 ### Tier 1 — Headline projection (~50% weight)
 
-1. **Blended xFP for hitters (H bucket)** — Production headline number.
+1. **Baseline xFP for hitters (H bucket)** — Production headline number.
    Phase 1 RP-card analog for hitters; per_pa + bootstrap CI +
    confidence_tier. Same caveat as SP version: refit cadence quarterly,
    5 NaN-fallback cases (pl_unavailable, slope_3yr_missing,
@@ -390,14 +390,14 @@ empirical citations exist they're listed; where they don't, `[qual]`.
 2. **rh3 per_pa / per_game** — Validated single-model RoS projection.
    Hetero σ rescaled in `xfp_rh3_per_pa`. `expected_total_fp_remaining`
    is the season-long total accounting for `expected_pa_remaining`. IS a
-   component of Blended xFP — use rh3 standalone only when blend is null.
+   component of baseline xFP — use rh3 standalone only when blend is null.
 
 ### Tier 2 — FA-pickup decision modifiers (~20%)
 
 3. **live_marginal + value_tier (H)** — Phase 2.5 same-position FA-pool
    delta with bucket-scaled tier cuts (H: ±100/±40 vs SP's ±40/±15).
    Compares your target vs the best FA at the SAME position bucket
-   (C/1B/2B/3B/SS/OF/DH). Built on Blended xFP so it inherits headline
+   (C/1B/2B/3B/SS/OF/DH). Built on baseline xFP so it inherits headline
    accuracy. **The cleanest "is this FA better than my current player
    at this position" answer.**
 
@@ -451,7 +451,7 @@ empirical citations exist they're listed; where they don't, `[qual]`.
      Decision 12 (the `_assert_no_buylow` regression guard enforces this)
    **What you DO use the bucket for**: diagnosis ("why is this player's
    per_pa moving"). What you DO NOT use it for: as additive lift over
-   Blended xFP. When the sustainability bucket says BUY-LOW, the
+   Baseline xFP. When the sustainability bucket says BUY-LOW, the
    correct response is **skepticism** — the rh3 ranker is probably
    correctly de-rating these candidates and BUY-LOW is the trap.
 
@@ -524,7 +524,7 @@ empirical citations exist they're listed; where they don't, `[qual]`.
 
 ### Synthesis rules
 
-- When **Tier 1 and Tier 2 disagree** → trust Blended xFP unless boom
+- When **Tier 1 and Tier 2 disagree** → trust baseline xFP unless boom
   layer shows a SHARP boom%/bust% sign-flip; then weight boom_stack.
 - **xwOBA L21d vs 2025 gap is the gate** for any drop/add — surface it
   always before naming a swap; never ship without this check.
@@ -540,7 +540,7 @@ empirical citations exist they're listed; where they don't, `[qual]`.
 - **Tier 6 (PL) is the 4th-lens agreement check** — PL alone never
   drives an add.
 - **Model vs actuals divergence**: When boom-bust L5 differs from
-  Blended xFP × games/wk equivalent by more than ~5 FP/wk, surface the
+  Baseline xFP × games/wk equivalent by more than ~5 FP/wk, surface the
   divergence explicitly. Canonical case: Bradish blend 5.98 (model
   says streamer-tier) vs L5 17.88 + 37% boom = actuals say BUY. The
   divergence is the signal.
@@ -550,7 +550,7 @@ empirical citations exist they're listed; where they don't, `[qual]`.
 ## Drop-target rule (mirrors `/sp-slate-grid` v3)
 
 **When recommending an FA pickup that requires a drop**, you MUST first
-rank the user's full hitter roster by Blended xFP before naming a
+rank the user's full hitter roster by baseline xFP before naming a
 drop target. The 2026-06-06 Messick failure on the SP side applies
 verbatim here.
 
@@ -570,7 +570,7 @@ my_hitters = roster[roster['position'].isin(['C','1B','2B','3B','SS','OF','DH'])
 Synthesis output requirement:
 
 ```
-| What you give up (drop) | Blended xFP | What you gain (add) | Blended xFP |
+| What you give up (drop) | baseline xFP | What you gain (add) | baseline xFP |
 ```
 
 ---
@@ -600,7 +600,7 @@ Synthesis output requirement:
 - **Recommending against a "BUY-LOW" hitter purely because BUY-LOW was
   rejected.** The rejection is about ADDING based on BUY-LOW divergence
   alone; it doesn't mean BUY-LOW-flagged hitters are universally bad
-  picks. Use Blended xFP + boom_stack + xwOBA L21d + xwOBACON YoY in
+  picks. Use baseline xFP + boom_stack + xwOBA L21d + xwOBACON YoY in
   combination; the BUY-LOW flag is one negative-weighted input, not a
   veto.
 - **Ignoring lineup confirmation status.** A "starts every day" hitter
@@ -656,7 +656,7 @@ without rebuilding.
 ## Related
 
 - `/boom-bust-history` — **variance lens companion**. When the model
-  layer (rh3/Blended xFP) gives a verdict and you want to verify
+  layer (rh3/baseline xFP) gives a verdict and you want to verify
   whether recent actuals support or contradict it, invoke
   `/boom-bust-history --names "X,Y"` for the hard-actuals
   decomposition (L21 hitter games, boom% ≥5 FP, bust% <0 FP —
@@ -699,6 +699,6 @@ Quick CLI: `python scripts/xfp/run_trending.py --names "A, B"`.
   (toward band, NOT "up = good").
 - **Necessary-not-sufficient:** a 🔺/🔻 flags the physical TOOL moving; confirm with
   the contact/results column in the tag (tool-moved-but-not-yet-translating is common).
-- **Add a physical-trend column** (one tag per hitter) as an extra display layer — a tiebreaker for same-tier adds, NEVER a re-rank of Blended xFP.
+- **Add a physical-trend column** (one tag per hitter) as an extra display layer — a tiebreaker for same-tier adds, NEVER a re-rank of baseline xFP.
 
 Validation: `data/research/validation_runs/early_season_bat_speed_2026-06-16.md`.

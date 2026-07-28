@@ -18,7 +18,7 @@ game state:
 | LEADING | > 60% | a LIABILITY | floor: SAFE-tier sp_floor, low bust%, no speculative streams |
 
 **Rule 13 statement:** this is a DECISION layer only. It never touches
-rh3/rp3/rprs2/Blended xFP, never re-ranks a projection, and its
+rh3/rp3/rprs2/baseline xFP, never re-ranks a projection, and its
 Delta-P(win) numbers are decision weights, not forecasts. The headline
 projection stays the model's.
 

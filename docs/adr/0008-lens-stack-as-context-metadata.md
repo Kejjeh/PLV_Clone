@@ -28,7 +28,8 @@ downstream model later picks up, could silently regress the projection.
 
 1. **The lens stack is context metadata.** A lens may inform the *displayed verdict /
    conviction* and the dashboards, but it MUST NOT be a feature of any projection model
-   (rh3 / rp3 / rprs2 / blended xFP) and MUST NOT move the headline number.
+   (rh3 / rp3 / rprs2 / baseline xFP — the `blended_xfp` value, labelled "Blended xFP"
+   when this ADR was written; relabelled 2026-07-28) and MUST NOT move the headline number.
 
 2. **One authoritative declaration.** `scripts/xfp/lib/lens_registry.py` enumerates every
    lens family and the EXACT batch columns it emits (exact names, not prefixes — a prefix

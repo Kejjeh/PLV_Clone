@@ -1,6 +1,6 @@
 ---
 name: pregame-check
-description: Morning-of (before lineup lock) daily decision skill. For each of my SPs starting today, decides whether the start is CAP-WORTHY (counts toward the period SP-start cap — 10 standard week / 16 ASG block / 20 playoff 2-week) vs CAP-BENCH (keep on BE because better starts are coming) based on empirically validated rules. Empirical validation 2026-06-06 (n=13,716 starts 2023-25) showed the v1 "aggressive bench" rules were REJECTED — even flagged starts average 9-11 FP, well above replacement ~5 FP. **Skill v2 is conservative** — default to START every confirmed start UNLESS the period SP-start cap is at risk of overflow OR Blended xFP is at replacement-level AND matchup is brutal. Also pre-scans opponent's confirmed SPs and flags any of my hitters facing high-boom opp pitchers (boom_stack ≥3). Pulls live matchup state + current win prob delta. Use every game-day morning before ~12 PM ET. The missing daily layer between /sp-week-plan (weekly cap math) and /roster-deep-audit (seasonal). Triggers — "pregame check", "should I bench today", "any of my SPs in trouble today", "morning roster check", "pregame", "should I start X today", "what's my matchup look like today".
+description: Morning-of (before lineup lock) daily decision skill. For each of my SPs starting today, decides whether the start is CAP-WORTHY (counts toward the period SP-start cap — 10 standard week / 16 ASG block / 20 playoff 2-week) vs CAP-BENCH (keep on BE because better starts are coming) based on empirically validated rules. Empirical validation 2026-06-06 (n=13,716 starts 2023-25) showed the v1 "aggressive bench" rules were REJECTED — even flagged starts average 9-11 FP, well above replacement ~5 FP. **Skill v2 is conservative** — default to START every confirmed start UNLESS the period SP-start cap is at risk of overflow OR baseline xFP is at replacement-level AND matchup is brutal. Also pre-scans opponent's confirmed SPs and flags any of my hitters facing high-boom opp pitchers (boom_stack ≥3). Pulls live matchup state + current win prob delta. Use every game-day morning before ~12 PM ET. The missing daily layer between /sp-week-plan (weekly cap math) and /roster-deep-audit (seasonal). Triggers — "pregame check", "should I bench today", "any of my SPs in trouble today", "morning roster check", "pregame", "should I start X today", "what's my matchup look like today".
 ---
 
 # pregame-check
@@ -53,7 +53,7 @@ Three blocks per invocation:
 ### Block 1: My SP starts today
 For each confirmed SP start the user has today:
 - Confirmed probable + opp + first pitch ET
-- Blended xFP from `live_blend_xfp_latest.csv`
+- Baseline xFP from `live_blend_xfp_latest.csv`
 - Tier B status (from latest pitcher-sustainability or sp_master)
 - opp_bat_index_recent from `team_strength_*.csv`
 - boom_stack score from today's `sp_boom_stack_full_pool_*.json`
@@ -84,7 +84,7 @@ Only consider CAP-BENCH when:
    FP of all confirmed starts. In this case, bench the lowest-EV start
    to free cap for a higher-EV one later in the week.
 
-2. **Replacement-level AND brutal matchup**: Blended xFP ≤ 7.0
+2. **Replacement-level AND brutal matchup**: baseline xFP ≤ 7.0
    (genuinely replacement-level) AND opp_bat_index_recent ≥ 1.10
    (truly brutal, top-3 offense). Both conditions required.
    Even then, only bench if there's a known-better start coming THIS
@@ -188,7 +188,7 @@ projection or change verdict rules — it is context only.
 - Last start FP < 0 (💀 disaster): note the rough outing but don't auto-bench;
   check whether it was a genuine implosion (ER ≥ 5) or a short hook (IP < 3)
 - 2+ consecutive poor starts (FP < 5 each): worth noting trend, not a rule change
-- Recent actuals confirming the model (within ±5 FP of blended xFP): label "MODEL ALIGNED"
+- Recent actuals confirming the model (within ±5 FP of baseline xFP): label "MODEL ALIGNED"
 
 ## Step 2: Per-SP cap-worthy verdict
 
@@ -287,7 +287,7 @@ Win prob today: ~<WP>%
 
 ### My SP starts today
 1. <Pitcher> vs <opp> (<time> ET)
-   Blended xFP: <X> (<conf>)
+   Baseline xFP: <X> (<conf>)
    Recent actual: <MM-DD> <IP>IP <K>K → <FP> FP [⚡/💀/MODEL ALIGNED]
    (or last 2 if both within 7 days)
    Tier B: <status>

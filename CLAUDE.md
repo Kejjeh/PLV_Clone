@@ -413,7 +413,7 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     free R² boost. **xwOBA-L21d (hitters)** and **boom-bust + sustainability
     (SPs)** are NON-additive / mildly negative as point terms — use them for
     CONTEXT and as Tier-B gates, NEVER to move the projection. Headline number
-    stays rh3/rp3/rprs2 / Blended xFP. See `reference_lens_merge_protocol.md`.
+    stays rh3/rp3/rprs2 / baseline xFP. See `reference_lens_merge_protocol.md`.
 14. **Don't headline a Stuff+ "buy-low" for a veteran without the decline
     cross-check.** Stuff+ measures stuff LEVEL, not TRAJECTORY — a high-Stuff+ /
     lagging-results SP can be a real decline, not a buy. Before headlining BUY,

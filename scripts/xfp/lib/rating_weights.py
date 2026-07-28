@@ -7,8 +7,8 @@ computes the FP-faithful composite from ONE place instead of re-deriving the
 weights. Registry rule: every shared fact has one owner module.
 
 OVERALL_FP is a display/context construct (Rule 13): it NEVER moves the
-rh3/rp3/rprs2/Blended xFP headline. The shipped OVERALL (which feeds
-`arche_overall_prior` -> Blended xFP) is deliberately untouched — changing
+rh3/rp3/rprs2/baseline xFP headline. The shipped OVERALL (which feeds
+`arche_overall_prior` -> baseline xFP) is deliberately untouched — changing
 its construction requires /validate-feature.
 
 Weights cite the 2026-07-04 CV-by-year refit study (rating_reimagine memo):

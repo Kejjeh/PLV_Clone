@@ -10,7 +10,7 @@ bundle **playoff-war-room**):
 
 1. **roster-verify** — confirm live roster membership before anything else
 2. **playoff-team-build** — build the ideal playoff roster across all
-   positions using Blended xFP for ranking
+   positions using baseline xFP for ranking
 3. **sp-stash-finder** — IL'd FA SPs whose ESPN return date arrives before
    playoffs end, ranked by playoff xFP and IL-slot cost
 4. **sp-rehab-tracker** — rehab-timeline tracking for my IL'd + stash SPs
@@ -50,7 +50,7 @@ Verify live roster membership. See `/roster-verify`.
 
 ## Step 2 — playoff-team-build (condensed)
 
-Run `/playoff-team-build` over `roster` + `fa_all`, ranking by Blended xFP.
+Run `/playoff-team-build` over `roster` + `fa_all`, ranking by baseline xFP.
 Surface the **ROLE+AGE (annual-value z)** keeper lens per hitter (item 2 —
 ANNUAL horizon only, Rule 13 context; do NOT let it move a weekly rank).
 
@@ -82,7 +82,7 @@ for _, r in il_sps.sort_values('days_until_return').iterrows():
 ```markdown
 # Playoff War Room — <date>
 
-## Ideal playoff roster (by Blended xFP)
+## Ideal playoff roster (by baseline xFP)
 <position-grouped table; ROLE+AGE annual-value z on hitters (context)>
 
 ## IL stashes returning before playoffs end

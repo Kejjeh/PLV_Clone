@@ -39,7 +39,7 @@ final call through `/triangulate` / `/fa-pickup-deep-dive`.
 1. **Display/decision layer ONLY (Rule 13).** The volume model is already
    consumed by xfp_board and the snapshot logger for RoS TOTALS
    (rate × volume, validated 2026-07-09); this skill just SURFACES the movers.
-   Never use the gap to move an rh3/rp3/Blended-xFP number.
+   Never use the gap to move an rh3/rp3/baseline xFP number.
 2. **Ownership is LIVE.** Every run walks `all_teams()` fresh and derives
    MY team name from a live `my_roster()` id-overlap — never session memory
    (`/roster-verify` rule). Anything on no roster = FA (all-8-rosters check,

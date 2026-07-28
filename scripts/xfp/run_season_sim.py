@@ -6,7 +6,7 @@ aggressive should I be for the REST of the season". The marginal value of a
 weekly win is NOT constant — it depends on the standings race, and the value
 of VARIANCE in Josh's weekly distribution flips sign with his seeding safety.
 
-RULE 13 (decision layer only): never touches rh3/rp3/rprs2/Blended xFP.
+RULE 13 (decision layer only): never touches rh3/rp3/rprs2/baseline xFP.
 It converts existing rate x volume projections + empirical weekly actuals
 into P(playoffs) / seed distribution / P(title) and championship-equity
 sensitivities for strategy calls (FAAB pacing, stream aggressiveness,

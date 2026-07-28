@@ -1219,7 +1219,7 @@ def triangulate_player(name: str, bucket: str | None = None,
     verdict, rationale = synthesize(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche)
     verdict, rationale, override_tag = apply_overrides(verdict, rationale, player, arche, model)
 
-    # Phase 3 blended xFP (additive — does NOT alter verdict synthesis).
+    # Phase 3 baseline xFP (additive — does NOT alter verdict synthesis).
     try:
         blend = compute_blended_xfp(
             player_name=player['display_name'],

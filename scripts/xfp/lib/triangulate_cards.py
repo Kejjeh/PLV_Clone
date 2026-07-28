@@ -145,7 +145,7 @@ def build_card_data(result: dict) -> dict:
             'il_return': bool(model.get('is_first_back_long_il')),
             'process_verdict': model.get('process_verdict'),
         },
-        # --- blended xFP + value tier + role (RP) ---
+        # --- Baseline xFP + value tier + role (RP) ---
         'blend': {
             'xfp': result.get('blended_xfp'),
             'ci': result.get('blended_ci'),
@@ -326,12 +326,14 @@ def _blend_panel(c):
     if bl['xfp'] is None and bl['value_tier'] is None and bl['role'] is None:
         return ''
     ci = bl['ci']
-    inner = (f'<div class="big">{_fmt(bl["xfp"],2)}<span class="u">blended</span></div>'
+    inner = (f'<div class="big">{_fmt(bl["xfp"],2)}<span class="u">baseline xFP</span></div>'
              + (_kv('95% CI', f'{_fmt(ci[0],1)} – {_fmt(ci[1],1)}') if ci else '')
              + (_kv('value tier', h(str(bl['value_tier'])), _word_cls(bl['value_tier'])) if bl['value_tier'] else '')
              + (_kv('Δ vs replacement', _fmt(bl['rep_delta'], 1), 'pos' if (bl['rep_delta'] or 0) > 0 else 'neg') if bl['rep_delta'] is not None else '')
              + (_kv('role', h(str(bl['role'] or bl['role_char'] or '—'))) if (bl['role'] or bl['role_char']) else ''))
-    return _panel('Blended xFP & Value', inner)
+    # "Baseline xFP", not "Blended xFP" (2026-07-28) — see run_triangulate.py.
+    # Prior-anchored talent read; rh3/rp3 own the in-season number.
+    return _panel('Baseline xFP & Value', inner, tag='prior-anchored')
 
 
 def _process_panel(c):

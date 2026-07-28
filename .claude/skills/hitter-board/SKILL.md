@@ -27,7 +27,7 @@ named.
 ## Mode summaries
 
 - **`slate`** — every above-threshold FA hitter (plus your roster for the
-  drop-target comparison) with Blended xFP + CI, rh3, live_marginal/value_tier,
+  drop-target comparison) with baseline xFP + CI, rh3, live_marginal/value_tier,
   Triangulate, Sustainability bucket (BUY-LOW REJECTED caveat, 705defc),
   xwOBA L21d vs 2025, xwOBACON YoY, archetype + T+1 + comps, hitter boom_stack,
   process panel, PL Top 150, lineup/park/splits. Positional grid + the mandatory
@@ -56,11 +56,11 @@ named.
 4. **Rule 12** — compute and SHOW the full lens stack; headline verdict must be
    stable and lens-order-independent.
 5. **Rule 13** — lenses are conviction/context, not additive lift. The headline
-   number stays rh3 / Blended xFP in every mode (`level` and the divergence
+   number stays rh3 / baseline xFP in every mode (`level` and the divergence
    flags never re-rank the model).
 6. **Drop gates** — no drop/add recommendation without the xwOBA L21d vs 2025 +
    xwOBACON YoY pre-check (don't-do #8) and the drop-target rule (rank your full
-   hitter roster by Blended xFP before naming a drop).
+   hitter roster by baseline xFP before naming a drop).
 
 ## Relationship to the other hitter skills
 

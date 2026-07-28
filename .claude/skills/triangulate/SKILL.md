@@ -10,7 +10,7 @@ maturity: arcs-domains-lenses
 > headline STABLE across turns. Never headline a single sliver (the Steer
 > cool↔buy flip). When the actuals lens (boom-bust), the trajectory lens
 > (xwOBACON YoY / archetype traj), and the process/ranker lens (rh3·rp3·rprs2 +
-> Blended xFP) diverge, write the explicit **actuals vs trajectory vs process**
+> the baseline xFP) diverge, write the explicit **actuals vs trajectory vs process**
 > reconciliation rather than picking one. A verdict may change only on new data
 > or a corrected error — say WHY when it does. **(SP) This explicitly covers the
 > stuff-vs-trajectory case:** a high-Stuff+ / lagging-results "buy-low" is a LEVEL
@@ -103,7 +103,7 @@ pitchers by ESPN `.position`; Detmers is `position=RP` but a bucket-SP, gotcha #
 
 | Col | Source | Meaning |
 |---|---|---|
-| Head | `headline_proj` | Blended xFP (fp/game H · fp/start SP · rprs2 RP) |
+| Head | `headline_proj` | **baseline xFP** — the `blended_xfp` value (fp/game H · fp/start SP · rprs2 RP). Prior-anchored TALENT read (every input is a `*_prior`), not a second in-season projection; rh3/rp3/rprs2 own that. Divergence vs the model = "veteran in a down year" / "breakout beyond his prior", not an error — only >2.0x is broken, and the engine caps confidence at `low` there. Relabelled 2026-07-28. |
 | Mdl | `model_rank` | rh3/rp3/rprs2 rank |
 | **Career arc (domains)** | `arche_overall` + `arche_traj` arrow + `arche_domains` | current-year OVERALL + MULTI-YEAR direction, with current-year 3-pillar ratings in parens |
 | **In-season arc (domains)** | `traj_ovr_first→traj_ovr_last` + `traj_dom_last` | OVERALL first→latest 2026 snapshot, with MOST-RECENT snapshot's 3 pillars in parens |

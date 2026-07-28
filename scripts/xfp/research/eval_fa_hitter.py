@@ -1,7 +1,7 @@
 """Shared per-candidate FA-hitter eval engine — identical lens stack for every
 candidate so the workflow agents compare apples to apples. Usage:
     python scripts/xfp/research/eval_fa_hitter.py "<name>" [mlbam]
-Lenses: rh3 (ROS/per-g/rep-delta/signal) · Blended xFP+tier · xwOBA-L21d vs 2025
+Lenses: rh3 (ROS/per-g/rep-delta/signal) · baseline xFP+tier · xwOBA-L21d vs 2025
 (required hitter pre-check) · xwOBACON YoY 2024/25/26 · physical-trend (3-axis) ·
 recent-15g actuals (boom/bust BrownU FP). Display/context; rh3/Blended is headline.
 """
@@ -35,7 +35,7 @@ if not r.empty:
 else:
     out['rh3'] = {'note': 'OUTSIDE rh3 top-240 (projects below the surfaced FA set)'}
 
-# --- Blended xFP ---
+# --- Baseline xFP ---
 try:
     from scripts.xfp.lib.blend_score import compute_blended_xfp
     b = compute_blended_xfp(player_name=name, player_type='H', mlbam_id=mlbam)

@@ -1,6 +1,6 @@
 ---
 name: sp-slate-grid
-description: Full-slate SP scan over a date window (default today + tomorrow) joining ALL 14 model layers — Blended xFP (Phase 3 production scorer with 95% bootstrap CI), rp3 rank + per_start band + opp_bat_index + recency_form_gap, live_marginal + value_tier (Phase 2.5 FA-pool-relative delta with SP floor), Triangulate verdict + reason_tag + confidence (synthesized BUY/HOLD/CAUTION/FADE/MIXED), Sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS on rp3 with BUY-LOW/SELL-HIGH divergence flags), SP archetype master OVERALL + traj_flag + T+1, shadow_scout grade (20-80 ratings + PLUS_PROCESS/AVG_PROCESS/BELOW_AVG/NO_MLB_DATA for rookies/spot starts with no rp3 row), boom_stack 0-4 score + boom%/bust%/E[FP] from the validated tier-aware lookup + per-component breakdown (skill_spike / recform_hot / opp_soft / park_friendly), secondary boom tags (🔥 HIGH-K ARM standalone +6.84pp lift, 🧊 ELITE FRAMER / ⚠ FRAMING TAX within-pitcher paired p=0.017, 🚩 IL_RETURN salvage tag +2.93pp bust lift, ⚠ skill_spike_anti_predictive regression warning at SP2/3+Backend tiers), Process panel composite (PR 8 L30/STD/PriorYr SP marker decomposition with direction-adjusted z-score and level_pct), PL Top 100, PL daily streamer ranks with auto-fresh WebFetch when cache is stale and paywall fallback to nearest cached date. Tags ownership (MINE / opponent team name / FA) via league.teams roster walk. Renders a time-sorted multi-day grid with FA highlighted, decision-deadline header (first pitch ET), then synthesizes a boom-layer-aware top-FA recommendation that can DOWNGRADE high-rp3 picks when the live boom signal disagrees (canonical Emmet Sheehan 6/7/26 — rp3 #55 but boom 9/18 said skip; Cameron rp3 #85 with boom_stack 3/4 was the actual best play). Use when the user asks "rundown on all SP starts", "show me every SP start tomorrow", "what SPs are available across the slate", "all SP starts on DATE1 + DATE2 with FA highlighted", "use all models, every starter" or wants the full multi-day pitcher board not just their own roster. Engine pattern: probables from MLB Stats API + fa_sp_master.csv + sp_boom_stack_full_pool JSON + live_blend_xfp_latest.csv + sp_process_panel.csv + sp_ratings_master.csv + xfp_rp3_projections.csv + PL caches + on-demand shadow_scout and triangulate calls for shortlisted FAs — ALL joined on MLBAM pitcher_id (NOT name — same-name collisions like Logan Allen would silently break a name join, and ESPN's playerId is NOT MLBAM, canonical bug Castillo ESPN=33748 vs MLBAM=622491).
+description: Full-slate SP scan over a date window (default today + tomorrow) joining ALL 14 model layers — baseline xFP (Phase 3 production scorer with 95% bootstrap CI), rp3 rank + per_start band + opp_bat_index + recency_form_gap, live_marginal + value_tier (Phase 2.5 FA-pool-relative delta with SP floor), Triangulate verdict + reason_tag + confidence (synthesized BUY/HOLD/CAUTION/FADE/MIXED), Sustainability bucket (LEGIT/IMPROVING/STABLE/MIXED/NOISE/BAD_LUCK/REGRESS on rp3 with BUY-LOW/SELL-HIGH divergence flags), SP archetype master OVERALL + traj_flag + T+1, shadow_scout grade (20-80 ratings + PLUS_PROCESS/AVG_PROCESS/BELOW_AVG/NO_MLB_DATA for rookies/spot starts with no rp3 row), boom_stack 0-4 score + boom%/bust%/E[FP] from the validated tier-aware lookup + per-component breakdown (skill_spike / recform_hot / opp_soft / park_friendly), secondary boom tags (🔥 HIGH-K ARM standalone +6.84pp lift, 🧊 ELITE FRAMER / ⚠ FRAMING TAX within-pitcher paired p=0.017, 🚩 IL_RETURN salvage tag +2.93pp bust lift, ⚠ skill_spike_anti_predictive regression warning at SP2/3+Backend tiers), Process panel composite (PR 8 L30/STD/PriorYr SP marker decomposition with direction-adjusted z-score and level_pct), PL Top 100, PL daily streamer ranks with auto-fresh WebFetch when cache is stale and paywall fallback to nearest cached date. Tags ownership (MINE / opponent team name / FA) via league.teams roster walk. Renders a time-sorted multi-day grid with FA highlighted, decision-deadline header (first pitch ET), then synthesizes a boom-layer-aware top-FA recommendation that can DOWNGRADE high-rp3 picks when the live boom signal disagrees (canonical Emmet Sheehan 6/7/26 — rp3 #55 but boom 9/18 said skip; Cameron rp3 #85 with boom_stack 3/4 was the actual best play). Use when the user asks "rundown on all SP starts", "show me every SP start tomorrow", "what SPs are available across the slate", "all SP starts on DATE1 + DATE2 with FA highlighted", "use all models, every starter" or wants the full multi-day pitcher board not just their own roster. Engine pattern: probables from MLB Stats API + fa_sp_master.csv + sp_boom_stack_full_pool JSON + live_blend_xfp_latest.csv + sp_process_panel.csv + sp_ratings_master.csv + xfp_rp3_projections.csv + PL caches + on-demand shadow_scout and triangulate calls for shortlisted FAs — ALL joined on MLBAM pitcher_id (NOT name — same-name collisions like Logan Allen would silently break a name join, and ESPN's playerId is NOT MLBAM, canonical bug Castillo ESPN=33748 vs MLBAM=622491).
 maturity: legacy-lens-stack
 ---
 
@@ -31,10 +31,10 @@ For each scheduled SP start in the window:
 |---|---|---|---|
 | **MLB API probable** | Pitcher, MLBAM id, matchup, ET first pitch | `https://statsapi.mlb.com/api/v1/schedule` with `hydrate=probablePitcher,team` | net |
 | **Ownership** | MINE / `<opp team name>` / FA | `league.teams` roster walk (NOT `get_all_teams()` — that returns strings) | API |
-| **Blended xFP + 95% CI** | Production headline per-start projection (blends rp3 + archetype + PL + slope_3yr + HIGH-K + shadow features per validated weights) + bootstrap CI + confidence_tier | `data/outputs/live_blend_xfp_latest.csv` keyed on `mlbam_id` | file |
+| **Baseline xFP + 95% CI** | Production headline per-start projection (blends rp3 + archetype + PL + slope_3yr + HIGH-K + shadow features per validated weights) + bootstrap CI + confidence_tier | `data/outputs/live_blend_xfp_latest.csv` keyed on `mlbam_id` | file |
 | **rp3** | Rank, per_start with p25/p75 band, opp_bat_index, recency_form_gap, data_quality_tag | `data/outputs/xfp_rp3_projections.csv` keyed on `pitcher` (MLBAM) | file |
 | **live_marginal + value_tier** | FA-pool-relative delta (`target.ros − best_FA_at_role.ros`) + SP floor (`sp_floor_ros` bottom-25%) + tier (OWN_THE_ROLE / COMFORTABLE_HOLD / REPLACEABLE / DOWNGRADE / ACTIVE_LOSS) | `scripts/xfp/lib/blend_score.py::_compute_live_marginal_sp` (Phase 2.5 + PR 6 floor). Snapshot: `data/research/fa_snapshots/fa_pool_SP_latest.parquet` | compute |
-| **Triangulate verdict** | Synthesized BUY / HOLD / CAUTION / FADE / MIXED + reason_tag + confidence (4 independent signals voting) | `scripts/xfp/lib/triangulate_core.py::triangulate_player(name)` — expensive at slate scale; **call only for shortlisted FAs (top 10 by Blended xFP)** | compute |
+| **Triangulate verdict** | Synthesized BUY / HOLD / CAUTION / FADE / MIXED + reason_tag + confidence (4 independent signals voting) | `scripts/xfp/lib/triangulate_core.py::triangulate_player(name)` — expensive at slate scale; **call only for shortlisted FAs (top 10 by baseline xFP)** | compute |
 | **Sustainability bucket** | LEGIT / IMPROVING / STABLE / MIXED / NOISE / BAD_LUCK / REGRESS confidence layer on rp3 + BUY-LOW/SELL-HIGH divergence flag when sustainability disagrees by >1.5 FP/start | `scripts/xfp/pitcher_sustainability.py::classify(rows)` — compute on demand from rolling cache | compute |
 | **SP archetype** | OVERALL, archetype label, traj_flag (UP/DOWN/STABLE/CAREER_LOW), T+1, slope_3yr | `data/research/sp_ratings_master.csv` keyed on `pitcher` (MLBAM), latest year | file |
 | **shadow_scout** | 20-80 grades on FB velo / K% / BB% / whiff% / CSW% from 2026 Statcast percentiled vs live ~432-SP population. Verdict: PLUS_PROCESS / AVG_PROCESS / BELOW_AVG / NO_MLB_DATA. **Critical for rookies / spot starts with no rp3 row** | `scripts/xfp/lib/shadow_scout.py::shadow_card(mlbam_id)` — fallback ONLY when rp3 row is missing | compute |
@@ -46,7 +46,7 @@ For each scheduled SP start in the window:
 | **Recent actuals (boom-bust)** | L5 avg + boom% + bust% per row, using empirically calibrated thresholds (SP: boom ≥17 (lib.boom_bust.SP_BOOM) / bust <5; hitter: boom ≥5 / bust <0). Pulled inline via `boom_bust_history.analyze()` helper or equivalent inline call to MLB Stats API. Surfaces model divergence at the row level. | MLB Stats API gameLog | compute |
 | **sp-decline tier** | RoS DECLINE-RISK / RISING / STABLE — flags whose results are propped above their whiff/K stuff LEVEL and will regress DOWN (the ERA-trap guard). Render as a compact `decline` column: `⚠DEC` (DECLINE-RISK) / `RIS` (RISING) / blank. Risk/context flag ONLY — never moves the headline (CLAUDE.md #13). | `sp_decline_model.build()` keyed on MLBAM (`mlb_id`) | compute |
 
-**Performance budget**: ~10 file joins (cheap, <1s) + triangulate calls capped at top-10 FAs by Blended xFP + shadow_scout only for rows with no rp3. Total skill runtime ~30-60s.
+**Performance budget**: ~10 file joins (cheap, <1s) + triangulate calls capped at top-10 FAs by baseline xFP + shadow_scout only for rows with no rp3. Total skill runtime ~30-60s.
 
 The output is one markdown table per day, sorted by start time, with a
 **decision-deadline header** (first pitch ET) so the user knows their
@@ -177,7 +177,7 @@ rp3_lookup = rp3.set_index('pitcher')[[
     'recency_form_gap','next_opp_bat_index','data_quality_tag'
 ]].to_dict('index')
 
-# ── Layer 2: Blended xFP + 95% CI — production headline number ─────────
+# ── Layer 2: baseline xFP + 95% CI — production headline number ─────────
 blend = pd.read_csv('data/outputs/live_blend_xfp_latest.csv')
 blend_lookup = blend.set_index('mlbam_id')[[
     'live_blend_xfp','ci_lower','ci_upper','confidence_tier'
@@ -214,7 +214,7 @@ with open('data/research/pl_cache/pl_sps_top100.json') as f:
 
 # ── Layer 5b: sp-decline tier — keyed on MLBAM (mlb_id) ─────────────────
 # Validated 2026-06-13 RoS DECLINE-RISK board (whiff/K LEVEL, partial-r ~0.235).
-# Risk/context flag ONLY — never moves Blended xFP / rp3 (CLAUDE.md #13).
+# Risk/context flag ONLY — never moves baseline xFP / rp3 (CLAUDE.md #13).
 import sys as _sys; _sys.path.insert(0, 'scripts/xfp')
 try:
     from sp_decline_model import build as _build_decline
@@ -226,7 +226,7 @@ except Exception:
     decline_lookup = {}   # fail-soft: column renders blank if FG cache offline
 
 # ── Layer 5c: Floor + Conviction context columns (item 1) ──────────────
-# Both display-only (Rule 13) — never move Blended xFP / rp3 / the ranking.
+# Both display-only (Rule 13) — never move baseline xFP / rp3 / the ranking.
 #   Floor: K-BB bust risk -> FLOOR-RISK (RISKY tier the mean hides, red) /
 #          SAFE-FLOOR (SAFE tier the mean under-credits, green) / blank.
 #   Conv : model-vs-process divergence -> PROCESS>MODEL (buy-low) /
@@ -248,7 +248,7 @@ def conv_col(mlbam):
 
 # ── Layers 8-10: live_marginal, Triangulate verdict, Sustainability ────
 # These are COMPUTE-time (not file joins). Run ONLY for shortlisted FAs
-# (top 10 by Blended xFP) to keep slate runtime under 60s.
+# (top 10 by baseline xFP) to keep slate runtime under 60s.
 from scripts.xfp.lib.blend_score import _compute_live_marginal_sp
 from scripts.xfp.lib.triangulate_core import triangulate_player
 from scripts.xfp.pitcher_sustainability import classify as sustain_classify
@@ -289,7 +289,7 @@ because opp_soft + park_friendly are date-dependent).
 - shadow_scout: only rows where `rp3_lookup.get(pid)` is missing AND the
   row is FA (don't waste compute on opp-rostered rookies).
 - triangulate + live_marginal + sustainability: only for **top 10 FAs by
-  Blended xFP**. Total: ~30-60s budget.
+  Baseline xFP**. Total: ~30-60s budget.
 
 ---
 
@@ -395,7 +395,7 @@ secondary tags: `***. 🔥` = boom_stack 3/4 + HIGH-K; `**.. 🧊` = boom 2/4 +
 elite framer; `**.. ⚠` = boom 2/4 + framing tax; `*... 🚩` = boom 1/4 +
 IL_RETURN; `*... ⚠AP` = boom 1/4 + anti-predictive K-spike warning.
 
-**FA shortlist deep-dive table** (compute layers, top 10 FAs by Blended xFP):
+**FA shortlist deep-dive table** (compute layers, top 10 FAs by baseline xFP):
 
 `Pitcher | Verdict (conf) | Reason | live_marginal | value_tier | floor_marg | Sust bucket | Divergence`
 
@@ -462,7 +462,7 @@ a free-text verdict is not allowed. Use this template verbatim:
 RECOMMENDATION: <action> <player>
    Confidence: HIGH | MEDIUM | LOW (per **empirically calibrated** 8-lens count from reference_lens_merge_protocol.md — HIGH ≥5 of 8, NOT ≥6, per 2026-06-06 calibration `confidence_label_calibration_2026-06-06.md`. **Conflict Rule 4** REJECTED at HIGH_CONFIDENCE per `conflict_rule_lift_2026-06-06.md` (n=84, 36.9% win rate, players bounce) — downgrade to MODERATE drop with bounce-back caveat.)
    Lens votes:
-     Tier A: rh3=<v> | Blended xFP=<v> [conf] | rp3/rprs2 if SP=<v>
+     Tier A: rh3=<v> | baseline xFP=<v> [conf] | rp3/rprs2 if SP=<v>
      Tier B: xwOBA L21d=<v> | xwOBACON YoY=<v> | sustainability=<v>
      Tier C: boom-bust L5/L21=<v> | boom_stack=<v>
      Tier D: archetype=<v> | PL Top 100/150=<v>
@@ -505,7 +505,7 @@ is propped above the stuff. Never let it MOVE the headline number; it only gates
 the verdict.
 
 **Canonical case (SP)**: Bradish hot streak L5 17.88 + 37% boom would
-normally read BUY from Tier A (rp3 + Blended xFP catching up) + Tier C
+normally read BUY from Tier A (rp3 + baseline xFP catching up) + Tier C
 (boom-bust history strong, boom_stack ≥2). But pitcher-sustainability
 returns **NOISE** with K% −12.3 pp vs season baseline. That is a Tier B
 REGRESS signal with HIGH confidence → synthesis downgrades to
@@ -530,7 +530,7 @@ won because Tier 3 evidence is strong and tier-aware).
 
 ### Tier 1 — Headline projection (the actual point estimate; weight ~50%)
 
-1. **Blended xFP + 95% CI** — *Production headline number.* Built by
+1. **Baseline xFP + 95% CI** — *Production headline number.* Built by
    stacking rp3 + archetype + PL + slope_3yr + HIGH-K + shadow features
    with validated weights (`data/research/validation_runs/weight_blend_
    cleanup3_refit_2026-06-05.{md,json}`). Latest weight-refit deflated
@@ -542,14 +542,14 @@ won because Tier 3 evidence is strong and tier-aware).
    The project's primary SP model with documented validation history
    (re-fit each daily refresh; LOO over 2019-2025 sans 2020). The p25-p75
    band carries hetero σ rescaled to historical calibration. rp3 IS one
-   of the components of Blended xFP — when reading a row, ignore rp3 if
-   Blended xFP is available; only use rp3 when blend is null
+   of the components of baseline xFP — when reading a row, ignore rp3 if
+   Baseline xFP is available; only use rp3 when blend is null
    (`pl_unavailable` / `rookie_or_no_prior_year` fallback).
 
 ### Tier 2 — FA-pickup decision modifiers (weight ~20% on top of headline)
 
 3. **live_marginal + value_tier** — *Direct answer to "is this FA actually
-   better than the best alternative?"* Built on Blended xFP so it inherits
+   better than the best alternative?"* Built on baseline xFP so it inherits
    the headline accuracy AND adds the FA-pool-relative delta. Tiers
    (OWN_THE_ROLE / COMFORTABLE_HOLD / REPLACEABLE / DOWNGRADE / ACTIVE_LOSS)
    are calibrated against ros-delta cuts. The SP floor (`sp_floor_ros`,
@@ -612,7 +612,7 @@ won because Tier 3 evidence is strong and tier-aware).
 10. **shadow_scout grade (PLUS_PROCESS / AVG_PROCESS / BELOW_AVG /
     NO_MLB_DATA)** — *The only signal that gives you ANYTHING for rows
     where rp3 + archetype are both null.* High value at the rookie/spot-
-    start margin; less impactful for established SPs (Blended xFP already
+    start margin; less impactful for established SPs (baseline xFP already
     incorporates shadow features via `shadow_velo_pct_prior` etc. for
     those that have rp3). Use as fallback verdict ONLY when the other
     layers return null. No standalone lift number published — this is
@@ -631,7 +631,7 @@ won because Tier 3 evidence is strong and tier-aware).
     `archetype_breakout` triangulate rule (Rule #1) leans on traj_flag —
     when traj=TRENDING_UP AND archetype_breakout fires, it's a buy
     signal in the 4-lens vote. T+1 is forward-looking (rest-of-season)
-    and is INCLUDED in Blended xFP via `arche_overall_prior`. Standalone
+    and is INCLUDED in baseline xFP via `arche_overall_prior`. Standalone
     use: only as the trajectory column for the scan.
 
 13. **Process panel composite (PR 8 L30/STD/PriorYr)** — *Direction-
@@ -670,7 +670,7 @@ won because Tier 3 evidence is strong and tier-aware).
 ### How to use the ranking in synthesis
 
 When all six "weighted ≥ 5%" lenses agree → strong signal, recommend.
-When Tier 1 and Tier 2 disagree → trust Blended xFP unless boom_stack
+When Tier 1 and Tier 2 disagree → trust baseline xFP unless boom_stack
 boom%/bust% sign-flip is sharp; then weight boom_stack.
 When Tier 3 tags compound (`***. 🔥 🧊`) → upgrade the recommendation.
 When Tier 3 anti-predictive fires (`⚠ AP` on a SP2/3 with K-spike) →
@@ -678,7 +678,7 @@ downgrade despite hot recent line.
 Tier 5 (PL ranks) alone is NEVER reason to add. PL agreement amplifies
 a model BUY; PL disagreement alone doesn't beat the model.
 - **Model vs actuals divergence**: When boom-bust L5 differs from
-  Blended xFP × games/wk equivalent by more than ~5 FP/wk, surface the
+  Baseline xFP × games/wk equivalent by more than ~5 FP/wk, surface the
   divergence explicitly. Canonical case: Bradish blend 5.98 (model
   says streamer-tier) vs L5 17.88 + 37% boom = actuals say BUY. The
   divergence is the signal.
@@ -688,14 +688,14 @@ a model BUY; PL disagreement alone doesn't beat the model.
 **The above weights are calibrated for ROS / multi-start decisions.** For
 a one-shot single-start streamer pickup, the framework shifts:
 
-- **Blended xFP loses weight** when its conservatism is anchored on
+- **Baseline xFP loses weight** when its conservatism is anchored on
   `shadow_*_prior` or `traj_career_low_prior` (i.e. prior-season process
   tail risk that compounds across many starts but doesn't bind a single
   game). Check `marcel_baseline` vs `data_driven_estimate` — if they
   disagree by >2 FP, the blend may be over-penalizing.
 - **boom_mean_fp_expected (from boom_stack JSON) becomes the central
-  tendency for THIS start**, not the RoS-anchored Blended xFP. Use this
-  when comparing FAs for a single-start pickup; use Blended xFP when
+  tendency for THIS start**, not the RoS-anchored baseline xFP. Use this
+  when comparing FAs for a single-start pickup; use baseline xFP when
   comparing for a hold-the-roster-spot decision.
 - **rp3_per_start_sched** (schedule-adjusted rp3) is the most direct
   single-start estimate when boom_stack is unavailable.
@@ -704,21 +704,21 @@ a one-shot single-start streamer pickup, the framework shifts:
   and compute BrownU FP per start (`K + IP*3.3 - H - 2*ER - BB - HBP`).
   If the L4 average is materially above season per_start, the boom
   layer's `recform_hot` signal is corroborated and the prior-process
-  drag in Blended xFP should be down-weighted for the one-start
+  drag in baseline xFP should be down-weighted for the one-start
   decision.
 
 ### Single-start vs RoS framework — concrete rule
 
 | Decision type | Primary headline | Secondary | Tertiary |
 |---|---|---|---|
-| **Add for the roster (RoS)** | Blended xFP (Tier 1, 50%) | live_marginal value_tier | rp3 RoS |
+| **Add for the roster (RoS)** | baseline xFP (Tier 1, 50%) | live_marginal value_tier | rp3 RoS |
 | **One-shot streamer (single start)** | rp3_per_start_sched OR boom_mean_fp_expected (whichever is more recent / corroborated) | boom_stack tier-amp lift | recent 4-start actual FP/start |
 
-Canonical case (Cameron 6/7/26): Blended xFP 6.89 (Tier 1) said skip
+Canonical case (Cameron 6/7/26): baseline xFP 6.89 (Tier 1) said skip
 because prior-season velo 10th-pct + traj_career_low_prior dragged the
 blend; boom_mean_fp_expected 10.6 + rp3 schedule-adj 10.51 + L4 actual
 18.55 said legitimate single-start play. For a one-shot streamer pickup
-the correct call was BUY despite the low Blended xFP.
+the correct call was BUY despite the low baseline xFP.
 
 ### CRITICAL — Tag verification rule (added 2026-06-06 after Cameron mis-call)
 
@@ -775,14 +775,14 @@ do NOT treat the skill_spike as a warning.
 ## Drop-target rule (added 2026-06-06 after Messick mis-call)
 
 **When recommending an FA pickup that requires a drop**, you MUST first
-rank the user's full SP staff by Blended xFP before naming a drop target.
+rank the user's full SP staff by baseline xFP before naming a drop target.
 
 The canonical failure (2026-06-06): I recommended dropping Parker Messick
 to add Roki Sasaki, calling Messick "no rp3 row, rookie callup, no
 validated signal." Messick actually had:
 
 - rp3 **#63** per_start 10.68
-- Blended xFP **14.68 [8.49-19.74] HIGH confidence** — the HIGHEST on the
+- Baseline xFP **14.68 [8.49-19.74] HIGH confidence** — the HIGHEST on the
   user's roster
 - Archetype PURE_MOVEMENT OVERALL **65**, K% **28.2%**, BB% 6.4%
 - HIGH-K verified (z=0.93)
@@ -809,7 +809,7 @@ blend = pd.read_csv('data/outputs/live_blend_xfp_latest.csv')
 
 # 3. Rank staff descending. Drop candidates start at the BOTTOM.
 # Never name a drop target without showing the proposed drop's
-# Blended xFP next to the FA add's Blended xFP.
+# Baseline xFP next to the FA add's baseline xFP.
 ```
 
 ### Synthesis output requirement
@@ -817,10 +817,10 @@ blend = pd.read_csv('data/outputs/live_blend_xfp_latest.csv')
 Any drop/add recommendation table MUST include:
 
 ```
-| What you give up (drop) | Blended xFP | What you gain (add) | Blended xFP |
+| What you give up (drop) | baseline xFP | What you gain (add) | baseline xFP |
 ```
 
-When the drop's Blended xFP > add's Blended xFP, STOP and re-evaluate
+When the drop's baseline xFP > add's baseline xFP, STOP and re-evaluate
 before recommending the swap. Either pick a different drop or
 acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
 "streamer rental for this week's 10th cap start").
@@ -833,7 +833,7 @@ acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
   the slate join but is FULLY PRESENT in rp3 + blend + sp_master +
   process_panel + boom_stack JSON. Always query by MLBAM directly.
 - **Recommending a drop without ranking the user's full SP staff by
-  Blended xFP first.** Canonical Messick failure 2026-06-06.
+  Baseline xFP first.** Canonical Messick failure 2026-06-06.
 - **Pattern-matching "rookie callup" → "no validated signal".** Rookies
   with 10+ MLB starts have data_driven_full rp3 rows. Always check.
 - **Rendering an emoji tag without verifying the boolean field in the
@@ -841,7 +841,7 @@ acknowledge the trade is RoS-negative (and explain WHY anyway — e.g.,
   his `is_high_k: false, reason: "z=0.28_below_threshold"`. Always read
   the boolean, never infer the tag from per_start or recent K count.
 - **Applying the RoS-calibrated Tier 1 weighting to a single-start
-  decision.** Blended xFP's conservatism comes from `shadow_*_prior` +
+  decision.** baseline xFP's conservatism comes from `shadow_*_prior` +
   `traj_career_low_prior` tail risk that compounds across N starts.
   For one start, use `boom_mean_fp_expected` or `rp3_per_start_sched`
   as the central tendency.
@@ -906,7 +906,7 @@ without rebuilding). Save the joined CSV to
 ## Related
 
 - `/boom-bust-history` — **variance lens companion**. When the model
-  layer (rp3 + Blended xFP + archetype) gives a verdict but you want
+  layer (rp3 + baseline xFP + archetype) gives a verdict but you want
   hard evidence of recent form, invoke `/boom-bust-history --names
   "X,Y"` for the L8-starts decomposition (boom% ≥17 (lib.boom_bust.SP_BOOM) FP, bust% <5 FP,
   std, trend arrow). Canonical case: Bradish blend 5.98 vs L5 actuals

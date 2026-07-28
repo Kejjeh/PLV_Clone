@@ -1,5 +1,5 @@
 """OF-priority re-rank: ALL FA hitters eligible at OF (can fill the durable Judge
-hole, out ~38d), ranked by rh3 then Blended xFP. Catches OF-eligible bats my
+hole, out ~38d), ranked by rh3 then baseline xFP. Catches OF-eligible bats my
 rh3-ROS-sorted scan missed (e.g. Steer, outside rh3 top-240)."""
 import sys; sys.path.insert(0, '.')
 import pandas as pd
@@ -38,8 +38,8 @@ for _, r in show.iterrows():
     ro = f"{r['rh3_ros']:.0f}" if r['rh3_ros'] else '—'
     print(f"  {r['name'][:19]:<20}{str(r['pos']):<5}{pg:<7}{ro:<8}{r['own']:<6.0f}{r['rh3_top240']}")
 
-# Blended xFP for the top OF-eligible + Steer (the real production read)
-print("\n=== Blended xFP (production read) for top OF-eligible candidates ===")
+# Baseline xFP for the top OF-eligible + Steer (the real production read)
+print("\n=== baseline xFP (production read) for top OF-eligible candidates ===")
 focus = list(show['name'][:8]) + ['Spencer Steer','Carlos Cortes','Jo Adell','Gavin Sheets','Jakob Marsee']
 seen = set()
 for nm in focus:
@@ -50,7 +50,7 @@ for nm in focus:
     bid = rr.iloc[0]['mlbam']
     try:
         b = compute_blended_xfp(player_name=nm, player_type='H', mlbam_id=int(bid))
-        print(f"  {nm[:20]:<22} Blended xFP={b.get('blended_xfp'):.2f} tier={b.get('confidence_tier')} "
+        print(f"  {nm[:20]:<22} baseline xFP={b.get('blended_xfp'):.2f} tier={b.get('confidence_tier')} "
               f"rh3/g={rr.iloc[0]['rh3_per_g']}")
     except Exception as e:
         print(f"  {nm[:20]:<22} blend err: {str(e)[:50]}")
