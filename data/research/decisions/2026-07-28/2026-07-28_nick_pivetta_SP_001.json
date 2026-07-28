@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-28_nick_pivetta_SP_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_4_5",
+    "archetype_overall": 52,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 11.862669171158792,
+    "inputs_schema": 2,
+    "live_marginal": -8.331918067123354,
+    "model_rank": 37,
+    "override_tag": null,
+    "pl_rank": null,
+    "proj_display": 12.462431497602736,
+    "proj_per": 12.462431497602736,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 601713,
+  "player_name": "Nick Pivetta",
+  "reason_tag": "no_convergence",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-28",
+  "verdict_top": "MIXED"
+}

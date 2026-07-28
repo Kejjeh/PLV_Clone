@@ -1,0 +1,27 @@
+{
+  "bucket": "RP",
+  "confidence": 0.5,
+  "decision_id": "2026-07-28_emilio_pagan_RP_001",
+  "inputs": {
+    "archetype_label": "LIGHT_USE_MIDDLE",
+    "archetype_overall": 47,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 4.476207587850619,
+    "inputs_schema": 2,
+    "live_marginal": -13.599999999999994,
+    "model_rank": 55,
+    "override_tag": null,
+    "pl_rank": 7,
+    "proj_display": 107.2,
+    "proj_per": 6.457831325301204,
+    "proj_units": "fp_per_g",
+    "replacement_delta": -29.5
+  },
+  "mlbam_id": 641941,
+  "player_name": "Emilio Pag\u00e1n",
+  "reason_tag": "process_red_flag",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-28",
+  "verdict_top": "CAUTION"
+}

@@ -1,10 +1,10 @@
 {
-  "generated": "2026-07-27",
-  "upgrade_floor_fpp": -0.0449,
-  "hit_upgrade_floor_xwoba": 0.323,
+  "generated": "2026-07-28",
+  "upgrade_floor_fpp": -0.0484,
+  "hit_upgrade_floor_xwoba": 0.321,
   "alert_count": 0,
   "hitter_alert_count": 0,
   "alerts": [],
   "hitter_alerts": [],
-  "my_active_sp_count": 7
+  "my_active_sp_count": 8
 }

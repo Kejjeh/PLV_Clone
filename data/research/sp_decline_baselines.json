@@ -1,5 +1,5 @@
 {
-  "all_t_plus_1_decline_rate": 0.395,
+  "all_t_plus_1_decline_rate": 0.396,
   "elite_t_plus_1_decline_rate": 0.617,
   "methodology_note": "Pre-decline process drops (STUFF/velo/SwStr decreases at year T) actually correlate with LOWER T+1 decline rate, not higher \u2014 mean reversion already absorbed. Elite tier (FP/s>=14) has 59% T+1 decline baseline regardless of process indicators. Use elite_decline_rate as base-rate context, not as an actionable alert."
 }
