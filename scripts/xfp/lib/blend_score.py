@@ -1,4 +1,4 @@
-"""Blended xFP scorer (Phase 3 — Agent 2, shipped 2026-06-04;
+"""baseline xFP scorer (Phase 3 — Agent 2, shipped 2026-06-04;
 RP with_pl refit + hitter per-player PA/G display unit, 2026-06-05;
 Cleanup #3 refit on corrected PL panel + `is_non_closer_rp` flag, 2026-06-05).
 
@@ -29,6 +29,41 @@ Hitter display unit change (2026-06-05):
   rather than the prior fixed-3.85 product of ~6.4 that confused readers.
   CI bounds and per-feature contributions use the same per-player scale.
 
+Hitter scale audit — CLOSED NO-CHANGE (2026-07-28):
+  Investigated a suspected units/level regression after ~25 hitters were
+  observed blending 1.5-1.75x above rh3 at 'high' confidence (Suárez
+  1.36->2.37, Rooker 1.58->2.75, Doyle 1.32->2.31, ...). The consistency of
+  the multiplier looked like a scale error. It is not. Measured:
+
+    - PA/G is IDENTICAL on both sides. master_panel's implied PA/G
+      (fp_per_game / fp_per_pa) has median 3.500; rh3's own
+      xfp_rh3_per_game / xfp_rh3_per_pa spans 3.4824-3.5140 across all 473
+      rows (that range is 2dp rounding on per_game, nothing else).
+      `_hitter_pa_per_game` therefore returns rh3's own 3.5 — the blend is
+      mapped through the same constant rh3 publishes with.
+    - LEVELS agree. Panel H fp_per_pa mean 0.4705 vs rh3 0.4695. The blend
+      intercept (target_mean) is 0.4817 = 1.04x rh3's median per-game.
+    - The population median blend/rh3 ratio is 1.063. The blend is centred,
+      not inflated.
+    - The disagreement distribution is NOT hitter-specific. |log ratio|
+      quantiles, H vs SP: p50 1.16 / 1.15, p90 1.46 / 1.38, p95 1.59 / 1.52,
+      p99 1.75 / 1.81. The two buckets scatter the same amount.
+
+  The observed band is the p90-p99 tail of genuine model disagreement. The
+  mechanism is structural and expected: every blend feature is a *_prior
+  (prior-year rate, archetype, trajectory, age), so the blend answers "what
+  is this player's established talent level", while rh3 answers "what is he
+  producing this season". By late July those diverge most for veterans in a
+  down year. corr(blend, rh3) is 0.431 for H and 0.594 for SP. rh3 is also
+  deliberately shrunk (validated as helping) — its per-PA range is
+  0.215-0.769 against the panel's observed -0.03 to 0.974 — while the blend
+  reproduces the unshrunk historical spread. Two models, two questions.
+
+  CONCLUSION: no scale fix is warranted and _BLEND_DISAGREEMENT_RATIO stays
+  GLOBAL at 2.0 (see its comment for the calibration). Do not re-open this
+  as a units bug; `tests/test_blend_hitter_scale.py` now pins the invariant
+  that would have to break first.
+
 RP with_pl coefficients (2026-06-05):
   After expanding the PL RP archive with the 2024 Top 100 Save+Hold list
   (`pl_rp_2024_top100sv_hld.json`), RP join_rate climbed from ~13% to 17.1%
@@ -39,7 +74,7 @@ RP with_pl coefficients (2026-06-05):
 
 
 Production library that takes a player (name + bucket + mlbam_id) and
-returns a single blended xFP point estimate + bootstrap 95% CI. The blend
+returns a single baseline xFP point estimate + bootstrap 95% CI. The blend
 uses prior-year anchor + archetype overall + career-percentile + trajectory
 + age (and PL rank, when available) per the validated Phase 1-3 weights:
 
@@ -261,6 +296,37 @@ def _hitter_pa_per_game(mlbam_id: int) -> float:
 # Phase 1-3 convention. Do NOT remove this filter.
 _COVID_YEAR = 2020
 
+# --- Guardrails added 2026-07-28 (relief-convert anchor leak) --------------
+#
+# Max plausible value for each bucket's prior-year RATE anchor. Observed
+# ceilings in master_panel (2024-25): SP fp_per_start 19.7, RP fp_per_g ~8,
+# H fp_per_pa ~1.0. These are deliberately loose — the point is to catch a
+# unit error (a season total landing in a per-start field), not to clip a
+# legitimately elite season.
+_ANCHOR_PLAUSIBLE_MAX = {'H': 2.0, 'SP': 30.0, 'RP': 15.0}
+
+# A same-role prior more than this many seasons old is not a "prior year".
+_ANCHOR_MAX_STALENESS_YEARS = 3
+
+# The blend is a SECOND OPINION on the production model, not a different
+# quantity. Past this ratio in either direction the two disagree so badly
+# that at least one is broken — never report that as high confidence.
+#
+# GLOBAL, not per-bucket — calibrated 2026-07-28 against the post-fix
+# nightly. |log ratio| quantiles are near-identical across buckets
+# (H p90 1.46 / p95 1.59 / p99 1.75; SP p90 1.38 / p95 1.52 / p99 1.81), so
+# 2.0 sits around p99.5 for both and flags 0.6% of each. A bucket-specific
+# threshold was considered and rejected: the two distributions differ by
+# less than sampling noise, so splitting them would be fitting noise.
+#
+# Resist tightening this to ~1.6 to "catch" the hitter band. That band is
+# ordinary tail disagreement (see the hitter scale audit in the module
+# docstring); flagging it would fire on ~10% of hitters and train readers to
+# ignore the flag, which is exactly how the Jax/Leahy 3-5x inflation went
+# unnoticed while wearing a 'high' label. This guard is for BROKEN INPUTS,
+# not for editorialising about two models that legitimately differ.
+_BLEND_DISAGREEMENT_RATIO = 2.0
+
 
 # Model fitting (for training mean/std + residual sigma for CI) --------
 
@@ -417,9 +483,10 @@ def _load_projection_csv(bucket: str) -> Optional[pd.DataFrame]:
 
 @lru_cache(maxsize=1)
 def _load_master_panel_lookup() -> Optional[pd.DataFrame]:
-    """master_panel rows for the MOST RECENT prior year per player. Used as
-    fallback for prior-year anchor + archetype priors when the projection
-    CSV doesn't have them joined (pre-Agent 1)."""
+    """master_panel rows for the MOST RECENT prior year per player,
+    IGNORING player_type. Only role-INDEPENDENT facts (age) may be read
+    from this — see `_load_master_panel_lookup_typed` for anything
+    measured on a role-specific scale."""
     if not os.path.exists(_MASTER_PANEL):
         return None
     try:
@@ -431,6 +498,50 @@ def _load_master_panel_lookup() -> Optional[pd.DataFrame]:
         return df
     except Exception as e:
         _warn('load_master_panel_lookup', e)
+        return None
+
+
+@lru_cache(maxsize=3)
+def _load_master_panel_lookup_typed(bucket: str) -> Optional[pd.DataFrame]:
+    """Most-recent master_panel row per player **restricted to rows whose
+    `player_type` matches `bucket`**.
+
+    WHY THIS EXISTS (bug fixed 2026-07-28). The untyped lookup let a
+    relief-converted starter pull his RP season in as the SP anchor, and
+    `fp_per_start` on an RP row is **season-total FP / GS** — for a
+    reliever with one or two spot starts that is a SEASON TOTAL wearing a
+    per-start label (Griffin Jax 2025: 112.4; Kyle Leahy 2025: 242.4; 754
+    such rows in the panel, max 344.0). Fed through the SP anchor weight
+    (+0.507 in z-units) that inflated blended_xfp 3-5x over model_proj —
+    Jax 10.82 -> 29.09, Leahy 9.06 -> 45.64 — and both still read
+    `blend_confidence='high'`.
+
+    A rate and an archetype rating are only meaningful on the scale of the
+    role they were measured in, so the prior row must share the bucket we
+    are projecting. When no same-role row exists the honest answer is "no
+    anchor" (confidence 'low'), not a number from the other role.
+    """
+    if not os.path.exists(_MASTER_PANEL):
+        return None
+    try:
+        df = pd.read_parquet(_MASTER_PANEL)
+        if 'player_type' not in df.columns:
+            return None
+        df = df[df['player_type'] == bucket]
+        return df.sort_values('year').drop_duplicates('mlbam_id', keep='last')
+    except Exception as e:
+        _warn(f'load_master_panel_lookup_typed({bucket})', e)
+        return None
+
+
+@lru_cache(maxsize=1)
+def _panel_max_year() -> Optional[int]:
+    panel = _load_master_panel_lookup()
+    if panel is None or panel.empty or 'year' not in panel.columns:
+        return None
+    try:
+        return int(panel['year'].max())
+    except (TypeError, ValueError):
         return None
 
 
@@ -449,45 +560,86 @@ def _lookup_player_features(mlbam_id: int, bucket: str) -> dict:
 
     # Fallback: pull missing anchor/archetype from master_panel most-recent
     # row, where the values are already named prior_year_X / arche_X_prior.
-    panel = _load_master_panel_lookup()
-    if panel is not None:
-        prow = panel[panel['mlbam_id'] == mlbam_id]
+    #
+    # ROLE GATE (2026-07-28): rate anchors and archetype ratings are measured
+    # on role-specific scales, so they may ONLY come from a row whose
+    # player_type matches the bucket we're projecting. Age is role-independent
+    # and still comes from the most recent row of any type.
+    notes: list[str] = []
+    typed = _load_master_panel_lookup_typed(bucket)
+    if typed is not None:
+        prow = typed[typed['mlbam_id'] == mlbam_id]
         if not prow.empty:
             pr = prow.iloc[0].to_dict()
-            # For 2026 forward-looking blend, the "prior year" feature should
-            # be the player's MOST RECENT actual production. master_panel's
-            # current-row fp_per_X IS that.
-            target_to_anchor = {
-                'H': ('fp_per_pa', 'prior_year_fp_per_pa'),
-                'SP': ('fp_per_start', 'prior_year_fp_per_start'),
-                'RP': ('fp_per_g', 'prior_year_fp_per_g_rp'),
-            }[bucket]
-            tcol, anchor_col = target_to_anchor
-            if r.get(anchor_col) is None or _isnan(_f(r.get(anchor_col))):
-                v = pr.get(tcol)
-                if v is not None and not _isnan(_f(v)):
-                    r[anchor_col] = v
-            # archetype priors: use master_panel current-row values (those
-            # ARE the prior we need for next-year forecast).
-            for src, dst in (('arche_overall', 'arche_overall_prior'),
-                             ('arche_career_pct', 'arche_career_pct_prior'),
-                             ('arche_traj', 'arche_traj_prior')):
-                if r.get(dst) is None or (not isinstance(r.get(dst), str) and _isnan(_f(r.get(dst)))):
-                    v = pr.get(src)
-                    if v is not None:
-                        r[dst] = v
-            if r.get('age') is None or _isnan(_f(r.get('age'))):
-                a = pr.get('age')
-                if a is not None and not _isnan(_f(a)):
-                    # add 1 year to current-row age to project forward to 2026
-                    r['age'] = float(a) + 1.0
+            # STALENESS GATE: a role-converted or long-absent pitcher can have
+            # a same-role row many seasons back. That is not a "prior year".
+            max_year = _panel_max_year()
+            row_year = _f(pr.get('year'))
+            stale = (
+                max_year is not None and not _isnan(row_year)
+                and (max_year - int(row_year)) > _ANCHOR_MAX_STALENESS_YEARS
+            )
+            if stale:
+                notes.append(
+                    f'prior_role_row_stale: most recent {bucket} season is '
+                    f'{int(row_year)} (>{_ANCHOR_MAX_STALENESS_YEARS}y old)'
+                )
+            else:
+                # For 2026 forward-looking blend, the "prior year" feature should
+                # be the player's MOST RECENT actual production. master_panel's
+                # current-row fp_per_X IS that.
+                target_to_anchor = {
+                    'H': ('fp_per_pa', 'prior_year_fp_per_pa'),
+                    'SP': ('fp_per_start', 'prior_year_fp_per_start'),
+                    'RP': ('fp_per_g', 'prior_year_fp_per_g_rp'),
+                }[bucket]
+                tcol, anchor_col = target_to_anchor
+                if r.get(anchor_col) is None or _isnan(_f(r.get(anchor_col))):
+                    v = pr.get(tcol)
+                    if v is not None and not _isnan(_f(v)):
+                        r[anchor_col] = v
+                # archetype priors: use master_panel current-row values (those
+                # ARE the prior we need for next-year forecast).
+                for src, dst in (('arche_overall', 'arche_overall_prior'),
+                                 ('arche_career_pct', 'arche_career_pct_prior'),
+                                 ('arche_traj', 'arche_traj_prior')):
+                    if r.get(dst) is None or (not isinstance(r.get(dst), str) and _isnan(_f(r.get(dst)))):
+                        v = pr.get(src)
+                        if v is not None:
+                            r[dst] = v
+        else:
+            notes.append(f'no_prior_{bucket}_season: role-scoped priors unavailable')
+
+    # Age is role-independent — most recent row of ANY player_type.
+    panel_any = _load_master_panel_lookup()
+    if panel_any is not None:
+        arow = panel_any[panel_any['mlbam_id'] == mlbam_id]
+        if not arow.empty and (r.get('age') is None or _isnan(_f(r.get('age')))):
+            a = _f(arow.iloc[0].to_dict().get('age'))
+            if not _isnan(a):
+                # add 1 year to current-row age to project forward to 2026
+                r['age'] = float(a) + 1.0
 
     feats: dict = {}
     # Anchor.
     anchor_col = {'H': 'prior_year_fp_per_pa',
                   'SP': 'prior_year_fp_per_start',
                   'RP': 'prior_year_fp_per_g_rp'}[bucket]
-    feats[anchor_col] = _f(r.get(anchor_col))
+    anchor_val = _f(r.get(anchor_col))
+    # BACKSTOP: reject an anchor outside the physically plausible range for
+    # this bucket's rate, whatever path supplied it. The role gate above is
+    # the real fix; this catches any FUTURE source that hands us a season
+    # total (or another unit) where a rate belongs, instead of letting it
+    # silently multiply through the anchor weight.
+    if not _isnan(anchor_val) and anchor_val > _ANCHOR_PLAUSIBLE_MAX[bucket]:
+        notes.append(
+            f'anchor_implausible: {anchor_col}={anchor_val:.1f} exceeds the '
+            f'{bucket} max of {_ANCHOR_PLAUSIBLE_MAX[bucket]} — dropped '
+            f'(likely a season total, not a rate)'
+        )
+        anchor_val = np.nan
+    feats[anchor_col] = anchor_val
+    feats['_lookup_notes'] = notes
     # Archetype core.
     feats['arche_overall_prior'] = _f(r.get('arche_overall_prior'))
     feats['arche_career_pct_prior'] = _f(r.get('arche_career_pct_prior'))
@@ -551,7 +703,7 @@ def compute_blended_xfp(
     player_type: str,
     mlbam_id: int,
 ) -> dict:
-    """Compute the blended xFP point estimate + 95% bootstrap CI.
+    """Compute the baseline xFP point estimate + 95% bootstrap CI.
 
     Returns a dict per the Phase 3 spec. Always returns SOMETHING — falls
     back to confidence_tier='low' with explanatory notes when features
@@ -566,7 +718,9 @@ def compute_blended_xfp(
         return _empty_result("training panel unavailable")
 
     feats = _lookup_player_features(mlbam_id, ptype)
-    notes: list[str] = []
+    # Notes raised during feature lookup (role gate / staleness / implausible
+    # anchor) travel with the feats dict; hoist them onto the result.
+    notes: list[str] = list(feats.pop('_lookup_notes', []) or [])
 
     # PL availability gate.
     pl_inv = _pl_rank_mid_inv_for(mlbam_id, ptype)
@@ -684,7 +838,27 @@ def compute_blended_xfp(
     else:
         confidence_tier = 'low'
 
+    # DISAGREEMENT GUARD (2026-07-28): feature COUNT alone said 'high' for
+    # blends 3-5x the production model (Jax 10.82 -> 29.09, Leahy 9.06 ->
+    # 45.64). Counting inputs measures how much we know, not whether the
+    # answer is sane. A blend that far from rh3/rp3 is evidence of a broken
+    # input, so cap confidence and say so — in BOTH directions, since a
+    # blend 3x too LOW is equally broken.
+    model_rate = _production_rate(mlbam_id, ptype)
+    blend_vs_model_ratio = None
+    if model_rate and blended_xfp and blended_xfp > 0:
+        ratio = float(blended_xfp) / model_rate
+        blend_vs_model_ratio = ratio
+        if max(ratio, 1.0 / ratio) > _BLEND_DISAGREEMENT_RATIO:
+            notes.append(
+                f'blend_model_disagreement: blended {blended_xfp:.2f} vs model '
+                f'{model_rate:.2f} ({ratio:.1f}x) — confidence capped at low'
+            )
+            confidence_tier = 'low'
+
     result = {
+        'model_rate': model_rate,
+        'blend_vs_model_ratio': blend_vs_model_ratio,
         'blended_xfp': float(blended_xfp),
         'ci_lower_95': float(ci_low_disp),
         'ci_upper_95': float(ci_high_disp),
@@ -1177,6 +1351,30 @@ def _ros_sp_for_mlbam(mlbam_id: int) -> Optional[float]:
         return None
     remaining = max(0, min(28, 32 - gs_to))
     return per_start * remaining
+
+
+def _production_rate(mlbam_id: int, bucket: str) -> Optional[float]:
+    """The production model's rate for this player, in the SAME display unit
+    the blend reports (H fp/game, SP fp/start). Used only to sanity-check the
+    blend against rh3/rp3 — never to move it (Rule 13).
+
+    Returns None for RP: rprs2 publishes season/RoS totals (`xfp_ros`), not a
+    per-appearance rate, so there is no like-for-like comparison. The guard
+    simply stays inactive there rather than comparing mismatched units.
+    """
+    if bucket == 'RP':
+        return None
+    df = _load_projection_csv(bucket)
+    if df is None or df.empty:
+        return None
+    id_col, rate_col = ('batter', 'xfp_rh3_per_game') if bucket == 'H' else ('pitcher', 'xfp_rp3_per_start')
+    if id_col not in df.columns or rate_col not in df.columns:
+        return None
+    rows = df[df[id_col] == mlbam_id]
+    if rows.empty:
+        return None
+    v = _f(rows.iloc[0].get(rate_col))
+    return None if (_isnan(v) or v <= 0) else float(v)
 
 
 def _empty_result(reason: str) -> dict:
