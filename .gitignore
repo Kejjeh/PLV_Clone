@@ -188,3 +188,5 @@ data/research/sigma_study_cache/rp3_2026-*.csv
 # ── box-score-era raw API caches (regenerable via build_panels.py / probes)
 data/research/boxscore_era/raw/
 data/research/boxscore_era/raw_probe/
+# ── ad-hoc session scratch dumps (roster/FA snapshots from one-off scripts)
+scratch_*
