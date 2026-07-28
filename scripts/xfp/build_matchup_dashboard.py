@@ -901,14 +901,13 @@ def fetch_schedules_by_team(team_ids, start_date, end_date):
     Returns a dict keyed by MLB team_id; missing teams default to empty list
     on lookup downstream.
 
-    NOT migrated to mlb_stats.get_schedule (item 9, checked 2026-07-04): shape
-    fits (same team-id keys, abbrevs, probables — live-diffed 224/224 rows), but
-    the `date` field differs — this uses gameDate[:10] (the UTC date, which rolls
-    to TOMORROW for evening ET games) while get_schedule uses the schedule BLOCK
-    date (the actual game day). The block date is more correct (get_schedule would
-    FIX a latent UTC-drift bug here), but this feeds cap-sensitive SP-start
-    counting, so the swap needs a deliberate cap-count regression check first.
-    Left as-is; revisit as a correctness fix with that verification.
+    Dates are the schedule BLOCK date (the actual ET game day), NOT
+    gameDate[:10] — that is a UTC instant which rolls to TOMORROW for evening-ET
+    first pitches, pushing a period's final-day starts outside the cap window.
+    Fixed 2026-07-27 (#10) together with the two matching sites in
+    `plv_clone.mlb_stats.fetch_week_probables`; all three must stay on the same
+    calendar, because `build_sp_starts_by_pitcher` joins probables to this
+    schedule on (pitcher, date) and a split convention silently misses.
     """
     url = (f'https://statsapi.mlb.com/api/v1/schedule?sportId=1'
            f'&startDate={start_date}&endDate={end_date}'
@@ -927,7 +926,7 @@ def fetch_schedules_by_team(team_ids, start_date, end_date):
             away_id = away['team']['id']
             home_p = home.get('probablePitcher', {}) or {}
             away_p = away.get('probablePitcher', {}) or {}
-            date_s = g['gameDate'][:10]
+            date_s = d_block['date']
             home_abbr = home['team'].get('abbreviation', '?').upper()
             away_abbr = away['team'].get('abbreviation', '?').upper()
             if home_id in by_team:

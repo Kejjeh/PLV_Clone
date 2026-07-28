@@ -26,8 +26,14 @@ def predict_rotation_starts(
     week_end: date,
     anchor: date | None = None,
     n_predictions: int = 2,
-) -> list[tuple[date, str]]:
+    with_meta: bool = False,
+) -> list[tuple[date, str]] | list[tuple[date, str, dict]]:
     """Predict up to ``n_predictions`` rotation-gap starts in [week_start, week_end].
+
+    ``with_meta`` appends a ``{"slide", "gap"}`` dict to each tuple. Callers that
+    aggregate ACROSS pitchers need it to break team-game collisions: this
+    function is pure and per-pitcher, so it cannot know another pitcher was
+    already predicted into the same team-game (#10).
 
     Anchor (the date forward from which we count gaps) defaults to the later
     of (a) the latest actual gamelog start and (b) the latest confirmed start
@@ -52,8 +58,18 @@ def predict_rotation_starts(
     # pitcher's underlying rotation cadence is the shorter intervals.
     if len(gamelog_dates) >= 2:
         intervals = [(gamelog_dates[i] - gamelog_dates[i + 1]).days
-                     for i in range(min(3, len(gamelog_dates) - 1))]
-        gap = max(4, min(7, min(intervals)))
+                     for i in range(min(5, len(gamelog_dates) - 1))]
+        # Intervals > 7d are not rotation cadence — they are IL stints, the
+        # All-Star break, or a skipped turn. Drop them, then take the MEDIAN of
+        # what remains. Taking min() over a raw 3-window let a single ASG or
+        # IL-inflated log poison the estimate downward: Henderson's last three
+        # were [5, 8, 48] -> min 5, but his true cadence is 6, which put him a
+        # day early and manufactured a start inside the period (#10).
+        clean = [g for g in intervals if 4 <= g <= 7]
+        if clean:
+            gap = max(4, min(7, sorted(clean)[len(clean) // 2]))
+        else:
+            gap = max(4, min(7, min(intervals)))
     else:
         gap = 5  # single-start gamelog: default to 5-day rotation
     if anchor is None:
@@ -76,7 +92,11 @@ def predict_rotation_starts(
                 match = (cand, sched[cand])
                 break
         if match is not None:
-            out.append(match)
+            if with_meta:
+                out.append((match[0], match[1],
+                            {"slide": abs((match[0] - next_date).days), "gap": gap}))
+            else:
+                out.append(match)
             # Advance the anchor to the MATCHED date (not the pre-slide
             # next_date) so the next iteration doesn't re-fire from the
             # wrong base and produce a double-prediction.
@@ -332,9 +352,10 @@ def fetch_week_probables(
 
     for date_block in sched.get("dates", []):
         for game in date_block.get("games", []):
-            game_date = datetime.fromisoformat(
-                game["gameDate"].replace("Z", "+00:00")
-            ).date()
+            # BLOCK date = actual ET game day. game["gameDate"] is a UTC
+            # instant, which rolls to tomorrow for evening-ET first pitches and
+            # pushes a period's final-day starts out of the cap window (#10).
+            game_date = date.fromisoformat(date_block["date"])
             if not (week_start <= game_date <= week_end):
                 continue
             home = game.get("teams", {}).get("home", {}) or {}
@@ -389,9 +410,10 @@ def fetch_week_probables(
     # Build team-schedule lists for any pitcher we found a team for.
     for date_block in sched.get("dates", []):
         for game in date_block.get("games", []):
-            game_date = datetime.fromisoformat(
-                game["gameDate"].replace("Z", "+00:00")
-            ).date()
+            # BLOCK date = actual ET game day. game["gameDate"] is a UTC
+            # instant, which rolls to tomorrow for evening-ET first pitches and
+            # pushes a period's final-day starts out of the cap window (#10).
+            game_date = date.fromisoformat(date_block["date"])
             if not (week_start <= game_date <= week_end):
                 continue
             home_team_id = ((game.get("teams", {}).get("home") or {}).get("team") or {}).get("id")
@@ -404,7 +426,11 @@ def fetch_week_probables(
                 elif tid == away_team_id:
                     team_schedule_by_pid.setdefault(pid, []).append((game_date, home_abbr))
 
-    # Rotation-gap fill per pitcher.
+    # Rotation-gap fill per pitcher. Predictions are COLLECTED first, then
+    # resolved to at most one per team-game below — predict_rotation_starts is
+    # pure and per-pitcher, so nothing inside it can see that another pitcher
+    # was already predicted into the same game (#10).
+    pred_rows: list[dict] = []
     for pid in pitcher_set:
         log_url = (
             f"{_STATSAPI}/people/{pid}/stats?stats=gameLog&group=pitching"
@@ -425,8 +451,26 @@ def fetch_week_probables(
             confirmed_dates=confirmed_dates_by_pid.get(pid, []),
             team_schedule=team_schedule_by_pid.get(pid, []),
             week_start=week_start, week_end=week_end,
+            with_meta=True,
         )
-        for game_date, opp in predicted:
-            confirmed.setdefault((pid, game_date), opp)
+        for game_date, opp, meta in predicted:
+            pred_rows.append({"pid": pid, "date": game_date, "opp": opp,
+                              "tid": pid_team_id.get(pid),
+                              "slide": meta["slide"], "gap": meta["gap"]})
+
+    # One starter per team-game. A team-date already held by an MLB-confirmed
+    # probable is closed to predictions; among competing predictions the
+    # least-speculative wins — no +/-1 slide first, then the shorter inferred
+    # rotation gap, then pitcher id purely so the result is deterministic.
+    taken: set[tuple[int, date]] = {
+        (pid_team_id[p], d) for (p, d) in mlb_confirmed_keys if p in pid_team_id
+    }
+    for r in sorted(pred_rows, key=lambda r: (r["slide"], r["gap"], r["pid"])):
+        key = (r["tid"], r["date"])
+        if r["tid"] is not None:
+            if key in taken:
+                continue
+            taken.add(key)
+        confirmed.setdefault((r["pid"], r["date"]), r["opp"])
 
     return WeekProbables(starts=confirmed, confirmed_keys=frozenset(mlb_confirmed_keys))

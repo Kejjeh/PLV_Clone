@@ -130,7 +130,7 @@ def test_fetch_week_probables_returns_confirmed_starts_matching_pitcher_ids():
     week_start = date(2026, 5, 22)
     week_end = date(2026, 5, 28)
     schedule_payload = {
-        "dates": [{"games": [
+        "dates": [{"date": "2026-05-24", "games": [
             {
                 "gameDate": "2026-05-24T19:00:00Z",
                 "teams": {
@@ -164,25 +164,30 @@ def test_fetch_week_probables_folds_rotation_gap_predictions_into_confirmed():
     """Bug B integration: pitcher confirmed Mon + 5-day gap gamelog -> predicted Sat too."""
     week_start = date(2026, 5, 18)
     week_end = date(2026, 5, 24)
-    schedule_payload = {"dates": [{"games": [
+    # One block PER DATE, each carrying its `date` — the real /schedule shape.
+    schedule_payload = {"dates": [
         # Mon confirmed for our pitcher (HOU home vs BAL)
-        {
-            "gameDate": "2026-05-18T19:00:00Z",
-            "teams": {
-                "home": {"team": {"id": 117, "abbreviation": "HOU"},
-                          "probablePitcher": {"id": 686613, "fullName": "Hunter Brown"}},
-                "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+        {"date": "2026-05-18", "games": [
+            {
+                "gameDate": "2026-05-18T19:00:00Z",
+                "teams": {
+                    "home": {"team": {"id": 117, "abbreviation": "HOU"},
+                              "probablePitcher": {"id": 686613, "fullName": "Hunter Brown"}},
+                    "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+                },
             },
-        },
+        ]},
         # Sat HOU plays NYY — no probable listed; rotation-gap should fill
-        {
-            "gameDate": "2026-05-23T19:00:00Z",
-            "teams": {
-                "home": {"team": {"id": 117, "abbreviation": "HOU"}},
-                "away": {"team": {"id": 147, "abbreviation": "NYY"}},
+        {"date": "2026-05-23", "games": [
+            {
+                "gameDate": "2026-05-23T19:00:00Z",
+                "teams": {
+                    "home": {"team": {"id": 117, "abbreviation": "HOU"}},
+                    "away": {"team": {"id": 147, "abbreviation": "NYY"}},
+                },
             },
-        },
-    ]}]}
+        ]},
+    ]}
     # Last two actual starts 5 days apart -> gap=5 -> next start = 5/18 + 5 = 5/23.
     gamelog_payload = {"stats": [{"splits": [
         {"date": "2026-05-18", "stat": {"gamesStarted": "1"}},
@@ -281,7 +286,7 @@ def test_fetch_week_probables_resolves_team_via_people_endpoint_fallback():
     week_start = date(2026, 5, 22)
     week_end = date(2026, 5, 25)
     # Schedule has TB games but NO probable listed -> can't resolve team via schedule walk.
-    schedule_payload = {"dates": [{"games": [
+    schedule_payload = {"dates": [{"date": "2026-05-24", "games": [
         {
             "gameDate": "2026-05-24T19:00:00Z",
             "teams": {
@@ -309,3 +314,83 @@ def test_fetch_week_probables_resolves_team_via_people_endpoint_fallback():
     )
 
     assert result.starts == {(663556, date(2026, 5, 24)): "BAL"}
+
+
+# ── Regression: UTC date-rollover + team-game uniqueness (issue #10) ──────────
+
+def test_fetch_week_probables_uses_block_date_not_utc_instant():
+    """A 9:38p ET first pitch has a NEXT-DAY UTC gameDate. The start must be
+    recorded on its real ET game day, or a period's final-day starts fall
+    outside the cap window entirely (#10)."""
+    schedule_payload = {"dates": [{"date": "2026-05-24", "games": [
+        {
+            # 2026-05-24 21:38 ET == 2026-05-25 01:38 UTC
+            "gameDate": "2026-05-25T01:38:00Z",
+            "teams": {
+                "home": {"team": {"id": 108, "abbreviation": "LAA"},
+                          "probablePitcher": {"id": 672282, "fullName": "Reid Detmers"}},
+                "away": {"team": {"id": 117, "abbreviation": "HOU"}},
+            },
+        },
+    ]}]}
+    result = fetch_week_probables(
+        week_start=date(2026, 5, 24), week_end=date(2026, 5, 24),
+        pitcher_ids=[672282],
+        http_get=_make_http_get({
+            "schedule?sportId=1": schedule_payload,
+            "people/672282/stats": {"stats": [{"splits": []}]},
+        }),
+    )
+    assert result.starts == {(672282, date(2026, 5, 24)): "HOU"}
+
+
+def test_fetch_week_probables_never_predicts_two_starters_into_one_team_game():
+    """A team plays one game; it has one starting pitcher. Two rostered
+    same-team arms whose rotation gaps both land on that game must not both be
+    predicted into it (#10) — that inflated a period past its physical maximum.
+    """
+    schedule_payload = {"dates": [{"date": "2026-05-24", "games": [
+        {
+            "gameDate": "2026-05-24T19:00:00Z",
+            "teams": {
+                "home": {"team": {"id": 117, "abbreviation": "HOU"}},
+                "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+            },
+        },
+    ]}]}
+    # Both HOU arms last started 5/19 on a clean 5-day cadence -> both predict 5/24.
+    log = {"stats": [{"splits": [
+        {"date": "2026-05-19", "stat": {"gamesStarted": "1"}},
+        {"date": "2026-05-14", "stat": {"gamesStarted": "1"}},
+        {"date": "2026-05-09", "stat": {"gamesStarted": "1"}},
+    ]}]}
+    result = fetch_week_probables(
+        week_start=date(2026, 5, 24), week_end=date(2026, 5, 24),
+        pitcher_ids=[686613, 592789],
+        http_get=_make_http_get({
+            "schedule?sportId=1": schedule_payload,
+            "people/686613?hydrate": {"people": [{"id": 686613, "currentTeam": {"id": 117}}]},
+            "people/592789?hydrate": {"people": [{"id": 592789, "currentTeam": {"id": 117}}]},
+            "people/686613/stats": log,
+            "people/592789/stats": log,
+        }),
+    )
+    on_the_day = [k for k in result.starts if k[1] == date(2026, 5, 24)]
+    assert len(on_the_day) == 1, f"one HOU game, one starter expected; got {on_the_day}"
+
+
+def test_rotation_gap_ignores_il_and_all_star_break_intervals():
+    """Henderson's last three intervals were [5, 8, 48] — an ASG break and an IL
+    stint. min() over that window returned 5 against a true cadence of 6, firing
+    a phantom start a day early (#10). Non-rotation intervals must be dropped."""
+    from plv_clone.mlb_stats import predict_rotation_starts
+    gamelog = [date(2026, 7, 22), date(2026, 7, 17), date(2026, 7, 9),
+               date(2026, 5, 22), date(2026, 5, 16), date(2026, 5, 10)]
+    sched = [(date(2026, 8, 2), "LAA"), (date(2026, 8, 3), "PIT")]
+    out = predict_rotation_starts(
+        gamelog_dates=gamelog, confirmed_dates=[date(2026, 7, 28)],
+        team_schedule=sched,
+        week_start=date(2026, 7, 27), week_end=date(2026, 8, 2),
+    )
+    # gap 6 from the 7/28 confirmed anchor -> 8/3, outside the window -> no start.
+    assert out == [], f"expected no in-window prediction, got {out}"
