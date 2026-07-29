@@ -3,7 +3,7 @@ from __future__ import annotations
 import sys, time
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 sys.path.insert(0, str(ROOT / 'scripts'))
 
 from fetch_fangraphs import run

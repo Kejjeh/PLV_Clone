@@ -7,7 +7,7 @@ import sys, time, re, asyncio
 from pathlib import Path
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 OUTPUTS = ROOT / 'data' / 'outputs'
 
 YEARS = [2020, 2021, 2022, 2023, 2024, 2025]

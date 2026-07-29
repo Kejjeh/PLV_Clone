@@ -23,7 +23,7 @@ import joblib
 
 warnings.filterwarnings('ignore')
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_relievers_2018_2026.csv'
 COUNTING_DIR = ROOT / 'data' / 'research' / 'xfp_cache'
 MODEL_PKL = ROOT / 'data' / 'models' / 'xfp_rprs1_pipeline.pkl'

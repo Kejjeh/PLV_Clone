@@ -21,7 +21,7 @@ import numpy as np
 import pandas as pd
 
 warnings.filterwarnings('ignore')
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = CACHE / 'park_factors.csv'
 YEARS = [2022, 2023, 2024, 2025]

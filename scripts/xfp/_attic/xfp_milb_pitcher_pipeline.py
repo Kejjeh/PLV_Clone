@@ -18,7 +18,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.linear_model import RidgeCV, HuberRegressor
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 EXT_PATH = CACHE / 'milb_pitchers_ext_2015_2026.csv'

@@ -24,7 +24,7 @@ import joblib
 
 warnings.filterwarnings('ignore')
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_hitters_2018_2026.csv'
 MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2026.csv'
 MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'

@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 import numpy as np
 import pandas as pd
 
-ROOT = Path(__file__).resolve().parents[2]
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
 from xfp_v7_pipeline import (load_data, derive_features, add_ip_resid_lag,
                               ooy_evaluate, cross_year_evaluate, ytd_tracking_evaluate,
