@@ -1,0 +1,22 @@
+{
+ "sentiment": {
+  "freddy peralta": "🟡→ wk18 List #57 (unch) 'rough as anything… hasn't looked terribly off from previous years, though' — hold-lean, unchanged from wk17",
+  "jose soriano": "🔴↓ wk18 List #78 (unch) 'wonderful start to the year… erratic and harmful since' — off streamer board; sell, unchanged from wk17",
+  "kyle bradish": "🟢↑ wk18 List #36 (+2) 'slider and curveball are the key to everything… not thrilled to see him go' — mild helper, small climb",
+  "drew rasmussen": "🟢→ wk18 List #12 (+1) 'knocked around… clear One Night Bland. Nothing to fear' — elite tier holds",
+  "jake bennett": "🟢↑ wk18 List #43 (+2) 'premium SWATCH thus far… hope it continues despite a lack of breakers' — small climb",
+  "trevor rogers": "🟢↑ wk18 List #44 (+2) 'pumping 94+ mph heaters up with secondaries down… hasn't looked better all year' — velo-driven helper",
+  "shota imanaga": "🟡→ wk18 List #40 (+1) 'told there would be more HRs… also told he'd continue to sit around 92 mph' — steady",
+  "eury perez": "🟢↑↑ wk18 List #32 (+16) 'starting to come alive in the way we dreamed he would last winter' — major climb, breakout tier",
+  "hunter greene": "🟢↑ wk18 List #14 (+5) 'Coronation Day awaits after still looking great in Coors' — helper, elite tier",
+  "parker messick": "🟡→ wk18 List #39 (+1) 'still a solid play you should generally slot into your lineup… sad it's back down' — steady",
+  "logan henderson": "🔴↓ wk18 List #33 (-2) 'adore Henderson when he pitches, but can't ignore getting pulled for a forearm cramp' — injury-watch dock",
+  "griffin jax": "🟢↑ wk18 List #35 (+1) 'ignore his weekend start against the Red Sox, that was a circus. His stuff is unreal' — helper",
+  "emmet sheehan": "🔴↓ wk18 List #45 (-1) 'shallow numbers aren't pretty, but the skills sure are. Trust the positive regression' — minor dock, still bullish tone"
+ },
+ "_meta": {
+  "source": "https://pitcherlist.com/top-100-starting-pitchers-for-2026-fantasy-baseball-7-20-week-18-rankings/",
+  "fetched": "2026-07-20",
+  "coverage_note": "Partial — only names relevant to current roster+FA comparisons were fetched verbatim; not a full 100-pitcher sentiment set like some prior snapshots. Rank deltas computed vs wk17 (2026-07-18 pl_sps_top100 cache)."
+ }
+}

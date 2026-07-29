@@ -104,8 +104,18 @@ data/research/rp_archetype_career_panel.parquet
 data/research/hr14d_*.parquet
 data/research/batter_name_map.parquet
 
-# Triangulate mega-research ephemeral outputs (live roster + FA snapshots)
-data/research/triangulate_universe/
+# Triangulate mega-research ephemeral outputs (live roster + FA snapshots).
+# Trailing /* is deliberate and load-bearing: git does NOT descend into an
+# excluded DIRECTORY, so a bare `dir/` would make the negations below silent
+# no-ops. Matching the CONTENTS is what lets specific files be re-included.
+data/research/triangulate_universe/*
+# ...except the hand-curated Pitcher List sentiment caches. These are INPUTS,
+# not outputs: distilled by hand from PL articles (SP Roundup / Streamer / The
+# List; hitter List + Hitter Recap) and NOT regenerable by any script. Losing
+# them on a clean checkout loses the boards' only external lens. Everything
+# else in this directory is a regenerable board/snapshot output.
+!data/research/triangulate_universe/nick_sentiment_*.json
+!data/research/triangulate_universe/pl_hitter_sentiment_*.json
 
 # Research archive — historical snapshots, local-only (see _archive/README.md)
 data/research/_archive/

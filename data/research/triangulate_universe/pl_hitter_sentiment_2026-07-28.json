@@ -1,0 +1,21 @@
+{
+ "fetched": "2026-07-28",
+ "sources": [
+  "PL Top 150 Hitters wk16 (7/22, Scott Chu)",
+  "PL Hitter Recap 7/24 (Ryan Clark), 7/25 (Kevin O’Brien), 7/26 (Kyle Stanzel), 7/27 (Ryan Amore)"
+ ],
+ "coverage_note": "Sparse BY SOURCE DESIGN. Hitter Recap features ~5-8 noteworthy performances out of ~250 hitters who played, vs SP Roundup covering essentially every starter. 10 of 61 MINE/FA rows carry sentiment; the rest are genuinely unwritten-about, not missing data.",
+ "sentiment": {
+  "jordan walker": "🟢↑ List wk16 #11 'continues to make in-season adjustments — the root of why he's a stud in 2026' [Chu]",
+  "corbin carroll": "🔴↓ List wk16 #16 'poor results well earned — 32.1% K over 18 games with a single barrel' [Chu]",
+  "luis garcia": "🟢↑↑ List wk16 #33 'one of four players with a wOBA north of .450 since May 25 — incredible company' [Chu]",
+  "ryan ohearn": "🟢↑ List #63 'facing lefties hasn't diluted his 2026 numbers' + 7/26 recap grand slam off Taillon [Chu/Stanzel]",
+  "jj bleday": "🟡→ List #116 'still believe in a resurgence, but it needs a return to mostly-average contact' [Chu]",
+  "trent grisham": "🟢↑ List 'solid in his return, appears to have found nearly everyday playing time' [Chu]",
+  "ceddanne rafaela": "🟡→ 7/27 recap first career grand slam; 'doesn't walk, poor swing decisions (79 DV)' but .763 OPS (+50) [Amore]",
+  "salvador perez": "🟢↑ 7/25 recap career HR #318 — passes Brett as Royals all-time leader [O'Brien]",
+  "eugenio suarez": "🟡→ 7/24 recap 'reunion season one to forget, but still doing what he does best: hitting homers' [Clark]",
+  "jake burger": "🟡→ 7/24 recap 'poor ratios, lots of Ks, streaky — but great pop, always HR potential' [Clark]"
+ },
+ "key_note": "Keys use plv_clone.utils.name_match.safe_name_key (OWNER). A local normalizer here previously mis-keyed curly-apostrophe names."
+}
