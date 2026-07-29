@@ -1,10 +1,10 @@
 {
-  "fetched": "2026-07-28",
+  "fetched": "2026-07-29",
   "il": {
     "Konnor Griffin": "SIXTY_DAY_DL",
     "Robert Suarez": "FIFTEEN_DAY_DL",
     "Corey Seager": "TEN_DAY_DL",
-    "Casey Schmitt": "OUT",
+    "Casey Schmitt": "TEN_DAY_DL",
     "Garrett Crochet": "SIXTY_DAY_DL",
     "Blake Snell": "SIXTY_DAY_DL",
     "Max Meyer": "FIFTEEN_DAY_DL",
@@ -16,6 +16,7 @@
     "Josh Jung": "TEN_DAY_DL",
     "Aaron Judge": "SIXTY_DAY_DL",
     "Tyler Glasnow": "SIXTY_DAY_DL",
+    "Curtis Mead": "TEN_DAY_DL",
     "Nick Pivetta": "SIXTY_DAY_DL",
     "Cody Bellinger": "TEN_DAY_DL",
     "Brandon Woodruff": "SIXTY_DAY_DL",
@@ -33,7 +34,7 @@
       "name": "Corey Seager",
       "status": "TEN_DAY_DL",
       "return_date": "2026-07-31",
-      "days_until_return": 3,
+      "days_until_return": 2,
       "injury_type": "Back",
       "status_code": "IL10"
     },
@@ -41,7 +42,7 @@
       "name": "Tyler Glasnow",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-21",
-      "days_until_return": 24,
+      "days_until_return": 23,
       "injury_type": "Back",
       "status_code": "IL60"
     },
@@ -49,7 +50,7 @@
       "name": "Aaron Judge",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-07",
-      "days_until_return": 10,
+      "days_until_return": 9,
       "injury_type": "Ribs",
       "status_code": "IL60"
     },
@@ -57,7 +58,7 @@
       "name": "Blake Snell",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-11",
-      "days_until_return": 14,
+      "days_until_return": 13,
       "injury_type": "Elbow",
       "status_code": "IL60"
     },
@@ -65,7 +66,7 @@
       "name": "Cody Bellinger",
       "status": "TEN_DAY_DL",
       "return_date": "2026-09-01",
-      "days_until_return": 35,
+      "days_until_return": 34,
       "injury_type": "Hamstring",
       "status_code": "IL10"
     },
@@ -73,7 +74,7 @@
       "name": "Edwin Diaz",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-07-29",
-      "days_until_return": 1,
+      "days_until_return": 0,
       "injury_type": "Elbow",
       "status_code": "IL60"
     },
@@ -81,7 +82,7 @@
       "name": "Nick Pivetta",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-10",
-      "days_until_return": 13,
+      "days_until_return": 12,
       "injury_type": "Forearm",
       "status_code": "IL60"
     },
@@ -89,7 +90,7 @@
       "name": "Juan Soto",
       "status": "TEN_DAY_DL",
       "return_date": "2026-08-21",
-      "days_until_return": 24,
+      "days_until_return": 23,
       "injury_type": "Calf",
       "status_code": "IL10"
     },
@@ -97,7 +98,7 @@
       "name": "Brandon Woodruff",
       "status": "SIXTY_DAY_DL",
       "return_date": "2028-02-01",
-      "days_until_return": 553,
+      "days_until_return": 552,
       "injury_type": "Shoulder",
       "status_code": "IL60"
     },
@@ -105,15 +106,15 @@
       "name": "Will Smith",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-13",
-      "days_until_return": 16,
+      "days_until_return": 15,
       "injury_type": "Neck",
       "status_code": "IL60"
     },
     "39712": {
       "name": "Oneil Cruz",
       "status": "SIXTY_DAY_DL",
-      "return_date": "2026-08-08",
-      "days_until_return": 11,
+      "return_date": "2026-08-07",
+      "days_until_return": 9,
       "injury_type": "Hand",
       "status_code": "IL60"
     },
@@ -121,7 +122,7 @@
       "name": "Zac Gallen",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-08-14",
-      "days_until_return": 17,
+      "days_until_return": 16,
       "injury_type": "Elbow",
       "status_code": "IL15"
     },
@@ -129,15 +130,23 @@
       "name": "Ben Brown",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-08-21",
-      "days_until_return": 24,
+      "days_until_return": 23,
       "injury_type": "Neck",
       "status_code": "IL15"
     },
     "42178": {
       "name": "Adley Rutschman",
       "status": "TEN_DAY_DL",
-      "return_date": "2026-07-29",
-      "days_until_return": 1,
+      "return_date": "2026-08-14",
+      "days_until_return": 16,
+      "injury_type": "Wrist",
+      "status_code": "IL10"
+    },
+    "42360": {
+      "name": "Curtis Mead",
+      "status": "TEN_DAY_DL",
+      "return_date": "2026-09-15",
+      "days_until_return": 48,
       "injury_type": "Wrist",
       "status_code": "IL10"
     },
@@ -145,14 +154,14 @@
       "name": "Bobby Witt Jr.",
       "status": "TEN_DAY_DL",
       "return_date": "2026-07-31",
-      "days_until_return": 3,
+      "days_until_return": 2,
       "injury_type": "Back",
       "status_code": "IL10"
     },
     "42433": {
       "name": "Nick Lodolo",
       "status": "FIFTEEN_DAY_DL",
-      "return_date": "2026-08-04",
+      "return_date": "2026-08-05",
       "days_until_return": 7,
       "injury_type": "Finger",
       "status_code": "IL15"
@@ -161,7 +170,7 @@
       "name": "Josh Jung",
       "status": "TEN_DAY_DL",
       "return_date": "2026-08-01",
-      "days_until_return": 4,
+      "days_until_return": 3,
       "injury_type": "Calf",
       "status_code": "IL10"
     },
@@ -169,7 +178,7 @@
       "name": "Shea Langeliers",
       "status": "TEN_DAY_DL",
       "return_date": "2026-09-22",
-      "days_until_return": 56,
+      "days_until_return": 55,
       "injury_type": "Knee",
       "status_code": "IL10"
     },
@@ -177,7 +186,7 @@
       "name": "Robert Suarez",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-07-30",
-      "days_until_return": 2,
+      "days_until_return": 1,
       "injury_type": "Elbow",
       "status_code": "IL15"
     },
@@ -185,23 +194,23 @@
       "name": "Garrett Crochet",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-25",
-      "days_until_return": 28,
+      "days_until_return": 27,
       "injury_type": "Lat",
       "status_code": "IL60"
     },
     "4301949": {
       "name": "Casey Schmitt",
-      "status": "OUT",
-      "return_date": "2026-08-07",
-      "days_until_return": 10,
+      "status": "TEN_DAY_DL",
+      "return_date": "2027-02-01",
+      "days_until_return": 187,
       "injury_type": "Knee",
-      "status_code": "O"
+      "status_code": "IL10"
     },
     "4345164": {
       "name": "Max Meyer",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-08-15",
-      "days_until_return": 18,
+      "days_until_return": 17,
       "injury_type": "Neck",
       "status_code": "IL15"
     },
@@ -209,7 +218,7 @@
       "name": "Kyle Harrison",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-08-05",
-      "days_until_return": 8,
+      "days_until_return": 7,
       "injury_type": "Forearm",
       "status_code": "IL15"
     },
@@ -217,7 +226,7 @@
       "name": "Connelly Early",
       "status": "FIFTEEN_DAY_DL",
       "return_date": "2026-08-15",
-      "days_until_return": 18,
+      "days_until_return": 17,
       "injury_type": "Elbow",
       "status_code": "IL15"
     },
@@ -225,7 +234,7 @@
       "name": "Roman Anthony",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-08-04",
-      "days_until_return": 7,
+      "days_until_return": 6,
       "injury_type": "Finger",
       "status_code": "IL60"
     },
@@ -233,7 +242,7 @@
       "name": "Konnor Griffin",
       "status": "SIXTY_DAY_DL",
       "return_date": "2026-09-04",
-      "days_until_return": 38,
+      "days_until_return": 37,
       "injury_type": "Finger",
       "status_code": "IL60"
     }

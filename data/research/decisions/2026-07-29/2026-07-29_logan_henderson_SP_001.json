@@ -1,0 +1,27 @@
+{
+  "bucket": "SP",
+  "confidence": 0.75,
+  "decision_id": "2026-07-29_logan_henderson_SP_001",
+  "inputs": {
+    "archetype_label": "STUFF_PLUS_CTRL",
+    "archetype_overall": 69,
+    "archetype_traj": "CAREER_LOW",
+    "blended_xfp": 11.027922980436584,
+    "inputs_schema": 2,
+    "live_marginal": -78.26202418213535,
+    "model_rank": 43,
+    "override_tag": null,
+    "pl_rank": 23,
+    "proj_display": 12.131216339907157,
+    "proj_per": 12.131216339907157,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 701656,
+  "player_name": "Logan Henderson",
+  "reason_tag": "strong_hold",
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-29",
+  "verdict_top": "BUY"
+}

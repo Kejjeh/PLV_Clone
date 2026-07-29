@@ -17,8 +17,18 @@
   "mlbam_id": 682829,
   "player_name": "Elly De La Cruz",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-07-29",
+  "settlement": {
+    "actual_fp_per_unit": 0.5945945945945946,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 74,
+    "proj_per": 0.5142857142857143,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": 0.08030888030888028,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-08",
   "verdict_top": "MIXED"
 }

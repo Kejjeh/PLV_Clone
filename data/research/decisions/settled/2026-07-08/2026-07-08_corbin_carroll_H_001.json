@@ -1,0 +1,34 @@
+{
+  "bucket": "H",
+  "confidence": 0.75,
+  "decision_id": "2026-07-08_corbin_carroll_H_001",
+  "inputs": {
+    "archetype_label": "AVERAGE_HITTER",
+    "archetype_overall": 57,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 3.0892535765159335,
+    "live_marginal": null,
+    "model_rank": 16,
+    "override_tag": null,
+    "pl_rank": 10,
+    "proj_per": 2.2,
+    "replacement_delta": null
+  },
+  "mlbam_id": 682998,
+  "player_name": "Corbin Carroll",
+  "reason_tag": "strong_hold",
+  "settled_at": "2026-07-29",
+  "settlement": {
+    "actual_fp_per_unit": 0.5066666666666667,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 75,
+    "proj_per": 0.6285714285714287,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.12190476190476196,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-07-08",
+  "verdict_top": "BUY"
+}
