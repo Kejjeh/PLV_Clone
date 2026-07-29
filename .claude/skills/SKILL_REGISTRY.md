@@ -118,7 +118,7 @@ resolve through it.
 ### Hitter boards
 | Skill | Status | Role |
 |---|---|---|
-| **hitter-board** | active | CANONICAL hitter board — `--mode {slate\|level\|replace}` (P2 executed 2026-07-20, MODIFIED: xfp-board + hitter-compare deliberately NOT absorbed — see notes on their rows) |
+| **hitter-board** | active | CANONICAL hitter board — `--mode {slate\|level\|replace\|pl}` (P2 executed 2026-07-20, MODIFIED: xfp-board + hitter-compare deliberately NOT absorbed — see notes on their rows). **`pl` added 2026-07-28**: PL-spined board (one row per PL Top-150 hitter that is MINE/FA, ▲▼ vs prior edition) — the hitter twin of `/sp-board --scope roster`. New surface, no alias. Engine `build_hitter_pl_board.py` |
 | hitter-slate-grid | alias | → `/hitter-board --mode slate` (holds the 14-layer recipe) |
 | level-board | alias | → `/hitter-board --mode level` (holds the recipe) |
 | xfp-board | active | Merged roster+FA RoS/playoff dual-rank HTML boards — CROSS-POSITION (its SP half would misroute under hitter-board; kept standalone) |
@@ -178,6 +178,7 @@ resolve through it.
 | moves | meta | decision-gates check → churn-plan verify → cap-check → forced-drop-planner (execution state; live-scan truth) |
 | player-verdict | meta | guards (verify + role + id) → triangulate N names → pitcher-/hitter-compare (bucket-correct) → boom-bust-history → ONE firm verdict (Rule 12) |
 | all-boards | meta | sp-board slate → streamer-precision-board (+boom>=2) → hitter-board slate → fa-pitcher-pool sp+rp → fa-monitor HIGH; one FA pull |
+| **team** | meta | sp-board --scope roster + hitter-board --mode pl over one FA pull → cross-position synthesis (2026-07-28). The **PL-spined** cross-position surface: one row per PL-ranked SP/hitter that is MINE or FA, ▲▼ vs prior edition. Distinct from all-boards (slate-spined market browse) and xfp-board (model-spined single value scale) — spine, not data, is the difference. Owns the **cadence-asymmetry header** (SP Top 100 Mon vs hitter Top 150 Wed → the two halves are always at different edition ages) |
 | form-check | meta | sp-form ×4 lenses (+rp-decline) → hitter-form roster (+career) → flag-routed deep-dive queue (Rule 13 sweep) |
 
 **Alias policy:** the 6 alias skills keep their full recipe text and trigger
