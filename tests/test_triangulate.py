@@ -220,8 +220,25 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     # override_tag asserted only when we have a strong expectation.
     # For None expectations we still check it's None — non-overridden
     # verdicts should never carry a tag.
-    assert result["override_tag"] == override_tag, (
+    #
+    # IL-DRIFT RELAXATION (2026-07-28). An 'IL' tag on a player the live
+    # injury cache reports as injured is the engine correctly reporting
+    # HEALTH, not a verdict regression — and health drifts between runs.
+    # Casey Schmitt reddened this lock by landing on the IL; hard-coding
+    # 'IL' into his row would just flip it red again the day he's activated.
+    # This table encodes each player's ANALYTICAL read, so neutralise a
+    # transient IL tag and keep every other lock live. Deliberately narrow:
+    #   - a row that EXPECTS 'IL' (Judge, season-long 60-day) still enforces,
+    #     because override_tag is not None there;
+    #   - a HEALTHY player carrying a spurious 'IL' tag still fails, because
+    #     il is None;
+    #   - any other unexpected tag still fails.
+    actual_tag = result["override_tag"]
+    if actual_tag == "IL" and il is not None and override_tag is None:
+        actual_tag = None
+    assert actual_tag == override_tag, (
         f"{name!r} override_tag={result['override_tag']!r}, expected {override_tag!r}"
+        f"{'' if il is None else f' (live IL status: {il!r})'}"
     )
 
 
