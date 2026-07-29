@@ -156,6 +156,52 @@ two separate assembly paths agreeing on the same number.
 
 ---
 
+## Empirical confirmation — affected validations re-run (2026-07-28)
+
+The blast-radius argument above is analytical (dates + file locations). It was then
+checked by **re-running the at-risk validations against the fixed baseline** and
+comparing to the recorded verdicts.
+
+Defining the at-risk set required separating the two bugs, because they have
+different windows:
+
+- **Bug 1 (`ROOT`)** was live 2026-07-19 → 07-28. Zero recorded runs fall in it.
+- **Bug 2 (stale `RH3_FEATS`)** has a *wider* window — `bx_prior_h` was promoted
+  2026-07-10, so any rh3 validation run after that date against a hardcoded
+  21-feature list would be a Rule 9 violation independent of the file move. **Five
+  rh3 validations ran on 2026-07-19**, inside that window.
+
+A repo-wide scan settles it: **exactly one script hardcodes a baseline feature
+list** (`validate_pitch_shape_early_warning.py`, `RP3_FEATS`), and its 24 features
+match live production. Every other harness imports the list. The five 07-19 runs go
+through `scripts/xfp/_validate_rh3_v3_helper.py`, which uses
+`feats_base = list(rh3.RH3_FEATS)` — the live 22-feature list — and explicitly
+merges `ros_opp_sp_xwoba_weighted` and `bx_prior_h` via `rh3.*_CSV` production path
+constants (all four verified `.exists() == True`, so the helper's own
+`else: … = 0.0` fallbacks never fire).
+
+### Re-run results — all baselines 0.6419 (correct 22-feature value)
+
+| Signal | Recorded 2026-07-19 | Re-run 2026-07-28 | Verdict |
+|---|---|---|---|
+| `ev90_to_sh` | MARGINAL | Δr +0.0016, 4/7, holdout 1/2, coef OK | **unchanged** |
+| `pulled_air_rate` | Δr +0.0003, 4/7, holdout 2/2, sign WRONG | identical | **unchanged** |
+| `sb_takeoff_rate` | Δr −0.0001, 1/7, holdout 0/2, sign WRONG | identical | **unchanged** |
+| `spray_adj_xwobacon` | Δr +0.0004, 4/7, holdout 1/2, sign WRONG | Δr +0.0003, 4/7, 1/2, WRONG | **unchanged** |
+| `teammate_context` (`r_context`) | Δr +0.0027, 5/7, holdout 1/2, coef OK | identical | **unchanged** |
+
+Plus the harness's own A–F sweep, re-run under the fixed 22-feature baseline:
+A +0.0000, B −0.0001, D +0.0002, E −0.0004, F +0.0000 — all REJECTED/MARGINAL as
+originally recorded, none promoted.
+
+`spray_adj_xwobacon` moved by 1 unit in the 4th decimal (+0.0004 → +0.0003),
+consistent with statcast having refreshed since 07-19. It does not approach the
+gate and its coefficient sign is wrong either way.
+
+**Six validation runs re-executed, zero verdict changes.** The analytical
+zero-blast-radius conclusion is confirmed empirically. No registry entry was
+rewritten.
+
 ## Repo-wide sweep — all 56 stale anchors fixed (2026-07-28)
 
 The first scan undercounted. Widening the pattern beyond a bare line-start
