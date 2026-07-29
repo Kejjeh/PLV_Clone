@@ -49,7 +49,28 @@ starting <year Y>.
 
 ## Index
 
+## Harness integrity — the 2026-07-19 `ROOT` bug (FIXED 2026-07-28)
+
+The 2026-07-19 archive commit (`b42b561`) moved 96 scripts into
+`scripts/xfp/research/`, `_attic/`, and `archive/` **one directory deeper** without
+updating their hardcoded `ROOT = Path(__file__).resolve().parents[2]`. In **56** of
+them `ROOT` resolved to `<repo>/scripts`, so baseline inputs silently failed
+`.exists()` and were filled with `0.0` — a Rule 9 baseline degraded to constant
+features, which inflates any candidate's measured lift.
+
+Measured cost on rh3: baseline cross-year r **0.6418 → 0.6050**, i.e. **−0.0368**,
+against a **+0.005** gate — 7.4× the gate in spurious headroom.
+
+**No recorded verdict is affected.** All 59 preregs citing an affected script ran
+*before* the move; the 9 dated on/after it all cite scripts that never moved.
+
+**Now resolved:** all 56 anchors rewritten to a marker-based walk-up, and
+`tests/test_repo_root_paths.py` fails the build if any repo-root anchor ever drifts
+again. Full assessment:
+[`docs/rh3_harness_root_bug_2026-07-28.md`](../../../docs/rh3_harness_root_bug_2026-07-28.md).
+
 | Date | Signal | Target | Verdict | Notes |
+| 2026-07-28 | xwoba_L150pa (`_within` / `_cross`, Bonferroni 2) | rh3 | MARGINAL (0/2 promoted) | Savant's rolling-leaderboard window (last 150 PA, full xwOBA) vs the FULL 22-feat production baseline. Δ cross-year r **+0.0007** (`_within`) / **+0.0019** (`_cross`) vs the +0.005 gate; sign-consistent 6/7 and holdout 2/2 positive, so a real-but-tiny positive, not a null. **Redundancy diagnostic is the finding:** the candidate is **R²=0.74 reconstructible** from the existing 22 features — marginal r vs target +0.43, but its unique residual carries only +0.03/+0.05. Same signature that killed `xwoba_on_contact_to_sh` (rh3) and `xwoba_contact_to` (rp3). Rule 8 curve: 15/19 cutoffs positive, median +0.0006, but lift is concentrated EARLY (day 30 +0.0041 → ~0 by day 72) — a fixed-PA window only helps while the season sample is thin, which `xwoba_per_pa_to_sh`'s K=300 shrinkage already covers. **Matched-frame correction was load-bearing:** the `_within` frame's baseline r is 0.6641 vs 0.6418 full-frame (thin-sample hitters removed), so comparing extended-on-matched to baseline-on-full would have reported +0.0230 — a **33× over-claim**. Reconciles the +0.062 partial r in `rolling_xwoba_windows_2026-07-28.md` (weaker 3-term control, 14d horizon) with production reality. Do not re-test without new data; window stays a display lens (`current_l150_xwoba`, Rule 13). **Two incidental bugs found and since FIXED:** `validate_rh3_breakout_signals.py` had `ROOT=parents[2]` → resolved to `scripts/`, silently filling 3 baseline inputs with 0.0 (degraded baseline); and its hardcoded RH3_FEATS was stale at 21 vs production's 22. Both repaired, swept repo-wide (56 anchors), and locked by `tests/test_repo_root_paths.py` — see the integrity section above. Prereg + full results `xwoba_L150pa_2026-07-28.md`; script `validate_xwoba_l150pa.py`. |
 |---|---|---|---|---|
 | 2026-07-10 | regime_interactions (R1 sb_x_newrules / R2 barrel_x_ball_env / R3 hr_risk_x_ball_env / R4 swstr_x_sticky, Bonferroni 4) | rh3 (R1,R2) / rp3 (R3,R4) | REJECTED×3 + MARGINAL×1 (0/4 promoted) | Rule-change / ball-era interaction sweep vs FULL production baselines (rh3 r 0.6338 n=36,571; rp3 r 0.5614 n=19,111). NEW as-of ball-era cache `league_hr_env_by_year_split.csv` (league P(HR\|barrel) to-date per (year, split_day); fingerprint 2019 0.592 juiced → 2022 0.475 dead → 2025 0.457 deadest). **R2** barrel×env the only live signal: +0.0048 (just sub-gate), holdout +0.0019, coef + OK, but 4/7 signs with 2019 — the MOST juiced year — the worst dissent (−0.0094, anti-mechanism) → MARGINAL, not promoted. **R3** SP barrel×env −0.0009, 2/7, holdout −, decisive null (main effect itself only +0.0009 — xwoba_to_sh spans contact quality). **R4** swstr×I[≥2022] −0.0013, post-era 1/4 — sticky-crackdown shifted whiff LEVELS, not forward translation. **R1 UNTESTABLE — found a production bug:** `sb_per_pa_to`≡0 for ALL batters ALL years (builder matches stolen_base_* against statcast pitch `events`, which never carries them) → `sb_per_pa_to_sh` is a constant no-op in RH3_FEATS AND the rh3 target `ros_full_fp_per_pa` omits SB points entirely (unused `mlb_sb` sits in hitter_counting_stats JSONs). Fix flagged (task chip) — likely worth more than any regime cell. Script `validate_regime_interactions.py`. |
 | 2026-07-10 | era_normalization (E1 league_fp_env_to / E2 league_sp_fp_env_to / E3 prior_env_gap / E4 prior_env_gap_sp, Bonferroni 4) | rh3 (E1/E3), rp3 (E2/E4) | E1 MARGINAL, E2/E3/E4 REJECTED | League-environment drift across ball/rule eras vs FULL production baselines. Env features = leave-self-out to-date league mean FP rate at (year, split_day), as-of from the substrate itself (0 NaN, 7/7 yrs); real era drift confirmed (hitter env 0.2365 dead-2022 → 0.2666 juiced-2019, ~12% swing). **E1** (rh3 current-year hitter env): +0.0026 (< +0.005 gate), 5/7 signs, holdout 2/2, coef + OK, convergence 3/4 bands but late-season reversal sd>150 −0.0101 — the only live thread, sub-gate, NOT promoted. **E2** (rp3 SP env): +0.0017, 4/7, coef WRONG SIGN (−0.143 — mean-reversion signature, baseline level features already carry env). **E3/E4** (prior-era shift since Marcel prior earned — the sharpest "different balls" test): −0.0001 / −0.0004 nulls; build_prior_table's per-target-year league-mean centering already absorbs prior-era mis-centering. Closes the era-normalization line for the frozen rate models; re-test only when TRAIN_YEARS grows (year-level n=7 is the binding constraint). Script `validate_era_normalization.py`; prereg `era_normalization_2026-07-10.md`. |
