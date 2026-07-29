@@ -187,6 +187,22 @@ def main():
               'pulled SB cutoff forward (leakage-safe, but sb_per_pa_to_sh '
               'will lag until the next successful pull)')
 
+    # Bat-speed daily accumulator (2026-07-29). Bat speed is the ONLY validated
+    # forward hitter process metric, but until now it was readable only as a
+    # YoY delta — the season-aggregate artifacts carry no history and
+    # bat_speed_trending_2026.csv is overwritten nightly. This appends one row
+    # per (batter, day) so an IN-SEASON bat-speed study becomes possible (the
+    # sole declared re-open condition for the closed in-season-delta family).
+    # Derived from the pitch-level xfp_cache parquets, so it inherits the gf
+    # bridge's same-day currency and needs no extra network call.
+    ok_bs = run('1.65. Append bat-speed daily accumulator',
+                'python -X utf8 scripts/xfp/build_bat_speed_daily.py --days 10',
+                timeout=900)
+    if not ok_bs:
+        print('  ⚠ bat-speed accumulator failed — store keeps its last good day; '
+              'idempotent on (batter, game_date) so the next run backfills the '
+              'gap (non-gating)')
+
     run('1.7 (was 1b). Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 
