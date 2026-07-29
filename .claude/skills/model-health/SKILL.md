@@ -77,6 +77,25 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
    - `proj_volume_fill_rate` -> volume builders (steps 4.91/4.92/4.93, formerly
      4.09/4.09b) or snapshot-logger ordering (4.94, formerly 4.10, must run
      AFTER the volume builders)
+   - **DRIFT SENTINELS (added 2026-07-29 — the name/id layer)**
+     - `collision_team_reachability` -> `src/plv_clone/utils/name_match.py`
+       `KNOWN_COLLISIONS` / `KNOWN_PITCHER_COLLISIONS` + `TEAM_CODE_ALIASES`.
+       A FAIL means some collision entry's team hint is keyed to a code NO live
+       ESPN spelling can reach, so `resolve_*_id` will fall through its team
+       filter and can return the WRONG same-name player. **This is a
+       correctness FAIL, not a freshness one — fix before trusting any board
+       that touches a colliding name.** Fix = add the live spelling to
+       `TEAM_CODE_ALIASES` (never widen the gate itself). Canonical incident:
+       ESPN moved the Athletics to `Oak` while the entry said `ATH` (2026-07-29).
+     - `collision_smoke` -> same file. Asserts 12 canonical resolver cases
+       (both Muncys, both Logan Allens, García Jr., Eury Pérez, Soriano) AND
+       that ambiguous/stale-hint inputs still REFUSE. A FAIL means the
+       refuse-to-guess contract is broken again.
+     - `fa_join_coverage` -> `build_fa_snapshot.py` (step 0.7) x the projection
+       CSVs, joined on MLBAM. A drop signals a schema/id drift upstream, not a
+       name-matching problem (the join is id-keyed). Baseline is the trailing
+       7-day mean of this same metric; absolute floors apply until 3 days of
+       history exist.
    Report the finding with severity; fix only with the user's go-ahead.
 3. **Read forward accuracy against the honest baselines**, not against
    same-period fit: forward Spearman ~**0.30-0.40** for rp3 and rh3-vs-TOTAL

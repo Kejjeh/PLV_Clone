@@ -801,6 +801,201 @@ def check_proj_volume_fill(hist: pd.DataFrame | None) -> None:
                 '(tail-rank players legitimately lack a volume row)')
 
 
+# -------------------------------------------------------------------------
+# DRIFT SENTINELS (added 2026-07-29)
+#
+# Motivation: the Max Muncy collision gate rotted SILENTLY. `resolve_batter_id`
+# went from "refuses to guess" to "returns the wrong player" because ESPN's team
+# code for the Athletics drifted to "Oak" while KNOWN_COLLISIONS still keyed
+# "ATH", and the gate then fell through to a position hint that no longer
+# separated the two players. Nothing alerted; it surfaced only because a live FA
+# board produced an obviously wrong row. These three checks make that class of
+# rot loud and nightly. All are OFFLINE — they read committed artifacts only.
+# -------------------------------------------------------------------------
+
+ROSTER_HISTORY_PARQUET = RESEARCH / 'matchup_rosters_history.parquet'
+FA_SNAPSHOT_DIR = RESEARCH / 'fa_snapshots'
+
+
+def _live_espn_team_codes() -> set:
+    """The ESPN `pro_team` vocabulary, offline, from the roster history panel.
+
+    This is the vocabulary that actually reaches the resolvers at runtime
+    ('Oak', 'ChW', 'Wsh', ...) — distinct from the Statcast codes the model CSVs
+    carry ('ATH', 'CWS', 'WSH'). The whole point of the reachability check is
+    that these two vocabularies must be bridged by team_key().
+    """
+    df = pd.read_parquet(ROSTER_HISTORY_PARQUET, columns=['snapshot_date', 'pro_team'])
+    df = df[df['pro_team'].notna() & (df['pro_team'].astype(str).str.strip() != '')]
+    if df.empty:
+        return set()
+    # last 30 days is plenty to see all 30 clubs, and keeps a long-dead
+    # abbreviation from a prior season out of the vocabulary
+    df['snapshot_date'] = pd.to_datetime(df['snapshot_date']).dt.date
+    recent = df[df['snapshot_date'] >= (TODAY - timedelta(days=30))]
+    use = recent if not recent.empty else df
+    return {str(t).strip() for t in use['pro_team'].unique()}
+
+
+def check_collision_team_reachability() -> None:
+    """Every KNOWN_COLLISIONS team hint must be reachable from a LIVE ESPN code.
+
+    The 2026-07-29 failure: KNOWN_COLLISIONS['Max Muncy'] carried team 'ATH',
+    ESPN reported 'Oak', team_key had no OAK->ATH bridge in the gate's compare,
+    so the team filter matched zero candidates and the resolver fell through.
+    FAIL on any entry no live code can reach — that entry's disambiguator is dead.
+    """
+    from plv_clone.utils.name_match import (
+        KNOWN_COLLISIONS, KNOWN_PITCHER_COLLISIONS, team_key)
+
+    if not ROSTER_HISTORY_PARQUET.exists():
+        add_row('data_health', 'collision_team_reachability', 'all', None,
+                'SKIP', 'matchup_rosters_history.parquet missing')
+        return
+    espn = _live_espn_team_codes()
+    if not espn:
+        add_row('data_health', 'collision_team_reachability', 'all', None,
+                'SKIP', 'no pro_team values in roster history')
+        return
+    reachable = {team_key(c) for c in espn}
+
+    unreachable, n_entries = [], 0
+    for label, table in (('H', KNOWN_COLLISIONS), ('P', KNOWN_PITCHER_COLLISIONS)):
+        for name, cands in table.items():
+            for ct, _hint, mlbam in cands:
+                n_entries += 1
+                if team_key(ct) not in reachable:
+                    unreachable.append(f'{label}:{name}/{ct}->{team_key(ct)}({mlbam})')
+
+    rate = 1.0 - (len(unreachable) / n_entries) if n_entries else float('nan')
+    status = 'PASS' if not unreachable else 'FAIL'
+    note = (f'{n_entries - len(unreachable)}/{n_entries} collision team hints '
+            f'reachable from {len(espn)} live ESPN codes')
+    if unreachable:
+        note += ' | DEAD: ' + '; '.join(unreachable[:6])
+        note += ' — the resolver will fall through and may return the WRONG player'
+    add_row('data_health', 'collision_team_reachability', 'all', rate, status, note)
+
+
+def check_collision_smoke() -> None:
+    """Canonical resolver cases, asserted. Pure table lookups — no data files.
+
+    These are the exact inputs that have burned us. If any returns the wrong id,
+    or a should-refuse case silently resolves, the gate is broken again.
+    """
+    from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+
+    cases = [
+        # (callable, kwargs, expected, why this case exists)
+        ('Max Muncy Oak+3B', lambda: resolve_batter_id(
+            'Max Muncy', team='Oak', position='3B'), 691777,
+         'the 2026-07-29 bug: ESPN team spelling + a position hint that no '
+         'longer separates the two Muncys'),
+        ('Max Muncy ATH', lambda: resolve_batter_id(
+            'Max Muncy', team='ATH'), 691777, 'statcast team spelling'),
+        ('Max Muncy LAD', lambda: resolve_batter_id(
+            'Max Muncy', team='LAD'), 571970, 'the established veteran'),
+        ('Max Muncy hintless', lambda: resolve_batter_id('Max Muncy'), None,
+         'must refuse to guess'),
+        ('Max Muncy pos-only 3B', lambda: resolve_batter_id(
+            'Max Muncy', position='3B'), None,
+         'both Muncys list 3B now — ambiguous, must refuse'),
+        ('Max Muncy wrong team', lambda: resolve_batter_id(
+            'Max Muncy', team='NYY'), None,
+         'a stale team hint must refuse, never fall through to position'),
+        ('Luis Garcia Jr WSH', lambda: resolve_batter_id(
+            'Luis Garcia Jr.', team='WSH'), 671277, 'unaccented suffix spelling'),
+        ('Logan Allen SDP', lambda: resolve_pitcher_id(
+            'Logan Allen', team='SDP'), 663531,
+         'FanGraphs team spelling; role=SP matches BOTH Allens so a '
+         'fall-through would return the CLE arm'),
+        ('Logan Allen CLE', lambda: resolve_pitcher_id(
+            'Logan Allen', team='CLE'), 671106, 'the current rotation arm'),
+        ('Logan Allen role-only', lambda: resolve_pitcher_id(
+            'Logan Allen', role='SP'), None, 'ambiguous, must refuse'),
+        ('Eury Perez MIA', lambda: resolve_pitcher_id(
+            'Eury Perez', team='MIA'), 691587, 'accent-drift resolution force'),
+        ('Jose Soriano hintless', lambda: resolve_pitcher_id(
+            'Jose Soriano'), 667755, 'single-candidate force resolves hintless'),
+    ]
+    failures = []
+    for label, fn, expected, _why in cases:
+        try:
+            got = fn()
+        except Exception as e:
+            failures.append(f'{label}: raised {type(e).__name__}')
+            continue
+        if got != expected:
+            failures.append(f'{label}: got {got}, want {expected}')
+
+    status = 'PASS' if not failures else 'FAIL'
+    note = f'{len(cases) - len(failures)}/{len(cases)} canonical resolver cases'
+    if failures:
+        note += ' | BROKEN: ' + '; '.join(failures[:5])
+    add_row('data_health', 'collision_smoke', 'all',
+            (len(cases) - len(failures)) / len(cases), status, note)
+
+
+def check_fa_join_coverage() -> None:
+    """% of the FA pool that joins to its projection CSV, vs a trailing baseline.
+
+    A silent normalizer/schema drift shows up here before it shows up in a bad
+    recommendation: the O'Hearn curly-apostrophe bug (2026-07-28) and the
+    Muncy team drift both manifest as join coverage quietly falling. Joins on
+    MLBAM id — the collision-safe key — so this measures DATA drift, not name
+    matching. WARN at -5pp vs the trailing mean, FAIL at -15pp.
+    """
+    specs = [
+        ('H', FA_SNAPSHOT_DIR / 'fa_pool_H_latest.parquet', RH3_CSV, 'batter'),
+        ('SP', FA_SNAPSHOT_DIR / 'fa_pool_SP_latest.parquet', RP3_CSV, 'pitcher'),
+        ('RP', FA_SNAPSHOT_DIR / 'fa_pool_RP_latest.parquet', RPRS2_CSV, 'pitcher'),
+    ]
+    hist = None
+    if SCORECARD_HISTORY.exists():
+        try:
+            h = pd.read_csv(SCORECARD_HISTORY)
+            hist = h[(h['metric'] == 'fa_join_coverage')]
+        except Exception:
+            hist = None
+
+    for seg, snap_p, proj_p, id_col in specs:
+        if not (snap_p.exists() and proj_p.exists()):
+            add_row('data_health', 'fa_join_coverage', seg, None, 'SKIP',
+                    f'missing {snap_p.name if not snap_p.exists() else proj_p.name}')
+            continue
+        snap = pd.read_parquet(snap_p, columns=['mlbam_id'])
+        ids = pd.to_numeric(snap['mlbam_id'], errors='coerce').dropna().astype(int)
+        if ids.empty:
+            add_row('data_health', 'fa_join_coverage', seg, None, 'SKIP',
+                    'no mlbam ids in snapshot')
+            continue
+        proj = pd.read_csv(proj_p, usecols=[id_col])
+        pool = set(pd.to_numeric(proj[id_col], errors='coerce').dropna().astype(int))
+        rate = float(ids.isin(pool).mean())
+
+        base = float('nan')
+        if hist is not None:
+            prior = hist[(hist['segment'] == seg)]
+            prior = prior[prior['date'] != TODAY.isoformat()]
+            vals = pd.to_numeric(prior['value'], errors='coerce').dropna()
+            if len(vals) >= 3:
+                base = float(vals.tail(7).mean())
+        if np.isfinite(base):
+            delta = rate - base
+            status = ('FAIL' if delta <= -0.15 else
+                      'WARN' if delta <= -0.05 else 'PASS')
+            note = (f'{int(ids.isin(pool).sum())}/{len(ids)} FA {seg} rows join '
+                    f'{proj_p.name} by mlbam; {delta:+.3f} vs trailing mean '
+                    f'{base:.3f} (WARN -0.05 / FAIL -0.15)')
+        else:
+            # No baseline yet — report the level, don't invent a threshold.
+            status = 'FAIL' if rate < 0.40 else ('WARN' if rate < 0.70 else 'PASS')
+            note = (f'{int(ids.isin(pool).sum())}/{len(ids)} FA {seg} rows join '
+                    f'{proj_p.name} by mlbam; no trailing baseline yet '
+                    f'(need 3+ prior days) — absolute floors 0.70/0.40 applied')
+        add_row('data_health', 'fa_join_coverage', seg, rate, status, note)
+
+
 def run_data_health() -> None:
     hist = None
     if HISTORY_PARQUET.exists():
@@ -823,6 +1018,10 @@ def run_data_health() -> None:
     _run_check('proj_rowcount_delta_7d',
                lambda: check_projection_rowcounts(hist))
     _run_check('proj_volume_fill_rate', lambda: check_proj_volume_fill(hist))
+    # Drift sentinels (2026-07-29) — silent-rot detection for the name/id layer
+    _run_check('collision_team_reachability', check_collision_team_reachability)
+    _run_check('collision_smoke', check_collision_smoke)
+    _run_check('fa_join_coverage', check_fa_join_coverage)
 
 
 # =========================================================================
