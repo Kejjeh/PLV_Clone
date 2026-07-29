@@ -127,7 +127,15 @@ data/outputs/_*
 # git (already committed) — gitignore only affects untracked files, so listing
 # them here is purely an indexer hint, not a git removal.
 scripts/xfp/archive/
-scripts/xfp/research/
+# research/ is listed as `/*` rather than `/` so git still DESCENDS into it —
+# a trailing-slash dir exclude makes the `!` re-include below a silent no-op
+# ("cannot re-include a file if a parent directory is excluded"). The
+# validate_* harnesses gate model promotions under Rule 9, so they must be
+# versioned; the other ~89 backtest/scratch scripts stay out of git and out of
+# the index. Un-negated 2026-07-28 after a stale ROOT path in an untracked
+# harness silently degraded an rh3 baseline (docs/rh3_harness_root_bug_2026-07-28.md).
+scripts/xfp/research/*
+!scripts/xfp/research/validate_*.py
 scripts/xfp/_research/
 scripts/_oneoff/
 scripts/xfp/_attic/
