@@ -150,6 +150,18 @@ scripts/xfp/research/*
 # same ROOT fix and is worth surviving a clone — named explicitly rather than
 # widening the glob, so the ~88 scratch/probe scripts stay out.
 !scripts/xfp/research/multi_year_sp_backtest.py
+# ...then re-exclude the SUPERSEDED generations of the version chains, so a topic
+# search returns the terminal record and not three drafts of it. These 4 stay
+# TRACKED (they were committed in ef8bdc5; .gitignore does not untrack) — this is
+# purely a CodeGraph indexer hint, same as the archive/ and _attic/ lines above.
+# Named individually, not globbed on `_v[0-9]`: drift_v5_hitters/_sps are
+# different POPULATIONS and pitch_shape impact/in_season/robustness are different
+# QUESTIONS, so both families are complementary rather than superseded.
+# Each entry below is superseded by its own successor's docstring:
+scripts/xfp/research/validate_rolling_trend_v2.py
+scripts/xfp/research/validate_rolling_trend_v3.py
+scripts/xfp/research/validate_pl_signals.py
+scripts/xfp/research/validate_skill_spike_5g.py
 scripts/xfp/_research/
 scripts/_oneoff/
 scripts/xfp/_attic/
