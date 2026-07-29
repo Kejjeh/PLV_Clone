@@ -136,6 +136,10 @@ scripts/xfp/archive/
 # harness silently degraded an rh3 baseline (docs/rh3_harness_root_bug_2026-07-28.md).
 scripts/xfp/research/*
 !scripts/xfp/research/validate_*.py
+# Not a validate_* harness, but it is a real multi-year backtest that carries the
+# same ROOT fix and is worth surviving a clone — named explicitly rather than
+# widening the glob, so the ~88 scratch/probe scripts stay out.
+!scripts/xfp/research/multi_year_sp_backtest.py
 scripts/xfp/_research/
 scripts/_oneoff/
 scripts/xfp/_attic/
