@@ -96,6 +96,53 @@ def test_resolver_accent_and_suffix_forces_2026_07_20():
     assert resolve_batter_id("Max Muncy", team="LAD") == 571970
 
 
+def test_collision_gate_team_hint_is_canonical_and_authoritative_2026_07_29():
+    """2026-07-29 live regression: the FA replacement-pool board surfaced the
+    Oakland Max Muncy carrying the LAD Muncy's projection.
+
+    ``resolve_batter_id("Max Muncy", team="Oak", position="3B")`` returned
+    571970 (LAD, rh3 #60, 1.97 FP/g, 62.0 RoS) instead of 691777 (ATH, rh3
+    #436, 1.27 FP/g, signal=drop) — so a drop-signal bat ranked 4th of ~490
+    candidates as an "upgrade". Two independent faults:
+
+      1. the gate compared raw ``.upper()`` team strings, so ESPN's "Oak"
+         matched neither "LAD" nor "ATH" (``team_key`` aliases OAK→ATH);
+      2. it then FELL THROUGH to the position hint, where "3B" matched the
+         LAD entry — the silent guess the docstring promises never happens.
+    """
+    from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+
+    # (1) ESPN's live team spelling now resolves, with or without a position.
+    assert resolve_batter_id("Max Muncy", team="Oak") == 691777
+    assert resolve_batter_id("Max Muncy", team="Oak", position="3B") == 691777
+    assert resolve_batter_id("Max Muncy", team="OAK", position="C") == 691777
+    assert resolve_batter_id("Max Muncy", team="ATH") == 691777
+    # The LAD side is unaffected, and a position hint can't override team.
+    assert resolve_batter_id("Max Muncy", team="LAD") == 571970
+    assert resolve_batter_id("Max Muncy", team="LAD", position="SS") == 571970
+
+    # (2) A team hint that matches NO candidate refuses — it must not fall
+    # through to position and hand back an arbitrary player.
+    assert resolve_batter_id("Max Muncy", team="NYY", position="3B") is None
+    assert resolve_batter_id("Max Muncy", team="NYY") is None
+
+    # (3) Both Muncys are listed at 3B now, so position alone is ambiguous
+    # and must refuse rather than pick the first match.
+    assert resolve_batter_id("Max Muncy", position="3B") is None
+    assert resolve_batter_id("Max Muncy") is None
+    # A position unique to one of them still resolves.
+    assert resolve_batter_id("Max Muncy", position="DH") == 571970
+
+    # (4) Same fault existed pitcher-side: "SDP" missed both Logan Allens on
+    # the raw compare, then role="SP" matched BOTH and returned the CLE id.
+    assert resolve_pitcher_id("Logan Allen", team="SDP") == 663531
+    assert resolve_pitcher_id("Logan Allen", team="SD") == 663531
+    assert resolve_pitcher_id("Logan Allen", team="CLE") == 671106
+    assert resolve_pitcher_id("Logan Allen", role="SP") is None   # ambiguous
+    assert resolve_pitcher_id("Logan Allen", team="NYY", role="SP") is None
+    assert resolve_pitcher_id("Logan Allen") is None
+
+
 def test_accented_pitcher_cache_spelling_still_resolves():
     """The accented spelling resolves via the cache path (the force entries
     must not shadow it)."""

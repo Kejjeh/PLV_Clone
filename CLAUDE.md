@@ -313,6 +313,19 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     HardHit%/BB% are redundant/confirmatory). **Practical:** anchor on the season level, use **L21d**
     as the recent-form window, trust **L7 only for bat speed**, and a hot L21d rate with flat bat
     speed = variance, not a new tier. (Caveat: established everyday regulars only.)
+    **Confirmed at 60-cell scale + empirical cutoffs (2026-07-29, `inseason_delta_grid`
+    registry entry):** every in-season DELTA of a rate metric (12 metrics × feasible lags +
+    discipline/contact composites, BH-FDR corrected) adds ~0 to rh3 beyond season-to-date
+    levels — family CLOSED; sole re-open = in-season bat-speed deltas. Window studies MUST use
+    non-overlapping windows (overlapping anchors inflated a holdout +0.090 → ~0).
+    **Canonical empirical sample minimums** (forward r≥0.50 — use these, never hand-picks;
+    each in the metric's OWN denominator): chase **150 OOZ pitches** · zswing **150 IZ
+    pitches** · whiff **150 swings** · swstr **150 pitches** · K% **50 PA** ·
+    hard-hit/barrel **50 BIP** · BB% **175 PA** · xwOBA/PA **225 PA** · ISO **275 AB** ·
+    HR-rate **275 PA**. Consequence: any ≤3-week
+    "walking more" / "ISO jumped" read is noise BY CONSTRUCTION (BB%/power never reach r=0.70
+    in-window); short-window reads are legit only for swing-decision metrics, K%, and
+    hard-hit/barrel at those minimums.
 13. **Model forward-calibration is GOOD — don't "fix" the small under-projection (validated
     2026-06-26).** True forward retrospective (real git-recovered rh3/rp3 snapshots, projected at
     T vs actuals AFTER T; `model_forward_calibration_2026-06-26.md`): forward rank skill is modest

@@ -108,6 +108,10 @@ TEAM_CODE_ALIASES: dict[str, str] = {
     # ESPN / FanGraphs spellings → the Statcast codes the model CSVs carry.
     "ARI": "AZ", "CHW": "CWS", "WSN": "WSH", "OAK": "ATH",
     "SDP": "SD", "SFG": "SF", "TBR": "TB", "KCR": "KC",
+    # Relocation/rename drift. ESPN's live `proTeam` for the Athletics is
+    # "Oak"; the model CSVs carry "ATH". Missing this equivalence is what let
+    # the Max Muncy gate fall through on 2026-07-29 (see _pick_collision_candidate).
+    "ATH": "ATH", "OAKLAND": "ATH", "ATHLETICS": "ATH",
 }
 
 
@@ -178,15 +182,70 @@ def safe_lookup(name, index: dict[str, list], *, team=None):
     return None
 
 
+def _pos_hints(pos) -> frozenset[str]:
+    """Normalize a collision entry's position/role field to a set of hints.
+
+    Accepts a bare string ("3B") or any iterable of strings (("3B", "2B")) so
+    an entry can declare every position a player is credibly listed at.
+    Single-position entries were the second half of the 2026-07-29 Muncy bug:
+    both Muncys are listed at 3B in the current rh3 output, so a one-position
+    hint cannot separate them and must not pretend to.
+    """
+    if pos is None:
+        return frozenset()
+    vals = [pos] if isinstance(pos, str) else list(pos)
+    return frozenset(str(v).upper().strip() for v in vals if str(v).strip())
+
+
+def _pick_collision_candidate(candidates, *, team=None, hint=None) -> Optional[int]:
+    """Shared disambiguator for KNOWN_COLLISIONS / KNOWN_PITCHER_COLLISIONS.
+
+    The refuse-to-guess contract, in precedence order:
+
+    1. **team is authoritative.** It is canonicalized through :func:`team_key`
+       so ESPN's "Oak" and the model CSVs' "ATH" are one equivalence class. If
+       a team hint is supplied it decides the answer alone — and if it selects
+       zero or >1 candidates the result is None. It must NEVER fall through to
+       the weaker position/role hint: that fall-through is exactly how
+       ``resolve_batter_id("Max Muncy", team="Oak", position="3B")`` returned
+       the LAD Muncy on 2026-07-29, putting a ``signal=drop`` bat on an FA
+       board carrying an everyday regular's projection.
+    2. **position/role only when no team was given**, matched against the
+       candidate's full hint SET, and only if it selects exactly one.
+    3. **single-candidate entries** (the accent-drift RESOLUTION-FORCE rows)
+       resolve with no hints at all — unambiguous by construction.
+
+    Anything else returns None so the caller skips the row.
+    """
+    if team is not None and str(team).strip():
+        tk = team_key(team)
+        hits = [m for ct, _cp, m in candidates if team_key(ct) == tk]
+        return hits[0] if len(hits) == 1 else None
+    if hint is not None and str(hint).strip():
+        h = str(hint).upper().strip()
+        hits = [m for _ct, cp, m in candidates if h in _pos_hints(cp)]
+        return hits[0] if len(hits) == 1 else None
+    if len(candidates) == 1:
+        return candidates[0][2]
+    return None
+
+
 # Known name collisions in the player universe. Each entry maps a colliding
 # name to a list of (team, position, mlbam_id) tuples so the resolver can pick
-# the right player using roster metadata. See
+# the right player using roster metadata. `position` may be a single string or
+# a tuple of every position the player is credibly listed at — list ALL of
+# them, so an overlapping position correctly reads as ambiguous instead of
+# silently selecting one player (see :func:`_pick_collision_candidate`). See
 # `memory/feedback_player_name_collisions.md` for the canonical list — keep
 # this dict in sync with that memory file.
-KNOWN_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
+KNOWN_COLLISIONS: dict[str, list[tuple[str, object, int]]] = {
+    # 2026-07-29: positions widened to the full listed set. Both Muncys now
+    # appear at 3B in xfp_rh3_projections.csv (691777 was a C/SS when this
+    # entry was written), so `position` alone is no longer separating — team
+    # is. ESPN reports the Athletics as "Oak"; TEAM_CODE_ALIASES maps it to ATH.
     "Max Muncy": [
-        ("LAD", "3B", 571970),  # established veteran
-        ("ATH", "SS", 691777),  # 2024+ Oakland callup
+        ("LAD", ("3B", "2B", "1B", "DH"), 571970),  # established veteran
+        ("ATH", ("SS", "3B", "2B", "C"), 691777),   # 2024+ Oakland callup
     ],
     # Added 2026-06-05 from PL-archive name-resolution audit.
     # Will Smith: LAD catcher (669257) vs SF/ATL LHP-turned-position-classified
@@ -398,10 +457,13 @@ def resolve_batter_id(
         name: Player name as it appears in ESPN / model outputs (e.g.
             "Max Muncy"). Accent / suffix normalization is applied so
             "José Ramírez" and "Jose Ramirez" both resolve.
-        team: ESPN/MLB team abbreviation (e.g. "LAD") — required when
-            ``name`` is in ``KNOWN_COLLISIONS``.
-        position: Position abbreviation (e.g. "3B") — second-line tie
-            breaker if ``team`` is ambiguous.
+        team: ESPN/MLB team abbreviation (e.g. "LAD", or ESPN's "Oak") —
+            required when ``name`` is in ``KNOWN_COLLISIONS``. Canonicalized
+            via :func:`team_key`, and AUTHORITATIVE: when supplied it decides
+            the collision alone. A team hint that matches no candidate
+            resolves to None rather than falling back to ``position``.
+        position: Position abbreviation (e.g. "3B") — used only when no
+            ``team`` is given, and only if it selects exactly one candidate.
         multiyr: Optional pre-loaded multiyr cache to avoid re-reading
             the CSV per call. If None, reads from ``multiyr_path``.
         multiyr_path: Path to the hitters_multiyr cache.
@@ -414,17 +476,8 @@ def resolve_batter_id(
     """
     # Fast-path the collision list first — these are the historic footguns.
     if name in KNOWN_COLLISIONS:
-        candidates = KNOWN_COLLISIONS[name]
-        if team is not None:
-            for cand_team, cand_pos, mlbam in candidates:
-                if cand_team.upper() == team.upper():
-                    return mlbam
-        if position is not None:
-            for cand_team, cand_pos, mlbam in candidates:
-                if cand_pos.upper() == position.upper():
-                    return mlbam
-        # Refuse to silently guess.
-        return None
+        return _pick_collision_candidate(
+            KNOWN_COLLISIONS[name], team=team, hint=position)
 
     if multiyr is None:
         multiyr = pd.read_csv(multiyr_path)
@@ -477,24 +530,15 @@ def resolve_pitcher_id(
     Returns:
         MLBAM pitcher ID (int), or None if unresolved.
     """
-    # Collision gate first — for both spellings.
+    # Collision gate first — for both spellings. Shares the batter-side
+    # contract: team is canonicalized + authoritative, role is a fallback set,
+    # single-candidate RESOLUTION-FORCE entries (Soriano / Eury Pérez
+    # accent-drift) resolve hintless. Before 2026-07-29 the raw-`.upper()`
+    # team compare meant team="SDP" missed both Logan Allens and then fell
+    # through to role="SP", which matches BOTH — silently returning the CLE one.
     if name in KNOWN_PITCHER_COLLISIONS:
-        candidates = KNOWN_PITCHER_COLLISIONS[name]
-        if team is not None:
-            for cand_team, cand_role, mlbam in candidates:
-                if cand_team.upper() == team.upper():
-                    return mlbam
-        if role is not None:
-            for cand_team, cand_role, mlbam in candidates:
-                if cand_role.upper() == role.upper():
-                    return mlbam
-        # Single-candidate RESOLUTION-FORCE entries (Soriano / Eury Pérez
-        # accent-drift) are unambiguous by construction — resolve them even
-        # with no hints so hintless callers don't fall through to wrong-ID
-        # fallbacks. A provided-but-mismatched hint still refuses (above).
-        if team is None and role is None and len(candidates) == 1:
-            return candidates[0][2]
-        return None
+        return _pick_collision_candidate(
+            KNOWN_PITCHER_COLLISIONS[name], team=team, hint=role)
 
     # "First Last" -> "Last, First" alternate form for the SP cache.
     alt_name = None

@@ -45,17 +45,26 @@ Compute for each window:
 
 | Metric | Source | Stabilization threshold |
 |---|---|---|
-| **Bat speed** (avg) | `bat_speed` on swing pitches | **30 swings** |
-| Swing length | `swing_length` | 30 swings |
-| **xwOBA** | `estimated_woba_using_speedangle` on events | 150 PA |
-| **EV90** (90th pct exit velo) | `launch_speed` on events | 70 batted balls |
-| Hard-hit% (95+ EV) | `launch_speed >= 95` / events | 70 batted balls |
-| **Whiff%** | `swinging_strike*+foul_tip` / swings | 100 swings |
-| **Chase%** (OOZ swing) | OOZ swings / OOZ pitches | 60 OOZ pitches |
-| Z-Contact% | in-zone contacts / in-zone swings | 60 IZ swings |
-| **K%** | strikeouts / PA | 60 PA |
-| BB% | walks / PA | 60 PA |
-| HR/PA | HRs / PA | 70 batted balls |
+| **Bat speed** (avg) | `bat_speed` on swing pitches | **30 swings** (literature; not yet re-derived on our data) |
+| Swing length | `swing_length` | 30 swings (literature) |
+| **xwOBA** | `estimated_woba_using_speedangle` on events | **225 PA** ⬆ (was 150) |
+| **EV90** (90th pct exit velo) | `launch_speed` on events | 70 batted balls (literature) |
+| Hard-hit% (95+ EV) | `launch_speed >= 95` / events | **50 BIP** ⬇ (was 70) |
+| **Whiff%** | `swinging_strike*+foul_tip` / swings | **150 swings** ⬆ (was 100) |
+| **Chase%** (OOZ swing) | OOZ swings / OOZ pitches | **150 OOZ pitches** ⬆ (was 60) |
+| Z-Contact% | in-zone contacts / in-zone swings | **150 IZ swings** ⬆ (was 60) |
+| **K%** | strikeouts / PA | **50 PA** (was 60) |
+| BB% | walks / PA | **175 PA** ⬆⬆ (was 60 — the old value was badly wrong) |
+| HR/PA | HRs / PA | **275 PA** ⬆⬆ (was 70 BBE — never reaches r=0.70 in-season) |
+
+> **Thresholds re-derived empirically 2026-07-29** on 91,628 of our own
+> snapshots (forward r ≥ 0.50 vs rest-of-season;
+> `validate_cutoff_stabilization.py`, `inseason_delta_grid_2026-07-29.md`).
+> The two big corrections: **BB% needs 175 PA** (a 60-PA walk-rate read is
+> noise by construction — BB% never reaches r=0.70 within a season window)
+> and **HR-rate needs 275 PA**. A ≤3-week "walking more" / "power spike"
+> claim can no longer support a SUSTAINABLE verdict on its own; route those
+> through the season-level + bat-speed axis instead.
 
 Surface as a 4-column table per metric: 2025 | 2026 season | 2026 L21d | **Δ L21d vs 2025**.
 
@@ -84,12 +93,16 @@ AND compute the 95% confidence interval on the L21d xwOBA.
 import numpy as np
 
 # Stabilization check
-print(f"Swings L21d: {n_swings}  → bat-speed/whiff stabilized: "
-      f"{'YES' if n_swings>=30 else 'borderline' if n_swings>=20 else 'NO'}")
-print(f"PA L21d:     {n_pa}      → K%/BB% stabilized: "
-      f"{'YES' if n_pa>=60 else 'borderline' if n_pa>=40 else 'NO'}")
+# Empirical minimums (2026-07-29): bat speed 30 sw (lit) / whiff 150 sw /
+# K% 50 PA / BB% 175 PA / xwOBA 225 PA — see stabilization table above.
+print(f"Swings L21d: {n_swings}  → bat-speed stabilized: "
+      f"{'YES' if n_swings>=30 else 'borderline' if n_swings>=20 else 'NO'}"
+      f" | whiff%: {'YES' if n_swings>=150 else 'NO — season-level only'}")
+print(f"PA L21d:     {n_pa}      → K% stabilized: "
+      f"{'YES' if n_pa>=50 else 'NO'}"
+      f" | BB%: {'YES' if n_pa>=175 else 'NO — a L21d BB% read is noise, use season'}")
 print(f"PA season:   {n_pa_szn} → xwOBA stabilized: "
-      f"{'YES (>150)' if n_pa_szn>=150 else 'borderline' if n_pa_szn>=100 else 'NO'}")
+      f"{'YES (>225)' if n_pa_szn>=225 else 'borderline' if n_pa_szn>=150 else 'NO'}")
 
 # 95% CI on L21d xwOBA (mandatory)
 se = 0.39 / np.sqrt(n_pa)  # approximation: SE ≈ 0.39 / sqrt(PA)
