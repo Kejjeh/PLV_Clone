@@ -325,7 +325,13 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     HR-rate **275 PA**. Consequence: any ≤3-week
     "walking more" / "ISO jumped" read is noise BY CONSTRUCTION (BB%/power never reach r=0.70
     in-window); short-window reads are legit only for swing-decision metrics, K%, and
-    hard-hit/barrel at those minimums.
+    hard-hit/barrel at those minimums. **Pitcher-side (same method, same date,
+    `pitcher_cutoff_stabilization`): velo 150 pitches (r=.90 immediately — the king pitcher
+    metric) · whiff 150 · swstr 175-200 · K% 100 TBF SP / 125 RP · gb 50 BIP · csw 425;
+    pitcher chase, pitcher BB%, and hard-hit/barrel/HR-AGAINST NEVER stabilize in-window** —
+    mid-season "command improved" / "getting more chases" / "HR-prone lately" reads are noise
+    by construction (the HR/9 lens is legit as season-vs-career only; gotcha #11's "watch
+    STUFF, not walks" now has measurement math behind it).
 13. **Model forward-calibration is GOOD — don't "fix" the small under-projection (validated
     2026-06-26).** True forward retrospective (real git-recovered rh3/rp3 snapshots, projected at
     T vs actuals AFTER T; `model_forward_calibration_2026-06-26.md`): forward rank skill is modest
