@@ -30,6 +30,10 @@ from pathlib import Path
 # the floor_lens path.
 from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
+# Empirical sample-size minimums (measured 2026-07-29). Never hand-pick a
+# window gate here — see docs/stabilization_minimums.md.
+from plv_clone import stabilization as _stab  # noqa: E402
+
 
 def _warn(section: str, exc: BaseException) -> None:
     """One-line stderr breadcrumb for fail-soft handlers (audit 2026-07-04:
@@ -221,7 +225,23 @@ def classify_stuff_command(swstr_d, velo_d, bb_d, zone_d, yoy_swstr_d=0.0,
     the YoY leg). Without an established baseline, a single in-season signal
     is debut-adjustment noise, not structural decline (false-fired on Bennett
     and Messick): STUFF-DECLINE then requires BOTH in-season stuff signals
-    (SwStr AND velo eroding) to fire."""
+    (SwStr AND velo eroding) to fire.
+
+    Measurement note (2026-07-29 pitcher stabilization study, see
+    docs/stabilization_minimums.md) — the two tags do NOT rest on equally solid
+    ground, and that asymmetry is the point:
+      * STUFF-DECLINE's inputs are measured and fast-stabilizing: FB velo
+        (r~=0.90 by 150 pitches, the most reliable pitcher metric we have) and
+        SwStr% (175 pitches).
+      * COMMAND-WATCH's `bb_d` leg is a pitcher BB% delta, and pitcher BB%
+        **never stabilizes in-window at any sample size** — a recent walk spike
+        carries essentially no information about the rest of the season.
+        Rather than contradicting this lens, that finding is what JUSTIFIES its
+        interpretation: COMMAND-WATCH means "reversible, hold-watch" precisely
+        because the walk signal does not persist. So bb_d is retained as a
+        DESCRIPTION of what happened, never as evidence that it will continue —
+        which is why COMMAND-WATCH must never be read as a sell trigger.
+        (`zone_d` is untested — not in the study's metric set.)"""
     if prior_ok:
         stuff_eroding = (swstr_d <= -2.0) or (velo_d <= -1.5) or (yoy_swstr_d <= -2.0)
     else:
@@ -283,10 +303,19 @@ def stuff_command_lens(mlbam, season=2026):
     except Exception as e:
         _warn("stuff_command_lens.slice", e)
         return None
-    if len(d) < 300:
-        return None
+    # Sample gate is on the SPLIT WINDOWS, not the total. The lens compares an
+    # early window (first 50%) against a recent one (last 30%), and the recent
+    # window is the binding constraint: SP SwStr% stabilizes at 175 pitches
+    # (measured 2026-07-29 — plv_clone.stabilization; docs/stabilization_minimums.md),
+    # so 0.30*n >= 175 => n >= ~584. The old flat `len(d) < 300` gate let the
+    # recent window run at ~90 pitches, about half the sample SwStr needs, which
+    # meant the headline swstr_d could be computed off a window carrying no
+    # forward information. Both windows are now checked explicitly.
     n = len(d)
+    _swstr_min = _stab.minimum("swstr", "SP")[0]
     early, recent = d.iloc[:int(n * 0.5)], d.iloc[int(n * 0.7):]
+    if len(early) < _swstr_min or len(recent) < _swstr_min:
+        return None
 
     def _m(g):
         import pandas as pd

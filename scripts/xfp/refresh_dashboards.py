@@ -1,13 +1,28 @@
 """refresh_dashboards.py — one-command full refresh.
 
-Steps:
-  1. Pull latest statcast (lag=1 day, gets through yesterday)
-  2. Rebuild all xFP models (rh3, rp3, rprs2, h2, v12, rps1)
-     — also mirrors xfp_dashboard.html → xfp-model/docs/index.html
-  3. Regenerate live_dashboard.html (mirrored to xfp-model/docs/)
-  4. Regenerate matchup.html (mirrored to xfp-model/docs/)
-  5. Commit the three mirrored dashboards in xfp-model
-  6. Push xfp-model to GitHub Pages
+Step numbering is decimal-inserted so new work slots between existing steps
+without renumbering the world; when a step IS renumbered the old number is kept
+in its label (e.g. '4.91 (was 4.09)'). `run()` never raises — a timeout or
+nonzero exit prints a warning and the pipeline continues. Only step 2 (model
+rebuild) gates: if it fails, the git publish steps are skipped.
+
+Bands, in execution order:
+  0.5-0.8   persistence/snapshots (rosters, transactions, FA snapshot, FG)
+  1-1.6     statcast pull, gf bridge (1.05), boxscore bridge (1.5), SB gamelog
+  1.65-1.98 feature/rolling caches, schedule + bx priors, velo & bat-speed
+            trending, plv cli update (several mtime-gated)
+  2-2.85    MODEL REBUILD (gating) + IL patch, name-resolution cache, alerts,
+            archetype panels, PL cache
+  3-3.65    live dashboard, calibration report/panel
+  4-4.4     matchup.html, injury cache, triangulate chain, boom stacks,
+            console payload, player profiles, xfp_board
+  4.8-4.93  history panels (boom stack, PL rank), volume pipelines
+  4.94-4.97 snapshot logger + decision log/panel/settle, FG RoS, IL txns,
+            model scorecard, verdict scorecard (some Monday-only)
+  5-7       git commit + push xfp-model (gated on step 2), PL freshness notice
+
+Docstring last reconciled with main() 2026-07-29 (it had described a long-since
+superseded 6-step pipeline).
 
 Usage:
   python scripts/xfp/refresh_dashboards.py            # full refresh + push

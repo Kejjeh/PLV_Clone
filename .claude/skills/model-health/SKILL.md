@@ -74,8 +74,9 @@ Exit code 0 = no FAIL tripwires; 1 = at least one FAIL. Outputs:
      with a working Chrome; the scrape's exit code is unreliable, trust this
      tripwire's age instead.
    - `proj_rowcount_delta_7d` -> the model pipeline whose CSV swung
-   - `proj_volume_fill_rate` -> volume builders (steps 4.09/4.09b) or
-     snapshot-logger ordering (4.10 must run AFTER 4.09)
+   - `proj_volume_fill_rate` -> volume builders (steps 4.91/4.92/4.93, formerly
+     4.09/4.09b) or snapshot-logger ordering (4.94, formerly 4.10, must run
+     AFTER the volume builders)
    Report the finding with severity; fix only with the user's go-ahead.
 3. **Read forward accuracy against the honest baselines**, not against
    same-period fit: forward Spearman ~**0.30-0.40** for rp3 and rh3-vs-TOTAL
@@ -169,7 +170,7 @@ run turns that 6-week silence into days.
 
 ## Cadence + companions
 
-- **Weekly (Monday)** via refresh step 4.13 (fail-soft; see
+- **Weekly (Monday)** via refresh step 4.97 (formerly 4.13; fail-soft; see
   `docs/wiring_notes_2026-07-10_scorecard.md`), or on demand monthly at
   minimum, and ALWAYS after touching any cache builder or model pipeline.
 - Companions: `/matchup-audit` (dashboard-level SP bugs), `/validate-feature`
@@ -180,7 +181,7 @@ run turns that 6-week silence into days.
 ## Paired Monday run: /verdict-scorecard (added 2026-07-18)
 
 This skill grades the MODELS; its sibling grades the CALLS. The Monday
-refresh runs both (steps 4.13 + 4.13b). When invoking /model-health
+refresh runs both (steps 4.97 + 4.97b, formerly 4.13 + 4.13b). When invoking /model-health
 manually, also read `data/outputs/verdict_scorecard.csv` (or run
 `python scripts/xfp/run_verdict_scorecard.py`) and check the two open
 watch items from the 2026-07-18 first read:

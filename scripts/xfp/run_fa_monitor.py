@@ -58,6 +58,10 @@ RP_RATINGS = REPO / "data/research/rp_ratings_master.csv"
 # becomes redundant but harmless — join_key already matches both orders.
 from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
+# Empirical sample-size minimums (measured 2026-07-29) — never hand-pick a
+# threshold here. See docs/stabilization_minimums.md.
+from plv_clone import stabilization as _stab  # noqa: E402
+
 
 def _fuzzy_in(name: str, pool: list[str]) -> str | None:
     """Return best match from pool or None."""
@@ -352,10 +356,24 @@ def signal_c(fa_hits, rh3):
             continue
         l21d = row["xwoba_l21d"]
         pa_l21d = int(row["pa_l21d"])
+        # HIGH escalation requires a decision-grade xwOBA sample. xwOBA/PA
+        # stabilizes at 225 PA (measured, 2026-07-29 — plv_clone.stabilization;
+        # docs/stabilization_minimums.md). The old gates were 100 PA season /
+        # 30 PA L21d, i.e. 2x and 7x below the crossing, so HIGH could fire on
+        # a read that carries no forward information. Thin samples still SURFACE
+        # at MONITOR — awareness on thin data is fine as long as it isn't
+        # escalated into spending real analysis effort.
+        _XWOBA_MIN_PA = _stab.minimum("xwoba_ppa", "H")[0]
         priority = "MONITOR"
-        if xw >= 0.390 and row["pa_season"] >= 100:
+        pa_season = int(row["pa_season"])
+        if xw >= 0.390 and pa_season >= _XWOBA_MIN_PA:
             priority = "HIGH"
-        if pa_l21d >= 30 and not pd.isna(l21d) and l21d >= 0.400:
+        # The L21d branch can never reach 225 PA on its own, so it is now a
+        # CONFIRMING signal rather than a standalone escalator: a hot recent
+        # window promotes only when the season-level sample is already
+        # decision-grade (also satisfies the two-window rule, don't-do #15).
+        if (pa_l21d >= 30 and not pd.isna(l21d) and l21d >= 0.400
+                and pa_season >= _XWOBA_MIN_PA):
             priority = "HIGH"
         entry = {
             "signal": "C",

@@ -15,7 +15,11 @@ This module derives, on the fly from `statcast_2026.parquet`:
   2. Per-team modal 2026 catcher (most-pitches catcher when that team is on
      defense). Used as a v1 baseline — does not consult the daily lineup.
   3. 2026 quintile assignment within catchers with >=200 shadow pitches
-     (lower than the 300-pitch full-season floor; the 2026 season is ~2 mo old).
+     (`_MIN_SHADOW_PITCHES`, lower than the 300-pitch full-season floor from
+     the source methodology; originally relaxed because the 2026 season was
+     young). Doc/code drift fixed 2026-07-29 — the code had been filtering at
+     100. Revisit whether the full 300 floor should be restored now that the
+     season is mature.
 
 Public API: `compute_catcher_framing(pitcher_team: str) -> dict`.
 
@@ -29,6 +33,12 @@ from typing import Optional
 
 import numpy as np
 import pandas as pd
+
+# Minimum shadow pitches for a catcher to receive a framing quintile. Named so
+# the docstring and the filter can never drift apart again (they did: doc said
+# 200, code filtered 100 — fixed 2026-07-29). Methodological floor, not one of
+# the measured stabilization minimums.
+_MIN_SHADOW_PITCHES = 200
 
 _REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..'))
 _STATCAST_2026 = os.path.join(_REPO_ROOT, 'data', 'research', 'xfp_cache', 'statcast_2026.parquet')
@@ -114,7 +124,17 @@ def _shadow_zone_framing_2026() -> pd.DataFrame:
         shadow_pitches=('shadow', 'size'),
         shadow_called_strikes=('called_strike', 'sum'),
     ).reset_index()
-    g = g[g['shadow_pitches'] >= 100].copy()
+    # Align to the documented floor. The module docstring has always said 200
+    # shadow pitches; the code filtered at 100 — a silent drift that made the
+    # framing quintiles more permissive than the documented methodology (and
+    # than the 300-pitch full-season floor it was deliberately relaxed from).
+    # The docstring's justification for relaxing ("the 2026 season is ~2 mo
+    # old") has since expired, so if anything this should climb back toward
+    # 300; 200 restores doc/code agreement without a second unreviewed change.
+    # NOTE: framing is NOT in the 2026-07-29 stabilization study's metric set
+    # (that covered hitter rate metrics + SP/RP stuff/command), so this floor is
+    # methodological, not measured — it does not belong in stabilization.py.
+    g = g[g['shadow_pitches'] >= _MIN_SHADOW_PITCHES].copy()
     g['framing_rate'] = g['shadow_called_strikes'] / g['shadow_pitches']
     # 0.13 runs per called strike, per 100 shadow pitches (Sports Info Solutions)
     g['framing_runs_per_100'] = (g['framing_rate'] - lg) * 0.13 * 100

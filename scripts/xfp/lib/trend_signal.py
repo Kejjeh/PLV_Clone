@@ -30,8 +30,22 @@ PA_EVENTS = {'single','double','triple','home_run','strikeout','strikeout_double
              'grounded_into_double_play','double_play','triple_play','fielders_choice',
              'fielders_choice_out','field_error','sac_fly','sac_fly_double_play','sac_bunt','catcher_interf'}
 
-# stabilization points (split-half r>=0.70), for the min-sample gates below
-HIT_MIN_SW_CUR, HIT_MIN_SW_BASE = 80, 200     # bat speed stabilizes ~20 swings; gate well above
+# Min-sample gates. Provenance is deliberately explicit here — see
+# plv_clone.stabilization and docs/stabilization_minimums.md.
+#
+# HIT_MIN_SW gates BAT SPEED, which the 2026-07-29 stabilization studies could
+# NOT re-derive (no window-capable bat-speed store existed when they ran; that
+# is workstream W3b). The ~20-swing figure behind these values is a LITERATURE
+# number, carried in stabilization.LITERATURE_ONLY and labelled as such. Keeping
+# 80/200 because they are conservative relative to that literature figure —
+# do NOT relax them to the literature value; wait for the measured crossing.
+HIT_MIN_SW_CUR, HIT_MIN_SW_BASE = 80, 200
+# PIT_MIN_FB gates VELOCITY, which IS measured: forward r>=0.50 at 150 *total
+# pitches* (r~=0.90 in the very first bucket — the fastest-stabilizing metric we
+# have). These gates count FASTBALLS, a different denominator: ~150 total
+# pitches is roughly 50-60 fastballs, so 50/100 is consistent with the measured
+# crossing and is left as-is. Unit mismatch is the reason this is not a direct
+# stabilization.minimum('velo','SP') substitution.
 PIT_MIN_FB_CUR, PIT_MIN_FB_BASE = 50, 100
 # 3-axis hitter physical profile (slice_frontier_2026-06-16): bat speed + attack
 # angle (swing path) + fast-swing% (intent) — each adds OOS CV R2 over bat speed
