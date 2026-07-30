@@ -1,0 +1,9 @@
+cell,n,CRPS,pin25,pin75,cov50_%,cov80_%
+A1 rh3 RoS-avg (FP/PA) :: global,2187,0.06414,0.03564,0.03636,46.9,77.3
+A1 rh3 RoS-avg (FP/PA) :: hetero,2187,0.06395,0.03547,0.03635,46.1,77.6
+A2 rp3 RoS-avg (FP/start) :: display_x2.41,1215,2.61269,1.58715,1.41589,83.0,99.8
+A2 rp3 RoS-avg (FP/start) :: decision_raw,1215,2.24087,1.28562,1.2435,41.2,71.0
+B1 rh3 next-game (FP/PA) :: global,7616,0.60733,0.31044,0.31822,7.7,13.5
+B1 rh3 next-game (FP/PA) :: hetero,7616,0.60728,0.31031,0.31832,7.5,13.3
+B2 rp3 next-start (FP/start) :: display_x2.41,1037,5.39816,3.19403,2.86367,46.3,75.3
+B2 rp3 next-start (FP/start) :: decision_raw,1037,6.11518,3.41105,3.24958,19.5,34.7

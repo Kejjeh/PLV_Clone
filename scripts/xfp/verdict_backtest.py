@@ -87,6 +87,25 @@ def build_hitter_panel() -> pd.DataFrame:
     else:
         rolling["xwoba_gap_to"] = 0.0
 
+    # Box-score-era ensemble prior — promoted into RH3_FEATS 2026-07-10 (B1,
+    # bx_prior_h_promotion_2026-07-10.md). This reconstruction was NOT updated
+    # at promotion time, so every hitter run of this script raised
+    # KeyError: ['bx_prior_h'] from the dropna(subset=feats) below (found
+    # 2026-07-29 by the band-CRPS study). Merge mirrors rh3.main() lines 373-397
+    # and _merge_bx in validate_bx_ensemble.py: (batter, year) mlbam join,
+    # per-year-mean fill, then global-mean fill.
+    if RH3.BX_PRIORS_CSV.exists():
+        bx = pd.read_csv(RH3.BX_PRIORS_CSV)[["mlbam", "year", "bx_prior_h"]].rename(
+            columns={"mlbam": "batter"})
+        rolling = rolling.merge(bx, on=["batter", "year"], how="left")
+        year_means = rolling.groupby("year")["bx_prior_h"].transform("mean")
+        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(year_means)
+        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(rolling["bx_prior_h"].mean())
+    else:
+        raise FileNotFoundError(
+            f"Missing required bx priors cache: {RH3.BX_PRIORS_CSV}. "
+            "Run scripts/xfp/build_bx_priors.py (refresh step 1.95).")
+
     first_year = multiyr.groupby("batter")["year"].min().to_dict()
     rolling["career_stage"] = rolling.apply(
         lambda r: r["year"] - first_year.get(r["batter"], r["year"]), axis=1)

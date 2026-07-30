@@ -1,0 +1,5 @@
+cell,n_rows,n_clusters,CRPS_A,CRPS_B,dCRPS,rel_%,ci95,boot_p,underpowered,bh_pass,econ_pass,ci_excl_0
+A1,2187,322,0.06414,0.06395,-0.000189,-0.29,"[-0.000381, -0.000000]",0.05,False,False,False,False
+A2,1215,173,2.61269,2.24087,-0.371819,-14.23,"[-0.465284, -0.264969]",0.00025,True,True,True,True
+B1,7616,421,0.60733,0.60728,-5.5e-05,-0.01,"[-0.000484, +0.000374]",0.804,False,False,False,False
+B2,1037,202,5.39816,6.11518,0.717019,13.28,"[+0.634687, +0.804211]",0.00025,False,True,True,True

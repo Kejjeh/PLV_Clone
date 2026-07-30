@@ -316,8 +316,24 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     **Confirmed at 60-cell scale + empirical cutoffs (2026-07-29, `inseason_delta_grid`
     registry entry):** every in-season DELTA of a rate metric (12 metrics × feasible lags +
     discipline/contact composites, BH-FDR corrected) adds ~0 to rh3 beyond season-to-date
-    levels — family CLOSED; sole re-open = in-season bat-speed deltas. Window studies MUST use
-    non-overlapping windows (overlapping anchors inflated a holdout +0.090 → ~0).
+    levels — **family CLOSED with NO re-open condition remaining**: the one named re-open
+    (in-season bat-speed deltas) was built and tested the same day —
+    `bat_speed_stabilization_and_delta_2026-07-29.md`, 0/6 cells survived BH-FDR, best cell's
+    full 22-feature Rule-9 integration **+0.0035 vs the +0.005 bar**. Window studies MUST use
+    non-overlapping windows on **BOTH** legs with ≥2L spacing (the delta_grid harness's EARLIER
+    leg was cumulative season-to-date, not a window — corrected in that memo; overlapping
+    anchors had inflated a holdout +0.090 → ~0).
+    **Bat speed itself is now MEASURED, and it is the most reliable in-window hitter metric we
+    have:** forward r ≥ 0.70 by **25-30 swings** (r=.905 @ 87, .950 @ 612; no bucket below
+    .70 anywhere) on 126,434 batter-days / 1,929 player-seasons. So: read the bat-speed LEVEL
+    off ~one week of playing time and trust it; read the YoY step; but the **in-season
+    trajectory is descriptive only and must never move a rank, add, or drop** (Rule 13).
+    Canonical trap: a board sorted by in-season bat-speed delta surfaces Bichette (+1.87 mph,
+    a slow April washing out, 25th-pctile level) as the riser and Cam Smith (flat +0.01 on a
+    98th-pctile level, +3.10 YoY) as boring — exactly backwards.
+    CAVEAT: `lib/trend_signal.py`'s 80/200 swing gates guard a YoY DELTA (~√2× a level's
+    noise), so the level curve above does NOT license relaxing them — leave them alone until a
+    delta-appropriate gate is derived.
     **Canonical empirical sample minimums** (forward r≥0.50 — use these, never hand-picks;
     each in the metric's OWN denominator): chase **150 OOZ pitches** · zswing **150 IZ
     pitches** · whiff **150 swings** · swstr **150 pitches** · K% **50 PA** ·

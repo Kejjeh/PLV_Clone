@@ -132,10 +132,50 @@ under non-overlapping windows with same-metric level controls, no cell
 generalizes. The non-overlap design is the correct default for all
 future window studies.
 
+## CORRECTIONS (2026-07-29, from adversarial review of the bat-speed re-open run)
+
+Three defects in THIS memo/harness, found when the follow-up study reused it.
+All three bias toward FALSE POSITIVES or LESS POWER, so **the REJECTED verdict
+stands unchanged — if anything it is strengthened.** Recording them because the
+harness must not be reused as-is.
+
+1. **The "non-overlapping windows" claim is only HALF true — corrected to
+   "non-overlapping RECENT windows."** In `validate_delta_grid.build_frames`,
+   RECENT is a genuine window (`_rec = _to − _lag`) but **EARLIER is the
+   CUMULATIVE season-to-date count** at `split_day − L`, not a window. So
+   consecutive snapshots of the same batter-year share most of their EARLIER
+   leg (lag21 snapshots at splits 79 and 100 share ~73% of that sample) and
+   effective n is still inflated — the very error this memo claimed ≥L spacing
+   had eliminated. ≥L spacing is sufficient only when BOTH legs are windows.
+   The corrected recipe (implemented in `validate_bat_speed_delta.py`) is a
+   **windowed EARLIER leg with ≥2L spacing.**
+2. **Silent design shrinkage.** The `+L` shift plus inner join means a declared
+   anchor at S requires `split_day == S − L` to exist; the panel's minimum
+   split_day is 30. So `lag63@79` (needs 16) and `lag84@79` (needs −5) were
+   **silently dropped with no warning**. The declared `NONOVERLAP` lists
+   `63: [79,142]` and `84: [79,163]`, but each actually ran on ONE anchor
+   (142 and 163). This is the mechanical reason lag84 came out at n=75 and was
+   reported UNDERPOWERED. Fix: assert every declared anchor has `S − L` present
+   AND yields non-zero rows.
+3. **The re-open condition is now CLOSED.** This memo named in-season
+   **bat-speed** deltas as the family's sole re-open. That study has now run
+   (`bat_speed_stabilization_and_delta_2026-07-29.md`): 0 of 6 pre-registered
+   cells survived BH-FDR, and the best cell's full Rule-9 integration against
+   all 22 RH3_FEATS came to **+0.0035** against the +0.005 bar (independent
+   OLS re-run +0.0045 — still short). **The in-season-delta family for rh3 has
+   no remaining named re-open condition.** One qualifier the reviewer added:
+   bat tracking only exists 2024+, so that study had 3 cohorts and could never
+   clear the ≥5-year consistency gate; its best cell (lag63, partial r +0.1126,
+   n=466) was marginally underpowered at its own FDR threshold. A 2027 cohort
+   could in principle revisit lag63 specifically — so the honest statement is
+   **closed, with lag63 re-testable only if a 4th cohort is ever wanted.**
+
 **Verdict: REJECTED — the entire in-season-delta family (12 metrics x
 feasible lags, 3 composites) adds nothing to rh3 beyond season-to-date
 levels.** Matches CLAUDE.md #12 at 60-cell scale. Part A's empirical
 minimums are the durable deliverable: adopted as the canonical
 sample-size gates for any future window/lens work (display lenses
-included). Do not re-open without a structural data change (e.g.
-in-season bat-speed deltas when the gf bridge carries swing speed).
+included). **The one named re-open — in-season bat-speed deltas — was
+tested the SAME DAY once the daily bat-speed store was built, and
+REJECTED (0/6 cells; best-cell Rule-9 integration +0.0035 vs the +0.005
+bar). No named re-open condition remains.** See CORRECTIONS below.
