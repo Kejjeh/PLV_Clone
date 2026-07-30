@@ -1,6 +1,6 @@
 {
-  "generated": "2026-07-11",
-  "period": 15,
+  "generated": "2026-07-30",
+  "period": 17,
   "reg_season_end": 20,
   "playoff_teams": 6,
   "playoff_rounds": [
@@ -20,248 +20,248 @@
   "sims": 5000,
   "team_sims": 2000,
   "seed": 7,
-  "frac_current_week_left": 0.643,
-  "cur_period_weeks": 2,
-  "cur_period_covered": true,
+  "frac_current_week_left": 0.571,
+  "cur_period_weeks": 1.0,
+  "cur_period_covered": false,
   "standings": {
     "Boone's Bad Bullpen": {
-      "wins": 6,
+      "wins": 8,
       "losses": 8,
-      "pf": 4920.5,
-      "wtd": 214.0
+      "pf": 5856.8,
+      "wtd": 127.4
     },
     "Team Solomon": {
-      "wins": 10,
+      "wins": 12,
       "losses": 4,
-      "pf": 4917.5,
-      "wtd": 212.6
+      "pf": 5896.0,
+      "wtd": 184.1
     },
     "Late Night Bettsing": {
-      "wins": 10,
-      "losses": 4,
-      "pf": 5171.2,
-      "wtd": 203.4
+      "wins": 11,
+      "losses": 5,
+      "pf": 6119.4,
+      "wtd": 125.0
     },
     "U Just Lost To Edwin Diaz": {
-      "wins": 10,
-      "losses": 4,
-      "pf": 4657.7,
-      "wtd": 191.4
+      "wins": 11,
+      "losses": 5,
+      "pf": 5431.0,
+      "wtd": 202.5
     },
     "2015 Draft First Round": {
       "wins": 7,
-      "losses": 7,
-      "pf": 4598.5,
-      "wtd": 147.2
+      "losses": 9,
+      "pf": 5333.4,
+      "wtd": 145.4
     },
     "New York Ligers": {
-      "wins": 7,
-      "losses": 7,
-      "pf": 4706.4,
-      "wtd": 167.1
+      "wins": 8,
+      "losses": 8,
+      "pf": 5620.8,
+      "wtd": 92.4
     },
     "Frendy's Fantastic Team": {
       "wins": 5,
-      "losses": 9,
-      "pf": 4600.3,
-      "wtd": 187.4
+      "losses": 11,
+      "pf": 5307.2,
+      "wtd": 176.4
     },
     "Treasure Island Mashers": {
-      "wins": 1,
-      "losses": 13,
-      "pf": 4085.8,
-      "wtd": 168.4
+      "wins": 2,
+      "losses": 14,
+      "pf": 4815.9,
+      "wtd": 74.9
     }
   },
   "team_strength": {
     "Boone's Bad Bullpen": {
-      "mc_sd": 102.62,
-      "mc_mu_raw": 330.8,
-      "mc_mu_cal": 349.1,
-      "emp_mu": 351.5,
-      "emp_sd": 55.4,
-      "mu": 348.16,
-      "sd": 86.59
+      "mc_sd": 49.13,
+      "mc_mu_raw": 299.7,
+      "mc_mu_cal": 331.0,
+      "emp_mu": 366.0,
+      "emp_sd": 79.2,
+      "mu": 348.26,
+      "sd": 69.17
     },
     "Team Solomon": {
-      "mc_sd": 105.3,
-      "mc_mu_raw": 355.2,
-      "mc_mu_cal": 374.9,
-      "emp_mu": 351.3,
-      "emp_sd": 58.5,
-      "mu": 359.04,
-      "sd": 89.45
+      "mc_sd": 54.6,
+      "mc_mu_raw": 368.6,
+      "mc_mu_cal": 407.2,
+      "emp_mu": 368.5,
+      "emp_sd": 79.5,
+      "mu": 381.68,
+      "sd": 71.62
     },
     "Late Night Bettsing": {
-      "mc_sd": 103.86,
-      "mc_mu_raw": 359.0,
-      "mc_mu_cal": 378.8,
-      "emp_mu": 369.4,
-      "emp_sd": 91.3,
-      "mu": 368.42,
-      "sd": 102.67
+      "mc_sd": 51.19,
+      "mc_mu_raw": 344.3,
+      "mc_mu_cal": 380.4,
+      "emp_mu": 382.5,
+      "emp_sd": 97.0,
+      "mu": 376.21,
+      "sd": 81.42
     },
     "U Just Lost To Edwin Diaz": {
-      "mc_sd": 104.31,
-      "mc_mu_raw": 308.5,
-      "mc_mu_cal": 325.5,
-      "emp_mu": 332.7,
-      "emp_sd": 74.0,
-      "mu": 330.17,
-      "sd": 94.94
+      "mc_sd": 47.77,
+      "mc_mu_raw": 314.8,
+      "mc_mu_cal": 347.7,
+      "emp_mu": 339.4,
+      "emp_sd": 80.9,
+      "mu": 344.06,
+      "sd": 69.72
     },
     "2015 Draft First Round": {
-      "mc_sd": 95.1,
-      "mc_mu_raw": 322.3,
-      "mc_mu_cal": 340.2,
-      "emp_mu": 328.5,
-      "emp_sd": 55.2,
-      "mu": 334.61,
-      "sd": 81.65
+      "mc_sd": 50.64,
+      "mc_mu_raw": 300.5,
+      "mc_mu_cal": 332.0,
+      "emp_mu": 333.3,
+      "emp_sd": 53.8,
+      "mu": 334.76,
+      "sd": 54.84
     },
     "New York Ligers": {
-      "mc_sd": 105.82,
-      "mc_mu_raw": 341.8,
-      "mc_mu_cal": 360.7,
-      "emp_mu": 336.2,
-      "emp_sd": 77.6,
-      "mu": 346.59,
-      "sd": 97.44
+      "mc_sd": 53.23,
+      "mc_mu_raw": 358.1,
+      "mc_mu_cal": 395.6,
+      "emp_mu": 351.3,
+      "emp_sd": 90.2,
+      "mu": 369.44,
+      "sd": 77.75
     },
     "Frendy's Fantastic Team": {
-      "mc_sd": 45.6,
-      "mc_mu_raw": 265.4,
-      "mc_mu_cal": 280.1,
-      "emp_mu": 328.6,
-      "emp_sd": 46.4,
-      "mu": 309.14,
-      "sd": 48.29
+      "mc_sd": 46.18,
+      "mc_mu_raw": 281.6,
+      "mc_mu_cal": 311.1,
+      "emp_mu": 331.7,
+      "emp_sd": 54.2,
+      "mu": 325.21,
+      "sd": 52.89
     },
     "Treasure Island Mashers": {
-      "mc_sd": 47.71,
-      "mc_mu_raw": 265.9,
-      "mc_mu_cal": 280.6,
-      "emp_mu": 291.8,
-      "emp_sd": 58.6,
-      "mu": 293.72,
-      "sd": 56.12
+      "mc_sd": 46.26,
+      "mc_mu_raw": 243.3,
+      "mc_mu_cal": 268.8,
+      "emp_mu": 301.0,
+      "emp_sd": 74.0,
+      "mu": 294.15,
+      "sd": 64.77
     }
   },
   "league_weekly": {
-    "wk_mean": 336.2,
-    "wk_sd": 64.6
+    "wk_mean": 346.7,
+    "wk_sd": 76.1
   },
   "results": {
     "Boone's Bad Bullpen": {
-      "p_playoffs": 0.8744,
-      "p_final": 0.2152,
-      "p_title": 0.1044,
-      "exp_wins": 9.32,
+      "p_playoffs": 0.9858,
+      "p_final": 0.168,
+      "p_title": 0.068,
+      "exp_wins": 9.79,
       "seed_dist": [
-        0.1256,
+        0.0142,
         0.0,
-        0.0014,
-        0.0124,
-        0.243,
-        0.302,
-        0.3156
+        0.0,
+        0.0022,
+        0.3892,
+        0.429,
+        0.1654
       ]
     },
     "Team Solomon": {
       "p_playoffs": 1.0,
-      "p_final": 0.4998,
-      "p_title": 0.2628,
-      "exp_wins": 13.58,
+      "p_final": 0.6258,
+      "p_title": 0.3796,
+      "exp_wins": 14.48,
       "seed_dist": [
         0.0,
-        0.4622,
-        0.2754,
-        0.1964,
-        0.0498,
-        0.013,
-        0.0032
+        0.6728,
+        0.2298,
+        0.0956,
+        0.0018,
+        0.0,
+        0.0
       ]
     },
     "Late Night Bettsing": {
       "p_playoffs": 1.0,
-      "p_final": 0.5464,
-      "p_title": 0.3186,
-      "exp_wins": 13.58,
+      "p_final": 0.5268,
+      "p_title": 0.2814,
+      "exp_wins": 13.44,
       "seed_dist": [
         0.0,
-        0.3192,
-        0.372,
-        0.2632,
-        0.04,
-        0.0054,
-        0.0002
+        0.1544,
+        0.457,
+        0.3788,
+        0.0094,
+        0.0004,
+        0.0
       ]
     },
     "U Just Lost To Edwin Diaz": {
       "p_playoffs": 1.0,
-      "p_final": 0.3062,
-      "p_title": 0.1236,
-      "exp_wins": 13.07,
+      "p_final": 0.2864,
+      "p_title": 0.096,
+      "exp_wins": 13.15,
       "seed_dist": [
         0.0,
-        0.2142,
-        0.3214,
-        0.389,
-        0.0668,
-        0.008,
-        0.0006
+        0.1728,
+        0.312,
+        0.4844,
+        0.0308,
+        0.0,
+        0.0
       ]
     },
     "2015 Draft First Round": {
-      "p_playoffs": 0.918,
-      "p_final": 0.1702,
-      "p_title": 0.0754,
-      "exp_wins": 9.94,
+      "p_playoffs": 0.8922,
+      "p_final": 0.1072,
+      "p_title": 0.032,
+      "exp_wins": 9.15,
       "seed_dist": [
-        0.082,
-        0.0016,
-        0.0142,
-        0.0616,
-        0.2992,
-        0.2922,
-        0.2492
+        0.1078,
+        0.0,
+        0.0,
+        0.0026,
+        0.1106,
+        0.28,
+        0.499
       ]
     },
     "New York Ligers": {
-      "p_playoffs": 0.9254,
-      "p_final": 0.2306,
-      "p_title": 0.1078,
-      "exp_wins": 10.12,
+      "p_playoffs": 0.9768,
+      "p_final": 0.2736,
+      "p_title": 0.1408,
+      "exp_wins": 10.25,
       "seed_dist": [
-        0.0746,
-        0.0028,
-        0.0156,
-        0.0764,
-        0.2792,
-        0.3034,
-        0.248
+        0.0232,
+        0.0,
+        0.0012,
+        0.0364,
+        0.4538,
+        0.2588,
+        0.2266
       ]
     },
     "Frendy's Fantastic Team": {
-      "p_playoffs": 0.2822,
-      "p_final": 0.0316,
-      "p_title": 0.0074,
-      "exp_wins": 7.48,
+      "p_playoffs": 0.1452,
+      "p_final": 0.0122,
+      "p_title": 0.0022,
+      "exp_wins": 6.89,
       "seed_dist": [
-        0.7178,
+        0.8548,
         0.0,
         0.0,
-        0.001,
-        0.022,
-        0.076,
-        0.1832
+        0.0,
+        0.0044,
+        0.0318,
+        0.109
       ]
     },
     "Treasure Island Mashers": {
       "p_playoffs": 0.0,
       "p_final": 0.0,
       "p_title": 0.0,
-      "exp_wins": 2.92,
+      "exp_wins": 2.85,
       "seed_dist": [
         1.0,
         0.0,
@@ -275,88 +275,72 @@
   },
   "josh": {
     "team": "New York Ligers",
-    "p_playoffs": 0.9254,
-    "p_title": 0.1078,
+    "p_playoffs": 0.9768,
+    "p_title": 0.1408,
     "seed_dist_miss_then_1toN": [
-      0.0746,
-      0.0028,
-      0.0156,
-      0.0764,
-      0.2792,
-      0.3034,
-      0.248
+      0.0232,
+      0.0,
+      0.0012,
+      0.0364,
+      0.4538,
+      0.2588,
+      0.2266
     ],
     "value_of_win_curve": [
       {
-        "period": 15,
-        "p_win_week": 0.343,
-        "p_title_if_win": 0.1254,
-        "p_title_if_lose": 0.0986,
-        "dtitle_pp": 2.67,
-        "dplayoffs_pp": 6.56
-      },
-      {
-        "period": 16,
-        "p_win_week": 0.688,
-        "p_title_if_win": 0.1117,
-        "p_title_if_lose": 0.0993,
-        "dtitle_pp": 1.24,
-        "dplayoffs_pp": 9.27
-      },
-      {
         "period": 17,
-        "p_win_week": 0.431,
-        "p_title_if_win": 0.1128,
-        "p_title_if_lose": 0.104,
-        "dtitle_pp": 0.88,
-        "dplayoffs_pp": 6.42
+        "p_win_week": 0.336,
+        "p_title_if_win": 0.1457,
+        "p_title_if_lose": 0.1383,
+        "dtitle_pp": 0.75,
+        "dplayoffs_pp": 2.42
       },
       {
         "period": 18,
-        "p_win_week": 0.63,
-        "p_title_if_win": 0.1129,
-        "p_title_if_lose": 0.099,
-        "dtitle_pp": 1.39,
-        "dplayoffs_pp": 18.47
+        "p_win_week": 0.678,
+        "p_title_if_win": 0.1466,
+        "p_title_if_lose": 0.1287,
+        "dtitle_pp": 1.79,
+        "dplayoffs_pp": 7.21
       },
       {
         "period": 19,
-        "p_win_week": 0.49,
-        "p_title_if_win": 0.1199,
-        "p_title_if_lose": 0.0962,
-        "dtitle_pp": 2.37,
-        "dplayoffs_pp": 10.8
+        "p_win_week": 0.577,
+        "p_title_if_win": 0.1494,
+        "p_title_if_lose": 0.1291,
+        "dtitle_pp": 2.03,
+        "dplayoffs_pp": 4.58
       },
       {
         "period": 20,
-        "p_win_week": 0.538,
-        "p_title_if_win": 0.1163,
-        "p_title_if_lose": 0.0979,
-        "dtitle_pp": 1.84,
-        "dplayoffs_pp": 9.72
+        "p_win_week": 0.656,
+        "p_title_if_win": 0.1433,
+        "p_title_if_lose": 0.136,
+        "dtitle_pp": 0.74,
+        "dplayoffs_pp": 5.59
       }
     ],
     "sensitivity": {
-      "dtitle_mean_plus2_pp": 0.56,
-      "dplayoffs_mean_plus2_pp": 0.4,
-      "dtitle_sigma_up10_pp": 0.0,
-      "dplayoffs_sigma_up10_pp": -0.08
+      "dtitle_mean_plus2_pp": 0.68,
+      "dplayoffs_mean_plus2_pp": 0.06,
+      "dtitle_sigma_up10_pp": -0.16,
+      "dplayoffs_sigma_up10_pp": -0.14
     },
     "strategy_directive": [
-      "Playoff odds 93%, title odds 10.8%, modal seed 5 (P(miss) 7%).",
-      "A win THIS period is worth +2.7pp title equity (vs +2.1pp avg for periods 19-20).",
-      "MOSTLY SAFE: entry likely but not locked (P(miss) 7%) \u2014 take cheap wins and free streams, but don't burn premium FAAB on marginal regular-season edges; start positioning the playoff roster (/playoff-team-build, /sp-stash-finder).",
-      "Variance is roughly title-neutral right now (+0.00pp per +10% sigma) \u2014 optimize E[FP].",
-      "Mean dial: +2 FP/week of true strength = +0.56pp title / +0.40pp playoffs \u2014 the scale for valuing any add/trade in equity terms."
+      "Playoff odds 98%, title odds 14.1%, modal seed 4 (P(miss) 2%).",
+      "A win THIS period is worth +0.8pp title equity (vs +1.4pp avg for periods 19-20).",
+      "SAFE: playoff spot near-locked \u2014 bank floor, hoard FAAB/streams for the playoff weeks; a marginal regular-season win buys little. Position the playoff roster (/playoff-team-build, /sp-stash-finder).",
+      "VARIANCE HURTS: +10% weekly sigma costs -0.16pp title equity \u2014 you are protecting a position; prefer floor (SAFE-tier arms, low bust%).",
+      "Mean dial: +2 FP/week of true strength = +0.68pp title / +0.06pp playoffs \u2014 the scale for valuing any add/trade in equity terms."
     ]
   },
   "consistency_checks": {
-    "spearman_wins_vs_playoffP": 0.994,
+    "spearman_wins_vs_playoffP": 0.975,
     "leader_has_top_playoffP": true,
     "sum_title_p": 1.0,
-    "p_win_current_period": 0.343,
-    "matchup_leverage_pwin": 0.206,
-    "pwin_gap_pp": 13.7
+    "p_win_current_period": 0.3362,
+    "matchup_leverage_pwin": 0.2811,
+    "pwin_gap_pp": 5.5
   },
   "caveats": [
     "Team weekly totals approximated as a fitted Normal from one 2k-draw representative-week roster MC, blended 50/50 with played-week actuals.",

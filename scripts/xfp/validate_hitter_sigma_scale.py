@@ -530,7 +530,7 @@ LIVE_MODEL_VERSIONS = ("baseline", "MA_v1")
 
 
 def _load_live_history() -> pd.DataFrame:
-    """Live 2026 win-prob snapshots only.
+    """Live 2026 win-prob snapshots only, restricted to CLOSED periods.
 
     predictions_history.csv also holds ``backfill_2024_*`` / ``backfill_2025_*``
     rows written by a synthetic backfill whose sigma is 3-10x the production
@@ -550,6 +550,24 @@ def _load_live_history() -> pd.DataFrame:
           f"({sorted(set(LIVE_MODEL_VERSIONS))}); "
           f"{n_all - len(df)} synthetic-backfill rows excluded")
     df = df[df["actual_my_final"].notna() & df["actual_opp_final"].notna()]
+    # OPEN-PERIOD GUARD (2026-07-30, after the label repair).  A non-null
+    # actual_*_final is NOT necessarily a final: the pre-fix labeller wrote
+    # running single-day partials, and `fetch_closed_matchup_actuals --repair`
+    # can only rewrite periods ESPN has DECIDED (open ones raise
+    # PeriodNotFinal), so a still-open period keeps its garbage until the
+    # nightly closes it (canonical: period 17 on 2026-07-30, labelled
+    # 3.3-23.3 / 81.1-68.5 while Jul 27-Aug 2 was mid-play).  The repair's
+    # signature is that a decided period's labels are ONE constant pair across
+    # all its live snapshots; per-snapshot-varying "finals" are partials by
+    # construction and are excluded loudly.  Such a period re-enters on its
+    # own once the nightly --repair closes it.
+    lbl_nuniq = df.groupby("period")[["actual_my_final", "actual_opp_final"]].nunique()
+    open_periods = sorted(int(p) for p in lbl_nuniq[(lbl_nuniq > 1).any(axis=1)].index)
+    if open_periods:
+        print(f"  open-period guard: excluding period(s) {open_periods} -- "
+              f"labels vary by snapshot date, i.e. still-open partials, "
+              f"not ESPN finals ({int(df['period'].isin(open_periods).sum())} rows)")
+        df = df[~df["period"].isin(open_periods)].copy()
     df["date"] = pd.to_datetime(df["date"])
     df = df.sort_values("date").drop_duplicates(["period", "mv"], keep="first")
     df["outcome"] = (df["actual_my_final"] > df["actual_opp_final"]).astype(int)

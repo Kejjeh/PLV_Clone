@@ -1,0 +1,13 @@
+metric,key,value
+classification,BUY_HIT,43
+classification,BUY_MISS,108
+classification,FADE_HIT,4
+classification,HOLD_NEUTRAL,2
+classification,CAUTION_NEUTRAL,48
+classification,MIXED_NEUTRAL,159
+classification,UNSETTLEABLE_V1_UNITS,32
+hit_rate_by_bucket,H,46/136 (34%)
+hit_rate_by_bucket,SP,1/19 (5%)
+pending,total_pending,879
+pending,ripe_but_pending_events,84
+summary,settled_total,396

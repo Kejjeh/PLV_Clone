@@ -100,6 +100,16 @@ They were effectively invisible to the P(win) model.
 | Brier | 0.2603 | **0.2469** |
 | Team σ | 30.03 FP | **39.65 FP** (realized spread 56.41) |
 
+> **SUPERSEDED 2026-07-30 — these acceptance numbers were computed against
+> CORRUPTED matchup labels** (5 of 11 periods stored single-day partials; the
+> I5 track found and repaired 182 rows). On honest labels the table reads:
+> SD(resid/σ) before-fix **0.927** → after-fix **0.704**; Brier **0.1203** →
+> **0.1269**; realized spread SD **39.41 FP** — i.e. the pre-registered stop
+> condition (pre-fix dispersion ≤ 1.00) actually FIRES, and the team-level
+> acceptance claim is retracted. The fix stays shipped on its label-independent
+> per-player basis (sections 1–6 of the memo). Full re-score + addendum:
+> `hitter_sigma_scale_2026-07-29.md`.
+
 Your logged period-16 win probability of **0.9896 was really 0.9600**. Period-15's
 **0.0192 was really 0.0584**.
 

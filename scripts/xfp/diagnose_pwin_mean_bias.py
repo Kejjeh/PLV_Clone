@@ -234,10 +234,12 @@ def dispersion_check(raw: pd.DataFrame, cache: dict, n_boot: int = 20000) -> dic
     """Re-run the F1 dispersion statistic on ESPN-corrected labels.
 
     The F1 track concluded the win-prob model was OVER-confident
-    (SD(resid/sigma) 1.379 -> 1.045 after widening hitter sigma).  That
-    statistic is a ratio of a realised residual to a model sigma, and the
-    residual was computed from the corrupted actuals.  Recomputing it on ESPN
-    finals is a direct check of whether the widening was warranted.
+    (SD(resid/sigma) 1.379 -> 1.045 after widening hitter sigma — numbers from
+    the CORRUPT-label era; the 2026-07-30 re-score on repaired labels reads
+    0.927 -> 0.704, reversing the acceptance verdict).  That statistic is a
+    ratio of a realised residual to a model sigma, and the residual was
+    computed from the corrupted actuals.  Recomputing it on ESPN finals is a
+    direct check of whether the widening was warranted.
 
     Panel construction deliberately mirrors ``validate_hitter_sigma_scale.
     _load_live_history`` (mv fillna baseline, first snapshot per period x mv)

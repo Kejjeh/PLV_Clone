@@ -328,6 +328,30 @@ from scripts.xfp.lib.period_meta import (  # noqa: E402
     resolve_period_meta, espn_period_meta,
 )
 
+
+def derive_projection_window(league, period, today):
+    """Period-TRUE projection window for the dashboard (fix 2026-07-30).
+
+    The window used to be hardcoded to the ISO calendar week of ``today``
+    (Mon .. Mon+6) — one week, always — while only the CAP was period-aware.
+    Multi-week periods exist (the 2026 ASG block, period 15 = Jul 6–19; 2-week
+    playoff rounds), and the one-week window truncated every projection for
+    them: the period-15 07-06 build projected 322/383 against finals of
+    552/581 (+230/+198 FP) purely from the missing second week
+    (``pwin_mean_bias_2026-07-30.md`` §5). ``resolve_period_meta`` already
+    returns the true span — ``leverage_engine.build_state`` consumes it
+    directly — so this seam does the same and is what ``main()`` calls.
+
+    Returns ``(week_start, week_end, days_remaining_after_today, pmeta)``.
+    For a standard single-week period this is byte-identical to the old
+    Mon–Sun derivation. ``days_remaining_after_today`` is clamped at 0 so a
+    stale build (ESPN period not yet rolled past an override window's end)
+    reports 0 days rather than a negative count.
+    """
+    pmeta = resolve_period_meta(league, period, today=today)
+    week_start, week_end = pmeta['week_start'], pmeta['week_end']
+    return week_start, week_end, max(0, (week_end - today).days), pmeta
+
 # League-average per-event FP (for opp factor centering)
 LEAGUE_AVG_SP_FP_PER_START = 11.5
 LEAGUE_AVG_HITTER_PER_GAME = 2.8
@@ -3193,18 +3217,16 @@ def main():
     else:
         print(f'  ⚙ ADJUSTERS OFF (baseline xfp model only) calib={_maps["calib"]:.3f}')
     today = _today_et()
-    week_start = today - timedelta(days=today.weekday())
-    week_end = week_start + timedelta(days=6)
-    days_remaining_in_week = (week_end - today).days
-
-    # Period-aware SP cap (2026-07-11): the CAP + banked count for the current
-    # matchup period come from the ONE shared resolver — so matchup.html shows
-    # the same cap as /matchup-leverage and /roster-audit (ASG period 15 → 16,
-    # 2-week playoff round → 20, normal week → 10). The single-week projection
-    # WINDOW above (week_start/week_end) is intentionally left unchanged — this
-    # is a weekly planning view and touching the window would perturb the
-    # guarded SP-projection logic. Only the cap NUMBER + banked display change.
-    _pmeta = resolve_period_meta(mu['league_obj'], mu['period'], today=today)
+    # Period-aware SP cap AND projection window (cap 2026-07-11; window
+    # 2026-07-30): both come from the ONE shared resolver — matchup.html shows
+    # the same cap and projects the same date span as /matchup-leverage and
+    # /roster-audit (ASG period 15 → cap 16 over Jul 6–19, 2-week playoff
+    # round → cap 20 over 14 days, normal week → cap 10 over Mon–Sun). The
+    # window used to be a flat Mon..Mon+6 calendar week regardless of period
+    # length, truncating every multi-week projection (pwin_mean_bias memo §5);
+    # derive_projection_window() is the tested seam that keeps this fixed.
+    week_start, week_end, days_remaining_in_week, _pmeta = \
+        derive_projection_window(mu['league_obj'], mu['period'], today)
     sp_cap = _pmeta['sp_cap']
     try:
         _banked_meta = espn_period_meta(

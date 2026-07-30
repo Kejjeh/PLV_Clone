@@ -90,6 +90,7 @@ training_years: >
   estimates that bracket it (0.762996 direct rate sigma, 0.762139 panel-scaled).
 validation_script: scripts/xfp/validate_hitter_sigma_scale.py
 date: 2026-07-29
+revised: 2026-07-30 (section 5 re-scored on repaired matchup labels — see addendum; conclusion of the acceptance test REVERSES)
 ---
 
 # Hitter per-game sigma: the matchup win-prob path was 3.1x under-dispersed on the hitter side
@@ -259,32 +260,37 @@ result was an artifact — those rows carry an implied spread sigma of 100-400 F
 against the live model's 29-50 FP, so they dominate and invert the statistic.
 The exclusion is justified independently of the outcome (they are a different
 code path, flagged `is_synthetic` / `backfill_year`, and the live-only implied
-sigma is corroborated to +5.0% by the section-5a reconstruction), not because it
-flipped the sign. The filter is in the script as
+sigma is corroborated to +5.0% by the section-5a reconstruction — +4.6% after
+the 2026-07-30 input refresh), not because it flipped the sign. The filter is in the script as
 `LIVE_MODEL_VERSIONS = ("baseline", "MA_v1")` and it prints the excluded count.
 
 ### 5a. Hitter share of team sigma², reconstructed from production inputs
 
-Real inputs: 5.870 games per MLB team per scoring week (from 2026 boxscores);
+*(numbers refreshed 2026-07-30 with one more day of boxscores — games/week
+5.870 → 5.748, share 0.0905 → 0.0889; an input drift, unrelated to the label
+repair, and immaterial: at the old 0.0905 the section-5b sweep row differs by
+< 0.005 in SD(z).)*
+
+Real inputs: 5.748 games per MLB team per scoring week (from 2026 boxscores);
 mean pa_per_g 4.0016 over 377 regulars; per-SP-start sigma **8.7261** (the
 `xfp_rp3_sigma` production actually uses); BrownU 13 active hitters, 10 SP starts
 under the period cap, 4 true RPs at 0.40 app rate, RP sigma 2.5.
 
 | component | sigma² BEFORE | sigma² AFTER |
 |---|---|---|
-| hitters (76.3 hitter-games) | 81.6 | 752.2 |
+| hitters (74.7 hitter-games) | 79.9 | 736.6 |
 | SP (10 starts @ 8.7261) | 761.5 | 761.5 |
-| RP (9.4 apps @ 2.5) | 58.7 | 58.7 |
-| **team sigma** | **30.03 FP** | **39.65 FP** |
+| RP (9.2 apps @ 2.5) | 57.5 | 57.5 |
+| **team sigma** | **29.98 FP** | **39.44 FP** |
 
-**Hitter share of team sigma² before the fix = 0.0905.** Hitter variance
+**Hitter share of team sigma² before the fix = 0.0889.** Hitter variance
 multiplier from the fix = **9.215x**.
 
 **Independent cross-check that this reconstruction is right:** it implies a
-*spread* sigma of `30.03 * sqrt(2) = 42.47 FP`. Inverting the actually-logged
-win probabilities gives a mean implied spread sigma of **40.46 FP**
-(median 40.92) — **+5.0% agreement**, from a completely separate data path. The
-0.0905 share is therefore trustworthy.
+*spread* sigma of `29.98 * sqrt(2) = 42.40 FP`. Inverting the actually-logged
+win probabilities gives a mean implied spread sigma of **40.52 FP**
+(median 40.92) — **+4.6% agreement**, from a completely separate data path. The
+0.0889 share is therefore trustworthy.
 
 *(Data hygiene, and the reason a first pass got this backwards:
 `predictions_history.csv` also holds 141 `backfill_2024_*` / `backfill_2025_*`
@@ -292,78 +298,108 @@ synthetic rows whose implied spread sigma is 100–400 FP, 3-10x the live model'
 Including them inverts the sign of the dispersion test. Only
 `model_version in {baseline, MA_v1}` is live and only those are used.)*
 
-### 5b. The result
+### 5b. The result — RE-SCORED 2026-07-30 on repaired labels; the acceptance test now FAILS
 
-21 live snapshots over 11 completed periods (10 of them `MA_v1`, the live
-version). Residual = `(actual_my - actual_opp) - (proj_my - proj_opp)`.
+*(The 2026-07-29 version of this section graded against corrupted labels — 5 of
+the 11 labelled periods held single-day partials, not matchup finals — and
+reported PASS: 1.379 → 1.045, Brier 0.2603 → 0.2469. Those numbers are
+label artifacts; the originals are preserved in the addendum table. What
+follows is the honest re-score.)*
+
+19 live snapshots over 10 **closed** periods (9 of them `MA_v1`, the live
+version). Residual = `(actual_my - actual_opp) - (proj_my - proj_opp)`. The
+original run's "11 completed periods" was wrong: period 17 was still OPEN and
+its labels were running partials; the script now excludes still-open periods
+via the open-period guard in `_load_live_history`.
 
 | metric | BEFORE (as logged) | AFTER (fixed) | target |
 |---|---|---|---|
-| realised spread-error SD | 56.41 FP | 56.41 FP | — |
-| model spread sigma | 40.46 FP | **53.43 FP** | 56.41 |
-| **SD(resid / sigma)** | **1.379** | **1.045** | **1.000** |
-| \|error from 1.00\| | 0.379 | **0.045** | 0 |
-| Brier | 0.2603 | **0.2469** | lower |
-| window-normalised `k = sigma/sqrt(remaining FP)` | 1.6594 | **2.1912** | 2.2372 |
+| realised spread-error SD | 39.41 FP | 39.41 FP | — |
+| model spread sigma | 40.52 FP | **53.30 FP** | 39.41 |
+| **SD(resid / sigma)** | **0.927** | **0.704** | **1.000** |
+| \|error from 1.00\| | 0.073 | **0.296** | 0 |
+| Brier | 0.1203 | **0.1269** | lower |
+| window-normalised `k = sigma/sqrt(remaining FP)` | 1.6813 | **2.2117** | 1.6323 |
 
-`MA_v1` only (n=10, the live production version):
+`MA_v1` only (n=9, the live production version):
 
 | metric | BEFORE | AFTER |
 |---|---|---|
-| realised spread-error SD | 61.33 FP | 61.33 FP |
-| model spread sigma | 39.65 FP | 52.35 FP |
-| **SD(resid / sigma)** | **1.503** | **1.138** |
-| Brier | 0.2766 | **0.2609** |
+| realised spread-error SD | 45.08 FP | 45.08 FP |
+| model spread sigma | 39.74 FP | 52.28 FP |
+| **SD(resid / sigma)** | **1.080** | **0.821** |
+| Brier | 0.1203 | **0.1235** |
 
-**The fix moves measured calibration toward the diagonal on every metric, in the
-pre-registered direction.** The dispersion error shrinks by 8.4x (0.379 -> 0.045)
-and Brier improves 0.0134. The buckets also tighten where it matters most: the
-confident bucket `[0.65,1.00)` went from `pred 0.83 / act 0.56` to
-`pred 0.79 / act 0.50` — still over-confident, but the *sigma* term is no longer
-the reason.
+**On honest labels the pre-registered stop condition has occurred.** The
+front-matter pre-registration reads: *"If SD(resid/sigma) had come in at or
+below 1.00 before the fix, the diagnosis would have been incomplete and the fix
+would have been WRONG to ship; that outcome was pre-accepted as a stop
+condition."* The all-live BEFORE is **0.927** — at/below 1.00 — and the fix
+moves dispersion AWAY from 1 on both panels (0.927 → 0.704; MA_v1 1.080 →
+0.821) and worsens Brier slightly (0.1203 → 0.1269; MA_v1 0.1203 → 0.1235).
+The realised spread-error SD (39.41 FP) matches the OLD model sigma (40.52 FP)
+almost exactly; the widened sigma (53.30 FP) over-disperses at team level.
+Confident-bucket read: BEFORE `[0.65,1.00) n=7 pred 0.83 / act 0.71`; AFTER
+`n=6 pred 0.80 / act 0.67` — the logged probabilities were not the
+mis-calibrated object; the labels were.
+
+Sampling context, stated both ways: at n=19 the 1-SE band on an SD estimate is
+roughly ±0.16, so BEFORE's 0.927 is within 1 SE of perfect while AFTER's 0.704
+is ~1.8 SE below it; at n=9 (MA_v1) the band is ~±0.25 and neither 1.080 nor
+0.821 is decisive alone. The test no longer supports the fix in the
+pre-registered direction on either panel; it does not by itself *prove* the
+fix over-disperses.
 
 Sensitivity to the one reconstructed quantity (hitter share), all-live:
 
 | share | sigma scale | SD(z) |
 |---|---|---|
-| 0.0500 | 1.188 | 1.161 |
-| 0.0750 | 1.271 | 1.085 |
-| **0.0905 (reconstructed)** | **1.320** | **1.045** |
-| 0.1000 | 1.350 | 1.022 |
-| 0.1500 | 1.494 | 0.923 |
-| 0.2000 | 1.626 | 0.848 |
+| 0.0500 | 1.188 | 0.780 |
+| 0.0750 | 1.271 | 0.729 |
+| **0.0905 (≈ reconstructed 0.0889)** | **1.320** | **0.702** |
+| 0.1000 | 1.350 | 0.687 |
+| 0.1500 | 1.494 | 0.620 |
+| 0.2000 | 1.626 | 0.570 |
 
-The conclusion holds across the whole plausible range: every share from 0.05 to
-0.20 improves on BEFORE's 1.379, and the reconstructed 0.0905 lands 0.045 from
-perfect. n = 11 periods is small — the *direction* is robust, the second decimal
-is not, and no threshold was tuned here.
+The reversal holds across the whole plausible range: every share from 0.05 to
+0.20 moves SD(z) further below the BEFORE's 0.927 — there is no share at which
+the widened sigma improves team-level dispersion on honest labels.
 
-Residual over-confidence after the fix (mean pred 0.499 vs actual win rate 0.429
-all-live; 0.475 vs 0.400 on MA_v1) is a **mean/bias** question, not a variance
-question, and is explicitly out of scope: nothing in this change touches a
-projection mean.
+The mean/bias question (mean pred 0.467 before / 0.471 after vs actual win
+rate 0.368, all-live on honest labels) remains out of scope: nothing in this change touches a
+projection mean, and the I5 study (`pwin_mean_bias_2026-07-30.md`) found the
+apparent mean bias indistinguishable from zero at this n once the same label
+corruption was removed.
 
 ## 6. Recommendation on `MATCHUP_LEGACY_SIGMA` — keep the default at `0` (off)
 
+*(SD(z) columns re-scored 2026-07-30 on repaired labels; the team-level ranking
+INVERTS — see addendum.)*
+
 `MATCHUP_LEGACY_SIGMA=1` swaps in fixed per-position sigmas: hitter 3.5,
-**SP 5.5**, RP 2.5. Scaling the logged dispersion by each variant's
+**SP 5.5**, RP 2.5. Scaling the honest-label dispersion by each variant's
 reconstructed team sigma:
 
 | variant | sigma_hit FP/g | team sigma | scale | SD(z) | \|SD(z)−1\| |
 |---|---|---|---|---|---|
-| SHIPPED buggy (real ppg) | 1.0342 | 30.03 | 1.000 | 1.379 | 0.379 |
-| SHIPPED buggy (3.5 fallback) | 0.9672 | 29.86 | 0.994 | 1.387 | 0.387 |
-| exponent fix only | 2.0688 | 33.86 | 1.128 | 1.223 | 0.223 |
-| **FIXED (shipped now)** | **3.1395** | **39.65** | **1.320** | **1.045** | **0.045** |
-| FIXED, worst-case 3.5 ppg fallback | 2.7460 | 37.36 | 1.244 | 1.109 | 0.109 |
-| `MATCHUP_LEGACY_SIGMA=1` | 3.5000 | 36.00 | 1.199 | 1.151 | 0.151 |
+| SHIPPED buggy (real ppg) | 1.0342 | 29.98 | 1.000 | 0.927 | 0.073 |
+| SHIPPED buggy (3.5 fallback) | 0.9672 | 29.81 | 0.994 | 0.932 | 0.068 |
+| exponent fix only | 2.0688 | 33.75 | 1.126 | 0.823 | 0.177 |
+| **FIXED (shipped now)** | **3.1395** | **39.44** | **1.315** | **0.704** | **0.296** |
+| FIXED, worst-case 3.5 ppg fallback | 2.7460 | 37.18 | 1.240 | 0.747 | 0.253 |
+| `MATCHUP_LEGACY_SIGMA=1` | 3.5000 | 35.71 | 1.191 | 0.778 | 0.222 |
 
-**Verdict: leave `MATCHUP_LEGACY_SIGMA` defaulting to `0`.** Before this fix the
-legacy path was genuinely better calibrated at the team level (0.151 vs 0.379) —
-its hitter sigma was nearly right and only its SP sigma (5.5 vs the calibrated
-8.73) dragged it down. After the fix the hetero path wins outright (0.045 vs
-0.151) *and* keeps the per-batter heteroskedasticity, which the legacy path
-throws away. Keep the flag as the A/B escape hatch; do not flip its default.
+**The original verdict's empirical basis is withdrawn.** On corrupted labels
+this table read 1.379 / 1.223 / 1.045 / 1.151 top to bottom and the FIXED path
+"won outright" (0.045 vs legacy's 0.151). On honest labels every variant sits
+BELOW 1 and the ranking inverts: the buggy path is now numerically closest to
+1 (0.073) and the FIXED path farthest (0.296). At n=19 (±0.16 1-SE) this does
+not license flipping any default — it licenses saying the team-level evidence
+no longer discriminates in the fix's favour. The default stays `0` for now
+because no variant is *demonstrably* better at this n and the hetero path
+keeps the per-batter heteroskedasticity (section 4's r = +0.58/+0.62, which is
+label-independent and stands); the team-level question is OPEN pending the
+follow-up in the addendum (SP-side sigma / cross-player correlation).
 
 Two follow-ups this memo does NOT ship (both outside this change's file set):
 
@@ -372,7 +408,8 @@ Two follow-ups this memo does NOT ship (both outside this change's file set):
    `MatchupConfig.league_pa_per_game = 4.0016`. This only fires for batters with
    no lineup-map entry (fewer than 3 started games in the trailing 21 days), so
    the real-world effect is small; the worst case, if it fired for *every*
-   hitter, is the 1.109 row above vs 1.045. One-line follow-up: pass 4.0016, or
+   hitter, is the "3.5 fallback" row above vs the FIXED row (0.747 vs 0.704 on
+   repaired labels). One-line follow-up: pass 4.0016, or
    drop the argument and inherit the measured default.
 2. The comment block at `build_matchup_dashboard.py:363-370` states the wrong
    identity ("Per-game variance ~ PA_per_game * sigma_pa^2 ... ~ 0.94 FP^2,
@@ -384,18 +421,27 @@ Two follow-ups this memo does NOT ship (both outside this change's file set):
 Everything that consumed per-player hitter `sigma2` between the hetero-sigma
 ship (2026-06-03, per `CLAUDE.md` "Recent shipping") and 2026-07-29:
 
-- **`data/outputs/predictions_history.csv` — every `baseline` / `MA_v1`
-  `win_probability` in that window is over-confident.** Direction is one-way:
-  probabilities were pushed AWAY from 0.5. Magnitude: the spread sigma was
-  40.46 FP where 53.43 FP was warranted, so e.g. the logged 0.9896/0.9908 for
-  period 16 becomes ~0.96, and 0.0192 for period 15 becomes ~0.058.
-  Do NOT use the pre-fix rows to score win-prob calibration without the
-  correction applied. The 141 synthetic `backfill_*` rows are a *separate*
-  problem (their sigma is 3-10x the live model's) and should not be pooled with
-  live rows for any calibration read either.
+- **`data/outputs/predictions_history.csv` — the corrupted thing was the
+  LABELS, not the probabilities.** *(Rewritten 2026-07-30; the original bullet
+  claimed "every `baseline` / `MA_v1` `win_probability` in that window is
+  over-confident" with spread sigma "40.46 FP where 53.43 FP was warranted" —
+  that claim was measured against the corrupt labels and is WITHDRAWN.)*
+  5 of 11 labelled periods stored single-day partials as finals (period 13:
+  25.7-64.5 vs real 322.1-331.3); repaired 2026-07-30 (commit `dda7639`,
+  `fetch_closed_matchup_actuals --repair`, 182 rows, periods 12-16). On honest
+  labels the logged win probabilities score Brier 0.1203 and SD(resid/sigma)
+  0.927 all-live / 1.080 MA_v1 — near-calibrated. Systematic over-confidence
+  is no longer demonstrated at team level. The 141 synthetic `backfill_*` rows
+  are a *separate* problem (their sigma is 3-10x the live model's) and should
+  not be pooled with live rows for any calibration read; nor should any
+  still-open period's labels (they are partials until the nightly `--repair`
+  closes them — the open-period guard in the script enforces this).
 - **`matchup.html` win probability and its CI bands** (`render_ci_bands` reads
-  the same `my_sigma2` / `opp_sigma2`) for every build in that window — bands
-  were too narrow.
+  the same `my_sigma2` / `opp_sigma2`) for every build in that window — the
+  per-player hitter bands were too narrow (sections 1-4, label-independent),
+  but the TEAM-level "bands were too narrow" consequence is no longer
+  demonstrable on honest labels (SD(z) before = 0.927 ≈ calibrated;
+  corrected 2026-07-30).
 - **`/matchup-leverage` P(win) regimes — PARTIALLY affected.** `run_matchup_leverage.py:407`
   derives its per-game hitter sigma as `sqrt(proj['sigma2'] / n_games)`, i.e.
   directly from the buggy value. But `_blend_draws` mixes an empirical boxscore
@@ -429,6 +475,10 @@ and RP variance paths, and `batter_sigma_factor` itself.
 ## verdict:
 
 **SHIP — units bug confirmed and repaired; recalibration measured, not assumed.**
+**(REVISED 2026-07-30: items 1-4 stand unchanged; items 5-6 are re-scored on
+repaired labels and the acceptance test now lands in its own pre-registered
+stop-condition region — see the addendum. The per-player measurement basis for
+the ship is intact; the team-level acceptance support is withdrawn.)**
 
 1. `global_sigma_pa_fp = 0.517` is a per-GAME-RATE sigma, not a per-PA sigma
    (PA-weighted 0.516968 vs unweighted 0.518566; the per-PA reading misses the
@@ -445,16 +495,142 @@ and RP variance paths, and `batter_sigma_factor` itself.
    a re-centred ratio, ridge is scale-equivariant in y, and rescaling the target
    2x / 10x reproduces the factors to `max|Δ| = 2e-15`. It also transfers to
    canonical FP (r = +0.58 / +0.62).
-5. Acceptance test **PASSES in the pre-registered direction**: SD(resid/sigma)
-   1.379 -> **1.045** (target 1.00), Brier 0.2603 -> **0.2469**; MA_v1-only
-   1.503 -> 1.138 and 0.2766 -> 0.2609. Robust across the full 0.05-0.20
-   hitter-share sensitivity range.
-6. `MATCHUP_LEGACY_SIGMA` default stays `0`. It was the better path *before* this
-   fix (0.151 vs 0.379) and is the worse path after it (0.151 vs 0.045).
+5. *(Re-scored 2026-07-30 on repaired labels — REVERSED.)* The acceptance test
+   **no longer passes**: on honest labels SD(resid/sigma) goes 0.927 -> **0.704**
+   all-live (target 1.00; the fix moves it AWAY) and 1.080 -> **0.821** MA_v1;
+   Brier worsens slightly, 0.1203 -> **0.1269** (MA_v1 0.1203 -> 0.1235). The
+   original PASS (1.379 -> 1.045, Brier 0.2603 -> 0.2469) was an artifact of
+   grading against corrupted labels. The all-live BEFORE of 0.927 is the
+   pre-registered stop condition ("at or below 1.00 before the fix ... the fix
+   would have been WRONG to ship"). The reversal holds across the full
+   0.05-0.20 hitter-share sensitivity range.
+6. *(Re-scored 2026-07-30 — the cited numbers inverted.)* `MATCHUP_LEGACY_SIGMA`
+   default stays `0`, but no longer on the original grounds (legacy 0.151 vs
+   fixed 0.045 was label-artifact). On honest labels the fixed path is
+   *farthest* from 1 (0.296 vs legacy 0.222 vs buggy 0.073); at n=19 nothing is
+   demonstrably best, so the default is kept for the per-batter
+   heteroskedasticity, not for team-level calibration.
 
-Caveats stated plainly: the team-level acceptance test rests on **11 completed
-periods** — the direction is solid, the second decimal is not. The hitter share
-0.0905 is a reconstruction, though one that agrees with the logged-implied sigma
-to +5.0%. The canonical-FP measurement is 2026-only because no earlier season
-has a canonical per-game FP store; the 2018-2025 panel agrees on the units
-question and on the proxy sigma to 0.11%.
+Caveats stated plainly: the team-level acceptance test rests on **10 closed
+periods / 19 snapshots** (the original "11 completed periods" wrongly counted
+the still-open period 17) — far too small to settle the per-player vs
+team-level tension the re-score exposed. The hitter share 0.0889 is a
+reconstruction, though one that agrees with the logged-implied sigma to +4.6%.
+The canonical-FP measurement is 2026-only because no earlier season has a
+canonical per-game FP store; the 2018-2025 panel agrees on the units question
+and on the proxy sigma to 0.11%.
+
+---
+
+## ADDENDUM 2026-07-30 — section 5 re-scored on repaired matchup labels; the acceptance-test conclusion REVERSES
+
+### What changed, and why
+
+The 2026-07-29 run of section 5b graded against
+`data/outputs/predictions_history.csv` labels that were CORRUPTED: the pre-fix
+`fetch_closed_matchup_actuals.py` wrote in-progress single-day scores into
+**5 of the 11** labelled live periods as if they were matchup finals (period 13
+stored as 25.7-64.5, real final 322.1-331.3; period 15 stored as 22.7-15.0,
+real final 552.1-581.4 — with the WRONG winner). Commit `dda7639` (2026-07-30,
+track I5) repaired 182 live rows across periods 12-16 from ESPN's authoritative
+`totalPoints`, and the nightly now runs `--repair` so future closures
+self-heal. This addendum re-runs section 5 (script section 7b) against the
+repaired labels. Two accompanying changes:
+
+1. **Open-period guard added to the script** (`_load_live_history`). A non-null
+   `actual_*_final` is not necessarily a final: the repair tool refuses
+   still-open periods (`PeriodNotFinal`), so period 17 — open Jul 27-Aug 2,
+   labelled 3.3-23.3 / 81.1-68.5 by the pre-fix labeller — still carries
+   partials. The original run's "11 completed periods" silently included it.
+   The guard drops any period whose live labels vary across snapshots (a
+   decided, repaired period's labels are one constant pair) and prints the
+   exclusion; period 17 re-enters on its own once ESPN closes it.
+2. **One day of boxscore drift** (not label-related): `boxscore_hitters.parquet`
+   gained Jul 29 games, moving section 7a's games/week 5.870 → 5.748 and the
+   reconstructed hitter share 0.0905 → 0.0889 (sigma scale 1.320 → 1.315).
+   Sections 1-6 of the script reproduce the 2026-07-29 memo **digit-for-digit**
+   (e.g. 0.516968, 3.250239, 0.784563, factor max|Δ| 0.000e+00) — they never
+   touch the labels.
+
+### Old vs new (script section 7b; old = corrupt labels, new = repaired labels + open-period guard)
+
+| metric | panel | OLD (2026-07-29, corrupt) | NEW (2026-07-30, repaired) |
+|---|---|---|---|
+| n snapshots / periods | all-live | 21 / 11 (incl. open p17) | 19 / 10 (closed only) |
+| realised spread-error SD | all-live | 56.41 FP | **39.41 FP** |
+| model spread sigma BEFORE | all-live | 40.46 FP | 40.52 FP |
+| model spread sigma AFTER | all-live | 53.43 FP | 53.30 FP |
+| SD(resid/sigma) BEFORE fix | all-live | 1.379 | **0.927** |
+| SD(resid/sigma) AFTER fix | all-live | 1.045 | **0.704** |
+| Brier BEFORE fix | all-live | 0.2603 | **0.1203** |
+| Brier AFTER fix | all-live | 0.2469 | **0.1269** |
+| realised spread-error SD | MA_v1 | 61.33 FP | 45.08 FP |
+| SD(resid/sigma) BEFORE fix | MA_v1 | 1.503 | **1.080** |
+| SD(resid/sigma) AFTER fix | MA_v1 | 1.138 | **0.821** |
+| Brier BEFORE fix | MA_v1 | 0.2766 | **0.1203** |
+| Brier AFTER fix | MA_v1 | 0.2609 | **0.1235** |
+| §6 \|SD(z)−1\|: buggy / legacy / FIXED | all-live | 0.379 / 0.151 / **0.045** | 0.073 / 0.222 / **0.296** |
+
+Robustness: the reversal is NOT an artifact of the new guard. Re-scoring on
+repaired labels with period 17's partials still included (the script exactly
+as it ran on 2026-07-29) gives SD(z) before/after **0.988 / 0.751** all-live
+and **1.136 / 0.864** MA_v1, Brier 0.1738 → 0.1702 / 0.1804 → 0.1727 — same
+direction on dispersion; only the tiny Brier edge flips sign with the guard.
+Nor is it the share drift: at the old 0.0905 share the sweep row reads 0.702
+vs 0.704.
+
+Independent corroboration: the I5 study (`pwin_mean_bias_2026-07-30.md` §4b)
+re-computed the same quantities through its own harness (ESPN finals pulled
+live, same n = 19 / 10 closed periods, period-clustered bootstrap) BEFORE this
+re-run: realized spread SD **39.64 FP** (vs 39.41 here — repaired CSV rounds
+finals to 0.1), pre-fix dispersion **0.940 [0.720, 1.140]** (vs 0.927), post-fix
+**0.712 [0.546, 0.863]** (vs 0.704). Two harnesses agree; note the I5 bootstrap
+CI for the post-fix model EXCLUDES 1.00, i.e. under its interval construction
+the widened model's team-level under-confidence is resolvable at 95%, which is
+stronger than the ±1-SE framing used above. I5's stated follow-up — "its
+team-level confirmation must be re-run on repaired labels" — is what this
+addendum executes.
+
+### Did conclusions change? Yes — stated plainly
+
+- **Section 5b: PASS → FAIL.** The pre-registered acceptance test read
+  "over-confident before (SD > 1), fix moves SD toward 1". On honest labels
+  the BEFORE is 0.927 all-live — inside the memo's own pre-accepted stop
+  condition ("at or below 1.00 before the fix ... the fix would have been
+  WRONG to ship") — and the fix moves dispersion away from 1 on both panels
+  while slightly worsening Brier. The 8.4x dispersion-error shrink and the
+  0.0134 Brier gain were label artifacts.
+- **Section 6: empirical basis inverted.** "After the fix the hetero path wins
+  outright (0.045 vs 0.151)" is withdrawn; on honest labels FIXED is farthest
+  from 1 (0.296) and the buggy path closest (0.073). The default stays 0, now
+  justified only by the (label-independent) per-batter heteroskedasticity.
+- **Section 7, first bullet: withdrawn.** The logged win probabilities were
+  not systematically over-confident; the labels were corrupt. On honest labels
+  they score Brier 0.1203, SD(z) 0.927 — consistent with the I5 memo's verdict
+  ("the defect was the labels, not the model").
+- **Sections 1-4 and the units/scale repair itself: UNCHANGED.** The shipped
+  per-game hitter sigma was, and remains, measurably ~3.1x below each batter's
+  own realised per-game SD (3.2502 FP truth vs ~1.04 shipped); the exponent,
+  the 1.517531 scale factor, and the sigma_factor scale-freeness are all
+  label-independent measurements.
+
+### The open tension this exposes (not resolved here; n = 19 cannot resolve it)
+
+Per-player, the hitter sigma was provably ~3x too small; yet the team-level
+realised spread dispersion (39.41 FP) matches the OLD, narrower team sigma
+(40.52 FP) almost exactly, and widening the hitter component over-disperses
+(0.704). Both cannot be fully right unless some OTHER component of the
+reconstructed team sigma is overstated — the prime suspects being the SP side
+(10 starts at the calibrated 8.7261 FP/start is 761.5 of ~902 FP², dwarfing the
+hitter share) and the independence assumption across players/games — or the
+n=19 panel is simply too small (±0.16 1-SE on SD). **Follow-up registered:**
+(a) re-score section 7b as closed periods accrue (the nightly `--repair` keeps
+labels honest from here on; ~8-10 more periods remain in 2026); (b) audit the
+team-level aggregation — SP per-start sigma realised-vs-model on the same
+matchup panel, and cross-player residual correlation — before any decision to
+revert or re-scale the shipped hitter fix. Until then the fix stays shipped on
+its per-player measurement basis, with the team-level acceptance claim
+explicitly retracted.
+
+Reproduce: `PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python
+scripts/xfp/validate_hitter_sigma_scale.py` (deterministic; no seeds).

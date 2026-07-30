@@ -10,6 +10,12 @@ Robustness (2026-07-20 fix — this was a silent 6-day failure):
   2. Chrome fallback AUTO-DETECTS the installed version — the old hardcoded
      version_main=148 broke the moment Chrome auto-updated (the actual cause
      of the daily-refresh flake). Pass --chrome-version N to pin if needed.
+     (2026-07-30 fix: version_main=None is NOT auto-detection — undetected-
+     chromedriver then downloads the LATEST driver, which races AHEAD of the
+     installed browser between Chrome auto-updates; driver 151 vs browser 150
+     froze this scrape 07-15..07-30. Now we read the REAL installed major from
+     the registry/install dir, and on a driver/browser mismatch error we parse
+     the browser version out of the message and retry once with that major.)
   3. VALIDATES the pull (non-empty + Stuff+ present) and only overwrites the
      good file when valid — never clobbers a working snapshot with an empty
      failed pull.
@@ -20,6 +26,7 @@ Robustness (2026-07-20 fix — this was a silent 6-day failure):
 from __future__ import annotations
 import argparse
 import json
+import os
 import re
 import time
 from pathlib import Path
@@ -79,20 +86,58 @@ def _try_cloudscraper() -> list[dict] | None:
     return None
 
 
+def _installed_chrome_major() -> int | None:
+    """Detect the REAL installed Chrome major version (Windows). Do NOT rely
+    on uc's version_main=None default — that downloads the LATEST chromedriver,
+    which mismatches the browser whenever Chrome's auto-update lags the driver
+    release (the 2026-07-15..30 freeze: driver 151, browser 150). Registry
+    first, then the versioned install dir Chrome leaves next to chrome.exe."""
+    try:
+        import winreg
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, r'Software\Google\Chrome\BLBeacon') as k:
+            return int(winreg.QueryValueEx(k, 'version')[0].split('.')[0])
+    except Exception:
+        pass
+    for base in (Path(os.environ.get('PROGRAMFILES', r'C:\Program Files')) / 'Google' / 'Chrome' / 'Application',
+                 Path(os.environ.get('LOCALAPPDATA', r'C:\_')) / 'Google' / 'Chrome' / 'Application'):
+        try:
+            vers = [p.name for p in base.iterdir() if re.fullmatch(r'\d+(\.\d+){3}', p.name)]
+            if vers:
+                return max(int(v.split('.')[0]) for v in vers)
+        except Exception:
+            pass
+    return None
+
+
 def _try_browser(chrome_version: int | None) -> list[dict] | None:
-    """undetected-chromedriver path. version_main auto-detected unless pinned."""
+    """undetected-chromedriver path. version_main: pinned via --chrome-version,
+    else the DETECTED installed major (never uc's latest-driver default)."""
     try:
         import undetected_chromedriver as uc
     except ImportError:
         print("  undetected_chromedriver not installed", flush=True)
         return None
-    o = uc.ChromeOptions()
-    o.add_argument('--disable-blink-features=AutomationControlled')
+    if chrome_version is None:
+        chrome_version = _installed_chrome_major()
+        print(f"  installed Chrome major: {chrome_version or 'not detected'}", flush=True)
     d = None
     try:
-        # version_main=None => auto-detect the installed Chrome (the fix: the
-        # old hardcoded 148 crashed on every Chrome auto-update).
-        d = uc.Chrome(options=o, version_main=chrome_version)
+        for attempt in range(2):
+            o = uc.ChromeOptions()
+            o.add_argument('--disable-blink-features=AutomationControlled')
+            try:
+                d = uc.Chrome(options=o, version_main=chrome_version)
+                break
+            except Exception as e:
+                # Driver/browser major mismatch — the error message names the
+                # REAL installed version; trust it, retry once with that major.
+                m = re.search(r'urrent browser version is (\d+)', str(e))
+                if attempt == 0 and m and int(m.group(1)) != chrome_version:
+                    chrome_version = int(m.group(1))
+                    print(f"  driver/browser mismatch — retrying with "
+                          f"version_main={chrome_version}", flush=True)
+                    continue
+                raise
         d.get(WARM); time.sleep(12)
         resp = None
         for _ in range(3):

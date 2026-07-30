@@ -41,6 +41,7 @@ import joblib
 from plv_clone.models.xfp import rh3 as RH3
 from plv_clone.models.xfp import rp3 as RP3
 from plv_clone.models.xfp import rprs2 as RPRS2
+from plv_clone.models.xfp.frames import require_cache, require_columns
 from plv_clone.decisions.settler import SETTLEMENT_WINDOWS
 
 # Settler windows give us thresholds; classification reproduced inline so we can
@@ -58,6 +59,21 @@ RP_MIN_EVENTS = SETTLEMENT_WINDOWS["RP"]["min_events"]  # 10 app
 # --------------------------------------------------------------------------- #
 def build_hitter_panel() -> pd.DataFrame:
     """Reconstruct rh3 features on the full rolling-hitter cache."""
+    # Fail fast on missing REQUIRED feature caches, BEFORE the expensive
+    # substrate load. Each feeds a live RH3_FEATS column; until 2026-07-30 the
+    # first two sat behind `if CSV.exists(): merge else: col = 0.0` branches —
+    # the exact silent-zero class that rotted the rh3 audit copy while 931
+    # tests passed (docs/rh3_harness_root_bug_2026-07-28.md). A zeroed
+    # lift_h2_aug150 / xwoba_residual_career (#2/#5 of 22 by held-out
+    # permutation importance) silently corrupts every backtested verdict.
+    require_cache(RH3.H2_LOCKED_CSV, feature="lift_h2_aug150",
+                  builder="scripts/xfp/seasonality_h2_locked.py")
+    require_cache(RH3.XWOBA_RESID_CSV, feature="xwoba_residual_career",
+                  builder="scripts/xfp/hitter_xwoba_residual.py")
+    require_cache(RH3.BX_PRIORS_CSV, feature="bx_prior_h",
+                  builder="scripts/xfp/build_bx_priors.py")
+    require_cache(RH3.ROS_OPP_SP_CSV, feature="ros_opp_sp_xwoba_weighted",
+                  builder="scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py")
     rolling = pd.read_csv(RH3.ROLLING_CSV)
     multiyr = pd.read_csv(RH3.MULTIYR_CSV)
 
@@ -67,28 +83,29 @@ def build_hitter_panel() -> pd.DataFrame:
     rolling["prior_fp_per_pa"] = rolling["prior_fp_per_pa"].fillna(league_mu)
     rolling["prior_pa_eff"] = rolling["prior_pa_eff"].fillna(0.0)
 
-    if RH3.H2_LOCKED_CSV.exists():
-        h2 = pd.read_csv(RH3.H2_LOCKED_CSV)[["batter", "lift_h2_aug150"]]
-        rolling = rolling.merge(h2, on="batter", how="left")
-        rolling["lift_h2_aug150"] = rolling["lift_h2_aug150"].fillna(0.0)
-    else:
-        rolling["lift_h2_aug150"] = 0.0
+    # Existence already asserted above — merges are unconditional, mirroring
+    # frames.build_rh3_frame. The NaN fill is for players without enough
+    # career data (no seasonal tilt / no residual assumed), not for a missing
+    # input.
+    h2 = pd.read_csv(RH3.H2_LOCKED_CSV)[["batter", "lift_h2_aug150"]]
+    rolling = rolling.merge(h2, on="batter", how="left")
+    rolling["lift_h2_aug150"] = rolling["lift_h2_aug150"].fillna(0.0)
 
-    if RH3.XWOBA_RESID_CSV.exists():
-        xw = pd.read_csv(RH3.XWOBA_RESID_CSV)[["batter", "xwoba_residual_career"]]
-        rolling = rolling.merge(xw, on="batter", how="left")
-        rolling["xwoba_residual_career"] = rolling["xwoba_residual_career"].fillna(0.0)
-    else:
-        rolling["xwoba_residual_career"] = 0.0
+    xw = pd.read_csv(RH3.XWOBA_RESID_CSV)[["batter", "xwoba_residual_career"]]
+    rolling = rolling.merge(xw, on="batter", how="left")
+    rolling["xwoba_residual_career"] = rolling["xwoba_residual_career"].fillna(0.0)
 
-    if "xwoba_on_contact_to" in rolling.columns and "woba_d_sum_to" in rolling.columns:
-        rolling["actual_woba_per_pa_to"] = np.where(
-            rolling["woba_d_sum_to"] > 0,
-            rolling["woba_v_sum_to"] / rolling["woba_d_sum_to"], np.nan)
-        rolling["xwoba_gap_to"] = (rolling["xwoba_on_contact_to"]
-                                   - rolling["actual_woba_per_pa_to"]).fillna(0.0)
-    else:
-        rolling["xwoba_gap_to"] = 0.0
+    # xwoba_gap_to is derived from substrate columns; a missing substrate
+    # column means the rolling cache itself is broken — raise (mirrors
+    # frames.build_rh3_frame), never fall back to a constant column.
+    require_columns(rolling,
+                    ["xwoba_on_contact_to", "woba_d_sum_to", "woba_v_sum_to"],
+                    derivation="xwoba_gap_to")
+    rolling["actual_woba_per_pa_to"] = np.where(
+        rolling["woba_d_sum_to"] > 0,
+        rolling["woba_v_sum_to"] / rolling["woba_d_sum_to"], np.nan)
+    rolling["xwoba_gap_to"] = (rolling["xwoba_on_contact_to"]
+                               - rolling["actual_woba_per_pa_to"]).fillna(0.0)
 
     # Box-score-era ensemble prior — promoted into RH3_FEATS 2026-07-10 (B1,
     # bx_prior_h_promotion_2026-07-10.md). This reconstruction was NOT updated
@@ -97,17 +114,12 @@ def build_hitter_panel() -> pd.DataFrame:
     # 2026-07-29 by the band-CRPS study). Merge mirrors rh3.main() lines 373-397
     # and _merge_bx in validate_bx_ensemble.py: (batter, year) mlbam join,
     # per-year-mean fill, then global-mean fill.
-    if RH3.BX_PRIORS_CSV.exists():
-        bx = pd.read_csv(RH3.BX_PRIORS_CSV)[["mlbam", "year", "bx_prior_h"]].rename(
-            columns={"mlbam": "batter"})
-        rolling = rolling.merge(bx, on=["batter", "year"], how="left")
-        year_means = rolling.groupby("year")["bx_prior_h"].transform("mean")
-        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(year_means)
-        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(rolling["bx_prior_h"].mean())
-    else:
-        raise FileNotFoundError(
-            f"Missing required bx priors cache: {RH3.BX_PRIORS_CSV}. "
-            "Run scripts/xfp/build_bx_priors.py (refresh step 1.95).")
+    bx = pd.read_csv(RH3.BX_PRIORS_CSV)[["mlbam", "year", "bx_prior_h"]].rename(
+        columns={"mlbam": "batter"})
+    rolling = rolling.merge(bx, on=["batter", "year"], how="left")
+    year_means = rolling.groupby("year")["bx_prior_h"].transform("mean")
+    rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(year_means)
+    rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(rolling["bx_prior_h"].mean())
 
     first_year = multiyr.groupby("batter")["year"].min().to_dict()
     rolling["career_stage"] = rolling.apply(
@@ -135,6 +147,11 @@ def build_hitter_panel() -> pd.DataFrame:
 
 def build_pitcher_panel() -> pd.DataFrame:
     """Reconstruct rp3 features on the full rolling-pitcher cache."""
+    # Fail fast: ros_opp_xwoba_weighted is a live RP3_FEATS column (validated
+    # 2026-05-24) — a missing cache must raise with a rebuild remedy, not
+    # surface later as a bare pandas error (or worse, a defaulted column).
+    require_cache(RP3.ROS_SCHED_CSV, feature="ros_opp_xwoba_weighted",
+                  builder="scripts/xfp/build_ros_schedule_features.py")
     rolling = pd.read_csv(RP3.ROLLING_CSV)
     multiyr = pd.read_csv(RP3.MULTIYR_CSV)
     il = pd.read_csv(RP3.IL_CSV)
@@ -151,6 +168,14 @@ def build_pitcher_panel() -> pd.DataFrame:
         nf = is26 & rolling["prior_fp_per_start"].isna()
         hm = nf & rolling["milb_prior_fp"].notna()
         rolling.loc[hm, "prior_fp_per_start"] = rolling.loc[hm, "milb_prior_fp"]
+    else:
+        # OPTIONAL BY DESIGN, mirroring frames.build_rp3_frame: the cache is a
+        # one-off research artifact (MT3, 2026-05-07) with no live builder, and
+        # its absence reproduces the validated pre-MT3 league-mean rookie prior
+        # rather than zeroing a feature. Degrade LOUDLY, never silently.
+        print(f"WARNING [build_pitcher_panel]: optional MiLB rookie-prior cache "
+              f"missing: {RP3.MILB_PRIORS_CSV} — 2026 rookie rows fall back to "
+              f"the league-mean prior (affects prior_fp_per_start only).")
     rolling["prior_fp_per_start"] = rolling["prior_fp_per_start"].fillna(league_mu)
     rolling["prior_gs_eff"] = rolling["prior_gs_eff"].fillna(0.0)
 

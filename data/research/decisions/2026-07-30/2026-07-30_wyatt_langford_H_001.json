@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-07-30_wyatt_langford_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "POWER_HITTER",
+    "archetype_overall": 57,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.6793977958620006,
+    "inputs_schema": 2,
+    "live_marginal": null,
+    "model_rank": 46,
+    "override_tag": null,
+    "pl_rank": 38,
+    "proj_display": 2.04,
+    "proj_per": 0.5833889851748965,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 694671,
+  "player_name": "Wyatt Langford",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-30",
+  "verdict_top": "MIXED"
+}

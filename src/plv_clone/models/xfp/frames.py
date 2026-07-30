@@ -212,7 +212,7 @@ def build_rh3_frame(
 
     # H2-locked career profile feature (Aug-01 cutoff, min 150 PA per half)
     require_cache(_rh3.H2_LOCKED_CSV, feature='lift_h2_aug150',
-                  builder='scripts/xfp/build_seasonality_h2.py')
+                  builder='scripts/xfp/seasonality_h2_locked.py')
     h2_locked = pd.read_csv(_rh3.H2_LOCKED_CSV)[['batter', 'lift_h2_aug150']]
     rolling = rolling.merge(h2_locked, on='batter', how='left')
     # Players without enough career data: fill with 0 (no seasonal tilt assumed)
@@ -222,7 +222,7 @@ def build_rh3_frame(
 
     # xwOBA residual career feature (2018-2025 window)
     require_cache(_rh3.XWOBA_RESID_CSV, feature='xwoba_residual_career',
-                  builder='scripts/xfp/build_hitter_xwoba_residual.py')
+                  builder='scripts/xfp/hitter_xwoba_residual.py')
     xw = pd.read_csv(_rh3.XWOBA_RESID_CSV)[['batter', 'xwoba_residual_career']]
     rolling = rolling.merge(xw, on='batter', how='left')
     n_with = rolling['xwoba_residual_career'].notna().sum()
@@ -378,8 +378,22 @@ def build_rp3_frame(
         n_milb = int(has_milb.sum())
         _p(f'  MiLB-derived priors applied to {n_milb} 2026 rookie rows')
     else:
-        _p(f'  NOTE: {_rp3.MILB_PRIORS_CSV} missing — rookie rows fall back to '
-           f"league mean, tagged prior_source='league_mean'")
+        # OPTIONAL BY DESIGN — but never silent. Why this is a warning and not
+        # a require_cache raise: (a) fallback rows are explicitly LABELLED
+        # prior_source='league_mean', so the degradation is visible in the
+        # output instead of masquerading as a real read; (b) the cache is a
+        # one-off research artifact (MT3, 2026-05-07 — see
+        # data/research/xfp_model_research.md) with no builder script in the
+        # live tree and no refresh step, so a raise would brick every rp3
+        # refit with no "rebuild it with X" remedy; (c) absence reproduces the
+        # validated pre-MT3 behavior (league-mean rookie prior) rather than
+        # zeroing a validated feature. The warning bypasses _p on purpose:
+        # verbose=False callers (e.g. the Rule-9 harness loader) are exactly
+        # the ones a silenced NOTE would hurt most.
+        print(f'WARNING [build_rp3_frame]: optional MiLB rookie-prior cache '
+              f'missing: {_rp3.MILB_PRIORS_CSV} — 2026 rookie rows fall back '
+              f"to the league-mean prior, tagged prior_source='league_mean' "
+              f'(affects prior_fp_per_start only).')
 
     rolling['prior_source'] = rolling['prior_source'].fillna('league_mean')
     rolling['prior_fp_per_start'] = rolling['prior_fp_per_start'].fillna(league_mu)

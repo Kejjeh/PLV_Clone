@@ -264,5 +264,8 @@ def test_build_hitter_panel_raises_on_missing_bx_cache(monkeypatch):
     if not Path(RH3.ROLLING_CSV).exists():
         pytest.skip("rolling hitter cache not present in this checkout")
     monkeypatch.setattr(RH3, "BX_PRIORS_CSV", ROOT / "data" / "_no_such_bx_cache.csv")
-    with pytest.raises(FileNotFoundError, match="bx priors"):
+    # 2026-07-30: the message comes from frames.require_cache now (the inline
+    # else-raise was replaced by the shared fail-fast check); pin the FEATURE
+    # name, which both wordings carry and which is the part a fixer needs.
+    with pytest.raises(FileNotFoundError, match="bx_prior_h"):
         VB.build_hitter_panel()

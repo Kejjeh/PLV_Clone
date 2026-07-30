@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-09_luis_arraez_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AGGRESSIVE_SLAP",
     "archetype_overall": 59,
@@ -17,8 +21,19 @@
   "mlbam_id": 650333,
   "player_name": "Luis Arraez",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-07-30",
+  "settlement": {
+    "actual_fp_per_unit": 0.5555555555555556,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 63,
+    "proj_per": 0.5599999999999999,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.004444444444444362,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-09",
   "verdict_top": "MIXED"
 }

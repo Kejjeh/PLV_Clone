@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-07-30_jackson_merrill_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "AVERAGE_HITTER",
+    "archetype_overall": 54,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 2.704823268520509,
+    "inputs_schema": 2,
+    "live_marginal": null,
+    "model_rank": 33,
+    "override_tag": null,
+    "pl_rank": 56,
+    "proj_display": 2.12,
+    "proj_per": 0.6066022668040885,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 701538,
+  "player_name": "Jackson Merrill",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-07-30",
+  "verdict_top": "MIXED"
+}

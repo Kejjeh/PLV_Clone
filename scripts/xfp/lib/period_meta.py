@@ -31,6 +31,7 @@ from plv_clone.cap_math import (  # noqa: F401  (re-exported for callers)
     period_window,
     is_period_covered,
     weeks_in_period,
+    PERIOD_WINDOW_OVERRIDES,
     SP_CAP,
 )
 
@@ -45,31 +46,80 @@ def _calendar_weeks(period, mp) -> int:
     return weeks_in_period(mp, period)
 
 
+def _walk(from_p: int, from_start: date, to_p: int, mp) -> date:
+    """Walk from one period's known Monday start to another's, summing each
+    intervening period's *calendar* weeks. Monday-preserving by construction
+    (every step is a multiple of 7 days)."""
+    d = from_start
+    if to_p > from_p:
+        for p in range(from_p, to_p):
+            d = d + timedelta(days=7 * _calendar_weeks(p, mp))
+    else:
+        for p in range(from_p - 1, to_p - 1, -1):
+            d = d - timedelta(days=7 * _calendar_weeks(p, mp))
+    return d
+
+
+def _anchored_current_start(cur_mp: int, mp, today: date) -> date | None:
+    """True Monday start of a MULTI-week current period that has no explicit
+    override window of its own (a clean 2-week playoff round).
+
+    The week-of-``today`` guess is only right during the period's FIRST week —
+    in week 2 it re-anchors a week late and extends 7 days past the true period
+    end (found by adversarial review 2026-07-30; would have gone live in the
+    Sept playoff rounds). But the season DOES carry an absolute calendar anchor:
+    every ASG-style entry in ``PERIOD_WINDOW_OVERRIDES`` pins one period to real
+    dates (2026: period 15 → Mon Jul 6). Walking week-counts from that anchor
+    yields the current period's true start regardless of which week today falls
+    in. Sanity-gated: the derived window must actually CONTAIN today (protects
+    against a hole-ridden ``matchup_periods`` map making the walk drift);
+    otherwise return None and let the caller fall back to the week-of-today
+    guess, warning loudly."""
+    n_days = 7 * _calendar_weeks(cur_mp, mp)
+    for p in sorted(PERIOD_WINDOW_OVERRIDES):
+        if p == cur_mp:
+            continue                       # its own override is handled upstream
+        cand = _walk(p, PERIOD_WINDOW_OVERRIDES[p][0], cur_mp, mp)
+        if cand <= today <= cand + timedelta(days=n_days - 1):
+            return cand
+    return None
+
+
 def _period_start(league, period, mp, today: date) -> date:
     """Monday of the requested period's first week.
 
-    For the CURRENT period (or a league that doesn't expose one) this is simply
-    the week of ``today`` — byte-identical to the pre-fix behavior. For any OTHER
-    period it walks forward/back from the current period's start, summing each
-    intervening period's *calendar* weeks, so an ASG/playoff block that is longer
-    than one week shifts later periods by the right number of days (the bug: the
-    old code returned the week of ``today`` for every period, so any non-current
-    period resolved to the wrong window)."""
+    The CURRENT period's start is resolved first: its explicit override window
+    if one exists (ASG); the week of ``today`` for a standard single-week period
+    (byte-identical to the pre-fix behavior); and for a multi-week period with
+    no override (clean playoff round), the absolute-anchor walk in
+    :func:`_anchored_current_start` — the week-of-today guess is only correct in
+    week 1, so weeks 2+ NEED the anchor. Any OTHER period then walks
+    forward/back from that start, summing each intervening period's *calendar*
+    weeks, so an ASG/playoff block longer than one week shifts later periods by
+    the right number of days (the original bug: the old code returned the week
+    of ``today`` for every period, so any non-current period resolved to the
+    wrong window)."""
     cur_monday = today - timedelta(days=today.weekday())
     cur_mp = getattr(league, "currentMatchupPeriod", None)
-    if cur_mp is None or period is None or cur_mp == period:
+    if cur_mp is None or period is None:
         return cur_monday
     cur_win = period_window(cur_mp)          # ASG current → its real start
-    anchor = cur_win[0] if cur_win is not None else cur_monday
-    if period > cur_mp:
-        d = anchor
-        for p in range(cur_mp, period):
-            d = d + timedelta(days=7 * _calendar_weeks(p, mp))
-        return d
-    d = anchor
-    for p in range(cur_mp - 1, period - 1, -1):
-        d = d - timedelta(days=7 * _calendar_weeks(p, mp))
-    return d
+    if cur_win is not None:
+        cur_start = cur_win[0]
+    elif _calendar_weeks(cur_mp, mp) <= 1:
+        cur_start = cur_monday               # single week: today's week IS it
+    else:
+        cur_start = _anchored_current_start(cur_mp, mp, today)
+        if cur_start is None:
+            print(f'  ⚠ period_meta: period {cur_mp} spans '
+                  f'{_calendar_weeks(cur_mp, mp)} weeks but no override anchor '
+                  f'reaches it — assuming today is in its FIRST week. If this '
+                  f'is week 2+, the window is a week late; add the period to '
+                  f'PERIOD_WINDOW_OVERRIDES to pin it.')
+            cur_start = cur_monday
+    if cur_mp == period:
+        return cur_start
+    return _walk(cur_mp, cur_start, period, mp)
 
 
 def resolve_period_meta(league, period, *, today: date | None = None) -> dict:

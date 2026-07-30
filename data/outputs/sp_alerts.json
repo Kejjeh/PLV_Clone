@@ -1,10 +1,41 @@
 {
-  "generated": "2026-07-29",
+  "generated": "2026-07-30",
   "upgrade_floor_fpp": -0.0484,
-  "hit_upgrade_floor_xwoba": 0.322,
-  "alert_count": 0,
+  "hit_upgrade_floor_xwoba": 0.321,
+  "alert_count": 2,
   "hitter_alert_count": 0,
-  "alerts": [],
+  "alerts": [
+    {
+      "name": "Drew Anderson",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.038)"
+      ],
+      "gs": 8,
+      "fpp": -0.0102,
+      "fpp_gap": 0.0382,
+      "gsp": 6,
+      "l4": "3/4",
+      "whiff_pct": 28.0,
+      "xwoba_con": 0.349,
+      "rp3_rank": 79
+    },
+    {
+      "name": "Christian Scott",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.021)"
+      ],
+      "gs": 15,
+      "fpp": -0.0271,
+      "fpp_gap": 0.0213,
+      "gsp": 8,
+      "l4": "3/4",
+      "whiff_pct": 25.6,
+      "xwoba_con": 0.366,
+      "rp3_rank": 78
+    }
+  ],
   "hitter_alerts": [],
   "my_active_sp_count": 8
 }

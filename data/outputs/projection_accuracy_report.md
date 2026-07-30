@@ -1,6 +1,6 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-07-29  
+**Generated:** 2026-07-30  
 **Source:** `data/outputs/predictions_history.csv`  
 **Backfilled rows:** 462  
 **Minimum N per bucket to trust:** 5
@@ -37,10 +37,10 @@ Error = projected − actual. Bias > 0 means model over-projects.
 
 | Model | n | my MAE | my RMSE | my bias | opp MAE | opp RMSE | opp bias |
 |---|---|---|---|---|---|---|---|
-| `MA_v1` | 148 | 140.6 | 172.3 | +139.6 | 149.5 | 181.0 | +141.0 |
+| `MA_v1` | 148 | 69.5 | 102.6 | +34.5 | 64.4 | 95.0 | +21.8 |
 | `backfill_2024_bayes_shrink` | 84 | 74.4 | 133.3 | -43.5 | 72.4 | 135.2 | -53.2 |
 | `backfill_2025_bayes_shrink` | 57 | 70.9 | 104.2 | -30.9 | 74.0 | 104.2 | -45.2 |
-| `baseline` | 148 | 119.1 | 149.3 | +115.7 | 130.7 | 156.5 | +114.3 |
+| `baseline` | 148 | 57.3 | 92.8 | +10.6 | 58.5 | 90.7 | -4.9 |
 | `baseline_pre_versioning` | 25 | 37.1 | 44.3 | -33.0 | 39.2 | 44.6 | +12.4 |
 
 ## 3. Error metrics — latest snapshot per (period, model)
@@ -87,10 +87,10 @@ This is the "what the dashboard showed at end of week" view.
 | 13 | `backfill_2024_bayes_shrink` | 338.7 | 415.2 | -76.5 | 350.5 | 371.7 | -21.2 |
 | 13 | `backfill_2025_bayes_shrink` | 458.5 | 431.0 | +27.5 | 462.7 | 507.1 | -44.4 |
 | 13 | `baseline` | 391.2 | 322.1 | +69.1 | 401.4 | 331.3 | +70.1 |
-| 14 | `MA_v1` | 315.9 | 306.5 | +9.4 | 374.2 | 362.3 | +11.9 |
+| 14 | `MA_v1` | 315.9 | 306.5 | +9.4 | 374.2 | 363.3 | +10.9 |
 | 14 | `backfill_2024_bayes_shrink` | 343.9 | 314.0 | +29.9 | 329.9 | 402.9 | -73.0 |
 | 14 | `backfill_2025_bayes_shrink` | 457.1 | 402.8 | +54.3 | 491.8 | 631.1 | -139.3 |
-| 14 | `baseline` | 311.9 | 306.5 | +5.4 | 365.0 | 362.3 | +2.7 |
+| 14 | `baseline` | 311.9 | 306.5 | +5.4 | 365.0 | 363.3 | +1.7 |
 | 15 | `MA_v1` | 975.1 | 552.1 | +423.0 | 1016.0 | 581.4 | +434.6 |
 | 15 | `backfill_2024_bayes_shrink` | 331.1 | 412.4 | -81.3 | 320.4 | 236.9 | +83.5 |
 | 15 | `backfill_2025_bayes_shrink` | 510.6 | 527.3 | -16.6 | 500.1 | 548.3 | -48.2 |
@@ -120,7 +120,7 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 72 | 0.065 | 0.014 | 0.051 | OK |
+| 0.00-0.25 | 72 | 0.065 | 0.000 | 0.065 | OK |
 | 0.25-0.50 | 29 | 0.336 | 0.138 | 0.198 | OK |
 | 0.50-0.75 | 19 | 0.599 | 0.368 | 0.230 | OK |
 | 0.75-1.00 | 28 | 0.888 | 0.929 | 0.040 | OK |
@@ -147,7 +147,7 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 73 | 0.080 | 0.014 | 0.067 | OK |
+| 0.00-0.25 | 73 | 0.080 | 0.000 | 0.080 | OK |
 | 0.25-0.50 | 25 | 0.361 | 0.040 | 0.321 | OK |
 | 0.50-0.75 | 25 | 0.617 | 0.480 | 0.137 | OK |
 | 0.75-1.00 | 25 | 0.878 | 0.960 | 0.082 | OK |
