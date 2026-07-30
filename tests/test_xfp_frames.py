@@ -22,14 +22,26 @@ tests here close it:
   it was extracted. `pandas.testing.assert_frame_equal` (shape, column order,
   dtypes, values) must hold against `build_rh3_frame`.
 
-Note on rp3: `rp3.py` was deliberately NOT refactored to delegate (it is
-outside the change's file set), so it still holds its own copy of the prep.
-`test_frame_fit_fingerprint_matches_production_bundle` pins `build_rp3_frame`
-to it empirically instead — the fit fingerprint is an md5 over the train-year
-substrate, so a match proves the frame this module builds is the exact frame
-production last fitted on.
+Note on rp3 (updated 2026-07-30): `rp3.py` USED to be the last model in the repo
+still holding its own second copy of its feature assembly — deliberately left
+alone by the rh3 change, and pinned only by the fit fingerprint, which re-checks
+at REFIT time rather than at edit time. `rp3.main()` now delegates to
+`build_rp3_frame` as well, so the divergent-copy class is closed for both models.
+The same three-layer guard now applies to rp3:
+
+* `test_every_rp3_feat_present_in_assembled_frame` — the feats/frame sync check;
+* `test_rp3_frame_is_byte_identical_to_legacy_inline_assembly` — against
+  `_legacy_rp3_assembly`, a FROZEN VERBATIM copy of the block that lived inline
+  in `rp3.main()` at commit `06b2a57`;
+* `test_rp3_main_delegates_to_the_canonical_builder` — the structural check that
+  the second copy is actually GONE, not merely equal today. This is the one that
+  fails against the pre-refactor `rp3.py`.
 """
 from __future__ import annotations
+
+import ast
+import inspect
+import textwrap
 
 import numpy as np
 import pandas as pd
@@ -165,6 +177,90 @@ def _legacy_rh3_assembly(rolling: pd.DataFrame, multiyr: pd.DataFrame):
 
 
 # ---------------------------------------------------------------------------
+# Frozen reference implementation #2 — DO NOT "improve" or refactor this.
+# Verbatim copy of rp3.main()'s inline prep at commit 06b2a57 (2026-07-30),
+# print statements elided (they do not touch the frame). Same contract as the
+# rh3 twin above: if production's assembly legitimately changes, this copy is
+# updated in the SAME commit and the diff is the reviewable record.
+# ---------------------------------------------------------------------------
+def _legacy_rp3_assembly(rolling: pd.DataFrame, multiyr: pd.DataFrame,
+                         il: pd.DataFrame):
+    prior = rp3_mod.build_prior_table(multiyr, sorted(rolling['year'].unique()))
+    rolling = rolling.merge(prior, on=['pitcher', 'year'], how='left')
+    league_mu = float(multiyr[multiyr['gs'] >= 10]['fp_per_start_actual'].mean())
+
+    rolling['prior_source'] = np.where(
+        rolling['prior_fp_per_start'].notna(), 'mlb_lag', None)
+    if rp3_mod.MILB_PRIORS_CSV.exists():
+        milb_pri = pd.read_csv(rp3_mod.MILB_PRIORS_CSV)[
+            ['pitcher', 'projected_fp_per_start']]
+        milb_pri = milb_pri.rename(columns={'projected_fp_per_start': 'milb_prior_fp'})
+        rolling = rolling.merge(milb_pri, on='pitcher', how='left')
+        is_2026 = rolling['year'] == int(rolling['year'].max())
+        needs_fallback = is_2026 & rolling['prior_fp_per_start'].isna()
+        has_milb = needs_fallback & rolling['milb_prior_fp'].notna()
+        rolling.loc[has_milb, 'prior_fp_per_start'] = rolling.loc[has_milb, 'milb_prior_fp']
+        rolling.loc[has_milb, 'prior_source'] = 'milb_translation'
+
+    rolling['prior_source'] = rolling['prior_source'].fillna('league_mean')
+    rolling['prior_fp_per_start'] = rolling['prior_fp_per_start'].fillna(league_mu)
+    rolling['prior_gs_eff'] = rolling['prior_gs_eff'].fillna(0.0)
+
+    rolling = rolling.merge(il, on=['pitcher', 'year', 'split_day'], how='left')
+    rolling['il_stints_to'] = rolling['il_stints_to'].fillna(0).astype(int)
+    rolling['is_on_il_at_split'] = rolling['is_on_il_at_split'].fillna(0).astype(int)
+    _dsr_max = rolling['days_since_il_return'].max(skipna=True)
+    max_dsr = float(_dsr_max) if pd.notna(_dsr_max) else 200.0
+    rolling['days_since_il_return_imp'] = rolling['days_since_il_return'].fillna(max_dsr + 1)
+    _il_hit = float((rolling['il_stints_to'] > 0).mean())
+    if _il_hit < 0.02:
+        raise RuntimeError('IL feature join degenerate')
+
+    if rp3_mod.ROS_SCHED_CSV.exists():
+        sched_xw = pd.read_csv(rp3_mod.ROS_SCHED_CSV)[
+            ['pitcher', 'year', 'split_day', 'ros_opp_xwoba_weighted']
+        ]
+        rolling = rolling.merge(sched_xw, on=['pitcher', 'year', 'split_day'], how='left')
+        _cur_yr = int(rolling['year'].max())
+        _cur = rolling[rolling['year'] == _cur_yr]
+        _cur_nan = float(_cur['ros_opp_xwoba_weighted'].isna().mean()) if len(_cur) else 0.0
+        if _cur_nan > 0.50:
+            raise RuntimeError('ros schedule-strength cache looks FROZEN')
+        year_means = rolling.groupby('year')['ros_opp_xwoba_weighted'].transform('mean')
+        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(year_means)
+        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(
+            rolling['ros_opp_xwoba_weighted'].mean()
+        )
+    else:
+        raise FileNotFoundError('Missing required RoS schedule cache')
+
+    pop_to = rp3_mod.compute_population_means(
+        rolling, rp3_mod.TRAIN_YEARS, rp3_mod.SHRINK_SPEC_TO)
+    pop_l21 = rp3_mod.compute_population_means(
+        rolling, rp3_mod.TRAIN_YEARS, rp3_mod.SHRINK_SPEC_LAST21)
+    rolling = rp3_mod.apply_shrinkage(rolling, pop_to, rp3_mod.SHRINK_SPEC_TO)
+    rolling = rp3_mod.apply_shrinkage(rolling, pop_l21, rp3_mod.SHRINK_SPEC_LAST21)
+
+    rolling['delta_velo'] = rolling['avg_velo_last21'] - rolling['avg_velo_to']
+    rolling['delta_swstr'] = rolling['swstr_pct_last21'] - rolling['swstr_pct_to']
+    rolling['delta_k_pct'] = rolling['k_pct_last21'] - rolling['k_pct_to']
+    rolling['delta_bb_pct'] = rolling['bb_pct_last21'] - rolling['bb_pct_to']
+    rolling['delta_chase'] = rolling['o_swing_pct_last21'] - rolling['o_swing_pct_to']
+    rolling['delta_zone'] = rolling['zone_pct_last21'] - rolling['zone_pct_to']
+    for c in ('delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
+              'delta_chase', 'delta_zone'):
+        rolling[c] = rolling[c].fillna(0.0)
+    for col in (rate + '_sh' for rate in rp3_mod.SHRINK_SPEC_LAST21):
+        if col in rolling.columns:
+            mu = rolling.loc[rolling['year'].isin(rp3_mod.TRAIN_YEARS), col].mean(skipna=True)
+            rolling[col] = rolling[col].fillna(mu)
+    rolling['gs_last21'] = rolling['gs_last21'].fillna(0)
+    rolling['fp_per_start_last21'] = rolling['fp_per_start_last21'].fillna(
+        rolling['fp_per_start_to'])
+    return rolling, prior, pop_to, pop_l21
+
+
+# ---------------------------------------------------------------------------
 # Session-scoped builds (each ~5s; three tests share them)
 # ---------------------------------------------------------------------------
 @pytest.fixture(scope="module")
@@ -235,6 +331,70 @@ def test_rh3_frame_is_byte_identical_to_legacy_inline_assembly(rh3_frame):
         assert rh3_frame.pop_means_last21[k] == pytest.approx(v, rel=0, abs=0)
 
 
+def _fp_matches_bundle(mod, rolling, feats, bundle) -> tuple[bool, str]:
+    """Does the assembled substrate match what the bundle was fitted on?
+
+    The fingerprint is only a PROXY for substrate identity, and its definition
+    changed on 2026-07-30: `engine.fit_fingerprint` became order-SENSITIVE
+    (fp_version 1 -> 2) because the fitted pipelines are positional, so a FEATS
+    reorder previously reused a stale bundle and silently mismatched every
+    coefficient to the wrong column.
+
+    A bundle written before that bump carries a v1 hash, so comparing it to a v2
+    hash fails for a reason that has nothing to do with the substrate. So: match
+    under EITHER version, and report which. v1-only means the bundle is pre-bump
+    and production refits once on its next run -- the intended transitional
+    state. Matching under NEITHER is a real substrate divergence and still fails.
+
+    The v1 hash is recomputed through the MODEL'S OWN wrapper (with the engine
+    function partial-bound to fp_version=1) rather than re-deriving it here, so
+    the model's private `target` / `train_years` / `extra` constants cannot drift
+    out of sync with this test.
+    """
+    want = bundle["fit_fingerprint"]
+    if mod._fit_fingerprint(rolling, feats) == want:
+        return True, "v2"
+    import functools
+    from unittest import mock
+    from plv_clone.models.xfp import engine as _eng
+    v1_fn = functools.partial(_eng.fit_fingerprint, fp_version=1)
+    with mock.patch.object(mod._engine, "fit_fingerprint", v1_fn):
+        if mod._fit_fingerprint(rolling, feats) == want:
+            return True, ("v1 -- bundle predates the 2026-07-30 order-sensitivity "
+                          "bump and refits once on its next run")
+    # Neither hash matches. Before calling that a divergence, ask whether the
+    # SUBSTRATE was even allowed to be stable: if the rolling cache the frame is
+    # built from has been rewritten since the bundle was fitted, the two hashes
+    # are describing different data and the comparison cannot answer the question
+    # this test exists to ask. That is the NORMAL overnight state here -- the
+    # nightly refresh rewrites the rolling CSVs and the models refit later in the
+    # same run -- so failing on it would make this a daily false alarm.
+    import datetime as _dt
+    import pathlib
+    bundle_t = mod.MODEL_PKL.stat().st_mtime
+    # Every declared `*_CSV` on the model module EXCEPT its own output. Reading
+    # the constants rather than hardcoding a list keeps this current when the
+    # assembly gains an input.
+    newer = [
+        (v.stat().st_mtime, v.name)
+        for k, v in vars(mod).items()
+        if k.endswith("_CSV") and k != "PROJ_CSV"
+        and isinstance(v, pathlib.Path) and v.exists()
+        and v.stat().st_mtime > bundle_t
+    ]
+    if newer:
+        t, nm = max(newer)
+        f = "%Y-%m-%d %H:%M"
+        return None, (
+            f"input {nm} was rewritten at {_dt.datetime.fromtimestamp(t):{f}}, "
+            f"AFTER the bundle was fitted at "
+            f"{_dt.datetime.fromtimestamp(bundle_t):{f}} -- the two hashes "
+            f"describe different data; the model refits on its next run")
+    return False, ("neither v1 nor v2, and NO declared input has changed since "
+                   "the fit -- so the assembly CODE moved and the shipped bundle "
+                   "is stale; re-run the model")
+
+
 @needs_rh3_cache
 def test_rh3_frame_fit_fingerprint_matches_production_bundle(rh3_frame):
     """The train-year substrate is the exact one production last fitted on.
@@ -248,26 +408,126 @@ def test_rh3_frame_fit_fingerprint_matches_production_bundle(rh3_frame):
     if not rh3_mod.MODEL_PKL.exists():
         pytest.skip("no fitted rh3 bundle on disk")
     bundle = joblib.load(rh3_mod.MODEL_PKL)
-    fp = rh3_mod._fit_fingerprint(rh3_frame.rolling, rh3_mod.RH3_FEATS)
-    assert fp == bundle["fit_fingerprint"], (
+    ok, how = _fp_matches_bundle(rh3_mod, rh3_frame.rolling, rh3_mod.RH3_FEATS, bundle)
+    if ok is None:
+        pytest.skip(f"fingerprint uninformative: {how}")
+    assert ok, (
         "build_rh3_frame produces a different train substrate than the shipped "
-        "bundle was fitted on. If rh3's assembly changed on purpose, re-run "
-        "the model; otherwise this is a real divergence."
+        f"bundle was fitted on ({how}). If rh3's assembly changed on "
+        "purpose, re-run the model; otherwise this is a real divergence."
     )
+
 
 
 @needs_rp3_cache
 def test_rp3_frame_fit_fingerprint_matches_production_bundle(rp3_frame):
-    """Pins build_rp3_frame to rp3.main()'s (unrefactored) inline prep."""
+    """The rp3 train-year substrate is the one production last fitted on."""
     import joblib
     if not rp3_mod.MODEL_PKL.exists():
         pytest.skip("no fitted rp3 bundle on disk")
     bundle = joblib.load(rp3_mod.MODEL_PKL)
-    fp = rp3_mod._fit_fingerprint(rp3_frame.rolling, rp3_mod.RP3_FEATS)
-    assert fp == bundle["fit_fingerprint"], (
-        "build_rp3_frame has drifted from rp3.main()'s own prep — rp3.py still "
-        "holds a second copy of the assembly; reconcile them."
+    ok, how = _fp_matches_bundle(rp3_mod, rp3_frame.rolling, rp3_mod.RP3_FEATS, bundle)
+    if ok is None:
+        pytest.skip(f"fingerprint uninformative: {how}")
+    assert ok, (
+        "build_rp3_frame produces a different train substrate than the shipped "
+        f"bundle was fitted on ({how}). If rp3's assembly changed on "
+        "purpose, re-run the model; otherwise this is a real divergence."
     )
+
+
+@needs_rp3_cache
+def test_rp3_frame_is_byte_identical_to_legacy_inline_assembly(rp3_frame):
+    """build_rp3_frame == the assembly that lived inline in rp3.main().
+
+    This is the proof that licensed the 2026-07-30 delegation: rp3 is
+    PRODUCTION, so the frame had to be shown byte-identical, not asserted to be.
+    """
+    rolling = pd.read_csv(rp3_mod.ROLLING_CSV)
+    multiyr = pd.read_csv(rp3_mod.MULTIYR_CSV)
+    il = pd.read_csv(rp3_mod.IL_CSV)
+    legacy, legacy_prior, legacy_pop_to, legacy_pop_l21 = _legacy_rp3_assembly(
+        rolling, multiyr, il)
+
+    new = rp3_frame.rolling
+    assert new.shape == legacy.shape, f"shape {new.shape} != legacy {legacy.shape}"
+    assert list(new.columns) == list(legacy.columns), "column order/set differs"
+    assert list(new.dtypes.astype(str)) == list(legacy.dtypes.astype(str)), "dtypes differ"
+    assert_frame_equal(new, legacy, check_exact=True)
+
+    # The Marcel prior table travels on the frame because main() needs it after
+    # assembly (IL-vet fallback). It must be the same table, not a rebuild.
+    assert_frame_equal(rp3_frame.prior, legacy_prior, check_exact=True)
+
+    # Shrinkage population means go straight into the shipped bundle.
+    assert set(rp3_frame.pop_means_to) == set(legacy_pop_to)
+    for k, v in legacy_pop_to.items():
+        assert rp3_frame.pop_means_to[k] == pytest.approx(v, rel=0, abs=0)
+    assert set(rp3_frame.pop_means_last21) == set(legacy_pop_l21)
+    for k, v in legacy_pop_l21.items():
+        assert rp3_frame.pop_means_last21[k] == pytest.approx(v, rel=0, abs=0)
+
+
+@needs_rp3_cache
+def test_rp3_feats_unchanged_in_content_and_order(rp3_frame):
+    """RP3_FEATS order is load-bearing: the fitted Ridge is POSITIONAL.
+
+    `pipe.predict(valid[RP3_FEATS].values)` passes a bare ndarray, so permuting
+    RP3_FEATS silently feeds every coefficient the wrong column. Pin the live
+    list against the `features` list stored in the shipped bundle.
+    """
+    import joblib
+    if not rp3_mod.MODEL_PKL.exists():
+        pytest.skip("no fitted rp3 bundle on disk")
+    bundle = joblib.load(rp3_mod.MODEL_PKL)
+    assert list(bundle["features"]) == list(rp3_mod.RP3_FEATS), (
+        "RP3_FEATS differs from the shipped bundle's feature list in content or "
+        "ORDER — the fitted pipeline is positional, so this mis-maps coefficients."
+    )
+    assert len(rp3_mod.RP3_FEATS) == len(set(rp3_mod.RP3_FEATS))
+
+
+def test_rp3_main_delegates_to_the_canonical_builder():
+    """The second copy of the assembly must be GONE, not merely equal today.
+
+    Byte-identity tests prove the copies agree at this instant; they cannot stop
+    someone editing one copy tomorrow. This structural check is what actually
+    retires the divergence — it fails against the pre-refactor `rp3.main()`,
+    which called `build_prior_table` / `compute_population_means` /
+    `apply_shrinkage` and re-read the substrate CSVs itself.
+    """
+    tree = ast.parse(textwrap.dedent(inspect.getsource(rp3_mod.main)))
+    called = {n.func.id for n in ast.walk(tree)
+              if isinstance(n, ast.Call) and isinstance(n.func, ast.Name)}
+    assert "build_rp3_frame" in called, "rp3.main() no longer delegates to frames"
+
+    reimplemented = {"build_prior_table", "compute_population_means",
+                     "apply_shrinkage", "blend_callup_prior"} & called
+    assert not reimplemented, (
+        f"rp3.main() re-implements the feature assembly ({sorted(reimplemented)}). "
+        "The assembly lives in models/xfp/frames.build_rp3_frame — one copy only."
+    )
+
+    # ...and it must not re-read the substrate caches behind the builder's back.
+    substrate = {"ROLLING_CSV", "MULTIYR_CSV", "IL_CSV", "ROS_SCHED_CSV"}
+    reread = {
+        a.id
+        for n in ast.walk(tree)
+        if isinstance(n, ast.Call) and isinstance(n.func, ast.Attribute)
+        and n.func.attr == "read_csv"
+        for a in n.args
+        if isinstance(a, ast.Name) and a.id in substrate
+    }
+    assert not reread, f"rp3.main() re-reads substrate caches directly: {sorted(reread)}"
+
+
+def test_rp3_frame_exposes_the_prior_table():
+    """`Rp3Frame.prior` exists — main()'s IL-vet fallback depends on it.
+
+    Without it the delegating main() would have to rebuild `build_prior_table`
+    itself, which is exactly the second copy this refactor removed.
+    """
+    assert "prior" in Rp3Frame.__dataclass_fields__
 
 
 # ---------------------------------------------------------------------------

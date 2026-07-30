@@ -133,6 +133,46 @@ def _gaussian_draws(rng, mu: float, sigma: float, n: int) -> np.ndarray:
     return rng.normal(mu, sigma, n)
 
 
+def _bootstrap_draws(rng, emp_arr: np.ndarray, n: int, opp_factor: float,
+                     m_emp: float) -> np.ndarray:
+    """Resample real per-start FP and TRANSLATE by the matchup location delta.
+
+    Validated family (I1, 2026-07-30 — sp_bootstrap_opp_factor_2026-07-30.md).
+
+    This leg used to return `rng.choice(emp_arr, ...) * opp_factor`. Multiplying
+    carries the same sign defect F2 removed from the parametric leg, and one
+    worse: since multiplying by a positive scalar cannot change a sign,
+    P(FP <= 0) is EXACTLY invariant to the opponent — the single number a
+    bench/start call exists to price does not respond to the matchup at all.
+    Measured on the I1 panel across opp_factor {0.83 .. 1.20}, multiply's
+    P(FP<=0) spread is 0.00pp; this translation gives 17.90% -> 10.96%,
+    monotone, 6.94pp.
+
+    delta = m_emp * (opp_factor - 1) is the empirical leg's own analogue of
+    leverage_engine's `base + (target - ev)`: target = m_emp * opp_factor,
+    ev = m_emp. The MEAN is therefore identical to the old multiply
+    (E[f*X] = f*m_emp = E[X + m_emp*(f-1)], verified to 1e-14 on the panel) —
+    only the shape changes, and the real empirical shape (skew, the actual
+    disaster starts) is preserved exactly instead of being stretched by f.
+
+    CRPS was indifferent (5.5841 vs 5.5864, -0.04% rel, ci95 [-0.0104, +0.0061]),
+    so this shipped on the pre-declared responsiveness tie-break, backed by the
+    post-hoc conditional check: realized P(FP<=0) is +1.95pp higher against the
+    tougher half of matchups, which only the translation predicts (+1.48pp;
+    multiply predicts -0.24pp).
+
+    Raises on an empty or non-finite pool — never silently returns zeros.
+    """
+    if emp_arr is None or emp_arr.size == 0:
+        raise ValueError('_bootstrap_draws: empty empirical pool')
+    if not math.isfinite(m_emp):
+        raise ValueError(f'_bootstrap_draws: non-finite pool mean {m_emp!r}')
+    if not math.isfinite(opp_factor):
+        raise ValueError(f'_bootstrap_draws: non-finite opp_factor {opp_factor!r}')
+    return (rng.choice(emp_arr, size=n, replace=True)
+            + m_emp * (opp_factor - 1.0))
+
+
 def build_sp_sampler(emp_fps: list[float], rp3_mean: float, rp3_sigma: float,
                       prior: str, k_prior: int = 20, label: str = '<unnamed SP>'):
     """Returns a fn(rng, n_trials, opp_factor=1.0) → FP draws for ONE start.
@@ -155,15 +195,25 @@ def build_sp_sampler(emp_fps: list[float], rp3_mean: float, rp3_sigma: float,
         location scaling gives 17.43% at 0.83 and 8.77% at 1.20). sigma is
         deliberately NOT scaled — the F2 study held the band fixed.
 
-      empirical leg — multiplies the bootstrapped real FP, exactly as before.
-        Untouched by F2 by declared scope; it carries the same directional
-        asymmetry on its negative draws and needs its own study.
+      empirical leg — TRANSLATES the bootstrapped real FP by the same kind of
+        location delta, using the pool's own mean: `x + m_emp * (opp_factor-1)`.
+        See _bootstrap_draws. It used to multiply, which left P(FP<=0) exactly
+        invariant to the opponent; fixed by I1 (2026-07-30,
+        data/research/validation_runs/sp_bootstrap_opp_factor_2026-07-30.md).
+
+    Both legs are therefore now LOCATION-scaled by opp_factor and neither
+    rescales its spread.
 
     Raises (never silently defaults) if the parametric leg is needed but
     rp3_mean / rp3_sigma cannot support it.
     """
     n_emp = len(emp_fps)
     emp_arr = np.array(emp_fps, dtype=float) if n_emp else None
+    if emp_arr is not None and not np.all(np.isfinite(emp_arr)):
+        raise ValueError(
+            f'build_sp_sampler({label}): empirical pool contains non-finite FP '
+            f'{emp_fps!r}. Refusing to bootstrap from it.')
+    m_emp = float(emp_arr.mean()) if n_emp else None
     needs_param = (prior != 'empirical') or n_emp == 0
 
     sigma = rp3_sigma if (rp3_sigma is not None and math.isfinite(rp3_sigma)
@@ -187,7 +237,7 @@ def build_sp_sampler(emp_fps: list[float], rp3_mean: float, rp3_sigma: float,
         emp_weight = 0.0
     elif prior == 'empirical':
         def _draw(rng, n, opp_factor: float = 1.0):
-            return rng.choice(emp_arr, size=n, replace=True) * opp_factor
+            return _bootstrap_draws(rng, emp_arr, n, opp_factor, m_emp)
         emp_weight = 1.0
     else:  # blend
         w = n_emp / (n_emp + k_prior)
@@ -196,8 +246,8 @@ def build_sp_sampler(emp_fps: list[float], rp3_mean: float, rp3_sigma: float,
             n_emp_draws = int(mask.sum())
             out = _gaussian_draws(rng, rp3_mean * opp_factor, sigma, n)
             if n_emp_draws > 0:
-                out[mask] = (rng.choice(emp_arr, size=n_emp_draws, replace=True)
-                             * opp_factor)
+                out[mask] = _bootstrap_draws(rng, emp_arr, n_emp_draws,
+                                             opp_factor, m_emp)
             return out
         emp_weight = w
     return _draw, emp_weight

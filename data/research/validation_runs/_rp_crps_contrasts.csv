@@ -1,0 +1,5 @@
+contrast,n_rows,n_clusters,CRPS_A,CRPS_B,dCRPS,rel_%,ci_lo,ci_hi,boot_p,econ_pass,underpowered,bh_pass
+"R1 prod->c* (gauss, TEST)",3516,228,2.34518,2.27903,-0.06615,-2.82,-0.09686,-0.03817,0.00025,True,False,True
+R2 prod->S_BAND (gauss),3487,225,2.34917,3.17444,0.82528,35.13,0.6778,0.99285,0.00025,True,False,True
+"R3 prod->c*mix (MIXTURE, TEST)",3516,228,2.18016,2.17381,-0.00635,-0.29,-0.02005,0.00594,0.33,False,False,False
+"R4 mu_PROD->mu_VOL (gauss, TEST)",3516,228,2.34518,2.88065,0.53547,22.83,-0.00821,1.44816,0.057,True,False,False

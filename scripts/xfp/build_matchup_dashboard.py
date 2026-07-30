@@ -562,15 +562,29 @@ def load_projections():
     rprs2 = PROJECTIONS.rprs2().drop_duplicates('name_api')
     rprs2['nk'] = rprs2['name_api'].map(_norm)
     # MA1: derive sigma from quantiles. σ ≈ (p75 - p25) / 1.35 (standard normal IQR identity)
+    # GUARD (2026-07-30, rp_band_crps study §6): 5 of 347 published rprs2 rows
+    # carry p75 < p25 (deep-negative xfp_ros scrubs), so the unguarded identity
+    # yields a NEGATIVE sigma — which is truthy, survives every downstream
+    # `rp_info.get('sigma') or FALLBACK`, and ends up clamped into a degenerate
+    # point mass sold as a distribution. A corrupt band is a MISSING band: emit
+    # None so consumers take their documented fallback, and say so out loud.
     rprs2_map = {}
+    _bad_band = []
     for _, r in rprs2.iterrows():
         p25 = r.get('xfp_p25'); p75 = r.get('xfp_p75')
         sigma = (p75 - p25) / 1.35 if (pd.notna(p25) and pd.notna(p75)) else None
+        if sigma is not None and sigma <= 0:
+            _bad_band.append(str(r.get('name_api') or r.get('player_name') or '?'))
+            sigma = None
         rprs2_map[r['nk']] = {'xfp_ros': r.get('xfp_ros') or 0,
                               'xfp_full_year': r.get('xfp_full_year') or 0,
                               'role': r.get('role_lag1') or 'middle',
                               'sigma': sigma,
                               'mlbam': int(r['pitcher']) if pd.notna(r.get('pitcher')) else None}
+    if _bad_band:
+        print(f'  ⚠ rprs2 band corrupt (p75 <= p25) for {len(_bad_band)} row(s) — '
+              f'sigma set to None (consumers use their fallback): '
+              f'{", ".join(sorted(_bad_band))}')
 
     team_strength = pd.read_csv(CACHE / 'team_strength_2026.csv')
     team_strength['team'] = team_strength['team'].str.upper()

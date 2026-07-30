@@ -54,12 +54,30 @@ pre-refactor assembly is asserted by ``tests/test_xfp_frames.py``, which keeps
 a frozen verbatim copy of the old inline block as its reference implementation
 and compares with ``pandas.testing.assert_frame_equal``.
 
-``build_rp3_frame`` is a faithful transcription of ``rp3.main()``'s prep
-section. ``rp3.py`` is NOT refactored to delegate (it stays a second copy for
-now — see the module docstring note in the test file); equivalence is pinned
-empirically by asserting that the fit fingerprint computed from this frame
-matches the ``fit_fingerprint`` recorded in the production ``xfp_rp3_pipeline.pkl``
-bundle, i.e. the exact train-year substrate production last fitted on.
+``build_rp3_frame`` began as a faithful transcription of ``rp3.main()``'s prep
+section, leaving rp3 as the LAST divergent copy in the repo — pinned only by a
+fingerprint that re-checks at REFIT time rather than at edit time, so an edit to
+one copy could sit undetected until the next refit. **2026-07-30: closed.**
+``rp3.main()`` now delegates here, and the pre-refactor inline block is kept as
+a frozen verbatim reference in ``tests/test_xfp_frames.py``
+(``_legacy_rp3_assembly``) exactly as rh3's is.
+
+Byte-identity was PROVEN before the switch, not assumed, on the real
+2018-2026 cache (31,135 rows x 109 columns):
+
+  * ``assert_frame_equal(check_exact=True)`` — shape, column order, dtypes and
+    values all identical;
+  * the shrinkage population means (which go into the shipped bundle) equal to
+    the bit;
+  * ``_fit_fingerprint`` equal across both assemblies AND equal to the
+    ``fit_fingerprint`` in the shipped ``xfp_rp3_pipeline.pkl``
+    (``46e24bc9b4187492b95a84fbc3bb57dd``);
+  * ``cross_year_eval`` reproducing the bundle's recorded numbers from BOTH
+    assemblies — r=0.5617, mae=2.8394, baseline r=0.5484, Delta r=+0.0133.
+
+``RP3_FEATS`` is untouched in content and order (the fitted Ridge is positional,
+so order is load-bearing); ``tests/test_xfp_frames.py`` pins it against the
+``features`` list stored in the bundle.
 """
 from __future__ import annotations
 
@@ -144,6 +162,11 @@ class Rp3Frame:
     il: pd.DataFrame
     pop_means_to: dict
     pop_means_last21: dict
+    # The un-merged Marcel prior table. ``rp3.main()`` needs it AFTER the frame
+    # is assembled, for the IL-vet fallback (pitchers with a usable prior but no
+    # rolling row at all). Returning it here means the delegating caller never
+    # has to rebuild — and therefore can never rebuild it *differently*.
+    prior: pd.DataFrame
 
 
 # ---------------------------------------------------------------------------
@@ -317,7 +340,7 @@ def build_rp3_frame(
     il: pd.DataFrame | None = None,
     verbose: bool = True,
 ) -> Rp3Frame:
-    """Assemble the full rp3 substrate: all 23 ``RP3_FEATS`` present, shrunken.
+    """Assemble the full rp3 substrate: all 24 ``RP3_FEATS`` present, shrunken.
 
     Mirrors ``rp3.main()``'s prep section step for step, including the MiLB
     rookie-prior fallback, the IL-join hard guard, and the schedule-strength
@@ -445,4 +468,5 @@ def build_rp3_frame(
 
     assert_feats_present(rolling, list(_rp3.RP3_FEATS), label='build_rp3_frame')
     return Rp3Frame(rolling=rolling, multiyr=multiyr, il=il,
-                    pop_means_to=pop_to, pop_means_last21=pop_l21)
+                    pop_means_to=pop_to, pop_means_last21=pop_l21,
+                    prior=prior)

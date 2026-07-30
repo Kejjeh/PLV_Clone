@@ -1,0 +1,6 @@
+treatment,P0@f=0.83_%,P0@f=0.90_%,P0@f=1.00_%,P0@f=1.10_%,P0@f=1.20_%,spread_pp,non_increasing,mono_pass
+multiply,14.52,14.52,14.52,14.52,14.52,0.0,True,False
+shift_self,17.9,16.33,14.52,12.39,10.96,6.94,True,True
+shift_rp3,17.78,16.37,14.52,12.31,11.04,6.74,True,True
+unadjusted,14.52,14.52,14.52,14.52,14.52,0.0,True,False
+opp_conditioned,14.52,14.52,14.57,14.13,14.13,0.43,False,False

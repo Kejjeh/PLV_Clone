@@ -140,20 +140,49 @@ def lookup_sigma_vec(
 
 
 def fit_fingerprint(rolling, feats, *, target, train_years, extra=(),
-                    fp_version=1) -> str:
+                    fp_version=2) -> str:
     """Content hash of the fit stage's inputs: TRAIN-YEAR rows (immutable
     slice), feature list, and each model's constants (spliced verbatim into
     the repr so hoisting preserved every model's existing fingerprints).
-    Same fingerprint => byte-identical fit artifacts (warm-skip)."""
+    Same fingerprint => byte-identical fit artifacts (warm-skip).
+
+    FEATURE ORDER IS PART OF THE HASH (fp_version 2, 2026-07-30). It was not
+    before, and that was a live correctness hole: the fitted pipelines are
+    POSITIONAL — `pipe.predict(valid[FEATS].values)` hands sklearn a bare ndarray
+    — so reordering a FEATS list changes which coefficient meets which column.
+    With an order-insensitive fingerprint, a reorder left the hash unchanged, the
+    warm-skip path loaded the stale bundle, and every projection came out silently
+    wrong. Measured cost of swapping merely the FIRST TWO of rp3's 24 features on
+    the 271 pitchers actually projected: mean |delta| 2.587 FP/start (max 5.946)
+    against a mean projection of 9.801, and a mean absolute rank shift of 17.6
+    places — with NO fingerprint change to signal it.
+
+    The data hash still uses `sorted(...)` because that selects WHICH columns to
+    hash, where order genuinely does not matter; the ordered tuple goes into the
+    repr alongside it.
+
+    Bumping fp_version invalidates every stored fingerprint by design, so each
+    model refits ONCE on the next run. That refit is deterministic and reproduces
+    the same coefficients from the same data — only the cached hash changes.
+
+    `fp_version` selects the hash DEFINITION, not merely a salt: passing 1
+    reproduces the genuine pre-bump hash bit-for-bit. That is what lets a test
+    (or a diagnostic) distinguish "this bundle is merely PRE-BUMP" from "this
+    bundle was fitted on different data" — a distinction that is impossible if
+    the old hash can no longer be computed.
+    """
     import hashlib
     import pandas as pd
+    if fp_version not in (1, 2):
+        raise ValueError(f'unknown fp_version {fp_version!r} (expected 1 or 2)')
     sub = rolling[rolling['year'].isin(train_years)]
     cols = [c for c in sorted(set(feats + [target, 'year', 'split_day']))
             if c in sub.columns]
     h = hashlib.md5()
     h.update(pd.util.hash_pandas_object(
         sub[cols].reset_index(drop=True), index=False).values.tobytes())
-    h.update(repr((sorted(feats),) + tuple(extra)
+    feat_part = (sorted(feats),) if fp_version == 1 else (sorted(feats), tuple(feats))
+    h.update(repr(feat_part + tuple(extra)
                   + (sorted(train_years), fp_version)).encode())
     return h.hexdigest()
 

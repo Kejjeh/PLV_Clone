@@ -20,6 +20,7 @@ realized forward target, settler classification.
 """
 from __future__ import annotations
 
+import argparse
 import sys
 from datetime import date, timedelta
 from pathlib import Path
@@ -28,8 +29,10 @@ import numpy as np
 import pandas as pd
 from scipy.stats import spearmanr
 
-# "today" = data freshness cutoff. Models/data run through 2026-06-09.
-AS_OF = date(2026, 6, 9)
+# The settlement anchor used before 2026-07-30. Kept ONLY so `--as-of 2026-06-09`
+# reproduces the historical run; it is NOT a default. See
+# data/research/validation_runs/verdict_backtest_settlement_cutoff_2026-07-30.md.
+LEGACY_AS_OF = date(2026, 6, 9)
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -453,6 +456,116 @@ def run_relievers(rolling) -> pd.DataFrame:
 
 
 # --------------------------------------------------------------------------- #
+# Settlement gate — DERIVED per-bucket cutoff.
+#
+# A decision taken at split-day cutoff D may only be graded once its settlement
+# window (SETTLEMENT_WINDOWS[bucket]["days"]) has FULLY closed. Until
+# 2026-07-30 that test ran against a hardcoded `AS_OF = date(2026, 6, 9)`, which
+# was wrong twice over: STATIC (the caches advanced to split_day 125 /
+# 2026-07-28 while the literal stayed put, discarding 11 of 15 hitter and 13 of
+# 15 SP split-days) and BUCKET-BLIND (one date cannot express H 21d vs SP/RP
+# 35d).
+#
+# The anchor is DATA FRESHNESS, not wall-clock `today`. The realized target in
+# these panels (`ros_full_fp_per_pa` / `ros_fp_per_start`) is rest-of-season
+# TRUNCATED AT THE LAST DATE IN THE CACHE, not at season end — measured, split
+# 121 (cutoff 07-25) carries max ros_pa=17 and split 125 carries ros_pa=NaN. So
+# a `today`-anchored gate is only accidentally right: it is correct exactly
+# while the refresh is healthy, and the moment wall-clock runs ahead of the
+# cache it would admit a split holding 14 days of forward data and grade it as
+# a closed 21-day window — a confident number computed from data that isn't
+# there, i.e. the docs/rh3_harness_root_bug_2026-07-28.md failure class.
+# Anchoring on max(cutoff_date) of the bucket's OWN panel makes that
+# structurally impossible.
+#
+# NEVER default a missing/unparseable cutoff_date. Dropping it silently would
+# shrink the panel with no diagnostic; keeping it silently would grade an
+# unsettled window. Missing => raise.
+# --------------------------------------------------------------------------- #
+def _cutoff_dates(df: pd.DataFrame, who: str) -> pd.Series:
+    """cutoff_date as datetime.date, raising on any missing/unparseable value."""
+    if "cutoff_date" not in df.columns:
+        raise KeyError(
+            f"{who}: panel has no 'cutoff_date' column — the settlement gate "
+            "cannot be evaluated. Refusing to report a retro over an ungated "
+            "panel.")
+    parsed = pd.to_datetime(df["cutoff_date"], errors="coerce")
+    if parsed.isna().any():
+        bad = df.loc[parsed.isna(), "cutoff_date"].unique()[:5]
+        raise ValueError(
+            f"{who}: {int(parsed.isna().sum())} row(s) have a missing or "
+            f"unparseable cutoff_date (e.g. {list(bad)}). The settlement window "
+            "cannot be checked for them; refusing to silently include or drop "
+            "them.")
+    return parsed.dt.date
+
+
+def data_asof(df: pd.DataFrame, who: str) -> date:
+    """Freshest cutoff_date actually present in this bucket's panel."""
+    if df.empty:
+        raise ValueError(f"{who}: empty panel — no data freshness to derive.")
+    return max(_cutoff_dates(df, who))
+
+
+def settlement_cutoff(bucket: str, asof: date) -> date:
+    """Latest split cutoff whose settlement window has fully closed by `asof`."""
+    if bucket not in SETTLEMENT_WINDOWS:
+        raise KeyError(f"unknown settlement bucket {bucket!r}; "
+                       f"known: {sorted(SETTLEMENT_WINDOWS)}")
+    return asof - timedelta(days=SETTLEMENT_WINDOWS[bucket]["days"])
+
+
+def apply_settlement_gate(df: pd.DataFrame, bucket: str,
+                          asof_override: date | None = None):
+    """Drop rows whose settlement window has NOT fully closed.
+
+    Returns (gated_df, asof, cutoff). `asof` is derived from the panel unless
+    `asof_override` is given (historical-reproduction escape hatch only).
+    """
+    who = f"apply_settlement_gate[{bucket}]"
+    asof = asof_override if asof_override is not None else data_asof(df, who)
+    cutoff = settlement_cutoff(bucket, asof)
+    keep = _cutoff_dates(df, who).map(lambda c: c <= cutoff)
+    return df[keep.values].copy(), asof, cutoff
+
+
+# Every bucket the retro reports MUST be gated. RP was silently absent from this
+# list before 2026-07-30, which let the reliever number include split_day 125 —
+# a split whose forward window holds zero games.
+GATED_BUCKETS = ("H", "SP", "RP")
+
+
+def gate_panels(panels: dict, asof_override: date | None = None):
+    """Apply the derived settlement gate to every reported bucket.
+
+    `panels` maps bucket -> DataFrame. Returns (gated_panels, report) where
+    report[bucket] = dict(asof, cutoff, window_days, n_before, n_after,
+    split_days). Raises if a reported bucket is missing — a bucket that
+    silently skipped the gate is exactly the defect this function exists to
+    make impossible.
+    """
+    missing = [b for b in GATED_BUCKETS if b not in panels]
+    if missing:
+        raise KeyError(
+            f"gate_panels: no panel supplied for bucket(s) {missing}. Every "
+            f"bucket in GATED_BUCKETS={list(GATED_BUCKETS)} must pass the "
+            "settlement gate before it is reported.")
+    gated, report = {}, {}
+    for bucket, df in panels.items():
+        g, asof, cutoff = apply_settlement_gate(df, bucket, asof_override)
+        gated[bucket] = g
+        report[bucket] = {
+            "asof": asof,
+            "cutoff": cutoff,
+            "window_days": SETTLEMENT_WINDOWS[bucket]["days"],
+            "n_before": len(df),
+            "n_after": len(g),
+            "split_days": [int(s) for s in sorted(g["split_day"].unique())],
+        }
+    return gated, report
+
+
+# --------------------------------------------------------------------------- #
 # Settlement + stats
 # --------------------------------------------------------------------------- #
 def classify(signal, residual, thr):
@@ -481,7 +594,23 @@ def quintile_calibration(df, value_col, real_col):
     return g
 
 
-def main():
+def _parse_args(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument(
+        "--as-of", dest="as_of", default=None, metavar="YYYY-MM-DD",
+        help="Override the settlement anchor (default: derived per bucket from "
+             "max(cutoff_date) in that bucket's own panel). Use ONLY to "
+             f"reproduce a historical run, e.g. --as-of {LEGACY_AS_OF.isoformat()}.")
+    return ap.parse_args(argv)
+
+
+def main(argv=None):
+    args = _parse_args(argv)
+    as_of_override = date.fromisoformat(args.as_of) if args.as_of else None
+    if as_of_override is not None:
+        print(f"[settlement] AS-OF OVERRIDE {as_of_override} — reproducing a "
+              "historical run; the derived per-bucket anchor is bypassed.")
+
     print("Building hitter panel...")
     h_roll, h_multi = build_hitter_panel()
     print("Building pitcher panel...")
@@ -499,16 +628,20 @@ def main():
     H = settle(H, H_THR, "H")
     SP = settle(SP, SP_THR, "SP")
 
-    # As-of date gate: a decision at split-day cutoff D only settles if the
-    # settler window has FULLY elapsed by AS_OF (2026-06-09). This is the honest
-    # "could we have scored this decision by now" filter and mirrors
-    # settle_decision()'s `today >= snapshot + window_days` clause.
-    def window_elapsed(df, window_days):
-        cd = pd.to_datetime(df["cutoff_date"]).dt.date
-        return cd.map(lambda c: (AS_OF - c).days >= window_days)
-
-    H = H[window_elapsed(H, SETTLEMENT_WINDOWS["H"]["days"])].copy()
-    SP = SP[window_elapsed(SP, SETTLEMENT_WINDOWS["SP"]["days"])].copy()
+    # Settlement gate — per-bucket, derived from each panel's own freshness.
+    # Mirrors settle_decision()'s `today >= snapshot + window_days` clause, with
+    # `today` read from the data rather than asserted by a literal.
+    # RP is gated too: it was silently ungated before 2026-07-30, which let the
+    # reliever number include split 125 — a split with ZERO forward data.
+    gated, gate_report = gate_panels({"H": H, "SP": SP, "RP": RP}, as_of_override)
+    H, SP, RP = gated["H"], gated["SP"], gated["RP"]
+    print("\n[settlement gate] per-bucket derived cutoffs "
+          "(a decision is graded only once its window has fully closed):")
+    for b in GATED_BUCKETS:
+        r = gate_report[b]
+        print(f"  {b:2s}  data_asof={r['asof']}  window={r['window_days']}d  "
+              f"cutoff<={r['cutoff']}  rows {r['n_before']}->{r['n_after']}  "
+              f"split_days={r['split_days']}")
 
     # restrict to settleable rows (enough forward events)
     H_s = H[H["n_events"] >= H_MIN_EVENTS].copy()

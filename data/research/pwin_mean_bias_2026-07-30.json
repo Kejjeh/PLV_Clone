@@ -1,0 +1,512 @@
+{
+  "espn_pulled_at": "2026-07-30T07:21:41.924741",
+  "partition": {
+    "n_total": 464,
+    "n_synthetic_excluded": 141,
+    "n_legacy_null_mv_excluded": 25,
+    "n_live": 298,
+    "synthetic_versions": [
+      "backfill_2024_bayes_shrink",
+      "backfill_2025_bayes_shrink"
+    ],
+    "legacy_null_periods": [
+      7,
+      8
+    ]
+  },
+  "panel_meta": {
+    "open_periods_dropped": [
+      17
+    ],
+    "open_rows_dropped": 8,
+    "out_of_window_rows": 6,
+    "out_of_window_period_days": 2,
+    "out_of_window": [
+      {
+        "period": 11,
+        "date": "2026-06-15"
+      },
+      {
+        "period": 15,
+        "date": "2026-07-20"
+      }
+    ],
+    "corrupted_actuals": [
+      {
+        "period": 12,
+        "logged_my": 124.4,
+        "logged_opp": 145.5,
+        "true_my": 294.6,
+        "true_opp": 385.0,
+        "logged_outcome": 0,
+        "true_outcome": 0
+      },
+      {
+        "period": 13,
+        "logged_my": 25.7,
+        "logged_opp": 64.5,
+        "true_my": 322.1,
+        "true_opp": 331.3,
+        "logged_outcome": 0,
+        "true_outcome": 0
+      },
+      {
+        "period": 14,
+        "logged_my": 46.1,
+        "logged_opp": 50.9,
+        "true_my": 306.5,
+        "true_opp": 363.3,
+        "logged_outcome": 0,
+        "true_outcome": 0
+      },
+      {
+        "period": 15,
+        "logged_my": 22.7,
+        "logged_opp": 15.0,
+        "true_my": 552.1,
+        "true_opp": 581.4,
+        "logged_outcome": 1,
+        "true_outcome": 0
+      },
+      {
+        "period": 16,
+        "logged_my": 43.8,
+        "logged_opp": 31.2,
+        "true_my": 362.3,
+        "true_opp": 246.7,
+        "logged_outcome": 1,
+        "true_outcome": 1
+      }
+    ]
+  },
+  "calibration": {
+    "FIRST snapshot / period, AS-LOGGED actuals|ALL": {
+      "label": "ALL",
+      "n_snapshots": 16,
+      "periods": 8,
+      "mean_pred": 0.47404999999999997,
+      "actual": 0.5,
+      "gap": 0.02595000000000003,
+      "gap_ci": [
+        -0.2972,
+        0.38504374999999996
+      ],
+      "brier": 0.24526313,
+      "expected_wins": 3.7923999999999998,
+      "observed_wins": 4.0,
+      "sd_wins": 1.0402379343207977,
+      "z": 0.19956972645450433,
+      "p_two_sided": 0.8418171062437425,
+      "n": 8
+    },
+    "FIRST snapshot / period, AS-LOGGED actuals|baseline": {
+      "label": "baseline",
+      "n_snapshots": 8,
+      "periods": 8,
+      "mean_pred": 0.490425,
+      "actual": 0.5,
+      "gap": 0.009575,
+      "gap_ci": [
+        -0.31270031249999997,
+        0.3661875
+      ],
+      "brier": 0.24177692249999996,
+      "expected_wins": 3.9234,
+      "observed_wins": 4.0,
+      "sd_wins": 1.0627250914512183,
+      "z": 0.07207884768712655,
+      "p_two_sided": 0.9425391595337744,
+      "n": 8
+    },
+    "FIRST snapshot / period, AS-LOGGED actuals|MA_v1": {
+      "label": "MA_v1",
+      "n_snapshots": 8,
+      "periods": 8,
+      "mean_pred": 0.457675,
+      "actual": 0.5,
+      "gap": 0.042325,
+      "gap_ci": [
+        -0.282829375,
+        0.4029625
+      ],
+      "brier": 0.2499254175,
+      "expected_wins": 3.6614,
+      "observed_wins": 4.0,
+      "sd_wins": 1.012618714028138,
+      "z": 0.3343805474945935,
+      "p_two_sided": 0.7380924163247636,
+      "n": 8
+    },
+    "FIRST snapshot / period, ESPN-CORRECTED|ALL": {
+      "label": "ALL",
+      "n_snapshots": 16,
+      "periods": 8,
+      "mean_pred": 0.47404999999999997,
+      "actual": 0.375,
+      "gap": -0.09904999999999997,
+      "gap_ci": [
+        -0.339225,
+        0.14039375
+      ],
+      "brier": 0.13181313,
+      "expected_wins": 3.7923999999999998,
+      "observed_wins": 3.0,
+      "sd_wins": 1.0402379343207977,
+      "z": -0.7617488017463825,
+      "p_two_sided": 0.44620994260274144,
+      "n": 8
+    },
+    "FIRST snapshot / period, ESPN-CORRECTED|baseline": {
+      "label": "baseline",
+      "n_snapshots": 8,
+      "periods": 8,
+      "mean_pred": 0.490425,
+      "actual": 0.375,
+      "gap": -0.115425,
+      "gap_ci": [
+        -0.3557375,
+        0.12209687499999917
+      ],
+      "brier": 0.13507692249999997,
+      "expected_wins": 3.9234,
+      "observed_wins": 3.0,
+      "sd_wins": 1.0627250914512183,
+      "z": -0.8688982761657005,
+      "p_two_sided": 0.38490277252854693,
+      "n": 8
+    },
+    "FIRST snapshot / period, ESPN-CORRECTED|MA_v1": {
+      "label": "MA_v1",
+      "n_snapshots": 8,
+      "periods": 8,
+      "mean_pred": 0.457675,
+      "actual": 0.375,
+      "gap": -0.082675,
+      "gap_ci": [
+        -0.3209375,
+        0.1605375
+      ],
+      "brier": 0.1297254175,
+      "expected_wins": 3.6614,
+      "observed_wins": 3.0,
+      "sd_wins": 1.012618714028138,
+      "z": -0.6531579861574842,
+      "p_two_sided": 0.5136544327094057,
+      "n": 8
+    },
+    "ALL in-window snapshots, ESPN-CORRECTED|ALL": {
+      "label": "ALL",
+      "n_snapshots": 284,
+      "periods": 8,
+      "mean_pred": 0.4283546651002902,
+      "actual": 0.375,
+      "gap": -0.05335466510029019,
+      "gap_ci": [
+        -0.21906953760578762,
+        0.10901667707292707
+      ],
+      "brier": 0.05875605058349754,
+      "expected_wins": 3.4268373208023215,
+      "observed_wins": 3.0,
+      "sd_wins": 1.018816601642657,
+      "z": -0.4189540297185222,
+      "p_two_sided": 0.675249729221847,
+      "n": 8
+    },
+    "ALL in-window snapshots, ESPN-CORRECTED|baseline": {
+      "label": "baseline",
+      "n_snapshots": 142,
+      "periods": 8,
+      "mean_pred": 0.433134889507077,
+      "actual": 0.375,
+      "gap": -0.058134889507077014,
+      "gap_ci": [
+        -0.22931935844935844,
+        0.1099970548548673
+      ],
+      "brier": 0.06325948908581976,
+      "expected_wins": 3.465079116056616,
+      "observed_wins": 3.0,
+      "sd_wins": 1.0358715420947262,
+      "z": -0.4489737357936671,
+      "p_two_sided": 0.6534506031772958,
+      "n": 8
+    },
+    "ALL in-window snapshots, ESPN-CORRECTED|MA_v1": {
+      "label": "MA_v1",
+      "n_snapshots": 142,
+      "periods": 8,
+      "mean_pred": 0.42357444069350325,
+      "actual": 0.375,
+      "gap": -0.04857444069350325,
+      "gap_ci": [
+        -0.2086200197925198,
+        0.108240198526136
+      ],
+      "brier": 0.054469248920871426,
+      "expected_wins": 3.388595525548026,
+      "observed_wins": 3.0,
+      "sd_wins": 1.0006056111806034,
+      "z": -0.38836033018996013,
+      "p_two_sided": 0.6977493967777677,
+      "n": 8
+    }
+  },
+  "ladder": [
+    {
+      "step": "prior harness (as reviewed)",
+      "n": 21,
+      "periods": 11,
+      "mean_pred": 0.5160285714285713,
+      "actual": 0.42857142857142855,
+      "brier": 0.24672344380952382,
+      "gap": -0.08745714285714273
+    },
+    {
+      "step": "  - drop legacy NULL model_version",
+      "n": 19,
+      "periods": 10,
+      "mean_pred": 0.48305263157894734,
+      "actual": 0.3684210526315789,
+      "brier": 0.26746253789473684,
+      "gap": -0.11463157894736842
+    },
+    {
+      "step": "  - drop periods ESPN calls UNDECIDED",
+      "n": 17,
+      "periods": 9,
+      "mean_pred": 0.44775294117647063,
+      "actual": 0.4117647058823529,
+      "brier": 0.22626503647058824,
+      "gap": -0.03598823529411771
+    },
+    {
+      "step": "  - drop out-of-window snapshots",
+      "n": 15,
+      "periods": 8,
+      "mean_pred": 0.47159999999999996,
+      "actual": 0.4666666666666667,
+      "brier": 0.24628680533333333,
+      "gap": -0.00493333333333329
+    },
+    {
+      "step": "  - use ESPN finals, not logged actuals",
+      "n": 15,
+      "periods": 8,
+      "mean_pred": 0.47159999999999996,
+      "actual": 0.3333333333333333,
+      "brier": 0.125273472,
+      "gap": -0.13826666666666665
+    }
+  ],
+  "margin": {
+    "ALL": {
+      "mean": -5.386249999999974,
+      "mean_of_cluster_means": -5.386249999999974,
+      "lo": -34.98740624999997,
+      "hi": 27.60432812499997,
+      "n_obs": 16,
+      "n_clusters": 8,
+      "sd": 47.08330148081519
+    },
+    "baseline": {
+      "mean": -8.718749999999968,
+      "mean_of_cluster_means": -8.718749999999968,
+      "lo": -37.469999999999985,
+      "hi": 23.11125000000004,
+      "n_obs": 8,
+      "n_clusters": 8,
+      "sd": 46.4526931212205
+    },
+    "MA_v1": {
+      "mean": -2.0537499999999795,
+      "mean_of_cluster_means": -2.0537499999999795,
+      "lo": -33.01874999999998,
+      "hi": 32.46246874999991,
+      "n_obs": 8,
+      "n_clusters": 8,
+      "sd": 50.66684092819342
+    }
+  },
+  "dispersion": {
+    "n": 19,
+    "n_periods": 10,
+    "f1_scale_applied": 1.3203463203463202,
+    "pre-F1 model, as-logged labels": {
+      "dispersion": 1.3509866700262407,
+      "lo": 1.000861806728749,
+      "hi": 1.6400640624936194
+    },
+    "pre-F1 model, ESPN finals": {
+      "dispersion": 0.9402813223809764,
+      "lo": 0.7202722549588172,
+      "hi": 1.1400064539438062
+    },
+    "post-F1 model, ESPN finals": {
+      "dispersion": 0.7121474933442804,
+      "lo": 0.5455176750671697,
+      "hi": 0.8634147241344893
+    }
+  },
+  "sides": {
+    "all periods|ALL": {
+      "frac_my": {
+        "mean": 0.05796803517678478,
+        "mean_of_cluster_means": 0.05796803517678479,
+        "lo": -0.08490426931816412,
+        "hi": 0.24896674738398683,
+        "n_obs": 16,
+        "n_clusters": 8
+      },
+      "frac_opp": {
+        "mean": 0.05443775763831419,
+        "mean_of_cluster_means": 0.054437757638314196,
+        "lo": -0.08838596676484006,
+        "hi": 0.20019245871768834,
+        "n_obs": 16,
+        "n_clusters": 8
+      },
+      "frac_gap": {
+        "mean": -0.003530277538470593,
+        "mean_of_cluster_means": -0.003530277538470593,
+        "lo": -0.1276516641986078,
+        "hi": 0.11109465610951418,
+        "n_obs": 16,
+        "n_clusters": 8
+      }
+    },
+    "all periods|baseline": {
+      "frac_my": {
+        "mean": 0.12026219365818881,
+        "mean_of_cluster_means": 0.12026219365818881,
+        "lo": -0.0322518577032115,
+        "hi": 0.3187232036246339,
+        "n_obs": 8,
+        "n_clusters": 8
+      },
+      "frac_opp": {
+        "mean": 0.1257889794834226,
+        "mean_of_cluster_means": 0.1257889794834226,
+        "lo": -0.025322513225419382,
+        "hi": 0.2814203684438663,
+        "n_obs": 8,
+        "n_clusters": 8
+      },
+      "frac_gap": {
+        "mean": 0.005526785825233804,
+        "mean_of_cluster_means": 0.005526785825233804,
+        "lo": -0.11913219367734032,
+        "hi": 0.12313712758402337,
+        "n_obs": 8,
+        "n_clusters": 8
+      }
+    },
+    "all periods|MA_v1": {
+      "frac_my": {
+        "mean": -0.004326123304619234,
+        "mean_of_cluster_means": -0.004326123304619234,
+        "lo": -0.13767851751904178,
+        "hi": 0.17845808840622795,
+        "n_obs": 8,
+        "n_clusters": 8
+      },
+      "frac_opp": {
+        "mean": -0.016913464206794224,
+        "mean_of_cluster_means": -0.016913464206794224,
+        "lo": -0.14957564905311485,
+        "hi": 0.11877506522832611,
+        "n_obs": 8,
+        "n_clusters": 8
+      },
+      "frac_gap": {
+        "mean": -0.01258734090217499,
+        "mean_of_cluster_means": -0.01258734090217499,
+        "lo": -0.13459963361416305,
+        "hi": 0.09831019446008013,
+        "n_obs": 8,
+        "n_clusters": 8
+      }
+    },
+    "ex multi-week periods [15] (window bug)|ALL": {
+      "frac_my": {
+        "mean": -0.025433466713521098,
+        "mean_of_cluster_means": -0.025433466713521098,
+        "lo": -0.10871916616011819,
+        "hi": 0.06625652774556882,
+        "n_obs": 14,
+        "n_clusters": 7
+      },
+      "frac_opp": {
+        "mean": 0.0022483889841863813,
+        "mean_of_cluster_means": 0.0022483889841863813,
+        "lo": -0.12571433712300306,
+        "hi": 0.1245890204354355,
+        "n_obs": 14,
+        "n_clusters": 7
+      },
+      "frac_gap": {
+        "mean": 0.02768185569770748,
+        "mean_of_cluster_means": 0.02768185569770748,
+        "lo": -0.09713506642817513,
+        "hi": 0.13490471960499836,
+        "n_obs": 14,
+        "n_clusters": 7
+      }
+    },
+    "ex multi-week periods [15] (window bug)|baseline": {
+      "frac_my": {
+        "mean": 0.035471375577430284,
+        "mean_of_cluster_means": 0.035471375577430284,
+        "lo": -0.05806770772626092,
+        "hi": 0.14229287147959951,
+        "n_obs": 7,
+        "n_clusters": 7
+      },
+      "frac_opp": {
+        "mean": 0.06984715189139401,
+        "mean_of_cluster_means": 0.06984715189139401,
+        "lo": -0.06534856704069496,
+        "hi": 0.20131800563760446,
+        "n_obs": 7,
+        "n_clusters": 7
+      },
+      "frac_gap": {
+        "mean": 0.03437577631396373,
+        "mean_of_cluster_means": 0.03437577631396373,
+        "lo": -0.0998242843094589,
+        "hi": 0.148978375657238,
+        "n_obs": 7,
+        "n_clusters": 7
+      }
+    },
+    "ex multi-week periods [15] (window bug)|MA_v1": {
+      "frac_my": {
+        "mean": -0.08633830900447248,
+        "mean_of_cluster_means": -0.08633830900447248,
+        "lo": -0.1592182826426431,
+        "hi": -0.007840363559524412,
+        "n_obs": 7,
+        "n_clusters": 7
+      },
+      "frac_opp": {
+        "mean": -0.06535037392302125,
+        "mean_of_cluster_means": -0.06535037392302125,
+        "lo": -0.1867816571247112,
+        "hi": 0.0489300510370037,
+        "n_obs": 7,
+        "n_clusters": 7
+      },
+      "frac_gap": {
+        "mean": 0.02098793508145123,
+        "mean_of_cluster_means": 0.02098793508145123,
+        "lo": -0.10065845563865358,
+        "hi": 0.1225413616190963,
+        "n_obs": 7,
+        "n_clusters": 7
+      }
+    }
+  },
+  "multiweek_periods": [
+    15
+  ]
+}

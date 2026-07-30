@@ -285,8 +285,26 @@ def classify_team_roster(team, rh3_map, rp3_map, rprs2_map, vol_h, vol_sp,
                 rps.append({'name': p.name, 'mlbam': mlbam, 'emp': emp,
                             'wk_mean': wk_mean, 'apps_wk': apps_wk,
                             'mean_app': wk_mean / apps_wk,
-                            'sigma_app': float(info.get('sigma')
-                                               or fallback_sigma('RP', default=SIGMA_PER_RP_GAME))})
+                            # UNITS FIX 2026-07-30 (rp_band_crps memo, I4 rec 1).
+                            # This used to read `info['sigma']`, which
+                            # build_matchup_dashboard derives as
+                            # (xfp_p75 - xfp_p25)/1.35 from the rprs2 REST-OF-SEASON
+                            # TOTAL band — roughly 42.5 FP. Assigning a season-total
+                            # sigma into a PER-APPEARANCE slot made reliever variance
+                            # ~17x too wide in the season sim, and that sim produces
+                            # the value-of-a-win curve that title_equity converts
+                            # every weekly edge through.
+                            # The band is NOT rescaled into per-appearance units here
+                            # because the honest conversion needs an appearance count
+                            # the map does not carry; the documented per-appearance
+                            # fallback is used instead. (Measured within-pitcher
+                            # per-appearance SD is 4.1444 FP vs this 2.5 fallback —
+                            # still narrow, but the pre-registered stopping rule in
+                            # the I4 study declined to retune the constant, so that
+                            # is a separate, evidenced decision rather than a
+                            # drive-by change here.)
+                            'sigma_app': float(
+                                fallback_sigma('RP', default=SIGMA_PER_RP_GAME))})
         else:
             info = rh3_map.get(nk, {})
             per_pa = float(info.get('per_pa') or 0)

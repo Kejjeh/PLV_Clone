@@ -217,125 +217,31 @@ def train_final(df: pd.DataFrame, feats: list[str]):
 
 def main():
     print('=== xfp_rp3 (RP2 + recency + CI + replacement + schedule) ===')
-    rolling = pd.read_csv(ROLLING_CSV)
-    multiyr = pd.read_csv(MULTIYR_CSV)
-    il = pd.read_csv(IL_CSV)
-    print(f'rolling {len(rolling)} | multiyr {len(multiyr)} | il {len(il)}')
 
-    # Marcel prior
-    prior = build_prior_table(multiyr, sorted(rolling['year'].unique()))
-    rolling = rolling.merge(prior, on=['pitcher', 'year'], how='left')
-    league_mu = float(multiyr[multiyr['gs'] >= 10]['fp_per_start_actual'].mean())
-
-    # MiLB-derived rookie prior fallback (Phase MT-Pitchers v1).
-    # For rows where Marcel prior is NaN (no prior MLB) AND year==2026, prefer
-    # MiLB-translated prior over league_mu. Tagged via prior_source.
-    rolling['prior_source'] = np.where(
-        rolling['prior_fp_per_start'].notna(), 'mlb_lag', None)
-    if MILB_PRIORS_CSV.exists():
-        milb_pri = pd.read_csv(MILB_PRIORS_CSV)[['pitcher', 'projected_fp_per_start']]
-        milb_pri = milb_pri.rename(columns={'projected_fp_per_start': 'milb_prior_fp'})
-        rolling = rolling.merge(milb_pri, on='pitcher', how='left')
-        # Fill NaN MLB-prior rows in the current season with MiLB prior where
-        # available (data-driven year — audit R2, no hardcoded 2026)
-        is_2026 = rolling['year'] == int(rolling['year'].max())
-        needs_fallback = is_2026 & rolling['prior_fp_per_start'].isna()
-        has_milb = needs_fallback & rolling['milb_prior_fp'].notna()
-        rolling.loc[has_milb, 'prior_fp_per_start'] = rolling.loc[has_milb, 'milb_prior_fp']
-        rolling.loc[has_milb, 'prior_source'] = 'milb_translation'
-        n_milb = int(has_milb.sum())
-        print(f'  MiLB-derived priors applied to {n_milb} 2026 rookie rows')
-
-    rolling['prior_source'] = rolling['prior_source'].fillna('league_mean')
-    rolling['prior_fp_per_start'] = rolling['prior_fp_per_start'].fillna(league_mu)
-    rolling['prior_gs_eff']       = rolling['prior_gs_eff'].fillna(0.0)
-
-    # IL
-    rolling = rolling.merge(il, on=['pitcher', 'year', 'split_day'], how='left')
-    rolling['il_stints_to']        = rolling['il_stints_to'].fillna(0).astype(int)
-    rolling['is_on_il_at_split']   = rolling['is_on_il_at_split'].fillna(0).astype(int)
-    _dsr_max = rolling['days_since_il_return'].max(skipna=True)
-    # NaN-truthy fix (audit 2026-07-04): float(nan or 200) returns nan (nan is
-    # truthy), poisoning the imputation for an all-NaN column.
-    max_dsr = float(_dsr_max) if pd.notna(_dsr_max) else 200.0
-    rolling['days_since_il_return_imp'] = rolling['days_since_il_return'].fillna(max_dsr + 1)
-    # HARD GUARD (IL-join fix 2026-07-09): the IL cache must cover the rolling
-    # substrate's split_day grid (build_il_split_features derives its grid
-    # from the rolling CSVs). On 2026-05-29 the rolling builders moved to a
-    # weekly cadence while the IL cache stayed monthly — this exact join
-    # matched 0.45% of rows and all three VALIDATED IL features silently
-    # degenerated to their fillna constants for ~6 weeks. Healthy hit rate is
-    # ~25-30% of rows carrying IL history; fail loudly if it collapses again.
-    _il_hit = float((rolling['il_stints_to'] > 0).mean())
-    if _il_hit < 0.02:
-        raise RuntimeError(
-            f"IL feature join degenerate: only {_il_hit:.2%} of rolling rows "
-            "carry IL history (expected ~25-30%). The il_split_features cache "
-            "split_day grid no longer matches the rolling substrate — rerun "
-            "scripts/xfp/build_il_split_features.py (it derives its grid from "
-            "the rolling CSVs). See rp3_il_join_fix_2026-07-09.md.")
-
-    # RoS schedule-strength feature (validated 2026-05-24, PASS Δr +0.0145).
-    # Cache source: scripts/xfp/build_ros_schedule_features.py. Merge mirrors
-    # the validation harness (attach() in validate_ros_opp_xwoba_weighted.py).
-    if ROS_SCHED_CSV.exists():
-        sched_xw = pd.read_csv(ROS_SCHED_CSV)[
-            ['pitcher', 'year', 'split_day', 'ros_opp_xwoba_weighted']
-        ]
-        rolling = rolling.merge(sched_xw, on=['pitcher', 'year', 'split_day'], how='left')
-        n_missing = int(rolling['ros_opp_xwoba_weighted'].isna().sum())
-        # HARD GUARD (audit 2026-07-04): the cache froze at split 58 for ~6 weeks
-        # and this fillna silently constant-filled 100% of projection rows —
-        # a VALIDATED feature served a year-mean while looking alive. If the
-        # majority of CURRENT-SEASON rows are NaN pre-fill, the cache is frozen
-        # again: fail loudly (refresh step 1.9 rebuilds it daily).
-        _cur_yr = int(rolling['year'].max())
-        _cur = rolling[rolling['year'] == _cur_yr]
-        _cur_nan = float(_cur['ros_opp_xwoba_weighted'].isna().mean()) if len(_cur) else 0.0
-        if _cur_nan > 0.50:
-            raise RuntimeError(
-                f"ros_opp_xwoba_weighted: {_cur_nan:.0%} of {_cur_yr} rows are NaN pre-fill — "
-                "the ros schedule-strength cache looks FROZEN (see "
-                "build_ros_schedule caches / refresh step 1.9). Refusing to "
-                "silently constant-fill a validated feature.")
-        year_means = rolling.groupby('year')['ros_opp_xwoba_weighted'].transform('mean')
-        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(year_means)
-        rolling['ros_opp_xwoba_weighted'] = rolling['ros_opp_xwoba_weighted'].fillna(
-            rolling['ros_opp_xwoba_weighted'].mean()
-        )
-        print(f'  ros_opp_xwoba_weighted missing pre-fill: {n_missing}/{len(rolling)} '
-              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
-    else:
-        raise FileNotFoundError(
-            f'Missing required RoS schedule cache: {ROS_SCHED_CSV}. '
-            'Run scripts/xfp/build_ros_schedule_features.py.'
-        )
-
-    # Shrinkage on cumulative + last21
-    pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
-    pop_l21 = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_LAST21)
-    rolling = apply_shrinkage(rolling, pop_to, SHRINK_SPEC_TO)
-    rolling = apply_shrinkage(rolling, pop_l21, SHRINK_SPEC_LAST21)
-
-    # NEW v2: SP within-season drift features (H1, validated 2026-05-12).
-    # delta = last_21_day_rate − cumulative_to_date_rate (positive = recent uptick).
-    rolling['delta_velo']    = rolling['avg_velo_last21']   - rolling['avg_velo_to']
-    rolling['delta_swstr']   = rolling['swstr_pct_last21']  - rolling['swstr_pct_to']
-    rolling['delta_k_pct']   = rolling['k_pct_last21']      - rolling['k_pct_to']
-    rolling['delta_bb_pct']  = rolling['bb_pct_last21']     - rolling['bb_pct_to']
-    rolling['delta_chase']   = rolling['o_swing_pct_last21']- rolling['o_swing_pct_to']
-    rolling['delta_zone']    = rolling['zone_pct_last21']   - rolling['zone_pct_to']
-    # NaN drift (no last-21 data) → fill 0 (neutral)
-    for c in ('delta_velo', 'delta_swstr', 'delta_k_pct', 'delta_bb_pct',
-              'delta_chase', 'delta_zone'):
-        rolling[c] = rolling[c].fillna(0.0)
-    print('  computed 6 within-season drift features')
-    for col in (rate + '_sh' for rate in SHRINK_SPEC_LAST21):
-        if col in rolling.columns:
-            mu = rolling.loc[rolling['year'].isin(TRAIN_YEARS), col].mean(skipna=True)
-            rolling[col] = rolling[col].fillna(mu)
-    rolling['gs_last21'] = rolling['gs_last21'].fillna(0)
-    rolling['fp_per_start_last21'] = rolling['fp_per_start_last21'].fillna(rolling['fp_per_start_to'])
+    # ── Feature assembly: delegated to the ONE canonical builder (2026-07-30).
+    # This prep block used to live inline here, making rp3 the LAST model in the
+    # repo carrying a second copy of its own feature assembly. The rh3 postmortem
+    # (docs/rh3_harness_root_bug_2026-07-28.md) is the reason that matters: a
+    # divergent copy silently weakened the Rule-9 BASELINE for ~20 harnesses and
+    # cost -0.0368 cross-year r for nine days while printing confident numbers.
+    # rp3's copy was pinned only by the fit fingerprint, which re-checks at REFIT
+    # time — an edit to one copy could sit undetected until the next refit.
+    #
+    # The switch was PROVEN byte-identical on the real 2018-2026 cache before it
+    # was made (31,135 x 109, assert_frame_equal(check_exact=True), equal pop
+    # means, fingerprint 46e24bc9b4187492b95a84fbc3bb57dd matching the shipped
+    # bundle, cross_year r=0.5617 / mae=2.8394 / baseline 0.5484 / delta +0.0133
+    # reproduced from both). tests/test_xfp_frames.py keeps a frozen verbatim
+    # copy of the old inline block and re-asserts the equality every run.
+    #
+    # Local import: frames.py imports this module at module scope.
+    from plv_clone.models.xfp.frames import build_rp3_frame
+    _frame = build_rp3_frame()
+    rolling = _frame.rolling
+    multiyr = _frame.multiyr
+    prior = _frame.prior
+    pop_to = _frame.pop_means_to
+    pop_l21 = _frame.pop_means_last21
 
     # Cross-year RP3
     print('\n--- LOO cross-year (RP3) ---')

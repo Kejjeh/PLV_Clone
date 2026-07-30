@@ -1,0 +1,5 @@
+candidate,n_rows,n_pitchers,CRPS_incumbent,CRPS_cand,dCRPS,rel_%,ci95,boot_p,ci_excl_0,econ_pass,bh_pass
+shift_self,929,170,5.5864,5.5841,-0.0023,-0.04,"[-0.0104, +0.0061]",0.579,False,False,False
+shift_rp3,929,170,5.5864,5.5766,-0.0098,-0.17,"[-0.0179, -0.0015]",0.022,True,False,True
+unadjusted,929,170,5.5864,5.5842,-0.0022,-0.04,"[-0.0284, +0.0255]",0.844,False,False,False
+opp_conditioned,929,170,5.5864,5.6816,0.0952,1.7,"[+0.0377, +0.1568]",0.00025,True,False,True
