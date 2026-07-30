@@ -49,6 +49,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import sys
 from dataclasses import dataclass, field
 from datetime import date, datetime
@@ -312,11 +313,40 @@ def _req_cols(df: pd.DataFrame, cols: tuple[str, ...], artifact: str) -> None:
             f'(present: {", ".join(map(str, df.columns))})')
 
 
+def _settled_total(df) -> str:
+    """Total settled observations, or an explicit marker when a cell is unusable.
+
+    Returns a STRING because "--" is a legitimate answer: silently summing a
+    non-numeric cell as 0 would understate the sample while still looking valid.
+    """
+    n = pd.to_numeric(df['n'], errors='coerce')
+    if n.isna().any():
+        bad = int(n.isna().sum())
+        return f'-- ({bad} of {len(n)} `n` cells non-numeric)'
+    return str(int(n.sum()))
+
+
 def _num(value: Any, key: str, artifact: str) -> float:
+    """Strict numeric coercion — non-finite is MALFORMED, not a number.
+
+    The NaN case is the one that matters and it was the gap here. `json.dumps`
+    defaults to ``allow_nan=True``, so both upstream writers can legitimately emit
+    the bare literal ``NaN``, and ``float('nan')`` sails through a try/except.
+    A NaN ``cap_remaining`` then compares False against every threshold, so a real
+    SP-cap BREACH renders as "Nothing FLAGGED" and the brief exits 0 — the exact
+    silent-pass class this whole program spent the day removing. Non-finite now
+    raises like any other malformed field.
+    """
     try:
-        return float(value)
+        out = float(value)
     except (TypeError, ValueError):
         raise MalformedArtifact(f'{artifact}: field `{key}` is not numeric ({value!r})')
+    if not math.isfinite(out):
+        raise MalformedArtifact(
+            f'{artifact}: field `{key}` is non-finite ({value!r}) — refusing to '
+            f'treat it as a number. A NaN here would compare False against every '
+            f'threshold and hide a real breach behind "Nothing FLAGGED".')
+    return out
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -444,7 +474,18 @@ def collect_decisions(arts: dict[str, Artifact], paths: BriefPaths,
                 if dpwin > 0:
                     positives.append((mv, dpwin))
             if positives:
-                for mv, dpwin in positives:
+                # The optimizer's plan is SEQUENCED: step k is scored against the
+                # roster AFTER step k-1, so step 2 routinely drops the very player
+                # step 1 added. Presenting them as independent numbered decisions
+                # invites acting on step 2 alone, which REVERSES step 1. So each
+                # line is labelled with its position and the multi-step case says
+                # so explicitly. (Found by adversarial review 2026-07-29.)
+                n_steps = len(positives)
+                for step, (mv, dpwin) in enumerate(positives, 1):
+                    seq = (f'STEP {step} of {n_steps} (sequenced — do them IN ORDER; '
+                           f'later steps are scored against the roster after the '
+                           f'earlier ones and may drop a player an earlier step added)'
+                           if n_steps > 1 else 'single move')
                     se = mv.get('mc_se')
                     sig = ''
                     if se is not None:
@@ -453,7 +494,7 @@ def collect_decisions(arts: dict[str, Artifact], paths: BriefPaths,
                                else f' (WITHIN 2x MC se {se_f:.4f} — not distinguishable '
                                     f'from no move; break the tie on regime, not dpwin)')
                     dec.urgent.append(
-                        f'**MOVE AVAILABLE** ADD {mv.get("add", "?")} / DROP '
+                        f'**MOVE AVAILABLE — {seq}** ADD {mv.get("add", "?")} / DROP '
                         f'{mv.get("drop", "?")} for dP(win) +{dpwin:.4f}{sig}. '
                         f'Verify live rosters (`/roster-verify`) before executing. {stamp}')
             else:
@@ -824,8 +865,10 @@ def _verdict_section(arts: dict[str, Artifact], today: date,
         lines = [
             f'- `verdict_scorecard.csv` — {vs.age_phrase()} '
             f'(no date column in this artifact, so the age is mtime-based)',
+            # No fillna(0): a non-numeric `n` cell must not silently contribute
+            # zero observations and make the sample look smaller-but-valid.
             f'- {len(df)} bucket x verdict cells over '
-            f'{int(pd.to_numeric(df["n"], errors="coerce").fillna(0).sum())} settled observations',
+            f'{_settled_total(df)} settled observations',
             '',
             '| bucket | verdict | n | players | mean actual | mean proj | residual | hit rate |',
             '|---|---|---|---|---|---|---|---|',
@@ -957,9 +1000,9 @@ def _provenance_section(arts: dict[str, Artifact]) -> list[str]:
         else:
             status = 'ok'
         asof = art.content_date or art.mtime_date
+        age = f'{art.age_days}d' if art.age_days is not None else '--'
         lines.append(
-            f'| `{name}` | {status} | {asof if asof else "--"} | '
-            f'{art.age_days if art.age_days is not None else "--"}d | '
+            f'| `{name}` | {status} | {asof if asof else "--"} | {age} | '
             f'{art.age_basis} | `{REGEN.get(name, "--")}` |')
     return lines
 

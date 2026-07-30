@@ -51,13 +51,13 @@ OUT_DOCS = ROOT / 'xfp-model' / 'docs' / 'index.html'
 
 # ─── Name normalization ───────────────────────────────────────────────────────
 
-def _strip_accents(s: str) -> str:
-    return ''.join(c for c in unicodedata.normalize('NFD', s)
-                   if unicodedata.category(c) != 'Mn')
-
-
-def _norm(s: str) -> str:
-    return re.sub(r'[^a-z]+', '', _strip_accents(s).lower())
+# Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-
+# PRESERVING, space-separated ("kyle schwarber"), collapses curly-vs-straight
+# apostrophes, C.J./CJ and hyphens. NEVER re-derive locally: a local copy
+# mis-keyed Ryan O'Hearn's U+2019 apostrophe and printed an opponent's player
+# as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
+# separators, which is a different (order-independent) key.
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
 
 
 def xfp_name_key(name: str) -> tuple[str, str]:
@@ -4301,15 +4301,10 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 # Team Audit payload — position-by-position roster eval + FA leaderboards
 # ═══════════════════════════════════════════════════════════════════════════════
 
-def _norm_audit(s: str) -> str:
-    if pd.isna(s):
-        return ''
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    if ',' in s:
-        last, first = s.split(',', 1)
-        s = first.strip() + ' ' + last.strip()
-    return re.sub(r'[^a-z]+', '', s)
+# Name join key — OWNER: name_match.safe_name_key. safe_name_key already does the
+# "Last, First" flip and the accent strip this used to hand-roll, and additionally
+# collapses curly-vs-straight apostrophes (the Ryan O'Hearn miss, 2026-07-28).
+from plv_clone.utils.name_match import safe_name_key as _norm_audit  # noqa: E402
 
 
 def _marcel_fp(multiyr: pd.DataFrame, player_id: int, id_col: str,

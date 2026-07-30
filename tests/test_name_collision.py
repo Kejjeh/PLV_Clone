@@ -12,7 +12,6 @@ These tests lock in:
   3. the boom-bust engine filters by mlbam, never by name.
 """
 import sys
-import unicodedata
 from pathlib import Path
 
 import pandas as pd
@@ -22,15 +21,13 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 
-
-def _nm(s):
-    """The collision-safe normalizer the fixed skill engines use (full name,
-    accent-stripped, 'Last, First' flipped)."""
-    s = "".join(c for c in unicodedata.normalize("NFD", str(s)) if unicodedata.category(c) != "Mn").lower()
-    if "," in s:
-        a, b = s.split(",", 1)
-        s = f"{b.strip()} {a.strip()}"
-    return " ".join(s.replace(".", "").split())
+# The collision-safe normalizer the fixed skill engines use (full name,
+# accent-stripped, "Last, First" flipped, apostrophes/periods/hyphens collapsed).
+# This file used to carry its OWN copy of the body — which is exactly the
+# duplication the tests below exist to prevent, and exactly how Ryan O'Hearn's
+# curly apostrophe got mis-keyed on 2026-07-28. The test that locks the fix must
+# exercise the shipped function, not a look-alike.
+from plv_clone.utils.name_match import safe_name_key as _nm  # noqa: E402
 
 
 def test_lastname_substring_was_the_bug():

@@ -43,12 +43,94 @@ jobs:
       - name: Full refresh (statcast + models + dashboards + publish xfp-model)
         run: python scripts/xfp/refresh_dashboards.py
 
+      - name: Surface scorecard tripwire FAILs (alert only — never gates)
+        # WHY THIS STEP EXISTS
+        # build_model_scorecard.py already exits 1 when any data_health /
+        # pipeline_staleness check FAILs — and that now includes the three drift
+        # sentinels added 2026-07-29 (collision_team_reachability,
+        # collision_smoke, fa_join_coverage). But it runs INSIDE
+        # refresh_dashboards.py step 4.97, which is deliberately fail-soft, so
+        # that exit code is swallowed into one line of a 140-minute log that
+        # nobody reads. A sentinel FAIL means the name-collision / FA-join
+        # machinery every board depends on has drifted, and it was silently
+        # green-emailing.
+        #
+        # So: read the artifact the refresh just wrote, and (a) prepend a marker
+        # to the commit message so the alert is visible in `git log` forever,
+        # (b) write a job summary so it lands in the Actions notification.
+        #
+        # ALERT ONLY. `if: always()` + a terminal `exit 0` on every path: the
+        # data work must still commit even if this detection breaks. It reads a
+        # CSV; it must never be the reason a refresh loses a day of data.
+        if: always()
+        run: |
+          # 'Stop' (GitHub's default for shell: powershell) so a bad CSV becomes a
+          # TERMINATING error the catch below actually sees, instead of a warning
+          # that lets the step continue with $rows silently empty and report a
+          # false all-clear.
+          $ErrorActionPreference = 'Stop'
+          $csv = 'data/outputs/model_scorecard.csv'
+          $sum = $env:GITHUB_STEP_SUMMARY
+          $sentinels = @('collision_team_reachability', 'collision_smoke', 'fa_join_coverage')
+          $lines = @()
+          $marker = ''
+          try {
+            if (-not (Test-Path $csv)) {
+              # NOT an all-clear: say the check could not run.
+              $lines += "- COULD NOT CHECK: $csv is absent (step 4.97 runs Mondays only)."
+            } else {
+              $rows  = Import-Csv $csv
+              $trip  = $rows | Where-Object { $_.section -eq 'data_health' -or $_.section -eq 'pipeline_staleness' }
+              $fails = $trip | Where-Object { $_.status -eq 'FAIL' }
+              $warns = $trip | Where-Object { $_.status -eq 'WARN' }
+              $asof  = ($rows | ForEach-Object { $_.date } | Sort-Object | Select-Object -Last 1)
+              $nf = @($fails).Count
+              $nw = @($warns).Count
+              $sentFails = @($fails | Where-Object { $sentinels -contains $_.metric })
+              $ns = $sentFails.Count
+              $lines += "- scorecard as-of ${asof}: $nf FAIL, $nw WARN (data_health + pipeline_staleness)"
+              foreach ($f in $fails) {
+                $kind = 'TRIPWIRE FAIL'
+                if ($sentinels -contains $f.metric) { $kind = 'DRIFT SENTINEL FAIL' }
+                $lines += "- **$kind** ``$($f.metric)`` ($($f.segment)): $($f.note)"
+              }
+              foreach ($w in $warns) {
+                $lines += "- WARN ``$($w.metric)`` ($($w.segment)): $($w.note)"
+              }
+              # Roll call: a sentinel with NO ROW is not a pass. Sentinels landed
+              # 2026-07-29, so an older scorecard legitimately lacks them.
+              foreach ($s in $sentinels) {
+                if (-not ($rows | Where-Object { $_.metric -eq $s })) {
+                  $lines += "- NOTE: sentinel ``$s`` has NO ROW in this scorecard (did not run, or the scorecard predates 2026-07-29) - that is NOT a PASS"
+                }
+              }
+              if ($ns -gt 0) {
+                $marker = "ALERT[$ns sentinel FAIL] "
+              } elseif ($nf -gt 0) {
+                $marker = "ALERT[$nf tripwire FAIL] "
+              }
+            }
+          } catch {
+            $lines += "- ALERT DETECTION ITSELF FAILED: $($_.Exception.Message) (data work unaffected)"
+          }
+          "SCORECARD_ALERT=$marker" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          if ($sum) {
+            "## Model scorecard tripwires" | Out-File $sum -Append -Encoding utf8
+            if ($marker) { "**$($marker.Trim())**" | Out-File $sum -Append -Encoding utf8 }
+            $lines | Out-File $sum -Append -Encoding utf8
+          }
+          $lines | ForEach-Object { Write-Host $_ }
+          exit 0
+
       - name: Commit & push regenerated plv_clone data
         run: |
           git add data
           git diff --cached --quiet
           if ($LASTEXITCODE -ne 0) {
             $stamp = Get-Date -Format 'yyyy-MM-dd'
+            # Tripwire marker from the alert step above (empty when all clear),
+            # so a FAIL is legible in `git log` and not only in a run page.
+            $alert = $env:SCORECARD_ALERT
             # BRANCH-AWARE (root-caused 2026-07-21): this job runs in Josh's
             # live working tree, which usually sits on a FEATURE branch. The
             # old `pull --rebase origin main` + `push origin main` combo (a)
@@ -61,7 +143,7 @@ jobs:
               Write-Host "WARN: detached HEAD - skipping commit/push, reconcile manually."
               exit 0
             }
-            git commit -m "refresh: daily auto-refresh $stamp"
+            git commit -m "${alert}refresh: daily auto-refresh $stamp"
             git fetch origin $branch
             if ($LASTEXITCODE -eq 0) {
               git pull --rebase --autostash origin $branch

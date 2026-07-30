@@ -101,12 +101,14 @@ def _save_state(state: dict) -> None:
     tmp.replace(STATE_PATH)
 
 
-def _normalize(name: str) -> str:
-    try:
-        from plv_clone.utils.name_match import _normalize as nm
-        return nm(str(name))
-    except Exception:
-        return str(name).strip().lower()
+# Name key — OWNER: name_match._normalize, and it MUST stay that exact function,
+# not safe_name_key: `details.get(_normalize(name))` below reads the dict returned
+# by lib/injury_status.load_injury_details(), which is keyed by name_match._normalize.
+# Swapping only this side would miss 100% of the injury-detail joins, silently.
+# (Was a try/except that fell back to `str(name).strip().lower()` on ANY exception —
+# a silent-default fallback that would have desynced every key in this file from the
+# injury cache without a single warning. Import loudly instead.)
+from plv_clone.utils.name_match import _normalize  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

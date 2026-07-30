@@ -42,9 +42,13 @@ PA = {'single','double','triple','home_run','strikeout','strikeout_double_play',
       'fielders_choice','fielders_choice_out','field_error','sac_fly','sac_fly_double_play','sac_bunt','catcher_interf'}
 
 
-def _nm(s):
-    s = ''.join(c for c in unicodedata.normalize('NFKD', str(s)) if not unicodedata.combining(c))
-    return ' '.join(s.lower().replace('.', '').replace(',', '').split())
+# Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-
+# PRESERVING, space-separated ("kyle schwarber"), collapses curly-vs-straight
+# apostrophes, C.J./CJ and hyphens. NEVER re-derive locally: a local copy
+# mis-keyed Ryan O'Hearn's U+2019 apostrophe and printed an opponent's player
+# as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
+# separators, which is a different (order-independent) key.
+from plv_clone.utils.name_match import safe_name_key as _nm  # noqa: E402
 
 
 def main():

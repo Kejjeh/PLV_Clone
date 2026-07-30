@@ -158,15 +158,14 @@ ESPN_TEAM_ALIAS = {"OAK": "ATH", "WSH": "WSH", "CHW": "CWS", "AZ": "ARI"}
 
 
 # ── shared helpers ───────────────────────────────────────────────────────────
-# NOT routed to name_match.join_key (item 10, 2026-07-04): this `norm` feeds
-# `_li_key` below, a (last, first-initial) fallback that needs SPACE-separated,
-# order-preserving tokens. join_key sorts alphabetic tokens and drops separators
-# ("kyle schwarber" -> "kyleschwarber"), which collapses _li_key's split to a
-# single token and breaks the Cam/Cameron-style fallback join. Kept local; the
-# owner has no (last, first-initial) key scheme.
-def norm(s):
-    s = unicodedata.normalize("NFKD", str(s)).encode("ascii", "ignore").decode()
-    return re.sub(r"\s+", " ", re.sub(r"[^a-z ]", "", s.lower())).strip()
+# Name join key — OWNER: name_match.safe_name_key. It is order-PRESERVING and
+# SPACE-separated ("kyle schwarber"), which is exactly what `_li_key` below needs
+# for its (last, first-initial) fallback split. (join_key would be WRONG here: it
+# sorts tokens and drops separators, collapsing _li_key to a single token.)
+# Verified 2026-07-30 over the 4520-name universe: 0 lost matches on the full key;
+# the _li_key buckets that change are all size>=2 and therefore discarded by the
+# len(b)==1 guard in _lookup, so no join can silently change target.
+from plv_clone.utils.name_match import safe_name_key as norm  # noqa: E402
 
 
 def alias_team(t):

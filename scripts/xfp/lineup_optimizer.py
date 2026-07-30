@@ -52,11 +52,6 @@ TEAM_ID_TO_ABBR = {
 }
 
 
-def _strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', s)
-                   if unicodedata.category(c) != 'Mn')
-
-
 # _norm was join_key's exact algorithm (accent-strip + sorted alpha tokens);
 # routed to the name_match owner (item 10, 2026-07-04). Proven byte-identical on
 # a diverse name set (accents, suffixes, "Last, First"), so this is a pure move.

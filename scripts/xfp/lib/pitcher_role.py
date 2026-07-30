@@ -290,26 +290,27 @@ def build_role_lookup(
 
     Both DataFrames use 'pitcher' as their MLBAM ID column.
     """
-    import unicodedata
-
-    def _norm(s: str) -> str:
-        return (
-            unicodedata.normalize('NFKD', str(s))
-            .encode('ascii', 'ignore')
-            .decode()
-            .lower()
-            .strip()
-        )
+    # Name join key — OWNER: name_match.safe_name_key. `_rp3_name_keys` above
+    # already uses it, so this function was the only place in the module still
+    # hand-rolling one. The old local body was NFKD-ascii-lower-strip: it kept
+    # apostrophes and periods, so an rp3 "O'Hearn, Ryan" and an ESPN roster
+    # "Ryan O’Hearn" (curly U+2019) normalized differently and the role lookup
+    # fell through to ESPN's stale position tag. safe_name_key collapses both
+    # apostrophe forms, C.J./CJ and hyphens. Both sides of the join below use it.
+    from plv_clone.utils.name_match import safe_name_key as _norm
 
     def _norm_both(name: str, d: dict, pid: int) -> None:
-        """Store MLBAM ID under both the raw norm and a 'First Last' canonical form."""
+        """Store the MLBAM ID under the canonical key.
+
+        safe_name_key already rewrites "Last, First" -> "first last", so the
+        explicit flip this used to do is now a no-op that lands on the same key
+        (kept only so an rp3 spelling change can't silently drop the alias).
+        """
         nk = _norm(name)
         d[nk] = pid
-        # rp3 uses "Last, First" — also store as "First Last" so roster names match
         if ',' in name:
             parts = name.split(',', 1)
-            canonical = _norm(parts[1].strip() + ' ' + parts[0].strip())
-            d[canonical] = pid
+            d[_norm(parts[1].strip() + ' ' + parts[0].strip())] = pid
 
     mlbam_by_norm: dict[str, int] = {}
 

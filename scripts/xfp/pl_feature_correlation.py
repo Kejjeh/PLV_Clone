@@ -20,8 +20,7 @@ from plv_clone.paths import ROOT
 PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rprs1_projections.csv')
 PROJ['ros_rank'] = PROJ['xfp_ros'].rank(ascending=False, method='min')
 
-def _strip(s): return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
-def norm(s): return re.sub(r'[^a-z]+', '', _strip((s or '').lower()))
+from plv_clone.utils.name_match import safe_name_key as norm  # noqa: E402  OWNER — never re-derive
 LOOKUP = {norm(r['name_api']): r for _, r in PROJ.iterrows()}
 
 PL_TOP50 = [

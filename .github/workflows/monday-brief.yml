@@ -1,0 +1,166 @@
+name: Monday brief (self-hosted)
+
+# Composes data/outputs/monday_brief.md — the one page Josh reads before touching
+# the roster on a Monday. It is a pure READ of artifacts the daily refresh already
+# wrote (model_scorecard, verdict_scorecard, dpwin_history, weekly_optimizer,
+# matchup_leverage, season_sim) plus the PL cache AGES. No modelling, no ESPN, no
+# MLB Stats, and explicitly NO pitcherlist.com fetch — per refresh_dashboards.py
+# step 7, refreshing a PL cache needs a live agent WebSearch/WebFetch, which is
+# deliberately not a headless scrape, so the brief reports the last cached
+# edition's age and routes the refresh to an interactive session.
+#
+# Like the other jobs here it runs in Josh's real working tree
+# (C:\Users\Joshua\plv_clone), NOT a fresh checkout, so it reads the same files a
+# hand-run would.
+#
+# ── WHY 14:30 UTC MONDAY ────────────────────────────────────────────────────
+# daily-refresh.yml starts at 11:00 UTC with timeout-minutes: 180, so its HARD
+# ceiling is 14:00 UTC (typical finish is 12:25-13:20 for the 85-140 min run —
+# and Monday is the LONG day, because that is when the Monday-only steps 4.96
+# (IL transactions), 4.97 (model scorecard) and 4.97b (verdict scorecard) run,
+# and 4.97/4.97b are precisely the artifacts this brief reads). 14:30 UTC is
+# 30 minutes past that hard ceiling, so the brief can never read a half-written
+# scorecard even in the pathological case.
+#   14:30 UTC = 10:30 ET (EDT) / 09:30 ET (EST) — still well before lineups lock.
+# Belt and braces: this is the SAME self-hosted runner, which processes one job
+# at a time, so a still-running refresh would queue this job rather than race it.
+#
+# ── LATE / MISSED RUNS ───────────────────────────────────────────────────────
+# A missed run (PC off) queues and fires whenever the runner next comes online —
+# possibly hours late, possibly not on a Monday at all. That is fine and tested:
+# build_monday_brief.py never branches on "is it Monday morning", stamps the age
+# of every artifact it reads, and computes ages in whole calendar days so an
+# intraday rerun diffs to a single line.
+on:
+  schedule:
+    - cron: "30 14 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  monday-brief:
+    runs-on: [self-hosted, Windows]
+    timeout-minutes: 15
+    defaults:
+      run:
+        shell: powershell
+        working-directory: C:\Users\Joshua\plv_clone
+    env:
+      PYTHONUTF8: "1"
+      PYTHONIOENCODING: "utf-8"
+    steps:
+      - name: Diagnostics (python + git on the runner's PATH)
+        run: |
+          Write-Host "python: $((Get-Command python).Source)"
+          python --version
+          git --version
+          git rev-parse --abbrev-ref HEAD
+
+      - name: Compose the brief
+        # Exit codes (see the module docstring):
+        #   0 = clean; 2 = brief WRITTEN but >=1 artifact was present-and-malformed
+        #   (a truncated file from an upstream writer — a real defect); 1 = the
+        #   brief could not be written at all.
+        # Exit 2 must NOT stop the commit: the brief still has to land so Josh
+        # sees the rest of it. It is re-raised as a red job at the end instead.
+        run: |
+          python scripts/xfp/build_monday_brief.py
+          $rc = $LASTEXITCODE
+          "BRIEF_RC=$rc" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          if ($rc -eq 2) {
+            Write-Host "WARN: brief written, but >=1 artifact was MALFORMED (see stderr above)."
+            exit 0
+          }
+          exit $rc
+
+      - name: Commit & push the brief
+        # NOTE ON IDEMPOTENCY: the brief's BODY is byte-identical for identical
+        # artifacts, but the one marked `Brief built:` line records the real fire
+        # time, so a run normally does produce a one-line diff and does commit.
+        # That is deliberate: on a runner where a missed job queues and fires
+        # hours late, WHEN the brief was actually built is the thing you need to
+        # know, and it costs one line of history per week.
+        run: |
+          git add data/outputs/monday_brief.md
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            $stamp = Get-Date -Format 'yyyy-MM-dd'
+            $alert = ''
+            if ($env:BRIEF_RC -eq '2') { $alert = 'ALERT[malformed artifact] ' }
+            # BRANCH-AWARE (root-caused 2026-07-21, same as daily-refresh.yml):
+            # this job runs in Josh's live working tree, which usually sits on a
+            # FEATURE branch. Rebasing onto / pushing `main` re-hashed already-
+            # pushed branch commits and pushed a stale ref, so the job's own
+            # commit never landed. Always reconcile + push the CURRENT branch.
+            $branch = git branch --show-current
+            if (-not $branch) {
+              Write-Host "WARN: detached HEAD - skipping commit/push, reconcile manually."
+              exit 0
+            }
+            git commit -m "${alert}brief: monday brief $stamp"
+            git fetch origin $branch
+            if ($LASTEXITCODE -eq 0) {
+              git pull --rebase --autostash origin $branch
+              if ($LASTEXITCODE -ne 0) {
+                # Fail-soft: keep the commit local and say so loudly. Never
+                # fall back to -X ours merges - that silently mangles history.
+                git rebase --abort
+                Write-Host "WARN: rebase onto origin/$branch failed - commit left LOCAL for manual reconcile."
+                exit 0
+              }
+            }
+            git push origin HEAD
+          } else {
+            Write-Host "No brief changes to commit - the composer wrote byte-identical content (same artifacts AND same build second)."
+          }
+
+      - name: Job summary (the brief's decision block + push traceability)
+        # Puts the DECISIONS section straight into the Actions notification, so
+        # the alert-worthy part arrives without opening the file. `always()` so it
+        # reports even if an earlier step failed.
+        if: always()
+        run: |
+          $sum = $env:GITHUB_STEP_SUMMARY
+          if (-not $sum) { exit 0 }
+          "## Monday brief" | Out-File $sum -Append -Encoding utf8
+          if ($env:BRIEF_RC -eq '2') {
+            "**ALERT: >=1 artifact was present-and-MALFORMED - the brief lists which field is missing.**" | Out-File $sum -Append -Encoding utf8
+          }
+          $brief = 'data/outputs/monday_brief.md'
+          if (Test-Path $brief) {
+            # Section 1 only: everything up to the '## 2.' heading.
+            # -Encoding UTF8 is REQUIRED: Windows PowerShell 5.1's Get-Content
+            # defaults to the ANSI codepage, which renders the brief's em-dashes
+            # as 'a-hat-euro-trademark' mojibake in the notification.
+            $all = Get-Content $brief -Encoding UTF8
+            $stop = ($all | Select-String -SimpleMatch '## 2.' | Select-Object -First 1).LineNumber
+            if ($stop) { $all[0..($stop - 2)] | Out-File $sum -Append -Encoding utf8 }
+            else { $all | Select-Object -First 40 | Out-File $sum -Append -Encoding utf8 }
+          } else {
+            "- brief NOT written - see the compose step's log." | Out-File $sum -Append -Encoding utf8
+          }
+          $head   = (git rev-parse --short HEAD)
+          $branch = (git branch --show-current)
+          $remote = (git rev-parse --short "origin/$branch" 2>$null)
+          "### Push traceability"          | Out-File $sum -Append -Encoding utf8
+          "- branch: $branch @ $head"      | Out-File $sum -Append -Encoding utf8
+          "- origin/${branch}: $remote"    | Out-File $sum -Append -Encoding utf8
+          if ($head -eq $remote) {
+            "- OK: local HEAD is on origin (push landed)"                         | Out-File $sum -Append -Encoding utf8
+          } else {
+            "- WARN: local HEAD NOT on origin (commit left local or push failed)" | Out-File $sum -Append -Encoding utf8
+          }
+          exit 0
+
+      - name: Re-raise malformed-artifact alert (last step, after the brief landed)
+        # The brief is committed by now, so failing here is purely the alert
+        # channel: a red run + notification for a truncated upstream artifact.
+        if: always()
+        run: |
+          if ($env:BRIEF_RC -eq '2') {
+            Write-Host "FAILING THE JOB AS AN ALERT: the brief was written and committed, but an artifact it reads is malformed. Fix the writer named in data/outputs/monday_brief.md."
+            exit 1
+          }
+          exit 0

@@ -86,12 +86,13 @@ PITCH_TEMPLATES = {
 }
 
 
-def _norm(s: str) -> str:
-    # item 10 (2026-07-04): NOT routed to name_match.join_key — this looks up
-    # `rp_decline` whose keys are built by rp_decline_model (a DIFFERENT module).
-    # Swapping only here would desync the two sides; migrate both together or
-    # not at all. Left on the shared NFKD-ascii variant.
-    return unicodedata.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
+# Name join key — OWNER: name_match.safe_name_key. This reads `rp_decline`, whose
+# keys are built by rp_decline_model via sp_stuff_model._norm; BOTH sides migrated
+# to safe_name_key together on 2026-07-30. Before that they had already DESYNCED —
+# this file stripped nothing but accents (keeping "o'hearn", "a.j.") while
+# sp_stuff_model._norm dropped all non-[a-z ], so every apostrophe/period name
+# missed the rp_decline join silently. Do not fork them again.
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
 
 
 # ---------- Data loaders ------------------------------------------------

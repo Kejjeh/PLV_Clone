@@ -112,11 +112,9 @@ def main():
         if rh_row.empty:
             # accent/format-tolerant FULL-name match — never a surname substring,
             # which grabs the wrong same-name hitter's batter_id. (collision fix 2026-06-26)
-            import unicodedata as _ud
-
-            def _nm(s):
-                s = "".join(c for c in _ud.normalize("NFD", str(s)) if _ud.category(c) != "Mn").lower()
-                return " ".join(s.replace(".", "").split())
+            # OWNER: name_match.safe_name_key (accents, apostrophes, C.J./CJ,
+            # hyphens, and the "Last, First" flip all in one place).
+            from plv_clone.utils.name_match import safe_name_key as _nm
 
             rh_row = rh[rh['player_name'].fillna('').apply(_nm) == _nm(name)]
         if rh_row.empty:

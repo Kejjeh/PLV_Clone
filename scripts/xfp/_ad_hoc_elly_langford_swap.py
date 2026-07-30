@@ -20,12 +20,7 @@ from app.espn_connector import (
 )
 
 
-def norm(s: str) -> str:
-    if s is None:
-        return ""
-    s = unicodedata.normalize("NFKD", str(s))
-    s = "".join(c for c in s if not unicodedata.combining(c))
-    return s.lower().strip().replace(".", "").replace("'", "")
+from plv_clone.utils.name_match import safe_name_key as norm  # noqa: E402  OWNER
 
 
 def main() -> None:

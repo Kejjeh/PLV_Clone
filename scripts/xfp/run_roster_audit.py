@@ -338,9 +338,11 @@ def main():
     try:
         sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
         from rp_decline_model import tier_map as _rpd_tier_map  # type: ignore
-        import unicodedata as _ud
-        def _rpd_norm(s):
-            return _ud.normalize('NFKD', str(s)).encode('ascii', 'ignore').decode().lower().strip()
+        # OWNER: name_match.safe_name_key. rp_decline_model keys tier_map with
+        # sp_stuff_model._norm, which is now the same function — before 2026-07-30
+        # the two had DESYNCED (this side kept apostrophes/periods, that side
+        # stripped them), so every "O'Hearn"/"A.J."-style RP missed the join.
+        from plv_clone.utils.name_match import safe_name_key as _rpd_norm
         _rpd = _rpd_tier_map()
     except Exception:
         _rpd = {}

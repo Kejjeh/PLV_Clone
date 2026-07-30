@@ -48,6 +48,12 @@ def load_pl_ranks() -> dict[str, int]:
     """name_norm -> PL rank integer (from all three PL cache files).
 
     PL cache format: {"ranks": {"Player Name": rank_int, ...}, ...}
+
+    Keys go through `_ascii_lower` (= name_match.safe_name_key), the SAME
+    normalizer that builds every `name_norm` column below. It used to be a bare
+    `.strip().lower()`, which kept accents and punctuation while the lookup side
+    stripped them — so "José Ramírez", "Ryan O’Hearn" (the PL caches write a
+    CURLY U+2019) and "C.J. Abrams" silently returned no PL rank. Fixed 2026-07-30.
     """
     ranks: dict[str, int] = {}
     for fname in ("pl_hitters_top150.json", "pl_sps_top100.json", "pl_closers.json"):
@@ -58,13 +64,13 @@ def load_pl_ranks() -> dict[str, int]:
         raw = data.get("ranks", {})
         if isinstance(raw, dict):
             for name, rk in raw.items():
-                nm = name.strip().lower()
+                nm = _ascii_lower(name)
                 if nm and rk is not None:
                     ranks[nm] = int(rk)
         elif isinstance(raw, list):
             for item in raw:
                 if isinstance(item, dict):
-                    nm = (item.get("name") or "").strip().lower()
+                    nm = _ascii_lower(item.get("name") or "")
                     rk = item.get("rank")
                 else:
                     continue
@@ -86,20 +92,17 @@ def load_rh3() -> pd.DataFrame:
     return out
 
 
-def _ascii_lower(s: str) -> str:
-    """Normalize accented chars to ASCII and lowercase."""
-    return unicodedata.normalize("NFD", s).encode("ascii", "ignore").decode("ascii").lower()
+# Name join key — OWNER: name_match.safe_name_key (order-preserving, space-
+# separated, collapses curly/straight apostrophes + C.J./CJ + hyphens). Every
+# `name_norm` column in this file must come from this one function or the merges
+# below join on nothing. The old local `_ascii_lower` kept punctuation, so an
+# ESPN "C.J. Abrams" never matched an rh3 "CJ Abrams".
+from plv_clone.utils.name_match import safe_name_key as _ascii_lower  # noqa: E402
 
 
-def _norm_sp_name(raw) -> str:
-    """Convert rp3 'Lastname, Firstname' → ascii-lowered 'firstname lastname'."""
-    if not isinstance(raw, str):
-        return ""
-    raw = raw.strip()
-    if "," in raw:
-        parts = raw.split(",", 1)
-        return _ascii_lower(f"{parts[1].strip()} {parts[0].strip()}")
-    return _ascii_lower(raw)
+# safe_name_key already rewrites "Last, First" -> "first last", so the rp3 flip
+# this used to hand-roll is now the owner's job.
+from plv_clone.utils.name_match import safe_name_key as _norm_sp_name  # noqa: E402
 
 
 def load_rp3() -> pd.DataFrame:

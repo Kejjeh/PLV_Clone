@@ -25,13 +25,6 @@ ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 
-def _strip(s):
-    return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
-
-def _norm(s):
-    return re.sub(r'[^a-z]+', '', _strip((s or '').lower()))
-
-
 # ─── Calibration metric helpers ──────────────────────────────────────────────
 
 def calibration(preds, acts, label):

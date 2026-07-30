@@ -39,11 +39,6 @@ PA_EVENTS = {
 }
 
 
-def _strip_accents(s):
-    return ''.join(c for c in unicodedata.normalize('NFD', str(s))
-                   if unicodedata.category(c) != 'Mn')
-
-
 # Name join key — OWNER: plv_clone.utils.name_match.join_key (order-independent,
 # so "Fried, Max" == "Max Fried"). NEVER re-derive locally: 127 local copies
 # drifted apart and mis-keyed Ryan O'Hearn's curly apostrophe (2026-07-28).

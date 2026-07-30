@@ -15,8 +15,7 @@ from plv_clone.projections import PROJECTIONS
 ROOT = Path('c:/Users/Joshua/plv_clone')
 PROJ = PROJECTIONS.rh3()
 
-def _strip(s): return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
-def norm(s):   return re.sub(r'[^a-z]+', '', _strip((s or '').lower()))
+from plv_clone.utils.name_match import safe_name_key as norm  # noqa: E402  OWNER — never re-derive
 
 def name_key(name):
     if ',' in name:

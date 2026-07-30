@@ -100,12 +100,10 @@ def main():
             # normalized name (handles 'Last, First' + accents) — NEVER a surname
             # substring, which grabs the wrong same-name player (Will vs Austin
             # Warren, the Garcias). (collision fix 2026-06-26)
-            import unicodedata as _ud
-
-            def _nm(s):
-                s = "".join(c for c in _ud.normalize("NFD", str(s)) if _ud.category(c) != "Mn").lower()
-                s = _flip_lastfirst(s)
-                return " ".join(s.replace(".", "").split())
+            # OWNER: name_match.safe_name_key — it already flips "Last, First",
+            # strips accents, and collapses apostrophes/periods/hyphens. The local
+            # copy this replaced missed curly-vs-straight apostrophes.
+            from plv_clone.utils.name_match import safe_name_key as _nm
 
             tgt = _nm(p.name)
             if is_pit:

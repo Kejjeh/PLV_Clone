@@ -14,11 +14,7 @@ ROOT = Path('c:/Users/Joshua/plv_clone')
 PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rprs1_projections.csv')
 
 # Map RP RoS rank by name
-def _strip_accents(s: str) -> str:
-    return ''.join(c for c in unicodedata.normalize('NFKD', s) if not unicodedata.combining(c))
-
-def name_norm(s: str) -> str:
-    return re.sub(r'[^a-z]+', '', _strip_accents((s or '').lower()))
+from plv_clone.utils.name_match import safe_name_key as name_norm  # noqa: E402  OWNER — never re-derive
 
 # Recompute RoS rank (current proj is sorted by xfp_full_year)
 PROJ['ros_rank'] = PROJ['xfp_ros'].rank(ascending=False, method='min').astype('Int64')

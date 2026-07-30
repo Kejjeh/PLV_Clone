@@ -74,15 +74,13 @@ def _live_gs_from_boxscore():
     return pd.DataFrame(out, columns=["mlb_id", "live_gs", "live_apps", "recent_start_ratio"])
 
 
-def _norm(name: str) -> str:
-    # item 10 (2026-07-04): NOT routed to name_match.join_key — the output feeds
-    # _last_init_key(nm), a (last, first-initial) fallback that needs SPACE-
-    # separated, order-preserving tokens. join_key sorts + strips spaces, which
-    # would break that fallback (same reason build_xfp_boards._li_key stays local).
-    import re, unicodedata
-    s = unicodedata.normalize("NFKD", str(name)).encode("ascii", "ignore").decode()
-    s = re.sub(r"[^a-z ]", "", s.lower())
-    return re.sub(r"\s+", " ", s).strip()
+# Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-
+# PRESERVING, space-separated ("kyle schwarber"), collapses curly-vs-straight
+# apostrophes, C.J./CJ and hyphens. NEVER re-derive locally: a local copy
+# mis-keyed Ryan O'Hearn's U+2019 apostrophe and printed an opponent's player
+# as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
+# separators, which is a different (order-independent) key.
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
 
 
 def _last_init_key(norm_name: str):

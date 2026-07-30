@@ -35,13 +35,6 @@ EXT = ROOT / 'data' / 'research' / 'external_projections'
 OUT = ROOT / 'data' / 'outputs'
 
 
-def _normalize_name(s: str) -> str:
-    if pd.isna(s):
-        return ''
-    s = str(s).lower()
-    s = re.sub(r'[^a-z\s]', '', s)
-    s = re.sub(r'\s+', ' ', s).strip()
-    return s
 
 
 def hitter_fp_per_pa(row) -> float:

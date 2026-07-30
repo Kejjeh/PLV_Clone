@@ -19,10 +19,13 @@ from plv_clone.paths import ROOT, CACHE, OUTPUTS as OUT
 sys.path.insert(0, str(ROOT))
 
 
-def _norm(s):
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    return re.sub(r'[^a-z]+', '', s)
+# Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-
+# PRESERVING, space-separated ("kyle schwarber"), collapses curly-vs-straight
+# apostrophes, C.J./CJ and hyphens. NEVER re-derive locally: a local copy
+# mis-keyed Ryan O'Hearn's U+2019 apostrophe and printed an opponent's player
+# as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
+# separators, which is a different (order-independent) key.
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
 
 
 def career_summary(df):

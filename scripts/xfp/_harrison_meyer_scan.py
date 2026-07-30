@@ -21,10 +21,7 @@ rp3  = pd.read_csv(REPO / "data/outputs/xfp_rp3_projections.csv")
 from app.espn_connector import _get_league
 
 
-def _norm(s):
-    s = unicodedata.normalize("NFD", str(s))
-    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
-    return re.sub(r"\s+", " ", s).strip()
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402  OWNER
 
 
 print("Loading ESPN roster data...", flush=True)

@@ -25,15 +25,13 @@ rh3 = PROJECTIONS.rh3()
 OUT = REPO / "data/outputs/sp_alerts.json"
 
 
-def _norm(s):
-    # item 10 (2026-07-04): NOT routed to name_match.join_key yet. This is a
-    # PRODUCER of sp_alerts.json (a consumed artifact); join_key is order-
-    # independent so it would change cross-format match results (more alerts).
-    # Self-consistent + same-format joins make it *probably* a no-op, but that
-    # needs a byte-diff of sp_alerts.json before swapping — left order-preserving.
-    s = unicodedata.normalize("NFD", str(s))
-    s = "".join(c for c in s if unicodedata.category(c) != "Mn").lower()
-    return re.sub(r"\s+", " ", s).strip()
+# Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-
+# PRESERVING, space-separated ("kyle schwarber"), collapses curly-vs-straight
+# apostrophes, C.J./CJ and hyphens. NEVER re-derive locally: a local copy
+# mis-keyed Ryan O'Hearn's U+2019 apostrophe and printed an opponent's player
+# as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
+# separators, which is a different (order-independent) key.
+from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
 
 
 def display_name(sc):

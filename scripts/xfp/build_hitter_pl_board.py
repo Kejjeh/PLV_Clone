@@ -48,23 +48,11 @@ C = Path('data/research/xfp_cache')
 UNI = Path('data/research/triangulate_universe')
 
 
-def _nm(s):
-    """Join key. Flips "Last, First" (rp3/volume CSV convention) then delegates
-    to the OWNER normalizer.
-
-    Do NOT hand-roll this. A local copy here silently dropped Ryan O'Hearn on
-    the first run: the PL cache writes a curly apostrophe (U+2019) and the rh3
-    file a straight one (U+0027), so the two normalized differently and his row
-    came back with zero games. `safe_name_key` already collapses both, plus
-    "C.J." / "CJ" and hyphens. This is fix-backlog item #4 (73 files re-defining
-    the normalizer) biting in real time — route to the owner instead of adding
-    a 74th variant.
-    """
-    s = str(s)
-    if ',' in s:
-        last, _, first = s.partition(',')
-        s = f'{first.strip()} {last.strip()}'
-    return safe_name_key(s)
+# Name join key. safe_name_key ALREADY rewrites "Last, First" (the rp3/volume CSV
+# convention) to "first last", so the flip this used to hand-roll was redundant.
+# Do NOT re-add a local copy: one here silently dropped Ryan O'Hearn, because the
+# PL cache writes a curly apostrophe (U+2019) and the rh3 file a straight one.
+from plv_clone.utils.name_match import safe_name_key as _nm  # noqa: E402
 
 
 def main():
