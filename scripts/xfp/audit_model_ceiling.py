@@ -9,9 +9,17 @@ For each production xFP model (rh3, rp3, rprs2), runs three ceiling fns:
   3. feature_ceiling — LassoCV on baseline + candidate columns.
      Verdict: BASELINE_OPTIMAL | ADD_CANDIDATES | REPLACE_BASELINE.
 
-The driver re-runs each model's PREP pipeline (Marcel prior, shrinkage, etc.)
-locally so the ceiling fns see the same substrate the production model sees.
-It does NOT touch the production .pkl bundles or the FEATS lists.
+The driver builds each model's substrate through the SHARED canonical assembly
+(`plv_clone.models.xfp.frames`) — the same code production's `rh3.main()` runs —
+so the ceiling fns see exactly the substrate the production model sees. It does
+NOT touch the production .pkl bundles or the FEATS lists.
+
+It does not carry its own copy of the prep any more. Before 2026-07-29 it did,
+and that copy had silently fallen 2 features + 1 prior-blend behind production
+while still reading the LIVE FEATS list (KeyError on rh3/rp3, and a silent-zero
+fallback on the #2 and #5 most important rh3 features). See
+`docs/rh3_harness_root_bug_2026-07-28.md` for why a copied baseline is a
+baseline that will eventually be wrong.
 
 Usage:
     python -X utf8 scripts/xfp/audit_model_ceiling.py --model rh3
@@ -24,11 +32,11 @@ Outputs:
 from __future__ import annotations
 import argparse
 import sys
+import time
 import warnings
 from datetime import date
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 warnings.filterwarnings("ignore")
@@ -43,162 +51,87 @@ from plv_clone.models.xfp.ceiling import (
     linear_ceiling,
     nonlinear_ceiling,
 )
+from plv_clone.models.xfp.frames import (
+    assert_feats_present,
+    build_rh3_frame,
+    build_rp3_frame,
+)
 
 CACHE = ROOT / "data" / "research" / "xfp_cache"
 
 
 # ---------------------------------------------------------------------------
 # Substrate prep per model
-# Replicates the prep portion of each model's main() up through shrinkage +
-# feature derivation, without fitting or projecting.
+#
+# 2026-07-29: prep_rh3 / prep_rp3 used to carry their OWN transcription of each
+# model's main() prep. Both had rotted behind production — prep_rh3 never
+# attached `ros_opp_sp_xwoba_weighted` (promoted 2026-05-24) or `bx_prior_h`
+# (2026-07-10), never called `blend_callup_prior` (2026-07-19), and still used
+# the `if CSV.exists(): merge else: col = 0.0` SILENT-ZERO fallback on
+# `lift_h2_aug150` / `xwoba_residual_career` (ranked #2 and #5 of 22 by
+# held-out permutation importance). prep_rp3 was missing
+# `ros_opp_xwoba_weighted`. Both now delegate to the ONE canonical assembly in
+# `plv_clone.models.xfp.frames`, which raises on a missing cache instead of
+# defaulting and self-checks that every FEATS name is a real column.
+#
+# What remains here is the only thing that is genuinely the audit's business:
+# the per-model eval ROW filter (matches each model's cross_year_eval).
 # ---------------------------------------------------------------------------
 def prep_rh3() -> pd.DataFrame:
-    rolling = pd.read_csv(rh3_mod.ROLLING_CSV)
-    multiyr = pd.read_csv(rh3_mod.MULTIYR_CSV)
-
-    # Marcel prior
-    years_needed = sorted(rolling["year"].unique())
-    prior = rh3_mod.build_prior_table(multiyr, years_needed)
-    rolling = rolling.merge(prior, on=["batter", "year"], how="left")
-    league_mu = float(multiyr[multiyr["pa"] >= 200]["fp_per_pa_actual"].mean())
-    rolling["prior_fp_per_pa"] = rolling["prior_fp_per_pa"].fillna(league_mu)
-    rolling["prior_pa_eff"] = rolling["prior_pa_eff"].fillna(0.0)
-
-    # H2-locked career profile feature (mirrors main())
-    if rh3_mod.H2_LOCKED_CSV.exists():
-        h2 = pd.read_csv(rh3_mod.H2_LOCKED_CSV)[["batter", "lift_h2_aug150"]]
-        rolling = rolling.merge(h2, on="batter", how="left")
-        rolling["lift_h2_aug150"] = rolling["lift_h2_aug150"].fillna(0.0)
-    else:
-        rolling["lift_h2_aug150"] = 0.0
-
-    # xwOBA residual career
-    if rh3_mod.XWOBA_RESID_CSV.exists():
-        xw = pd.read_csv(rh3_mod.XWOBA_RESID_CSV)[["batter", "xwoba_residual_career"]]
-        rolling = rolling.merge(xw, on="batter", how="left")
-        rolling["xwoba_residual_career"] = rolling["xwoba_residual_career"].fillna(0.0)
-    else:
-        rolling["xwoba_residual_career"] = 0.0
-
-    # xwoba_gap_to derivation (still computed even though removed from FEATS)
-    if "xwoba_on_contact_to" in rolling.columns and "woba_d_sum_to" in rolling.columns:
-        rolling["actual_woba_per_pa_to"] = np.where(
-            rolling["woba_d_sum_to"] > 0,
-            rolling["woba_v_sum_to"] / rolling["woba_d_sum_to"],
-            np.nan,
-        )
-        rolling["xwoba_gap_to"] = (
-            rolling["xwoba_on_contact_to"] - rolling["actual_woba_per_pa_to"]
-        ).fillna(0.0)
-    else:
-        rolling["xwoba_gap_to"] = 0.0
-
-    # career_stage
-    first_year = multiyr.groupby("batter")["year"].min().to_dict()
-    rolling["career_stage"] = rolling.apply(
-        lambda r: r["year"] - first_year.get(r["batter"], r["year"]), axis=1
-    )
-
-    # Shrinkage on cumulative + last21
-    pop_to = rh3_mod.compute_population_means(
-        rolling, rh3_mod.TRAIN_YEARS, rh3_mod.SHRINK_SPEC_TO
-    )
-    pop_l21 = rh3_mod.compute_population_means(
-        rolling, rh3_mod.TRAIN_YEARS, rh3_mod.SHRINK_SPEC_LAST21
-    )
-    rolling = rh3_mod.apply_shrinkage(rolling, pop_to, rh3_mod.SHRINK_SPEC_TO)
-    rolling = rh3_mod.apply_shrinkage(rolling, pop_l21, rh3_mod.SHRINK_SPEC_LAST21)
-    for col in (rate + "_sh" for rate in rh3_mod.SHRINK_SPEC_LAST21):
-        if col in rolling.columns:
-            mu = rolling.loc[rolling["year"].isin(rh3_mod.TRAIN_YEARS), col].mean(
-                skipna=True
-            )
-            rolling[col] = rolling[col].fillna(mu)
-    rolling["pa_last21"] = rolling["pa_last21"].fillna(0).astype(float)
-
+    rolling = build_rh3_frame(verbose=False).rolling
     # Apply eval filters (matches cross_year_eval)
     rolling = rolling[
         (rolling["pa_to"] >= rh3_mod.EVAL_PA_MIN)
         & (rolling["ros_pa"] >= rh3_mod.ROS_PA_MIN)
         & (rolling["year"] != 2020)
     ].copy()
+    _assert_audit_substrate(rolling, rh3_mod.RH3_FEATS, rh3_mod.TARGET, "rh3")
     return rolling
 
 
 def prep_rp3() -> pd.DataFrame:
-    rolling = pd.read_csv(rp3_mod.ROLLING_CSV)
-    multiyr = pd.read_csv(rp3_mod.MULTIYR_CSV)
-    il = pd.read_csv(rp3_mod.IL_CSV)
-
-    # Marcel prior
-    prior = rp3_mod.build_prior_table(multiyr, sorted(rolling["year"].unique()))
-    rolling = rolling.merge(prior, on=["pitcher", "year"], how="left")
-    league_mu = float(multiyr[multiyr["gs"] >= 10]["fp_per_start_actual"].mean())
-    rolling["prior_fp_per_start"] = rolling["prior_fp_per_start"].fillna(league_mu)
-    rolling["prior_gs_eff"] = rolling["prior_gs_eff"].fillna(0.0)
-
-    # IL merge
-    rolling = rolling.merge(il, on=["pitcher", "year", "split_day"], how="left")
-    rolling["il_stints_to"] = rolling["il_stints_to"].fillna(0).astype(int)
-    rolling["is_on_il_at_split"] = rolling["is_on_il_at_split"].fillna(0).astype(int)
-    max_dsr = float(rolling["days_since_il_return"].max(skipna=True) or 200)
-    rolling["days_since_il_return_imp"] = rolling["days_since_il_return"].fillna(
-        max_dsr + 1
-    )
-
-    # Shrinkage
-    pop_to = rp3_mod.compute_population_means(
-        rolling, rp3_mod.TRAIN_YEARS, rp3_mod.SHRINK_SPEC_TO
-    )
-    pop_l21 = rp3_mod.compute_population_means(
-        rolling, rp3_mod.TRAIN_YEARS, rp3_mod.SHRINK_SPEC_LAST21
-    )
-    rolling = rp3_mod.apply_shrinkage(rolling, pop_to, rp3_mod.SHRINK_SPEC_TO)
-    rolling = rp3_mod.apply_shrinkage(rolling, pop_l21, rp3_mod.SHRINK_SPEC_LAST21)
-
-    # SP drift features
-    rolling["delta_velo"] = rolling["avg_velo_last21"] - rolling["avg_velo_to"]
-    rolling["delta_swstr"] = rolling["swstr_pct_last21"] - rolling["swstr_pct_to"]
-    rolling["delta_k_pct"] = rolling["k_pct_last21"] - rolling["k_pct_to"]
-    rolling["delta_bb_pct"] = rolling["bb_pct_last21"] - rolling["bb_pct_to"]
-    rolling["delta_chase"] = (
-        rolling["o_swing_pct_last21"] - rolling["o_swing_pct_to"]
-    )
-    rolling["delta_zone"] = rolling["zone_pct_last21"] - rolling["zone_pct_to"]
-    for c in (
-        "delta_velo",
-        "delta_swstr",
-        "delta_k_pct",
-        "delta_bb_pct",
-        "delta_chase",
-        "delta_zone",
-    ):
-        rolling[c] = rolling[c].fillna(0.0)
-
-    for col in (rate + "_sh" for rate in rp3_mod.SHRINK_SPEC_LAST21):
-        if col in rolling.columns:
-            mu = rolling.loc[rolling["year"].isin(rp3_mod.TRAIN_YEARS), col].mean(
-                skipna=True
-            )
-            rolling[col] = rolling[col].fillna(mu)
-    rolling["gs_last21"] = rolling["gs_last21"].fillna(0)
-    rolling["fp_per_start_last21"] = rolling["fp_per_start_last21"].fillna(
-        rolling["fp_per_start_to"]
-    )
-
+    rolling = build_rp3_frame(verbose=False).rolling
     rolling = rolling[
         (rolling["gs_to"] >= rp3_mod.EVAL_GS_MIN)
         & (rolling["ros_gs"] >= rp3_mod.ROS_GS_MIN)
         & (rolling["year"] != 2020)
     ].copy()
+    _assert_audit_substrate(rolling, rp3_mod.RP3_FEATS, rp3_mod.TARGET, "rp3")
     return rolling
 
 
+def _assert_audit_substrate(
+    df: pd.DataFrame, feats: list[str], target: str, name: str
+) -> None:
+    """Fail loudly if the filtered substrate can't support the audit.
+
+    The point of a ceiling audit is that its baseline r IS the production
+    baseline r. A short feature list, a missing target, or an empty frame all
+    make the reported number a different quantity wearing the same name — so
+    none of them may pass silently.
+    """
+    assert_feats_present(df, list(feats), label=f"prep_{name}")
+    if target not in df.columns:
+        raise KeyError(f"prep_{name}: target column '{target}' missing from substrate")
+    if df.empty:
+        raise RuntimeError(f"prep_{name}: eval filters left 0 rows")
+    usable = len(df.dropna(subset=list(feats) + [target]))
+    if usable < 500:
+        raise RuntimeError(
+            f"prep_{name}: only {usable} rows have all {len(feats)} features "
+            f"AND the target non-null — too few to audit a ceiling against."
+        )
+
+
 def prep_rprs2() -> pd.DataFrame:
+    # rprs2 reads its features straight off its own rolling cache — there is no
+    # multi-source assembly to share, and this prep was already producing all
+    # 28/28 FEATS. Left as-is; only the substrate assertion is added.
     rolling = pd.read_csv(rprs2_mod.ROLLING_CSV)
     rolling = rolling[
         rolling["year"].isin(rprs2_mod.TRAIN_YEARS) & (rolling["g_to"] >= rprs2_mod.EVAL_G_MIN)
     ].copy()
+    _assert_audit_substrate(rolling, rprs2_mod.FEATS_RPRS2, rprs2_mod.TARGET, "rprs2")
     return rolling
 
 
@@ -285,9 +218,9 @@ def audit_one(name: str):
     if len(candidates) > 50:
         candidates = sorted(candidates)[:50]
 
-    print(f"\n=== {name} ceiling audit ===")
+    print(f"\n=== {name} ceiling audit ===", flush=True)
     print(f"  substrate rows: {len(df)} | baseline feats: {len(feats)} | "
-          f"candidate feats considered: {len(candidates)}")
+          f"candidate feats considered: {len(candidates)}", flush=True)
 
     common = dict(
         df=df,
@@ -296,13 +229,25 @@ def audit_one(name: str):
         min_train=min_train,
         min_test=min_test,
     )
-    nl = nonlinear_ceiling(feats=feats, **common)
-    lc = linear_ceiling(feats=feats, **common)
-    fc = feature_ceiling(
+
+    # Progress + timing. The three ceilings take minutes each on the 2026
+    # substrate (rh3 is 38k rows x 22 feats, and feature_ceiling refits LassoCV
+    # per held year over 70+ columns). A silent multi-minute run is
+    # indistinguishable from a hang, so say where we are.
+    def _timed(label, fn):
+        t0 = time.perf_counter()
+        print(f"  [{label}] running...", flush=True)
+        out = fn()
+        print(f"  [{label}] done in {time.perf_counter() - t0:.0f}s", flush=True)
+        return out
+
+    nl = _timed("nonlinear", lambda: nonlinear_ceiling(feats=feats, **common))
+    lc = _timed("linear", lambda: linear_ceiling(feats=feats, **common))
+    fc = _timed("feature", lambda: feature_ceiling(
         baseline_feats=feats,
         candidate_feats=candidates,
         **common,
-    )
+    ))
 
     print(
         f"  nonlinear: ridge={nl.ridge_r:+.4f}  xgb={nl.xgb_r:+.4f}  rf={nl.rf_r:+.4f}  "
@@ -348,6 +293,12 @@ def render_md(results: list[dict]) -> str:
     today = date.today().isoformat()
     lines: list[str] = []
     lines.append(f"# xFP model accuracy-ceiling audit — {today}")
+    lines.append("")
+    lines.append(
+        f"Models covered by THIS run: **{', '.join(r['name'] for r in results)}**. "
+        "Substrate built through the shared canonical assembly "
+        "(`plv_clone.models.xfp.frames`) — the same code `rh3.main()` runs."
+    )
     lines.append("")
     lines.append(
         "Per-model empirical ceiling audit using the `plv_clone.models.xfp.ceiling` "
@@ -437,6 +388,11 @@ def render_md(results: list[dict]) -> str:
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--model", choices=["rh3", "rp3", "rprs2"], default=None)
+    parser.add_argument(
+        "--models",
+        default=None,
+        help="comma-separated subset, e.g. 'rh3,rp3' — one report covering just those",
+    )
     parser.add_argument("--all", action="store_true")
     parser.add_argument(
         "--no-report",
@@ -445,14 +401,22 @@ def main():
     )
     args = parser.parse_args()
 
-    if not args.all and args.model is None:
-        parser.error("must pass --model {rh3|rp3|rprs2} or --all")
-
-    targets = ["rh3", "rp3", "rprs2"] if args.all else [args.model]
+    known = ["rh3", "rp3", "rprs2"]
+    if args.all:
+        targets = known
+    elif args.models:
+        targets = [m.strip() for m in args.models.split(",") if m.strip()]
+        bad = [m for m in targets if m not in known]
+        if bad:
+            parser.error(f"unknown model(s) {bad}; choose from {known}")
+    elif args.model:
+        targets = [args.model]
+    else:
+        parser.error("must pass --model X, --models a,b or --all")
     results = []
     for name in targets:
         try:
-            results.append(audit_one(name))
+            results.append(audit_one(name))  # noqa: PERF401
         except Exception as e:
             print(f"\n!!! {name} audit FAILED: {type(e).__name__}: {e}", file=sys.stderr)
             raise

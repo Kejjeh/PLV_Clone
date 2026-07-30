@@ -258,161 +258,24 @@ def train_final(df: pd.DataFrame, feats: list[str]):
 
 def main():
     print('=== xfp_rh3 (RH2 + recency + CI + replacement deltas + PA proj) ===')
-    rolling = pd.read_csv(ROLLING_CSV)
-    multiyr = pd.read_csv(MULTIYR_CSV)
-    print(f'rolling: {len(rolling)} rows | multiyr: {len(multiyr)} rows')
-
-    # Marcel prior
-    print('\nBuilding Marcel prior...')
-    years_needed = sorted(rolling['year'].unique())
-    prior = build_prior_table(multiyr, years_needed)
-    rolling = rolling.merge(prior, on=['batter', 'year'], how='left')
-    league_mu = float(multiyr[multiyr['pa'] >= 200]['fp_per_pa_actual'].mean())
-    rolling['prior_fp_per_pa'] = rolling['prior_fp_per_pa'].fillna(league_mu)
-    rolling['prior_pa_eff']    = rolling['prior_pa_eff'].fillna(0.0)
-
-    # AAA callup prior blend (validated PASS 2026-07-19, subgroup partial r
-    # +0.276 train / +0.238 holdout / 7/7 yrs — milb_aaa_translation_2026-07-19.md;
-    # integration sign-off same date). Blends the translated AAA rate profile
-    # into prior_fp_per_pa for rows with < 150 MLB PA (prior_pa_eff + pa_to),
-    # weight decaying to 0 at the boundary. Non-callup rows untouched.
-    from plv_clone.models.xfp.aaa_translation import blend_callup_prior
-    rolling = blend_callup_prior(rolling)
-
-    # H2-locked career profile feature (Aug-01 cutoff, min 150 PA per half)
-    if H2_LOCKED_CSV.exists():
-        h2_locked = pd.read_csv(H2_LOCKED_CSV)[['batter', 'lift_h2_aug150']]
-        rolling = rolling.merge(h2_locked, on='batter', how='left')
-        # Players without enough career data: fill with 0 (no seasonal tilt assumed)
-        n_with = rolling['lift_h2_aug150'].notna().sum()
-        rolling['lift_h2_aug150'] = rolling['lift_h2_aug150'].fillna(0.0)
-        print(f'  merged H2-locked feature: {n_with}/{len(rolling)} rows have career data')
-    else:
-        print(f'  WARNING: {H2_LOCKED_CSV} missing — fill lift_h2_aug150=0')
-        rolling['lift_h2_aug150'] = 0.0
-
-    # xwOBA residual career feature (2018-2025 window)
-    if XWOBA_RESID_CSV.exists():
-        xw = pd.read_csv(XWOBA_RESID_CSV)[['batter', 'xwoba_residual_career']]
-        rolling = rolling.merge(xw, on='batter', how='left')
-        n_with = rolling['xwoba_residual_career'].notna().sum()
-        rolling['xwoba_residual_career'] = rolling['xwoba_residual_career'].fillna(0.0)
-        print(f'  merged xwOBA residual feature: {n_with}/{len(rolling)} rows have career data')
-    else:
-        print(f'  WARNING: {XWOBA_RESID_CSV} missing — fill xwoba_residual_career=0')
-        rolling['xwoba_residual_career'] = 0.0
-
-    # NEW v2 features (validated 2026-05-12):
-    # xwoba_gap_to = within-season expected wOBA on contact − actual wOBA per PA.
-    # Captures regression-candidate signal at the current-season window.
-    if 'xwoba_on_contact_to' in rolling.columns and 'woba_d_sum_to' in rolling.columns:
-        rolling['actual_woba_per_pa_to'] = np.where(
-            rolling['woba_d_sum_to'] > 0,
-            rolling['woba_v_sum_to'] / rolling['woba_d_sum_to'],
-            np.nan)
-        rolling['xwoba_gap_to'] = (rolling['xwoba_on_contact_to']
-                                     - rolling['actual_woba_per_pa_to'])
-        # Fill NaN with 0 (neutral signal)
-        rolling['xwoba_gap_to'] = rolling['xwoba_gap_to'].fillna(0.0)
-        n_with = (rolling['xwoba_gap_to'] != 0).sum()
-        print(f'  computed xwoba_gap_to: {n_with}/{len(rolling)} rows non-trivial')
-    else:
-        rolling['xwoba_gap_to'] = 0.0
-        print('  WARNING: xwoba_on_contact_to or woba_*_sum_to missing — fill 0')
-
-    # career_stage = target year - first MLB year per batter
-    first_year = multiyr.groupby('batter')['year'].min().to_dict()
-    # vectorized (audit 2026-07-19): identical to the old row-wise apply —
-    # unmapped batters fill with their own year (career_stage 0), then int.
-    rolling['career_stage'] = (
-        rolling['year'] - rolling['batter'].map(first_year).fillna(rolling['year'])
-    ).astype(int)
-    print(f'  computed career_stage: range {rolling["career_stage"].min()}-{rolling["career_stage"].max()}')
-
-    # RoS opposing-SP schedule strength (validated 2026-05-24, PASS Δr +0.0137).
-    # Cache source: scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py. Merge
-    # mirrors the validation harness (attach() in
-    # validate_ros_opp_sp_xwoba_weighted.py).
-    if ROS_OPP_SP_CSV.exists():
-        opp_sp = pd.read_csv(ROS_OPP_SP_CSV)[
-            ['batter', 'year', 'split_day', 'ros_opp_sp_xwoba_weighted']
-        ]
-        rolling = rolling.merge(opp_sp, on=['batter', 'year', 'split_day'], how='left')
-        n_missing = int(rolling['ros_opp_sp_xwoba_weighted'].isna().sum())
-        # HARD GUARD (audit 2026-07-04): the cache froze at split 58 for ~6 weeks
-        # and this fillna silently constant-filled 100% of projection rows —
-        # a VALIDATED feature served a year-mean while looking alive. If the
-        # majority of CURRENT-SEASON rows are NaN pre-fill, the cache is frozen
-        # again: fail loudly (refresh step 1.9 rebuilds it daily).
-        _cur_yr = int(rolling['year'].max())
-        _cur = rolling[rolling['year'] == _cur_yr]
-        _cur_nan = float(_cur['ros_opp_sp_xwoba_weighted'].isna().mean()) if len(_cur) else 0.0
-        if _cur_nan > 0.50:
-            raise RuntimeError(
-                f"ros_opp_sp_xwoba_weighted: {_cur_nan:.0%} of {_cur_yr} rows are NaN pre-fill — "
-                "the ros schedule-strength cache looks FROZEN (see "
-                "build_ros_schedule caches / refresh step 1.9). Refusing to "
-                "silently constant-fill a validated feature.")
-        year_means = rolling.groupby('year')['ros_opp_sp_xwoba_weighted'].transform('mean')
-        rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(year_means)
-        rolling['ros_opp_sp_xwoba_weighted'] = rolling['ros_opp_sp_xwoba_weighted'].fillna(
-            rolling['ros_opp_sp_xwoba_weighted'].mean()
-        )
-        print(f'  ros_opp_sp_xwoba_weighted missing pre-fill: {n_missing}/{len(rolling)} '
-              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
-    else:
-        raise FileNotFoundError(
-            f'Missing required RoS opp-SP cache: {ROS_OPP_SP_CSV}. '
-            'Run scripts/xfp/build_ros_opp_sp_xwoba_per_hitter.py.'
-        )
-
-    # Box-score-era ensemble prior (validated 2026-07-10, B1 PASS + pre-flight
-    # PROMOTE on the live-SB cache). Cache source: scripts/xfp/build_bx_priors.py.
-    # Merge mirrors the validation harness (_merge_bx in validate_bx_ensemble.py):
-    # (batter, year) mlbam join, per-year-mean fill.
-    if BX_PRIORS_CSV.exists():
-        bx = pd.read_csv(BX_PRIORS_CSV)[['mlbam', 'year', 'bx_prior_h']].rename(
-            columns={'mlbam': 'batter'})
-        rolling = rolling.merge(bx, on=['batter', 'year'], how='left')
-        n_missing = int(rolling['bx_prior_h'].isna().sum())
-        # HARD GUARD (mirrors ros_opp_sp_xwoba_weighted, audit 2026-07-04): the
-        # bx prior is built from COMPLETED T-1 seasons, so ~35-40% NaN (rookies /
-        # sub-floor T-1 lines) is the healthy state. If the MAJORITY of
-        # current-season rows are NaN pre-fill, the cache is stale/broken (e.g.
-        # season rolled over without a build_bx_priors.py rerun) and the fill
-        # would silently constant-serve a validated feature: fail loudly.
-        _cur_yr = int(rolling['year'].max())
-        _cur = rolling[rolling['year'] == _cur_yr]
-        _cur_nan = float(_cur['bx_prior_h'].isna().mean()) if len(_cur) else 0.0
-        if _cur_nan > 0.50:
-            raise RuntimeError(
-                f"bx_prior_h: {_cur_nan:.0%} of {_cur_yr} rows are NaN pre-fill — "
-                f"the bx priors cache looks STALE (expected ~35-40% NaN). Rerun "
-                "scripts/xfp/build_bx_priors.py (refresh step 1.95). Refusing to "
-                "silently constant-fill a validated feature.")
-        year_means = rolling.groupby('year')['bx_prior_h'].transform('mean')
-        rolling['bx_prior_h'] = rolling['bx_prior_h'].fillna(year_means)
-        rolling['bx_prior_h'] = rolling['bx_prior_h'].fillna(rolling['bx_prior_h'].mean())
-        print(f'  bx_prior_h missing pre-fill: {n_missing}/{len(rolling)} '
-              f'({n_missing / max(len(rolling), 1):.1%}) — filled with year mean')
-    else:
-        raise FileNotFoundError(
-            f'Missing required bx priors cache: {BX_PRIORS_CSV}. '
-            'Run scripts/xfp/build_bx_priors.py.'
-        )
-
-    # Shrinkage on both windows
-    print('Shrinkage (cumulative + last21)...')
-    pop_to = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
-    pop_l21 = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_LAST21)
-    rolling = apply_shrinkage(rolling, pop_to, SHRINK_SPEC_TO)
-    rolling = apply_shrinkage(rolling, pop_l21, SHRINK_SPEC_LAST21)
-    # last21 columns can be NaN (zero PA in window) — fill _sh with mean
-    for col in (rate + '_sh' for rate in SHRINK_SPEC_LAST21):
-        if col in rolling.columns:
-            mu = rolling.loc[rolling['year'].isin(TRAIN_YEARS), col].mean(skipna=True)
-            rolling[col] = rolling[col].fillna(mu)
-    rolling['pa_last21'] = rolling['pa_last21'].fillna(0).astype(float)
+    # Feature assembly (Marcel prior -> AAA call-up blend -> career-profile
+    # merges -> schedule-strength -> bx prior -> shrinkage) lives in ONE place:
+    # plv_clone.models.xfp.frames.build_rh3_frame. It was extracted verbatim
+    # from this function on 2026-07-29 because three divergent copies existed
+    # (production, validate_inseason_discipline, audit_model_ceiling) and the
+    # third had rotted 2 features + 1 blend behind production while still
+    # reading the live FEATS list. Byte-identity of the extracted frame vs the
+    # old inline block is asserted by
+    # tests/test_xfp_frames.py::test_rh3_frame_is_byte_identical_to_legacy_inline_assembly
+    # (assert_frame_equal, exact) and pinned to the shipped bundle's
+    # fit_fingerprint. Imported inside main() so frames.py can import this
+    # module at its top level without a cycle.
+    from plv_clone.models.xfp.frames import build_rh3_frame
+    _frame = build_rh3_frame()
+    rolling = _frame.rolling
+    multiyr = _frame.multiyr
+    pop_to = _frame.pop_means_to
+    pop_l21 = _frame.pop_means_last21
 
     # Cross-year (RH3)
     print('\n--- LOO cross-year eval (RH3) ---')

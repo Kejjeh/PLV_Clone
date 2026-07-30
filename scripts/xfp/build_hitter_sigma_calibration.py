@@ -27,6 +27,32 @@ Outputs:
         "generated_at": "YYYY-MM-DD",
         "version": "hetero_v1"
       }
+
+UNITS WARNING (audited 2026-07-29 — see
+data/research/validation_runs/hitter_sigma_scale_2026-07-29.md):
+
+  ``global_sigma_per_pa`` is MISNAMED and the name is load-bearing downstream.
+  It is NOT a per-PA sigma.  It is the pooled within-batter sigma of the
+  per-GAME RATE ``fp_proxy / PA`` — one observation per batter-game.  The
+  PA weighting in the np.average call below weights GAMES by their PA; it does
+  not convert the quantity to a per-PA basis.  Measured proof on this same
+  panel: PA-weighted 0.516968 vs the UNWEIGHTED SD of the identical rate
+  0.518566 (+0.31%).
+
+  Two things therefore do NOT follow from this number:
+    * per-game variance is NOT sigma^2 * PA_per_game.  It is
+      (sigma * PA_per_game)^2 — PA/game enters SQUARED.
+    * this sigma is not in canonical BrownU FP units at all, because
+      ``fp_proxy = TB + BB + HBP - K`` (analyze_hitter_boom_bust.py:96) OMITS
+      R, RBI and SB.  The canonical formula is R+TB+RBI+BB+HBP+SB-K, and the
+      measured canonical/proxy per-game-RATE sigma ratio is 1.4742.
+
+  Consumers must convert.  ``plv_clone.matchup_projection.hitter_sigma_per_game``
+  is the reference conversion; it fixed a 3.36x per-game sigma understatement
+  in the matchup win-probability path.  The per-batter ridge FACTOR is
+  unaffected (it is a re-centred ratio; ridge is scale-equivariant in y, so
+  rescaling sigma_emp leaves the factors bit-identical) — do not refit on
+  account of the units correction.
 """
 from __future__ import annotations
 
@@ -73,7 +99,9 @@ def main() -> None:
         rows.append({"batter": int(bid), "sigma_emp": float(np.sqrt(var_w))})
     pp = pd.DataFrame(rows)
 
-    # global pooled per-PA sigma (PA-weighted residual variance vs each batter's mean)
+    # Global pooled sigma of the per-GAME RATE fp_proxy/PA (PA-weighted residual
+    # variance vs each batter's own mean).  MISNAMED as "per_pa" in the output
+    # bundle — see the UNITS WARNING in the module docstring before using it.
     batter_mean = df.groupby("batter").apply(
         lambda s: np.average(s["fp_per_pa"], weights=s["PA"].astype(float)),
         include_groups=False,
@@ -127,9 +155,18 @@ def main() -> None:
         "cv_r2": float(cv_r2),
         "source_panel": str(PANEL.relative_to(ROOT)),
         "source_ratings": str(RATINGS.relative_to(ROOT)),
+        "global_sigma_units": "sigma of the per-GAME RATE fp_proxy/PA "
+                             "(fp_proxy = TB+BB+HBP-K, which OMITS R/RBI/SB). "
+                             "NOT a per-PA sigma and NOT canonical BrownU FP "
+                             "units. Per-game sigma = this * PA_per_game * "
+                             "1.4742 (canonical/proxy ratio). See "
+                             "data/research/validation_runs/"
+                             "hitter_sigma_scale_2026-07-29.md",
         "note": "Predicts per-batter sigma_emp from ratings_master features. "
                 "Apply as factor = (pred_sigma / global) clamped to [0.7,1.5] "
-                "then re-centered so mean(factor)=1 across active batters.",
+                "then re-centered so mean(factor)=1 across active batters. "
+                "The factor is scale-free; a units correction to "
+                "global_sigma_per_pa does NOT require a refit.",
     }
     OUT.parent.mkdir(parents=True, exist_ok=True)
     OUT.write_text(json.dumps(bundle, indent=2), encoding="utf-8")

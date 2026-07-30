@@ -356,17 +356,41 @@ _UNCONFIRMED_START_CONF = 0.80
 # before/after comparison). Default: use per-player σ where available.
 import os as _os
 LEGACY_SIGMA = _os.environ.get('MATCHUP_LEGACY_SIGMA', '0') == '1'
-# Typical PA/game when a hitter's lineup_map entry is missing (mirrors
-# rh3 build constant). Used to convert per-PA σ → per-game variance.
-LEAGUE_PA_PER_GAME = 3.5
+# Fallback PA/started-game when a hitter's lineup_map entry is missing.
+# CORRECTED 2026-07-29 from 3.5 to the measured mean PA per STARTED game
+# (4.0016, matching plv_clone.matchup_projection's default). The old 3.5 was
+# the second half of the hitter-variance bug below: it both understated the
+# multiplier AND overrode the corrected default that matchup_projection now
+# carries, so leaving it would have held production between the fixed and
+# unfixed sigma. Fires only for batters with <3 started games in the trailing
+# 21 days, but at worst-case (firing for every hitter) it costs SD(z)
+# 1.109 vs 1.045.
+LEAGUE_PA_PER_GAME = 4.0016
 
-# Empirical per-PA FP outcome σ from the hitter boom-bust panel (245k
-# batter-games 2018-2025). This is the GLOBAL pooled per-PA outcome σ,
-# distinct from the rh3 model's per-PA CI σ (xfp_rh3_sigma_raw ≈ 0.108)
-# which is a rate-prediction interval. Per-game variance ≈ PA_per_game *
-# σ_pa² ⇒ ≈ 3.5 * 0.517² ≈ 0.94 FP² (σ ≈ 0.97 FP/g) for a baseline batter.
-# The legacy SIGMA_PER_HITTER_GAME = 3.5 absorbed a lot of unrelated
-# noise; the hetero path scales this with batter_sigma_factor ∈ [0.7, 1.5].
+# Empirical FP outcome σ used to build per-game hitter variance.
+#
+# *** READ THIS BEFORE TOUCHING THE VARIANCE MATH — the comment that used to
+# live here contained the wrong identity and IS the documented root cause of a
+# 9.68x variance understatement that shipped 2026-06-03 and survived until
+# 2026-07-29. See data/research/validation_runs/hitter_sigma_scale_2026-07-29.md
+# and src/plv_clone/matchup_projection.py. ***
+#
+# The retracted reasoning was: "σ_pa = 0.517 is a per-PA outcome σ, so per-game
+# variance ≈ PA_per_game * σ_pa²  ⇒  3.5 * 0.517² ≈ 0.94 FP² (σ ≈ 0.97 FP/g)."
+# Both halves are wrong:
+#   1. 0.517 is NOT per-PA. build_hitter_sigma_calibration.py:82-83 defines it
+#      as the PA-WEIGHTED RMS of the per-GAME-RATE residual. Proof on 245,712
+#      batter-games: PA-weighted RMS 0.5170 vs UNWEIGHTED SD of the per-game
+#      rate 0.5239 — the same number, so the PA-weighting does not convert units.
+#   2. PA/game therefore enters variance QUADRATICALLY, not linearly (a rate
+#      times a count is a total; scaling the count scales the total, so the
+#      variance scales by the square).
+# Ground truth, measured on the production population (2026, canonical fp_h,
+# 26,199 started games / 377 batters): within-batter per-game hitter FP SD
+# = 3.2502 FP. The old formula produced 0.9672-1.0444 (3.1-3.4x too small,
+# 9.7-11.3x in variance); the corrected one gives 3.1138.
+# Consequence while it shipped: hitters were ~9% of team σ² instead of ~48%, so
+# matchup P(win) was badly overconfident (a logged 0.9896 is really 0.9600).
 GLOBAL_SIGMA_PA_FP = 0.517
 
 # Reliever appearance rates by role

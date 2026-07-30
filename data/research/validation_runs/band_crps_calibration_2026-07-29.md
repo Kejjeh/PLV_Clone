@@ -378,3 +378,47 @@ the `bx_prior_h` host rot (fixed) and the `ppg`-exponent variance bug in the
 matchup MC (reported, needs its own study). The frame-routing rule in §4 is the
 durable deliverable: **x2.41 for single-event MC draws, raw for
 rest-of-season judgements, and never the reverse.**
+
+
+---
+
+## CORRECTIONS (from independent adversarial review, 2026-07-29)
+
+The reviewer re-ran this study; **the NO-CHANGE verdict is CONFIRMED** and the
+Panel-B replication claim was UPGRADED. Four corrections to surrounding claims:
+
+**1. RETRACT "BUG 1 is fixed / verdict_backtest.py is now runnable again."**
+Repairing `build_hitter_panel`'s missing `bx_prior_h` merge fixed only the FIRST
+of TWO rot points. The host is still dead for BOTH buckets:
+`run_hitters()` raises at line ~237 and `run_pitchers()` at line ~284 —
+`AttributeError: module 'plv_clone.models.xfp.rh3' has no attribute '_signal'`
+(and `RP3._signal`). Both symbols were deleted in commit **de9f6e6** when signal
+computation moved to a vectorized `np.select` path. This study never hit it
+because `panel_a()` imports only the panel builders and never executes `run_*`.
+"931/931 tests pass" was NOT evidence of the fix — **no test exercises that
+path**, which is the actual defect. Tracked as F3.
+
+**2. Bug-2 magnitude is ~4.6x, not 5.7x, on the production path.** The 5.69x
+figure assumes `cfg.league_pa_per_game = 3.5`, but
+`build_matchup_dashboard.py:1372` passes the real per-batter `pa_per_g`; at the
+empirical mean 4.348 the variance understatement is **4.58x**. 5.69x applies only
+where `pa_per_g` is missing and the 3.5 default fires. Both figures are dimensionally
+correct — the exponent error stands either way.
+
+**3. The 868 -> 1037 pair growth is NEW OUTCOMES, not cache growth.** Both runs
+used the same 30 snapshot dates and 6,266 band-carrying rows; the 169 additional
+starts are simply dated after 2026-07-09 and have since landed in
+`boxscore_pitchers.parquet`. The §0 sanity narrative should say so.
+
+**4. UPGRADE the replication claim.** Restricting Panel B to
+`game_date <= 2026-07-09` reproduces the 2026-07-10 single-start coverage study
+**digit-for-digit: n=868, cov50 44.9%, cov80 74.0%.** That is a stronger
+statement than the memo made, and it means this study *strengthens* the earlier
+NO-CHANGE conclusion rather than merely agreeing with it.
+
+**5. The 2.307 FP/g empirical SD is PROVISIONAL.** It inherits `fp_proxy`'s
+definition, whose mean is 1.1775 FP/g — implausibly low for a BrownU hitter game
+(R+TB+RBI+BB+HBP+SB-K). The ppg-exponent error is dimensionally correct in any
+units so the bug stands regardless, but the 2.6% match must NOT be read as
+validating `fp_proxy`. Any sigma recalibration must audit `fp_proxy` against the
+canonical formula first (tracked as F1).

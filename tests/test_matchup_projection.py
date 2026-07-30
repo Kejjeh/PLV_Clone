@@ -98,8 +98,13 @@ def test_project_hitter_neutral_game_legacy_sigma():
 def test_project_hitter_hetero_sigma():
     games = [HitterGameCtx('2026-06-20', 'NYY', team_pit_index=1.0)]
     r = project_hitter_games(3.0, games, sigma_factor=1.0, pa_per_g=4.0, cfg=CFG)
-    # sigma_pa = 0.517 * 1.0 ; var = 1 game * sigma_pa^2 * 4.0
-    assert r.sigma2 == pytest.approx((0.517 ** 2) * 4.0)
+    # σ_game = global_proxy_rate_σ × proxy→canonical × factor × PA/game.
+    # PA/game is LINEAR in σ, so it enters the variance SQUARED (fixed
+    # 2026-07-29; the old assertion re-derived the buggy `* pa_per_g` form).
+    # Scale is pinned against measured data in tests/test_hitter_sigma_scale.py.
+    from plv_clone.matchup_projection import _FP_PROXY_TO_FULL_FP_SIGMA
+    expected_sigma = 0.517 * _FP_PROXY_TO_FULL_FP_SIGMA * 1.0 * 4.0
+    assert r.sigma2 == pytest.approx(expected_sigma ** 2)
 
 
 def test_project_hitter_nan_sigma_factor_falls_back_to_legacy():

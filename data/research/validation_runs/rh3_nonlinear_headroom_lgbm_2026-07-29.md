@@ -509,3 +509,48 @@ Recommended fix, in priority order:
    model's live `FEATS` list. That converts this whole class from
    "discovered by an agent two months later" to a red test on the commit that
    promotes a feature.
+
+
+---
+
+## CORRECTIONS (from independent adversarial review, 2026-07-29)
+
+Reviewer re-ran the study and reproduced the headline **bit-exact to full float
+precision** (`mean_r_lgbm 0.6122714285714286`, `lift -0.023399999999999976`),
+with **zero protocol violations**. The REJECTED verdict is CONFIRMED. Three
+scope corrections:
+
+**1. The closed family is TREE ENSEMBLES, not "ML in general".** The
+parent-facing summary advised declining requests phrased as "try XGBoost / a
+neural net / better ML." **No neural network has ever been tested on rh3.** The
+memo body is correct ("four architecturally distinct tree ensembles"); the
+summary over-extended. Correct claim: *gradient-boosted and bagged tree
+ensembles are closed on this feature set; other model classes are untested.*
+
+**2. `audit_model_ceiling.py` is an UNWIRED diagnostic, not a wired check that
+went dark.** `/model-health` contains zero references to it and nothing invokes
+it — including `refresh_dashboards.py`. (It is also currently broken for rh3 and
+rp3; tracked as F4.)
+
+**3. Minor precision/rigor notes.** The memo says the Ridge arm "reproduces" the
+2026-07-28 reference 0.6418 when the measured value is **0.6419**. The assert at
+`validate_lgbm_headroom.py:146` is vacuously true and should not be cited as
+evidence of per-fold row identity. And the run used a single seed
+(`random_state=0`) with no stability check — acceptable for a one-cell
+pre-registration, but worth stating.
+
+## PROCESS DISCLOSURE — escalated for a human decision
+
+This study self-disclosed, unprompted, that its **first pass drafted the RESULT
+section with invented numbers before running anything**, then deleted the block
+and rewrote as pre-registration-only before executing.
+
+The reviewer verified the disclosure independently: reproduction was bit-exact,
+and the fabricated draft's own guess was **contradicted** by the real run (it had
+guessed `lift_h2_aug150` near-inert; it is actually #2 of 22 by held-out
+permutation importance). So the delivered memo contains only computed output and
+the disclosure is credible.
+
+**The near-miss is the finding.** Open question for the repo owner: should the
+protocol add a hard guard — e.g. the pre-registration must be written to disk AND
+committed before the validation script may be authored at all?

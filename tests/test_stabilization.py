@@ -111,11 +111,31 @@ def test_is_sufficient_boundary_is_inclusive():
 
 # ── Provenance honesty ───────────────────────────────────────────────────────
 
-def test_bat_speed_is_flagged_as_literature_not_measured():
-    """Bat speed's 30-swing value is borrowed, not ours — it must say so."""
-    assert "bat_speed" in S.LITERATURE_ONLY
-    assert "bat_speed" not in S.HITTER_MINS
-    assert "literature" in S.describe("bat_speed", "H")
+def test_bat_speed_graduated_to_a_measured_entry():
+    """2026-07-29: bat speed was promoted out of LITERATURE_ONLY once the daily
+    store made it measurable. Forward r never falls below +0.70 anywhere in the
+    curve; both crossings clear by 25-30 swings; ceil-25 rule gives 50."""
+    assert S.minimum("bat_speed", "H") == (50, S.SWINGS)
+    assert "bat_speed" in S.HITTER_MINS
+    assert "bat_speed" not in S.LITERATURE_ONLY
+    # it clears r=0.70, so it must NOT be labelled directional-only
+    assert "bat_speed" not in S.NEVER_HIGH_CONFIDENCE["H"]
+    assert "literature" not in S.describe("bat_speed", "H")
+
+
+def test_bat_speed_is_the_cheapest_hitter_gate():
+    """It should be reachable in ~a week of playing time — cheaper than every
+    other hitter metric, which is the whole practical point."""
+    n_bs, _ = S.minimum("bat_speed", "H")
+    for other in ("chase", "k_pct", "bb_pct", "xwoba_ppa", "iso"):
+        assert n_bs <= S.minimum(other, "H")[0], other
+
+
+def test_swing_length_remains_literature_only():
+    """gf bridge carries batSpeed but not swing_length — coverage too thin to
+    derive a crossing, so the borrowed number must stay flagged."""
+    assert "swing_length" in S.LITERATURE_ONLY
+    assert "literature" in S.describe("swing_length", "H")
 
 
 def test_directional_only_metrics_are_labelled():

@@ -95,7 +95,13 @@ def fetch_pitcher_starts_multi_year(mlbam: int, years=(2024, 2025, 2026),
 
 # ─── distribution samplers ────────────────────────────────────────────
 def _lognormal_draws(rng, mu: float, sigma: float, n: int) -> np.ndarray:
-    """Match a lognormal to (mean=mu, std=sigma). Fall back to normal if mu<=0."""
+    """Match a lognormal to (mean=mu, std=sigma). Fall back to normal if mu<=0.
+
+    STILL USED by run_mc._non_sp_total for hitter / RP WEEKLY TOTALS, where a
+    sum over many events makes (0, inf) support far less wrong. It is NO LONGER
+    used for a single SP start — see build_sp_sampler and
+    data/research/validation_runs/sp_sampler_tail_family_2026-07-29.md.
+    """
     if mu <= 0 or sigma <= 0:
         return rng.normal(mu, max(sigma, 1e-6), n)
     var = sigma * sigma
@@ -104,36 +110,94 @@ def _lognormal_draws(rng, mu: float, sigma: float, n: int) -> np.ndarray:
     return rng.lognormal(lmu, math.sqrt(sig2), n)
 
 
+def _gaussian_draws(rng, mu: float, sigma: float, n: int) -> np.ndarray:
+    """Per-start SP FP draws from N(mu, sigma). Validated family (F2, 2026-07-29).
+
+    BrownU SP FP = K + IP*3.3 - H - 2*ER - BB - HBP has no floor: 170 of 1037
+    real single starts in the validation panel finished at FP <= 0 (16.39%, min
+    -23.5). A moment-matched lognormal — what this replaced — assigns EXACTLY
+    zero probability to that entire region, so the blow-up a bench/start call
+    exists to price was modeled as impossible. Gaussian beat it by 7.40%
+    relative CRPS (5.3982 vs 5.8298, pitcher-clustered bootstrap ci95
+    [-0.499, -0.364], p=0.00025) and its P(FP<=0) lands at 12.99% vs the
+    realized 16.39%.
+
+    Raises on a non-finite mu or a non-positive sigma. NO silent floor: a
+    missing/degenerate input must be loud, not quietly turned into a point mass.
+    """
+    if not math.isfinite(mu):
+        raise ValueError(f'_gaussian_draws: mu must be finite, got {mu!r}')
+    if not math.isfinite(sigma) or sigma <= 0:
+        raise ValueError(f'_gaussian_draws: sigma must be finite and > 0, '
+                         f'got {sigma!r}')
+    return rng.normal(mu, sigma, n)
+
+
 def build_sp_sampler(emp_fps: list[float], rp3_mean: float, rp3_sigma: float,
-                      prior: str, k_prior: int = 20):
-    """Returns a fn(rng, n_trials) → np.ndarray of FP draws for ONE start.
+                      prior: str, k_prior: int = 20, label: str = '<unnamed SP>'):
+    """Returns a fn(rng, n_trials, opp_factor=1.0) → FP draws for ONE start.
 
     prior:
       'empirical' — bootstrap from emp_fps only (or fall back to rp3 if empty)
-      'rp3' — lognormal from rp3_mean + rp3_sigma
+      'rp3' — Gaussian N(rp3_mean * opp_factor, rp3_sigma)
       'blend' — Bayesian blend: weight = n/(n+k_prior). Rodon n=2 → 9% emp,
                 Valdez n=30 → 60% emp.
+
+    opp_factor (the dashboard's clipped 1/bat_index, range 0.80-1.20) is applied
+    INSIDE the sampler, and the two legs apply it differently on purpose:
+
+      parametric leg — scales the LOCATION: N(mu * opp_factor, sigma).
+        run_mc used to multiply the finished draw instead. That was harmless
+        while every draw was positive, but once negatives exist a post-hoc
+        multiply makes a blow-up LESS bad against a TOUGH offense and leaves
+        P(FP<=0) completely invariant to the opponent (measured at the panel
+        median mu=9.86 sigma=8.73: multiply gives 12.94% at every opp_factor;
+        location scaling gives 17.43% at 0.83 and 8.77% at 1.20). sigma is
+        deliberately NOT scaled — the F2 study held the band fixed.
+
+      empirical leg — multiplies the bootstrapped real FP, exactly as before.
+        Untouched by F2 by declared scope; it carries the same directional
+        asymmetry on its negative draws and needs its own study.
+
+    Raises (never silently defaults) if the parametric leg is needed but
+    rp3_mean / rp3_sigma cannot support it.
     """
     n_emp = len(emp_fps)
     emp_arr = np.array(emp_fps, dtype=float) if n_emp else None
-    sigma = rp3_sigma if rp3_sigma and rp3_sigma > 0 else SIGMA_PER_SP_START
+    needs_param = (prior != 'empirical') or n_emp == 0
+
+    sigma = rp3_sigma if (rp3_sigma is not None and math.isfinite(rp3_sigma)
+                          and rp3_sigma > 0) else SIGMA_PER_SP_START
+    if needs_param:
+        # A missing rp3 row used to arrive here as rp3_mean=0 and get quietly
+        # modeled as a 0-FP starter (the 2026-07-28 ROOT-bug pattern). Loud now.
+        if rp3_mean is None or not math.isfinite(rp3_mean) or rp3_mean <= 0:
+            raise ValueError(
+                f'build_sp_sampler({label}): prior={prior!r} with n_emp={n_emp} '
+                f'needs a usable rp3 per-start mean, got {rp3_mean!r}. Refusing '
+                f'to substitute a silent default — supply the rp3 projection or '
+                f"run with --prior empirical and real game-log history.")
+        if not math.isfinite(sigma) or sigma <= 0:
+            raise ValueError(
+                f'build_sp_sampler({label}): unusable sigma {sigma!r}')
 
     if prior == 'rp3' or n_emp == 0:
-        def _draw(rng, n):
-            return _lognormal_draws(rng, rp3_mean, sigma, n)
+        def _draw(rng, n, opp_factor: float = 1.0):
+            return _gaussian_draws(rng, rp3_mean * opp_factor, sigma, n)
         emp_weight = 0.0
     elif prior == 'empirical':
-        def _draw(rng, n):
-            return rng.choice(emp_arr, size=n, replace=True)
+        def _draw(rng, n, opp_factor: float = 1.0):
+            return rng.choice(emp_arr, size=n, replace=True) * opp_factor
         emp_weight = 1.0
     else:  # blend
         w = n_emp / (n_emp + k_prior)
-        def _draw(rng, n):
+        def _draw(rng, n, opp_factor: float = 1.0):
             mask = rng.random(n) < w
             n_emp_draws = int(mask.sum())
-            out = _lognormal_draws(rng, rp3_mean, sigma, n)
+            out = _gaussian_draws(rng, rp3_mean * opp_factor, sigma, n)
             if n_emp_draws > 0:
-                out[mask] = rng.choice(emp_arr, size=n_emp_draws, replace=True)
+                out[mask] = (rng.choice(emp_arr, size=n_emp_draws, replace=True)
+                             * opp_factor)
             return out
         emp_weight = w
     return _draw, emp_weight
@@ -329,9 +393,11 @@ def run_mc(my_proj, opp_proj, mu_state, sp_samplers_mine, sp_samplers_opp,
             total = np.zeros(n_trials)
             for pname, _, sd in kept:
                 draw, _ = samplers[pname]
-                base = draw(rng, n_trials)
                 opp_factor = make_opp_factor(sd['opp_team'], ts_map, opp_window)
-                total = total + base * opp_factor
+                # opp_factor goes INTO the sampler (location scaling on the
+                # parametric leg) — see build_sp_sampler. Multiplying the
+                # finished draw mis-signs negative outcomes.
+                total = total + draw(rng, n_trials, opp_factor)
             return total
         else:  # ev — dashboard projection convention
             n_starts = len(active)
@@ -340,9 +406,8 @@ def run_mc(my_proj, opp_proj, mu_state, sp_samplers_mine, sp_samplers_opp,
             mat = np.zeros((n_starts, n_trials))
             for i, (pname, _, sd) in enumerate(active):
                 draw, _ = samplers[pname]
-                base = draw(rng, n_trials)
                 opp_factor = make_opp_factor(sd['opp_team'], ts_map, opp_window)
-                mat[i, :] = base * opp_factor
+                mat[i, :] = draw(rng, n_trials, opp_factor)
             if n_starts > cap_remaining:
                 sorted_desc = -np.sort(-mat, axis=0)
                 kept = sorted_desc[:cap_remaining, :]
@@ -494,13 +559,15 @@ def main():
         emp = fetch_pitcher_starts_multi_year(mlbam, limit=args.history_window)
         emp_fps = [s['fp'] for s in emp]
         rp_info = rp3_map.get(_norm(name), {})
-        # Prefer schedule-adjusted to match dashboard convention (W1 fix)
-        rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start') or 0
+        # Prefer schedule-adjusted to match dashboard convention (W1 fix).
+        # Pass None (not 0) when the rp3 row is absent — build_sp_sampler RAISES
+        # if the parametric leg needs it, rather than modeling a 0-FP starter.
+        rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start') or None
         rp3_sigma = rp_info.get('sigma') or SIGMA_PER_SP_START
         if rp3_sigma is None or rp3_sigma <= 0:
             rp3_sigma = SIGMA_PER_SP_START
         draw_fn, emp_w = build_sp_sampler(emp_fps, rp3_mean, rp3_sigma,
-                                            args.prior, args.k_prior)
+                                            args.prior, args.k_prior, label=name)
         per_pitcher_stats[name] = {
             'n_starts': len(emp_fps),
             'emp_mean': float(np.mean(emp_fps)) if emp_fps else None,
@@ -556,8 +623,9 @@ def main():
     print(f'\n--- Per-pitcher sample stats ---')
     for name, s in sorted(per_pitcher_stats.items()):
         emp_mean_str = f"{s['emp_mean']:>5.1f}" if s['emp_mean'] is not None else '  n/a'
+        rp3_str = f"{s['rp3_mean']:>5.2f}" if s['rp3_mean'] is not None else '  n/a'
         print(f"  {name:<22} n={s['n_starts']:>3}  "
-              f"emp_mean={emp_mean_str}  rp3={s['rp3_mean']:>5.2f}  "
+              f"emp_mean={emp_mean_str}  rp3={rp3_str}  "
               f"emp_weight={s['emp_weight']*100:>5.1f}%")
 
     print(f'\n--- Scenario results ---')
@@ -585,14 +653,18 @@ def main():
             ranked = []
             for name, mlbam, sd in remaining_mine:
                 rp_info = rp3_map.get(_norm(name), {})
-                # Prefer schedule-adjusted (W1 fix)
-                rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start') or 0
+                # Prefer schedule-adjusted (W1 fix). No rp3 row → no adj_EV; it
+                # is shown as n/a and sorted LAST, never imputed as 0.00 (a 0
+                # would masquerade as the worst start and drive a bench call).
+                rp3_mean = rp_info.get('per_start_sched') or rp_info.get('per_start')
                 f = make_opp_factor(sd['opp_team'], ts_map, args.opp_window)
-                ranked.append((name, sd['date'], sd['opp_team'], rp3_mean * f))
-            ranked.sort(key=lambda x: x[3])
+                ev = rp3_mean * f if rp3_mean else None
+                ranked.append((name, sd['date'], sd['opp_team'], ev))
+            ranked.sort(key=lambda x: (x[3] is None, x[3] if x[3] is not None else 0))
             print(f'  {"Pitcher":<20} {"Date":<11} {"Opp":<5} {"adj_EV":>8}  (lowest at top → bench candidate)')
             for n, d, o, ev in ranked:
-                print(f'  {n:<20} {d:<11} {o:<5} {ev:>8.2f}')
+                ev_str = f'{ev:>8.2f}' if ev is not None else '     n/a'
+                print(f'  {n:<20} {d:<11} {o:<5} {ev_str}')
         else:
             print(f'  Best:  bench {best["label"]}  → win prob {best["win_prob"]*100:.2f}% '
                   f'({best["wp_delta"]*100:+.2f}pp vs baseline)')

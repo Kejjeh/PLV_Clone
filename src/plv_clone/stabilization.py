@@ -27,6 +27,18 @@ What the studies changed about prior practice:
   are effectively unmeasurable at window scale.
 - **Velocity is the king pitcher metric**: r≈0.90 in the very first bucket
   (~150 pitches ≈ 1–2 starts). An in-season velo move is trustworthy at once.
+- **Bat speed is the hitter equivalent, and it is now measured** (2026-07-29,
+  `validate_bat_speed_stabilization.py` over `bat_speed_daily.parquet`): forward
+  r never drops below +0.70 at ANY sample size in the curve, clearing both
+  crossings by 25-30 swings — roughly one week of playing time. It graduated out
+  of LITERATURE_ONLY into HITTER_MINS.
+  **But read the LEVEL, not the trajectory.** The companion study
+  (`validate_bat_speed_delta.py`) rejected the in-season bat-speed DELTA against
+  rh3 — 0 of 6 pre-registered cells survived BH-FDR, and the best cell's full
+  22-feature Rule-9 integration came to +0.0035 against the +0.005 bar. A
+  well-measured quantity can still carry no forward information beyond the level
+  that already contains it; those are different questions and this module only
+  answers the first.
 - **Pitcher chase, pitcher BB%, and contact-quality-AGAINST (hard-hit, barrel,
   HR-rate) NEVER stabilize in-window.** Mid-season "his command improved" or
   "he's been HR-prone lately" reads are unsupportable — see NEVER_STABILIZES.
@@ -68,6 +80,17 @@ AB = "ab"
 # From validate_cutoff_stabilization.py. r=0.70 crossings in the memo; the
 # never-reaches-0.70 set is called out in NEVER_HIGH_CONFIDENCE below.
 HITTER_MINS: dict[str, tuple[int, str]] = {
+    # Bat speed — MEASURED 2026-07-29 (promoted out of LITERATURE_ONLY the same
+    # day the daily store made it measurable). It is the most reliable in-window
+    # hitter metric we have: forward r = +0.736 @ 27 swings, +0.849 @ 32,
+    # +0.879 @ 52, +0.905 @ 87, +0.950 @ 612 — and NO bucket anywhere in the
+    # curve falls below +0.70. Both the r>=0.50 and r>=0.70 crossings clear at or
+    # below 25-30 swings; the crossing could not be resolved lower only because
+    # fewer than 200 player-seasons exist below 25 swings under a weekly
+    # snapshot stride. 50 is the same mechanical ceil-25 rule every other entry
+    # uses (ceil(27/25)*25), so it is deliberately conservative.
+    # fast_swing_rate and p90 bat speed stabilize on the same curve.
+    "bat_speed":   (50, SWINGS),
     "chase":       (150, OOZ_PITCHES),
     "zswing":      (150, IZ_PITCHES),
     "z_contact":   (150, IZ_PITCHES),
@@ -130,12 +153,18 @@ NEVER_HIGH_CONFIDENCE: dict[str, frozenset[str]] = {
 }
 
 # ── Not yet re-derived on our data ───────────────────────────────────────────
-# Bat speed's 30-swing threshold is a literature value (Savant bat-tracking
-# guidance), NOT one of ours — the studies above could not cover it because no
-# window-capable bat-speed store existed when they ran. Flagged so the number
-# is never mistaken for a measured one. W3b re-derives it.
+# Literature values (Savant bat-tracking guidance), NOT ours. Flagged so a
+# borrowed number is never mistaken for a measured one.
+#
+# bat_speed GRADUATED from this table on 2026-07-29 — it is now a MEASURED entry
+# in HITTER_MINS. Its old literature value of 30 swings was CONFIRMED by the
+# measurement (30 sits at r~=0.74-0.85, comfortably above both the 0.50 decision
+# floor and the 0.70 high-confidence bar).
+#
+# swing_length remains literature-only: the gf bridge carries batSpeed but NOT
+# swing_length, so ~1% of 2026 batter-days have no swing_length at all and the
+# canonical pull lags 1-2 days. Not enough coverage to derive a crossing.
 LITERATURE_ONLY: dict[str, tuple[int, str]] = {
-    "bat_speed":    (30, SWINGS),
     "swing_length": (30, SWINGS),
 }
 

@@ -1,0 +1,3 @@
+candidate,n_rows,n_pitchers,CRPS_incumbent,CRPS_cand,dCRPS,rel_%,ci95,boot_p,ci_excl_0,econ_pass,bh_pass
+gaussian,1037,202,5.8298,5.3982,-0.4317,-7.4,"[-0.4990, -0.3640]",0.00025,True,True,True
+shifted_lognormal,1037,202,5.8298,5.4551,-0.3747,-6.43,"[-0.4247, -0.3261]",0.00025,True,True,True

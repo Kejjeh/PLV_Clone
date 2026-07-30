@@ -202,6 +202,103 @@ def lookup_sigma_vec(ci_table, overall_sigma, split, preds, pred_buckets):
                      for p in preds])
 
 
+# --------------------------------------------------------------------------- #
+# add/hold/drop signal — vectorized, mirroring the CURRENT production path.
+#
+# History (why this code exists here at all): rh3/rp3 used to expose a row-wise
+# `_signal(row)` helper that this script called via `df.apply(..., axis=1)`.
+# Commit de9f6e6 ("model vectorization", audit item 21/W3) DELETED both helpers
+# and inlined an equivalent `np.select` block into each pipeline's `main()`.
+# Nothing re-pointed this script, so `run_hitters()` / `run_pitchers()` have
+# raised AttributeError on every invocation since. Found 2026-07-29.
+#
+# Why a local vectorized reimplementation rather than importing production's:
+# after de9f6e6 the production signal is NOT a callable — it is an inline
+# `np.select(...)` inside `rh3.main()` / `rp3.main()`, and `main()` retrains the
+# model and writes the production CSVs. There is no importable seam to call.
+# The right long-term fix is to extract `signal_vec(df)` into rh3/rp3 and have
+# both `main()` and this script call it; that edit is out of this change's file
+# set, so instead we (a) reproduce the np.select EXACTLY — same predicate order,
+# same column names, same NaN semantics — and (b) lock it against drift with
+# tests/test_verdict_backtest_hosts.py::test_*_signal_matches_production, which
+# replays these functions over the shipped production projection CSVs and
+# asserts the emitted signal is byte-identical to the `signal` column the
+# pipelines actually wrote. If someone changes the production rule and not this
+# one, that test fails.
+#
+# NEVER add a fallback default for a missing input column: silently defaulting a
+# missing band or replacement level to "hold" is exactly the silent-zero class of
+# bug that cost -0.0368 cross-year r in the 2026-07-28 ROOT incident. Missing
+# input => raise.
+# --------------------------------------------------------------------------- #
+H_SIGNAL_COLS = ("replacement_delta", "replacement_xfp_per_pa",
+                 "xfp_rh3_p25", "xfp_rh3_p75")
+SP_SIGNAL_COLS = ("is_on_il_at_split", "replacement_delta",
+                  "replacement_xfp_per_start",
+                  "xfp_rp3_decision_p25", "xfp_rp3_decision_p75")
+
+
+def _require_cols(df: pd.DataFrame, cols, who: str) -> None:
+    missing = [c for c in cols if c not in df.columns]
+    if missing:
+        raise KeyError(
+            f"{who}: missing required signal input column(s) {missing}. "
+            f"Present: {sorted(df.columns)[:40]}... "
+            "Refusing to emit a signal from an incomplete frame (a defaulted "
+            "'hold' would silently corrupt every backtested verdict).")
+
+
+def hitter_signal_vec(df: pd.DataFrame) -> np.ndarray:
+    """rh3 add/hold/drop. Mirrors the np.select block in `rh3.main()`.
+
+    hold : replacement_delta / replacement level missing
+    add  : p25 still above replacement (high-confidence above)
+    drop : p75 still below replacement (no recovery even at the top of the band)
+
+    NaN comparisons intentionally evaluate False, matching production.
+    """
+    _require_cols(df, H_SIGNAL_COLS, "hitter_signal_vec")
+    repl = df["replacement_xfp_per_pa"]
+    p25, p75 = df["xfp_rh3_p25"], df["xfp_rh3_p75"]
+    return np.select(
+        [
+            df["replacement_delta"].isna() | repl.isna(),
+            p25.notna() & (p25 > repl),
+            p75.notna() & (p75 < repl),
+        ],
+        ["hold", "add", "drop"],
+        default="hold",
+    )
+
+
+def pitcher_signal_vec(df: pd.DataFrame) -> np.ndarray:
+    """rp3 il/add/hold/drop. Mirrors the np.select block in `rp3.main()`.
+
+    CRITICAL: the trigger reads the **DECISION** band
+    (`xfp_rp3_decision_p25/p75`, built from the RAW LOO sigma), NOT the
+    displayed `xfp_rp3_p25/p75` band (raw sigma x alpha_global ~= 2.41). The
+    wide display band is coverage-calibrated for an honest CI and is far too
+    wide to ever cross the SP-45 replacement level — feeding it to this rule
+    makes the signal inert (100% 'hold', found by this very backtest
+    2026-06-11, fixed in rp3 by 13bb4a1). Getting this wrong does not error; it
+    silently flattens every backtested verdict.
+    """
+    _require_cols(df, SP_SIGNAL_COLS, "pitcher_signal_vec")
+    il = df["is_on_il_at_split"]
+    repl = df["replacement_xfp_per_start"]
+    p25, p75 = df["xfp_rp3_decision_p25"], df["xfp_rp3_decision_p75"]
+    return np.select(
+        [
+            il.isna() | (il != 0),
+            df["replacement_delta"].isna() | repl.isna(),
+            p25.notna() & (p25 > repl),
+            p75.notna() & (p75 < repl),
+        ],
+        ["il", "hold", "add", "drop"],
+        default="hold",
+    )
+
+
 def run_hitters(rolling, multiyr) -> pd.DataFrame:
     b = joblib.load(RH3.MODEL_PKL)
     pipe, feats = b["pipeline"], b["features"]
@@ -234,7 +331,7 @@ def run_hitters(rolling, multiyr) -> pd.DataFrame:
         sub = sub.rename(columns={"xfp_rh3_per_pa": "proj"})
         sub["xfp_rh3_p25"] = sub["p25"]
         sub["xfp_rh3_p75"] = sub["p75"]
-        sub["signal"] = sub.apply(RH3._signal, axis=1)
+        sub["signal"] = hitter_signal_vec(sub)
         for _, r in sub.iterrows():
             out_rows.append({
                 "bucket": "H", "player": int(r["batter"]), "split_day": int(split),
@@ -281,7 +378,7 @@ def run_pitchers(rolling) -> pd.DataFrame:
         repl = float(srt["proj"].iloc[n - 1]) if len(srt) >= n else float(srt["proj"].median())
         sub["replacement_xfp_per_start"] = round(repl, 3)
         sub["replacement_delta"] = (sub["proj"] - repl).round(3)
-        sub["signal"] = sub.apply(RP3._signal, axis=1)
+        sub["signal"] = pitcher_signal_vec(sub)
         for _, r in sub.iterrows():
             out_rows.append({
                 "bucket": "SP", "player": int(r["pitcher"]), "split_day": int(split),

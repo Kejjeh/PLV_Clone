@@ -1,6 +1,7 @@
 """Shared helper for the rh3 v3 candidate-feature validation scripts.
 
-Replicates the rh3 main() data-prep path EXACTLY through the point where
+Delegates the data-prep path to the canonical assembly (frames.build_rh3_frame)
+through the point where
 RH3_FEATS is computed, then exposes a `cross_year_eval_with_candidate()`
 helper that returns the Δr lift of (RH3_FEATS + candidate) vs RH3_FEATS
 alone, both via the rh3.cross_year_eval LOO procedure.
@@ -40,118 +41,35 @@ def _cye(df: pd.DataFrame, feats: list[str]):
 
 
 def load_and_prep_rh3_inputs() -> pd.DataFrame:
-    """Replicate rh3.main()'s data-prep steps and return the prepared
-    rolling DataFrame (post-shrinkage, with all RH3_FEATS computed).
+    """The Rule-9 baseline substrate: all 22 RH3_FEATS present, post-shrinkage.
 
-    Mirrors lines ~250-321 of src/plv_clone/models/xfp/rh3.py.
+    MIGRATED 2026-07-29 to delegate to the canonical assembly
+    ``plv_clone.models.xfp.frames.build_rh3_frame``.
+
+    This function used to be a hand-transcribed FOURTH copy of rh3.main()'s
+    feature assembly, and it is the highest-traffic one — it is the baseline
+    loader for ~20 ``/validate-feature`` harnesses, so every Rule-9 lift number
+    the repo has ever produced for a hitter candidate was measured against it.
+    It carried the exact pattern that the 2026-07-28 ROOT bug memo condemned:
+
+        if CSV.exists(): merge ...
+        else:            rolling[feature] = 0.0     # silent zero
+
+    on ``lift_h2_aug150``, ``xwoba_residual_career``,
+    ``ros_opp_sp_xwoba_weighted`` and ``bx_prior_h`` — which the 2026-07-29
+    LightGBM importance study ranked #2, #5, #7 and #1 of 22 by held-out
+    permutation importance. It also lacked production's two
+    ``_cur_nan > 0.50 -> raise`` frozen-cache guards. A missing or stale cache
+    would therefore have silently weakened the BASELINE, which inflates every
+    candidate's apparent lift — the precise failure mode Rule 9 exists to
+    prevent, sitting inside the Rule-9 loader itself.
+
+    It was measured as LATENT (frame byte-equal to canonical on all 122 columns
+    at migration time), so no recorded validation number is wrong. Delegating
+    means the guards now apply and the divergence cannot reopen.
     """
-    rolling = pd.read_csv(rh3.ROLLING_CSV)
-    multiyr = pd.read_csv(rh3.MULTIYR_CSV)
-
-    # Marcel prior
-    years_needed = sorted(rolling["year"].unique())
-    prior = rh3.build_prior_table(multiyr, years_needed)
-    rolling = rolling.merge(prior, on=["batter", "year"], how="left")
-    league_mu = float(multiyr[multiyr["pa"] >= 200]["fp_per_pa_actual"].mean())
-    rolling["prior_fp_per_pa"] = rolling["prior_fp_per_pa"].fillna(league_mu)
-    rolling["prior_pa_eff"] = rolling["prior_pa_eff"].fillna(0.0)
-
-    # AAA callup prior blend — mirrors rh3.main() (production since 2026-07-19).
-    from plv_clone.models.xfp.aaa_translation import blend_callup_prior
-    rolling = blend_callup_prior(rolling)
-
-    # H2-locked career profile
-    if rh3.H2_LOCKED_CSV.exists():
-        h2 = pd.read_csv(rh3.H2_LOCKED_CSV)[["batter", "lift_h2_aug150"]]
-        rolling = rolling.merge(h2, on="batter", how="left")
-        rolling["lift_h2_aug150"] = rolling["lift_h2_aug150"].fillna(0.0)
-    else:
-        rolling["lift_h2_aug150"] = 0.0
-
-    # xwOBA residual
-    if rh3.XWOBA_RESID_CSV.exists():
-        xw = pd.read_csv(rh3.XWOBA_RESID_CSV)[["batter", "xwoba_residual_career"]]
-        rolling = rolling.merge(xw, on="batter", how="left")
-        rolling["xwoba_residual_career"] = rolling["xwoba_residual_career"].fillna(0.0)
-    else:
-        rolling["xwoba_residual_career"] = 0.0
-
-    # ros_opp_sp_xwoba_weighted — in RH3_FEATS, must be merged for Rule 9 baseline
-    # parity. Mirrors src/plv_clone/models/xfp/rh3.py lines ~325-337.
-    # Idempotent: if already present (e.g. caller pre-merged), skip.
-    if "ros_opp_sp_xwoba_weighted" in rolling.columns:
-        pass
-    elif rh3.ROS_OPP_SP_CSV.exists():
-        opp_sp = pd.read_csv(rh3.ROS_OPP_SP_CSV)[
-            ["batter", "year", "split_day", "ros_opp_sp_xwoba_weighted"]
-        ]
-        rolling = rolling.merge(
-            opp_sp, on=["batter", "year", "split_day"], how="left"
-        )
-        year_means = rolling.groupby("year")["ros_opp_sp_xwoba_weighted"].transform(
-            "mean"
-        )
-        rolling["ros_opp_sp_xwoba_weighted"] = rolling[
-            "ros_opp_sp_xwoba_weighted"
-        ].fillna(year_means)
-        rolling["ros_opp_sp_xwoba_weighted"] = rolling[
-            "ros_opp_sp_xwoba_weighted"
-        ].fillna(rolling["ros_opp_sp_xwoba_weighted"].mean())
-    else:
-        rolling["ros_opp_sp_xwoba_weighted"] = 0.0
-
-    # bx_prior_h — in RH3_FEATS since 2026-07-10 (B1 promotion), must be merged
-    # for Rule 9 baseline parity. Mirrors the rh3.main() merge (mlbam join on
-    # (batter, year), per-year-mean fill). Idempotent: skip if caller pre-merged
-    # (e.g. validate_bx_ensemble._merge_bx).
-    if "bx_prior_h" in rolling.columns:
-        pass
-    elif rh3.BX_PRIORS_CSV.exists():
-        bx = pd.read_csv(rh3.BX_PRIORS_CSV)[["mlbam", "year", "bx_prior_h"]].rename(
-            columns={"mlbam": "batter"}
-        )
-        rolling = rolling.merge(bx, on=["batter", "year"], how="left")
-        year_means = rolling.groupby("year")["bx_prior_h"].transform("mean")
-        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(year_means)
-        rolling["bx_prior_h"] = rolling["bx_prior_h"].fillna(
-            rolling["bx_prior_h"].mean()
-        )
-    else:
-        rolling["bx_prior_h"] = 0.0
-
-    # xwoba_gap_to (derived; not currently in FEATS but computed for parity)
-    if "xwoba_on_contact_to" in rolling.columns and "woba_d_sum_to" in rolling.columns:
-        rolling["actual_woba_per_pa_to"] = np.where(
-            rolling["woba_d_sum_to"] > 0,
-            rolling["woba_v_sum_to"] / rolling["woba_d_sum_to"],
-            np.nan,
-        )
-        rolling["xwoba_gap_to"] = (
-            rolling["xwoba_on_contact_to"] - rolling["actual_woba_per_pa_to"]
-        )
-        rolling["xwoba_gap_to"] = rolling["xwoba_gap_to"].fillna(0.0)
-
-    # career_stage
-    first_year = multiyr.groupby("batter")["year"].min().to_dict()
-    rolling["career_stage"] = rolling.apply(
-        lambda r: r["year"] - first_year.get(r["batter"], r["year"]), axis=1
-    )
-
-    # Shrinkage on both windows
-    pop_to = rh3.compute_population_means(rolling, rh3.TRAIN_YEARS, rh3.SHRINK_SPEC_TO)
-    pop_l21 = rh3.compute_population_means(
-        rolling, rh3.TRAIN_YEARS, rh3.SHRINK_SPEC_LAST21
-    )
-    rolling = rh3.apply_shrinkage(rolling, pop_to, rh3.SHRINK_SPEC_TO)
-    rolling = rh3.apply_shrinkage(rolling, pop_l21, rh3.SHRINK_SPEC_LAST21)
-    for col in (rate + "_sh" for rate in rh3.SHRINK_SPEC_LAST21):
-        if col in rolling.columns:
-            mu = rolling.loc[rolling["year"].isin(rh3.TRAIN_YEARS), col].mean(
-                skipna=True
-            )
-            rolling[col] = rolling[col].fillna(mu)
-    rolling["pa_last21"] = rolling["pa_last21"].fillna(0).astype(float)
-    return rolling
+    from plv_clone.models.xfp.frames import build_rh3_frame
+    return build_rh3_frame(verbose=False).rolling
 
 
 def cross_year_eval_per_split(

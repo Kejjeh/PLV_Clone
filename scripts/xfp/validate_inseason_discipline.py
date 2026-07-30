@@ -34,14 +34,8 @@ from sklearn.preprocessing import StandardScaler
 
 from plv_clone.models.xfp.rh3 import (
     RH3_FEATS, TARGET, TRAIN_YEARS, EVAL_PA_MIN, ROS_PA_MIN,
-    ROLLING_CSV, MULTIYR_CSV, H2_LOCKED_CSV, XWOBA_RESID_CSV,
-    SHRINK_SPEC_TO, build_prior_table, compute_population_means,
-    apply_shrinkage,
 )
-from plv_clone.models.xfp.aaa_translation import blend_callup_prior
-
-ROS_OPP_SP_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_opp_sp_xwoba_per_hitter.csv'
-from plv_clone.models.xfp.rh3 import BX_PRIORS_CSV  # noqa: E402
+from plv_clone.models.xfp.frames import build_rh3_frame
 
 HOLDOUT = [2024, 2025]
 TRAIN = [y for y in TRAIN_YEARS if y not in HOLDOUT]      # 2018,19,21,22,23
@@ -53,46 +47,26 @@ COUNT_COLS = ['pitches_to', 'pa_to', 'in_zone_to', 'swing_to', 'o_swing_to',
               'bb_to', 'k_to']
 
 
-def attach_production_features(rolling: pd.DataFrame, multiyr: pd.DataFrame) -> pd.DataFrame:
-    """Replicate main()'s feature attachment so the baseline is the real 22."""
-    prior = build_prior_table(multiyr, sorted(rolling['year'].unique()))
-    rolling = rolling.merge(prior, on=['batter', 'year'], how='left')
-    league_mu = float(multiyr[multiyr['pa'] >= 200]['fp_per_pa_actual'].mean())
-    rolling['prior_fp_per_pa'] = rolling['prior_fp_per_pa'].fillna(league_mu)
-    rolling['prior_pa_eff'] = rolling['prior_pa_eff'].fillna(0.0)
-    rolling = blend_callup_prior(rolling)
+def attach_production_features(
+    rolling: pd.DataFrame | None = None,
+    multiyr: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """The real production substrate — all 22 RH3_FEATS, from the ONE assembly.
 
-    h2 = pd.read_csv(H2_LOCKED_CSV)[['batter', 'lift_h2_aug150']]
-    rolling = rolling.merge(h2, on='batter', how='left')
-    rolling['lift_h2_aug150'] = rolling['lift_h2_aug150'].fillna(0.0)
+    Was a hand-maintained transcription of ``rh3.main()``'s feature attachment.
+    Now delegates to ``plv_clone.models.xfp.frames.build_rh3_frame`` (migrated
+    2026-07-29), which is the same code production runs and is pinned
+    byte-identical to it by ``tests/test_xfp_frames.py``. Rule 9 wants the
+    baseline to BE production's 22 features; a copy of production is a baseline
+    that eventually silently isn't (docs/rh3_harness_root_bug_2026-07-28.md).
 
-    xw = pd.read_csv(XWOBA_RESID_CSV)[['batter', 'xwoba_residual_career']]
-    rolling = rolling.merge(xw, on='batter', how='left')
-    rolling['xwoba_residual_career'] = rolling['xwoba_residual_career'].fillna(0.0)
-
-    first_year = multiyr.groupby('batter')['year'].min().to_dict()
-    rolling['career_stage'] = (
-        rolling['year'] - rolling['batter'].map(first_year).fillna(rolling['year'])
-    ).astype(int)
-
-    opp = pd.read_csv(ROS_OPP_SP_CSV)[['batter', 'year', 'split_day',
-                                       'ros_opp_sp_xwoba_weighted']]
-    rolling = rolling.merge(opp, on=['batter', 'year', 'split_day'], how='left')
-    ym = rolling.groupby('year')['ros_opp_sp_xwoba_weighted'].transform('mean')
-    rolling['ros_opp_sp_xwoba_weighted'] = (
-        rolling['ros_opp_sp_xwoba_weighted'].fillna(ym)
-        .fillna(rolling['ros_opp_sp_xwoba_weighted'].mean()))
-
-    bx = pd.read_csv(BX_PRIORS_CSV)[['mlbam', 'year', 'bx_prior_h']].rename(
-        columns={'mlbam': 'batter'})
-    rolling = rolling.merge(bx, on=['batter', 'year'], how='left')
-    ym = rolling.groupby('year')['bx_prior_h'].transform('mean')
-    rolling['bx_prior_h'] = (rolling['bx_prior_h'].fillna(ym)
-                             .fillna(rolling['bx_prior_h'].mean()))
-
-    pop = compute_population_means(rolling, TRAIN_YEARS, SHRINK_SPEC_TO)
-    rolling = apply_shrinkage(rolling, pop, SHRINK_SPEC_TO)
-    return rolling
+    ``rolling`` / ``multiyr`` stay in the signature because three sibling
+    harnesses call this positionally with the raw CSVs already loaded
+    (``validate_delta_grid``, ``validate_bat_speed_delta``,
+    ``validate_lgbm_headroom``); they are forwarded through unchanged. Omit
+    both and the assembly reads the production CSVs itself.
+    """
+    return build_rh3_frame(rolling=rolling, multiyr=multiyr, verbose=False).rolling
 
 
 def build_candidate(rolling: pd.DataFrame) -> pd.DataFrame:
@@ -172,9 +146,7 @@ def cross_year_r(df, feats, years):
 
 def main():
     print('=== validate_inseason_discipline (pre-reg 2026-07-29) ===')
-    rolling = pd.read_csv(ROLLING_CSV)
-    multiyr = pd.read_csv(MULTIYR_CSV)
-    rolling = attach_production_features(rolling, multiyr)
+    rolling = attach_production_features()
     df = build_candidate(rolling)
 
     df = df.dropna(subset=RH3_FEATS + [TARGET])

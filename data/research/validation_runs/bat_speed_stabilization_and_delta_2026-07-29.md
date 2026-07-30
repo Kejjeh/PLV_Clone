@@ -209,9 +209,12 @@ curve identical to 3 decimals. Provisional gf-bridge rows are harmless.
   **CONFIRMED on our data.** 30 swings sits right at the measured r≈0.74-0.85
   region, comfortably above the 0.50 decision floor and above the 0.70
   high-confidence bar. This is now a MEASURED number, not a borrowed one.
-- `lib/trend_signal.HIT_MIN_SW_CUR / HIT_MIN_SW_BASE = 80 / 200` — **3x and
-  7x over-conservative.** Forward r at 37 swings (+0.841) is already within
-  0.11 of the asymptote (~+0.95). Nothing is bought by waiting for 200.
+- `lib/trend_signal.HIT_MIN_SW_CUR / HIT_MIN_SW_BASE = 80 / 200` —
+  ~~**3x and 7x over-conservative.**~~ **RETRACTED — see CORRECTION 4 below.**
+  Those gates guard a YEAR-OVER-YEAR DELTA; this curve measures a LEVEL. The
+  multiplier compares against the wrong reference quantity and must not be acted
+  on. Directionally there is probably headroom (r=+0.736 already at 27 swings),
+  but the number is not derivable from this study.
 - **Bat speed is the most reliable in-window hitter metric we have measured,
   by a wide margin.** Compare the 2026-07-29 hitter table: chase/whiff/swstr
   need 150 denominator units to hit 0.50; BB% needs 175 PA and never reaches
@@ -464,3 +467,67 @@ Part 2 it carries no forward information, and per the level it is below average.
 fast-swing rate softens (note only); Bichette's apparent in-season climb is a
 slow-April artifact on a below-average level (ignore).
 
+
+
+---
+
+## CORRECTIONS (from independent adversarial review, 2026-07-29)
+
+The reviewer re-ran this study and reproduced Part 1 bit-for-bit (including all
+substrate counts) and Part 2's headline to full float precision. **Both verdicts
+stand: Part 1 MEASURED, Part 2 REJECTED.** Four corrections to the surrounding
+claims, all accepted:
+
+**1. DECLARED vs REALIZED anchors — this study committed the same defect it
+flagged in `validate_delta_grid.py`.** Declared snapshot anchors silently shrank
+because the `ros_pa >= 100` filter has no rows past split_day 156:
+
+| lag | declared anchors | REALIZED anchors |
+|---|---|---|
+| 21 | 4 (incl. 170) | **3** — {44, 86, 128} |
+| 42 | 2 (incl. 170) | **1** — {86} |
+| 63 | 2 | **1** |
+
+Bias direction is toward LESS power, i.e. against a PASS, so the REJECTED
+verdict is unaffected. The assert this study recommended adding to
+`validate_delta_grid.py` (every declared anchor must exist AND yield non-zero
+rows) should be added here too.
+
+**2. lag42 is ALSO a single-anchor cell.** The memo body treated the missing
+Rule-8 framing-stability check as unique to lag63. It applies to lag42 as well.
+
+**3. lag63's power framing was a touch strong.** At n=466 the FDR rank-1 minimum
+detectable partial r is ~0.123; the cell measured +0.1126. The correct statement
+is: *it failed an FDR threshold it was marginally underpowered for, and then
+failed the decisive Rule-9 integration test outright* (+0.0035 vs +0.005;
+reviewer's independent OLS re-run +0.0045, still short). Not "no sample excuse."
+
+**4. The `trend_signal` 80/200 recommendation is RETRACTED** (struck above).
+Those gates guard `d_bat_speed = cur - base`, a YoY delta whose noise is ~√2× a
+level's; Part 1 measured the forward reliability of the LEVEL. **Do not relax
+80/200 on this evidence**, and do not re-run `/trending` cells blanked at 30-79
+swings until a delta-appropriate gate is derived.
+
+**Non-overlap scope (clarification, not a defect).** The ≥2L spacing guarantee
+covers the SWING legs. lag21's 1,380 rows come from 634 batter-years (2.18x), so
+their rest-of-season OUTCOME windows overlap and lag21 p-values are
+anti-conservative by roughly that factor. Measured as immaterial via
+one-snapshot-per-batter-year resampling: +0.0094 ± 0.0213. lag42/lag63 are 1.00
+rows per batter-year — clean.
+
+**Rule 5 constraint, disclosed and forced.** Bat tracking starts 2024, so
+TRAIN=[2024,2025] / HOLDOUT=[2026] and the ≥5-cohort year-consistency gate is
+**UNREACHABLE** (3 cohorts, one partial). Any PASS here would have been
+exploratory by construction. Moot — nothing passed. Side effect to record: the
+repo's canonical 2024-25 holdout is now consumed for any future
+bat-speed-substrate study.
+
+**Downstream actions taken from this memo (2026-07-29):**
+- `plv_clone.stabilization`: `bat_speed` promoted from `LITERATURE_ONLY` to
+  `HITTER_MINS` at **(50, SWINGS)**; the old literature 30 was confirmed by this
+  measurement before retirement. `swing_length` stays literature-only (gf bridge
+  does not carry it).
+- `docs/stabilization_minimums.md`: full curve + the read-the-level-not-the-
+  trajectory rule + the explicit trend_signal non-license.
+- `CLAUDE.md` #12 and `inseason_delta_grid_2026-07-29.md`: the family's re-open
+  condition struck — **no named re-open condition remains.**

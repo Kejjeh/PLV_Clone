@@ -39,6 +39,49 @@ def _clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
 
 
+# --- hitter per-game outcome σ: units, and the constant ------------------------
+# Calibrated 2026-07-29.  Script: scripts/xfp/validate_hitter_sigma_scale.py.
+# Memo: data/research/validation_runs/hitter_sigma_scale_2026-07-29.md.
+#
+# ``MatchupConfig.global_sigma_pa_fp`` (0.517) is NOT a per-PA σ, despite its
+# name and every comment that ever cited it.  build_hitter_sigma_calibration.py
+# (lines 77-83) computes it as the PA-weighted RMS of the per-GAME residual of
+# ``fp_proxy / PA`` — that is a per-GAME RATE, one observation per game.  Proof
+# on the same 245,712-batter-game panel: PA-weighted 0.516968 vs the UNWEIGHTED
+# SD of the identical rate 0.518566 (+0.31%), so the PA weighting does not
+# convert the unit.  Two consequences, both corrected below:
+#
+#  (1) EXPONENT.  Per-game σ = rate_σ × PA/game, so PA/game enters the VARIANCE
+#      squared.  Dimensional test on the panel (mean PA/g 4.3483, measured
+#      within-batter per-game SD of fp_proxy 2.2816):
+#          per-PA reading   0.517 × sqrt(4.3483) = 1.0780   (−52.8% vs measured)
+#          per-game-rate    0.517 × 4.3483       = 2.2479   (− 1.5% vs measured)
+#      Confirmed on per-batter PA/g variation (377 batters, 26,199 started 2026
+#      games): σ = C·ppg fits with weighted R² +0.2142 vs +0.1654 for C·sqrt(ppg).
+#
+#  (2) SCALE.  ``fp_proxy = TB + BB + HBP − K`` OMITS R, RBI and SB, so it is not
+#      the BrownU formula (R + TB + RBI + BB + HBP + SB − K) at all.  Measured on
+#      2026 boxscore rows that carry both: canonical/proxy per-game-RATE σ ratio
+#      = 1.4742.
+#
+# _FP_PROXY_TO_FULL_FP_SIGMA carries (2) plus the through-origin recalibration of
+# the per-batter slope:  1.4742 (formula gap) × 1.0295 (slope recal) = 1.5175, so
+#     0.517 × 1.5175 = 0.784563 FP per PA-of-a-game, canonical units.
+# Realised check: canonical within-batter per-game hitter FP SD = 3.2502 FP;
+# 0.784563 × mean pa_per_g 4.0016 = 3.1395 FP; the per-batter ratio
+# realised/model has mean 0.9961 and SD 0.1583.
+#
+# The per-batter ``sigma_factor`` needs NO refit: it is pred_σ/global_σ
+# re-centred to mean 1.0, ridge is scale-equivariant in y, and rescaling the
+# fitted σ_emp by 2× and 10× reproduces the factors to max |Δ| = 0.0 / 2.0e-15.
+_FP_PROXY_TO_FULL_FP_SIGMA = 1.517531
+
+# Measured mean PA per STARTED game over 2026 regulars (>= 30 started games) —
+# the fallback when a batter has no lineup-map entry.  The old 3.5 was inherited
+# from rh3's per-game construction constant, not measured as a PA mean.
+_LEAGUE_PA_PER_GAME_MEASURED = 4.0016
+
+
 @dataclass(frozen=True)
 class MatchupConfig:
     """Scalar knobs shared across the three projection paths.
@@ -54,9 +97,16 @@ class MatchupConfig:
     sigma_per_sp_start: float = 5.5
     sigma_per_rp_game: float = 2.5
     sigma_per_hitter_game: float = 3.5
-    # heteroscedastic hitter variance
+    # Heteroscedastic hitter variance.  ``global_sigma_pa_fp`` is the pooled
+    # within-batter σ of the PROXY per-game FP RATE (fp_proxy/PA, where
+    # fp_proxy = TB+BB+HBP−K) from the 2018-2025 boom-bust panel — NOT a per-PA σ
+    # and NOT in canonical BrownU FP units.  ``hitter_sigma_per_game`` converts
+    # it; see _FP_PROXY_TO_FULL_FP_SIGMA above.  The historical field name is kept
+    # so callers that pass it keep working, but the docstring is the contract.
     global_sigma_pa_fp: float = 0.517
-    league_pa_per_game: float = 3.5
+    # Fallback PA/started-game when a batter has no lineup-map entry (measured,
+    # see _LEAGUE_PA_PER_GAME_MEASURED).
+    league_pa_per_game: float = _LEAGUE_PA_PER_GAME_MEASURED
 
 
 @dataclass(frozen=True)
@@ -207,6 +257,43 @@ def _is_missing(x) -> bool:
     return x is None or (isinstance(x, float) and math.isnan(x))
 
 
+def hitter_sigma_per_game(sigma_factor: float,
+                          pa_per_g: Optional[float],
+                          cfg: "MatchupConfig" = None) -> float:
+    """Per-GAME outcome σ (canonical BrownU FP units) for one hitter game.
+
+        σ_game = global_proxy_rate_σ × proxy→canonical × sigma_factor × PA/game
+
+    PA/game is LINEAR here, so it enters the variance SQUARED — see
+    ``_FP_PROXY_TO_FULL_FP_SIGMA`` for the measurement that establishes both the
+    exponent and the constant.
+
+    ``pa_per_g`` may be omitted (None/NaN), in which case the measured league
+    mean ``cfg.league_pa_per_game`` stands in.  A *supplied* pa_per_g that is
+    non-positive is a broken input, not a missing one, and raises: silently
+    substituting a default for bad data is how the 2026-07-28 ROOT bug happened.
+    """
+    if cfg is None:
+        cfg = MatchupConfig()
+    if _is_missing(sigma_factor):
+        raise ValueError("hitter_sigma_per_game requires a real sigma_factor; "
+                         "callers must route missing factors to the legacy σ path")
+    if _is_missing(pa_per_g):
+        ppg = float(cfg.league_pa_per_game)
+    else:
+        ppg = float(pa_per_g)
+        if ppg <= 0:
+            raise ValueError(
+                f"pa_per_g must be > 0 when supplied, got {pa_per_g!r}. "
+                "A batter with no measurable PA/game must be passed as None so "
+                "the measured league fallback is used explicitly."
+            )
+    if ppg <= 0:
+        raise ValueError(f"cfg.league_pa_per_game must be > 0, got {ppg!r}")
+    return (float(cfg.global_sigma_pa_fp) * _FP_PROXY_TO_FULL_FP_SIGMA
+            * float(sigma_factor) * ppg)
+
+
 def project_hitter_games(
     per_game_base: float,
     games: list[HitterGameCtx],
@@ -225,8 +312,9 @@ def project_hitter_games(
 
     FP per game = base × opp × recent_form × lineup × park(=1) × platoon × IL
                   × calibration × momentum.
-    Variance: heteroscedastic (per-PA σ × per-batter factor, summed over PAs)
-    when ``sigma_factor`` is available, else the legacy fixed per-game σ.
+    Variance: heteroscedastic — ``n × hitter_sigma_per_game(...)²``, where the
+    per-game σ is LINEAR in PA/game (see ``hitter_sigma_per_game``) — when
+    ``sigma_factor`` is available, else the legacy fixed per-game σ.
     """
     park_factor = 1.0
     total = 0.0
@@ -253,9 +341,7 @@ def project_hitter_games(
     if legacy_sigma or _is_missing(sigma_factor):
         sigma2 = n * cfg.sigma_per_hitter_game ** 2
     else:
-        ppg = pa_per_g or cfg.league_pa_per_game
-        sigma_pa = cfg.global_sigma_pa_fp * float(sigma_factor)
-        sigma2 = n * (sigma_pa ** 2) * ppg
+        sigma2 = n * hitter_sigma_per_game(sigma_factor, pa_per_g, cfg) ** 2
     return ProjResult(fp=total, units=n, sigma2=sigma2, breakdown=breakdown)
 
 

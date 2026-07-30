@@ -172,9 +172,14 @@ def main() -> int:
                 'd_fpg', '1H_ops', '2H_ops', '1H_k', '2H_k']
         print(hit[cols].to_string(index=False))
     for role in ('SP', 'RP'):
-        sub = df[(df['kind'] == 'P') & (df['role'] == role)].sort_values('d_fp', ascending=False)
-        if not len(sub):
+        # Filter and emptiness-check BEFORE sorting. A hitters-only name list
+        # produces a frame with no pitcher columns at all, so sorting on 'd_fp'
+        # raised KeyError and killed the run *before* the CSV write below —
+        # the hitter table printed but the ledger was never written.
+        sub = df[(df['kind'] == 'P') & (df['role'] == role)]
+        if not len(sub) or 'd_fp' not in sub.columns:
             continue
+        sub = sub.sort_values('d_fp', ascending=False)
         unit = 'FP/start' if role == 'SP' else 'FP/app'
         print(f'\n=== {role}s — career pre-ASG vs post-ASG (BrownU {unit}) ===')
         cols = ['player', 'owner', '1H_n', '1H_fp', '2H_n', '2H_fp', 'd_fp',
