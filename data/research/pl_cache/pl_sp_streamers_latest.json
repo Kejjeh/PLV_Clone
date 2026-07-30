@@ -1,558 +1,597 @@
 {
- "fetched": "2026-07-20",
- "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-7-20-7-21-7-22/",
+ "fetched": "2026-07-30",
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-rankings-fantasy-baseball-7-30-7-31-8-1/",
+ "source_url_2": "https://pitcherlist.com/starting-pitcher-streamer-rankings-fantasy-baseball-7-31-8-1-8-2/",
  "covers_dates": [
-  "2026-07-20",
-  "2026-07-21",
-  "2026-07-22"
+  "2026-07-30",
+  "2026-07-31",
+  "2026-08-01"
  ],
- "primary_date": "2026-07-21",
- "note": "7/22 tier list is PL-Pro gated; ranks = 7/21 (tomorrow, the live decision day — 7/20 slate already underway at fetch time). ranks_by_day has 7/20 + 7/21.",
+ "primary_date": "2026-07-30",
+ "note": "ranks = 7/30 (today, the live decision day). ranks_by_day has 7/30 + 7/31 + 8/1 (7/31 + 8/1 from the companion 7/31-8/1-8/2 edition; both free lists agree on the overlapping 7/31 slate). The 8/2 tier list is PL-Pro gated — period 17's final day has no free streamer ranks.",
  "ranks": {
-  "Chase Burns": {
+  "Bryan Woo": {
    "rank": 1,
    "tier": "Auto-Start",
-   "opp": "@ SEA",
-   "date": "7/21"
+   "opp": "@ ATL",
+   "date": "7/30"
   },
-  "Zack Wheeler": {
+  "Logan Webb": {
    "rank": 2,
    "tier": "Auto-Start",
-   "opp": "vs LAD",
-   "date": "7/21"
+   "opp": "vs PIT",
+   "date": "7/30"
   },
-  "Drew Rasmussen": {
+  "Nathan Eovaldi": {
    "rank": 3,
    "tier": "Auto-Start",
-   "opp": "@ TOR",
-   "date": "7/21"
+   "opp": "@ LAA",
+   "date": "7/30"
   },
-  "Kevin Gausman": {
+  "Shota Imanaga": {
    "rank": 4,
    "tier": "Auto-Start",
-   "opp": "vs TBR",
-   "date": "7/21"
+   "opp": "@ MIL",
+   "date": "7/30"
   },
-  "Kyle Bradish": {
+  "MacKenzie Gore": {
    "rank": 5,
-   "tier": "Probably Start",
-   "opp": "@ BOS",
-   "date": "7/21"
+   "tier": "Auto-Start",
+   "opp": "@ HOU",
+   "date": "7/30"
   },
-  "Parker Messick": {
+  "Freddy Peralta": {
    "rank": 6,
    "tier": "Probably Start",
-   "opp": "vs MIN",
-   "date": "7/21"
+   "opp": "vs CHC",
+   "date": "7/30"
   },
-  "Ranger Suarez": {
+  "Zebby Matthews": {
    "rank": 7,
    "tier": "Probably Start",
-   "opp": "vs BAL",
-   "date": "7/21"
-  },
-  "Framber Valdez": {
-   "rank": 8,
-   "tier": "Probably Start",
-   "opp": "@ CHC",
-   "date": "7/21"
-  },
-  "Walbert Ureña": {
-   "rank": 9,
-   "tier": "Probably Start",
-   "opp": "vs STL",
-   "date": "7/21"
-  },
-  "Brandon Sproat": {
-   "rank": 10,
-   "tier": "Questionable Start",
-   "opp": "vs NYM",
-   "date": "7/21"
+   "opp": "vs BOS",
+   "date": "7/30"
   },
   "Will Warren": {
-   "rank": 11,
-   "tier": "Questionable Start",
-   "opp": "vs PIT",
-   "date": "7/21"
+   "rank": 8,
+   "tier": "Probably Start",
+   "opp": "vs TBR",
+   "date": "7/30"
   },
-  "Noah Schultz": {
+  "Ryne Nelson": {
+   "rank": 9,
+   "tier": "Probably Start",
+   "opp": "@ DET",
+   "date": "7/30"
+  },
+  "Brayan Bello": {
+   "rank": 10,
+   "tier": "Probably Start",
+   "opp": "@ MIN",
+   "date": "7/30"
+  },
+  "Chris Paddack": {
+   "rank": 11,
+   "tier": "Probably Start",
+   "opp": "vs ARI",
+   "date": "7/30"
+  },
+  "José Soriano": {
    "rank": 12,
    "tier": "Questionable Start",
-   "opp": "@ TEX",
-   "date": "7/21"
+   "opp": "vs TEX",
+   "date": "7/30"
   },
-  "Reynaldo López": {
+  "Clay Holmes": {
    "rank": 13,
    "tier": "Questionable Start",
-   "opp": "vs SDP",
-   "date": "7/21"
+   "opp": "@ SDP",
+   "date": "7/30"
   },
-  "Jack Perkins": {
+  "Yu Darvish": {
    "rank": 14,
    "tier": "Questionable Start",
-   "opp": "@ ARI",
-   "date": "7/21"
+   "opp": "vs NYM",
+   "date": "7/30"
   },
-  "Luis Castillo": {
+  "José Berríos": {
    "rank": 15,
    "tier": "Questionable Start",
-   "opp": "vs CIN",
-   "date": "7/21"
+   "opp": "@ BAL",
+   "date": "7/30"
   },
-  "Eric Lauer": {
+  "Adrian Houser": {
    "rank": 16,
    "tier": "Questionable Start",
-   "opp": "@ PHI",
-   "date": "7/21"
+   "opp": "vs PHI",
+   "date": "7/30"
   },
-  "Zach Thornton": {
+  "Jeffrey Springs": {
    "rank": 17,
    "tier": "Do Not Start",
-   "opp": "@ MIL",
-   "date": "7/21"
+   "opp": "vs SEA",
+   "date": "7/30"
   },
-  "Tyler Mahle": {
+  "Zack Littell": {
    "rank": 18,
    "tier": "Do Not Start",
-   "opp": "@ KCR",
-   "date": "7/21"
+   "opp": "@ NYY",
+   "date": "7/30"
   },
-  "Matthew Liberatore": {
+  "Mike Burrows": {
    "rank": 19,
    "tier": "Do Not Start",
-   "opp": "@ LAA",
-   "date": "7/21"
+   "opp": "@ SFG",
+   "date": "7/30"
   },
-  "Luinder Avila": {
+  "Joey Wentz": {
    "rank": 20,
    "tier": "Do Not Start",
-   "opp": "vs SFG",
-   "date": "7/21"
+   "opp": "@ KCR",
+   "date": "7/30"
   },
-  "Tatsuya Imai": {
+  "Ryan Gusto": {
    "rank": 21,
    "tier": "Do Not Start",
-   "opp": "vs MIA",
-   "date": "7/21"
+   "opp": "vs WSN",
+   "date": "7/30"
   },
-  "Kumar Rocker": {
+  "Dean Kremer": {
    "rank": 22,
    "tier": "Do Not Start",
-   "opp": "vs CHW",
-   "date": "7/21"
-  },
-  "Tyler Phillips": {
-   "rank": 23,
-   "tier": "Do Not Start",
-   "opp": "@ HOU",
-   "date": "7/21"
-  },
-  "Bubba Chandler": {
-   "rank": 24,
-   "tier": "Do Not Start",
-   "opp": "@ NYY",
-   "date": "7/21"
-  },
-  "Walker Buehler": {
-   "rank": 25,
-   "tier": "Do Not Start",
-   "opp": "@ ATL",
-   "date": "7/21"
-  },
-  "Kohl Drake": {
-   "rank": 26,
-   "tier": "Do Not Start",
-   "opp": "vs ATH",
-   "date": "7/21"
-  },
-  "David Peterson": {
-   "rank": 27,
-   "tier": "Do Not Start",
-   "opp": "vs DET",
-   "date": "7/21"
-  },
-  "Jack Anderson": {
-   "rank": 28,
-   "tier": "Do Not Start",
-   "opp": "@ CLE",
-   "date": "7/21"
+   "opp": "vs TOR",
+   "date": "7/30"
   },
   "Miles Mikolas": {
+   "rank": 23,
+   "tier": "Do Not Start",
+   "opp": "vs MIA",
+   "date": "7/30"
+  },
+  "Shohei Ohtani": {
+   "rank": 24,
+   "tier": "Do Not Start",
+   "opp": "@ CIN",
+   "date": "7/30"
+  },
+  "Taijuan Walker": {
+   "rank": 25,
+   "tier": "Do Not Start",
+   "opp": "@ CHW",
+   "date": "7/30"
+  },
+  "Cal Quantrill": {
+   "rank": 26,
+   "tier": "Do Not Start",
+   "opp": "@ STL",
+   "date": "7/30"
+  },
+  "Kyle Freeland": {
+   "rank": 27,
+   "tier": "Do Not Start",
+   "opp": "@ CLE",
+   "date": "7/30"
+  },
+  "Kolby Allard": {
+   "rank": 28,
+   "tier": "Do Not Start",
+   "opp": "vs COL",
+   "date": "7/30"
+  },
+  "Nick Martinez": {
    "rank": 29,
    "tier": "Do Not Start",
-   "opp": "@ COL",
-   "date": "7/21"
+   "opp": "vs LAD",
+   "date": "7/30"
   },
-  "Michael Lorenzen": {
+  "Angel Zerpa": {
    "rank": 30,
    "tier": "Do Not Start",
-   "opp": "vs WSH",
-   "date": "7/21"
+   "opp": "vs ATL",
+   "date": "7/30"
   }
  },
  "ranks_by_day": {
-  "7/20": {
-   "Jacob Misiorowski": {
+  "7/30": {
+   "Bryan Woo": {
     "rank": 1,
     "tier": "Auto-Start",
-    "opp": "vs NYM",
-    "date": "7/20"
+    "opp": "@ ATL",
+    "date": "7/30"
    },
-   "Joe Ryan": {
+   "Logan Webb": {
     "rank": 2,
     "tier": "Auto-Start",
-    "opp": "@ CLE",
-    "date": "7/20"
+    "opp": "vs PIT",
+    "date": "7/30"
    },
-   "Jacob deGrom": {
+   "Nathan Eovaldi": {
     "rank": 3,
     "tier": "Auto-Start",
-    "opp": "vs CHW",
-    "date": "7/20"
+    "opp": "@ LAA",
+    "date": "7/30"
    },
-   "Dylan Cease": {
+   "Shota Imanaga": {
     "rank": 4,
     "tier": "Auto-Start",
-    "opp": "vs TBR",
-    "date": "7/20"
+    "opp": "@ MIL",
+    "date": "7/30"
    },
-   "Cristopher Sánchez": {
+   "MacKenzie Gore": {
     "rank": 5,
     "tier": "Auto-Start",
-    "opp": "vs LAD",
-    "date": "7/20"
-   },
-   "Payton Tolle": {
-    "rank": 6,
-    "tier": "Auto-Start",
-    "opp": "vs BAL",
-    "date": "7/20"
-   },
-   "George Kirby": {
-    "rank": 7,
-    "tier": "Auto-Start",
-    "opp": "vs CIN",
-    "date": "7/20"
-   },
-   "Braxton Ashcraft": {
-    "rank": 8,
-    "tier": "Auto-Start",
-    "opp": "@ NYY",
-    "date": "7/20"
-   },
-   "Emmet Sheehan": {
-    "rank": 9,
-    "tier": "Probably Start",
-    "opp": "@ PHI",
-    "date": "7/20"
-   },
-   "Nick Martinez": {
-    "rank": 10,
-    "tier": "Probably Start",
-    "opp": "@ TOR",
-    "date": "7/20"
-   },
-   "Shane Baz": {
-    "rank": 11,
-    "tier": "Probably Start",
-    "opp": "@ BOS",
-    "date": "7/20"
-   },
-   "Ryan Weathers": {
-    "rank": 12,
-    "tier": "Probably Start",
-    "opp": "vs PIT",
-    "date": "7/20"
-   },
-   "Andrew Abbott": {
-    "rank": 13,
-    "tier": "Probably Start",
-    "opp": "@ SEA",
-    "date": "7/20"
+    "opp": "@ HOU",
+    "date": "7/30"
    },
    "Freddy Peralta": {
-    "rank": 14,
-    "tier": "Questionable Start",
-    "opp": "@ MIL",
-    "date": "7/20"
-   },
-   "Michael Wacha": {
-    "rank": 15,
-    "tier": "Questionable Start",
-    "opp": "vs SFG",
-    "date": "7/20"
-   },
-   "Jack Flaherty": {
-    "rank": 16,
-    "tier": "Questionable Start",
-    "opp": "@ CHC",
-    "date": "7/20"
-   },
-   "José Soriano": {
-    "rank": 17,
-    "tier": "Questionable Start",
-    "opp": "vs STL",
-    "date": "7/20"
-   },
-   "Tanner Bibee": {
-    "rank": 18,
-    "tier": "Questionable Start",
-    "opp": "vs MIN",
-    "date": "7/20"
-   },
-   "Bryce Elder": {
-    "rank": 19,
-    "tier": "Do Not Start",
-    "opp": "vs SDP",
-    "date": "7/20"
-   },
-   "Kyle Leahy": {
-    "rank": 20,
-    "tier": "Do Not Start",
-    "opp": "@ LAA",
-    "date": "7/20"
-   },
-   "Trevor McDonald": {
-    "rank": 21,
-    "tier": "Do Not Start",
-    "opp": "@ KCR",
-    "date": "7/20"
-   },
-   "Janson Junk": {
-    "rank": 22,
-    "tier": "Do Not Start",
-    "opp": "@ HOU",
-    "date": "7/20"
-   },
-   "Erick Fedde": {
-    "rank": 23,
-    "tier": "Do Not Start",
-    "opp": "@ TEX",
-    "date": "7/20"
-   },
-   "Jeffrey Springs": {
-    "rank": 24,
-    "tier": "Do Not Start",
-    "opp": "@ ARI",
-    "date": "7/20"
-   },
-   "JP Sears": {
-    "rank": 25,
-    "tier": "Do Not Start",
-    "opp": "@ ATL",
-    "date": "7/20"
-   },
-   "Jameson Taillon": {
-    "rank": 26,
-    "tier": "Do Not Start",
-    "opp": "vs DET",
-    "date": "7/20"
-   },
-   "Ronel Blanco": {
-    "rank": 27,
-    "tier": "Do Not Start",
-    "opp": "vs MIA",
-    "date": "7/20"
-   },
-   "Andrew Alvarez": {
-    "rank": 28,
-    "tier": "Do Not Start",
-    "opp": "@ COL",
-    "date": "7/20"
-   },
-   "Mitch Bratt": {
-    "rank": 29,
-    "tier": "Do Not Start",
-    "opp": "vs ATH",
-    "date": "7/20"
-   },
-   "Kyle Freeland": {
-    "rank": 30,
-    "tier": "Do Not Start",
-    "opp": "vs WSH",
-    "date": "7/20"
-   }
-  },
-  "7/21": {
-   "Chase Burns": {
-    "rank": 1,
-    "tier": "Auto-Start",
-    "opp": "@ SEA",
-    "date": "7/21"
-   },
-   "Zack Wheeler": {
-    "rank": 2,
-    "tier": "Auto-Start",
-    "opp": "vs LAD",
-    "date": "7/21"
-   },
-   "Drew Rasmussen": {
-    "rank": 3,
-    "tier": "Auto-Start",
-    "opp": "@ TOR",
-    "date": "7/21"
-   },
-   "Kevin Gausman": {
-    "rank": 4,
-    "tier": "Auto-Start",
-    "opp": "vs TBR",
-    "date": "7/21"
-   },
-   "Kyle Bradish": {
-    "rank": 5,
-    "tier": "Probably Start",
-    "opp": "@ BOS",
-    "date": "7/21"
-   },
-   "Parker Messick": {
     "rank": 6,
     "tier": "Probably Start",
-    "opp": "vs MIN",
-    "date": "7/21"
+    "opp": "vs CHC",
+    "date": "7/30"
    },
-   "Ranger Suarez": {
+   "Zebby Matthews": {
     "rank": 7,
     "tier": "Probably Start",
-    "opp": "vs BAL",
-    "date": "7/21"
-   },
-   "Framber Valdez": {
-    "rank": 8,
-    "tier": "Probably Start",
-    "opp": "@ CHC",
-    "date": "7/21"
-   },
-   "Walbert Ureña": {
-    "rank": 9,
-    "tier": "Probably Start",
-    "opp": "vs STL",
-    "date": "7/21"
-   },
-   "Brandon Sproat": {
-    "rank": 10,
-    "tier": "Questionable Start",
-    "opp": "vs NYM",
-    "date": "7/21"
+    "opp": "vs BOS",
+    "date": "7/30"
    },
    "Will Warren": {
-    "rank": 11,
-    "tier": "Questionable Start",
-    "opp": "vs PIT",
-    "date": "7/21"
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "vs TBR",
+    "date": "7/30"
    },
-   "Noah Schultz": {
+   "Ryne Nelson": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": "@ DET",
+    "date": "7/30"
+   },
+   "Brayan Bello": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": "@ MIN",
+    "date": "7/30"
+   },
+   "Chris Paddack": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "vs ARI",
+    "date": "7/30"
+   },
+   "José Soriano": {
     "rank": 12,
     "tier": "Questionable Start",
-    "opp": "@ TEX",
-    "date": "7/21"
+    "opp": "vs TEX",
+    "date": "7/30"
    },
-   "Reynaldo López": {
+   "Clay Holmes": {
     "rank": 13,
     "tier": "Questionable Start",
-    "opp": "vs SDP",
-    "date": "7/21"
+    "opp": "@ SDP",
+    "date": "7/30"
    },
-   "Jack Perkins": {
+   "Yu Darvish": {
     "rank": 14,
     "tier": "Questionable Start",
-    "opp": "@ ARI",
-    "date": "7/21"
+    "opp": "vs NYM",
+    "date": "7/30"
    },
-   "Luis Castillo": {
+   "José Berríos": {
     "rank": 15,
     "tier": "Questionable Start",
-    "opp": "vs CIN",
-    "date": "7/21"
+    "opp": "@ BAL",
+    "date": "7/30"
    },
-   "Eric Lauer": {
+   "Adrian Houser": {
     "rank": 16,
     "tier": "Questionable Start",
-    "opp": "@ PHI",
-    "date": "7/21"
+    "opp": "vs PHI",
+    "date": "7/30"
    },
-   "Zach Thornton": {
+   "Jeffrey Springs": {
     "rank": 17,
     "tier": "Do Not Start",
-    "opp": "@ MIL",
-    "date": "7/21"
+    "opp": "vs SEA",
+    "date": "7/30"
    },
-   "Tyler Mahle": {
+   "Zack Littell": {
     "rank": 18,
     "tier": "Do Not Start",
-    "opp": "@ KCR",
-    "date": "7/21"
+    "opp": "@ NYY",
+    "date": "7/30"
    },
-   "Matthew Liberatore": {
+   "Mike Burrows": {
     "rank": 19,
     "tier": "Do Not Start",
-    "opp": "@ LAA",
-    "date": "7/21"
+    "opp": "@ SFG",
+    "date": "7/30"
    },
-   "Luinder Avila": {
+   "Joey Wentz": {
     "rank": 20,
     "tier": "Do Not Start",
-    "opp": "vs SFG",
-    "date": "7/21"
+    "opp": "@ KCR",
+    "date": "7/30"
    },
-   "Tatsuya Imai": {
+   "Ryan Gusto": {
     "rank": 21,
     "tier": "Do Not Start",
-    "opp": "vs MIA",
-    "date": "7/21"
+    "opp": "vs WSN",
+    "date": "7/30"
    },
-   "Kumar Rocker": {
+   "Dean Kremer": {
     "rank": 22,
     "tier": "Do Not Start",
-    "opp": "vs CHW",
-    "date": "7/21"
-   },
-   "Tyler Phillips": {
-    "rank": 23,
-    "tier": "Do Not Start",
-    "opp": "@ HOU",
-    "date": "7/21"
-   },
-   "Bubba Chandler": {
-    "rank": 24,
-    "tier": "Do Not Start",
-    "opp": "@ NYY",
-    "date": "7/21"
-   },
-   "Walker Buehler": {
-    "rank": 25,
-    "tier": "Do Not Start",
-    "opp": "@ ATL",
-    "date": "7/21"
-   },
-   "Kohl Drake": {
-    "rank": 26,
-    "tier": "Do Not Start",
-    "opp": "vs ATH",
-    "date": "7/21"
-   },
-   "David Peterson": {
-    "rank": 27,
-    "tier": "Do Not Start",
-    "opp": "vs DET",
-    "date": "7/21"
-   },
-   "Jack Anderson": {
-    "rank": 28,
-    "tier": "Do Not Start",
-    "opp": "@ CLE",
-    "date": "7/21"
+    "opp": "vs TOR",
+    "date": "7/30"
    },
    "Miles Mikolas": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "vs MIA",
+    "date": "7/30"
+   },
+   "Shohei Ohtani": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ CIN",
+    "date": "7/30"
+   },
+   "Taijuan Walker": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "@ CHW",
+    "date": "7/30"
+   },
+   "Cal Quantrill": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ STL",
+    "date": "7/30"
+   },
+   "Kyle Freeland": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ CLE",
+    "date": "7/30"
+   },
+   "Kolby Allard": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": "vs COL",
+    "date": "7/30"
+   },
+   "Nick Martinez": {
     "rank": 29,
     "tier": "Do Not Start",
-    "opp": "@ COL",
-    "date": "7/21"
+    "opp": "vs LAD",
+    "date": "7/30"
    },
-   "Michael Lorenzen": {
+   "Angel Zerpa": {
     "rank": 30,
     "tier": "Do Not Start",
-    "opp": "vs WSH",
-    "date": "7/21"
+    "opp": "vs ATL",
+    "date": "7/30"
+   }
+  },
+  "7/31": {
+   "George Kirby": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "vs TEX",
+    "date": "7/31"
+   },
+   "Andrew Abbott": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "vs ATL",
+    "date": "7/31"
+   },
+   "Ryan Pepiot": {
+    "rank": 3,
+    "tier": "Questionable Start",
+    "opp": "@ NYY",
+    "date": "7/31"
+   },
+   "Kumar Rocker": {
+    "rank": 4,
+    "tier": "Questionable Start",
+    "opp": "@ SEA",
+    "date": "7/31"
+   },
+   "Marcus Stroman": {
+    "rank": 5,
+    "tier": "Do Not Start",
+    "opp": "vs TBR",
+    "date": "7/31"
+   },
+   "Carlos Carrasco": {
+    "rank": 6,
+    "tier": "Do Not Start",
+    "opp": "@ CIN",
+    "date": "7/31"
+   }
+  },
+  "8/1": {
+   "Joe Ryan": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ CLE",
+    "date": "8/1"
+   },
+   "Carlos Rodón": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ MIA",
+    "date": "8/1"
+   },
+   "Logan Gilbert": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "vs TEX",
+    "date": "8/1"
+   },
+   "Hunter Brown": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ BOS",
+    "date": "8/1"
+   },
+   "Robbie Ray": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": "@ NYM",
+    "date": "8/1"
+   },
+   "Ranger Suárez": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": "vs DET",
+    "date": "8/1"
+   },
+   "Nick Pivetta": {
+    "rank": 7,
+    "tier": "Auto-Start",
+    "opp": "vs STL",
+    "date": "8/1"
+   },
+   "Kevin Gausman": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "vs KCR",
+    "date": "8/1"
+   },
+   "David Peterson": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": "vs SFG",
+    "date": "8/1"
+   },
+   "Jack Flaherty": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": "@ PHI",
+    "date": "8/1"
+   },
+   "Merrill Kelly": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "@ ATH",
+    "date": "8/1"
+   },
+   "Tyler Anderson": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": "vs CHW",
+    "date": "8/1"
+   },
+   "Cade Horton": {
+    "rank": 13,
+    "tier": "Probably Start",
+    "opp": "vs BAL",
+    "date": "8/1"
+   },
+   "Gavin Williams": {
+    "rank": 14,
+    "tier": "Probably Start",
+    "opp": "vs MIN",
+    "date": "8/1"
+   },
+   "Trevor Rogers": {
+    "rank": 15,
+    "tier": "Probably Start",
+    "opp": "@ CHC",
+    "date": "8/1"
+   },
+   "Jose Quintana": {
+    "rank": 16,
+    "tier": "Questionable Start",
+    "opp": "@ WSN",
+    "date": "8/1"
+   },
+   "Matthew Liberatore": {
+    "rank": 17,
+    "tier": "Questionable Start",
+    "opp": "@ SDP",
+    "date": "8/1"
+   },
+   "Brady Singer": {
+    "rank": 18,
+    "tier": "Questionable Start",
+    "opp": "vs ATL",
+    "date": "8/1"
+   },
+   "Michael Wacha": {
+    "rank": 19,
+    "tier": "Questionable Start",
+    "opp": "@ TOR",
+    "date": "8/1"
+   },
+   "Shane Baz": {
+    "rank": 20,
+    "tier": "Questionable Start",
+    "opp": "vs LAD",
+    "date": "8/1"
+   },
+   "Jack Leiter": {
+    "rank": 21,
+    "tier": "Questionable Start",
+    "opp": "@ SEA",
+    "date": "8/1"
+   },
+   "Jacob Lopez": {
+    "rank": 22,
+    "tier": "Questionable Start",
+    "opp": "vs ARI",
+    "date": "8/1"
+   },
+   "Shane Smith": {
+    "rank": 23,
+    "tier": "Questionable Start",
+    "opp": "@ LAA",
+    "date": "8/1"
+   },
+   "Clayton Kershaw": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ TBR",
+    "date": "8/1"
+   },
+   "Janson Junk": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "vs NYY",
+    "date": "8/1"
+   },
+   "Andrew Heaney": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ COL",
+    "date": "8/1"
+   },
+   "Mitchell Parker": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "vs MIL",
+    "date": "8/1"
+   },
+   "Cooper Criswell": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": "vs HOU",
+    "date": "8/1"
+   },
+   "Bryce Elder": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ CIN",
+    "date": "8/1"
+   },
+   "Antonio Senzatela": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "vs PIT",
+    "date": "8/1"
    }
   }
  }

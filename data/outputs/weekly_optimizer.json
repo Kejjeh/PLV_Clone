@@ -1,130 +1,130 @@
 {
-  "base_pwin": 0.385,
+  "base_pwin": 0.3906,
   "regime": "TRAILING",
   "period": 17,
-  "sims": 5000,
+  "sims": 10000,
   "seed": 7,
   "cap_remaining": 7,
   "plan": [
     {
-      "add": "Ryan Jeffers",
+      "add": "Joc Pederson",
       "add_bucket": "H",
       "drop": "Reid Detmers",
       "drop_bucket": "SP",
-      "dpwin": 0.0944,
-      "mc_se": 0.007065,
-      "dtitle_equity_pp": 0.0831
+      "dpwin": 0.0845,
+      "mc_se": 0.004994,
+      "dtitle_equity_pp": 0.0634
     },
     {
-      "add": "Trent Grisham",
+      "add": "Ryan Jeffers",
       "add_bucket": "H",
-      "drop": "Ryan Jeffers",
+      "drop": "Joc Pederson",
       "drop_bucket": "H",
-      "dpwin": 0.0674,
-      "mc_se": 0.007039,
-      "dtitle_equity_pp": 0.0593
+      "dpwin": 0.0884,
+      "mc_se": 0.004996,
+      "dtitle_equity_pp": 0.0663
     }
   ],
   "title_equity": {
-    "dtitle_pp": 0.88,
-    "status": "stale",
+    "dtitle_pp": 0.75,
+    "status": "fresh",
     "source_period": 17,
-    "payload_period": 15,
-    "periods_stale": 2,
-    "note": "season_sim.json was generated at period 15, now period 17 (2 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
-    "plus2_pp": 0.56
+    "payload_period": 17,
+    "periods_stale": 0,
+    "note": "",
+    "plus2_pp": 0.68
   },
   "top_single_moves": [
     {
       "add": "Ryan Jeffers",
       "drop": "Reid Detmers",
-      "dpwin": 0.0944,
-      "mc_se": 0.007065
+      "dpwin": 0.0884,
+      "mc_se": 0.004996
     },
     {
       "add": "Ryan Jeffers",
       "drop": "Logan Henderson",
-      "dpwin": 0.0944,
-      "mc_se": 0.007065
+      "dpwin": 0.0884,
+      "mc_se": 0.004996
+    },
+    {
+      "add": "Joc Pederson",
+      "drop": "Reid Detmers",
+      "dpwin": 0.0845,
+      "mc_se": 0.004994
+    },
+    {
+      "add": "Joc Pederson",
+      "drop": "Logan Henderson",
+      "dpwin": 0.0845,
+      "mc_se": 0.004994
     },
     {
       "add": "Javier Sanoja",
       "drop": "Reid Detmers",
-      "dpwin": 0.0778,
-      "mc_se": 0.007051
+      "dpwin": 0.0721,
+      "mc_se": 0.004986
     },
     {
       "add": "Javier Sanoja",
       "drop": "Logan Henderson",
-      "dpwin": 0.0778,
-      "mc_se": 0.007051
+      "dpwin": 0.0721,
+      "mc_se": 0.004986
     },
     {
       "add": "Luke Weaver",
       "drop": "Reid Detmers",
-      "dpwin": 0.0706,
-      "mc_se": 0.007043
+      "dpwin": 0.0698,
+      "mc_se": 0.004984
     },
     {
       "add": "Luke Weaver",
       "drop": "Logan Henderson",
-      "dpwin": 0.0706,
-      "mc_se": 0.007043
+      "dpwin": 0.0698,
+      "mc_se": 0.004984
     },
     {
-      "add": "Trent Grisham",
+      "add": "Griffin Conine",
       "drop": "Reid Detmers",
-      "dpwin": 0.0674,
-      "mc_se": 0.007039
+      "dpwin": 0.0697,
+      "mc_se": 0.004984
     },
     {
-      "add": "Trent Grisham",
+      "add": "Griffin Conine",
       "drop": "Logan Henderson",
-      "dpwin": 0.0674,
-      "mc_se": 0.007039
-    },
-    {
-      "add": "Jared Young",
-      "drop": "Reid Detmers",
-      "dpwin": 0.059,
-      "mc_se": 0.007027
-    },
-    {
-      "add": "Jared Young",
-      "drop": "Logan Henderson",
-      "dpwin": 0.059,
-      "mc_se": 0.007027
+      "dpwin": 0.0697,
+      "mc_se": 0.004984
     },
     {
       "add": "Tyler Tolbert",
       "drop": "Reid Detmers",
-      "dpwin": 0.0554,
-      "mc_se": 0.007021
+      "dpwin": 0.066,
+      "mc_se": 0.004981
     },
     {
       "add": "Tyler Tolbert",
       "drop": "Logan Henderson",
-      "dpwin": 0.0554,
-      "mc_se": 0.007021
+      "dpwin": 0.066,
+      "mc_se": 0.004981
     },
     {
-      "add": "Ryan Jeffers",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.0482,
-      "mc_se": 0.007008
+      "add": "Isaac Collins",
+      "drop": "Reid Detmers",
+      "dpwin": 0.0637,
+      "mc_se": 0.004979
     },
     {
-      "add": "Ryan Jeffers",
-      "drop": "Corbin Carroll",
-      "dpwin": 0.0482,
-      "mc_se": 0.007008
+      "add": "Isaac Collins",
+      "drop": "Logan Henderson",
+      "dpwin": 0.0637,
+      "mc_se": 0.004979
     },
     {
-      "add": "Ryan Jeffers",
-      "drop": "Bo Bichette",
-      "dpwin": 0.041,
-      "mc_se": 0.006993
+      "add": "Trent Grisham",
+      "drop": "Reid Detmers",
+      "dpwin": 0.0597,
+      "mc_se": 0.004975
     }
   ],
-  "dpwin_run_id": "2026-07-30T005713_7"
+  "dpwin_run_id": "2026-07-30T100002_7"
 }
