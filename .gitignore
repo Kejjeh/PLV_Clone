@@ -58,6 +58,9 @@ data/outputs/*.parquet
 
 # ── Models: binary pkl artifacts (regenerable via training pipeline) ─────────
 data/models/*.pkl
+# verdict_backtest results cache — regenerable, was tracked by mistake
+# (untracked 2026-07-30; the no-pkl rule in CLAUDE.md covers it)
+data/research/validation_runs/_bt_results.pkl
 
 # Keep all JSON in data/models (calibration, scaling, positions, league config)
 !data/models/*.json
