@@ -2,20 +2,20 @@
 
 _As-of date **2026-07-30** (Thursday). Composed offline from artifacts already on disk — no live ESPN, MLB Stats, or Pitcher List calls. Every number below is stamped with the age of the file it came from._
 
-<!-- Brief built: 2026-07-30T02:02:20 — the ONLY wall-clock stamp in this file; the body depends on the calendar date only, so intraday reruns diff to this line alone. -->
+<!-- Brief built: 2026-07-30T09:08:50 — the ONLY wall-clock stamp in this file; the body depends on the calendar date only, so intraday reruns diff to this line alone. -->
 
 ## 1. Decisions
 
 ### Needs a decision
 
-1. **TRIPWIRE FAIL** `fg_scrape_silent_fail` (fg_pit_2026_current.csv) — mtime-based; daily step (0.8) — FG scrape appears to be SILENTLY FAILING (13d since last successful update; it exits 0 on chromedriver crash). Run scripts/_oneoff/fg_2026_current.py in an interactive shell with a working Chrome. [from model_scorecard.csv, as-of 2026-07-27, 3 days old (content date)]
+1. **TRIPWIRE FAIL** `fg_scrape_silent_fail` (fg_pit_2026_current.csv) — mtime-based; daily step (0.8) — FG scrape appears to be SILENTLY FAILING (15d since last successful update; it exits 0 on chromedriver crash). Run scripts/_oneoff/fg_2026_current.py in an interactive shell with a working Chrome. [from model_scorecard.csv, as-of 2026-07-30, today (content date)]
 2. **MOVE AVAILABLE — STEP 1 of 2 (sequenced — do them IN ORDER; later steps are scored against the roster after the earlier ones and may drop a player an earlier step added)** ADD Ryan Jeffers / DROP Reid Detmers for dP(win) +0.0944 (> 2x MC se — a real gap). Verify live rosters (`/roster-verify`) before executing. [weekly_optimizer.json, as-of 2026-07-30, today (content date)]
 3. **MOVE AVAILABLE — STEP 2 of 2 (sequenced — do them IN ORDER; later steps are scored against the roster after the earlier ones and may drop a player an earlier step added)** ADD Trent Grisham / DROP Ryan Jeffers for dP(win) +0.0674 (> 2x MC se — a real gap). Verify live rosters (`/roster-verify`) before executing. [weekly_optimizer.json, as-of 2026-07-30, today (content date)]
 
 ### Worth knowing
 
-- TRIPWIRE WARN `fg_proj_cache_systems_latest` (2026-07-27) — 7/8 systems; absent: steamerr_bat [model_scorecard.csv, as-of 2026-07-27, 3 days old (content date)]
-- `season_sim.json` is 2 period(s) behind (sim 15 vs live 17) — the title-equity weight applied to every move above comes from older standings. Run: `python scripts/xfp/run_season_sim.py`
+- TRIPWIRE WARN `console_data_freshness` (all) — console_data.json vs newest input xfp_rh3_projections.csv; hours behind (>0 = stale decision console — the 2026-07-18 trap) [model_scorecard.csv, as-of 2026-07-30, today (content date)]
+- TRIPWIRE WARN `espn_snapshot_ttl` (all) — oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering) [model_scorecard.csv, as-of 2026-07-30, today (content date)]
 - PL cache `pl_sp_streamers_latest.json` is STALE — 10d old (rolling, refresh every 2d) (10d old). Refresh in an interactive session (`/triangulate --check-caches`); this brief cannot fetch pitcherlist.com.
 
 ## 2. This period — P(win) and cap
@@ -51,22 +51,20 @@ _As-of date **2026-07-30** (Thursday). Composed offline from artifacts already o
 
 ## 5. Season outlook (title odds, value of a win)
 
-- `season_sim.json` — as-of 2026-07-11, 19 days old (content date) [STALE]
-- **New York Ligers** — P(playoffs) 0.925, P(title) 0.108 (sim period 15, 5000 sims)
-- **2 period(s) BEHIND** the live matchup (sim period 15 vs live 17) — the odds and the value-of-win curve are computed off older standings. Run: `python scripts/xfp/run_season_sim.py`
+- `season_sim.json` — as-of 2026-07-30, today (content date)
+- **New York Ligers** — P(playoffs) 0.977, P(title) 0.141 (sim period 17, 5000 sims)
+- Sim period 17 matches the live matchup period.
 - Value of winning each remaining period (dP(title), pp):
-  - period 15: dtitle +2.67pp, dplayoffs +6.56pp (P(win week) 0.343)
-  - period 16: dtitle +1.24pp, dplayoffs +9.27pp (P(win week) 0.688)
-  - period 17: dtitle +0.88pp, dplayoffs +6.42pp (P(win week) 0.431)
-  - period 18: dtitle +1.39pp, dplayoffs +18.47pp (P(win week) 0.63)
-  - period 19: dtitle +2.37pp, dplayoffs +10.80pp (P(win week) 0.49)
-  - period 20: dtitle +1.84pp, dplayoffs +9.72pp (P(win week) 0.538)
+  - period 17: dtitle +0.75pp, dplayoffs +2.42pp (P(win week) 0.336)
+  - period 18: dtitle +1.79pp, dplayoffs +7.21pp (P(win week) 0.678)
+  - period 19: dtitle +2.03pp, dplayoffs +4.58pp (P(win week) 0.577)
+  - period 20: dtitle +0.74pp, dplayoffs +5.59pp (P(win week) 0.656)
 - Strategy directive from the sim:
-  - Playoff odds 93%, title odds 10.8%, modal seed 5 (P(miss) 7%).
-  - A win THIS period is worth +2.7pp title equity (vs +2.1pp avg for periods 19-20).
-  - MOSTLY SAFE: entry likely but not locked (P(miss) 7%) — take cheap wins and free streams, but don't burn premium FAAB on marginal regular-season edges; start positioning the playoff roster (/playoff-team-build, /sp-stash-finder).
-  - Variance is roughly title-neutral right now (+0.00pp per +10% sigma) — optimize E[FP].
-  - Mean dial: +2 FP/week of true strength = +0.56pp title / +0.40pp playoffs — the scale for valuing any add/trade in equity terms.
+  - Playoff odds 98%, title odds 14.1%, modal seed 4 (P(miss) 2%).
+  - A win THIS period is worth +0.8pp title equity (vs +1.4pp avg for periods 19-20).
+  - SAFE: playoff spot near-locked — bank floor, hoard FAAB/streams for the playoff weeks; a marginal regular-season win buys little. Position the playoff roster (/playoff-team-build, /sp-stash-finder).
+  - VARIANCE HURTS: +10% weekly sigma costs -0.16pp title equity — you are protecting a position; prefer floor (SAFE-tier arms, low bust%).
+  - Mean dial: +2 FP/week of true strength = +0.68pp title / +0.06pp playoffs — the scale for valuing any add/trade in equity terms.
 
 ## 6. Decision quality (settled verdicts)
 
@@ -88,33 +86,35 @@ _As-of date **2026-07-30** (Thursday). Composed offline from artifacts already o
 
 ## 7. Model + data health
 
-- `model_scorecard.csv` — as-of 2026-07-27, 3 days old (content date)
-- Tripwires (data_health + pipeline_staleness): FAIL 1, PASS 29, WARN 1
+- `model_scorecard.csv` — as-of 2026-07-30, today (content date)
+- Tripwires (data_health + pipeline_staleness): FAIL 1, PASS 33, WARN 2
 - Drift sentinels (added 2026-07-29):
-  - `collision_team_reachability` — **NO ROW in this scorecard**: this scorecard is as-of 2026-07-27, which PREDATES the 2026-07-29 introduction — expected; the next Monday scorecard will carry it
-  - `collision_smoke` — **NO ROW in this scorecard**: this scorecard is as-of 2026-07-27, which PREDATES the 2026-07-29 introduction — expected; the next Monday scorecard will carry it
-  - `fa_join_coverage` — **NO ROW in this scorecard**: this scorecard is as-of 2026-07-27, which PREDATES the 2026-07-29 introduction — expected; the next Monday scorecard will carry it
+  - `collision_team_reachability` (all): **PASS** — 29/29 collision team hints reachable from 30 live ESPN codes
+  - `collision_smoke` (all): **PASS** — 12/12 canonical resolver cases
+  - `fa_join_coverage` (H): **PASS** — 214/214 FA H rows join xfp_rh3_projections.csv by mlbam; no trailing baseline yet (need 3+ prior days) — absolute floors 0.70/0.40 applied
+  - `fa_join_coverage` (SP): **PASS** — 209/209 FA SP rows join xfp_rp3_projections.csv by mlbam; no trailing baseline yet (need 3+ prior days) — absolute floors 0.70/0.40 applied
+  - `fa_join_coverage` (RP): **PASS** — 281/281 FA RP rows join xfp_rprs2_projections.csv by mlbam; no trailing baseline yet (need 3+ prior days) — absolute floors 0.70/0.40 applied
 - Forward accuracy (all-segment headline rows):
-  - `rh3_spearman_rate_7d` = 0.1247 [INFO]
-  - `rh3_vs_prior_delta_7d` = 0.0253 [INFO]
-  - `rp3_spearman_rate_7d` = 0.1947 [INFO]
-  - `rp3_vs_prior_delta_7d` = 0.2455 [INFO]
-  - `rprs2_spearman_rate_7d` = 0.1986 [INFO]
-  - `rh3_spearman_rate_14d` = 0.1607 [INFO]
-  - `rh3_vs_prior_delta_14d` = -0.0123 [INFO]
-  - `rp3_spearman_rate_14d` = 0.3585 [INFO]
-  - `rp3_vs_prior_delta_14d` = 0.2492 [INFO]
-  - `rprs2_spearman_rate_14d` = 0.2544 [INFO]
-  - `rh3_spearman_rate_21d` = 0.1514 [INFO]
-  - `rh3_vs_prior_delta_21d` = 0.0465 [INFO]
-  - `rp3_spearman_rate_21d` = 0.3962 [INSUFFICIENT]
-  - `rprs2_spearman_rate_21d` = 0.2952 [INFO]
-  - `rh3_spearman_rate_28d` = 0.1713 [INFO]
-  - `rh3_vs_prior_delta_28d` = 0.0496 [INFO]
-  - `rp3_spearman_rate_28d` = 0.3056 [INFO]
-  - `rp3_vs_prior_delta_28d` = 0.0918 [INFO]
-  - `rprs2_spearman_rate_28d` = 0.3256 [INFO]
-- Full rendered scorecard: `model_scorecard.md` — as-of 2026-07-27, 3 days old (file mtime)
+  - `rh3_spearman_rate_7d` = 0.0572 [INFO]
+  - `rh3_vs_prior_delta_7d` = 0.0035 [INFO]
+  - `rp3_spearman_rate_7d` = 0.3036 [INFO]
+  - `rp3_vs_prior_delta_7d` = 0.2335 [INFO]
+  - `rprs2_spearman_rate_7d` = 0.2950 [INFO]
+  - `rh3_spearman_rate_14d` = 0.2139 [INFO]
+  - `rh3_vs_prior_delta_14d` = 0.0338 [INFO]
+  - `rp3_spearman_rate_14d` = 0.3724 [INFO]
+  - `rp3_vs_prior_delta_14d` = 0.2910 [INFO]
+  - `rprs2_spearman_rate_14d` = 0.2283 [INFO]
+  - `rh3_spearman_rate_21d` = 0.2041 [INFO]
+  - `rh3_vs_prior_delta_21d` = 0.0510 [INFO]
+  - `rp3_spearman_rate_21d` = 0.5071 [INSUFFICIENT]
+  - `rprs2_spearman_rate_21d` = 0.2592 [INFO]
+  - `rh3_spearman_rate_28d` = 0.1869 [INFO]
+  - `rh3_vs_prior_delta_28d` = 0.0598 [INFO]
+  - `rp3_spearman_rate_28d` = 0.3794 [INFO]
+  - `rp3_vs_prior_delta_28d` = 0.1283 [INFO]
+  - `rprs2_spearman_rate_28d` = 0.3038 [INFO]
+- Full rendered scorecard: `model_scorecard.md` — as-of 2026-07-30, today (file mtime)
 
 ## 8. Pitcher List cache ages (no scraping here)
 
@@ -130,8 +130,8 @@ _As-of date **2026-07-30** (Thursday). Composed offline from artifacts already o
 |---|---|---|---|---|---|
 | `dpwin_history.parquet` | ok | 2026-07-30 | 0d | content date | `python scripts/xfp/run_matchup_leverage.py  (or run_weekly_optimizer.py — either appends)` |
 | `matchup_leverage.json` | ok | 2026-07-29 | 1d | content date | `python scripts/xfp/run_matchup_leverage.py` |
-| `model_scorecard.csv` | ok | 2026-07-27 | 3d | content date | `python scripts/xfp/build_model_scorecard.py  (refresh step 4.97, Mondays only)` |
-| `model_scorecard.md` | ok | 2026-07-27 | 3d | file mtime | `python scripts/xfp/build_model_scorecard.py  (refresh step 4.97, Mondays only)` |
-| `season_sim.json` | STALE | 2026-07-11 | 19d | content date | `python scripts/xfp/run_season_sim.py` |
+| `model_scorecard.csv` | ok | 2026-07-30 | 0d | content date | `python scripts/xfp/build_model_scorecard.py  (refresh step 4.97, Mondays only)` |
+| `model_scorecard.md` | ok | 2026-07-30 | 0d | file mtime | `python scripts/xfp/build_model_scorecard.py  (refresh step 4.97, Mondays only)` |
+| `season_sim.json` | ok | 2026-07-30 | 0d | content date | `python scripts/xfp/run_season_sim.py` |
 | `verdict_scorecard.csv` | ok | 2026-07-30 | 0d | file mtime | `python scripts/xfp/run_verdict_scorecard.py  (refresh step 4.97b, Mondays only)` |
 | `weekly_optimizer.json` | ok | 2026-07-30 | 0d | content date | `python scripts/xfp/run_weekly_optimizer.py` |
