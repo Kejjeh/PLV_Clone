@@ -441,9 +441,62 @@ def build_state(verbose=True):
         'banked_mine': banked_mine, 'banked_opp': banked_opp,
         'cap_remaining_mine': max(sp_cap - banked_mine, 0),
         'cap_remaining_opp': max(sp_cap - banked_opp, 0),
-        'rp3_map': None,  # not needed post-classify
+        # ── added 2026-07-29 for the weekly optimizer (C3) ────────────────────
+        # The projection maps and the SP-start table are kept rather than
+        # discarded so a CANDIDATE can be projected through the same
+        # project_player() path as a rostered player — the only way its units
+        # (and especially the rprs2 RoS-total sigma) come out right.
+        'proj_maps': {'rh3': rh3_map, 'rp3': rp3_map, 'rp3_by_mlbam': rp3_by_mlbam,
+                      'rprs2': rprs2_map, 'ts': ts_map},
+        'sp_starts_by_pitcher': sp_starts_by_pitcher,
+        'my_sp_ids': my_sp_ids,
+        # Roster composition, role-correct (detect_pitcher_role, never .position
+        # alone — gotcha #8). The optimizer needs it to enforce the 4-RP floor and
+        # positional coverage before it proposes a drop.
+        'my_roster': _roster_meta(mu['my_lineup'], my_sp_ids),
     }
 
+
+
+def _roster_meta(lineup, sp_ids: dict) -> list[dict]:
+    """One record per rostered player: role-correct bucket + eligibility + slot.
+
+    Bucket comes from ``detect_pitcher_role`` for pitchers, NEVER from
+    ``.position`` alone — ESPN mislabels dual-eligible arms (canonical: Detmers
+    2026, position='RP' but SP-eligible and starting), and the optimizer would
+    otherwise miscount the RP floor and propose an illegal drop.
+    """
+    out = []
+    for p in lineup:
+        pos = (p.position or '?')
+        slot = getattr(p, 'lineup_slot', None) or getattr(p, 'slot_position', None)
+        elig = {str(s) for s in (getattr(p, 'eligibleSlots', []) or [])}
+        if pos in ('SP', 'RP', 'P'):
+            m = None
+            try:
+                m = resolve_player_mlbam(p)
+            except Exception:
+                m = None
+            role = None
+            try:
+                role = detect_pitcher_role(p, mlbam_id=int(m)) if m else None
+            except Exception:
+                role = None
+            bucket = role or ('SP' if p.name in sp_ids else 'RP')
+        else:
+            bucket = 'H'
+            m = None
+            try:
+                m = resolve_player_mlbam(p)
+            except Exception:
+                m = None
+        out.append({
+            'name': p.name, 'mlbam': (int(m) if m else None), 'bucket': bucket,
+            'espn_pos': pos, 'slot': slot, 'eligible': elig,
+            'on_il': str(slot).upper() in ('IL', 'IR'),
+            'injury_status': str(getattr(p, 'injuryStatus', '') or '').upper(),
+        })
+    return out
 
 
 def _draw_key(entry) -> str:
