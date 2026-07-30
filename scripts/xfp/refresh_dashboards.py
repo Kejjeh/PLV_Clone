@@ -431,9 +431,14 @@ def main():
     # Must run BEFORE build_matchup_dashboard so any new actuals can flow
     # into matchup-page accuracy widgets if/when they're added.
     # Fail-soft: a backfill error must not stop the dashboard build.
+    # --repair: stored actuals that disagree with ESPN's DECLARED final are
+    # rewritten (pre-2026-07-30 rows hold single-day partials — period 17's
+    # will only become repairable once ESPN closes it). Safe nightly: open
+    # periods are refused (PeriodNotFinal), synthetic backfill_* rows are
+    # excluded by LIVE_MODEL_VERSIONS, and a clean store repairs 0 rows.
     ok_backfill = run(
-        '3.5. Backfill closed-week actuals (idempotent)',
-        'python -X utf8 scripts/xfp/fetch_closed_matchup_actuals.py',
+        '3.5. Backfill closed-week actuals (idempotent, self-repairing)',
+        'python -X utf8 scripts/xfp/fetch_closed_matchup_actuals.py --repair',
         timeout=180,
     )
     if not ok_backfill:
