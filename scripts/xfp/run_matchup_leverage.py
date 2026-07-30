@@ -95,6 +95,7 @@ from scripts.xfp.lib.period_meta import (  # noqa: E402
 )
 from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
 from scripts.xfp.lib import dpwin_history  # noqa: E402
+from scripts.xfp.lib import title_equity as TE  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -588,6 +589,14 @@ def main():
                     'start_date': r.get('date'),
                     'dpwin': r['dpwin_if_added'],
                     'candidate_source': 'advice:fa_streamer'})
+            # season bridge (C4) — displayed conversion, never a re-sort
+            _wv = TE.annotate(hist_moves, state['period'])
+            payload['title_equity'] = {k: _wv.get(k) for k in
+                ('dtitle_pp', 'status', 'source_period', 'payload_period',
+                 'periods_stale', 'note', 'plus2_pp')}
+            if _wv.get('dtitle_pp') is not None:
+                print()
+                print('  ' + TE.banner(_wv).replace(chr(10), chr(10) + '  '))
             payload['dpwin_run_id'] = dpwin_history.log_run(
                 state=state, regime=regime, base_pwin=base_p,
                 sims=args.sims, seed=args.seed, moves=hist_moves)

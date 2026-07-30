@@ -1,119 +1,130 @@
 {
-  "base_pwin": 0.420333,
-  "regime": "CLOSE",
+  "base_pwin": 0.385,
+  "regime": "TRAILING",
   "period": 17,
-  "sims": 6000,
+  "sims": 5000,
   "seed": 7,
   "cap_remaining": 7,
   "plan": [
     {
-      "add": "Joc Pederson",
+      "add": "Ryan Jeffers",
       "add_bucket": "H",
       "drop": "Reid Detmers",
       "drop_bucket": "SP",
-      "dpwin": 0.0875,
-      "mc_se": 0.006454
+      "dpwin": 0.0944,
+      "mc_se": 0.007065,
+      "dtitle_equity_pp": 0.0831
     },
     {
-      "add": "Ryan Jeffers",
+      "add": "Trent Grisham",
       "add_bucket": "H",
-      "drop": "Joc Pederson",
+      "drop": "Ryan Jeffers",
       "drop_bucket": "H",
-      "dpwin": 0.087167,
-      "mc_se": 0.006454
+      "dpwin": 0.0674,
+      "mc_se": 0.007039,
+      "dtitle_equity_pp": 0.0593
     }
   ],
+  "title_equity": {
+    "dtitle_pp": 0.88,
+    "status": "stale",
+    "source_period": 17,
+    "payload_period": 15,
+    "periods_stale": 2,
+    "note": "season_sim.json was generated at period 15, now period 17 (2 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
+    "plus2_pp": 0.56
+  },
   "top_single_moves": [
     {
-      "add": "Joc Pederson",
-      "drop": "Reid Detmers",
-      "dpwin": 0.0875,
-      "mc_se": 0.006454
-    },
-    {
-      "add": "Joc Pederson",
-      "drop": "Logan Henderson",
-      "dpwin": 0.0875,
-      "mc_se": 0.006454
-    },
-    {
       "add": "Ryan Jeffers",
       "drop": "Reid Detmers",
-      "dpwin": 0.087167,
-      "mc_se": 0.006454
+      "dpwin": 0.0944,
+      "mc_se": 0.007065
     },
     {
       "add": "Ryan Jeffers",
       "drop": "Logan Henderson",
-      "dpwin": 0.087167,
-      "mc_se": 0.006454
+      "dpwin": 0.0944,
+      "mc_se": 0.007065
     },
     {
       "add": "Javier Sanoja",
       "drop": "Reid Detmers",
-      "dpwin": 0.075,
-      "mc_se": 0.006455
+      "dpwin": 0.0778,
+      "mc_se": 0.007051
     },
     {
       "add": "Javier Sanoja",
       "drop": "Logan Henderson",
-      "dpwin": 0.075,
-      "mc_se": 0.006455
+      "dpwin": 0.0778,
+      "mc_se": 0.007051
     },
     {
       "add": "Luke Weaver",
       "drop": "Reid Detmers",
-      "dpwin": 0.068333,
-      "mc_se": 0.006453
+      "dpwin": 0.0706,
+      "mc_se": 0.007043
     },
     {
       "add": "Luke Weaver",
       "drop": "Logan Henderson",
-      "dpwin": 0.068333,
-      "mc_se": 0.006453
+      "dpwin": 0.0706,
+      "mc_se": 0.007043
     },
     {
       "add": "Trent Grisham",
       "drop": "Reid Detmers",
-      "dpwin": 0.064167,
-      "mc_se": 0.006452
+      "dpwin": 0.0674,
+      "mc_se": 0.007039
     },
     {
       "add": "Trent Grisham",
       "drop": "Logan Henderson",
-      "dpwin": 0.064167,
-      "mc_se": 0.006452
-    },
-    {
-      "add": "Tyler Tolbert",
-      "drop": "Reid Detmers",
-      "dpwin": 0.0575,
-      "mc_se": 0.006449
-    },
-    {
-      "add": "Tyler Tolbert",
-      "drop": "Logan Henderson",
-      "dpwin": 0.0575,
-      "mc_se": 0.006449
+      "dpwin": 0.0674,
+      "mc_se": 0.007039
     },
     {
       "add": "Jared Young",
       "drop": "Reid Detmers",
-      "dpwin": 0.0575,
-      "mc_se": 0.006449
+      "dpwin": 0.059,
+      "mc_se": 0.007027
     },
     {
       "add": "Jared Young",
       "drop": "Logan Henderson",
-      "dpwin": 0.0575,
-      "mc_se": 0.006449
+      "dpwin": 0.059,
+      "mc_se": 0.007027
+    },
+    {
+      "add": "Tyler Tolbert",
+      "drop": "Reid Detmers",
+      "dpwin": 0.0554,
+      "mc_se": 0.007021
+    },
+    {
+      "add": "Tyler Tolbert",
+      "drop": "Logan Henderson",
+      "dpwin": 0.0554,
+      "mc_se": 0.007021
+    },
+    {
+      "add": "Ryan Jeffers",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.0482,
+      "mc_se": 0.007008
     },
     {
       "add": "Ryan Jeffers",
       "drop": "Corbin Carroll",
-      "dpwin": 0.047167,
-      "mc_se": 0.006441
+      "dpwin": 0.0482,
+      "mc_se": 0.007008
+    },
+    {
+      "add": "Ryan Jeffers",
+      "drop": "Bo Bichette",
+      "dpwin": 0.041,
+      "mc_se": 0.006993
     }
   ],
-  "dpwin_run_id": "2026-07-30T003632_7"
+  "dpwin_run_id": "2026-07-30T005713_7"
 }

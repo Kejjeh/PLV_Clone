@@ -77,6 +77,7 @@ from scripts.xfp.lib.leverage_engine import (  # noqa: E402
 )
 from scripts.xfp.lib import roster_rules as RR  # noqa: E402
 from scripts.xfp.lib import dpwin_history  # noqa: E402
+from scripts.xfp.lib import title_equity as TE  # noqa: E402
 from scripts.xfp.lib.boom_bust import SP_BOOM, SP_BUST, H_BOOM, H_BUST  # noqa: E402
 from build_matchup_dashboard import (  # noqa: E402
     project_player, ESPN_TO_MLB_TEAM, IL_INJURY_STATES, _norm,
@@ -380,6 +381,18 @@ def main() -> int:
     res = optimize(state, D, base_p, regime, cands,
                    max_moves=args.max_moves)
 
+    # Season bridge (C4): weight the period-level dpwin by the value-of-a-win
+    # curve. dpwin stays the sort key — this is a displayed conversion (Rule 13),
+    # and the weight is a per-period constant so it cannot reorder anyway.
+    wv = TE.annotate(res['chosen'], state['period'])
+    if res['rounds']:
+        TE.annotate(res['rounds'][0], state['period'])
+    print('\n--- SEASON CONTEXT ---')
+    print('  ' + TE.banner(wv).replace(chr(10), chr(10) + '  '))
+    if wv.get('dtitle_pp') is not None:
+        print(f"  => every +1.00pp of THIS period's P(win) converts to "
+              f"{wv['dtitle_pp']/100:.4f}pp of title probability")
+
     print('\n--- RECOMMENDED PLAN ---')
     if not res['chosen']:
         print('  HOLD — no legal move improves P(win). The regime guidance above '
@@ -391,8 +404,10 @@ def main() -> int:
                if m.get('add') else f"DROP {m['drop']['name']} ({m['drop']['bucket']})")
         cum += m['dpwin']
         print(f'  {i}. {lbl}')
+        te = m.get('dtitle_equity_pp')
+        te_s = f'   title equity {te:+.4f}pp' if te is not None else ''
         print(f'     dP(win) {m["dpwin"]*100:+.2f}pp  (+/- {m["mc_se"]*100:.2f}pp MC)'
-              f'   running P(win) ~ {cum*100:.1f}%')
+              f'   running P(win) ~ {cum*100:.1f}%{te_s}')
 
     if res['rounds']:
         print('\n--- TOP 8 SINGLE MOVES (round 1) ---')
@@ -420,7 +435,11 @@ def main() -> int:
         'plan': [{'add': (m['add'] or {}).get('name') if m.get('add') else None,
                   'add_bucket': (m['add'] or {}).get('bucket') if m.get('add') else None,
                   'drop': m['drop']['name'], 'drop_bucket': m['drop']['bucket'],
-                  'dpwin': m['dpwin'], 'mc_se': m['mc_se']} for m in res['chosen']],
+                  'dpwin': m['dpwin'], 'mc_se': m['mc_se'],
+                  'dtitle_equity_pp': m.get('dtitle_equity_pp')} for m in res['chosen']],
+        'title_equity': {k: wv.get(k) for k in
+                         ('dtitle_pp', 'status', 'source_period', 'payload_period',
+                          'periods_stale', 'note', 'plus2_pp')},
         'top_single_moves': [
             {'add': r['add']['name'] if r.get('add') else None,
              'drop': r['drop']['name'], 'dpwin': r['dpwin'], 'mc_se': r['mc_se']}
@@ -434,6 +453,8 @@ def main() -> int:
                 mv = {'move_type': 'swap' if r.get('add') else 'drop',
                       'dpwin': r['dpwin'], 'pwin': r['pwin'], 'mc_se': r['mc_se'],
                       'candidate_source': 'optimizer:round1',
+                      'dtitle_pp_per_win': r.get('dtitle_pp_per_win'),
+                      'dtitle_equity_pp': r.get('dtitle_equity_pp'),
                       'drop': {'name': r['drop']['name'],
                                'mlbam': r['drop'].get('mlbam'),
                                'bucket': r['drop']['bucket']}}
