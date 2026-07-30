@@ -94,6 +94,7 @@ from scripts.xfp.lib.period_meta import (  # noqa: E402
     resolve_period_meta, espn_period_meta,
 )
 from scripts.xfp.lib.variance_bands import fallback_sigma  # noqa: E402
+from scripts.xfp.lib import dpwin_history  # noqa: E402
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -107,10 +108,15 @@ def hitter_sit_priority(state, D, base_p, opp_total):
     13 hitters score; marginal Delta-P(win) is the honest lever.)"""
     rows = []
     for h in state['my_hitters']:
-        my2, _ = assemble(state, D, zero_hitters={h['name']})
+        # MUST be the mlbam draw key, not the name: D became mlbam-keyed in the
+        # 2026-07-29 extraction (so same-name players stop merging), and passing a
+        # name here would match nothing — every dpwin_if_benched would silently
+        # read 0.00pp. assemble() now rejects a non-key to make that impossible.
+        my2, _ = assemble(state, D, zero_hitters={_draw_key(h)})
         dp = pwin(my2, opp_total) - base_p
         st = series_stats(emp_series(h['mlbam'], 'H'), H_BOOM, H_BUST)
-        rows.append({'name': h['name'], 'n_games': h['n_games'],
+        rows.append({'name': h['name'], 'mlbam': h.get('mlbam'),
+                     'n_games': h['n_games'],
                      'mean_g': round(h['mean_g'], 2),
                      'dpwin_if_benched': round(dp, 4),
                      'emp_sigma': st['std'], 'boom_pct': st['boom_pct'],
@@ -137,7 +143,8 @@ def sp_bench_scenarios(state, D, base_p, opp_total):
             fl = floor_lens(e['name'])
         except Exception:
             fl = None
-        rows.append({'name': e['name'], 'date': e['date'], 'opp': e['opp'],
+        rows.append({'name': e['name'], 'mlbam': e.get('mlbam'),
+                     'date': e['date'], 'opp': e['opp'],
                      'confirmed': e['confirmed'],
                      'model_fp': round(e['model_fp'], 2),
                      'marcel_il': (e.get('data_quality_tag') == 'marcel_il'),
@@ -235,7 +242,8 @@ def fa_streamer_adds(state, D, base_p, opp_total, regime, max_candidates=8):
         my2, _ = assemble(state, D, extra_my_sp=extra)
         dp = pwin(my2, opp_total) - base_p
         st = series_stats(emp, SP_BOOM, SP_BUST)
-        rows.append({'name': p.name, 'team': getattr(p, 'proTeam', ''),
+        rows.append({'name': p.name, 'mlbam': s0['pid'],
+                     'team': getattr(p, 'proTeam', ''),
                      'date': s0['date'], 'opp': s0['opp'],
                      'per_start_ev': round(per_start_ev, 2),
                      'marcel_il': bool(info is not None
@@ -550,6 +558,44 @@ def main():
                   'regime guidance above still applies to daily lineup calls')
         for m in moves[:3]:
             print(f"  {m['dpwin']*100:+.2f}pp  {m['move']}  — {m['why']}")
+
+        # ── durable dpwin surface (C2) ───────────────────────────────────────
+        # matchup_leverage.json is OVERWRITTEN each run, so without this the
+        # previous surface is gone and "what did we think this move was worth at
+        # the time, and what did we pass on?" becomes unanswerable — which is
+        # precisely what the counterfactual ledger needs to settle against.
+        # Every evaluated candidate is logged, not just the positive ones: the
+        # REJECTED surface is the counterfactual.
+        try:
+            hist_moves = []
+            for r in (hp or []):
+                hist_moves.append({
+                    'move_type': 'sit_hitter',
+                    'drop': {'name': r['name'], 'mlbam': r.get('mlbam'), 'bucket': 'H'},
+                    'dpwin': r['dpwin_if_benched'],
+                    'candidate_source': 'advice:hitter_sit'})
+            for r in (sb or []):
+                hist_moves.append({
+                    'move_type': 'bench_start',
+                    'drop': {'name': r['name'], 'mlbam': r.get('mlbam'), 'bucket': 'SP'},
+                    'start_date': r.get('date'),
+                    'dpwin': r['dpwin_if_benched'],
+                    'candidate_source': 'advice:sp_bench'})
+            for r in (fa or []):
+                hist_moves.append({
+                    'move_type': 'add',
+                    'add': {'name': r['name'], 'mlbam': r.get('mlbam'), 'bucket': 'SP'},
+                    'start_date': r.get('date'),
+                    'dpwin': r['dpwin_if_added'],
+                    'candidate_source': 'advice:fa_streamer'})
+            payload['dpwin_run_id'] = dpwin_history.log_run(
+                state=state, regime=regime, base_pwin=base_p,
+                sims=args.sims, seed=args.seed, moves=hist_moves)
+        except Exception as exc:
+            # Fail-soft on purpose: a logging problem must never take down a live
+            # advice run. Loud enough to notice, cheap enough to ignore.
+            print(f'  ⚠ dpwin history not written ({type(exc).__name__}: {exc}) '
+                  f'— advice above is unaffected')
 
     path = OUT / 'matchup_leverage.json'
     path.write_text(json.dumps(payload, indent=2, default=float), encoding='utf-8')

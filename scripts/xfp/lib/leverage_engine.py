@@ -649,6 +649,24 @@ def assemble(state, D, *, zero_hitters: set = frozenset(),
     my = np.full(n, float(state['mu']['my_score']))
     opp = np.full(n, float(state['mu']['opp_score']))
     zeroed = set(zero_hitters) | set(drop_hitters)
+    # Guard against the regression this refactor itself introduced: when D moved
+    # from name-keys to mlbam-keys, callers still passing a NAME matched nothing,
+    # so every "if benched" delta silently read 0.00pp — a wrong answer that
+    # looked like a legitimate "benching him costs nothing". Anything that is not
+    # a real draw key is now a hard error rather than a no-op. Use _draw_key(entry)
+    # or _resolve_keys(D, 'my_h', names).
+    _bad = [k for k in zeroed if k not in D['my_h']]
+    if _bad:
+        raise KeyError(
+            f'assemble(): {_bad!r} are not draw keys in D["my_h"]. Draws are keyed '
+            f'by mlbam since 2026-07-29 — pass _draw_key(entry), or translate '
+            f'names with _resolve_keys(D, "my_h", names). Silently ignoring these '
+            f'would report every hitter as free to bench.')
+    _bad_rp = [k for k in set(drop_rps) if k not in D['my_rp']]
+    if _bad_rp:
+        raise KeyError(
+            f'assemble(): {_bad_rp!r} are not draw keys in D["my_rp"] (same '
+            f'mlbam-key contract as my_h).')
     for key, rec in D['my_h'].items():
         if key not in zeroed:
             my = my + rec['arr']
