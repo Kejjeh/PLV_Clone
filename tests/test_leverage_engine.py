@@ -178,6 +178,81 @@ def test_ev_retarget_is_a_location_shift_not_a_multiply():
     assert scaled.min() < base.min()
 
 
+def test_matchup_factor_scales_location_not_the_finished_draw():
+    """The defect's signature: a pure multiplicative rescale leaves P(FP<=0)
+    COMPLETELY INVARIANT to the matchup, because scaling cannot move mass across
+    zero. Location scaling makes it monotone with a meaningful spread.
+
+    Mirror of tests/test_sp_sampler_tail_2026_07_29.py::
+    test_opp_factor_scales_location_not_the_finished_draw, at the same F2 panel
+    median (mu=9.86, sigma=8.73) so the two engines are checked against one
+    reference point.
+    """
+    mu, sigma, n = 9.86, 8.73, 120_000
+    emp = list(np.random.default_rng(0).normal(mu, sigma, 30))
+    factors = (0.83, 0.90, 1.00, 1.10, 1.20)
+
+    mult, shift = [], []
+    for f in factors:
+        base = E._blend_draws(np.random.default_rng(7), emp, mu, sigma,
+                              E.K_PRIOR_SP, n)
+        ev, target = float(base.mean()), mu * f
+        mult.append(float(((base * (target / ev)) <= 0).mean()))
+        shift.append(float(((base + (target - ev)) <= 0).mean()))
+
+    # the OLD treatment is blind to the matchup
+    assert max(mult) - min(mult) < 1e-9, (
+        f"multiplicative rescale should be invariant, got spread "
+        f"{max(mult) - min(mult):.6f}")
+    # the NEW treatment is monotone and materially different
+    assert all(shift[i] > shift[i + 1] for i in range(len(shift) - 1)), shift
+    assert (max(shift) - min(shift)) > 0.03, (
+        f"location scaling must move P(FP<=0) meaningfully, got "
+        f"{max(shift) - min(shift):.4f}")
+
+
+def test_matchup_factor_holds_sigma_fixed():
+    """A multiply scales the SD along with the mean (despite the old comment
+    claiming variance shape was preserved); a shift genuinely holds it."""
+    mu, sigma, n = 9.86, 8.73, 120_000
+    emp = list(np.random.default_rng(0).normal(mu, sigma, 30))
+    base = E._blend_draws(np.random.default_rng(7), emp, mu, sigma,
+                          E.K_PRIOR_SP, n)
+    ev, target = float(base.mean()), mu * 1.20
+    assert (base + (target - ev)).std() == pytest.approx(base.std(), rel=1e-9)
+    assert (base * (target / ev)).std() > base.std() * 1.20
+
+
+def test_weekly_total_downside_responds_to_the_matchup():
+    """The consumer-facing consequence: p05/p10 of a 6-start week must widen
+    when the matchup is unfavorable and tighten when it is favorable. Under the
+    multiply both moved the WRONG way relative to truth."""
+    mu, sigma, n = 9.86, 8.73, 40_000
+    emp = list(np.random.default_rng(0).normal(mu, sigma, 30))
+
+    def weekly(factor, shift_it):
+        tot = np.zeros(n)
+        for k in range(6):
+            b = E._blend_draws(np.random.default_rng(100 + k), emp, mu, sigma,
+                               E.K_PRIOR_SP, n)
+            ev, target = float(b.mean()), mu * factor
+            tot += (b + (target - ev)) if shift_it else (b * (target / ev))
+        return np.percentile(tot, 5), np.percentile(tot, 10), tot.mean()
+
+    bad_s, good_s = weekly(0.83, True), weekly(1.20, True)
+    bad_m, good_m = weekly(0.83, False), weekly(1.20, False)
+
+    # means agree by construction under both treatments
+    assert bad_s[2] == pytest.approx(bad_m[2], rel=1e-6)
+    assert good_s[2] == pytest.approx(good_m[2], rel=1e-6)
+    # but the tails do not: the multiply is optimistic in a bad matchup and
+    # pessimistic in a good one — backwards in both directions
+    assert bad_m[0] > bad_s[0], "multiply overstates the floor in a bad matchup"
+    assert good_m[0] < good_s[0], "multiply understates the floor in a good matchup"
+    assert (good_s[0] - bad_s[0]) > (good_m[0] - bad_m[0]), (
+        "location scaling must make the floor MORE matchup-sensitive")
+
+
 def test_engine_source_no_longer_multiplies_draws_by_a_target_ratio():
     """Strip comments first — the fix is DOCUMENTED by quoting the old
     expression, so a naive substring check trips on its own explanation."""

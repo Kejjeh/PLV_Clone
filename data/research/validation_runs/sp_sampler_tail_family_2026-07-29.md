@@ -334,3 +334,78 @@ agent's additions).
    a skewed family or a re-tuned sigma — both undeclared here, both would need a
    fresh pre-registration. Note the direction: the tool is still mildly
    *optimistic* about blow-ups, just no longer infinitely so.
+
+
+---
+
+## SIBLING ENGINE: the same defect in the P(win) engine (2026-07-29, same day)
+
+`run_matchup_leverage.py` carried the identical sign defect at its per-start EV
+retarget (old lines 492-505). The code moved to
+`scripts/xfp/lib/leverage_engine.py` during the C1 extraction and was fixed
+there in the same change: `base = base * (target / ev)` became
+`base = base + (target - ev)`. `_blend_draws` never multiplied anything itself —
+it draws `rng.normal` and bootstrap-replaces a fraction — so its empirical leg
+only INHERITED the distortion from that call site, and the location shift
+therefore repairs both legs at once.
+
+### Measured, at this study's own panel median (mu=9.86, sigma=8.73, 30-start log)
+
+| opp_factor | multiply P(FP<=0) | shift P(FP<=0) |
+|---|---|---|
+| 0.83 | 10.75% | **11.44%** |
+| 0.90 | 10.75% | 10.91% |
+| 1.00 | 10.75% | 10.24% |
+| 1.10 | 10.75% | 4.97% |
+| 1.20 | 10.75% | **4.48%** |
+
+Multiplicative spread **0.00pp — completely invariant to the matchup**, exactly as
+this study found for `sp_bench_mc`. Location scaling: 6.97pp and monotone.
+Sigma at factor 1.20: base 7.583, multiply **9.886** (inflated), shift 7.583 (held).
+
+### Weekly total, 6 starts — the consumer-facing number
+
+| factor | treatment | p05 | p10 | mean |
+|---|---|---|---|---|
+| 0.83 | multiply | 21.57 | 27.77 | 49.10 |
+| 0.83 | **shift** | **18.48** | **25.37** | 49.10 |
+| 1.20 | multiply | 31.19 | 40.16 | 70.99 |
+| 1.20 | **shift** | **40.37** | **47.26** | 70.99 |
+
+Means agree by construction; the tails do not. The multiply is **optimistic about
+the floor in a bad matchup (+3.1 FP at p05) and pessimistic in a good one
+(-9.2 FP)** — wrong in both directions.
+
+### Live P(win) impact: small, and worth saying so plainly
+
+Rebuilding the real period-17 state (WTD 91.1 vs 120.7) under both treatments,
+20k sims, seed 7:
+
+| treatment | P(win) | regime | my p05 | my p10 | my mean |
+|---|---|---|---|---|---|
+| multiply | 28.78% | TRAILING | 312.8 | 327.2 | 380.3 |
+| shift | **29.07%** | TRAILING | 312.8 | 327.0 | 380.3 |
+
+**+0.30pp**, and the team-total percentiles barely move. The defect is
+structurally real and correctly fixed, but its live effect here is modest for two
+reasons worth recording so nobody over-claims it later: (a) `model_fp` sits close
+to the empirical mean for most current events, so `target/ev` is near 1 and the
+two treatments nearly coincide; (b) the SP leg is 7 starts inside a full-roster
+total, so any per-start distortion is diluted. It matters most where the retarget
+factor is far from 1 — strong matchup tilts, `marcel_il` arms leaning parametric,
+and thin-history streamers.
+
+Guards: `tests/test_leverage_engine.py::test_matchup_factor_scales_location_not_the_finished_draw`
+(mirrors this study's `test_opp_factor_scales_location_not_the_finished_draw`),
+plus `test_matchup_factor_holds_sigma_fixed` and
+`test_weekly_total_downside_responds_to_the_matchup`.
+
+### Still open (declared out of scope here, unchanged)
+
+`sp_bench_mc.build_sp_sampler`'s **empirical-bootstrap leg** still multiplies
+bootstrapped REAL FP by `opp_factor` and carries the same asymmetry: a negative
+real start scaled by a factor < 1 becomes LESS bad. Distinct from the parametric
+leg this study fixed, and it needs its own contrast (a bootstrap has no mean
+parameter to shift, so the fix is not simply "shift instead" — options are
+resampling from an opponent-conditioned pool, or shifting the bootstrapped values
+by the same location delta).
