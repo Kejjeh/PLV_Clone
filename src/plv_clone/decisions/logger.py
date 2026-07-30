@@ -49,6 +49,44 @@ class DecisionRecord:
     settled_at: Optional[str] = None
     settlement: Optional[dict] = None
 
+    # ── schema v3 (2026-07-29): EXECUTED moves + their counterfactual ─────────
+    # Every field below is optional with a default, which is what keeps the 131
+    # days of existing v1/v2 records readable: settle_decisions rebuilds via
+    # DecisionRecord(**payload), so a missing key simply takes its default. Same
+    # backward-compatible pattern as the v1 -> v2 units fix.
+    #
+    # WHY v3 EXISTS. v1/v2 record a VERDICT on a player ("BUY Cam Smith") and the
+    # settler asks "was the projection right?" — residual vs realized FP/unit.
+    # That is a real question but it is not the one that decides a season. The
+    # question that does is "was the CHOICE right?": Josh executed one move out of
+    # a surface of alternatives, and the only honest grade is
+    # realized(chosen) - realized(rejected) over a common window. Those are
+    # different comparisons and both blocks can coexist on one record —
+    # `settlement` keeps answering the projection question, and
+    # `counterfactual_settlement` (filled by decisions/counterfactual.py) answers
+    # the choice question.
+    #
+    # record_schema is explicit rather than inferred: v2 was distinguished by the
+    # PRESENCE of inputs['proj_units'], which worked but meant every reader had to
+    # know that trick.
+    record_schema: int = 2
+    # add | drop | swap | start | bench | hold. None on a legacy verdict-style
+    # record, which is how the settler tells them apart without guessing.
+    action: Optional[str] = None
+    # ISO datetime the move actually happened in ESPN. None = advisory only, never
+    # executed — a distinction the scorecard needs, since an unexecuted
+    # recommendation cannot be graded as a decision.
+    executed_at: Optional[str] = None
+    # {rejected_name, rejected_mlbam, rejected_bucket, dpwin_chosen,
+    #  dpwin_rejected, dpwin_gap, source_run_id, regime, base_pwin,
+    #  dtitle_equity_chosen}
+    # Presence of this block is what GATES paired settlement — no alternative
+    # recorded means there is nothing to compare against, and inventing one after
+    # the fact would be hindsight, not accounting.
+    counterfactual: Optional[dict] = None
+    # Filled by the paired settler. Sibling of `settlement`, never a replacement.
+    counterfactual_settlement: Optional[dict] = None
+
 
 # ---------------------------------------------------------------------------
 # Name normalization + decision_id construction
@@ -73,6 +111,101 @@ def build_decision_id(
 ) -> str:
     """Build the canonical decision_id."""
     return f"{snapshot_date}_{_norm_name(player_name)}_{bucket}_{seq:03d}"
+
+
+# ---------------------------------------------------------------------------
+# schema v3 — executed-move records
+# ---------------------------------------------------------------------------
+
+VALID_ACTIONS = frozenset({"add", "drop", "swap", "start", "bench", "hold"})
+
+
+def build_executed_record(
+    *,
+    snapshot_date: str,
+    player_name: str,
+    mlbam_id: Optional[int],
+    bucket: str,
+    action: str,
+    executed_at: Optional[str] = None,
+    rejected: Optional[dict] = None,
+    dpwin_chosen: Optional[float] = None,
+    dpwin_rejected: Optional[float] = None,
+    source_run_id: Optional[str] = None,
+    regime: Optional[str] = None,
+    base_pwin: Optional[float] = None,
+    dtitle_equity_chosen: Optional[float] = None,
+    reason_tag: Optional[str] = None,
+    seq: int = 1,
+    inputs: Optional[dict] = None,
+) -> DecisionRecord:
+    """Build a v3 record for a move that was (or will be) EXECUTED.
+
+    ``rejected`` = {'name', 'mlbam', 'bucket'} — the best alternative that was
+    passed on, normally the top *unexecuted* same-bucket candidate from the same
+    dpwin_history run. Omitting it produces a valid v3 record that simply cannot
+    be paired-settled, which is the honest state for a move made with no recorded
+    alternative.
+
+    dpwin_gap is derived rather than passed so it can never disagree with its
+    own components.
+    """
+    if action not in VALID_ACTIONS:
+        raise ValueError(
+            f"action {action!r} not in {sorted(VALID_ACTIONS)} — refusing to "
+            f"write a record the settler cannot interpret")
+
+    cf = None
+    if rejected or dpwin_chosen is not None or source_run_id:
+        gap = None
+        if dpwin_chosen is not None and dpwin_rejected is not None:
+            gap = round(float(dpwin_chosen) - float(dpwin_rejected), 6)
+        cf = {
+            "rejected_name": (rejected or {}).get("name"),
+            "rejected_mlbam": (rejected or {}).get("mlbam"),
+            "rejected_bucket": (rejected or {}).get("bucket"),
+            "dpwin_chosen": dpwin_chosen,
+            "dpwin_rejected": dpwin_rejected,
+            "dpwin_gap": gap,
+            "source_run_id": source_run_id,
+            "regime": regime,
+            "base_pwin": base_pwin,
+            "dtitle_equity_chosen": dtitle_equity_chosen,
+        }
+
+    return DecisionRecord(
+        decision_id=build_decision_id(snapshot_date, player_name, bucket, seq=seq),
+        snapshot_date=snapshot_date,
+        player_name=player_name,
+        mlbam_id=(int(mlbam_id) if mlbam_id else None),
+        bucket=bucket,
+        # An executed move is not a "verdict"; carry the action so the existing
+        # verdict ladder in run_verdict_scorecard cannot mistake it for one.
+        verdict_top=action.upper(),
+        reason_tag=reason_tag,
+        confidence=None,
+        inputs=dict(inputs or {}, inputs_schema=3),
+        record_schema=3,
+        action=action,
+        executed_at=executed_at,
+        counterfactual=cf,
+    )
+
+
+def is_executed_record(rec: DecisionRecord) -> bool:
+    """True for a v3 executed-move record (as opposed to a verdict record)."""
+    return getattr(rec, "action", None) is not None
+
+
+def is_pairable(rec: DecisionRecord) -> bool:
+    """True when a record carries an alternative worth settling against.
+
+    Requires an executed timestamp AND a named rejected alternative: without the
+    first there is no window to measure over, and without the second there is
+    nothing to measure against.
+    """
+    cf = getattr(rec, "counterfactual", None) or {}
+    return bool(getattr(rec, "executed_at", None)) and bool(cf.get("rejected_name"))
 
 
 # ---------------------------------------------------------------------------

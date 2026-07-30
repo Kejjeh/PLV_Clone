@@ -347,10 +347,105 @@ def main() -> int:
         print("\n--- Worst calls (verdict vs realized outcome, per-player deduped) ---")
         print(wc.to_string(index=False))
 
+    # ── §7-9: DECISION accounting (C6, 2026-07-29) ───────────────────────────
+    # Everything above grades PROJECTIONS: was the number right? These three
+    # grade CHOICES: of the options on the table, was the one taken the best?
+    # A projection can be well calibrated while every decision made from it is
+    # wrong, and vice versa — so this is a genuinely separate scoreboard, not a
+    # restatement of the one above.
+    _decision_sections(today)
+
     ladder.to_csv(a.out, index=False)
     print(f"\nwrote {a.out} ({len(ladder)} rows)")
     print("\nRule 13: scoreboard only — never moves rh3/rp3/rprs2 or any verdict.")
     return 0
+
+
+def _load_paired_records(today: date) -> list:
+    """Every v3 record carrying a paired settlement, from both trees."""
+    from plv_clone.decisions.logger import DecisionRecord
+    root = Path(DECISIONS_ROOT) if not isinstance(DECISIONS_ROOT, Path) else DECISIONS_ROOT
+    out, seen = [], set()
+    if not root.exists():
+        return out
+    for p in sorted(root.rglob("*.json")):
+        try:
+            payload = json.loads(p.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        try:
+            rec = DecisionRecord(**payload)
+        except TypeError:
+            continue
+        if not getattr(rec, "counterfactual_settlement", None):
+            continue
+        # the settled/ mirror and the source tree can both hold a record; the
+        # mirror is authoritative, and sorted() puts 'settled' after the dates
+        if rec.decision_id in seen:
+            out = [r for r in out if r.decision_id != rec.decision_id]
+        seen.add(rec.decision_id)
+        out.append(rec)
+    return out
+
+
+def _decision_sections(today: date) -> None:
+    from plv_clone.decisions import counterfactual as CF
+
+    recs = _load_paired_records(today)
+    print("\n" + "=" * 78)
+    print("DECISION ACCOUNTING — was the CHOICE right? (grades moves, not projections)")
+    print("=" * 78)
+    if not recs:
+        print("  no paired settlements yet.")
+        print("  This fills in as executed moves ripen (H 21d / SP+RP 35d) and")
+        print("  requires a dpwin surface to have existed BEFORE the move — run")
+        print("  /matchup-leverage or the weekly optimizer before executing so the")
+        print("  alternative you passed on is on the record.")
+        return
+
+    summ = CF.summarize(recs)
+
+    print(f"\n--- §7 Decision regret by bucket (n={summ['n_settled']}) ---")
+    print(f"{'bucket':<8}{'n':>4}{'RIGHT':>7}{'WRONG':>7}{'WASH':>6}"
+          f"{'hit%':>7}{'mean FP':>9}{'median':>9}{'total FP':>10}")
+    for b, e in sorted(summ["by_bucket"].items()):
+        hr = f"{e['hit_rate']*100:.0f}%" if e["hit_rate"] is not None else "—"
+        print(f"{b:<8}{e['n']:>4}{e[CF.RIGHT_CALL]:>7}{e[CF.WRONG_CALL]:>7}"
+              f"{e[CF.WASH]:>6}{hr:>7}{e['fp_gained_mean']:>9.1f}"
+              f"{e['fp_gained_median']:>9.1f}{e['fp_gained_total']:>10.1f}")
+    if summ["n_low_sample"]:
+        print(f"  [{summ['n_low_sample']} of {summ['n_settled']} are low-sample — "
+              f"flagged, not excluded: sometimes the thin sample IS the outcome "
+              f"(the alternative got hurt or benched)]")
+
+    print(f"\n--- §8 Cumulative FP vs the road not taken ---")
+    tot = summ["total_fp_gained"]
+    verdict = ("the process is AHEAD" if tot > 0 else
+               "the process is BEHIND" if tot < 0 else "dead even")
+    print(f"  {tot:+.1f} FP across {summ['n_settled']} settled decisions — {verdict}")
+    print(f"  This is the single number that says whether the whole apparatus is")
+    print(f"  earning anything: sum of realized(chosen) - realized(rejected).")
+    if summ["n_settled"] < 20:
+        print(f"  [EARLY READ at n={summ['n_settled']} — a handful of decisions is "
+              f"mostly variance; treat the sign as provisional]")
+
+    res = CF.dpwin_resolution(recs)
+    print(f"\n--- §9 Does Delta-P(win) have RESOLUTION? ---")
+    if res["status"] == "EARLY_READ":
+        print(f"  {res['note']}")
+        print(f"  (the honest test of whether the surface predicts outcomes at all,")
+        print(f"   rather than merely being internally consistent)")
+    else:
+        rates = res["tercile_win_rates"]
+        print(f"  P(fp_gained>0) by ascending dpwin_gap tercile: {rates}  "
+              f"(n={res['n']})")
+        if res["monotone"]:
+            print(f"  MONOTONE — a bigger predicted edge really did produce a better")
+            print(f"  realized outcome. The dpwin surface has resolution.")
+        else:
+            print(f"  NOT monotone — the surface's confidence is not tracking")
+            print(f"  realized outcomes. Treat dpwin magnitudes as ordinal at best")
+            print(f"  until this turns over.")
 
 
 if __name__ == "__main__":

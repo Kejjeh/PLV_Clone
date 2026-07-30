@@ -44,11 +44,10 @@ def _strip_accents(s):
                    if unicodedata.category(c) != 'Mn')
 
 
-def _norm_sorted(s):
-    s = _strip_accents(s).lower()
-    s = re.sub(r'[,]+', ' ', s)
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# Name join key — OWNER: plv_clone.utils.name_match.join_key (order-independent,
+# so "Fried, Max" == "Max Fried"). NEVER re-derive locally: 127 local copies
+# drifted apart and mis-keyed Ryan O'Hearn's curly apostrophe (2026-07-28).
+from plv_clone.utils.name_match import join_key as _norm_sorted  # noqa: E402
 
 
 def lookup_player_id(name: str) -> tuple[int, str, str] | None:

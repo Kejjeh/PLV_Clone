@@ -16,12 +16,10 @@ OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
 
-def _norm(s):
-    """Order-independent normalize: handles 'Fried, Max' == 'Max Fried'."""
-    s = unicodedata.normalize('NFD', str(s))
-    s = ''.join(c for c in s if unicodedata.category(c) != 'Mn').lower()
-    parts = re.findall(r'[a-z]+', s)
-    return ''.join(sorted(parts))
+# Name join key — OWNER: plv_clone.utils.name_match.join_key (order-independent,
+# so "Fried, Max" == "Max Fried"). NEVER re-derive locally: 127 local copies
+# drifted apart and mis-keyed Ryan O'Hearn's curly apostrophe (2026-07-28).
+from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 
 
 SP_REMAINING_STARTS = 24  # dynamic empirical value, see opponent_lineup_overlap.py

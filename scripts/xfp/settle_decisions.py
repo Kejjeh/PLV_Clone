@@ -72,6 +72,7 @@ ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from plv_clone.decisions.logger import is_pairable as _CF_is_pairable  # noqa: E402
 from plv_clone.decisions import (  # noqa: E402
     DECISIONS_ROOT,
     DecisionRecord,
@@ -280,6 +281,75 @@ def _ripe(rec: DecisionRecord, today: date) -> bool:
     return today >= window_end
 
 
+def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
+                       gamelog_cache: dict) -> tuple[Optional[float], int]:
+    """(total_fp, n_events) over [start, end] — the PAIRED-settlement metric.
+
+    Total rather than per-unit, deliberately: a decision includes the playing time
+    you chose, so a player who was hurt or benched should score 0, not be dropped
+    as unsettleable. See plv_clone.decisions.counterfactual for the full argument.
+    """
+    group = "hitting" if bucket == "H" else "pitching"
+    key = (int(mlbam), start.year, group)
+    if key not in gamelog_cache:
+        gamelog_cache[key] = _fetch_gamelog(int(mlbam), start.year, group)
+    games = _games_in_window(gamelog_cache[key], start, end)
+    if bucket == "H":
+        rel = games
+        total = sum(_SCORING.score_hitter_game(g) for g in rel)
+        n = sum(g.get("plateAppearances", 0) for g in rel)
+    elif bucket == "SP":
+        rel = [g for g in games if g.get("gamesStarted", 0) == 1]
+        total = sum(_SCORING.score_pitcher_start(g) for g in rel)
+        n = len(rel)
+    else:
+        rel = [g for g in games if g.get("gamesStarted", 0) == 0]
+        total = sum(_SCORING.score_pitcher_relief(g) for g in rel)
+        n = len(rel)
+    if not rel:
+        return None, 0
+    return float(total), int(n)
+
+
+def _settle_counterfactual_one(rec: DecisionRecord, today: date,
+                               gamelog_cache: dict) -> DecisionRecord:
+    """Paired settlement for a v3 executed record. No-op for anything else.
+
+    Runs ALONGSIDE the residual settlement, not instead of it: one asks whether
+    the projection was right, the other whether the choice was. Reuses the same
+    gamelog cache so the extra player costs at most one more API call.
+    """
+    from plv_clone.decisions.counterfactual import (
+        settle_counterfactual, window_for, is_ripe)
+
+    if not _CF_is_pairable(rec) or rec.counterfactual_settlement:
+        return rec
+    if not is_ripe(rec, today=today):
+        return rec
+    win = window_for(rec)
+    if win is None:
+        return rec
+    start, end = win
+    cf = rec.counterfactual or {}
+
+    chosen_total, chosen_n = (None, 0)
+    if rec.mlbam_id:
+        chosen_total, chosen_n = _totals_in_window(
+            int(rec.mlbam_id), rec.bucket, start, end, gamelog_cache)
+
+    rej_total, rej_n = (None, 0)
+    rej_id = cf.get("rejected_mlbam")
+    if rej_id:
+        rej_total, rej_n = _totals_in_window(
+            int(rej_id), cf.get("rejected_bucket") or rec.bucket,
+            start, end, gamelog_cache)
+
+    return settle_counterfactual(
+        rec, today=today, chosen_total_fp=chosen_total,
+        rejected_total_fp=rej_total,
+        n_events_chosen=chosen_n, n_events_rejected=rej_n)
+
+
 def _settle_one(
     rec: DecisionRecord, today: date, gamelog_cache: dict
 ) -> tuple[DecisionRecord, str]:
@@ -471,7 +541,23 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
     reused_settled = 0
     gamelog_cache: dict = {}
 
+    paired_settled = 0
+
     for rec in records:
+        # 0. Paired (counterfactual) settlement runs on v3 executed records and is
+        #    INDEPENDENT of the residual path below — one grades the projection,
+        #    the other grades the choice. Sharing gamelog_cache means the extra
+        #    player costs at most one additional API call.
+        if _CF_is_pairable(rec) and not rec.counterfactual_settlement:
+            try:
+                rec2 = _settle_counterfactual_one(rec, today, gamelog_cache)
+                if rec2.counterfactual_settlement:
+                    rec = rec2
+                    paired_settled += 1
+            except Exception as exc:
+                print(f'  WARN paired settlement failed for {rec.decision_id}: '
+                      f'{type(exc).__name__}: {exc}')
+
         # 1. Idempotency: reuse an existing settlement if present.
         prior = _load_existing_settlement(root, rec)
         if prior is not None:
