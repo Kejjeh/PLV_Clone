@@ -5,24 +5,31 @@
   "sims": 10000,
   "seed": 7,
   "cap_remaining": 7,
+  "plan_source": "greedy",
+  "plan_total_dpwin": 0.15299999999999997,
+  "plan_pwin_final": 0.5436,
   "plan": [
     {
       "add": "Joc Pederson",
       "add_bucket": "H",
       "drop": "Reid Detmers",
       "drop_bucket": "SP",
-      "dpwin": 0.0845,
+      "dpwin": 0.08450000000000002,
       "mc_se": 0.004994,
+      "pwin_after": 0.4751,
+      "dpwin_from_base": 0.0845,
       "dtitle_equity_pp": 0.0634
     },
     {
-      "add": "Ryan Jeffers",
-      "add_bucket": "H",
-      "drop": "Joc Pederson",
-      "drop_bucket": "H",
-      "dpwin": 0.0884,
-      "mc_se": 0.004996,
-      "dtitle_equity_pp": 0.0663
+      "add": "Luke Weaver",
+      "add_bucket": "RP",
+      "drop": "Logan Henderson",
+      "drop_bucket": "SP",
+      "dpwin": 0.06849999999999995,
+      "mc_se": 0.004981,
+      "pwin_after": 0.5436,
+      "dpwin_from_base": 0.153,
+      "dtitle_equity_pp": 0.0514
     }
   ],
   "title_equity": {
@@ -38,25 +45,25 @@
     {
       "add": "Ryan Jeffers",
       "drop": "Reid Detmers",
-      "dpwin": 0.0884,
+      "dpwin": 0.08839999999999998,
       "mc_se": 0.004996
     },
     {
       "add": "Ryan Jeffers",
       "drop": "Logan Henderson",
-      "dpwin": 0.0884,
+      "dpwin": 0.08839999999999998,
       "mc_se": 0.004996
     },
     {
       "add": "Joc Pederson",
       "drop": "Reid Detmers",
-      "dpwin": 0.0845,
+      "dpwin": 0.08450000000000002,
       "mc_se": 0.004994
     },
     {
       "add": "Joc Pederson",
       "drop": "Logan Henderson",
-      "dpwin": 0.0845,
+      "dpwin": 0.08450000000000002,
       "mc_se": 0.004994
     },
     {
@@ -74,25 +81,25 @@
     {
       "add": "Luke Weaver",
       "drop": "Reid Detmers",
-      "dpwin": 0.0698,
+      "dpwin": 0.06979999999999997,
       "mc_se": 0.004984
     },
     {
       "add": "Luke Weaver",
       "drop": "Logan Henderson",
-      "dpwin": 0.0698,
+      "dpwin": 0.06979999999999997,
       "mc_se": 0.004984
     },
     {
       "add": "Griffin Conine",
       "drop": "Reid Detmers",
-      "dpwin": 0.0697,
+      "dpwin": 0.06969999999999998,
       "mc_se": 0.004984
     },
     {
       "add": "Griffin Conine",
       "drop": "Logan Henderson",
-      "dpwin": 0.0697,
+      "dpwin": 0.06969999999999998,
       "mc_se": 0.004984
     },
     {
@@ -110,21 +117,50 @@
     {
       "add": "Isaac Collins",
       "drop": "Reid Detmers",
-      "dpwin": 0.0637,
+      "dpwin": 0.06369999999999998,
       "mc_se": 0.004979
     },
     {
       "add": "Isaac Collins",
       "drop": "Logan Henderson",
-      "dpwin": 0.0637,
+      "dpwin": 0.06369999999999998,
       "mc_se": 0.004979
     },
     {
       "add": "Trent Grisham",
       "drop": "Reid Detmers",
-      "dpwin": 0.0597,
+      "dpwin": 0.059699999999999975,
       "mc_se": 0.004975
     }
   ],
-  "dpwin_run_id": "2026-07-30T100002_7"
+  "pair_check": {
+    "n_combos": 17,
+    "adopted": false,
+    "best": {
+      "moves": [
+        {
+          "add": "Ryan Jeffers",
+          "add_bucket": "H",
+          "drop": "Reid Detmers",
+          "drop_bucket": "SP",
+          "dpwin_solo": 0.08839999999999998,
+          "mc_se": 0.004996
+        },
+        {
+          "add": "Luke Weaver",
+          "add_bucket": "RP",
+          "drop": "Logan Henderson",
+          "drop_bucket": "SP",
+          "dpwin_solo": 0.06979999999999997,
+          "mc_se": 0.004984
+        }
+      ],
+      "dpwin": 0.1564,
+      "pwin": 0.547,
+      "mc_se": 0.004978,
+      "sum_solo": 0.15819999999999995,
+      "interaction": -0.0017999999999999405
+    }
+  },
+  "dpwin_run_id": "2026-07-30T104222_7"
 }

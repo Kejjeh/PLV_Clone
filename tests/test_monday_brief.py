@@ -84,7 +84,8 @@ def _write_matchup_leverage(paths, generated="2026-07-30", period=17,
     paths.matchup_leverage.write_text(json.dumps(payload), encoding="utf-8")
 
 
-def _write_optimizer(paths, run_id="2026-07-30T005713_7", plan=None) -> None:
+def _write_optimizer(paths, run_id="2026-07-30T005713_7", plan=None,
+                     plan_source=None) -> None:
     if plan is None:
         plan = [{"add": "Ryan Jeffers", "add_bucket": "H", "drop": "Reid Detmers",
                  "drop_bucket": "SP", "dpwin": 0.0944, "mc_se": 0.007065,
@@ -95,6 +96,8 @@ def _write_optimizer(paths, run_id="2026-07-30T005713_7", plan=None) -> None:
         "title_equity": {"dtitle_pp": 0.88, "status": "current"},
         "dpwin_run_id": run_id,
     }
+    if plan_source is not None:
+        payload["plan_source"] = plan_source
     paths.weekly_optimizer.write_text(json.dumps(payload), encoding="utf-8")
 
 
@@ -340,8 +343,9 @@ def test_positive_dpwin_move_leads_and_significance_is_reported(tmp_path):
     text, _ = MB.build_brief(paths, NOW)
     decisions = text.split("## 2.")[0]
     # The move must be present AND carry its position in the sequence. A plan of
-    # >1 step is ordered — step 2 routinely drops the player step 1 added — so an
-    # unlabelled list invites acting on one step alone and reversing another.
+    # >1 step is ordered (each dpwin is the marginal gain given the earlier
+    # steps — undos are suppressed since 2026-07-30), so an unlabelled list
+    # still invites acting on one step alone and mis-reading its marginal.
     assert "ADD Ryan Jeffers / DROP Reid Detmers" in decisions
     assert "MOVE AVAILABLE" in decisions
     if decisions.count("MOVE AVAILABLE") > 1:
@@ -547,10 +551,100 @@ def test_settled_total_refuses_to_silently_sum_a_bad_cell():
 
 
 def test_multi_step_plan_is_labelled_as_sequenced():
-    """The optimizer's plan is sequenced: step 2 routinely drops the player step 1
-    added, so acting on step 2 alone REVERSES step 1. The decision-first block must
-    say so, not present them as independent numbered choices."""
+    """The optimizer's plan is sequenced: each step's dpwin is the MARGINAL
+    gain given the earlier steps (undos are suppressed since 2026-07-30, so a
+    later step can no longer reverse an earlier one — but acting on step 2
+    alone still mis-reads its marginal as a standalone gain). The
+    decision-first block must say so, not present them as independent numbered
+    choices — and a jointly-evaluated PAIR plan must say either-order instead
+    of inventing a false ordering constraint."""
     src = (Path(__file__).resolve().parent.parent / "scripts" / "xfp"
            / "build_monday_brief.py").read_text(encoding="utf-8")
     assert "STEP {step} of {n_steps}" in src
     assert "do them IN ORDER" in src
+    assert "jointly evaluated" in src
+    assert "plan_source" in src
+
+
+def test_pair_sourced_plan_is_labelled_either_order(tmp_path):
+    """A plan adopted from the pair check was evaluated JOINTLY — the brief
+    must say execute-both-either-order, not impose the sequenced IN-ORDER
+    warning that belongs to greedy plans."""
+    paths = _paths(tmp_path)
+    _write_all(paths)
+    _write_optimizer(paths, plan=[
+        {"add": "Ryan Jeffers", "add_bucket": "H", "drop": "Logan Henderson",
+         "drop_bucket": "SP", "dpwin": 0.0884, "mc_se": 0.005,
+         "pwin_after": 0.4784, "dtitle_equity_pp": 0.0778},
+        {"add": "Joc Pederson", "add_bucket": "H", "drop": "Reid Detmers",
+         "drop_bucket": "SP", "dpwin": 0.0814, "mc_se": 0.005,
+         "pwin_after": 0.5598, "dtitle_equity_pp": 0.0716},
+    ], plan_source="pair_check")
+    text, _ = MB.build_brief(paths, NOW)
+    decisions = text.split("## 2.")[0]
+    assert decisions.count("MOVE AVAILABLE") == 2
+    assert "jointly evaluated PAIR" in decisions
+    assert "either order" in decisions
+    assert "do them IN ORDER" not in decisions
+
+
+def test_section5_label_matches_pair_source(tmp_path):
+    """Section 5 must not call a jointly-evaluated pair 'sequenced' while
+    section 1 says either-order (adversarial review round 2, 2026-07-30)."""
+    paths = _paths(tmp_path)
+    _write_all(paths)
+    _write_optimizer(paths, plan=[
+        {"add": "Ryan Jeffers", "add_bucket": "H", "drop": "Reid Detmers",
+         "drop_bucket": "SP", "dpwin": 0.0884, "mc_se": 0.005,
+         "pwin_after": 0.4784},
+        {"add": "Joc Pederson", "add_bucket": "H", "drop": "Logan Henderson",
+         "drop_bucket": "SP", "dpwin": 0.0814, "mc_se": 0.005,
+         "pwin_after": 0.5598},
+    ], plan_source="pair_check")
+    text, _ = MB.build_brief(paths, NOW)
+    assert "Recommended plan (jointly evaluated pair — either order):" in text
+    assert "Recommended sequenced plan:" not in text
+
+
+def test_pair_plan_is_all_or_nothing_in_the_decision_block(tmp_path):
+    """A pair with one negative-marginal leg but a positive TOTAL is one
+    decision: both legs must render (the negative leg is priced into the
+    total), never the surviving leg alone."""
+    paths = _paths(tmp_path)
+    _write_all(paths)
+    plan = [
+        {"add": "FA Boom", "add_bucket": "H", "drop": "Bench SP1",
+         "drop_bucket": "SP", "dpwin": 0.12, "mc_se": 0.005,
+         "pwin_after": 0.505},
+        {"add": "FA Synergy", "add_bucket": "H", "drop": "Bench SP2",
+         "drop_bucket": "SP", "dpwin": -0.01, "mc_se": 0.005,
+         "pwin_after": 0.495},
+    ]
+    _write_optimizer(paths, plan=plan, plan_source="pair_check")
+    # plan_total present and positive
+    payload = json.loads(paths.weekly_optimizer.read_text(encoding="utf-8"))
+    payload["plan_total_dpwin"] = 0.11
+    paths.weekly_optimizer.write_text(json.dumps(payload), encoding="utf-8")
+    text, _ = MB.build_brief(paths, NOW)
+    decisions = text.split("## 2.")[0]
+    assert decisions.count("MOVE AVAILABLE") == 2
+    assert "FA Synergy" in decisions
+
+
+def test_legacy_payload_is_not_sold_with_marginal_semantics(tmp_path):
+    """A pre-fix weekly_optimizer.json (no pwin_after) still renders, but its
+    sequenced label must warn that dpwins are base-relative and a later step
+    may undo an earlier one — not claim the new marginal semantics."""
+    paths = _paths(tmp_path)
+    _write_all(paths)
+    _write_optimizer(paths, plan=[
+        {"add": "Joc Pederson", "add_bucket": "H", "drop": "Reid Detmers",
+         "drop_bucket": "SP", "dpwin": 0.0845, "mc_se": 0.005},
+        {"add": "Ryan Jeffers", "add_bucket": "H", "drop": "Joc Pederson",
+         "drop_bucket": "H", "dpwin": 0.0884, "mc_se": 0.005},
+    ])
+    text, _ = MB.build_brief(paths, NOW)
+    decisions = text.split("## 2.")[0]
+    assert "PRE-FIX payload" in decisions
+    assert "re-run the optimizer" in decisions
+    assert "each dpwin is the marginal gain given the earlier steps" not in decisions

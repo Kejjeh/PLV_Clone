@@ -31,14 +31,31 @@ Exhaustive is infeasible and unnecessary. One `assemble`+`pwin` is a sum of ~30
 length-10k arrays over precomputed draws — low single-digit milliseconds — so:
 
   round 1  score every LEGAL single swap (add x drop) plus pure benches
-  apply    take the best positive-dpwin move onto a VIRTUAL roster
-  repeat   up to --max-moves times, re-scoring against the updated roster
-  pair     then exhaustively check pairs among the top-10 round-1 moves
+  apply    take the best positive-MARGINAL move onto a VIRTUAL roster
+  repeat   up to --max-moves times; every later step is scored CUMULATIVELY
+           (original state + all prior adds − all prior drops + this move),
+           because delta_pwin can only evaluate against the original state —
+           and each row's `dpwin` is the MARGINAL gain vs the prior steps'
+           endpoint, so marginals sum to the plan total and the running
+           P(win) is real, never base + a sum of base-relative numbers
+  pair     then exhaustively check pairs among the best row per distinct
+           round-1 add; `assemble_plan` ADOPTS the pair when it beats the
+           greedy endpoint by more than the pair's MC se
 
-The pair check exists for one real interaction: two SP adds competing for the
-same remaining cap slots, where the second is worth much less than its solo
-score suggests. Outside the cap the objective is close to separable, which is
-why greedy is adequate and a full K=2 sweep (~45k evals) buys almost nothing.
+A later step may never drop a player an earlier step added: that is an UNDO
+(the net plan is a shorter plan), and the engine cannot score it anyway — an
+unrostered "drop" silently no-ops in _resolve_keys, which is how the
+2026-07-30 run manufactured "ADD Jeffers / DROP Pederson +8.84pp" out of a
+free add. Prior adds are excluded from the droppable pool (legality still
+checks the FULL virtual roster).
+
+The pair check exists for two real cases: two SP adds competing for the same
+remaining cap slots (the second is worth much less than its solo score), and
+greedy myopia — a tie-break-influenced step 1 that walks past the best joint
+endpoint (2026-07-30: the boom tie-break took Pederson first while the
+Jeffers+Pederson pair at +16.98pp was printed and discarded). Outside those
+the objective is close to separable, which is why greedy is adequate and a
+full K=2 sweep (~45k evals) buys almost nothing.
 
 CONSTRAINTS are enforced by lib/roster_rules (13H/9P/4BE/3IL, the 4-RP floor as
 a FLOOR never a target, positional coverage, period-aware SP cap). Illegal moves
@@ -211,10 +228,40 @@ def _hitter_games(state, cands) -> dict:
 
 
 def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
-                       verbose=True) -> list[dict]:
-    """Every legal single swap + pure drop, scored by Delta-P(win)."""
+                       prior_adds=(), prior_drop_keys=(), cur_pwin=None,
+                       exclude_drops=(), verbose=True,
+                       _dp=delta_pwin) -> list[dict]:
+    """Every legal single swap + pure drop, scored by MARGINAL Delta-P(win).
+
+    CUMULATIVE SCORING (fix 2026-07-30). ``delta_pwin`` always evaluates against
+    the ORIGINAL state — it has no concept of the greedy loop's virtual roster.
+    The pre-fix loop therefore mis-scored every step after the first: step 2's
+    candidates were scored as if step 1 had never happened, and a "drop" of the
+    player step 1 added silently NO-OPed inside ``_resolve_keys`` (an unrostered
+    name matches no draw key), which is exactly how the 2026-07-30 10:00 run
+    produced "ADD Jeffers / DROP Pederson +8.84pp" — a free add masquerading as
+    a swap. Every scenario is now expressed the only way the engine can honestly
+    score it: original roster + ALL prior adds − ALL prior drops + this move.
+    ``dpwin`` on each row is the MARGINAL gain vs ``cur_pwin`` (the pwin after
+    the prior steps), so ranking, the stop rule, and the running-P(win) display
+    all speak the same language; ``dpwin_from_base`` keeps the vs-base number
+    for the history log. Round 1 (no priors) is byte-identical to the old
+    behavior: marginal == from-base.
+
+    ``_dp`` is an injection seam for tests (a fake ``delta_pwin`` over a toy
+    additive model); production always passes the real engine primitive.
+    """
+    if cur_pwin is None:
+        cur_pwin = base_p
+    prior_adds = list(prior_adds)
+    prior_drop_keys = list(prior_drop_keys)
+    exclude_drops = list(exclude_drops)
     rows, skipped = [], []
-    droppables = [p for p in roster if not p.get('on_il')]
+    # exclude_drops filters only WHO may be dropped (undo suppression) — the
+    # legality substrate stays the FULL virtual roster, otherwise check_swap
+    # would see a phantom short roster and block every later step
+    droppables = [p for p in roster if not p.get('on_il')
+                  and not any(RR.same_player(p, x) for x in exclude_drops)]
     _legal_kw = dict(cap_remaining=state['cap_remaining_mine'],
                      hitter_games=hgames,
                      days_remaining=state.get('days_remaining'))
@@ -224,10 +271,12 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
     for d in droppables:
         probs = RR.check_swap(roster, drop=d)
         if not probs:
-            r = delta_pwin(state, D, drop=[d['mlbam'] or d['name']],
-                           base_pwin=base_p)
+            r = _dp(state, D, add=prior_adds,
+                    drop=prior_drop_keys + [d['mlbam'] or d['name']],
+                    base_pwin=base_p)
             rows.append({'kind': 'drop', 'add': None, 'drop': d,
-                         'dpwin': r['dpwin'], 'pwin': r['pwin'],
+                         'dpwin': r['pwin'] - cur_pwin,
+                         'dpwin_from_base': r['dpwin'], 'pwin': r['pwin'],
                          'mc_se': r['mc_se']})
 
     for c in cands:
@@ -237,10 +286,12 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
             if probs:
                 skipped.append((c['name'], d['name'], probs[0]))
                 continue
-            r = delta_pwin(state, D, add=[eng],
-                           drop=[d['mlbam'] or d['name']], base_pwin=base_p)
-            rows.append({'kind': 'swap', 'add': c, 'drop': d,
-                         'dpwin': r['dpwin'], 'pwin': r['pwin'],
+            r = _dp(state, D, add=prior_adds + [eng],
+                    drop=prior_drop_keys + [d['mlbam'] or d['name']],
+                    base_pwin=base_p)
+            rows.append({'kind': 'swap', 'add': c, 'drop': d, '_eng': eng,
+                         'dpwin': r['pwin'] - cur_pwin,
+                         'dpwin_from_base': r['dpwin'], 'pwin': r['pwin'],
                          'mc_se': r['mc_se']})
 
     rows.sort(key=lambda r: -r['dpwin'])
@@ -272,23 +323,38 @@ def _regime_tiebreak(rows: list[dict], regime: str) -> list[dict]:
             r['_boom'] = st.get('boom_pct') or 0
             r['_bust'] = st.get('bust_pct') if st.get('bust_pct') is not None else 100
         if regime == 'TRAILING':
-            tied.sort(key=lambda r: (-r['dpwin'] // 1, -r['_boom']))
             tied.sort(key=lambda r: -r['_boom'])
         elif regime == 'LEADING':
             tied.sort(key=lambda r: r['_bust'])
     return tied + rest
 
 
-def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True):
-    """Greedy best-swap, re-scored against a virtual roster, then a pair check."""
+def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True,
+             _dp=delta_pwin):
+    """Greedy best-swap over a virtual roster (cumulatively scored), then a pair
+    check. ``_dp`` is the test seam threaded through to ``score_single_moves``.
+    """
     roster = [dict(p) for p in state['my_roster']]
     chosen, all_rows, all_skipped = [], [], []
     remaining = [dict(c) for c in cands]
     hgames = _hitter_games(state, cands)
+    prior_adds: list[dict] = []       # engine dicts of every add so far
+    prior_added: list[dict] = []      # candidate dicts, for droppable exclusion
+    prior_drop_keys: list = []
+    cur_pwin = base_p
 
     for step in range(max_moves):
-        rows, skipped = score_single_moves(state, D, roster, remaining, base_p,
-                                          hgames=hgames, verbose=verbose)
+        # UNDO SUPPRESSION (fix 2026-07-30): a player added by an earlier step
+        # must never be droppable by a later one. Dropping him is an UNDO — the
+        # net plan equals a shorter plan, so it never belongs in a forward
+        # sequence — and the engine cannot score it anyway (he is not in the
+        # original state's draws, so his "drop" silently no-ops; that silent
+        # no-op is what let the 2026-07-30 run recommend dropping its own add).
+        rows, skipped = score_single_moves(
+            state, D, roster, remaining, base_p, hgames=hgames,
+            prior_adds=prior_adds, prior_drop_keys=prior_drop_keys,
+            cur_pwin=cur_pwin, exclude_drops=prior_added,
+            verbose=verbose, _dp=_dp)
         all_rows.append(rows)
         all_skipped.extend(skipped)
         if not rows:
@@ -298,47 +364,206 @@ def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True):
         if best['dpwin'] <= 0:
             if verbose:
                 print(f'  step {step+1}: best available move is {best["dpwin"]*100:+.2f}pp '
-                      f'— stopping (no positive move)')
+                      f'— stopping (no positive marginal move)')
             break
         chosen.append(best)
         roster = RR.apply_swap(roster, add=best.get('add'), drop=best.get('drop'))
+        cur_pwin = best['pwin']       # true endpoint after this step
+        prior_drop_keys.append(best['drop']['mlbam'] or best['drop']['name'])
         if best.get('add'):
+            prior_adds.append(best.get('_eng') or _cand_for_engine(best['add']))
+            prior_added.append(best['add'])
             remaining = [c for c in remaining if c['name'] != best['add']['name']]
         if verbose:
             lbl = (f"ADD {best['add']['name']} / DROP {best['drop']['name']}"
                    if best.get('add') else f"DROP {best['drop']['name']}")
-            print(f'  step {step+1}: {lbl}  {best["dpwin"]*100:+.2f}pp')
+            print(f'  step {step+1}: {lbl}  {best["dpwin"]*100:+.2f}pp marginal '
+                  f'(P(win) now ~{cur_pwin*100:.1f}%)')
 
-    # pair interaction check over the top of round 1 — the case that matters is
-    # two SP adds competing for the same remaining cap slots
+    # Pair interaction check over the top of round 1. Two real cases: two SP
+    # adds competing for the same remaining cap slots (the second is worth much
+    # less than its solo score), and greedy myopia — a tie-break-influenced
+    # step 1 that walks past the best joint endpoint. Gated on max_moves >= 2:
+    # a pair IS two moves, so `--max-moves 1` must never surface one (found by
+    # adversarial review 2026-07-30).
     pairs = []
-    if all_rows and len(all_rows[0]) > 1:
-        top = [r for r in all_rows[0][:10] if r.get('add')]
+    n_pairs_illegal = 0
+    if max_moves >= 2 and all_rows and len(all_rows[0]) > 1:
+        roster0 = [dict(p) for p in state['my_roster']]
+        _pair_legal_kw = dict(cap_remaining=state['cap_remaining_mine'],
+                              hitter_games=hgames,
+                              days_remaining=state.get('days_remaining'))
+        # best rows per DISTINCT add (top few drop-variants each): one strong
+        # candidate's many drop-variants can flood a plain top-N row window,
+        # leaving the sweep zero usable pairs (every combination same-add-
+        # skipped) — and two adds whose BEST drop is the same player would
+        # collide even then (both Jeffers and Pederson wanted Detmers on
+        # 2026-07-30). Rows are sorted, so each add's list is best-first and a
+        # collision falls through to its next-best distinct drop.
+        by_add: dict[str, list] = {}
+        for r in all_rows[0]:
+            if not r.get('add'):
+                continue
+            lst = by_add.setdefault(r['add']['name'], [])
+            if len(lst) < 3 and all(x['drop']['name'] != r['drop']['name']
+                                    for x in lst):
+                lst.append(r)
+        top = [lst[0] for lst in list(by_add.values())[:10]]
         for i in range(len(top)):
             for j in range(i + 1, len(top)):
-                a, b = top[i], top[j]
-                if a['add']['name'] == b['add']['name']:
-                    continue
-                if a['drop']['name'] == b['drop']['name']:
+                a = top[i]
+                b = next((rb for rb in by_add[top[j]['add']['name']]
+                          if rb['drop']['name'] != a['drop']['name']), None)
+                if b is None:
                     continue          # cannot drop the same player twice
-                r = delta_pwin(
+                # JOINT LEGALITY (blocking fix, adversarial review 2026-07-30):
+                # each leg was checked only as a SINGLE swap vs the original
+                # roster, but the pair executes BOTH — two singly-legal legs
+                # can jointly drop the last catcher, breach the 4-RP floor, or
+                # oversubscribe the 13-slot lineup (and the phantom games of an
+                # oversubscribed pair INFLATE its score, biasing adoption
+                # toward exactly the unchecked scenario). The brief promises
+                # "either order", so require BOTH orderings legal; only the
+                # intermediate roster differs between them.
+                _pair_legal = True
+                for first, second in ((a, b), (b, a)):
+                    mid = RR.apply_swap(roster0, add=first['add'],
+                                        drop=first['drop'])
+                    if RR.check_swap(mid, add=second['add'],
+                                     drop=second['drop'], **_pair_legal_kw):
+                        _pair_legal = False
+                        break
+                if not _pair_legal:
+                    n_pairs_illegal += 1
+                    continue
+                r = _dp(
                     state, D,
                     add=[_cand_for_engine(a['add']), _cand_for_engine(b['add'])],
                     drop=[a['drop']['mlbam'] or a['drop']['name'],
                           b['drop']['mlbam'] or b['drop']['name']],
                     base_pwin=base_p)
                 pairs.append({
-                    'moves': [a, b], 'dpwin': r['dpwin'], 'mc_se': r['mc_se'],
+                    'moves': [a, b], 'dpwin': r['dpwin'], 'pwin': r['pwin'],
+                    'mc_se': r['mc_se'],
                     'sum_solo': a['dpwin'] + b['dpwin'],
                     'interaction': r['dpwin'] - (a['dpwin'] + b['dpwin'])})
         pairs.sort(key=lambda p: -p['dpwin'])
-        if verbose and pairs:
-            print(f'  pair check: {len(pairs)} combinations; best '
-                  f'{pairs[0]["dpwin"]*100:+.2f}pp (solo sum '
-                  f'{pairs[0]["sum_solo"]*100:+.2f}pp, interaction '
-                  f'{pairs[0]["interaction"]*100:+.2f}pp)')
+        if verbose and (pairs or n_pairs_illegal):
+            best_s = (f'; best {pairs[0]["dpwin"]*100:+.2f}pp (solo sum '
+                      f'{pairs[0]["sum_solo"]*100:+.2f}pp, interaction '
+                      f'{pairs[0]["interaction"]*100:+.2f}pp)') if pairs else ''
+            print(f'  pair check: {len(pairs)} jointly-legal combinations '
+                  f'({n_pairs_illegal} blocked by joint roster rules){best_s}')
     return {'chosen': chosen, 'rounds': all_rows, 'skipped': all_skipped,
             'pairs': pairs}
+
+
+def assemble_plan(res: dict, base_p: float) -> dict:
+    """Choose the RECOMMENDED PLAN: the greedy sequence or the best pair.
+
+    The greedy loop and the pair sweep are two searches over the same space.
+    Greedy commits to its (tie-break-influenced) step-1 choice; the pair sweep
+    evaluates top round-1 combinations jointly, so it can find a strictly better
+    two-move endpoint (2026-07-30: greedy's boom-tie-break took Pederson first
+    and walked into churn, while the pair Jeffers+Pederson at +16.98pp was
+    printed and then thrown away). Adopt the pair when it beats the greedy
+    sequence's TRUE total by more than the pair's own MC standard error —
+    inside 1×mc_se the two are indistinguishable and the sequenced greedy plan
+    (whose ordering already encodes the regime tie-break) is kept.
+
+    Plan items are UNIFORM in both shapes: ``dpwin`` is each move's MARGINAL
+    gain given the moves before it, so the marginals sum to ``total_dpwin``
+    and ``pwin_after`` is the honest running P(win) — never base + a sum of
+    base-relative numbers.
+    """
+    chosen, pairs = res.get('chosen') or [], res.get('pairs') or []
+    greedy_total = (chosen[-1]['pwin'] - base_p) if chosen else 0.0
+
+    def _greedy_items():
+        return [{'add': m.get('add'), 'drop': m['drop'], 'dpwin': m['dpwin'],
+                 'mc_se': m['mc_se'], 'pwin_after': m['pwin'],
+                 'dpwin_from_base': m.get('dpwin_from_base', m['dpwin'])}
+                for m in chosen]
+
+    if pairs:
+        best = pairs[0]
+        margin = best['dpwin'] - greedy_total
+        if margin > (best.get('mc_se') or 0.0):
+            a, b = sorted(best['moves'], key=lambda m: -m['dpwin'])
+            items = [
+                {'add': a.get('add'), 'drop': a['drop'], 'dpwin': a['dpwin'],
+                 'mc_se': a['mc_se'], 'pwin_after': a['pwin'],
+                 'dpwin_from_base': a['dpwin']},
+                # move 2's marginal is the pair endpoint minus move 1 alone —
+                # the two marginals sum to the pair total by construction.
+                # dpwin_from_base is the CUMULATIVE endpoint vs base (same
+                # semantics as a greedy item's), not b's solo score.
+                {'add': b.get('add'), 'drop': b['drop'],
+                 'dpwin': best['dpwin'] - a['dpwin'],
+                 'mc_se': best['mc_se'], 'pwin_after': best['pwin'],
+                 'dpwin_from_base': best['dpwin']},
+            ]
+            return {'source': 'pair_check', 'moves': items,
+                    'total_dpwin': best['dpwin'], 'pwin_final': best['pwin'],
+                    'greedy_total_dpwin': greedy_total,
+                    'adoption_margin': margin, 'pair': best}
+    if not chosen:
+        return {'source': 'hold', 'moves': [], 'total_dpwin': 0.0,
+                'pwin_final': base_p, 'greedy_total_dpwin': 0.0}
+    return {'source': 'greedy', 'moves': _greedy_items(),
+            'total_dpwin': greedy_total,
+            'pwin_final': chosen[-1]['pwin'],
+            'greedy_total_dpwin': greedy_total}
+
+
+def build_payload(*, plan, res, base_p, regime, period, sims, seed,
+                  cap_remaining, wv) -> dict:
+    """The weekly_optimizer.json payload — extracted from main() so its shape
+    (which the Monday brief consumes) is testable without ESPN."""
+    return {
+        'base_pwin': round(base_p, 6), 'regime': regime, 'period': period,
+        'sims': sims, 'seed': seed,
+        'cap_remaining': cap_remaining,
+        # plan[] semantics (fix 2026-07-30): `dpwin` is each move's MARGINAL
+        # gain given the moves before it — the marginals sum to
+        # `plan_total_dpwin`, and `pwin_after` is the honest running P(win).
+        'plan_source': plan['source'],
+        'plan_total_dpwin': plan['total_dpwin'],
+        'plan_pwin_final': plan['pwin_final'],
+        'plan': [{'add': (m['add'] or {}).get('name') if m.get('add') else None,
+                  'add_bucket': (m['add'] or {}).get('bucket') if m.get('add') else None,
+                  'drop': m['drop']['name'], 'drop_bucket': m['drop']['bucket'],
+                  'dpwin': m['dpwin'], 'mc_se': m['mc_se'],
+                  'pwin_after': m['pwin_after'],
+                  'dpwin_from_base': m.get('dpwin_from_base'),
+                  'dtitle_equity_pp': m.get('dtitle_equity_pp')}
+                 for m in plan['moves']],
+        'title_equity': {k: wv.get(k) for k in
+                         ('dtitle_pp', 'status', 'source_period', 'payload_period',
+                          'periods_stale', 'note', 'plus2_pp')},
+        'top_single_moves': [
+            {'add': r['add']['name'] if r.get('add') else None,
+             'drop': r['drop']['name'], 'dpwin': r['dpwin'], 'mc_se': r['mc_se']}
+            for r in (res['rounds'][0][:15] if res['rounds'] else [])],
+        # the best pair is persisted whether or not it was adopted — the
+        # console used to print it and throw it away (found 2026-07-30)
+        'pair_check': ({
+            'n_combos': len(res['pairs']),
+            'adopted': plan['source'] == 'pair_check',
+            'best': {
+                'moves': [{'add': m['add']['name'], 'add_bucket': m['add']['bucket'],
+                           'drop': m['drop']['name'],
+                           'drop_bucket': m['drop']['bucket'],
+                           'dpwin_solo': m['dpwin'], 'mc_se': m['mc_se']}
+                          for m in res['pairs'][0]['moves']],
+                'dpwin': res['pairs'][0]['dpwin'],
+                'pwin': res['pairs'][0]['pwin'],
+                'mc_se': res['pairs'][0]['mc_se'],
+                'sum_solo': res['pairs'][0]['sum_solo'],
+                'interaction': res['pairs'][0]['interaction']},
+        } if res.get('pairs') else None),
+    }
+
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -381,10 +606,14 @@ def main() -> int:
     res = optimize(state, D, base_p, regime, cands,
                    max_moves=args.max_moves)
 
+    plan = assemble_plan(res, base_p)
+
     # Season bridge (C4): weight the period-level dpwin by the value-of-a-win
     # curve. dpwin stays the sort key — this is a displayed conversion (Rule 13),
     # and the weight is a per-period constant so it cannot reorder anyway.
-    wv = TE.annotate(res['chosen'], state['period'])
+    # Annotate the FINAL plan's moves (marginal dpwins, which sum to the plan
+    # total, so the per-move equities sum to the plan's equity too).
+    wv = TE.annotate(plan['moves'], state['period'])
     if res['rounds']:
         TE.annotate(res['rounds'][0], state['period'])
     print('\n--- SEASON CONTEXT ---')
@@ -394,20 +623,27 @@ def main() -> int:
               f"{wv['dtitle_pp']/100:.4f}pp of title probability")
 
     print('\n--- RECOMMENDED PLAN ---')
-    if not res['chosen']:
+    if plan['source'] == 'hold':
         print('  HOLD — no legal move improves P(win). The regime guidance above '
               'still applies to daily lineup calls.')
-    cum = base_p
-    for i, m in enumerate(res['chosen'], 1):
+    elif plan['source'] == 'pair_check':
+        print(f"  (adopted from the PAIR CHECK: {plan['total_dpwin']*100:+.2f}pp "
+              f"jointly vs the greedy sequence's "
+              f"{plan['greedy_total_dpwin']*100:+.2f}pp — margin "
+              f"{plan['adoption_margin']*100:+.2f}pp exceeds the pair's MC se)")
+    for i, m in enumerate(plan['moves'], 1):
         lbl = (f"ADD {m['add']['name']} ({m['add']['bucket']}, {m['add']['team']})"
                f"  /  DROP {m['drop']['name']} ({m['drop']['bucket']})"
                if m.get('add') else f"DROP {m['drop']['name']} ({m['drop']['bucket']})")
-        cum += m['dpwin']
         print(f'  {i}. {lbl}')
         te = m.get('dtitle_equity_pp')
         te_s = f'   title equity {te:+.4f}pp' if te is not None else ''
-        print(f'     dP(win) {m["dpwin"]*100:+.2f}pp  (+/- {m["mc_se"]*100:.2f}pp MC)'
-              f'   running P(win) ~ {cum*100:.1f}%{te_s}')
+        print(f'     dP(win) {m["dpwin"]*100:+.2f}pp marginal  '
+              f'(+/- {m["mc_se"]*100:.2f}pp MC)'
+              f'   running P(win) ~ {m["pwin_after"]*100:.1f}%{te_s}')
+    if plan['moves']:
+        print(f'  = plan total {plan["total_dpwin"]*100:+.2f}pp '
+              f'-> P(win) ~ {plan["pwin_final"]*100:.1f}%')
 
     if res['rounds']:
         print('\n--- TOP 8 SINGLE MOVES (round 1) ---')
@@ -428,23 +664,10 @@ def main() -> int:
             if len(seen) >= 5:
                 break
 
-    payload = {
-        'base_pwin': round(base_p, 6), 'regime': regime, 'period': state['period'],
-        'sims': args.sims, 'seed': args.seed,
-        'cap_remaining': state['cap_remaining_mine'],
-        'plan': [{'add': (m['add'] or {}).get('name') if m.get('add') else None,
-                  'add_bucket': (m['add'] or {}).get('bucket') if m.get('add') else None,
-                  'drop': m['drop']['name'], 'drop_bucket': m['drop']['bucket'],
-                  'dpwin': m['dpwin'], 'mc_se': m['mc_se'],
-                  'dtitle_equity_pp': m.get('dtitle_equity_pp')} for m in res['chosen']],
-        'title_equity': {k: wv.get(k) for k in
-                         ('dtitle_pp', 'status', 'source_period', 'payload_period',
-                          'periods_stale', 'note', 'plus2_pp')},
-        'top_single_moves': [
-            {'add': r['add']['name'] if r.get('add') else None,
-             'drop': r['drop']['name'], 'dpwin': r['dpwin'], 'mc_se': r['mc_se']}
-            for r in (res['rounds'][0][:15] if res['rounds'] else [])],
-    }
+    payload = build_payload(plan=plan, res=res, base_p=base_p, regime=regime,
+                            period=state['period'], sims=args.sims,
+                            seed=args.seed,
+                            cap_remaining=state['cap_remaining_mine'], wv=wv)
 
     if not args.no_log and res['rounds']:
         try:

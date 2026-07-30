@@ -467,25 +467,57 @@ def collect_decisions(arts: dict[str, Artifact], paths: BriefPaths,
             if not isinstance(plan, list):
                 raise MalformedArtifact('weekly_optimizer.json: `plan` is not a list')
             stamp = f'[weekly_optimizer.json, {wo.age_phrase()}]'
+            is_pair = wo.payload.get('plan_source') == 'pair_check'
+            # a payload without pwin_after predates the 2026-07-30 marginal
+            # semantics — its dpwins are base-relative and may even encode an
+            # undo, so the sequenced wording must not claim otherwise
+            is_legacy = bool(plan) and 'pwin_after' not in plan[0]
             positives = []
             for mv in plan:
                 dpwin = _num(_req(mv, 'dpwin', 'weekly_optimizer.json:plan[]'),
                              'dpwin', 'weekly_optimizer.json:plan[]')
                 if dpwin > 0:
                     positives.append((mv, dpwin))
+            if is_pair and positives:
+                # ALL-OR-NOTHING: a pair is one jointly-scored decision. If its
+                # TOTAL is positive, show both legs (a negative-marginal leg is
+                # priced into the total); if not, show neither.
+                total = wo.payload.get('plan_total_dpwin')
+                total = (sum(m[1] for m in positives) if total is None
+                         else _num(total, 'plan_total_dpwin',
+                                   'weekly_optimizer.json'))
+                positives = ([(mv, _num(_req(mv, 'dpwin',
+                                             'weekly_optimizer.json:plan[]'),
+                                        'dpwin', 'weekly_optimizer.json:plan[]'))
+                              for mv in plan] if total > 0 else [])
             if positives:
-                # The optimizer's plan is SEQUENCED: step k is scored against the
-                # roster AFTER step k-1, so step 2 routinely drops the very player
-                # step 1 added. Presenting them as independent numbered decisions
-                # invites acting on step 2 alone, which REVERSES step 1. So each
-                # line is labelled with its position and the multi-step case says
-                # so explicitly. (Found by adversarial review 2026-07-29.)
+                # The optimizer's plan is SEQUENCED: step k's dpwin is the
+                # MARGINAL gain given the earlier steps (post-2026-07-30 fix;
+                # earlier steps can no longer be undone by later ones — the
+                # optimizer suppresses dropping its own adds). Presenting them
+                # as independent numbered decisions still invites acting on
+                # step 2 alone, so each line is labelled with its position.
+                # A `plan_source` of 'pair_check' means the two moves were
+                # evaluated JOINTLY — both should execute, in either order.
+                # (Sequencing hazard found by adversarial review 2026-07-29;
+                # semantics tightened 2026-07-30.)
                 n_steps = len(positives)
                 for step, (mv, dpwin) in enumerate(positives, 1):
-                    seq = (f'STEP {step} of {n_steps} (sequenced — do them IN ORDER; '
-                           f'later steps are scored against the roster after the '
-                           f'earlier ones and may drop a player an earlier step added)'
-                           if n_steps > 1 else 'single move')
+                    if n_steps == 1:
+                        seq = 'single move'
+                    elif is_pair:
+                        seq = (f'MOVE {step} of {n_steps} (jointly evaluated '
+                               f'PAIR — execute both, either order; each dpwin '
+                               f'is the marginal gain given the other)')
+                    elif is_legacy:
+                        seq = (f'STEP {step} of {n_steps} (sequenced — '
+                               f'do them IN ORDER; PRE-FIX payload: dpwins are '
+                               f'base-relative and a later step may undo an '
+                               f'earlier one — re-run the optimizer)')
+                    else:
+                        seq = (f'STEP {step} of {n_steps} (sequenced — '
+                               f'do them IN ORDER; each dpwin is the marginal '
+                               f'gain given the earlier steps)')
                     se = mv.get('mc_se')
                     sig = ''
                     if se is not None:
@@ -725,7 +757,12 @@ def _optimizer_section(arts: dict[str, Artifact], malformed: list[str]) -> list[
         ]
         plan = _req(p, 'plan', 'weekly_optimizer.json')
         if plan:
-            lines.append('- Recommended sequenced plan:')
+            # label must agree with section 1: a pair plan was evaluated
+            # jointly (either order), only a greedy plan is sequenced
+            _src = p.get('plan_source')
+            lines.append('- Recommended plan (jointly evaluated pair — '
+                         'either order):' if _src == 'pair_check'
+                         else '- Recommended sequenced plan:')
             for i, mv in enumerate(plan, 1):
                 dpwin = _num(_req(mv, 'dpwin', 'weekly_optimizer.json:plan[]'),
                              'dpwin', 'weekly_optimizer.json:plan[]')

@@ -101,6 +101,11 @@ def _same_player(a: dict, b: dict) -> bool:
     return (a.get('name') or '').lower() == (b.get('name') or '').lower()
 
 
+#: public alias — the optimizer's undo-suppression and pair-legality checks
+#: legitimately need player identity; keep them off the private name
+same_player = _same_player
+
+
 def lineup_capacity_problem(*, n_hitters_after: int, hitter_games_after: float,
                             days_remaining: int) -> Optional[str]:
     """Flag an add whose games CANNOT actually be played.
