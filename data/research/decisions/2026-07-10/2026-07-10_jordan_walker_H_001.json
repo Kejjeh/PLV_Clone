@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-10_jordan_walker_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "CONTACT_POWER",
     "archetype_overall": 65,
@@ -17,8 +21,19 @@
   "mlbam_id": 691023,
   "player_name": "Jordan Walker",
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-07-31",
+  "settlement": {
+    "actual_fp_per_unit": 0.16666666666666666,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 72,
+    "proj_per": 0.5485714285714286,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.38190476190476197,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-10",
   "verdict_top": "BUY"
 }

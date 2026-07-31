@@ -1,0 +1,39 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-07-10_vladimir_guerrero_jr_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "PURE_HITTER",
+    "archetype_overall": 57,
+    "archetype_traj": "TRENDING_DOWN",
+    "blended_xfp": 3.0403875515476986,
+    "live_marginal": 13.099999999999994,
+    "model_rank": 37,
+    "override_tag": null,
+    "pl_rank": 71,
+    "proj_per": 2.01,
+    "replacement_delta": null
+  },
+  "mlbam_id": 665489,
+  "player_name": "Vladimir Guerrero Jr.",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": "2026-07-31",
+  "settlement": {
+    "actual_fp_per_unit": 0.4838709677419355,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 62,
+    "proj_per": 0.5742857142857142,
+    "proj_units_note": "v1_h_per_game_converted",
+    "residual": -0.09041474654377868,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-07-10",
+  "verdict_top": "MIXED"
+}

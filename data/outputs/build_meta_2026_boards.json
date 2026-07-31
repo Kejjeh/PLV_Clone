@@ -1,5 +1,5 @@
 {
-  "built_at": "2026-07-20T14:55:25Z",
+  "built_at": "2026-07-31T13:12:04Z",
   "year": 2026,
   "exports": [
     "hitter_buy_targets",
@@ -11,8 +11,8 @@
     "pitcher_plv_targets"
   ],
   "model_version": "1.0.0",
-  "stage_detected": "mid",
-  "stage_active": "mid",
+  "stage_detected": "mature",
+  "stage_active": "mature",
   "source_hitter_path": "data\\outputs\\master_hitter_2026.csv",
   "source_pitcher_path": "data\\outputs\\master_pitcher_2026.csv"
 }
