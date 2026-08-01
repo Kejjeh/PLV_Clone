@@ -71,6 +71,64 @@ def test_the_floor_message_names_the_rule_so_the_reason_is_actionable():
     assert any("2026-07-18" in p for p in probs), probs
 
 
+def test_hitter_for_hitter_swap_stays_legal_under_a_preexisting_rp_deficit():
+    """An IL'd RP leaves only three ACTIVE RPs — a shortfall the MOVE did not
+    cause. A hitter-for-hitter swap never touches the RP bucket, so it must
+    stay legal (C6: the absolute post-state floor blocked EVERY candidate).
+    Dropping an active RP for a non-RP still worsens the bucket and stays
+    blocked by the standing RP-for-RP rule."""
+    r = _roster(n_rp=4)
+    next(p for p in r if p["bucket"] == "RP")["on_il"] = True   # 3 active RPs
+    some_hitter = next(p for p in r if p["bucket"] == "H" and p["espn_pos"] != "C")
+    assert RR.check_swap(r, add=_p("FA Bat", "H", "OF"), drop=some_hitter) == []
+    active_rp = next(p for p in r if p["bucket"] == "RP" and not p["on_il"])
+    probs = RR.check_swap(r, add=_p("FA Bat", "H", "OF"), drop=active_rp)
+    assert any("only be dropped for another RP" in p for p in probs), probs
+
+
+def test_a_move_that_itself_crosses_the_floor_from_4_to_3_is_still_blocked():
+    """Relative (crossing) semantics must not weaken the floor: a move that
+    TAKES the active-RP count from 4 to 3 crosses the floor and is flagged by
+    the floor check itself, not just the RP-for-RP standing rule."""
+    r = _roster(n_rp=4)
+    probs = RR.check_swap(r, add=_p("FA SP", "SP", "SP"),
+                          drop=next(p for p in r if p["bucket"] == "RP"))
+    assert any("fall to 3 < floor 4" in p for p in probs), probs
+
+
+def test_preexisting_bucket_shortfalls_do_not_block_moves_in_other_buckets():
+    """Same C6 class as the RP floor: an IL'd SP leaving 8 active pitchers (or
+    an IL'd hitter leaving 12 active hitters) is a PRE-EXISTING shortfall — a
+    swap confined to the other bucket must stay legal. A move that itself
+    crosses a sufficiency floor is still blocked."""
+    r = _roster(n_sp=5, n_rp=4)                       # exactly 9 pitchers
+    next(p for p in r if p["bucket"] == "SP")["on_il"] = True   # 8 active
+    some_hitter = next(p for p in r if p["bucket"] == "H" and p["espn_pos"] != "C")
+    assert RR.check_swap(r, add=_p("FA Bat", "H", "OF"), drop=some_hitter) == []
+
+    r2 = _roster()                                    # 13 H, one IL'd -> 12
+    next(p for p in r2 if p["bucket"] == "H" and p["espn_pos"] != "C")["on_il"] = True
+    sp = next(p for p in r2 if p["bucket"] == "SP")
+    assert RR.check_swap(r2, add=_p("FA SP", "SP", "SP"), drop=sp) == []
+
+    # crossing 9 -> 8 pitchers is still this move's fault, and still blocked
+    r3 = _roster(n_sp=5, n_rp=4)
+    probs = RR.check_swap(r3, add=_p("FA Bat", "H", "OF"),
+                          drop=next(p for p in r3 if p["bucket"] == "SP"))
+    assert any("9 active pitcher slots" in p for p in probs), probs
+
+
+def test_preexisting_shortfalls_surface_once_at_run_level_not_per_candidate():
+    """The deficit check_swap now tolerates must still be VISIBLE: one
+    run-level warning names the short bucket, instead of the same message on
+    every candidate. A healthy roster reports nothing."""
+    r = _roster(n_rp=4)
+    next(p for p in r if p["bucket"] == "RP")["on_il"] = True   # 3 active RPs
+    warns = RR.preexisting_shortfalls(r)
+    assert any("3" in w and "floor" in w for w in warns), warns
+    assert RR.preexisting_shortfalls(_roster()) == []
+
+
 # ── positional coverage ──────────────────────────────────────────────────────
 
 def test_cannot_drop_the_last_catcher():
@@ -217,3 +275,24 @@ def test_is_legal_mirrors_check_swap():
     r = _roster()
     assert RR.is_legal(r, add=_p("FA OF", "H", "OF"), drop=r[0])
     assert not RR.is_legal(r, add=_p("FA SP", "SP", "SP"), drop=r[-1])
+
+
+def test_worsening_an_already_short_bucket_is_still_blocked():
+    """Review round 2 (2026-07-30): crossing-relative floors must not create
+    a blind spot BELOW the floor — with only 12 healthy hitters (one IL'd),
+    a hitter-out-pitcher-in swap that worsens the deficit to 11 is blocked,
+    while an untouched-bucket swap at the same deficit stays legal (the C6
+    contract)."""
+    roster = _roster()
+    roster[0]["on_il"] = True                     # 12 healthy hitters
+    hitter_out = roster[1]
+    pitcher_in = {"name": "FA Arm", "mlbam": 999, "bucket": "SP",
+                  "espn_pos": "SP", "eligible": {"SP", "P"}}
+    probs = RR.check_swap(roster, add=pitcher_in, drop=hitter_out)
+    assert any("hitter" in p.lower() for p in probs), (
+        "worsening 12 -> 11 healthy hitters must be blocked even though the "
+        "13-hitter floor was already broken before the move")
+    # same deficit, untouched bucket: pitcher-for-pitcher stays legal
+    sp_out = next(p for p in roster if p["bucket"] == "SP")
+    probs2 = RR.check_swap(roster, add=pitcher_in, drop=sp_out)
+    assert not any("hitter" in p.lower() for p in probs2)

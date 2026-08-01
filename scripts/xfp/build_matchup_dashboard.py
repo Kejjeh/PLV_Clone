@@ -1604,48 +1604,66 @@ def render_days_of_fire(my_proj):
     return '\n'.join(out)
 
 
-def render_playoff_simulation():
-    """Monte Carlo: estimate Ligers' regular-season win count given current
-       per-week win probability + remaining weeks."""
-    history_path = OUT / 'predictions_history.csv'
-    if not history_path.exists():
-        return ''
-    df = pd.read_csv(history_path)
-    if df.empty: return ''
-    # Use most-recent win_probability as proxy for "typical" weekly win prob
-    latest_wp = df.iloc[-1]['win_probability']
-    # BrownU has 20 matchup periods; assume current period and remaining periods
-    current_period = int(df.iloc[-1]['period'])
-    remaining_periods = max(20 - current_period, 0)
-    if remaining_periods == 0:
-        return '<h2>🎲 Playoff Probability</h2><p class="muted">Regular season complete.</p>'
+# The playoff section reports the ONE validated engine (run_season_sim.py),
+# never its own sim (C12, 2026-08-01). The old inline Monte Carlo hardcoded
+# playoff_threshold=12 minus an assumed 4 prior wins over max(20 - period, 0)
+# remaining periods — arithmetically 0.0% for most of the season.
+SEASON_SIM_JSON = OUT / 'season_sim.json'
+#: refuse to render a number this many periods behind the live matchup
+# One staleness bar, imported from its owner — a drifted copy here would let
+# this section render odds title_equity itself refuses to convert through.
+from scripts.xfp.lib.title_equity import STALE_PERIOD_HARD as PLAYOFF_SIM_STALE_PERIODS  # noqa: E402
 
-    # Monte Carlo: 10000 sims of remaining_periods Bernoulli(latest_wp)
-    import random
-    random.seed(42)
-    n_sims = 10000
-    wins = []
-    for _ in range(n_sims):
-        w = sum(1 for _ in range(remaining_periods) if random.random() < latest_wp)
-        wins.append(w)
-    wins.sort()
-    p25 = wins[n_sims // 4]
-    p50 = wins[n_sims // 2]
-    p75 = wins[n_sims * 3 // 4]
-    # Assume playoff threshold ≈ top 4 → ~12 wins in 20-period season
-    # (rough; depends on league specifics)
-    playoff_threshold = 12
-    pct_make = sum(1 for w in wins if w >= playoff_threshold - 4) / n_sims  # assuming 4 prior wins
-    return (f'<h2>🎲 Playoff Simulation '
-            f'<small class="muted">(Monte Carlo, 10k sims · uses latest weekly win prob)</small></h2>'
-            f'<p class="notes">'
-            f'Latest weekly win prob: <b>{latest_wp*100:.1f}%</b> · '
-            f'{remaining_periods} periods remain<br>'
-            f'Projected additional wins: <b>P25 {p25}</b> · '
-            f'<b>median {p50}</b> · <b>P75 {p75}</b><br>'
-            f'Rough playoff probability (top 4): <b class="pos">{pct_make*100:.1f}%</b> '
-            f'(assumes ~{playoff_threshold - 4} more wins needed)'
-            f'</p>')
+
+def render_playoff_simulation(current_period=None):
+    """Playoff/title odds from season_sim.json, stamped with the payload's age.
+
+    Refuses to render (an explicit 'unavailable' line) when the payload is
+    missing or stale rather than printing a dead 0.0% — loud beats silent.
+    """
+    head = ('<h2>🎲 Playoff Odds '
+            '<small class="muted">(season_sim engine)</small></h2>')
+
+    def _unavailable(why):
+        return (head + f'<p class="notes muted">unavailable — {h(why)} · run '
+                '<code>python scripts/xfp/run_season_sim.py</code> to '
+                'refresh.</p>')
+
+    try:
+        payload = json.loads(SEASON_SIM_JSON.read_text(encoding='utf-8'))
+    except FileNotFoundError:
+        return _unavailable('season_sim.json missing')
+    except Exception as e:
+        return _unavailable(f'season_sim.json unreadable ({e})')
+
+    josh = payload.get('josh') or {}
+    p_play = josh.get('p_playoffs')
+    p_title = josh.get('p_title')
+    if p_play is None:
+        return _unavailable('season_sim.json carries no josh.p_playoffs')
+
+    gen = payload.get('generated') or 'unknown date'
+    pay_period = payload.get('period')
+    sims = payload.get('sims')
+
+    if current_period is not None and pay_period is not None:
+        gap = int(current_period) - int(pay_period)
+        if gap >= PLAYOFF_SIM_STALE_PERIODS:
+            return _unavailable(
+                f'season_sim.json is {gap} periods stale (generated '
+                f'{gen} at period {pay_period}, now period {current_period})')
+
+    bits = [f'P(playoffs) <b class="pos">{p_play * 100:.1f}%</b>']
+    if p_title is not None:
+        bits.append(f'P(title) <b>{p_title * 100:.1f}%</b>')
+    stamp = f'as of {h(str(gen))}'
+    if pay_period is not None:
+        stamp += f' · period {pay_period}'
+    if sims:
+        stamp += f' · {sims} sims'
+    return (head + '<p class="notes">' + ' · '.join(bits)
+            + f'<br><small class="muted">{stamp} · '
+            f'<code>run_season_sim.py</code></small></p>')
 
 
 def render_position_competition(rh3_map):
@@ -3544,7 +3562,7 @@ def main():
                                                     cap=sp_cap)
     gauge_html = render_win_prob_gauge(win_prob)
     fire_block = render_days_of_fire(my_proj)
-    playoff_block = render_playoff_simulation()
+    playoff_block = render_playoff_simulation(current_period=mu['period'])
     pos_comp_block = render_position_competition(rh3_map)
     injury_block = render_injury_alerts(mu['my_lineup'])
     trend_block = render_trend_watch(mu['my_lineup'])
@@ -3955,7 +3973,7 @@ th.sortable::after {{ content: ' ⇅'; opacity: 0.3; font-size: .8em; }}
 </details></section>
 
 <section id="playoff"><details>
-<summary>🎲 Playoff Simulation</summary>
+<summary>🎲 Playoff Odds (season sim)</summary>
 {playoff_block}
 </details></section>
 

@@ -175,8 +175,12 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
             f"roster would hold {after_c['total']} > {ROSTER_TOTAL} players "
             f"(an add needs a matching drop)")
 
-    # 4-RP floor, and the RP-for-RP rule
-    if after_c['RP'] < RP_FLOOR:
+    # 4-RP floor, and the RP-for-RP rule. The floor check is RELATIVE to the
+    # move (C6, 2026-08-01): it fires only when THIS move crosses the floor
+    # (before >= floor, after < floor). A pre-existing shortfall — an IL'd RP
+    # leaving 3 active — is not this candidate's fault and must not block
+    # unrelated moves; it surfaces ONCE per run via preexisting_shortfalls().
+    if after_c['RP'] < RP_FLOOR and after_c['RP'] < before_c['RP']:
         problems.append(
             f"RP count would fall to {after_c['RP']} < floor {RP_FLOOR} "
             f"(standing rule 2026-07-18: 4 true RPs is a FLOOR, never a target)")
@@ -188,14 +192,21 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
             f"{drop.get('name')} out for a {add.get('bucket') if add else 'nothing'} "
             f"is exactly the move the standing rule forbids")
 
-    # active-bucket sufficiency: enough bodies to fill the required active slots
-    if after_c['H'] < ACTIVE_HITTERS:
+    # active-bucket sufficiency: enough bodies to fill the required active
+    # slots. Move-relative like the RP floor (C6): a move is blocked when it
+    # CROSSES the floor or WORSENS an existing deficit (after < floor AND
+    # after < before — review round 2 closed the below-floor blind spot); a
+    # pre-existing shortfall the move leaves untouched is run-level news via
+    # preexisting_shortfalls(), never this candidate's fault.
+    if after_c['H'] < ACTIVE_HITTERS and after_c['H'] < before_c['H']:
         problems.append(
             f"only {after_c['H']} healthy hitters for {ACTIVE_HITTERS} active "
             f"hitter slots")
-    if after_c['SP'] + after_c['RP'] < ACTIVE_PITCHERS:
+    before_p = before_c['SP'] + before_c['RP']
+    after_p = after_c['SP'] + after_c['RP']
+    if after_p < ACTIVE_PITCHERS and after_p < before_p:
         problems.append(
-            f"only {after_c['SP'] + after_c['RP']} healthy pitchers for "
+            f"only {after_p} healthy pitchers for "
             f"{ACTIVE_PITCHERS} active pitcher slots")
 
     # positional coverage — the catcher case is the one that actually bites
@@ -233,6 +244,32 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
     return problems
 
 
+def preexisting_shortfalls(roster: list[dict]) -> list[str]:
+    """Warnings for deficits the CURRENT roster already carries (C6).
+
+    ``check_swap`` deliberately no longer blames these on every candidate move
+    (its floor checks are crossing-relative), so a caller that searches many
+    candidates prints this ONCE per run instead. Visibility, not values: the
+    shortfall is still loudly reported — just in the right place.
+    """
+    c = _counts(roster)
+    warns: list[str] = []
+    if c['RP'] < RP_FLOOR:
+        warns.append(
+            f"pre-existing shortfall: only {c['RP']} active RPs vs the "
+            f"{RP_FLOOR}-RP floor (standing rule 2026-07-18) — candidate moves "
+            f"that leave the RP bucket untouched are NOT blocked for this")
+    if c['H'] < ACTIVE_HITTERS:
+        warns.append(
+            f"pre-existing shortfall: only {c['H']} healthy hitters for "
+            f"{ACTIVE_HITTERS} active hitter slots")
+    if c['SP'] + c['RP'] < ACTIVE_PITCHERS:
+        warns.append(
+            f"pre-existing shortfall: only {c['SP'] + c['RP']} healthy pitchers "
+            f"for {ACTIVE_PITCHERS} active pitcher slots")
+    return warns
+
+
 def is_legal(roster: list[dict], **kw) -> bool:
     return not check_swap(roster, **kw)
 
@@ -240,5 +277,5 @@ def is_legal(roster: list[dict], **kw) -> bool:
 __all__ = [
     'ACTIVE_HITTERS', 'ACTIVE_PITCHERS', 'BENCH', 'IL_SLOTS', 'ROSTER_TOTAL',
     'RP_FLOOR', 'REQUIRED_SLOTS', 'IllegalMove',
-    'apply_swap', 'check_swap', 'is_legal',
+    'apply_swap', 'check_swap', 'is_legal', 'preexisting_shortfalls',
 ]
