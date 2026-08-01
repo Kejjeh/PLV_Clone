@@ -63,7 +63,7 @@ import os
 import sys
 import urllib.request
 from collections import defaultdict
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Optional
@@ -143,7 +143,12 @@ def _load_source_records(root: Path) -> list[DecisionRecord]:
 
 
 def _load_existing_settlement(root: Path, rec: DecisionRecord) -> Optional[DecisionRecord]:
-    """If a settled mirror already exists for this id, load it (idempotency)."""
+    """If a settled mirror already exists for this id, load it (idempotency).
+
+    The mirror may carry a residual `settlement`, a paired
+    `counterfactual_settlement`, or both — callers decide which question the
+    mirror actually answers (a paired-only mirror leaves the residual open).
+    """
     p = _settled_path(root, rec)
     if not p.exists():
         return None
@@ -350,6 +355,24 @@ def _settle_counterfactual_one(rec: DecisionRecord, today: date,
         n_events_chosen=chosen_n, n_events_rejected=rej_n)
 
 
+def _merge_paired_into_mirror(
+    prior: Optional[DecisionRecord], rec: DecisionRecord
+) -> DecisionRecord:
+    """The record to persist after a paired settlement lands on `rec`.
+
+    Merge INTO any existing mirror so a prior residual `settlement` is never
+    clobbered by the paired write; with no mirror, `rec` (source record +
+    paired block) is the mirror.
+    """
+    if prior is None:
+        return rec
+    return replace(
+        prior,
+        counterfactual_settlement=rec.counterfactual_settlement,
+        settled_at=prior.settled_at or rec.settled_at,
+    )
+
+
 def _settle_one(
     rec: DecisionRecord, today: date, gamelog_cache: dict
 ) -> tuple[DecisionRecord, str]:
@@ -385,9 +408,12 @@ def _settle_one(
     settled = settle_decision(
         rec, today=today, actual_fp_per_unit=actual, n_events=n_events
     )
-    if settled.settled_at is None:
+    if settled.settlement is None:
         # Time gate passed but settle_decision declined — almost always the
         # event-count gate (n_events < min_events) or a missing proj_per.
+        # Gate on `settlement`, not `settled_at`: a paired (counterfactual)
+        # settlement pre-sets settled_at, and that must never be mistaken for
+        # a residual settlement.
         return settled, "PENDING_EVENTS"
     return settled, "SETTLED"
 
@@ -544,23 +570,46 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
     paired_settled = 0
 
     for rec in records:
+        # Existing settled mirror (if any), loaded FIRST so both the paired
+        # step and the residual idempotency gate can consult it.
+        prior = _load_existing_settlement(root, rec)
+
         # 0. Paired (counterfactual) settlement runs on v3 executed records and is
         #    INDEPENDENT of the residual path below — one grades the projection,
         #    the other grades the choice. Sharing gamelog_cache means the extra
         #    player costs at most one additional API call.
+        #    Durable skip-gate: source JSONs are never mutated, so a grade
+        #    persisted on an earlier run lives only in the mirror — adopt it
+        #    instead of re-fetching game logs to recompute it every night.
+        if (prior is not None and prior.counterfactual_settlement
+                and not rec.counterfactual_settlement):
+            rec = replace(
+                rec,
+                counterfactual_settlement=prior.counterfactual_settlement,
+                settled_at=rec.settled_at or prior.settled_at,
+            )
         if _CF_is_pairable(rec) and not rec.counterfactual_settlement:
             try:
                 rec2 = _settle_counterfactual_one(rec, today, gamelog_cache)
                 if rec2.counterfactual_settlement:
                     rec = rec2
                     paired_settled += 1
+                    # Persist the paired grade NOW, independent of whether the
+                    # residual path below can ever settle (it cannot for a
+                    # name-only record) — otherwise the grade is recomputed and
+                    # the game log re-fetched every night (audit C9).
+                    mirror = _merge_paired_into_mirror(prior, rec)
+                    _atomic_write_json(_settled_path(root, rec), asdict(mirror))
+                    prior = mirror
             except Exception as exc:
                 print(f'  WARN paired settlement failed for {rec.decision_id}: '
                       f'{type(exc).__name__}: {exc}')
 
-        # 1. Idempotency: reuse an existing settlement if present.
-        prior = _load_existing_settlement(root, rec)
-        if prior is not None:
+        # 1. Idempotency: reuse an existing RESIDUAL settlement if present.
+        #    A paired-only mirror (settlement=None) must NOT short-circuit —
+        #    the residual question is still open and is retried nightly, and
+        #    counting it here would inflate the classified total.
+        if prior is not None and prior.settlement is not None:
             settled_out.append(prior)
             reused_settled += 1
             continue
@@ -591,6 +640,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         "settled_total": len(settled_out),
         "newly_settled": newly_settled,
         "reused_settled": reused_settled,
+        "paired_settled": paired_settled,
         "pending": pending,
         "ripe_but_pending": ripe_pending,
         "not_ripe": not_ripe,
@@ -600,6 +650,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
     print(
         f"  settled {len(settled_out)} ({newly_settled} new, "
         f"{reused_settled} reused) | "
+        f"paired {paired_settled} new | "
         f"pending {pending} ({not_ripe} not-ripe, "
         f"{ripe_pending} ripe-waiting-events)"
     )

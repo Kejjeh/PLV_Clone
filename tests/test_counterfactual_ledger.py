@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time as dtime, timedelta
 from pathlib import Path
 
 import pandas as pd
@@ -281,6 +281,16 @@ def test_dpwin_resolution_computes_terciles_once_powered():
 
 # ── reconciler ───────────────────────────────────────────────────────────────
 
+def _tx_ts_ms(hour: int = 9) -> int:
+    """Epoch-ms for *hour*:00 today — consistent with a tx dated today.
+
+    find_run compares the run's generated_at against the transaction's REAL
+    timestamp (C8: a surface generated later the same day must not explain an
+    earlier click), so fixtures must carry a ts_ms that matches the date they
+    claim."""
+    return int(datetime.combine(date.today(), dtime(hour, 0)).timestamp() * 1000)
+
+
 def _hist_row(run_id, snapshot, name, mlbam, bucket, dpwin):
     return {
         "run_id": run_id, "generated_at": f"{snapshot}T12:00:00",
@@ -311,7 +321,7 @@ def test_reconciler_attributes_a_move_and_picks_the_passed_on_alternative(tmp_pa
     hist.to_parquet(hp, index=False)
 
     tx = pd.DataFrame([{
-        "date": date.today(), "ts_ms": 1785000000000, "team_id": "1",
+        "date": date.today(), "ts_ms": _tx_ts_ms(9), "team_id": "1",
         "team_name": "New York Ligers", "action_str": "FA ADDED",
         "player_name": "Joc Pederson", "position": "OF", "pro_team": "Tex",
         "espn_player_id": 1, "mlbam_id": None}])
@@ -353,7 +363,8 @@ def test_reconciler_reports_unattributable_moves_rather_than_inventing_a_surface
         "player_name": "Someone", "position": "SP", "pro_team": "LAA",
         "espn_player_id": 2, "mlbam_id": None}])
     tp = tmp_path / "tx.parquet"; tx.to_parquet(tp, index=False)
-    s = RD.reconcile(days=10, dry_run=True, tx_path=tp, hist_path=hp, verbose=False)
+    s = RD.reconcile(days=10, dry_run=True, tx_path=tp, hist_path=hp,
+                     root=tmp_path / "decisions_root", verbose=False)
     assert s["unattributed"] == 1 and s["records"] == []
 
 
@@ -394,11 +405,12 @@ def test_reconciler_counts_name_only_id_matches(tmp_path):
         _hist_row("r1", yday, "Other Guy", 222, "H", 0.04)])
     hp = tmp_path / "h.parquet"; hist.to_parquet(hp, index=False)
     tx = pd.DataFrame([{
-        "date": date.today(), "ts_ms": 5, "team_id": "1",
+        "date": date.today(), "ts_ms": _tx_ts_ms(9), "team_id": "1",
         "team_name": "New York Ligers", "action_str": "FA ADDED",
         "player_name": "Chosen Guy", "position": "OF", "pro_team": "Tex",
         "espn_player_id": 1, "mlbam_id": None}])
     tp = tmp_path / "tx.parquet"; tx.to_parquet(tp, index=False)
-    s = RD.reconcile(days=10, dry_run=True, tx_path=tp, hist_path=hp, verbose=False)
+    s = RD.reconcile(days=10, dry_run=True, tx_path=tp, hist_path=hp,
+                     root=tmp_path / "decisions_root", verbose=False)
     assert s["name_only_matches"] == 1
     assert s["records"][0].inputs["id_source"] == "name_only"

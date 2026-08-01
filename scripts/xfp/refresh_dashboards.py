@@ -114,6 +114,20 @@ def main():
     if not ok_tx:
         print('  ⚠ transactions persist failed — continuing (archival only)')
 
+    # 0.65: Reconcile executed transactions against the dpwin surface —
+    # stamps executed_at on open v3 decision records and auto-creates v3
+    # records (with the passed-on alternative) for unlogged moves. Must run
+    # right after 0.6 so the ledger attributes today's moves while they are
+    # inside the ATTRIBUTION_DAYS window. Fail-soft + non-gating, mirroring
+    # settle_decisions (4.94c).
+    ok_reconcile = run(
+        '0.65. Reconcile executed moves x dpwin surface (decision ledger)',
+        'python -X utf8 scripts/xfp/reconcile_decisions.py',
+        timeout=180)
+    if not ok_reconcile:
+        print('  ⚠ decision reconcile failed — continuing (non-gating; '
+              'the ledger catches up on the next run)')
+
     # 0.7: Build FA-pool snapshot (RP-only, Phase 2). Powers the live_marginal
     # line on RP triangulate cards. Fail-soft — if snapshot is stale/missing,
     # blend_score.py emits live_marginal=None with a note.

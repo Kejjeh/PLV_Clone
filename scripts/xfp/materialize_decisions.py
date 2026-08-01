@@ -79,11 +79,18 @@ BB_EVENTS = {"walk", "intent_walk"}
 
 
 def _load_all(root: Path) -> list[DecisionRecord]:
-    """Walk {root}/{YYYY-MM-DD}/*.json and load every record."""
+    """Walk {root}/{YYYY-MM-DD}/*.json and load every record.
+
+    The ``settled/`` subtree is EXCLUDED: it holds settlement mirrors of
+    records that also exist at the day level (incl. the paired-only mirrors
+    the 2026-07-30 settlement fix writes systematically), so rglobbing it
+    would double-load those decisions into the panel."""
     if not root.exists():
         return []
     records: list[DecisionRecord] = []
     for json_path in sorted(root.rglob("*.json")):
+        if "settled" in json_path.parts:
+            continue
         try:
             payload = json.loads(json_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError:

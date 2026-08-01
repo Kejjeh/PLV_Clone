@@ -148,6 +148,67 @@ def test_candidate_draws_are_independent_of_pool_ORDER():
         assert fwd[k] == pytest.approx(rev[k]), f"candidate {k} moved with order"
 
 
+def test_identity_less_candidates_are_scored_independently():
+    """C1 (2026-08-01): two candidates whose mlbam never resolved (None) must
+    NOT collapse onto one cached draw object. Under the sentinel-0 cache key,
+    the second identity-less candidate literally received the first's draws —
+    wrong name, wrong mean — and its dpwin moved with pool order.
+
+    Spec: two identity-less candidates with different projections are scored
+    independently — each scored distribution reflects its own projected mean,
+    and swapping pool order changes neither."""
+    state = _state()
+
+    def score(order):
+        D = _draws(hitters=[(1, "Rostered", 5.0)])
+        out = {}
+        for name, fp in order:
+            cand = {"mlbam": None, "name": name, "bucket": "H",
+                    "proj": {"fp": fp, "units": 4, "sigma2": 16.0}}
+            rec = E.ensure_candidate_draws(state, D, cand)
+            out[name] = (rec["name"], float(rec["arr"].mean()))
+        return out
+
+    fwd = score([("Ghost A", 12.0), ("Ghost B", 40.0)])
+    rev = score([("Ghost B", 40.0), ("Ghost A", 12.0)])
+
+    # each candidate gets back ITS OWN record, not a cache-mate's
+    assert fwd["Ghost A"][0] == "Ghost A"
+    assert fwd["Ghost B"][0] == "Ghost B"
+    # each scored distribution reflects its own projected mean (no emp history
+    # for an identity-less candidate -> pure parametric at fp; MC SE ~0.06)
+    assert fwd["Ghost A"][1] == pytest.approx(12.0, abs=1.0)
+    assert fwd["Ghost B"][1] == pytest.approx(40.0, abs=1.0)
+    # and pool order changes neither
+    for k in fwd:
+        assert fwd[k] == pytest.approx(rev[k]), f"candidate {k} moved with order"
+
+
+def test_optimizer_warns_loudly_when_candidates_fail_to_resolve(monkeypatch, capsys):
+    """C1 visibility companion (2026-08-01): resolve_candidate_mlbams may
+    legitimately leave mlbam=None — name-fallback identity keeps such
+    candidates safe downstream — but it must SAY how many, because a silent
+    None is exactly how identity-less candidates entered the dpwin path
+    unnoticed. Visibility only: the values are unchanged."""
+    WO = pytest.importorskip("run_weekly_optimizer")
+    import plv_clone.utils.name_match as NM
+
+    def _unresolvable(*a, **k):
+        raise ValueError("ambiguous")
+    monkeypatch.setattr(NM, "resolve_batter_id", _unresolvable)
+    monkeypatch.setattr(NM, "resolve_pitcher_id", _unresolvable)
+
+    cands = [
+        {"name": "Ghost A", "bucket": "H", "team": "", "espn_pos": "OF"},
+        {"name": "Ghost B", "bucket": "SP", "team": "", "starts": []},
+    ]
+    WO.resolve_candidate_mlbams({}, cands)
+    assert all(c["mlbam"] is None for c in cands), "values must not change"
+    out = capsys.readouterr().out.lower()
+    assert "unresolved" in out and "2" in out, (
+        "a nonzero unresolved count must be printed, never silent")
+
+
 def test_precompute_draws_retains_seed_for_candidate_streams():
     """candidate_rng needs the run seed; it must be carried on D."""
     import inspect

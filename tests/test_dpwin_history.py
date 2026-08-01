@@ -111,7 +111,7 @@ def test_make_run_id_embeds_time_and_seed():
 def test_append_then_reappend_same_run_replaces_not_duplicates(tmp_path):
     p = tmp_path / "dpwin.parquet"
     r1 = H.append(_rows(), path=p)
-    assert r1 == {"added": 3, "replaced": 0, "total": 3}
+    assert r1 == {"added": 3, "replaced": 0, "evicted": 0, "total": 3}
     r2 = H.append(_rows(), path=p)
     assert r2["total"] == 3, "a retried run must not inflate the panel"
     assert r2["added"] == 0
@@ -182,6 +182,64 @@ def test_append_rejects_rows_missing_key_columns(tmp_path):
         H.append(bad, path=p)
 
 
+def test_append_reports_evictions_honestly(tmp_path, capsys):
+    """Spec 3 (2026-08-01): replacing rows via the same key counts as
+    ``replaced``; distinct evaluated rows collapsing onto one key within a
+    single append are counted as ``evicted`` and reported LOUDLY — the panel
+    never silently shrinks. (The old ``added = max(total - before, 0)``
+    arithmetic reported a 54-row loss as zero.)"""
+    p = tmp_path / "dpwin.parquet"
+
+    # an intentional upsert is REPLACED, with zero evictions
+    H.append(_rows(), path=p)
+    res = H.append(_rows(), path=p)
+    assert res["replaced"] == 3
+    assert res["evicted"] == 0
+
+    # two rows carrying the SAME idempotency key in one batch: one is evicted,
+    # the count says so, and a loud line is printed
+    one = [{"move_type": "add", "add": {"name": "Dup Guy", "mlbam": 777,
+                                        "bucket": "H"}, "dpwin": 0.01}]
+    batch = pd.concat([
+        H.build_rows(run_id="rdup", state=_state(), regime="CLOSE",
+                     base_pwin=0.5, sims=10, seed=1, moves=one),
+        H.build_rows(run_id="rdup", state=_state(), regime="CLOSE",
+                     base_pwin=0.5, sims=10, seed=1, moves=one),
+    ], ignore_index=True)
+    capsys.readouterr()
+    res2 = H.append(batch, path=p)
+    assert res2["evicted"] == 1
+    assert res2["added"] == 1
+    out = capsys.readouterr().out.lower()
+    assert "evict" in out, "an eviction must be reported loudly, never silently"
+
+
+def test_two_distinct_unresolved_id_adds_sharing_a_drop_both_survive(tmp_path):
+    """C2 (2026-08-01): the panel preserves EVERY evaluated candidate.
+
+    Two DISTINCT adds whose mlbam never resolved (None -> sentinel 0) paired
+    with the same drop used to collapse onto one dedup key, and
+    drop_duplicates(keep='last') silently evicted one — three consecutive live
+    runs each lost 54+ evaluated candidates this way. The evicted rows are the
+    counterfactual surface the ledger settles against."""
+    p = tmp_path / "dpwin.parquet"
+    moves = [
+        {"move_type": "swap", "add": {"name": "Ghost A", "bucket": "H"},
+         "drop": {"name": "Weak Bat", "mlbam": 555, "bucket": "H"},
+         "dpwin": 0.011},
+        {"move_type": "swap", "add": {"name": "Ghost B", "bucket": "H"},
+         "drop": {"name": "Weak Bat", "mlbam": 555, "bucket": "H"},
+         "dpwin": 0.022},
+    ]
+    df = H.build_rows(run_id="r1", state=_state(), regime="CLOSE", base_pwin=0.5,
+                      sims=10, seed=1, moves=moves)
+    H.append(df, path=p)
+    got = pd.read_parquet(p)
+    assert len(got) == 2, "stored row count must equal the number evaluated"
+    assert set(got["add_name"]) == {"Ghost A", "Ghost B"}, (
+        "both unresolved-id adds must be readable back")
+
+
 # ── read helpers ─────────────────────────────────────────────────────────────
 
 def test_load_on_missing_file_returns_typed_empty_frame(tmp_path):
@@ -241,3 +299,26 @@ def test_assemble_raises_on_a_name_passed_as_a_draw_key():
         E.assemble(st, D, zero_hitters={"Guy A"})
     my, _ = E.assemble(st, D, zero_hitters={"id:1"})
     assert my[0] == 0.0
+
+
+def test_legacy_parquet_without_key_columns_migrates_on_append(tmp_path):
+    """Review round 2 (2026-07-30): a panel written BEFORE the identity-key
+    fix has no add_key/drop_key columns. Appending to it must (a) derive keys
+    for the legacy rows from their stored (name, mlbam) legs so the same
+    logical rows are REPLACED, never duplicated, and (b) leave the merged
+    panel fully keyed. NOTE on red-first: the migration branch shipped inside
+    Spec 2's minimal fix; this test was written after, and its red was
+    produced by mutation (removing the _ensure_key_cols(old) call duplicates
+    every legacy row and fails the count assertion) — disclosed per the
+    established precedent."""
+    p = tmp_path / "dpwin_history.parquet"
+    new = _rows()
+    legacy = new.drop(columns=["add_key", "drop_key"])
+    legacy.to_parquet(p, index=False)
+
+    res = H.append(_rows(), path=p)
+    got = H.load(p)
+    assert len(got) == 3, "legacy rows must be replaced via derived keys, not duplicated"
+    assert res["replaced"] == 3 and res["added"] == 0
+    assert "add_key" in got.columns and "drop_key" in got.columns
+    assert got["add_key"].notna().all()

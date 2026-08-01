@@ -52,6 +52,7 @@ source; each would have silently corrupted persisted dpwin history)
 """
 from __future__ import annotations
 
+import hashlib
 import math
 import sys
 from datetime import date, timedelta
@@ -515,16 +516,40 @@ def _draw_key(entry) -> str:
 _BUCKET_ORD = {'H': 1, 'SP': 2, 'RP': 3}
 
 
-def candidate_rng(seed: int, mlbam, bucket: str) -> np.random.Generator:
+def _stable_ident_int(ident) -> int:
+    """Deterministic non-negative int from a candidate identity.
+
+    ``ident`` is either an mlbam int (passes through unchanged, so every
+    persisted dpwin seeded on an id stays bit-reproducible) or a ``'nm:...'``
+    draw-key string for a candidate whose mlbam never resolved. Python's builtin
+    ``hash()`` is process-salted, so a real digest is required for the string
+    path to be a pure function of the player across runs.
+    """
+    if isinstance(ident, (int, np.integer)):
+        return int(ident)
+    if isinstance(ident, float) and not np.isnan(ident) and float(ident).is_integer():
+        # a NaN-able pandas column hands back 123.0 for mlbam 123 — coerce
+        # exactly as _draw_key does, or the same player would seed two
+        # different streams depending on which frame he arrived through
+        return int(ident)
+    digest = hashlib.sha256(str(ident).encode('utf-8')).digest()
+    return int.from_bytes(digest[:8], 'big')
+
+
+def candidate_rng(seed: int, ident, bucket: str) -> np.random.Generator:
     """A per-candidate independent stream (DEFECT 2).
 
     Candidate draws MUST NOT come from the shared ``D['rng']``: doing so made a
     candidate's dpwin depend on how many candidates were scored before it, so the
     same player scored differently depending on pool ordering — fatal once dpwin
-    is persisted. Seeding on (seed, mlbam, bucket) makes each candidate's draws a
+    is persisted. Seeding on (seed, ident, bucket) makes each candidate's draws a
     pure function of the run seed and the player.
+
+    ``ident`` is the mlbam when known, else the ``'nm:...'`` fallback draw key
+    (C1, 2026-08-01) — collapsing every unresolved id to a shared 0 gave two
+    identity-less candidates common random numbers.
     """
-    return np.random.default_rng([int(seed), int(mlbam or 0),
+    return np.random.default_rng([int(seed), _stable_ident_int(ident or 0),
                                   _BUCKET_ORD.get(bucket, 0)])
 
 
@@ -784,14 +809,22 @@ def ensure_candidate_draws(state, D, cand: dict) -> dict:
 
     Draws come from ``candidate_rng`` (DEFECT 2), so a candidate's dpwin is a
     pure function of (run seed, player) and does not shift when the pool changes.
+
+    The memo key is IDENTITY-COMPLETE (C1, 2026-08-01): it uses the same
+    ``_draw_key`` semantics as the roster path — ``id:<mlbam>`` when the id
+    resolved, else ``nm:<normalized name>``. The old ``int(mlbam or 0)`` key
+    collapsed every unresolved id to a shared sentinel, so the SECOND
+    identity-less candidate in a pool received the FIRST one's cached draw
+    object (wrong name, wrong array) and its scored mean moved with pool order.
     """
     bucket = cand['bucket']
-    key = (int(cand.get('mlbam') or 0), bucket, cand.get('effective_date') or '')
+    ident = _draw_key(cand)
+    key = (ident, bucket, cand.get('effective_date') or '')
     if key in D['cand']:
         return D['cand'][key]
 
     n_sims = D['n_sims']
-    rng = candidate_rng(D['seed'], cand.get('mlbam'), bucket)
+    rng = candidate_rng(D['seed'], cand.get('mlbam') or ident, bucket)
     proj = cand.get('proj')
     if proj is None:
         raise ValueError(

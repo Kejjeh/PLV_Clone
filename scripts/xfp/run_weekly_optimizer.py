@@ -198,6 +198,15 @@ def resolve_candidate_mlbams(state, cands: list[dict]) -> None:
                     m = s.get('mlbam') or s.get('pid')
                     break
         c['mlbam'] = int(m) if m else None
+    # Visibility only (C1 companion, 2026-08-01): a None mlbam is legitimate —
+    # the engine and dpwin history now key such candidates by normalized name —
+    # but it must never be SILENT, because silent Nones are how identity-less
+    # candidates used to collapse onto one sentinel key unnoticed.
+    unresolved = sorted(c['name'] for c in cands if c.get('mlbam') is None)
+    if unresolved:
+        print(f'  !! {len(unresolved)} candidate(s) UNRESOLVED to mlbam — '
+              f'name-fallback identity in use: '
+              f'{", ".join(unresolved[:8])}{" ..." if len(unresolved) > 8 else ""}')
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -597,6 +606,11 @@ def main() -> int:
                  if p['bucket'] == b and not p['on_il']) for b in ('H', 'SP', 'RP')}
     print(f'  roster (active): {rc["H"]}H / {rc["SP"]}SP / {rc["RP"]}RP '
           f'(RP floor {RR.RP_FLOOR})')
+    # C6 companion: check_swap's floors are crossing-relative, so a deficit
+    # the roster ALREADY carries is reported here ONCE, not blamed on every
+    # candidate move the search scores.
+    for w in RR.preexisting_shortfalls(state['my_roster']):
+        print(f'  ⚠ {w}')
 
     print('\n--- CANDIDATES ---')
     cands = build_candidates(state, top_n=args.pool)
