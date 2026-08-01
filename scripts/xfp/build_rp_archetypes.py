@@ -71,6 +71,111 @@ TBF_FLOOR_RATED = 50
 G_FLOOR_FULL = 40      # FULL tier: more durable sample (~half-season equivalent)
 
 # ──────────────────────────────────────────────────────────────────────────────
+# Join-coverage + cache-staleness guard (audit 2026-08-01, T14)
+#
+# The FanGraphs leverage and Baseball-Reference IR caches are MANUALLY scraped
+# (pull_fg_rp_leverage.py / pull_bref_rp_ir.py) and are not in the nightly chain.
+# Both merges below were bare left-joins with no post-merge check, so when the
+# caches stopped being refreshed the 2026 join coverage fell to 79.5% (gmLI,
+# 182/229) and 79.0% (IR) against 99.3-100% in every complete prior season — and
+# the build still emitted a leverage_tier for every reliever, the 47 unmatched
+# arms silently falling back to the SV/HLD binary with FIREMAN uniformly False.
+#
+# Two distinct failure shapes, both reported: COVERAGE (cohort rows missing from
+# the cache) and STALENESS (the rows that DID join were measured months ago — the
+# 2026 cache tops out at G=28 while joined rows now sit at median G=40, so a
+# build can read fully covered and still be a two-month-old measurement).
+#
+# VISIBILITY ONLY — this changes what the build prints, never a tier, a gmLI
+# value, or anything reaching a projection. leverage_tier / gmli / FIREMAN are
+# display-surface columns (matchup closer tracker, /rp-archetype, /fa-rp-pool);
+# build_live_blend_xfp reads only OVERALL / OVERALL_career_pct / traj_flag, which
+# are composed upstream of both merges. Rule 13 holds.
+COVERAGE_FAIL = 0.85     # prior complete seasons run 99.3-100%, so a flat band works
+COVERAGE_WARN = 0.95
+CACHE_AGE_WARN_DAYS = 14   # manual cadence — looser than the FG snapshot's 2d/5d
+CACHE_AGE_FAIL_DAYS = 30
+
+
+def report_join_coverage(qual, col, cache_path, label, affects, year=None):
+    """Print + return the current-season join rate and cache age for one merge.
+
+    Returns a dict (year, n, matched, rate, prev_year, prev_rate, age_days,
+    status) with status in PASS / WARN / FAIL — the worse of the coverage band
+    and the staleness band. Never mutates `qual`.
+    """
+    import time
+
+    if 'year' not in qual.columns or len(qual) == 0:
+        return {'year': None, 'n': 0, 'matched': 0, 'rate': None,
+                'prev_year': None, 'prev_rate': None, 'age_days': None,
+                'status': 'FAIL'}
+
+    years = sorted(int(y) for y in qual['year'].dropna().unique())
+    if not years and year is None:
+        # non-empty panel whose year column coerced entirely to NaN — no usable
+        # season to score. Report FAIL (that IS the signal); a visibility guard
+        # must never abort the build it was added to observe.
+        print(f'  !! {label}: panel has no usable year values — coverage '
+              f'UNKNOWN, treating as FAIL (affects {affects})')
+        return {'year': None, 'n': len(qual), 'matched': 0, 'rate': None,
+                'prev_year': None, 'prev_rate': None, 'age_days': None,
+                'status': 'FAIL'}
+    cur_year = int(year) if year is not None else years[-1]
+    cur = qual[qual['year'] == cur_year]
+    n = len(cur)
+    matched = int(cur[col].notna().sum()) if col in qual.columns else 0
+    rate = (matched / n) if n else None
+
+    prior = [y for y in years if y < cur_year]
+    prev_year = prior[-1] if prior else None
+    prev_rate = None
+    if prev_year is not None and col in qual.columns:
+        prev = qual[qual['year'] == prev_year]
+        prev_rate = float(prev[col].notna().mean()) if len(prev) else None
+
+    cache_path = Path(cache_path)
+    age_days = None
+    if cache_path.exists():
+        age_days = round((time.time() - cache_path.stat().st_mtime) / 86400.0, 1)
+
+    cov_status = 'PASS'
+    if rate is None or rate < COVERAGE_FAIL:
+        cov_status = 'FAIL'
+    elif rate < COVERAGE_WARN:
+        cov_status = 'WARN'
+
+    if age_days is None:
+        age_status = 'FAIL'
+    elif age_days > CACHE_AGE_FAIL_DAYS:
+        age_status = 'FAIL'
+    elif age_days > CACHE_AGE_WARN_DAYS:
+        age_status = 'WARN'
+    else:
+        age_status = 'PASS'
+
+    status = 'FAIL' if 'FAIL' in (cov_status, age_status) else (
+        'WARN' if 'WARN' in (cov_status, age_status) else 'PASS')
+
+    prev_txt = (f'prior complete {prev_year}: {prev_rate:.1%}'
+                if prev_rate is not None else 'no prior season')
+    rate_txt = f'{rate:.1%}' if rate is not None else 'n/a'
+    print(f'  {label} join ({col}): {cur_year} {matched}/{n} = {rate_txt} '
+          f'({prev_txt}) [{cov_status}]', flush=True)
+    age_txt = f'{age_days}d' if age_days is not None else 'MISSING'
+    print(f'  {label} cache age: {age_txt} ({cache_path.name}) [{age_status}]',
+          flush=True)
+    if status != 'PASS':
+        print(f'  !! WARNING [{status}]: degraded {label} cache — {affects} '
+              f'unreliable. Unmatched rows fall back to the coarse binary, and '
+              f'matched rows carry a {age_txt}-old measurement. Re-run the '
+              f'scraper before trusting these tags.', flush=True)
+
+    return {'year': cur_year, 'n': n, 'matched': matched, 'rate': rate,
+            'prev_year': prev_year, 'prev_rate': prev_rate,
+            'age_days': age_days, 'status': status}
+
+# ──────────────────────────────────────────────────────────────────────────────
 # 27 archetype cells — STUFF / CONTROL / BATTED_BALL (S/C/B bucket triple)
 # ──────────────────────────────────────────────────────────────────────────────
 ARCHETYPES = {
@@ -283,8 +388,14 @@ def build_ratings_panel():
     qual['MULTI_INNING_BULK'] = (qual['ip_per_appearance'] >= 1.3)
 
     # ── FanGraphs leverage join (gmLI / pLI / WPA / Shutdowns / Meltdowns) ───
-    # 2018-2026 ex-2020. ~100% join coverage on eligible cohort (verified
-    # 2026-05-29). gmLI replaces the binary HIGH_LEVERAGE tag where present.
+    # 2018-2026 ex-2020. Complete prior seasons join at 99.6-100% on the eligible
+    # cohort; the CURRENT season's coverage depends entirely on when the manual
+    # scraper last ran, and was 79.5% (182/229) on a 2026-05-30 cache as of
+    # 2026-08-01 — hence report_join_coverage() below. The stale "~100% (verified
+    # 2026-05-29)" claim this comment used to carry was true on the day it was
+    # written and had silently become false. Do NOT re-assert a fixed rate here;
+    # read the build's printed rate. gmLI replaces the binary HIGH_LEVERAGE tag
+    # where present.
     # IR / IS% (inherited-runner stranded%) come from Baseball-Reference via
     # pull_bref_rp_ir.py — FG's combined-stats type=8 endpoint does NOT
     # expose them (confirmed by 544-key dump 2026-05-29). The Baseball-Reference
@@ -335,11 +446,18 @@ def build_ratings_panel():
         qual['meltdowns'] = np.nan
         qual['leverage_tier'] = np.where(qual['HIGH_LEVERAGE'], 'HIGH_LEVERAGE', 'MID_LEVERAGE')
 
+    report_join_coverage(qual, col='gmli', cache_path=FG_LEVERAGE_CSV,
+                         label='FanGraphs leverage',
+                         affects='leverage_tier / HIGH_LEVERAGE')
+
     # ── Baseball-Reference IR / IS% join (fireman skill) ────────────────────
     # Output of pull_bref_rp_ir.py. is_pct is STRANDED% (we invert BBRef's
     # scored% so higher = better, consistent with FG IR-S% convention).
     # FIREMAN = (inherited_stranded_pct >= 80) AND (ir >= 20).
-    # 99.7% join coverage on the qualifying RP cohort (verified 2026-05-30).
+    # Complete prior seasons join at 99.3-100%; the current season tracks the
+    # manual scraper's last run (79.0% on a 2026-05-30 cache as of 2026-08-01).
+    # The stale "99.7% (verified 2026-05-30)" claim this comment used to carry
+    # described the day it was written, not the build. Read the printed rate.
     if BREF_IR_CSV.exists():
         bref = pd.read_csv(BREF_IR_CSV)
         bref['mlb_id'] = pd.to_numeric(bref['mlb_id'], errors='coerce').astype('Int64')
@@ -370,6 +488,9 @@ def build_ratings_panel():
         qual['ir'] = np.nan
         qual['inherited_stranded_pct'] = np.nan
         qual['FIREMAN'] = False
+
+    report_join_coverage(qual, col='ir', cache_path=BREF_IR_CSV,
+                         label='BRef inherited-runner', affects='FIREMAN')
 
     # Optional platoon tag — only computable for 2022+ with sufficient TBF
     if SPLITS_CSV.exists():

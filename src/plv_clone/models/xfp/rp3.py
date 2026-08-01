@@ -41,6 +41,11 @@ ROS_SCHED_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_schedule_feature
 TEAM_STR_CSV  = ROOT / 'data' / 'research' / 'xfp_cache' / 'team_strength_2026.csv'
 SCHEDULE_CSV  = ROOT / 'data' / 'research' / 'xfp_cache' / 'pitcher_schedule_2026.csv'
 MILB_PRIORS_CSV = ROOT / 'data' / 'outputs' / 'xfp_milb_pitcher_priors_2026.csv'
+# Third name-source tier (audit 2026-08-01, T29). The boxscore bridge
+# (scripts/xfp/refresh_boxscores.py, refresh step 1.5) is mlbam-keyed and carries
+# a fullName for every pitcher who has appeared, so it resolves ids the two
+# name CSVs miss entirely.
+BOXSCORE_PITCHERS = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
 MODEL_PKL  = ROOT / 'data' / 'models' / 'xfp_rp3_pipeline.pkl'
 PROJ_CSV   = ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'
 # Sigma calibration config (added 2026-06-03). The raw LOO-residual sigma from
@@ -213,6 +218,82 @@ def train_final(df: pd.DataFrame, feats: list[str]):
     return _engine.train_final_ridge(
         df, feats, target=TARGET, train_years=TRAIN_YEARS,
         filter_fn=lambda d: (d['gs_to'] >= EVAL_GS_MIN) & (d['ros_gs'] >= ROS_GS_MIN))
+
+
+def fill_missing_player_names(valid: pd.DataFrame,
+                              id_col: str = 'pitcher',
+                              name_col: str = 'player_name') -> pd.DataFrame:
+    """Last name-source tier: resolve a still-blank player_name from the mlbam id.
+
+    sp_multiyr and the MiLB priors are both name CSVs keyed on ids they happen to
+    carry; a pitcher present in the rolling substrate but in neither (canonical
+    2026-08-01: Tyler Holton 663947, Eduardo Rivera 700842) shipped with a null
+    name and was unreachable by every name-keyed board join. The mlbam-keyed
+    boxscore store this same nightly chain writes knows them.
+
+    Additive and conservative: an existing name is never overwritten, an id
+    nothing can resolve stays null rather than being guessed at, and a missing
+    store is a no-op. Touches no numeric column.
+    """
+    if name_col not in valid.columns:
+        return valid
+    # "No name" means null OR blank/whitespace — a CSV written with na_rep=''
+    # produces the latter, and report_name_completeness already counts those
+    # rows as missing. Gating on isna() alone let the two disagree: the
+    # resolver skipped the row and the reporter warned about it forever.
+    _blank = (valid[name_col].isna()
+              | (valid[name_col].astype(str).str.strip() == ''))
+    if not _blank.any():
+        return valid
+    if not Path(BOXSCORE_PITCHERS).exists():
+        return valid
+    try:
+        box = pd.read_parquet(BOXSCORE_PITCHERS,
+                              columns=['mlbam_id', 'player_name', 'game_date'])
+    except Exception as e:                                  # pragma: no cover
+        print(f'  !! could not read {BOXSCORE_PITCHERS.name} for name backfill: {e}')
+        return valid
+    box = box.dropna(subset=['mlbam_id', 'player_name'])
+    box = box[box['player_name'].astype(str).str.strip() != '']
+    if box.empty:
+        return valid
+    # Most recent appearance wins — a name spelling can be corrected upstream.
+    box = (box.sort_values('game_date')
+              .drop_duplicates('mlbam_id', keep='last')
+              [['mlbam_id', 'player_name']]
+              .rename(columns={'player_name': '_box_name'}))
+    box['mlbam_id'] = pd.to_numeric(box['mlbam_id'], errors='coerce')
+
+    out = valid.copy()
+    key = pd.to_numeric(out[id_col], errors='coerce')
+    lookup = dict(zip(box['mlbam_id'], box['_box_name']))
+    resolved = key.map(lookup)
+    # fill the SAME blank set the gate tested (fillna alone would leave '' rows
+    # untouched); an existing real name is still never overwritten.
+    blank = (out[name_col].isna()
+             | (out[name_col].astype(str).str.strip() == ''))
+    out.loc[blank, name_col] = resolved[blank]
+    return out
+
+
+def report_name_completeness(valid: pd.DataFrame,
+                             id_col: str = 'pitcher',
+                             name_col: str = 'player_name') -> int:
+    """Announce rows still shipping without a name; return how many.
+
+    Non-gating by design — this is a display column on a fail-soft nightly, and
+    dropping the rows would discard legitimately projected pitchers. The point is
+    that a future gap is announced instead of silently shipped.
+    """
+    if name_col not in valid.columns:
+        return 0
+    missing = valid[valid[name_col].isna() |
+                    (valid[name_col].astype(str).str.strip() == '')]
+    if len(missing):
+        ids = ', '.join(str(i) for i in missing[id_col].tolist()[:20])
+        print(f'  !! WARNING: {len(missing)} row(s) have no {name_col} and are '
+              f'unreachable by every name-keyed join (pitcher ids: {ids})')
+    return len(missing)
 
 
 def main():
@@ -427,6 +508,9 @@ def main():
         valid = valid.merge(milb_names, on='pitcher', how='left')
         valid['player_name'] = valid['player_name'].fillna(valid['milb_name'])
         valid = valid.drop(columns=['milb_name'])
+    # Third tier: ids neither name CSV carries, resolved from the mlbam-keyed
+    # boxscore store (audit 2026-08-01, T29). Name column only.
+    valid = fill_missing_player_names(valid)
 
     # Schedule strength: opponent batting index for next 2 starts
     valid = apply_schedule_strength(valid)
@@ -563,6 +647,7 @@ def main():
         'slump_next_rate', 'slump_delta',
     ]
     out_cols = [c for c in out_cols if c in valid.columns]
+    report_name_completeness(valid)
     valid[out_cols].to_csv(PROJ_CSV, index=False)
     print(f'Wrote {PROJ_CSV}: {len(valid)} pitchers')
 

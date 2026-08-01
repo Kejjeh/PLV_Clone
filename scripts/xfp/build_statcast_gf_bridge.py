@@ -103,6 +103,7 @@ def gf_rows_for_game(pk, lookup):
             is_term = (p.get("ab_number") in max_pn and pn == max_pn[p["ab_number"]])
             try:
                 rows.append(map_gf_pitch(p, meta, lookup, is_terminal=is_term))
+                _MAPPED[0] += 1
             except Exception:
                 _DROPPED[0] += 1
                 continue
@@ -113,7 +114,15 @@ def gf_rows_for_game(pk, lookup):
 # to swallow EVERY mapping error invisibly — a gf schema drift would drop the
 # whole provisional day and the models would silently lose their same-day
 # bridge. Count drops and warn loudly past a threshold.
+#
+# Both counters are per-PROCESS and are reset at the top of main(). _MAPPED
+# (audit 2026-08-01 T28) is the honest denominator: the drop rate must be
+# measured against pitches ATTEMPTED, not pitches appended. A `--start` repair
+# run over already-canonical dates maps every pitch fine and appends none
+# (dedupe keeps canonical), so passing the appended count reported 100% drops
+# and fired a false schema-drift warning.
 _DROPPED = [0]
+_MAPPED = [0]
 
 
 def report_drops(n_mapped: int) -> None:
@@ -135,6 +144,9 @@ def main():
     ap.add_argument("--through", help="fill through this date (default: yesterday)")
     ap.add_argument("--start", help="force gap start (default: canonical max + 1)")
     args = ap.parse_args()
+
+    _DROPPED[0] = 0
+    _MAPPED[0] = 0
 
     if not STATCAST.exists():
         print(f"no statcast cache at {STATCAST} — run refresh_xfp_statcast first")
@@ -182,7 +194,7 @@ def main():
             games += 1
         d += timedelta(days=1)
 
-    report_drops(len(new_rows))
+    report_drops(_MAPPED[0])
     if not new_rows:
         if n_prior_prov:
             _write(canonical, sc.columns)

@@ -40,8 +40,98 @@ jobs:
           git --version
           git rev-parse --abbrev-ref HEAD
 
+      - name: Pre-publish test gate (a red suite blocks the refresh)
+        # WHY THIS STEP EXISTS (audit 2026-08-01 item 31)
+        # Nothing anywhere ran pytest: the suite gated neither this nightly
+        # publish nor a push to main, so a refresh could ship dashboards built
+        # by code whose own tests were failing.
+        #
+        # A red suite must NOT cost the day's ESPN archival (transactions and
+        # rosters roll off the API in 7-14 days, unrecoverable), and must NOT
+        # publish dashboards built by red code. Both at once = exporting
+        # SUITE_RED=1 and letting the refresh run with --no-push: data is
+        # pulled and committed, the public site is untouched (review
+        # 2026-08-01 - the first cut exited 1 here, which withheld the
+        # archival commit too).
+        #
+        # The non-zero outcomes are NOT the same thing:
+        #   exit 1   tests FAILED             -> SUITE_RED (archive, no publish)
+        #   exit 2   interrupted/COLLECTION   -> SUITE_RED (a production import
+        #            error lands here - it must never wave through)
+        #   exit 3-5 pytest itself broke      -> report, continue `slow` (the real-subprocess triangulate pair, ~42% of suite
+        # wall) is deselected; --no-cov -q override pyproject's addopts on the
+        # command line so this needs no config edit.
+        #
+        # ESCAPE HATCH: a red suite blocks the nightly by design, so if a
+        # data-dependent test ever goes red BECAUSE the data is stale, the two
+        # would deadlock. Break it by running the refresh by hand
+        # (`python scripts/xfp/refresh_dashboards.py`) - that path does not
+        # consult this gate - and then fix the test.
+        run: |
+          python scripts/ci/run_summary.py -- python -m pytest -m "not slow" -q --no-cov
+          $rc = $LASTEXITCODE
+          if ($rc -eq 0) { exit 0 }
+          if (($rc -eq 1) -or ($rc -eq 2)) {
+            # exit 1 = tests failed; exit 2 = execution interrupted, which
+            # INCLUDES a collection error - a syntax/import error in
+            # production code MUST gate, or the nightly runs broken code
+            # (review 2026-08-01). Neither may cost the day's ESPN archival
+            # (transactions/rosters roll off the API in 7-14d and can never
+            # be recovered), so the refresh still runs - with --no-push, so
+            # nothing built by red code reaches the public dashboards.
+            Write-Host "TEST GATE RED (pytest exit $rc) - data archival will run, but the publish is withheld."
+            "SUITE_RED=1" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            exit 0
+          }
+          Write-Host "WARN: pytest could not run (exit $rc) - NOT gating the nightly on a runner hiccup."
+          exit 0
+
       - name: Full refresh (statcast + models + dashboards + publish xfp-model)
-        run: python scripts/xfp/refresh_dashboards.py
+        # SUITE_RED withholds only the xfp-model publish; every archival and
+        # model step still runs and the data commit below still happens.
+        run: |
+          if ($env:SUITE_RED -eq '1') {
+            Write-Host "suite is RED - running refresh with --no-push (archival continues, publish withheld)."
+            python scripts/xfp/refresh_dashboards.py --no-push
+          } else {
+            python scripts/xfp/refresh_dashboards.py
+          }
+          exit $LASTEXITCODE
+
+      - name: Surface a GATED publish (alert only - never gates)
+        # WHY THIS STEP EXISTS (audit 2026-08-01 item 16)
+        # refresh_dashboards.main() RETURNS when the publish gate trips - it
+        # does not exit non-zero, and it must not: the "Commit & push
+        # regenerated plv_clone data" step below carries no `if:`, so a
+        # non-zero exit would silently drop a day of ESPN transaction/roster
+        # archival that rolls off the API in 7-14 days and can never be
+        # recovered. So a gated run used to look EXACTLY like a clean one -
+        # green job, data committed, nobody told that every dashboard below
+        # step 2 was rendered from yesterday's projections.
+        #
+        # The driver now writes .cache/PUBLISH_GATED on that path (and deletes
+        # it on a clean one; .cache is gitignored so `git add data` below never
+        # commits the marker). This step reads it and (a) exports
+        # PUBLISH_GATED so the commit step can mark the commit forever, (b)
+        # writes a job summary line so it lands in the Actions notification.
+        # ALERT ONLY: terminal `exit 0` on every path.
+        if: always()
+        run: |
+          $marker = '.cache/PUBLISH_GATED'
+          $sum = $env:GITHUB_STEP_SUMMARY
+          if (Test-Path $marker) {
+            $when = (Get-Content $marker -Encoding UTF8 -TotalCount 1)
+            "PUBLISH_GATED=1" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+            $msg = "PUBLISH GATED at ${when}: the model rebuild (step 2) failed, so nothing was pushed to xfp-model and every dashboard below step 2 carries STALE projections. The data commit in this run is stale too."
+            if ($sum) {
+              "## Publish gate" | Out-File $sum -Append -Encoding utf8
+              "- **GATED** $msg" | Out-File $sum -Append -Encoding utf8
+            }
+            Write-Host $msg
+          } else {
+            Write-Host "publish gate clear - the model rebuild succeeded."
+          }
+          exit 0
 
       - name: Surface scorecard tripwire FAILs (alert only — never gates)
         # WHY THIS STEP EXISTS
@@ -109,6 +199,29 @@ jobs:
               } elseif ($nf -gt 0) {
                 $marker = "ALERT[$nf tripwire FAIL] "
               }
+              # AGE CHECK (audit 2026-08-01 item 26). Step 4.97 writes this CSV
+              # on MONDAYS only, and the marker above is set purely off FAIL
+              # counts - so one Monday FAIL was re-reported as tonight's news
+              # for up to six consecutive nights (commit 0eb473a re-alerted the
+              # 07-30 scorecard on 07-31). Threshold is 2 days, not 1: reading
+              # Monday's file on Tuesday is the NORMAL case, and suppressing
+              # that would silence every real FAIL. Parsing sits inside the
+              # existing try{} so a malformed date lands in the catch.
+              $asofDate = [datetime]::MinValue
+              if (-not [datetime]::TryParse($asof, [ref]$asofDate)) {
+                # Unparseable as-of date = age genuinely UNKNOWN, which is the
+                # one case the guard must also suppress: an alert of unknown
+                # age is exactly the maybe-stale re-report the guard exists to
+                # stop (review 2026-08-01).
+                $lines += "- COULD NOT CHECK: the scorecard's as-of date '$asof' does not parse, so its age is UNKNOWN. NOT an all-clear - re-run build_model_scorecard.py to know."
+                $marker = ''
+              } else {
+                $age = ((Get-Date).Date - $asofDate.Date).Days
+                if ($age -gt 2) {
+                  $lines += "- COULD NOT CHECK: the scorecard is $age days old (as-of $asof) and step 4.97 runs Mondays only, so the FAIL/WARN lines above describe THAT day, not tonight. NOT an all-clear - re-run build_model_scorecard.py to know."
+                  $marker = ''
+                }
+              }
             }
           } catch {
             $lines += "- ALERT DETECTION ITSELF FAILED: $($_.Exception.Message) (data work unaffected)"
@@ -131,6 +244,10 @@ jobs:
             # Tripwire marker from the alert step above (empty when all clear),
             # so a FAIL is legible in `git log` and not only in a run page.
             $alert = $env:SCORECARD_ALERT
+            # A gated publish means these CSVs came off yesterday's models.
+            # Say so in the commit itself - `git log` is the only place this
+            # is still legible weeks later.
+            if ($env:PUBLISH_GATED -eq '1') { $alert = "GATED[stale models] " + $alert }
             # BRANCH-AWARE (root-caused 2026-07-21): this job runs in Josh's
             # live working tree, which usually sits on a FEATURE branch. The
             # old `pull --rebase origin main` + `push origin main` combo (a)

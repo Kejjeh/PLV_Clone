@@ -207,6 +207,16 @@ def main() -> None:
 
     new_p_rows, new_h_rows = [], []
     total_games = 0
+    # Audit 2026-08-01 (T27): per-game failures were printed to stderr but never
+    # counted, so the closing summary reported the numerator alone ('done - 2
+    # games refreshed') and a partial pull ended on a success-shaped line. The
+    # existing scorecard tripwire (check_boxscore_lag) reads max(game_date), a
+    # scalar that stays current if even ONE game of a date lands, so it is
+    # structurally blind to this. Reporting only — a failed game is simply absent
+    # from the store and is re-fetched on the next run, and this step is
+    # deliberately fail-soft in the nightly chain, so it must not exit non-zero.
+    attempted_games = 0
+    failed_pks: list[int] = []
 
     for d in dates:
         pks = game_pks_for_date(d)
@@ -215,6 +225,7 @@ def main() -> None:
             print(f'  {d}: {len(pks)} games, all cached - skip')
             continue
         print(f'  {d}: {len(pks)} games, {len(fresh)} need refresh')
+        attempted_games += len(fresh)
         for pk in fresh:
             try:
                 p_rows, h_rows = boxscore_rows(pk, d)
@@ -226,6 +237,7 @@ def main() -> None:
                     seen_pks_h.add(pk)
                 total_games += 1
             except Exception as e:
+                failed_pks.append(pk)
                 print(f'    !! game {pk} failed: {e}', file=sys.stderr)
 
     if new_p_rows:
@@ -249,7 +261,15 @@ def main() -> None:
     else:
         print('  hitters: no new games')
 
-    print(f'  done - {total_games} games refreshed')
+    summary = f'  done - {total_games}/{attempted_games} games refreshed'
+    if failed_pks:
+        shown = ', '.join(str(pk) for pk in failed_pks[:10])
+        more = f', +{len(failed_pks) - 10} more' if len(failed_pks) > 10 else ''
+        summary += f' ({len(failed_pks)} failed: {shown}{more})'
+    print(summary)
+    if attempted_games and len(failed_pks) / attempted_games > 0.10:
+        print(f'  !! WARNING: {len(failed_pks)}/{attempted_games} boxscore fetches '
+              f'failed - the store is short those games until the next run')
 
 
 if __name__ == '__main__':

@@ -2,9 +2,12 @@
 
 Step numbering is decimal-inserted so new work slots between existing steps
 without renumbering the world; when a step IS renumbered the old number is kept
-in its label (e.g. '4.91 (was 4.09)'). `run()` never raises — a timeout or
-nonzero exit prints a warning and the pipeline continues. Only step 2 (model
-rebuild) gates: if it fails, the git publish steps are skipped.
+in its label (e.g. '4.91 (was 4.09)'). `run()` never raises — a timeout kills
+the step's whole process tree, and a timeout or nonzero exit prints a warning
+and the pipeline continues. Only step 2 (model rebuild) gates: if it fails, the
+git publish steps are skipped AND .cache/PUBLISH_GATED is written so the
+nightly workflow can mark its commit (the process still exits 0 on purpose —
+see publish_gated_marker()).
 
 Bands, in execution order:
   0.5-0.8   persistence/snapshots (rosters, transactions, FA snapshot, FG)
@@ -15,7 +18,8 @@ Bands, in execution order:
             archetype panels, PL cache
   3-3.65    live dashboard, calibration report/panel
   4-4.4     matchup.html, injury cache, triangulate chain, boom stacks,
-            console payload, player profiles, xfp_board
+            console payload, index re-emit (4.31 — index.html must be built
+            AFTER its decision payload), player profiles, xfp_board
   4.8-4.93  history panels (boom stack, PL rank), volume pipelines
   4.94-4.97 snapshot logger + decision log/panel/settle, FG RoS, IL txns,
             model scorecard, verdict scorecard (some Monday-only)
@@ -53,6 +57,67 @@ PUBLISH_PAGES_CORE = (
 PUBLISH_PAGES_PROFILES = ('docs/player_profiles.html', 'docs/player_profiles_data.js')
 
 
+def season_year():
+    """The season the nightly INGESTION steps target.
+
+    Was a literal `2026` in three driver commands (audit 2026-08-01 item 42).
+    Two of the three scripts already default to the current calendar year, so
+    the literal was redundant today and wrong on 2027-01-01 — the pull would
+    keep growing the OLD season's parquet while reporting success. The third
+    (build_batter_sb_gamelog) defaults to ALL years, so it needs a computed
+    value rather than a deletion.
+
+    PLV_SEASON_YEAR overrides it, so an off-season backfill can pin the season
+    without editing the driver.
+    """
+    override = os.environ.get('PLV_SEASON_YEAR')
+    return int(override) if override else datetime.now().year
+
+
+def publish_gated_marker():
+    """Path of the file that records "the last publishing run was GATED".
+
+    The gate used to announce itself only by printing and returning, and main()
+    is invoked bare — so the process still exited 0, the nightly workflow saw a
+    green job, and its `git add data` step committed the stale-projection CSVs
+    regardless (audit 2026-08-01 item 16). The exit code is deliberately left
+    alone: daily-refresh.yml's commit step has no `if:`, so a non-zero exit
+    would drop a day of ESPN transaction/roster archival that rolls off the API
+    in 7-14 days and can never be recovered. This marker gives the workflow
+    something to READ instead, mirroring the SCORECARD_ALERT idiom.
+
+    Lives under .cache/ (already gitignored) rather than data/outputs/, because
+    the workflow's `git add data` would otherwise commit the marker on a gated
+    night and stage its deletion the next clean night. The signal is local to
+    one run in one working tree; it has no business in the history.
+    """
+    return ROOT / '.cache' / 'PUBLISH_GATED'
+
+
+def _kill_tree(proc):
+    """Kill `proc` AND every descendant it spawned.
+
+    shell=True means proc is the shell, not the worker — killing it alone
+    leaves the worker running. Windows walks the tree with `taskkill /T`;
+    posix uses the process group created by start_new_session. Both paths are
+    best-effort: a race where the tree exits between the wait() timeout and the
+    kill is a resolved timeout, not an error to raise into the pipeline.
+    """
+    try:
+        if os.name == 'nt':
+            subprocess.run(f'taskkill /T /F /PID {proc.pid}', shell=True,
+                           capture_output=True)
+        else:
+            import signal
+            os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+    except Exception as e:      # never let cleanup abort the pipeline
+        print(f'  ! could not kill the timed-out process tree ({e})')
+    try:
+        proc.wait(timeout=30)
+    except Exception:
+        pass
+
+
 def run(label, cmd, cwd=None, timeout=900, env=None):
     """Run a subprocess. `env` is an optional dict of EXTRA env vars merged
     on top of os.environ for THIS step only (scoped — does not leak).
@@ -64,16 +129,26 @@ def run(label, cmd, cwd=None, timeout=900, env=None):
     proc_env = None
     if env:
         proc_env = {**os.environ, **env}
+    # Popen + wait(timeout) rather than subprocess.run(timeout=) (audit
+    # 2026-08-01 item 17): run()'s timeout path kills only the DIRECT child,
+    # which under shell=True is cmd.exe. The python worker it spawned was
+    # orphaned and kept WRITING into the same data/outputs files the next step
+    # was about to read, while the log said "continuing with next step".
+    # Kill the whole tree instead. Only the already-abandoned path changes.
+    proc = subprocess.Popen(
+        cmd, cwd=cwd or ROOT, shell=True, env=proc_env,
+        **({} if os.name == 'nt' else {'start_new_session': True}),
+    )
     try:
-        result = subprocess.run(
-            cmd, cwd=cwd or ROOT, shell=True, timeout=timeout, env=proc_env,
-        )
+        returncode = proc.wait(timeout=timeout)
     except subprocess.TimeoutExpired:
-        print(f'  ⚠ {label} TIMED OUT after {timeout}s — continuing with next step')
+        _kill_tree(proc)
+        print(f'  ⚠ {label} TIMED OUT after {timeout}s — process tree killed, '
+              'continuing with next step')
         return False
     elapsed = time.time() - t0
-    if result.returncode != 0:
-        print(f'  ⚠ {label} returned exit code {result.returncode} after {elapsed:.1f}s')
+    if returncode != 0:
+        print(f'  ⚠ {label} returned exit code {returncode} after {elapsed:.1f}s')
         return False
     print(f'  ✓ {label} done in {elapsed:.1f}s')
     return True
@@ -154,8 +229,10 @@ def main():
     if not args.skip_statcast:
         # explicit timeout (audit 2026-07-19 item 16): the implicit default is
         # banned for publish-critical steps — same effective value (900s).
+        # No season literal (item 42): refresh_xfp_statcast.py's --year already
+        # defaults to date.today().year, so the pull follows the calendar.
         run('1. Refresh statcast (yesterday\'s games)',
-            'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1',
+            'python -X utf8 scripts/xfp/refresh_xfp_statcast.py --lag 1',
             timeout=900)
 
     # 1.05. Statcast gf bridge — fills the SAME 1-2 day Statcast lag at PITCH level
@@ -188,12 +265,17 @@ def main():
     # feature sb_per_pa_to_sh went LIVE on the MLB Stats API gameLog source.
     # Completed years are immutable; the 2026 cache goes stale as the season
     # progresses, so re-pull + assemble (~5-6 min) BEFORE the rolling-hitters
-    # rebuild (step 1c on the --no-models path; inside refresh_all in step 2)
+    # rebuild (step 1.75 on the --no-models path; inside refresh_all in step 2)
     # so the rolling cache sees yesterday's steals. Fail-soft: on failure the
     # rolling builder carries the LAST PULLED CUTOFF forward — leakage-safe,
     # but recent SBs won't be credited until the next successful pull.
-    ok_sb = run('1.6. Refresh as-of SB gamelog (2026 pull + assemble)',
-                'python -X utf8 scripts/xfp/build_batter_sb_gamelog.py pull --years 2026 --force && '
+    # --years MUST name the season explicitly here (item 42): the script's own
+    # default is None = EVERY year in the batter-years table (2018..current),
+    # so dropping the flag would re-pull ~9 immutable seasons and blow the
+    # 900s timeout. Computed, not literal.
+    ok_sb = run(f'1.6. Refresh as-of SB gamelog ({season_year()} pull + assemble)',
+                'python -X utf8 scripts/xfp/build_batter_sb_gamelog.py pull '
+                f'--years {season_year()} --force && '
                 'python -X utf8 scripts/xfp/build_batter_sb_gamelog.py assemble',
                 timeout=900)
     if not ok_sb:
@@ -209,10 +291,10 @@ def main():
     # sole declared re-open condition for the closed in-season-delta family).
     # Derived from the pitch-level xfp_cache parquets, so it inherits the gf
     # bridge's same-day currency and needs no extra network call.
-    ok_bs = run('1.65. Append bat-speed daily accumulator',
-                'python -X utf8 scripts/xfp/build_bat_speed_daily.py --days 10',
-                timeout=900)
-    if not ok_bs:
+    ok_batspeed = run('1.65. Append bat-speed daily accumulator',
+                      'python -X utf8 scripts/xfp/build_bat_speed_daily.py --days 10',
+                      timeout=900)
+    if not ok_batspeed:
         print('  ⚠ bat-speed accumulator failed — store keeps its last good day; '
               'idempotent on (batter, game_date) so the next run backfills the '
               'gap (non-gating)')
@@ -295,8 +377,10 @@ def main():
         if _pb_fresh:
             print('\n  1.98. PLV target boards fresh (<7 days) — skip weekly rebuild')
         else:
+            # No season literal (item 42): cli.update's --year already defaults
+            # to the current calendar year.
             run('1.98. Rebuild PLV target boards (plv update, weekly, mtime-gated)',
-                'python -X utf8 -m plv_clone.cli update --year 2026',
+                'python -X utf8 -m plv_clone.cli update',
                 timeout=1800)
 
     # ok_models gates the git publish (steps 5/6): a failed model rebuild means
@@ -662,6 +746,29 @@ def main():
     if not ok_console:
         print('  ⚠ console payload build failed — continuing (consoles show stale stamp)')
 
+    # 4.31. Re-emit index.html now that TODAY's console payload exists.
+    #
+    # WHY (audit 2026-08-01 item 13): index.html embeds console_data.json only
+    # when its generated_at date is today (build_index_dashboard.py:5021-5034)
+    # — the check that stops a stale payload being displayed as current. But
+    # the index build is the LAST stage of refresh_all.py, i.e. inside step 2,
+    # while the payload is written at step 4 (matchup, authoritative) and 4.3
+    # (fallback). The page was therefore always written minutes BEFORE its own
+    # payload — 09:18 vs 09:22 on the 2026-07-31 run — so the date test always
+    # failed and the published page shipped `window.XFP_DECISION = null` on 10
+    # of its last 12 publishes. Rebuilding here (idempotent; reads committed
+    # CSVs plus console_data.json) is the cheap correct fix; relaxing the date
+    # test is NOT, it is the only thing preventing a silently stale payload.
+    # Fail-soft and non-gating: the step-2 build stands if this one fails.
+    ok_index = run(
+        '4.31. Re-emit index.html with today\'s decision payload',
+        'python -X utf8 scripts/xfp/build_index_dashboard.py',
+        timeout=900,
+    )
+    if not ok_index:
+        print('  ⚠ index re-emit failed — the step-2 index build stands, but its '
+              'Decision tab will show the "not built today" notice')
+
     # Fail-closed: if player_profiles build fails, skip publish to avoid stale docs.
     # --payload-only (item 16, 2026-07-04): the shell is now BYTE-STABLE (meta line
     # renders client-side from the payload), so the daily refresh only rewrites the
@@ -869,13 +976,26 @@ def main():
             print('  ! verdict scorecard failed — continuing (non-gating)')
 
     if not args.no_push:
+        _marker = publish_gated_marker()
         if not ok_models:
             print('\n  ✖ PUBLISH GATED: the model rebuild (step 2) FAILED, so the '
                   'dashboards above were rendered from STALE projections.\n'
                   '    Nothing was committed or pushed to xfp-model. Fix the model '
                   'rebuild and re-run refresh_dashboards.py (or push manually if '
                   'the staleness is understood and acceptable).')
+            try:
+                _marker.parent.mkdir(parents=True, exist_ok=True)
+                _marker.write_text(datetime.now().isoformat(), encoding='utf-8')
+                print(f'    (wrote {_marker} — the workflow prefixes its commit '
+                      'message and job summary with GATED)')
+            except OSError as e:
+                print(f'    ! could not write the gate marker: {e}')
             return
+        # Clear a previous night's marker so it can never alert on a clean run.
+        try:
+            _marker.unlink(missing_ok=True)
+        except OSError:
+            pass
         if not XFP_MODEL.exists():
             print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
             return

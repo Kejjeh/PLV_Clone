@@ -1,10 +1,27 @@
 name: Monday brief (self-hosted)
 
 # Composes data/outputs/monday_brief.md — the one page Josh reads before touching
-# the roster on a Monday. It is a pure READ of artifacts the daily refresh already
-# wrote (model_scorecard, verdict_scorecard, dpwin_history, weekly_optimizer,
-# matchup_leverage, season_sim) plus the PL cache AGES. No modelling, no ESPN, no
-# MLB Stats, and explicitly NO pitcherlist.com fetch — per refresh_dashboards.py
+# the roster on a Monday. It is a pure READ of two kinds of artifact plus the PL
+# cache AGES.
+#
+#   (1) artifacts the daily refresh already wrote (model_scorecard,
+#       verdict_scorecard) — refresh steps 4.97 / 4.97b, Mondays only, which is
+#       why the brief allows them 8 days.
+#   (2) HAND-RUN decision-layer artifacts (dpwin_history, weekly_optimizer,
+#       matchup_leverage, season_sim) that NO scheduled job produces — no
+#       workflow and neither refresh driver invokes run_matchup_leverage.py,
+#       run_weekly_optimizer.py or run_season_sim.py. The brief reports their
+#       age and routes the regen to an interactive session, exactly as it does
+#       for the PL caches. Three of them carry a ONE-DAY bar
+#       (build_monday_brief.STALE_AFTER_DAYS), so they will read STALE most
+#       weeks; that is an honest report of an unscheduled artifact, not a
+#       pipeline failure. Wiring them into the nightly was considered and
+#       deferred 2026-08-01: run_weekly_optimizer and run_matchup_leverage both
+#       APPEND to dpwin_history.parquet (running both nightly double-appends),
+#       and run_weekly_optimizer has an open correctness item.
+#
+# No modelling, no ESPN, no MLB Stats, and explicitly NO pitcherlist.com fetch
+# — per refresh_dashboards.py
 # step 7, refreshing a PL cache needs a live agent WebSearch/WebFetch, which is
 # deliberately not a headless scrape, so the brief reports the last cached
 # edition's age and routes the refresh to an interactive session.
