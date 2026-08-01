@@ -23,7 +23,13 @@ import pytest
 
 REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
 
-SKIP_DIRS = {".git", "node_modules", ".cache", ".venv", "venv", "__pycache__", "xfp-model", "build"}
+SKIP_DIRS = {".git", "node_modules", ".cache", ".venv", "venv", "__pycache__",
+             "xfp-model", "build",
+             # agent worktrees are full checkouts whose parents[N] anchors
+             # correctly resolve to the WORKTREE root, not this repo's — the
+             # scan must never descend into them (found when a leftover T48
+             # worktree produced 265 false anchors, 2026-08-01)
+             ".claude"}
 
 # Variable names that denote the repository root by convention.
 ROOTISH_NAMES = {"ROOT", "_ROOT", "REPO_ROOT", "_REPO_ROOT", "PROJECT_ROOT", "pre_reg_path"}

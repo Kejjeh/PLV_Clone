@@ -8,7 +8,7 @@ tab was dead for over a week without a single error in the log.
 
 The cause is an ORDERING inversion, not a broken builder.
 build_index_dashboard.py embeds data/outputs/console_data.json only when its
-`generated_at` date is TODAY (build_index_dashboard.py:5021-5034) — a good
+`generated_at` date is TODAY (build_index_dashboard.py, the __TOKEN__ replace chain in main()) — a good
 check, and the only thing preventing a silently stale payload being shown as
 current. But the index build is the LAST stage of refresh_all.py, i.e. inside
 driver step 2, while console_data.json is written by the matchup build (step 4)

@@ -749,7 +749,7 @@ def main():
     # 4.31. Re-emit index.html now that TODAY's console payload exists.
     #
     # WHY (audit 2026-08-01 item 13): index.html embeds console_data.json only
-    # when its generated_at date is today (build_index_dashboard.py:5021-5034)
+    # when its generated_at date is today (build_index_dashboard.py, the __TOKEN__ replace chain in main())
     # — the check that stops a stale payload being displayed as current. But
     # the index build is the LAST stage of refresh_all.py, i.e. inside step 2,
     # while the payload is written at step 4 (matchup, authoritative) and 4.3
