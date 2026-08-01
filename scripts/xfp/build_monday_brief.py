@@ -586,7 +586,7 @@ def _pl_cache_rows(pl_dir: Path, today: date) -> tuple[list[PLCacheRow], str | N
     """Freshness of the four PL caches. Returns (rows, import_error).
 
     Read-only by design. Refreshing these needs a live agent WebSearch/WebFetch
-    (refresh_dashboards.py step 7 documents why it is deliberately NOT a headless
+    (refresh_dashboards.py step 2.85 documents why it is deliberately NOT a headless
     scrape), so this brief can only report and route.
     """
     try:
@@ -987,7 +987,7 @@ def _model_health_section(arts: dict[str, Artifact], malformed: list[str]) -> li
 def _pl_cache_section(pl_dir: Path, today: date) -> list[str]:
     """PL cache AGES only. This composer never fetches pitcherlist.com.
 
-    refresh_dashboards.py step 7 documents why: the PL caches need a live
+    refresh_dashboards.py step 2.85 documents why: the PL caches need a live
     WebSearch/WebFetch, which is an agent capability, not a headless scrape.
     So the brief reports what the last cached edition is and how old it is, and
     routes the refresh to an interactive session.

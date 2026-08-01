@@ -44,15 +44,40 @@ packages = ["src/plv_clone"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["src"]
-addopts = "-r sxX --cov --cov-report=term-missing -v"
+# Audit 2026-08-01 item 53: coverage is an explicit CI choice, not a tax on every
+# invocation. Measured A/B on the same 43 tests AFTER the item-37 source fix
+# below: 2.2s without the tracer, 11.3s with it (5.1x) — the tracer now sees
+# 71,602 statements instead of 9,148, so forcing it on every `pytest tests/foo.py`
+# costs far more than it did before. Hence: opt-in.
+# `-r sxX` is LOAD-BEARING — it is what puts the data-gated skip reasons into the
+# short-summary block scripts/ci/run_summary.py extracts. Invocations:
+#   default    : python scripts/ci/run_summary.py -- python -m pytest
+#   coverage   : python -m pytest --cov --cov-report=term-missing
+#   pre-publish: python -m pytest -m ""      (re-includes the slow triangulate
+#                parallel-vs-batch equivalence test that addopts deselects)
+addopts = "-r sxX -m 'not slow'"
 markers = [
     "slow: end-to-end tests that run the real triangulate subprocess (deselect with -m 'not slow')",
 ]
 
 [tool.coverage.run]
-# Measure the whole production surface, not just the installed package —
-# --cov=plv_clone alone covered ~11% of the codebase (the "~1% coverage" illusion).
-source = ["plv_clone", "lib", "app"]
+# Audit 2026-08-01 item 37: these must be PATHS, not module names. Module-name
+# entries only bind if that name is an import root, so "lib" measured nothing
+# unless a test happened to `import lib.*` (observed: "Module lib was never
+# imported" / "No data was collected"), and scripts/xfp — ~113k production lines,
+# every engine the decision layer runs on — was structurally unmeasurable.
+# Expect the reported percentage to DROP sharply against the old config. That is
+# the honest number, not a regression.
+source = ["src/plv_clone", "scripts/xfp", "app"]
+omit = [
+    # Dead / one-off trees, already .gitignore'd out of the CodeGraph index.
+    "scripts/xfp/research/*",
+    "scripts/xfp/_research/*",
+    "scripts/xfp/archive/*",
+    "scripts/xfp/_attic/*",
+    "scripts/xfp/_oneoff/*",
+    "scripts/xfp/_adhoc/*",
+]
 
 [tool.coverage.paths]
 # Alias the import identities so `lib.*` (scripts/xfp on sys.path) and

@@ -227,3 +227,14 @@ data/research/boxscore_era/raw/
 data/research/boxscore_era/raw_probe/
 # ── ad-hoc session scratch dumps (roster/FA snapshots from one-off scripts)
 scratch_*
+# ── FA pool snapshots: dated per-run copies are pure redundancy (213 tracked,
+#    3.0 MiB) against CLAUDE.md rule 5's no-parquet line. Consumers
+#    (blend_score, trade_target_scan, build_model_scorecard, session_context,
+#    run_positional_board) resolve the *_latest pointer first;
+#    run_positional_board.py additionally has a dated-file glob FALLBACK,
+#    which keeps working because untracking never deletes on-disk files.
+#    The three _latest pointers stay TRACKED as a deliberate exception: they
+#    are ESPN-derived INPUTS, not regenerable offline, and a clean clone needs
+#    them — the `_2*` form is narrow enough to exclude them without a negation.
+#    Untracked 2026-08-01 (audit T46).
+data/research/fa_snapshots/fa_pool_*_2*.parquet

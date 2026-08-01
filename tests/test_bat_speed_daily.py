@@ -177,7 +177,21 @@ def test_bat_tracking_starts_2024(bsd):
     assert bsd.FIRST_YEAR == 2024
 
 
-def test_registered_as_a_nonhgating_refresh_step():
-    src = (ROOT / "scripts" / "xfp" / "refresh_dashboards.py").read_text(encoding="utf-8")
-    assert "build_bat_speed_daily.py" in src
-    assert "1.65" in src
+# The refresh-registration guard that used to live here was a source-text pin:
+#
+#     src = refresh_dashboards.py.read_text()
+#     assert "build_bat_speed_daily.py" in src
+#     assert "1.65" in src
+#
+# Both halves survive the regression they were written to catch (audit
+# 2026-08-01 item 39). "1.65" also appears in the module docstring's band label
+# at line 12, and neutralising the step leaves its command string in the source
+# either way — measured on a mutated copy: with the step no longer issued, BOTH
+# assertions still evaluate True. The test name also promised a non-gating
+# property its body never checked.
+#
+# Replaced by behavioral tests that drive main() with a recorder and assert on
+# the commands it ACTUALLY issues:
+#   tests/test_testqual_refresh_steps.py
+#     ::test_the_refresh_issues_the_bat_speed_daily_accumulator
+#     ::test_a_failed_bat_speed_step_does_not_gate_the_publish

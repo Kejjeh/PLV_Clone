@@ -182,3 +182,97 @@ adversarially reviewed; the review round found and we fixed:
   test.
 
 Suite: 1,367 -> 1,404 passed, 0 failed.
+
+## BACKLOG EXECUTION RECORD (2026-08-01, all 41 items)
+
+Method: 7 disjoint tracks, each verify (refute-first) -> TDD fix -> adversarial
+review. Every track review returned ISSUES_FOUND; all 3 blocking, 8 important,
+and every actionable minor were resolved inline the same day (details below).
+Suite: 1,404 -> 1,562 passed, 0 failed; wall-clock 115s -> 68s (T37/T53).
+
+### refresh
+- T17: FIXED — A refresh step that exceeds its timeout leaves no descendant process alive — the whole process tree is killed before run() returns False.
+- T15: FIXED — When a gating substrate stage fails, refresh_all aborts before the model pipelines run, so the shipped projection CSVs are never rebuilt from yesterda
+- T16: FIXED — A refresh whose model rebuild failed announces the gate to its caller via a .cache/PUBLISH_GATED marker, which the nightly workflow reads to export PU
+- T32: FIXED — A refresh whose model-rebuild step fails issues no git add, commit, or push, while the fail-soft dashboard builds still run; a failed profiles build w
+- T51: FIXED — No refresh step's ok_* outcome flag is rebound by a later step — the 1.65 bat-speed binding is ok_batspeed, distinct from the 1.5 boxscore-bridge ok_b
+- T13: FIXED — index.html is built AFTER the decision payload it embeds — the driver issues build_index_dashboard.py at step 4.31, after build_console_data.py at 4.3
+- T42: FIXED — The nightly ingestion steps follow the calendar into a new season: the statcast pull and plv board rebuild name no season literal (their scripts defau
+- T26: FIXED — The nightly tripwire alert distinguishes 'no failures tonight' from 'the report is days old' — past a 2-day threshold it emits COULD NOT CHECK and sup
+- T31: FIXED — A red test suite blocks the nightly before it publishes, while pytest failing to START (exit 2-5) is reported and does not wedge the run; the gate sit
+- T20: FIXED — monday-brief.yml's header distinguishes the two artifacts the daily refresh actually writes (model_scorecard, verdict_scorecard) from the four HAND-RU
+
+### ingest
+- T14: FIXED — Given an RP leverage cache whose newest season covers only a fraction of the qualifying current-year relievers, the archetype build reports the curren
+- T27: FIXED — When some of a date's boxscore fetches fail, the bridge reports how many of that date's final games it actually stored against how many it attempted, 
+- T28: FIXED — Re-running the gf bridge over a date range already fully covered by the canonical pull reports the mapping-drop rate against pitches ATTEMPTED, not pi
+- T29: FIXED — Every row in the shipped starter projections carries a non-empty, unique player name, so a board joining the pool by name reaches the whole projected 
+- T141: DEFERRED — T14 sub-part, verifier fix-guidance items (1) and (2): add check_rp_leverage_coverage() and a cache-staleness row to scripts/xfp/build_model_scorecard
+- T142: DEFERRED — T14 sub-part, verifier fix-guidance item (5): re-run pull_fg_rp_leverage.py and pull_bref_rp_ir.py to actually repair the 63.3-day-stale caches, and c
+- T143: DEFERRED — T29 sub-part, verifier fix-guidance item (4): tests/test_no_new_normalizers.py:330 calls d[col].dropna() on exactly the (xfp_rp3_projections.csv, play
+
+### volume
+- T18: FIXED — The cross-year evaluation of a volume model never fits on a season outside the declared training years: holding out 2022 while an out-of-training seas
+- T35: FIXED — Attaching team-games to a roster leaves exactly one row per player and gives the same playing-time estimate cold or warm; a player whose team is absen
+- T41: FIXED — When a share of reliever rows cannot be matched to a team schedule, the RP volume build reports the unmapped share before applying the league-mean fal
+- T52: DEFERRED — The structural claim is true — build_schedule_and_relief_apps re-reads all eight season parquets with no cache guard while hitter/SP route theirs thro
+- T43: FIXED — The April hitter model projects the newest season present in its substrate rather than a hardcoded literal, and no season literal survives in its exec
+- T49: FIXED — The SP archetype ratings-panel builder declares no parameter it never reads, so its signature cannot promise year-scoping the body does not do.
+
+### decision
+- T23: FIXED — An added reliever's appearance count stays uncertain: a candidate RP projected for fewer appearances than his team has remaining games shows a non-deg
+- T22: FIXED — The graded settlement window begins on the first day the move could actually affect a lineup: a swap executed at 19:30 excludes that day's games for B
+- T25: FIXED — A rostered start inherits its matchup adjustment regardless of sign: a start projected below zero or at exactly zero centres its draws on the model's 
+- T21: FIXED — A title-equity weight whose age cannot be determined is never labelled 'fresh': a season_sim payload with no (or a null) period returns status 'unknow
+- T24: SKIPPED_REFUTED — Verifier verdict REFUTED as a live bias, and I reproduced the refutation independently rather than accepting it. src/plv_clone/matchup_projection.proj
+
+### lenses
+- T19: FIXED — A swing-decision window below the registered stabilization minimum renders marked and earns no verdict, instead of publishing an APPROACH SHIFT read o
+- T45: FIXED — The tracker resolves its statcast panel from any working directory, and refuses to build the default board from a roster snapshot past its freshness b
+- T44: FIXED — The positional board's SP rest-of-season and playoff horizons are derived from today's date, so the same per-start projection does not report the same
+- T30: FIXED — A matchup section that fails to build still renders a visible notice saying it is unavailable or degraded, rather than vanishing from the published pa
+
+### testqual
+- T33: FIXED — A completed season's rolling substrate rows are identical whether the disk cache was cold or warm; the in-progress season is rebuilt from source on ev
+- T34: FIXED — A thin-history player's per-window sigma is read from the measured bands table when the cell exists; when the table is missing, corrupt, or the cell a
+- T36: FIXED — Every column the dashboard reads by name is present in the export the pipeline actually wrote — asserted against the shipped CSV, not against a fixtur
+- T37: FIXED — A coverage run over the engine test files reports non-zero coverage for scripts/xfp/lib modules and emits no module-not-imported warning.
+- T53: FIXED — The default pytest invocation does not force coverage or verbose output and deselects `slow`, while keeping `-r sxX`; the pre-publish invocation `-m "
+- T38: FIXED — A run configured to require built artifacts fails loudly when a required artifact is absent, instead of reporting a pass over tests that silently neve
+- T39: FIXED — A refresh run issues the bat-speed daily accumulator command, and its failure does not gate the publish — asserted from the commands the driver actual
+- T40: FIXED — The refresh executes build_live_blend_xfp before the matchup dashboard build, and both boom-stack producers before triangulate — asserted from the seq
+- T47: FIXED — No module in the production trees of scripts/xfp or src/plv_clone embeds a new absolute filesystem path; the existing offenders are an explicit, named
+
+### hygiene
+- T46: FIXED — Dated per-run FA-pool snapshots are git-ignored, while the three fa_pool_{H,SP,RP}_latest.parquet pointers — the only thing production consumers resol
+- T50: FIXED — Every refresh-step number cited in a source comment in build_index_dashboard.py resolves to a step the driver actually runs, with a `(was N)` parenthe
+- T48: SKIPPED_REFUTED — The verifier REFUTED the finding's mechanism and I independently reconfirmed it by AST before skipping, rather than taking the verdict on trust. Obser
+
+### Review-round resolutions (same day)
+
+- BLOCKING: ENGINE_VERSION bumped to 2 (T23 changed every RP-add dpwin);
+  the citation guard now scans comment BLOCKS + docstrings with refresh
+  context (repo-wide, 30 citations, 0 stale after fixing 9); the
+  discipline_plus contract drop was verified benign (dashboard filters
+  guard every read; artifact truly lacks the column) and documented.
+- CI gate redesigned: a red suite (pytest exit 1 AND exit 2 — collection
+  errors carry production import failures) exports SUITE_RED so the refresh
+  runs --no-push: ESPN archival is never sacrificed, the publish never
+  ships red-code output. The gate tests EXECUTE the PowerShell contract.
+- decision-trend default board reads the NIGHTLY roster store
+  (matchup_rosters_history, step 0.5) — the orphaned live_rosters_* file is
+  fallback only; unknown snapshot age now refuses like measured staleness.
+- The +0.1051 pre-fix figure in the RP volume AMENDMENT was corrected to
+  the reviewer-reproduced +0.1052 (House Rule 3).
+- refresh_all MISSING-non-gating stages count as non-gating failures;
+  unparseable scorecard dates suppress the tripwire re-alert; census-bound
+  slack got deletion-direction margin; sibling-dependent tests skip
+  hermetically; T46 executed (213 dated parquets untracked, fresh-clone
+  assertion added); blank-name backfill agrees with its own reporter;
+  all-NaN-year coverage reports FAIL instead of crashing the build.
+
+DEFERRED (recorded, valid): T52 parquet-read caching (float-op-order risk,
+needs byte-identity A/B on a quiet day), plus 3 sub-items inside tracks
+(see per-track rationale above). REFUTED: T24 (mixed denominators claim),
+T48 (attempted; byte-identity could not be shown, deferral documented in
+build_index_dashboard's docstring).

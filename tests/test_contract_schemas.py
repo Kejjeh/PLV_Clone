@@ -18,17 +18,41 @@ by asserting on column lists documented here.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pandas as pd
 import pytest
+
+REPO_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "pyproject.toml").is_file())
+CONTRACT_YEAR = 2026
 
 # ── Column contracts (single source of truth for this file) ──────────────────
 
 # master_hitter_{year}.csv — read by Hitters tab, Player View, Hitter Fantasy tab
+#
+# 2026-08-01 correction (audit item 36): this list used to name `discipline_plus`
+# and `season_stage`. The export has carried NEITHER in any vintage (checked
+# 2023/2024/2025/2026) — the pillar is written as `decision_plus`, and
+# `discipline_plus` is synthesised DOWNSTREAM at
+# src/plv_clone/pipelines/build_target_boards.py:102
+# (`hitters["discipline_plus"] = hitters["decision_plus"]`), which is why the
+# board exports below legitimately require it and this one does not.
+# The old names were only ever checked against a hand-written fixture, so the
+# four-season drift was invisible. Corrected here rather than in the export:
+# adding columns to a shipped artifact that app/dashboard.py and the Player View
+# read would be a behavior change dressed up as a test fix.
+#
+# NOTE (review 2026-08-01): app/dashboard.py still NAMES `discipline_plus` in
+# its candidate display/sort lists, but every such reference is filtered
+# through `if c in df.columns` (or the df_show re-filter at :673), so the
+# absent column degrades to not-displayed rather than crashing — which is why
+# the contract tracks the ARTIFACT's real columns, not the dashboard's
+# wish-list. If discipline_plus's successor (`decision_plus`) is ever meant to
+# surface there, that is a dashboard change, not a contract change.
 MASTER_HITTER_REQUIRED = [
     "batter", "batter_name", "pa",
-    "process_plus", "discipline_plus", "k_avoidance_plus", "power_plus",
+    "process_plus", "decision_plus", "k_avoidance_plus", "power_plus",
     "fantasy_positions", "fantasy_positions_display", "primary_position",
-    "season_stage",
 ]
 
 # master_pitcher_{year}.csv — read by Pitchers tab, Player View
@@ -53,9 +77,13 @@ BOARD_HITTER_REQUIRED = [
 ]
 
 # pitcher_plv_targets — read by Target Boards tab
+#
+# 2026-08-01 correction (audit item 36): `season_stage` was declared here but the
+# pitcher board has never written it (14 columns; the hitter boards DO carry it).
+# Second violation the vacuous fixture tests were hiding.
 BOARD_PITCHER_REQUIRED = [
     "player_name", "pitches", "plv",
-    "season_stage", "confidence",
+    "confidence",
 ]
 
 # hitter_fantasy_{year}.csv — read by Hitter Fantasy tab
@@ -79,164 +107,92 @@ def _assert_cols(df: pd.DataFrame, required: list[str], label: str) -> None:
     assert not missing, f"{label} is missing required columns: {missing}"
 
 
-# ── master_hitter ─────────────────────────────────────────────────────────────
+# ── The contract, checked against the file the pipeline ACTUALLY wrote ────────
+#
+# Audit 2026-08-01 item 36: eight `test_required_cols_present` methods used to
+# check a hand-written in-memory fixture against the constant it had been
+# transcribed from. Copy == copy, so they could not fail — and they were green
+# for four seasons while master_hitter_*.csv did not carry two of the columns
+# the constant claimed. These parametrized cases read the real export instead.
+#
+# Semantics are ADDITIVE (superset): a pipeline that adds a column must not fail
+# here; only a DROPPED or RENAMED column does.
 
-class TestMasterHitterContract:
-    """Column contract for master_hitter_{year}.csv."""
-
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "batter": [1, 2],
-            "batter_name": ["A", "B"],
-            "pa": [300, 400],
-            "process_plus": [110.0, 100.0],
-            "discipline_plus": [108.0, 102.0],
-            "k_avoidance_plus": [105.0, 100.0],
-            "power_plus": [112.0, 98.0],
-            "fantasy_positions": ["OF", "1B"],
-            "fantasy_positions_display": ["OF", "1B"],
-            "primary_position": ["OF", "1B"],
-            "season_stage": ["mature", "mature"],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, MASTER_HITTER_REQUIRED, "master_hitter")
-
-    def test_batter_is_numeric(self, sample):
-        assert pd.api.types.is_numeric_dtype(sample["batter"])
-
-    def test_process_plus_is_numeric(self, sample):
-        assert pd.api.types.is_numeric_dtype(sample["process_plus"])
-
-    def test_fantasy_positions_is_string(self, sample):
-        assert pd.api.types.is_string_dtype(sample["fantasy_positions"])
-
-    def test_season_stage_valid_values(self, sample):
-        valid = {"early", "mid", "mature"}
-        assert set(sample["season_stage"].unique()).issubset(valid)
+EXPORT_CONTRACTS = {
+    "master_hitter": (f"master_hitter_{CONTRACT_YEAR}.csv", MASTER_HITTER_REQUIRED),
+    "master_pitcher": (f"master_pitcher_{CONTRACT_YEAR}.csv", MASTER_PITCHER_REQUIRED),
+    "process_plus_rolling": (f"process_plus_rolling_{CONTRACT_YEAR}.csv",
+                             ROLLING_HITTER_REQUIRED),
+    "plv_rolling": (f"plv_rolling_{CONTRACT_YEAR}.csv", ROLLING_PITCHER_REQUIRED),
+    "hitter_board": (f"hitter_buy_targets_{CONTRACT_YEAR}.csv", BOARD_HITTER_REQUIRED),
+    "pitcher_board": (f"pitcher_plv_targets_{CONTRACT_YEAR}.csv", BOARD_PITCHER_REQUIRED),
+    "hitter_fantasy": (f"hitter_fantasy_{CONTRACT_YEAR}.csv", HITTER_FANTASY_REQUIRED),
+    "pitcher_fantasy": (f"pitcher_fantasy_{CONTRACT_YEAR}.csv", PITCHER_FANTASY_REQUIRED),
+}
 
 
-# ── master_pitcher ────────────────────────────────────────────────────────────
+@pytest.mark.parametrize("label", sorted(EXPORT_CONTRACTS))
+def test_shipped_export_carries_its_declared_contract(label):
+    """The export on disk must carry every column its consumers read by name.
 
-class TestMasterPitcherContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "pitcher": [10, 20],
-            "player_name": ["P1", "P2"],
-            "pitches": [1200, 800],
-            "plv": [5.2, 4.8],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, MASTER_PITCHER_REQUIRED, "master_pitcher")
-
-    def test_plv_is_numeric(self, sample):
-        assert pd.api.types.is_numeric_dtype(sample["plv"])
-
-
-# ── rolling exports ───────────────────────────────────────────────────────────
-
-class TestRollingHitterContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "batter": [1],
-            "date": ["2026-04-15"],
-            "pa": [30],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, ROLLING_HITTER_REQUIRED, "process_plus_rolling")
+    A missing column does not raise at runtime — app/dashboard.py filters its
+    Sort-by list with `if c in hitters.columns`, so the option just silently
+    disappears from the UI. This test is the only place that notices.
+    """
+    fname, required = EXPORT_CONTRACTS[label]
+    path = REPO_ROOT / "data" / "outputs" / fname
+    if not path.exists():
+        pytest.skip(f"{path} not present in this checkout (pipeline not yet run)")
+    cols = list(pd.read_csv(path, nrows=1).columns)
+    missing = [c for c in required if c not in cols]
+    assert not missing, (
+        f"{fname} is missing declared contract columns {missing}.\n"
+        f"Either the pipeline dropped/renamed them, or the constant is "
+        f"aspirational — correct whichever is wrong, do NOT widen the export to "
+        f"satisfy the test.\nColumns actually written ({len(cols)}): {cols}")
 
 
-class TestRollingPitcherContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "pitcher": [10],
-            "date": ["2026-04-15"],
-            "pitches": [300],
-            "plv": [5.1],
-        })
+# ── dtypes and value domains, read off the shipped export ────────────────────
+#
+# These replace a set of per-class fixture assertions that checked the dtype of a
+# literal the test itself had just written (`assert is_numeric_dtype(sample["pa"])`
+# on a frame built from python ints). Same intent, but pointed at the artifact.
 
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, ROLLING_PITCHER_REQUIRED, "plv_rolling")
-
-
-# ── target boards ─────────────────────────────────────────────────────────────
-
-class TestBoardHitterContract:
-    """All hitter boards must carry these columns (P0-B contract)."""
-
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "batter_name": ["A"],
-            "pa": [300],
-            "process_plus": [112.0],
-            "fantasy_positions": ["OF"],
-            "season_stage": ["mature"],
-            "confidence": ["Tier A"],
-            "tag": ["elite_process"],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, BOARD_HITTER_REQUIRED, "hitter_board")
-
-    def test_season_stage_valid(self, sample):
-        assert sample["season_stage"].iloc[0] in ("early", "mid", "mature")
+DTYPE_CONTRACTS = [
+    ("master_hitter", "batter", "numeric"),
+    ("master_hitter", "process_plus", "numeric"),
+    ("master_hitter", "fantasy_positions", "string"),
+    ("master_pitcher", "plv", "numeric"),
+    ("hitter_fantasy", "core_fp_per_pa", "numeric"),
+    ("hitter_fantasy", "full_fp_per_pa", "numeric"),
+    ("pitcher_fantasy", "fp_per_ip", "numeric"),
+]
 
 
-class TestBoardPitcherContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "player_name": ["P1"],
-            "pitches": [1100],
-            "plv": [5.3],
-            "season_stage": ["mature"],
-            "confidence": ["Tier A"],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, BOARD_PITCHER_REQUIRED, "pitcher_board")
-
-
-# ── fantasy exports ───────────────────────────────────────────────────────────
-
-class TestHitterFantasyContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "batter_name": ["A"],
-            "pa": [300],
-            "core_fp_per_pa": [0.28],
-            "full_fp_per_pa": [0.45],
-            "fantasy_positions": ["OF"],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, HITTER_FANTASY_REQUIRED, "hitter_fantasy")
-
-    def test_fp_cols_are_numeric(self, sample):
-        assert pd.api.types.is_numeric_dtype(sample["core_fp_per_pa"])
-        assert pd.api.types.is_numeric_dtype(sample["full_fp_per_pa"])
+@pytest.mark.parametrize("label,column,kind", DTYPE_CONTRACTS)
+def test_shipped_export_column_dtype(label, column, kind):
+    fname, _ = EXPORT_CONTRACTS[label]
+    path = REPO_ROOT / "data" / "outputs" / fname
+    if not path.exists():
+        pytest.skip(f"{path} not present in this checkout (pipeline not yet run)")
+    s = pd.read_csv(path, nrows=200)[column].dropna()
+    if s.empty:
+        pytest.skip(f"{fname}:{column} is all-null in the sampled rows")
+    check = (pd.api.types.is_numeric_dtype if kind == "numeric"
+             else pd.api.types.is_string_dtype)
+    assert check(s), f"{fname}:{column} is {s.dtype}, expected {kind}"
 
 
-class TestPitcherFantasyContract:
-    @pytest.fixture
-    def sample(self):
-        return pd.DataFrame({
-            "player_name": ["P1"],
-            "pitches": [1100],
-            "plv": [5.2],
-            "fp_per_ip": [3.5],
-        })
-
-    def test_required_cols_present(self, sample):
-        _assert_cols(sample, PITCHER_FANTASY_REQUIRED, "pitcher_fantasy")
+def test_hitter_board_season_stage_is_a_known_stage():
+    """`season_stage` drives the threshold set the board was built with, so an
+    unrecognised value means a board scored against thresholds nobody declared."""
+    fname, _ = EXPORT_CONTRACTS["hitter_board"]
+    path = REPO_ROOT / "data" / "outputs" / fname
+    if not path.exists():
+        pytest.skip(f"{path} not present in this checkout (pipeline not yet run)")
+    seen = set(pd.read_csv(path)["season_stage"].dropna().unique())
+    assert seen, f"{fname} wrote no season_stage values at all"
+    assert seen <= {"early", "mid", "mature"}, f"unknown season_stage values: {seen}"
 
 
 # hitter_pre_breakout_{year}.csv — read by Target Boards tab

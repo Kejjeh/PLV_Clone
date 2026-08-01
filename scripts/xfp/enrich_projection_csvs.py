@@ -30,7 +30,7 @@ Hard rules embedded:
 
 Re-run safety: atomic write (tmp + os.replace), idempotent.
 
-Wired into refresh_dashboards.py as step 2.95.
+Wired into refresh_dashboards.py as step 3.67.
 """
 from __future__ import annotations
 

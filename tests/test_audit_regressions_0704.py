@@ -75,21 +75,19 @@ def test_publish_pages_cover_tracked_docs():
                          "— add to the constant or delete the page")
 
 
-def test_refresh_producers_before_consumers():
-    src = (_ROOT / "scripts/xfp/refresh_dashboards.py").read_text(encoding="utf-8")
-
-    def idx(marker):
-        assert marker in src, f"step marker gone: {marker}"
-        return src.index(marker)
-
-    # producers (moved 2026-07-04, commit a8ce49c) before consumers — match the
-    # RUN COMMANDS, not bare filenames (comments mention builders earlier).
-    assert idx("scripts/xfp/build_live_blend_xfp.py") < \
-           idx("run('4. Build matchup.html"), \
-        "live_blend must build before matchup consumes it"
-    assert idx("scripts/xfp/stream_the_stack.py") < \
-           idx("scripts/xfp/build_triangulate_dashboard"), \
-        "stream_the_stack (boom producer) must run before triangulate"
-    assert idx("scripts/xfp/build_hitter_boom_stack_daily.py") < \
-           idx("scripts/xfp/build_triangulate_dashboard"), \
-        "hitter boom producer must run before triangulate"
+# Concern 3 (refresh step order) used to be pinned here by `src.index(marker)` —
+# byte offsets into refresh_dashboards.py's source TEXT. That cannot fail on the
+# regression it exists to catch (audit 2026-08-01 item 40): measured on a mutated
+# copy in which the live_blend producer is no longer issued at all, all three
+# assertions still evaluate True, because the marker strings survive in the
+# source regardless of whether the step runs.
+#
+# Replaced by ordering assertions over the command sequence main() ACTUALLY
+# issues (recorder in place of `run`):
+#   tests/test_testqual_refresh_steps.py
+#     ::test_live_blend_is_built_before_matchup_consumes_it
+#     ::test_boom_stack_producers_run_before_triangulate
+#
+# When refresh_dashboards.main() grows the declarative (label, command, timeout,
+# gating) step list the audit proposed, those assertions move onto that structure
+# and the recorder goes away.

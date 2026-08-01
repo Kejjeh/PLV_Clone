@@ -72,7 +72,7 @@ WEEKLY_SPLIT_DAYS = list(range(30, 201, 7))
 # Years for which we emit weekly snapshots. Older years stay monthly because
 # (a) the Player Profiles dashboard prior-year overlay only needs 2024-2026
 # at high resolution and (b) regenerating 2018-2023 weekly would balloon
-# runtime ~7×. Documented in CHANGELOG of refresh_dashboards.py step 1b.
+# runtime ~7×. Documented in CHANGELOG of refresh_dashboards.py step 1.7.
 WEEKLY_YEARS = {2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026}
 
 

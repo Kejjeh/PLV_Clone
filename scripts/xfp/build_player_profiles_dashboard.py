@@ -1193,7 +1193,7 @@ def build_payload():
         # Per-pitcher boom/bust/variance — keyed by str(pitcher_id).
         'boom_pitcher': boom_payload,
         # Per-batter boom/bust/variance — keyed by str(batter_id). Populated
-        # by `scripts/xfp/build_hitter_boom_stack_daily.py` (step 4.7 of
+        # by `scripts/xfp/build_hitter_boom_stack_daily.py` (step 3.85 of
         # refresh_dashboards.py). Falls back to placeholder when missing.
         'boom_hitter': boom_hitter_payload,
     }

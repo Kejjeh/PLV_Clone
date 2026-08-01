@@ -844,6 +844,20 @@ def build_meta() -> dict:
     }
 
 
+# HTML_TEMPLATE is a RAW (r""") constant, deliberately NOT an f-string: every
+# `{}` in the JSX below is literal, so there is no brace-doubling hazard.
+# Substitution is the 12 named __TOKEN__ .replace() calls in main() (~:5037).
+# Externalising this to assets/ was assessed 2026-08-01 (audit T48) and
+# DEFERRED: the finding's stated payoff (killing the brace-doubling hazard)
+# does not exist, the "single documented substitution point" it asked for is
+# already the .replace() chain, and the remaining payoff is cosmetic (file
+# size, JS lintability) against a 200KB move whose generated HTML three other
+# scripts scrape. If revisited, prove identity at the STRING level -- ast the
+# old HTML_TEMPLATE out of `git show HEAD:...` and assert equality -- not by
+# diffing a full run: main() calls live ESPN and embeds date.today(), so a
+# before/after run diff yields false negatives. Load with read_text() (never
+# read_bytes().decode(): core.autocrlf=true and there is no .gitattributes,
+# so text mode is what normalises the checked-out CRLFs back to LF).
 HTML_TEMPLATE = r"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -5000,9 +5014,10 @@ def main():
     else:
         weekly_json = '{"weeks":{},"players":[]}'
 
-    # Decision-console payload (written by the matchup build / step 4.52
-    # CLI). Index is a PURE CONSUMER: stale or missing -> literal null and
-    # the Decision tab shows a "not built today" notice, never fetches.
+    # Decision-console payload (written by the matchup build / refresh
+    # step 4.3 (was 4.52) CLI). Index is a PURE CONSUMER: stale or missing
+    # -> literal null and the Decision tab shows a "not built today"
+    # notice, never fetches.
     decision_json = 'null'
     decision_path = ROOT / 'data' / 'outputs' / 'console_data.json'
     try:

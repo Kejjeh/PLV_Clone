@@ -1,6 +1,6 @@
 """build_console_data.py — standalone decision-console payload writer.
 
-Thin CLI over scripts/xfp/lib/decision_console.py:main(). Refresh step 4.52
+Thin CLI over scripts/xfp/lib/decision_console.py:main(). Refresh step 4.3
 runs this with --if-stale as the FALLBACK writer: the matchup build (step 4)
 is the authoritative writer (freshest week context); this covers the day when
 the matchup build fails so xfp_board / index still get a same-day payload.
