@@ -1,0 +1,42 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-07-11_luis_arraez_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "SLAP_HITTER",
+    "archetype_overall": 59,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.2563666521116295,
+    "inputs_schema": 2,
+    "live_marginal": 17.5,
+    "model_rank": 42,
+    "override_tag": null,
+    "pl_rank": 72,
+    "proj_display": 2.07,
+    "proj_per": 0.5904865078033587,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 650333,
+  "player_name": "Luis Arraez",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": "2026-08-01",
+  "settlement": {
+    "actual_fp_per_unit": 0.5076923076923077,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 65,
+    "proj_per": 0.5904865078033587,
+    "proj_units_note": "native",
+    "residual": -0.08279420011105099,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-07-11",
+  "verdict_top": "MIXED"
+}

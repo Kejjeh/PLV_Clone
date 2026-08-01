@@ -1,6 +1,6 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-07-31  
+**Generated:** 2026-08-01  
 **Source:** `data/outputs/predictions_history.csv`  
 **Backfilled rows:** 462  
 **Minimum N per bucket to trust:** 5

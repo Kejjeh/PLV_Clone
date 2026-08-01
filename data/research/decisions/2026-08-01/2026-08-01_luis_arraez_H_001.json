@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-01_luis_arraez_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_SLAP",
+    "archetype_overall": 58,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.2527957521105377,
+    "inputs_schema": 2,
+    "live_marginal": 7.5,
+    "model_rank": 54,
+    "override_tag": null,
+    "pl_rank": 73,
+    "proj_display": 2.0,
+    "proj_per": 0.5714226920301431,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 650333,
+  "player_name": "Luis Arraez",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-01",
+  "verdict_top": "MIXED"
+}

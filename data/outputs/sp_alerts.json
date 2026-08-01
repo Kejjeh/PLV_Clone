@@ -1,19 +1,19 @@
 {
-  "generated": "2026-07-31",
-  "upgrade_floor_fpp": -0.0484,
-  "hit_upgrade_floor_xwoba": 0.321,
-  "alert_count": 2,
+  "generated": "2026-08-01",
+  "upgrade_floor_fpp": -0.0744,
+  "hit_upgrade_floor_xwoba": 0.32,
+  "alert_count": 6,
   "hitter_alert_count": 0,
   "alerts": [
     {
       "name": "Drew Anderson",
       "tier": "HIGH",
       "signals": [
-        "SigH-HIGH(gap=+0.038)"
+        "SigH-HIGH(gap=+0.064)"
       ],
       "gs": 8,
       "fpp": -0.0102,
-      "fpp_gap": 0.0382,
+      "fpp_gap": 0.0642,
       "gsp": 6,
       "l4": "3/4",
       "whiff_pct": 28.0,
@@ -22,18 +22,78 @@
     },
     {
       "name": "Christian Scott",
-      "tier": "MONITOR",
+      "tier": "HIGH",
       "signals": [
-        "SigH-MONITOR(gap=+0.021)"
+        "SigH-HIGH(gap=+0.047)"
       ],
       "gs": 15,
       "fpp": -0.0271,
-      "fpp_gap": 0.0213,
+      "fpp_gap": 0.0473,
       "gsp": 8,
       "l4": "3/4",
       "whiff_pct": 25.6,
       "xwoba_con": 0.366,
       "rp3_rank": 79
+    },
+    {
+      "name": "Chase Dollander",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.029)"
+      ],
+      "gs": 8,
+      "fpp": -0.0452,
+      "fpp_gap": 0.0292,
+      "gsp": 4,
+      "l4": "2/4",
+      "whiff_pct": 27.4,
+      "xwoba_con": 0.358,
+      "rp3_rank": 172
+    },
+    {
+      "name": "Michael Soroka",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.029)"
+      ],
+      "gs": 14,
+      "fpp": -0.0455,
+      "fpp_gap": 0.0289,
+      "gsp": 8,
+      "l4": "3/4",
+      "whiff_pct": 21.5,
+      "xwoba_con": 0.378,
+      "rp3_rank": 119
+    },
+    {
+      "name": "Spencer Miles",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.028)"
+      ],
+      "gs": 12,
+      "fpp": -0.046,
+      "fpp_gap": 0.0284,
+      "gsp": 8,
+      "l4": "2/4",
+      "whiff_pct": 18.2,
+      "xwoba_con": 0.327,
+      "rp3_rank": 140
+    },
+    {
+      "name": "Kendry Rojas",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.026)"
+      ],
+      "gs": 8,
+      "fpp": -0.0485,
+      "fpp_gap": 0.0259,
+      "gsp": 4,
+      "l4": "1/4",
+      "whiff_pct": 27.6,
+      "xwoba_con": 0.278,
+      "rp3_rank": 80
     }
   ],
   "hitter_alerts": [],
