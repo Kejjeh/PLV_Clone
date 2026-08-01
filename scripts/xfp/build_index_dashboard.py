@@ -78,14 +78,30 @@ def plv_name_key(name: str) -> tuple[str, str]:
     return (_norm(parts[-1]), _norm(' '.join(parts[:-1])))
 
 
-def find_xfp_record(plv_name: str, by_key: dict) -> dict | None:
-    """Match a PLV-style name against the xFP records dict.
+def find_xfp_record(plv_name: str, by_key: dict, *, mlbam=None,
+                    by_id: dict | None = None) -> dict | None:
+    """Match an ESPN payload row against the xFP records.
 
-    Strict (last, first) match after accent-stripping normalization. Fallback
-    accepts a unique last-name match only when the first names share a 3-char
-    prefix — this catches `Cam Schlittler ↔ Schlittler, Cam` while rejecting
-    the `Robert Suarez ↔ Ranger Suarez` collision.
+    ID FIRST (review round 2, 2026-07-30): when the payload row carries an
+    mlbId and an id-index was built, the match is by id — the name dict is
+    keyed on bare (last, first) and last-write-wins, so with two same-name
+    players it holds only ONE of them and a name join returns whichever
+    survived (the wrong Max Muncy when Josh rosters the other). The name path
+    below remains for id-less rows only.
+
+    Name path: strict (last, first) match after accent-stripping
+    normalization. Fallback accepts a unique last-name match only when the
+    first names share a 3-char prefix — this catches `Cam Schlittler ↔
+    Schlittler, Cam` while rejecting the `Robert Suarez ↔ Ranger Suarez`
+    collision.
     """
+    if mlbam is not None and by_id:
+        try:
+            rec = by_id.get(int(mlbam))
+        except (TypeError, ValueError):
+            rec = None
+        if rec is not None:
+            return rec
     last, first = plv_name_key(plv_name)
     rec = by_key.get((last, first))
     if rec is not None:
@@ -103,12 +119,29 @@ def find_xfp_record(plv_name: str, by_key: dict) -> dict | None:
 
 # ─── ESPN payload extraction (from PLV dashboard) ─────────────────────────────
 
+def _clean_team_hint(v):
+    """Normalize a record's team field to a usable hint or None (NaN-safe)."""
+    if v is None or (isinstance(v, float) and v != v):
+        return None
+    s = str(v).strip()
+    return s or None
+
+
 def _label_roster_status(records: list[dict], name_key_fn,
                           my_team_name: str = MY_TEAM_NAME) -> None:
     """In-place: set rec['roster'] to 'mine' | 'taken' | 'fa' based on ESPN league rosters.
 
     Default-fall-through is 'fa'. Player on my team -> 'mine'.
-    Player on any other team -> 'taken'. Both name-keys are normalized.
+    Player on any other team -> 'taken'.
+
+    Join contract (audit C5, 2026-07-30): roster identity is
+    (safe_name_key, team) via build_safe_name_index / safe_lookup — never a
+    bare name key, which last-write-wins collapsed the two Max Muncy mlbIds
+    into one roster label on the shipped dashboard. A record whose MLB team
+    contradicts the rostered player's team is the OTHER same-name player and
+    stays 'fa'; a same-key roster pair that no team tiebreak can separate
+    raises at build time instead of mislabelling all of them. `name_key_fn`
+    is retained for signature compatibility but no longer drives the join.
     """
     try:
         import sys as _sys
@@ -119,20 +152,50 @@ def _label_roster_status(records: list[dict], name_key_fn,
         print(f'  [_label_roster_status] ESPN unavailable, defaulting to fa: {e}')
         return  # ESPN unavailable; leave existing labels
 
-    # Build {normalized_name_key: team_name} across the league
-    league_roster = {}
-    for _, p in teams.iterrows():
-        key = name_key_fn(p['player_name'])
-        league_roster[key] = p['team_name']
+    from plv_clone.utils.name_match import (
+        build_safe_name_index, safe_lookup, safe_name_key, team_key)
+
+    pro = teams['pro_team'] if 'pro_team' in teams.columns else None
+    idx = build_safe_name_index(teams['player_name'], pro)
+
+    # Build-time assertion: two rostered players may share a name key only
+    # when a team tiebreak can separate them — otherwise every same-key
+    # record's label would be a guess.
+    for k, cands in idx.items():
+        if len(cands) > 1:
+            tks = [t for _lbl, t in cands]
+            if None in tks or len(set(tks)) != len(tks):
+                raise ValueError(
+                    f"_label_roster_status: {len(cands)} rostered players "
+                    f"collapse to name key {k!r} without a team tiebreak "
+                    f"({tks}) — refusing to label; fix the roster feed")
 
     for rec in records:
         if rec.get('roster') == 'mine':
             continue  # preserve my-team merge's existing label
-        key = name_key_fn(rec.get('name') or rec.get('player_name') or '')
-        team = league_roster.get(key)
-        if team is None:
+        nm = rec.get('name') or rec.get('player_name') or ''
+        rec_team = (_clean_team_hint(rec.get('team'))
+                    or _clean_team_hint(rec.get('proTeam')))
+        cands = idx.get(safe_name_key(nm))
+        lbl = None
+        if cands and len(cands) == 1:
+            lbl, cand_tk = cands[0]
+            # Same name, but a DIFFERENT MLB team on both sides: this record
+            # is the other same-name player, not the rostered one.
+            if (rec_team is not None and cand_tk is not None
+                    and team_key(rec_team) != cand_tk):
+                lbl = None
+        elif cands:
+            lbl = safe_lookup(nm, idx, team=rec_team)
+            if lbl is None:
+                print(f"  [_label_roster_status] AMBIGUOUS: {nm!r} matches "
+                      f"{len(cands)} rostered players and record team "
+                      f"{rec_team!r} does not separate them — leaving 'fa'")
+        if lbl is None:
             rec['roster'] = 'fa'
-        elif team == my_team_name:
+            continue
+        team = teams.loc[lbl, 'team_name']
+        if team == my_team_name:
             rec['roster'] = 'mine'
         else:
             rec['roster'] = 'taken'
@@ -372,9 +435,11 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
     # Reliever records (separate model — RP-RS1 RoS + RP-S1 cross-year)
     rp_records = build_reliever_records()
     rp_by_key: dict[tuple[str, str], dict] = {xfp_name_key(r['name']): r for r in rp_records}
+    rp_by_id: dict[int, dict] = {r['mlbId']: r for r in rp_records if r.get('mlbId')}
 
-    # ESPN merge
+    # ESPN merge — id-index first (the name dict is lossy on shared names)
     by_key: dict[tuple[str, str], dict] = {xfp_name_key(r['name']): r for r in records}
+    by_id: dict[int, dict] = {r['mlbId']: r for r in records if r.get('mlbId')}
 
     my_team_raw = extract_my_team()
     my_team_payload: dict = {'teamName': None, 'pitchers': []}
@@ -385,7 +450,9 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
             espn_pos = p.get('espnPos') or ''
             role = 'SP' if 'SP' in espn_pos else ('RP' if 'RP' in espn_pos else (espn_pos or '—'))
             # Match SPs against the SP xFP universe; RPs against the RP universe.
-            xfp_rec = find_xfp_record(p['name'], by_key) if role == 'SP' else None
+            xfp_rec = (find_xfp_record(p['name'], by_key, mlbam=p.get('mlbId'),
+                                       by_id=by_id)
+                       if role == 'SP' else None)
             rp_rec  = find_xfp_record(p['name'], rp_by_key) if role == 'RP' else None
             if xfp_rec is not None:
                 xfp_rec['roster'] = 'mine'
@@ -638,19 +705,24 @@ def build_hitter_records() -> tuple[list[dict], list[dict]]:
     for i, rec in enumerate(records):
         rec['rank'] = i + 1
 
-    # ESPN merge — pull MY_TEAM hitters
+    # ESPN merge — pull MY_TEAM hitters. Id-index first: the name dict is
+    # lossy on shared names (both Muncys collapse to one key).
     by_key: dict[tuple[str, str], dict] = {}
+    by_id: dict[int, dict] = {}
     for r in records:
         # Hitter names are "First Last" (from master_hitter / Chadwick), so
         # we use plv_name_key for both sides.
         by_key[plv_name_key(r['name'])] = r
+        if r.get('mlbId'):
+            by_id[int(r['mlbId'])] = r
 
     my_team_raw = extract_my_team()
     hitter_payload: list[dict] = []
     if my_team_raw:
         for h in my_team_raw.get('hitters', []):
             espn_pos = h.get('espnPos') or h.get('pos') or ''
-            xfp_rec = find_xfp_record(h.get('name', '') or h.get('cleanName', ''), by_key)
+            xfp_rec = find_xfp_record(h.get('name', '') or h.get('cleanName', ''),
+                                      by_key, mlbam=h.get('mlbId'), by_id=by_id)
             if xfp_rec is not None:
                 xfp_rec['roster']        = 'mine'
                 xfp_rec['espnPos']       = espn_pos

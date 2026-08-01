@@ -16,7 +16,7 @@ sys.path.insert(0, str(REPO))
 from plv_clone.league_state import LeagueState
 from plv_clone.projections import PROJECTIONS
 from plv_clone.utils.name_match import lookup_batter_id_cached
-from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst
+from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst, fa_sp_mlbam_ids
 
 PARQ26 = (REPO / "data/research/xfp_cache/statcast_2026.parquet").as_posix()
 PARQ25 = (REPO / "data/research/xfp_cache/statcast_2025.parquet").as_posix()
@@ -132,25 +132,22 @@ print(f"  Upgrade floor (3rd-weakest): {upgrade_floor:+.4f}", flush=True)
 # ── Pull FA SP pool ──────────────────────────────────────────────────────────
 print("Pulling FA pool...", flush=True)
 fas = _ls.available_fa()
-fa_sp_norm = {}
-for _, p in fas.iterrows():
-    if p.get("position", "") in ("SP", "P"):
-        fa_sp_norm[_norm(p["player_name"])] = p["player_name"]
 
-def is_fa(sc_name):
-    n = _norm(display_name(sc_name))
-    if n in fa_sp_norm:
-        return True
-    parts = n.split()
-    if len(parts) >= 2:
-        last, fi = parts[-1], parts[0][0]
-        for k in fa_sp_norm:
-            kp = k.split()
-            if len(kp) >= 2 and kp[-1] == last and kp[0][0] == fi:
-                return True
-    return False
+# FA membership is mlbam-id-keyed (audit C7, 2026-07-30; CLAUDE.md rule 10).
+# The old normalized-name gate carried a last-name + first-INITIAL fallback
+# that alerted ROSTERED pitchers as FAs whenever a genuine FA shared their
+# surname and first initial. Both sides now speak mlbam: the FA pool is
+# resolved once through the collision-safe resolver (preloaded caches — one
+# read, not one per name; unresolvable names are skipped loudly and treated
+# as NOT-FA), and the statcast frame already carries the pitcher id.
+_sp_cache_p = REPO / "data/research/xfp_cache/sp_multiyr_2015_2025.csv"
+_rp_cache_p = REPO / "data/research/xfp_cache/relievers_multiyr_2018_2026.csv"
+_spm = pd.read_csv(_sp_cache_p) if _sp_cache_p.exists() else None
+_rpm = pd.read_csv(_rp_cache_p) if _rp_cache_p.exists() else None
+fa_sp_ids = fa_sp_mlbam_ids(fas, sp_multiyr=_spm, rp_multiyr=_rpm)
+print(f"  {len(fa_sp_ids)} FA SPs resolved to mlbam ids", flush=True)
 
-fa_rows = merged[merged["player_name"].apply(is_fa)].copy()
+fa_rows = merged[merged["pitcher"].astype(int).isin(fa_sp_ids)].copy()
 print(f"  {len(fa_rows)} FA SPs with 4+ starts", flush=True)
 
 # ── Apply signals ─────────────────────────────────────────────────────────────
