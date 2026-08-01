@@ -297,3 +297,44 @@ def test_loo_folds_never_fit_on_a_season_outside_the_training_years():
         f"entered its training frame: {with_extra[2022]} vs {clean[2022]}")
     assert extra_pooled == clean_pooled, (
         f"pooled gate is not reproducible: {extra_pooled} vs {clean_pooled}")
+
+
+def test_t52_derived_cache_round_trips_identically(tmp_path, monkeypatch):
+    """T52 (closed 2026-08-01): the RP pipeline caches DERIVED per-year
+    results, never the raw frame — so a cold compute and a warm cache read
+    must produce identical team-games and identical (and identically-sorted)
+    relief-appearance arrays for a frozen season. The frame-order hazard the
+    original deferral feared cannot survive this contract: arrays are sorted
+    before the write and re-sorted on load."""
+    import numpy as np
+    import pandas as pd
+    import importlib
+    import xfp_rp_volume_pipeline as RPV
+
+    # tiny synthetic season: 2 games, starter + reliever each half-inning
+    rows = []
+    for pk, d in ((1, "2024-04-01"), (2, "2024-04-02")):
+        for topbot in ("Top", "Bot"):
+            rows += [
+                dict(game_pk=pk, game_date=d, pitcher=100 + pk, inning=1,
+                     inning_topbot=topbot, home_team="AAA", away_team="BBB"),
+                dict(game_pk=pk, game_date=d, pitcher=500, inning=7,
+                     inning_topbot=topbot, home_team="AAA", away_team="BBB"),
+            ]
+    cache = tmp_path / "xfp_cache"
+    cache.mkdir()
+    pd.DataFrame(rows).to_parquet(cache / "statcast_2024.parquet", index=False)
+    monkeypatch.setattr(RPV, "CACHE", cache)
+
+    cold_tg, cold_rel = RPV.build_schedule_and_relief_apps()
+    assert (cache / ".rp_volume_derived" / "tg_2024.parquet").exists(), (
+        "a frozen season must write its derived cache")
+    warm_tg, warm_rel = RPV.build_schedule_and_relief_apps()
+
+    pd.testing.assert_frame_equal(
+        cold_tg.reset_index(drop=True), warm_tg.reset_index(drop=True))
+    assert set(cold_rel) == set(warm_rel)
+    for k in cold_rel:
+        np.testing.assert_array_equal(cold_rel[k], warm_rel[k])
+    # the reliever really is the cached appearance, the starters are not
+    assert (2024, 500) in warm_rel and len(warm_rel[(2024, 500)]) == 2

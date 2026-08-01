@@ -71,6 +71,9 @@ data/research/xfp_cache/*.parquet
 # *.parquet.bak-only rule let a 64 MB rolling_hitters CSV .bak into git
 # (audit 2026-07-19; git rm --cached'd the same day).
 data/research/xfp_cache/*.bak
+# T52 derived per-year cache (team-games + relief apps for frozen seasons;
+# regenerated from the statcast parquets on any cold run)
+data/research/xfp_cache/.rp_volume_derived/
 
 # ESPN snapshot layer (refresh-run network diet, audit 2026-07-19 F3) —
 # short-TTL pickles/JSON regenerated every refresh; never track.

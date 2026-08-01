@@ -157,20 +157,39 @@ def build_schedule_and_relief_apps() -> tuple[pd.DataFrame, dict]:
     '~2.5 GB/night' framing in volume_model's docstring is file-size arithmetic,
     not bytes touched). Against ~35s of RidgeCV in one gate pass that is not
     worth a byte-identity campaign on a path that produces g_per_teamgame_to
-    and ros_g. The relief-apps half is also the risky half: it depends on frame
-    order being preserved to pick each half-inning's starter, and a parquet
-    round-trip through a new cache would have to preserve that exactly. If this
-    is ever revisited, cache the team_games half ONLY (a straight reuse of the
-    proven build_team_games cache) and re-prove the CSV byte-identical.
+    and ros_g. The relief-apps half depends on frame order to pick each
+    half-inning's starter — which is why the per-year cache below stores the
+    DERIVED results (computed before any write), never the raw frame; see the
+    T52 comment in the loop. CSV byte-identity proven cold-vs-cached
+    2026-08-01.
     """
     tg_frames = []
     relief_apps: dict[tuple[int, int], np.ndarray] = {}
     from datetime import date as _date
-    for yr in list(range(2018, _date.today().year + 1)):
+    cur_year = _date.today().year
+    derived = CACHE / '.rp_volume_derived'
+    for yr in list(range(2018, cur_year + 1)):
         if yr == 2020:
             continue
         p_path = CACHE / f'statcast_{yr}.parquet'
         if not p_path.exists():
+            continue
+        # ── DERIVED per-year cache (T52, closed 2026-08-01). The deferral's
+        # frame-order worry was about round-tripping the RAW frame; a cache of
+        # the RESULTS has no such exposure — the order-sensitive starter pick
+        # runs BEFORE the write, and relief_apps arrays are np.sort()ed on
+        # every load exactly as the uncached path sorts them, so storage order
+        # is irrelevant by construction. Past seasons are frozen, so 7 of the
+        # 8 parquet reads disappear on warm nights; the CURRENT season always
+        # recomputes from the raw parquet.
+        tg_c = derived / f'tg_{yr}.parquet'
+        rel_c = derived / f'relief_{yr}.parquet'
+        if yr < cur_year and tg_c.exists() and rel_c.exists():
+            tg = pd.read_parquet(tg_c)
+            tg_frames.append(tg[['year', 'team', 'game_date']])
+            rel = pd.read_parquet(rel_c)
+            for pid, g in rel.groupby('pitcher'):
+                relief_apps[(yr, int(pid))] = np.sort(g['game_date'].values)
             continue
         p = pd.read_parquet(p_path, columns=['game_pk', 'game_date', 'pitcher',
                                              'inning', 'inning_topbot',
@@ -195,8 +214,19 @@ def build_schedule_and_relief_apps() -> tuple[pd.DataFrame, dict]:
         pg = pg.merge(starts, on=['game_pk', 'inning_topbot'], how='left')
         relief = (pg[pg['pitcher'] != pg['starter_id']]
                   .drop_duplicates(['game_pk', 'pitcher']))
+        rel_rows = []
         for pid, g in relief.groupby('pitcher'):
-            relief_apps[(yr, int(pid))] = np.sort(g['game_date'].values)
+            arr = np.sort(g['game_date'].values)
+            relief_apps[(yr, int(pid))] = arr
+            rel_rows.append(pd.DataFrame({'pitcher': int(pid), 'game_date': arr}))
+        if yr < cur_year:
+            try:
+                derived.mkdir(exist_ok=True)
+                tg[['year', 'team', 'game_date']].to_parquet(tg_c, index=False)
+                pd.concat(rel_rows, ignore_index=True).to_parquet(rel_c, index=False)
+            except Exception as e:
+                print(f'  ! derived-cache write failed for {yr} ({e}) — '
+                      f'recomputing nightly instead')
     return pd.concat(tg_frames, ignore_index=True), relief_apps
 
 
