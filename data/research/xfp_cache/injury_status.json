@@ -1,6 +1,7 @@
 {
   "fetched": "2026-08-01",
   "il": {
+    "Ryan O'Hearn": "TEN_DAY_DL",
     "Konnor Griffin": "SIXTY_DAY_DL",
     "Robert Suarez": "FIFTEEN_DAY_DL",
     "Casey Schmitt": "TEN_DAY_DL",
@@ -68,6 +69,14 @@
       "return_date": "2026-09-01",
       "days_until_return": 31,
       "injury_type": "Hamstring",
+      "status_code": "IL10"
+    },
+    "35183": {
+      "name": "Ryan O'Hearn",
+      "status": "TEN_DAY_DL",
+      "return_date": "2026-09-18",
+      "days_until_return": 48,
+      "injury_type": "Quadriceps",
       "status_code": "IL10"
     },
     "36056": {
