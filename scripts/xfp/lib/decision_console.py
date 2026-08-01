@@ -1506,7 +1506,7 @@ even below the FA display cut.</p>
 </section>"""
 
 
-# ── CLI (standalone payload writer — refresh step 4.52 fallback) ────────────
+# ── CLI (standalone payload writer — refresh step 4.3 fallback) ────────────
 def main(argv=None):
     import argparse
     ap = argparse.ArgumentParser(description="Build console_data.json")

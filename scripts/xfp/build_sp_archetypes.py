@@ -203,8 +203,17 @@ def build_pitch_arsenal(years=(2021, 2022, 2023, 2024, 2025, 2026)):
                   'FB_pct','SL_pct','CB_pct','CH_pct','FS_pct']]
 
 
-def build_ratings_panel(current_year=2026):
-    """Build the full 2015-current panel with 20-80 ratings + archetype labels."""
+def build_ratings_panel():
+    """Build the full 2015-current panel with 20-80 ratings + archetype labels.
+
+    Deliberately NOT year-scoped: the 20-80 ratings are computed WITHIN year via
+    groupby('year') across the whole panel, so there is no year ceiling to
+    thread. A `current_year=2026` parameter sat here unread until 2026-08-01
+    (audit T49) — it read like a filter, did nothing, and carried a season
+    literal that would rot. Removed rather than implemented: making it real
+    would change the emitted ratings, which is a pre-registered decision, not
+    an audit cleanup.
+    """
     m = pd.read_csv(HIST_CSV)
     m['hr_per_bf'] = m['hr'] / m['tbf'].clip(lower=1)
 

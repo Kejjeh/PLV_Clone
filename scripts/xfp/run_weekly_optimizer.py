@@ -213,10 +213,33 @@ def resolve_candidate_mlbams(state, cands: list[dict]) -> None:
 # Search
 # ─────────────────────────────────────────────────────────────────────────────
 
+def _cand_team_games(c: dict) -> int | None:
+    """Remaining TEAM GAMES behind a candidate's projection, or None.
+
+    Audit T23 (2026-08-01): this used to be ``c['units']``, which for an RP is a
+    fractional EXPECTED-APPEARANCE count (``project_rp`` returns
+    ``round(expected_appearances, 1)``), not a game count. The engine's
+    ``p_app = min(units / n_rem_games, 1.0)`` therefore pinned every candidate
+    reliever to an appearance probability of exactly 1.0 — one deterministic
+    appearance per simulated week against a projection of 1.7 — and any
+    candidate with units < 1.0 truncated to n_rem_games 0 and scored a hard zero.
+
+    The denominator ``project_rp`` actually divided by is already carried on the
+    projection (``breakdown[0]['n_team_games']``), so read it back rather than
+    re-deriving a schedule that could disagree with it. Returning None lets the
+    engine fall back to its own ``round(units)``.
+    """
+    for b in (c.get('proj') or {}).get('breakdown') or []:
+        n = b.get('n_team_games')
+        if n:
+            return int(n)
+    return None
+
+
 def _cand_for_engine(c: dict, effective: str | None = None) -> dict:
     return {'mlbam': c.get('mlbam'), 'name': c['name'], 'bucket': c['bucket'],
             'proj': c['proj'], 'starts': c.get('starts') or [],
-            'n_rem_games': c.get('units'), 'effective_date': effective}
+            'n_rem_games': _cand_team_games(c), 'effective_date': effective}
 
 
 def _hitter_games(state, cands) -> dict:

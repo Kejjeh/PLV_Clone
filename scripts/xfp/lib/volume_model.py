@@ -17,7 +17,25 @@ parquet IO across the three pipelines). Cache files live FLAT in xfp_cache as
 
 NOT hoisted (intentionally): each pipeline's FEATS list, eligibility filter,
 prepare() feature engineering, and the RP pipeline's combined
-schedule+relief-apps scan / string-verdict gates — those differ by design.
+schedule+relief-apps scan — those differ by design. (The RP pipeline's four
+remaining forks were folded in 2026-08-01, audit T41; only its MARGINAL
+string-verdict band stays local, wrapping check_gates' boolean.)
+
+2026-08-01 audit changes (T18/T35/T41), all proved output-preserving:
+  * cross_year_eval now restricts each LOO training frame to train_years —
+    it previously trained on the whole eligible frame minus the held year, so
+    the pre-registered gates scored a model the pipelines never ship and the
+    fold scores drifted nightly with the in-progress season. Gate numbers were
+    recomputed and all three verdicts are UNCHANGED (PASS); see the amendment
+    block in xfp_rp_volume_pipeline.py for the figures.
+  * attach_team_games takes an in-frame `team_col` as well as a team_map, so
+    the RP pipeline uses this version (and finally gets the unmapped guard).
+  * that guard's denominator now counts real fallback-branch hits instead of
+    `team.isna()`, which missed abbreviation drift entirely.
+  * a cache write that fails now says so once instead of `except: pass`, so a
+    permanently unwritable cache dir cannot silently un-do the whole hoist.
+Values unchanged throughout: the three volume CSVs are byte-identical (proved
+by rerun; the hashes are in xfp_rp_volume_pipeline.py's amendment block).
 """
 from __future__ import annotations
 
@@ -57,8 +75,15 @@ def _cached_year_frame(yr: int, cache_name: str, build_fn) -> pd.DataFrame | Non
     frame = build_fn(src)
     try:
         frame.to_parquet(dst, index=False)
-    except Exception:
-        pass  # cache write is best-effort; the frame is still returned
+    except Exception as exc:
+        # Best-effort by design — the frame is returned either way, so no
+        # nightly fails over a cache write. But swallowing it in silence lets
+        # the cache be permanently off (every season re-parsed on every run,
+        # the exact cost the 2026-07-19 hoist existed to remove) with nothing
+        # to show for it. Visibility only; values unchanged. (audit T35)
+        print(f'  !! WARNING volume_model: could not write the {yr} '
+              f'{cache_name} file ({type(exc).__name__}: {exc}) — that season '
+              f'will be re-parsed from statcast on every run')
     return frame
 
 
@@ -116,11 +141,24 @@ def build_catcher_flags(min_pitches: int = 100,
 
 
 def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
-                      team_map: pd.DataFrame, id_col: str) -> pd.DataFrame:
-    """Attach team_games_to / team_games_remaining per row via the player's
-    (id_col, year) -> team map; league-mean fallback when the team is unmapped.
-    Body identical to the former hitter/SP local copies (id column only)."""
-    out = rolling.merge(team_map, on=[id_col, 'year'], how='left')
+                      team_map: pd.DataFrame | None = None,
+                      id_col: str | None = None, *,
+                      team_col: str | None = None) -> pd.DataFrame:
+    """Attach team_games_to / team_games_remaining per row; league-mean fallback
+    when the team is unmapped.
+
+    Two ways to say which team a row belongs to:
+      * `team_map` + `id_col` — merge a (id_col, year) -> team map
+        (hitter / SP substrates, which carry no team column);
+      * `team_col` — the team already lives in the frame (RP substrate's
+        `team_abbr`). This path does no merge at all, so it cannot fan rows out.
+
+    Body otherwise identical to the pipelines' former local copies.
+    """
+    if team_col is not None:
+        out = rolling.rename(columns={team_col: 'team'}).copy()
+    else:
+        out = rolling.merge(team_map, on=[id_col, 'year'], how='left')
     out['cutoff_date'] = pd.to_datetime(out['cutoff_date'])
 
     dates_by = {k: np.sort(g['game_date'].values)
@@ -129,6 +167,7 @@ def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
 
     to_arr = np.full(len(out), np.nan)
     rem_arr = np.full(len(out), np.nan)
+    n_fallback = 0
     for (yr, team, cut), ix in out.groupby(['year', 'team', 'cutoff_date'],
                                            dropna=False).groups.items():
         key = (yr, team)
@@ -136,6 +175,7 @@ def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
             n_to = int(np.searchsorted(dates_by[key], np.datetime64(cut), side='right'))
             n_total = total_by[key]
         else:
+            n_fallback += len(ix)
             keys = [k for k in dates_by if k[0] == yr]
             if not keys:
                 continue
@@ -146,10 +186,13 @@ def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame,
         rem_arr[out.index.get_indexer(ix)] = n_total - n_to
     out['team_games_to'] = to_arr
     out['team_games_remaining'] = rem_arr
-    # Fallback-visibility guard (audit 2026-07-19 R5): the league-mean branch
-    # silently absorbs a stale/desynced team map. Values unchanged — surface
-    # the unmapped fraction so a broken map can't hide.
-    _unmapped = float(out['team'].isna().mean()) if 'team' in out.columns else 0.0
+    # Fallback-visibility guard (audit 2026-07-19 R5; denominator widened
+    # 2026-08-01 audit T35): the league-mean branch silently absorbs a stale or
+    # desynced team map. The old measure was `team.isna()`, but the branch fires
+    # on `(year, team) not in dates_by` — strictly broader — so an abbreviation
+    # drift ('AZ' vs 'ARI') read as 0% unmapped. Count actual branch hits.
+    # Values unchanged; visibility only.
+    _unmapped = (n_fallback / len(out)) if len(out) else 0.0
     if _unmapped > 0:
         marker = '  !! WARNING' if _unmapped > 0.25 else '  '
         print(f'{marker} attach_team_games: {_unmapped:.1%} of rows unmapped to a '
@@ -200,7 +243,12 @@ def cross_year_eval(df: pd.DataFrame, *, feats: list[str], target: str,
     detail_frames = []
     mae_m_num = mae_n_num = mae_den = 0.0
     for held in train_years:
-        train = df[df['year'] != held]
+        # Train-year isolation (audit 2026-08-01, T18): the LOO training frame
+        # must be train_years-minus-held, NOT the whole eligible frame minus
+        # held. The shipped final fit restricts to TRAIN_YEARS, so without this
+        # the pre-registered gate scored a model the pipeline never ships — and
+        # the fold scores drifted nightly as the in-progress season grew.
+        train = df[(df['year'] != held) & (df['year'].isin(train_years))]
         test = df[df['year'] == held].copy()
         if len(train) < 100 or len(test) < 30:
             continue

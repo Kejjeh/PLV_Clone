@@ -615,7 +615,19 @@ def precompute_draws(state, n_sims: int, seed: int):
             # A LOCATION shift hits the identical target mean, genuinely preserves
             # the variance, cannot invert the tail, and needs no guard. Same class
             # as the opp_factor defect fixed in sp_bench_mc on 2026-07-29.
-            if e['model_fp'] > 0:
+            #
+            # AUDIT T25 (2026-08-01): the test used to be `model_fp > 0`, a
+            # leftover from the multiplicative era where a non-positive target
+            # would have blown up the ratio. A LOCATION shift has no such
+            # failure mode. (Precision, per review: project_sp_starts does not
+            # emit non-positive projections TODAY, so the old guard was dead
+            # weight rather than an active bug — but nothing enforces that
+            # floor, and the candidate SP path in ensure_candidate_draws
+            # shifts unconditionally, so `> 0` was a latent divergence waiting
+            # on an upstream change.) The finite
+            # check keeps the one thing `> 0` was still buying: a NaN
+            # projection fails SAFE instead of poisoning every draw for him.
+            if np.isfinite(e['model_fp']):
                 # model_fp includes the 0.80 unconfirmed discount; undo it since
                 # occurrence is simulated explicitly below.
                 target = e['model_fp'] / (1.0 if e['confirmed'] else UNCONFIRMED_START_P)

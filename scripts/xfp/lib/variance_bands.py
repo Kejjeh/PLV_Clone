@@ -18,6 +18,7 @@ bands file.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[3]
@@ -32,8 +33,18 @@ def load_bands():
         try:
             import pandas as pd
             _CACHE['df'] = pd.read_csv(BANDS_CSV)
-        except Exception:  # noqa: BLE001 — missing/corrupt file -> None
+        except Exception as e:  # noqa: BLE001 — missing/corrupt file -> None
             _CACHE['df'] = None
+            # Degrading to the caller's default is DELIBERATE (engines must never
+            # crash on a missing bands file) but it must not be invisible: a
+            # P(win) built on caller defaults otherwise looks identical to one
+            # built on the measured 2010-2025 table. One line, once per process
+            # (the flag lives in _CACHE so it resets with the table).
+            if not _CACHE.get('_notified'):
+                _CACHE['_notified'] = True
+                print(f"  [variance_bands] WARN table unreadable ({BANDS_CSV}): "
+                      f"{type(e).__name__} — falling back to caller-supplied sigmas",
+                      file=sys.stderr)
     return _CACHE['df']
 
 

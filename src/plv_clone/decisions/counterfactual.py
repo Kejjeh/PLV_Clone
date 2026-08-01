@@ -67,13 +67,62 @@ WRONG_CALL = "WRONG_CALL"
 WASH = "WASH"
 UNSETTLEABLE = "UNSETTLEABLE"
 
+# Local wall-clock hour at or after which a move can no longer be assumed to
+# have reached the day's slate (audit T22, 2026-08-01). 13:00 is the earliest
+# ROUTINE MLB first pitch; a move stamped before it is AHEAD OF the routine
+# slate, though not literally every game (holiday 11:35s, London starts, and
+# doubleheader openers exist — review 2026-08-01). The residual error is a
+# rare day-0 game credited to both sides symmetrically, well inside the wash
+# band.
+#
+# TIMEZONE, stated rather than buried: ``executed_at`` is built by
+# ``scripts/xfp/reconcile_decisions.py`` as
+# ``datetime.fromtimestamp(int(ts)/1000.0)`` — naive LOCAL wall-clock, neither
+# tz-aware nor forced to ET. The cutoff is therefore evaluated in whatever
+# timezone the machine that reconciled the transaction was in; for this league
+# that is Eastern, which is also the timezone the cutoff hour is chosen for.
+FIRST_PITCH_CUTOFF_HOUR = 13
+
+
+def effective_start(stamp) -> Optional[date]:
+    """First day a move stamped ``stamp`` could actually have affected a lineup.
+
+    The window used to start on ``str(stamp)[:10]``, and ``_games_in_window``
+    filters INCLUSIVELY on both ends, so an evening move credited BOTH players a
+    day-0 game it could not possibly have influenced — noise added symmetrically
+    to a paired comparison whose wash band is only 10 FP for a hitter.
+
+    A stamp carrying no time is left on its own day: absence of a clock reading
+    is not evidence of lateness, and ``snapshot_date`` (the fallback) means the
+    surface existed that morning.
+
+    The ``strip()`` is a DELIBERATE, disclosed widening (review 2026-08-01): a
+    whitespace-padded but otherwise valid stamp used to fail parsing and leave
+    its record unsettleable forever. Trimming admits it. This settles MORE
+    records; it never changes an already-settled value.
+    """
+    text = str(stamp).strip()
+    try:
+        day = date.fromisoformat(text[:10])
+    except ValueError:
+        return None
+    if len(text) <= 10:
+        return day
+    try:
+        moment = datetime.fromisoformat(text)
+    except ValueError:
+        return day
+    return day if moment.hour < FIRST_PITCH_CUTOFF_HOUR else day + timedelta(days=1)
+
 
 def window_for(record: DecisionRecord) -> Optional[tuple[date, date]]:
-    """The common measurement window: executed_at (or snapshot) + bucket days.
+    """The common measurement window: first effective day + bucket days.
 
     Both sides are measured over the SAME interval — that is what makes the
     comparison fair, and it is why the window is derived from the record rather
-    than from either player's own game availability.
+    than from either player's own game availability. Applying the effective-start
+    shift HERE, once, is what keeps the two legs symmetric; the end offset stays
+    relative to the start so window LENGTH is unchanged.
     """
     spec = SETTLEMENT_WINDOWS.get(record.bucket)
     if spec is None:
@@ -81,9 +130,8 @@ def window_for(record: DecisionRecord) -> Optional[tuple[date, date]]:
     stamp = record.executed_at or record.snapshot_date
     if not stamp:
         return None
-    try:
-        start = date.fromisoformat(str(stamp)[:10])
-    except ValueError:
+    start = effective_start(stamp)
+    if start is None:
         return None
     return start, start + timedelta(days=int(spec["days"]))
 

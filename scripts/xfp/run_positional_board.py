@@ -33,12 +33,57 @@ OUT = ROOT / "data" / "outputs"
 SNAPSHOTS = ROOT / "data" / "research" / "fa_snapshots"
 PL_CACHE = ROOT / "data" / "research" / "pl_cache"
 
-PLAYOFF_SHARE = 6 / 20         # last 6 of ~20 remaining weeks
+# ── DATE-PARAMETERIZED HORIZON (audit T44, 2026-08-01) ───────────────────────
+# These were frozen literals — `WEEKS_REMAINING = 15.5` and `PLAYOFF_SHARE =
+# 6/20`, the calendar as of 2026-06-15 — while the rh3/rprs2 ROS columns beside
+# them shrink with the season. By 2026-08-01 the SP column claimed 18.4 starts
+# against a real 8.5, and the frozen 0.30 playoff share understated the PLYO
+# column for hitters and RPs as well as SPs. Idiom copied from the owner,
+# build_xfp_boards.py:66-77.
+#
+# NOTE (pre-existing, deliberately not silently resolved here): the repo carries
+# two season-end dates — 2026-09-20 in build_xfp_boards.py and run_consensus_diff.py,
+# 2026-09-28 in build_matchup_dashboard.py. This board follows the two that agree.
+# Settling that belongs in a shared owner (league_config), not in a third fork.
+from datetime import date
 from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as _SPW  # owner (audit 2026-07-04)
-PLAYOFF_SP_STARTS = round(_SPW * 6, 1)   # ~7.1 playoff starts per healthy SP
-# Weeks remaining in regular season (June 15 → ~Sep 28)
-WEEKS_REMAINING = 15.5
-SP_STARTS_REMAINING = round(_SPW * WEEKS_REMAINING, 1)  # ~18.4
+
+SEASON_END = date(2026, 9, 20)
+PLAYOFF_START = date(2026, 8, 17)
+RATE = _SPW / 7.0              # empirical SP starts per active SP per day
+
+
+def _days_left(today: date | None = None) -> int:
+    return max(0, (SEASON_END - (today or date.today())).days)
+
+
+def _playoff_days_left(today: date | None = None) -> int:
+    today = today or date.today()
+    return max(0, (SEASON_END - max(today, PLAYOFF_START)).days)
+
+
+def sp_starts_remaining(today: date | None = None) -> float:
+    """Starts a healthy SP has left between *today* and season end."""
+    return round(_days_left(today) * RATE, 1)
+
+
+def playoff_sp_starts(today: date | None = None) -> float:
+    """Starts a healthy SP has left inside the fantasy playoff window."""
+    return round(_playoff_days_left(today) * RATE, 1)
+
+
+def playoff_share(today: date | None = None) -> float:
+    """Share of the remaining season that falls inside the playoff window.
+
+    Scales the PLYO column for hitters and RPs (whose ROS is a full-season
+    total) the way `playoff_sp_starts` scales the SP column.
+    """
+    return _playoff_days_left(today) / max(1, _days_left(today))
+
+
+PLAYOFF_SHARE = playoff_share()
+PLAYOFF_SP_STARTS = playoff_sp_starts()
+SP_STARTS_REMAINING = sp_starts_remaining()
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Data loaders
@@ -263,8 +308,9 @@ def print_group(label: str, my_rows: list[dict], fa_rows: list[dict]):
 
 def main():
     print(f"\n{'#'*76}")
-    print(f"  POSITIONAL BOARD  —  2026-06-15")
-    print(f"  ROS = full remaining season xFP | PLYO = last 6 wks ({PLAYOFF_SHARE:.0%} of RoS)")
+    print(f"  POSITIONAL BOARD  —  {date.today()}")
+    print(f"  ROS = xFP through {SEASON_END} ({SP_STARTS_REMAINING} SP starts left) | "
+          f"PLYO = from {PLAYOFF_START} ({PLAYOFF_SHARE:.0%} of RoS)")
     print(f"  Models: rh3 (H) | rp3 (SP) | rprs2 (RP)")
     print(f"{'#'*76}")
 

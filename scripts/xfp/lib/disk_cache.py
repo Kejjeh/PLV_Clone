@@ -20,6 +20,7 @@ import glob
 import hashlib
 import os
 import pickle
+import sys
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parents[3]
@@ -67,8 +68,14 @@ def disk_cached(name: str, builder, dep_paths, version: int = 1):
                     os.remove(old)
                 except OSError:
                     pass
-    except Exception:
-        pass  # caching is best-effort; never fail the build over a cache write
+    except Exception as e:  # noqa: BLE001
+        # Caching is best-effort — a write failure must NEVER fail the build, and
+        # `val` is returned unchanged below. But it must not be invisible either:
+        # a permanently unwritable cache dir looked exactly like a healthy one,
+        # while every nightly silently paid the full uncached rebuild.
+        print(f"  [disk_cache] WARN could not write cache entry {name!r} "
+              f"({type(e).__name__}: {e}) — value is correct, build stays uncached",
+              file=sys.stderr)
     return val
 
 

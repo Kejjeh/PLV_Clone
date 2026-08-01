@@ -58,8 +58,13 @@ from plv_clone.paths import ROOT
 SEASON_SIM_JSON = ROOT / 'data' / 'outputs' / 'season_sim.json'
 
 # Beyond this many periods behind, the weight is too stale to display without a
-# hard warning. Two periods is roughly two weeks of standings movement.
-STALE_PERIOD_WARN = 1
+# hard warning. Three periods is roughly three weeks of standings movement.
+#
+# (STALE_PERIOD_WARN = 1 lived here until 2026-08-01. It was exported and
+# documented but referenced nowhere, and it could not become referenced: the
+# severity branch it would have gated already sits inside `if gap > 0`, so
+# `gap >= 1` is unconditionally true there. Removed rather than left as a
+# decorative export.)
 STALE_PERIOD_HARD = 3
 
 
@@ -87,7 +92,10 @@ def win_value(period: int, payload: dict | None = None,
         'payload_period', 'periods_stale', 'note', 'plus2_pp'}
 
     ``dtitle_pp`` is None when nothing usable exists; ``status`` is one of
-    ``fresh`` / ``stale`` / ``interpolated`` / ``unavailable``.
+    ``fresh`` / ``stale`` / ``interpolated`` / ``unknown_staleness`` /
+    ``unavailable``. ``unknown_staleness`` means the payload carried no
+    ``period``, so the weight is displayed but its age is undeterminable — it is
+    deliberately NOT collapsed into ``fresh``.
     """
     pay = payload if payload is not None else load_payload(path)
     out = {'dtitle_pp': None, 'dplayoffs_pp': None, 'p_win_week': None,
@@ -154,7 +162,17 @@ def win_value(period: int, payload: dict | None = None,
                      f'refresh.')
             out['note'] = (out['note'] + ' | ' + extra) if out['note'] else extra
     elif out['status'] != 'interpolated':
-        out['status'] = 'fresh'
+        # AUDIT T21 (2026-08-01): this used to say 'fresh'. A payload carrying no
+        # 'period' does not tell us the weight is CURRENT — it tells us we cannot
+        # date it at all, and reporting that with the same word as a
+        # generated-this-period weight is exactly the laundering this module's
+        # contract forbids. Keep the number (degrade, never refuse); label the
+        # ignorance.
+        out['status'] = 'unknown_staleness'
+        extra = ('season_sim payload carries no period — the weight\'s age could '
+                 'not be determined; it may be current or many periods old. '
+                 'Re-run /season-sim to get a datable weight.')
+        out['note'] = (out['note'] + ' | ' + extra) if out['note'] else extra
     return out
 
 
@@ -204,6 +222,8 @@ def banner(wv: dict) -> str:
     src = wv.get('source_period')
     bits = [f'winning period {src if not isinstance(src, list) else src} is worth '
             f'{wv["dtitle_pp"]:.2f}pp of title probability']
+    if wv.get('status') == 'unknown_staleness':
+        bits.append('weight age UNKNOWN (payload undated)')
     if wv.get('p_win_week') is not None:
         bits.append(f'sim P(win wk) {wv["p_win_week"]:.3f}')
     if wv.get('plus2_pp') is not None:
@@ -215,4 +235,4 @@ def banner(wv: dict) -> str:
 
 
 __all__ = ['SEASON_SIM_JSON', 'load_payload', 'win_value', 'equity',
-           'annotate', 'banner', 'STALE_PERIOD_WARN', 'STALE_PERIOD_HARD']
+           'annotate', 'banner', 'STALE_PERIOD_HARD']

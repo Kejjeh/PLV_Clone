@@ -280,7 +280,7 @@ def _fa_card_from_batch(j: dict, lens: dict | None) -> dict:
 def load_fa_cards_store() -> dict:
     """Full-fidelity FA card store: {name: result-dict} in the LIVE-card schema
     (triangulate_core.assemble_result), written by run_triangulate --cards-out
-    alongside the nightly batch (refresh step 4.72b). Hydrating from this store
+    alongside the nightly batch (refresh step 4.1b). Hydrating from this store
     makes FA cards identical to roster cards at ~zero cost — no per-FA engine
     re-run. Returns {} when absent (pre-store nights) so callers fall back to
     the flat batch card."""

@@ -70,6 +70,19 @@ SEASON_GAMES = 162
 # April-only substrate cutoff
 APRIL_SPLIT_MAX = 30
 
+
+def projection_year(rolling: pd.DataFrame) -> int:
+    """The season this run projects: the newest one present in the substrate.
+
+    Matches the idiom rh3 / rp3 / rprs2 already use. rh3_april is not in the
+    nightly chain (it is run by hand for the April-framing study), so a
+    hardcoded season here would not fail loudly on the calendar roll — it
+    would quietly select last season's frame. (An earlier revision of this
+    comment claimed the module is "out of framing past split_day 30"; the
+    guard is actually unreached in that regime — review 2026-08-01.)
+    """
+    return int(rolling['year'].max())
+
 SHRINK_SPEC_TO = {
     'k_pct_to':         ('pa_to',     60),
     'bb_pct_to':        ('pa_to',    120),
@@ -360,16 +373,19 @@ def main():
     for f, c in sorted(zip(RH3_APRIL_FEATS, coefs), key=lambda x: -abs(x[1]))[:14]:
         print(f'    {f:<26s} {c:+.4f}')
 
-    # 2026 projection — ONLY valid if latest split_day <= APRIL_SPLIT_MAX
-    df_26 = rolling[rolling['year'] == 2026].copy()
+    # projection year = latest season in the substrate (audit R2 idiom, applied
+    # here 2026-08-01/T43 — rh3/rp3/rprs2 were migrated earlier and this file
+    # was the holdout). ONLY valid if latest split_day <= APRIL_SPLIT_MAX.
+    proj_year = projection_year(rolling)
+    df_26 = rolling[rolling['year'] == proj_year].copy()
     if df_26.empty:
-        print('\nNo 2026 April-substrate data — skipping projection.')
+        print(f'\nNo {proj_year} April-substrate data — skipping projection.')
         latest_split = None
         valid = pd.DataFrame()
     else:
         latest_split = int(df_26['split_day'].max())
         if latest_split > APRIL_SPLIT_MAX:
-            print(f'\nLatest 2026 split_day={latest_split} > {APRIL_SPLIT_MAX}: '
+            print(f'\nLatest {proj_year} split_day={latest_split} > {APRIL_SPLIT_MAX}: '
                   'rh3_april is OUT OF FRAMING. Skipping projection.')
             valid = pd.DataFrame()
         else:
@@ -410,7 +426,12 @@ def main():
         ).round(2)
 
         # Names + position
-        names = multiyr[multiyr['year'] == 2026][['batter', 'player_name', 'team']] \
+        # rolling and multiyr are separate files; if multiyr lags a season the
+        # exact-year join would yield NaN names for every row, so fall back to
+        # multiyr's own newest season (audit 2026-08-01/T43).
+        name_year = proj_year if (multiyr['year'] == proj_year).any() \
+            else int(multiyr['year'].max())
+        names = multiyr[multiyr['year'] == name_year][['batter', 'player_name', 'team']] \
             .drop_duplicates('batter')
         valid = valid.drop_duplicates('batter').merge(names, on='batter', how='left')
         if MASTER_HITTER.exists():

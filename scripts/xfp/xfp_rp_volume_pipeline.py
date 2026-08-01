@@ -38,6 +38,43 @@ Gates (locked in the prereg BEFORE results):
 MARGINAL band [+0.01, +0.03): report exact numbers, do NOT wire the logger.
 
 Output: data/outputs/xfp_rp_volume_projections.csv
+
+AMENDMENT 2026-08-01 (audit T18/T41) — GATE RECOMPUTED, VERDICT UNCHANGED
+------------------------------------------------------------------------
+The LOO folds trained on the whole eligible frame minus the held year, not on
+TRAIN_YEARS minus the held year. For RP that leaked BOTH 2018 and the
+in-progress season into every fold — ~19% of the eligible frame — while the
+shipped final fit (and therefore the projections CSV) has always restricted to
+TRAIN_YEARS. So the gate scored a model this pipeline never ships, and the fold
+scores drifted nightly as the in-progress season accumulated rows, making the
+published numbers non-reproducible.
+
+Fixed in lib.volume_model.cross_year_eval; this file now delegates. Re-run on
+2026-08-01, train-years-only folds:
+
+    2019 +0.1493  2021 +0.1217  2022 +0.1090
+    2023 +0.1233  2024 +0.1398  2025 +0.1159
+    POOLED +0.1262 (was +0.1271)   n=40,289
+    Gate 1 PASS · Gate 2 6/6 PASS · Gate 3 PASS  ->  VERDICT: PASS
+
+The prereg (rp_volume_model_2026-07-10.md) published POOLED +0.1270; that
+number is NOT withdrawn, it is superseded by the recomputation above. No
+pre-registered verdict changed, and every gate keeps a wide margin over the
++0.03 bar. The hitter and SP companions were recomputed the same day:
+pooled +0.0747 (was +0.0746) and +0.1048 (was +0.1052 pre-fix — the implementer first wrote +0.1051 here; the reviewer reproduced +0.1052 and this line now records the OBSERVED value), both still PASS.
+
+Shipped outputs did NOT move, and this was measured rather than argued (the
+verdict string is return-only, the CSV write precedes it, and refresh_dashboards
+runs these as fail-soft subprocesses). Evidence, 2026-08-01, all runs redirected
+to a scratchpad path so data/outputs/ was never written:
+  * RP — the pre-change file (git HEAD) and the post-change file were each run
+    on the same substrate; both emitted sha256 d12d0079…46249 bytes, which is
+    also byte-identical to the nightly's shipped xfp_rp_volume_projections.csv.
+  * hitter / SP — the post-change rerun reproduced the nightly's shipped
+    xfp_volume_projections.csv (9fb10aae…, 54,259 B) and
+    xfp_sp_volume_projections.csv (1f8caa06…, 29,606 B) byte-for-byte; those
+    shipped files were produced by the PRE-change code, so that comparison is
+    itself the before/after.
 """
 from __future__ import annotations
 
@@ -49,7 +86,11 @@ import numpy as np
 import pandas as pd
 
 from lib.volume_model import make_pipe as _lib_make_pipe, \
-    cell_spearman as _lib_cell_spearman, wavg as _lib_wavg
+    cell_spearman as _lib_cell_spearman, wavg as _lib_wavg, \
+    attach_team_games as _lib_attach_team_games, \
+    cross_year_eval as _lib_cross_year_eval, \
+    tercile_calibration as _lib_tercile_calibration, \
+    check_gates as _lib_check_gates
 
 warnings.filterwarnings('ignore')
 
@@ -106,6 +147,21 @@ def build_schedule_and_relief_apps() -> tuple[pd.DataFrame, dict]:
       (build_rolling_relievers.relief_pitches_only): a pitcher-game is a
       relief appearance iff pitcher != first pitcher of his
       (game_pk, inning_topbot) half.
+
+    DELIBERATELY LEFT UNCACHED (audit 2026-08-01, T52 — deferred, not missed).
+    The hitter/SP builds route their equivalent scan through
+    lib.volume_model._cached_year_frame; this one re-reads all eight season
+    parquets every run. Measured on 2026-08-01 before deferring: the whole
+    function, including the drop_duplicates/groupby work, takes 1.50s (warm OS
+    page cache; the reads are column-projected over 7 of ~90 columns, so the
+    '~2.5 GB/night' framing in volume_model's docstring is file-size arithmetic,
+    not bytes touched). Against ~35s of RidgeCV in one gate pass that is not
+    worth a byte-identity campaign on a path that produces g_per_teamgame_to
+    and ros_g. The relief-apps half is also the risky half: it depends on frame
+    order being preserved to pick each half-inning's starter, and a parquet
+    round-trip through a new cache would have to preserve that exactly. If this
+    is ever revisited, cache the team_games half ONLY (a straight reuse of the
+    proven build_team_games cache) and re-prove the CSV byte-identical.
     """
     tg_frames = []
     relief_apps: dict[tuple[int, int], np.ndarray] = {}
@@ -145,35 +201,16 @@ def build_schedule_and_relief_apps() -> tuple[pd.DataFrame, dict]:
 
 
 def attach_team_games(rolling: pd.DataFrame, team_games: pd.DataFrame) -> pd.DataFrame:
-    """Attach team_games_to / team_games_remaining per row via the substrate's
-    own team_abbr column; league-mean fallback when the team is unmapped."""
-    out = rolling.rename(columns={'team_abbr': 'team'}).copy()
-    out['cutoff_date'] = pd.to_datetime(out['cutoff_date'])
+    """Attach team_games_to / team_games_remaining via the substrate's own
+    team_abbr column; league-mean fallback when the team is unmapped.
 
-    dates_by = {k: np.sort(g['game_date'].values)
-                for k, g in team_games.groupby(['year', 'team'])}
-    total_by = {k: len(v) for k, v in dates_by.items()}
-
-    to_arr = np.full(len(out), np.nan)
-    rem_arr = np.full(len(out), np.nan)
-    for (yr, team, cut), ix in out.groupby(['year', 'team', 'cutoff_date'],
-                                           dropna=False).groups.items():
-        key = (yr, team)
-        if key in dates_by:
-            n_to = int(np.searchsorted(dates_by[key], np.datetime64(cut), side='right'))
-            n_total = total_by[key]
-        else:
-            keys = [k for k in dates_by if k[0] == yr]
-            if not keys:
-                continue
-            n_to = int(np.mean([np.searchsorted(dates_by[k], np.datetime64(cut), side='right')
-                                for k in keys]))
-            n_total = int(np.mean([total_by[k] for k in keys]))
-        to_arr[out.index.get_indexer(ix)] = n_to
-        rem_arr[out.index.get_indexer(ix)] = n_total - n_to
-    out['team_games_to'] = to_arr
-    out['team_games_remaining'] = rem_arr
-    return out
+    Consolidated onto lib.volume_model 2026-08-01 (audit T41). The local fork
+    was byte-identical arithmetic MINUS the unmapped-team visibility guard the
+    hitter and SP builds have had since the 2026-07-19 hoist, so a desynced
+    team map degraded to the league mean in silence here alone. Emitted CSV
+    proved byte-identical before/after the consolidation.
+    """
+    return _lib_attach_team_games(rolling, team_games, team_col='team_abbr')
 
 
 def attach_forward_apps(rolling: pd.DataFrame, relief_apps: dict) -> pd.DataFrame:
@@ -289,72 +326,34 @@ def _wavg(cells: list[tuple[int, float]]) -> float:
 
 
 def cross_year_eval(df: pd.DataFrame):
-    """LOO over TRAIN_YEARS. Returns per-year dict + pooled dict + detail."""
-    df = eligible(df)
-    per_year = {}
-    all_cells_model, all_cells_naive = [], []
-    detail_frames = []
-    mae_m_num = mae_n_num = mae_den = 0.0
-    for held in TRAIN_YEARS:
-        train = df[df['year'] != held]
-        test = df[df['year'] == held].copy()
-        if len(train) < 100 or len(test) < 30:
-            continue
-        pipe = _make_pipe()
-        pipe.fit(train[RP_VOLUME_FEATS].values, train[TARGET].values)
-        test['pred'] = np.clip(pipe.predict(test[RP_VOLUME_FEATS].values), *PRED_CLIP)
-        cells_m = _cell_spearman(test, 'pred')
-        cells_n = _cell_spearman(test, 'g_per_teamgame_to')
-        sp_m, sp_n = _wavg(cells_m), _wavg(cells_n)
-        mae_m = float(np.mean(np.abs(test['pred'] - test[TARGET])))
-        mae_n = float(np.mean(np.abs(test['g_per_teamgame_to'] - test[TARGET])))
-        per_year[held] = {'spear_model': round(sp_m, 4), 'spear_naive': round(sp_n, 4),
-                          'delta': round(sp_m - sp_n, 4),
-                          'mae_model': round(mae_m, 4), 'mae_naive': round(mae_n, 4),
-                          'n': len(test)}
-        all_cells_model += cells_m
-        all_cells_naive += cells_n
-        mae_m_num += mae_m * len(test)
-        mae_n_num += mae_n * len(test)
-        mae_den += len(test)
-        detail_frames.append(test[['pitcher', 'year', 'split_day', 'pred',
-                                   'g_per_teamgame_to', TARGET]])
-    pooled = {
-        'spear_model': round(_wavg(all_cells_model), 4),
-        'spear_naive': round(_wavg(all_cells_naive), 4),
-        'delta': round(_wavg(all_cells_model) - _wavg(all_cells_naive), 4),
-        'mae_model': round(mae_m_num / mae_den, 4),
-        'mae_naive': round(mae_n_num / mae_den, 4),
-        'n': int(mae_den),
-    }
-    detail = pd.concat(detail_frames, ignore_index=True)
-    return per_year, pooled, detail
+    """LOO over TRAIN_YEARS. Returns per-year dict + pooled dict + detail.
+
+    Consolidated onto lib.volume_model 2026-08-01 (audit T41): the fork was
+    output-identical to the lib version on the real reliever frame. The
+    delegation also inherits the T18 train-year-isolation fix — the fork
+    trained each fold on the whole eligible frame minus the held year, which
+    for RP leaked BOTH 2018 and the in-progress season (~19% of rows) into
+    every fold of a gate whose shipped model never sees them.
+    """
+    return _lib_cross_year_eval(
+        df, feats=RP_VOLUME_FEATS, target=TARGET,
+        naive_col='g_per_teamgame_to', id_col='pitcher',
+        train_years=TRAIN_YEARS, pred_clip=PRED_CLIP,
+        eligible_fn=eligible, min_cell_n=MIN_CELL_N)
 
 
 def tercile_calibration(detail: pd.DataFrame) -> pd.DataFrame:
-    d = detail.copy()
-    d['tercile'] = pd.qcut(d['pred'], 3, labels=['low', 'mid', 'high'])
-    return (d.groupby('tercile')
-            .agg(n=('pred', 'size'),
-                 mean_pred=('pred', 'mean'),
-                 mean_actual=(TARGET, 'mean'),
-                 mean_naive=('g_per_teamgame_to', 'mean'))
-            .round(4))
+    return _lib_tercile_calibration(detail, TARGET, 'g_per_teamgame_to', decimals=4)
 
 
 # --------------------------------------------------------------------- gates
 def check_gates(per_year: dict, pooled: dict) -> tuple[str, list[str]]:
-    lines = []
-    g1 = pooled['delta'] >= GATE_POOLED_DSPEAR
-    lines.append(f"Gate 1 pooled ΔSpearman {pooled['delta']:+.4f} >= +{GATE_POOLED_DSPEAR}: "
-                 f"{'PASS' if g1 else 'FAIL'}")
-    pos_years = sum(1 for v in per_year.values() if v['delta'] > 0)
-    g2 = pos_years >= GATE_YEARS_POSITIVE
-    lines.append(f"Gate 2 per-year Δ>0 in {pos_years}/{len(per_year)} years "
-                 f"(need >= {GATE_YEARS_POSITIVE}): {'PASS' if g2 else 'FAIL'}")
-    g3 = all(per_year.get(y, {'delta': -1})['delta'] > 0 for y in HOLDOUT_YEARS)
-    lines.append(f"Gate 3 holdout {HOLDOUT_YEARS} both Δ>0: {'PASS' if g3 else 'FAIL'}")
-    if g1 and g2 and g3:
+    """Lib gate check, wrapped to keep the RP-only MARGINAL string band."""
+    ok, lines = _lib_check_gates(per_year, pooled,
+                                 pooled_gate=GATE_POOLED_DSPEAR,
+                                 years_positive=GATE_YEARS_POSITIVE,
+                                 holdout_years=HOLDOUT_YEARS)
+    if ok:
         return 'PASS', lines
     if MARGINAL_DSPEAR <= pooled['delta'] < GATE_POOLED_DSPEAR:
         return 'MARGINAL', lines

@@ -1720,8 +1720,9 @@ def render_trend_watch(my_lineup):
     """Physical getting-better/worse watch for rostered players (DISPLAY/CONTEXT
     only — never a projection input, CLAUDE.md #13). Hitters = 3-axis bat-tracking
     (bat speed + attack angle + fast-swing%); SP/RP = FB velo (induced bat speed
-    rejected for pitchers). Notable movers only (|z|>=1.0). Robust: returns '' on
-    any failure so it can never break the build. Engine + validation:
+    rejected for pitchers). Notable movers only (|z|>=1.0). Robust: any failure
+    renders a VISIBLE 'unavailable this build' notice (never a blank section, and
+    never a publish-gating error marker) so it can't break the build. Engine + validation:
     scripts/xfp/lib/trend_signal.py, early_season_bat_speed_2026-06-16.md."""
     try:
         from scripts.xfp.lib.trend_signal import (trend_line, hitter_trend_table,
@@ -1755,7 +1756,15 @@ def render_trend_watch(my_lineup):
         return '\n'.join(out)
     except Exception as e:
         _warn_except('trend_watch', e)
-        return ''
+        # Fail-soft but VISIBLE (audit T30, 2026-08-01). `return ''` deleted the
+        # section from the published page, and the publish-integrity guard in
+        # main() cannot regex a section that is not there — so a dead trend
+        # watch shipped with one stderr line as its only trace. The wording
+        # deliberately avoids that guard's '<h2>..</h2><p class="muted">error:'
+        # marker: this is a display/context lens (CLAUDE.md #13) and a
+        # bat-tracking hiccup must not gate the nightly Pages publish.
+        return ('<h2 id="trend">📈 Physical Trend Watch</h2>'
+                f'<p class="notes muted">unavailable this build — {h(str(e))}</p>')
 
 
 def render_power_rankings():
@@ -2670,9 +2679,13 @@ def render_closer_tracker():
         _warn_except('Closer Tracker leverage enrichment', e)
         traceback.print_exc()
         fallback = _render_closer_tracker_simple()
+        # Say DEGRADED, not just 'error' (audit T30): the table that ships here
+        # is a DIFFERENT table — no leverage_tier, no gmLI, no FIREMAN — and a
+        # reader who skims the note reads the simple table as the full tracker.
         return (fallback
-                + f'\n<p class="notes muted">leverage enrichment error: '
-                f'{h(str(e))}</p>')
+                + f'\n<p class="notes muted">⚠ DEGRADED — leverage enrichment '
+                f'unavailable, so this is the simple closer table WITHOUT '
+                f'leverage tiers / gmLI / FIREMAN: {h(str(e))}</p>')
 
 
 def render_snapshot_diff():

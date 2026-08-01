@@ -78,7 +78,13 @@ HISTORY_PARQUET = ROOT / 'data' / 'research' / 'dpwin_history.parquet'
 # Bumped whenever a change makes dpwin numerically incomparable to earlier rows.
 #   1 = first version (post hitter-variance fix, post location-scaling fix,
 #       post mlbam-keyed draws — i.e. everything from 2026-07-29 onward)
-ENGINE_VERSION = 1
+# 2 (2026-08-01): T23 corrected RP-candidate appearance modeling — n_rem_games
+# had been populated with `units`, forcing every RP add's appearance
+# probability to 1.0 — so every RP-add dpwin scored after the fix comes from a
+# different generative model than rows logged before it. This constant exists
+# precisely so those populations stay separable in the panel; mixing them
+# silently was the review round's one BLOCKING find.
+ENGINE_VERSION = 2
 
 # Idempotency key. start_date distinguishes two adds of the SAME pitcher on
 # different days (a two-start week is one candidate per start). add_key /
