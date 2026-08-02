@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "SP",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-02_shota_imanaga_SP_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "PURE_CONTROL",
+    "archetype_overall": 57,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 9.514353218090308,
+    "inputs_schema": 2,
+    "live_marginal": -239.13949621245115,
+    "model_rank": 57,
+    "override_tag": null,
+    "pl_rank": 46,
+    "proj_display": 11.814050378754882,
+    "proj_per": 11.814050378754882,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 684007,
+  "player_name": "Shota Imanaga",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-02",
+  "verdict_top": "MIXED"
+}

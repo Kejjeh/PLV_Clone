@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "SP",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-02_reid_detmers_SP_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 61,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 11.348513060446848,
+    "inputs_schema": 2,
+    "live_marginal": -239.809539264874,
+    "model_rank": 58,
+    "override_tag": null,
+    "pl_rank": 36,
+    "proj_display": 11.7470460735126,
+    "proj_per": 11.7470460735126,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 672282,
+  "player_name": "Reid Detmers",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-02",
+  "verdict_top": "MIXED"
+}

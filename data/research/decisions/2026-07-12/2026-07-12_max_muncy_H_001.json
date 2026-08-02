@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-12_max_muncy_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 60,
@@ -20,8 +24,19 @@
   "mlbam_id": 571970,
   "player_name": "Max Muncy",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-02",
+  "settlement": {
+    "actual_fp_per_unit": 0.49056603773584906,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 53,
+    "proj_per": 0.558218699941064,
+    "proj_units_note": "native",
+    "residual": -0.06765266220521493,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-12",
   "verdict_top": "MIXED"
 }

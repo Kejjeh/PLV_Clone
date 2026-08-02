@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 0.5,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-12_wyatt_langford_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AVERAGE_HITTER",
     "archetype_overall": 54,
@@ -20,8 +24,19 @@
   "mlbam_id": 694671,
   "player_name": "Wyatt Langford",
   "reason_tag": "process_red_flag",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-02",
+  "settlement": {
+    "actual_fp_per_unit": 0.4782608695652174,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 69,
+    "proj_per": 0.5761559676923345,
+    "proj_units_note": "native",
+    "residual": -0.09789509812711705,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-12",
   "verdict_top": "CAUTION"
 }

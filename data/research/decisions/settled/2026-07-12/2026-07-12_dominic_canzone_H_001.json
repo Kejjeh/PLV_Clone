@@ -1,0 +1,42 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-07-12_dominic_canzone_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "CONTACT_POWER",
+    "archetype_overall": 67,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 1.9586794775755694,
+    "inputs_schema": 2,
+    "live_marginal": -29.400000000000006,
+    "model_rank": 118,
+    "override_tag": null,
+    "pl_rank": 124,
+    "proj_display": 1.85,
+    "proj_per": 0.5275925130100206,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 686527,
+  "player_name": "Dominic Canzone",
+  "reason_tag": "no_convergence",
+  "record_schema": 2,
+  "settled_at": "2026-08-02",
+  "settlement": {
+    "actual_fp_per_unit": 0.6065573770491803,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 61,
+    "proj_per": 0.5275925130100206,
+    "proj_units_note": "native",
+    "residual": 0.0789648640391597,
+    "threshold": 0.02,
+    "window_days": 21
+  },
+  "snapshot_date": "2026-07-12",
+  "verdict_top": "MIXED"
+}

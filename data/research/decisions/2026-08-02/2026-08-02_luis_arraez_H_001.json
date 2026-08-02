@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 0.75,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-02_luis_arraez_H_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "AGGRESSIVE_SLAP",
+    "archetype_overall": 58,
+    "archetype_traj": "STABLE",
+    "blended_xfp": 2.2568482359902244,
+    "inputs_schema": 2,
+    "live_marginal": 20.199999999999996,
+    "model_rank": 17,
+    "override_tag": null,
+    "pl_rank": 73,
+    "proj_display": 2.33,
+    "proj_per": 0.6645120662248676,
+    "proj_units": "fp_per_pa",
+    "replacement_delta": null
+  },
+  "mlbam_id": 650333,
+  "player_name": "Luis Arraez",
+  "reason_tag": "model_anchored",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-02",
+  "verdict_top": "BUY"
+}

@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.3906,
+  "base_pwin": 0.36045,
   "regime": "TRAILING",
   "period": 17,
-  "sims": 10000,
+  "sims": 20000,
   "seed": 7,
-  "cap_remaining": 7,
+  "cap_remaining": 4,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.15299999999999997,
-  "plan_pwin_final": 0.5436,
+  "plan_total_dpwin": 0.09179999999999999,
+  "plan_pwin_final": 0.45225,
   "plan": [
-    {
-      "add": "Joc Pederson",
-      "add_bucket": "H",
-      "drop": "Reid Detmers",
-      "drop_bucket": "SP",
-      "dpwin": 0.08450000000000002,
-      "mc_se": 0.004994,
-      "pwin_after": 0.4751,
-      "dpwin_from_base": 0.0845,
-      "dtitle_equity_pp": 0.0634
-    },
     {
       "add": "Luke Weaver",
       "add_bucket": "RP",
-      "drop": "Logan Henderson",
+      "drop": "Hunter Greene",
       "drop_bucket": "SP",
-      "dpwin": 0.06849999999999995,
-      "mc_se": 0.004981,
-      "pwin_after": 0.5436,
-      "dpwin_from_base": 0.153,
-      "dtitle_equity_pp": 0.0514
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481,
+      "pwin_after": 0.4128,
+      "dpwin_from_base": 0.05235,
+      "dtitle_equity_pp": 0.0393
+    },
+    {
+      "add": "Jeff Hoffman",
+      "add_bucket": "RP",
+      "drop": "Reid Detmers",
+      "drop_bucket": "SP",
+      "dpwin": 0.039449999999999985,
+      "mc_se": 0.003519,
+      "pwin_after": 0.45225,
+      "dpwin_from_base": 0.0918,
+      "dtitle_equity_pp": 0.0296
     }
   ],
   "title_equity": {
@@ -43,124 +43,124 @@
   },
   "top_single_moves": [
     {
-      "add": "Ryan Jeffers",
-      "drop": "Reid Detmers",
-      "dpwin": 0.08839999999999998,
-      "mc_se": 0.004996
-    },
-    {
-      "add": "Ryan Jeffers",
-      "drop": "Logan Henderson",
-      "dpwin": 0.08839999999999998,
-      "mc_se": 0.004996
-    },
-    {
-      "add": "Joc Pederson",
-      "drop": "Reid Detmers",
-      "dpwin": 0.08450000000000002,
-      "mc_se": 0.004994
-    },
-    {
-      "add": "Joc Pederson",
-      "drop": "Logan Henderson",
-      "dpwin": 0.08450000000000002,
-      "mc_se": 0.004994
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Reid Detmers",
-      "dpwin": 0.0721,
-      "mc_se": 0.004986
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Logan Henderson",
-      "dpwin": 0.0721,
-      "mc_se": 0.004986
+      "add": "Luke Weaver",
+      "drop": "Hunter Greene",
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481
     },
     {
       "add": "Luke Weaver",
       "drop": "Reid Detmers",
-      "dpwin": 0.06979999999999997,
-      "mc_se": 0.004984
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481
+    },
+    {
+      "add": "Luke Weaver",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481
+    },
+    {
+      "add": "Luke Weaver",
+      "drop": "Eury Perez",
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481
     },
     {
       "add": "Luke Weaver",
       "drop": "Logan Henderson",
-      "dpwin": 0.06979999999999997,
-      "mc_se": 0.004984
+      "dpwin": 0.05235000000000001,
+      "mc_se": 0.003481
     },
     {
-      "add": "Griffin Conine",
+      "add": "Jeff Hoffman",
+      "drop": "Hunter Greene",
+      "dpwin": 0.03985,
+      "mc_se": 0.003465
+    },
+    {
+      "add": "Jeff Hoffman",
       "drop": "Reid Detmers",
-      "dpwin": 0.06969999999999998,
-      "mc_se": 0.004984
+      "dpwin": 0.03985,
+      "mc_se": 0.003465
     },
     {
-      "add": "Griffin Conine",
+      "add": "Jeff Hoffman",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.03985,
+      "mc_se": 0.003465
+    },
+    {
+      "add": "Jeff Hoffman",
+      "drop": "Eury Perez",
+      "dpwin": 0.03985,
+      "mc_se": 0.003465
+    },
+    {
+      "add": "Jeff Hoffman",
       "drop": "Logan Henderson",
-      "dpwin": 0.06969999999999998,
-      "mc_se": 0.004984
+      "dpwin": 0.03985,
+      "mc_se": 0.003465
     },
     {
-      "add": "Tyler Tolbert",
+      "add": "Kenley Jansen",
+      "drop": "Hunter Greene",
+      "dpwin": 0.03855000000000003,
+      "mc_se": 0.003463
+    },
+    {
+      "add": "Kenley Jansen",
       "drop": "Reid Detmers",
-      "dpwin": 0.066,
-      "mc_se": 0.004981
+      "dpwin": 0.03855000000000003,
+      "mc_se": 0.003463
     },
     {
-      "add": "Tyler Tolbert",
+      "add": "Kenley Jansen",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.03855000000000003,
+      "mc_se": 0.003463
+    },
+    {
+      "add": "Kenley Jansen",
+      "drop": "Eury Perez",
+      "dpwin": 0.03855000000000003,
+      "mc_se": 0.003463
+    },
+    {
+      "add": "Kenley Jansen",
       "drop": "Logan Henderson",
-      "dpwin": 0.066,
-      "mc_se": 0.004981
-    },
-    {
-      "add": "Isaac Collins",
-      "drop": "Reid Detmers",
-      "dpwin": 0.06369999999999998,
-      "mc_se": 0.004979
-    },
-    {
-      "add": "Isaac Collins",
-      "drop": "Logan Henderson",
-      "dpwin": 0.06369999999999998,
-      "mc_se": 0.004979
-    },
-    {
-      "add": "Trent Grisham",
-      "drop": "Reid Detmers",
-      "dpwin": 0.059699999999999975,
-      "mc_se": 0.004975
+      "dpwin": 0.03855000000000003,
+      "mc_se": 0.003463
     }
   ],
   "pair_check": {
-    "n_combos": 17,
+    "n_combos": 45,
     "adopted": false,
     "best": {
       "moves": [
         {
-          "add": "Ryan Jeffers",
-          "add_bucket": "H",
-          "drop": "Reid Detmers",
-          "drop_bucket": "SP",
-          "dpwin_solo": 0.08839999999999998,
-          "mc_se": 0.004996
-        },
-        {
           "add": "Luke Weaver",
           "add_bucket": "RP",
-          "drop": "Logan Henderson",
+          "drop": "Hunter Greene",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.06979999999999997,
-          "mc_se": 0.004984
+          "dpwin_solo": 0.05235000000000001,
+          "mc_se": 0.003481
+        },
+        {
+          "add": "Jeff Hoffman",
+          "add_bucket": "RP",
+          "drop": "Reid Detmers",
+          "drop_bucket": "SP",
+          "dpwin_solo": 0.03985,
+          "mc_se": 0.003465
         }
       ],
-      "dpwin": 0.1564,
-      "pwin": 0.547,
-      "mc_se": 0.004978,
-      "sum_solo": 0.15819999999999995,
-      "interaction": -0.0017999999999999405
+      "dpwin": 0.0918,
+      "pwin": 0.45225,
+      "mc_se": 0.003519,
+      "sum_solo": 0.0922,
+      "interaction": -0.0003999999999999976
     }
   },
-  "dpwin_run_id": "2026-07-30T104222_7"
+  "dpwin_run_id": "2026-08-01T200714_7"
 }

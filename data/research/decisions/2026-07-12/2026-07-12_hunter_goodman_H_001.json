@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-12_hunter_goodman_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 57,
@@ -20,8 +24,19 @@
   "mlbam_id": 696100,
   "player_name": "Hunter Goodman",
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-02",
+  "settlement": {
+    "actual_fp_per_unit": 0.6851851851851852,
+    "classification": "BUY_HIT",
+    "event_unit": "PA",
+    "n_events": 54,
+    "proj_per": 0.582235042086886,
+    "proj_units_note": "native",
+    "residual": 0.1029501430982992,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-12",
   "verdict_top": "BUY"
 }

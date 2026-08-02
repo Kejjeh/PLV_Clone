@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "SP",
+  "confidence": 0.75,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-02_griffin_jax_SP_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "PURE_STUFF",
+    "archetype_overall": 57,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 11.18439968764039,
+    "inputs_schema": 2,
+    "live_marginal": -193.1162015440433,
+    "model_rank": 87,
+    "override_tag": null,
+    "pl_rank": 28,
+    "proj_display": 10.944253230397113,
+    "proj_per": 10.944253230397113,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 643377,
+  "player_name": "Griffin Jax",
+  "reason_tag": "archetype_breakout",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-02",
+  "verdict_top": "BUY"
+}
