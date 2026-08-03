@@ -1,8 +1,8 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-08-02  
+**Generated:** 2026-08-03  
 **Source:** `data/outputs/predictions_history.csv`  
-**Backfilled rows:** 462  
+**Backfilled rows:** 476  
 **Minimum N per bucket to trust:** 5
 
 ## 1. Periods covered
@@ -24,7 +24,7 @@
 | 14 | 37 | 563.1 | 429.5 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 15 | 53 | 562.5 | 443.9 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 16 | 21 | 790.5 | 712.3 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
-| 17 | 13 | 349.7 | 680.9 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
+| 17 | 27 | 349.7 | 680.9 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 18 | 7 | 540.4 | 408.2 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 19 | 7 | 553.3 | 540.0 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
 | 20 | 7 | 418.0 | 518.0 | backfill_2024_bayes_shrink, backfill_2025_bayes_shrink |
@@ -37,10 +37,10 @@ Error = projected − actual. Bias > 0 means model over-projects.
 
 | Model | n | my MAE | my RMSE | my bias | opp MAE | opp RMSE | opp bias |
 |---|---|---|---|---|---|---|---|
-| `MA_v1` | 148 | 69.5 | 102.6 | +34.5 | 64.4 | 95.0 | +21.8 |
+| `MA_v1` | 155 | 62.4 | 86.0 | +29.1 | 58.8 | 81.0 | +18.0 |
 | `backfill_2024_bayes_shrink` | 84 | 74.4 | 133.3 | -43.5 | 72.4 | 135.2 | -53.2 |
 | `backfill_2025_bayes_shrink` | 57 | 70.9 | 104.2 | -30.9 | 74.0 | 104.2 | -45.2 |
-| `baseline` | 148 | 57.3 | 92.8 | +10.6 | 58.5 | 90.7 | -4.9 |
+| `baseline` | 155 | 49.7 | 78.4 | +5.2 | 52.1 | 78.5 | -8.4 |
 | `baseline_pre_versioning` | 25 | 37.1 | 44.3 | -33.0 | 39.2 | 44.6 | +12.4 |
 
 ## 3. Error metrics — latest snapshot per (period, model)
@@ -99,10 +99,10 @@ This is the "what the dashboard showed at end of week" view.
 | 16 | `backfill_2024_bayes_shrink` | 332.0 | 426.7 | -94.7 | 318.8 | 484.2 | -165.4 |
 | 16 | `backfill_2025_bayes_shrink` | 511.9 | 950.3 | -438.4 | 529.6 | 666.4 | -136.8 |
 | 16 | `baseline` | 399.7 | 362.3 | +37.4 | 234.1 | 246.7 | -12.6 |
-| 17 | `MA_v1` | 382.6 | 81.1 | +301.5 | 384.3 | 68.5 | +315.8 |
+| 17 | `MA_v1` | 340.8 | 319.4 | +21.4 | 345.0 | 314.0 | +31.0 |
 | 17 | `backfill_2024_bayes_shrink` | 363.5 | 403.0 | -39.5 | 328.9 | 315.0 | +13.9 |
 | 17 | `backfill_2025_bayes_shrink` | 494.2 | 402.5 | +91.7 | 539.6 | 564.0 | -24.4 |
-| 17 | `baseline` | 333.2 | 81.1 | +252.1 | 344.9 | 68.5 | +276.4 |
+| 17 | `baseline` | 334.5 | 319.4 | +15.1 | 336.4 | 314.0 | +22.4 |
 | 18 | `backfill_2024_bayes_shrink` | 365.7 | 245.6 | +120.1 | 326.2 | 262.6 | +63.6 |
 | 18 | `backfill_2025_bayes_shrink` | 489.5 | 370.9 | +118.6 | 474.4 | 384.8 | +89.6 |
 | 19 | `backfill_2024_bayes_shrink` | 360.2 | 386.5 | -26.3 | 323.0 | 303.8 | +19.2 |
@@ -116,14 +116,14 @@ This is the "what the dashboard showed at end of week" view.
 
 Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈ actual win rate. Buckets with N < 5 are flagged INSUFFICIENT.
 
-### `MA_v1` (n=148)
+### `MA_v1` (n=155)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 72 | 0.065 | 0.000 | 0.065 | OK |
-| 0.25-0.50 | 29 | 0.336 | 0.138 | 0.198 | OK |
-| 0.50-0.75 | 19 | 0.599 | 0.368 | 0.230 | OK |
-| 0.75-1.00 | 28 | 0.888 | 0.929 | 0.040 | OK |
+| 0.00-0.25 | 75 | 0.070 | 0.040 | 0.030 | OK |
+| 0.25-0.50 | 32 | 0.342 | 0.219 | 0.124 | OK |
+| 0.50-0.75 | 20 | 0.597 | 0.400 | 0.197 | OK |
+| 0.75-1.00 | 28 | 0.888 | 1.000 | 0.112 | OK |
 
 ### `backfill_2024_bayes_shrink` (n=84)
 
@@ -143,14 +143,14 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 | 0.50-0.75 | 26 | 0.589 | 0.500 | 0.089 | OK |
 | 0.75-1.00 | 2 | 0.760 | 1.000 | 0.240 | INSUFFICIENT |
 
-### `baseline` (n=148)
+### `baseline` (n=155)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
-| 0.00-0.25 | 73 | 0.080 | 0.000 | 0.080 | OK |
-| 0.25-0.50 | 25 | 0.361 | 0.040 | 0.321 | OK |
-| 0.50-0.75 | 25 | 0.617 | 0.480 | 0.137 | OK |
-| 0.75-1.00 | 25 | 0.878 | 0.960 | 0.082 | OK |
+| 0.00-0.25 | 76 | 0.084 | 0.039 | 0.045 | OK |
+| 0.25-0.50 | 28 | 0.364 | 0.143 | 0.222 | OK |
+| 0.50-0.75 | 26 | 0.614 | 0.538 | 0.075 | OK |
+| 0.75-1.00 | 25 | 0.878 | 1.000 | 0.122 | OK |
 
 ### `baseline_pre_versioning` (n=25)
 

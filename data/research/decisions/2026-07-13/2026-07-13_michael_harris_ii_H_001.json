@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-13_michael_harris_ii_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AGGRESSIVE_STAR",
     "archetype_overall": 63,
@@ -20,8 +24,19 @@
   "mlbam_id": 671739,
   "player_name": "Michael Harris II",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-03",
+  "settlement": {
+    "actual_fp_per_unit": 0.5616438356164384,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.6214435558526328,
+    "proj_units_note": "native",
+    "residual": -0.0597997202361944,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-13",
   "verdict_top": "MIXED"
 }

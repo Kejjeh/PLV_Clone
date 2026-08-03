@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-08-02",
-  "n_backfilled_rows": 462,
+  "generated_at": "2026-08-03",
+  "n_backfilled_rows": 476,
   "periods_covered": [
     2,
     3,
@@ -30,16 +30,16 @@
     "MA_v1": {
       "error_metrics": {
         "my": {
-          "n": 148,
-          "mae": 69.47283783783783,
-          "rmse": 102.64866705734005,
-          "bias": 34.5189189189189
+          "n": 155,
+          "mae": 62.44496774193547,
+          "rmse": 85.98089471579736,
+          "bias": 29.06961290322579
         },
         "opp": {
-          "n": 148,
-          "mae": 64.44189189189187,
-          "rmse": 94.97338935267676,
-          "bias": 21.772837837837837
+          "n": 155,
+          "mae": 58.78051612903224,
+          "rmse": 80.95087517110449,
+          "bias": 18.038451612903227
         }
       },
       "win_prob_calibration": [
@@ -47,30 +47,30 @@
           "bucket": "0.00-0.25",
           "lo": 0.0,
           "hi": 0.25,
-          "n": 72,
-          "mean_predicted": 0.064675,
-          "actual_win_rate": 0.0,
-          "abs_gap": 0.064675,
+          "n": 75,
+          "mean_predicted": 0.07044533333333333,
+          "actual_win_rate": 0.04,
+          "abs_gap": 0.03044533333333333,
           "sufficient": true
         },
         {
           "bucket": "0.25-0.50",
           "lo": 0.25,
           "hi": 0.5,
-          "n": 29,
-          "mean_predicted": 0.3356413793103449,
-          "actual_win_rate": 0.13793103448275862,
-          "abs_gap": 0.19771034482758626,
+          "n": 32,
+          "mean_predicted": 0.34248124999999996,
+          "actual_win_rate": 0.21875,
+          "abs_gap": 0.12373124999999996,
           "sufficient": true
         },
         {
           "bucket": "0.50-0.75",
           "lo": 0.5,
           "hi": 0.75,
-          "n": 19,
-          "mean_predicted": 0.5987999999999999,
-          "actual_win_rate": 0.3684210526315789,
-          "abs_gap": 0.23037894736842096,
+          "n": 20,
+          "mean_predicted": 0.5973999999999999,
+          "actual_win_rate": 0.4,
+          "abs_gap": 0.1973999999999999,
           "sufficient": true
         },
         {
@@ -79,8 +79,8 @@
           "hi": 1.0,
           "n": 28,
           "mean_predicted": 0.8884107142857143,
-          "actual_win_rate": 0.9285714285714286,
-          "abs_gap": 0.04016071428571433,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.11158928571428572,
           "sufficient": true
         }
       ]
@@ -204,16 +204,16 @@
     "baseline": {
       "error_metrics": {
         "my": {
-          "n": 148,
-          "mae": 57.28283783783783,
-          "rmse": 92.78881741803718,
-          "bias": 10.613513513513492
+          "n": 155,
+          "mae": 49.73199999999999,
+          "rmse": 78.35569343004518,
+          "bias": 5.170322580645145
         },
         "opp": {
-          "n": 148,
-          "mae": 58.45885135135135,
-          "rmse": 90.70511409119828,
-          "bias": -4.931689189189188
+          "n": 155,
+          "mae": 52.115806451612904,
+          "rmse": 78.46196037859117,
+          "bias": -8.411935483870968
         }
       },
       "win_prob_calibration": [
@@ -221,30 +221,30 @@
           "bucket": "0.00-0.25",
           "lo": 0.0,
           "hi": 0.25,
-          "n": 73,
-          "mean_predicted": 0.08038493150684932,
-          "actual_win_rate": 0.0,
-          "abs_gap": 0.08038493150684932,
+          "n": 76,
+          "mean_predicted": 0.08416184210526316,
+          "actual_win_rate": 0.039473684210526314,
+          "abs_gap": 0.044688157894736846,
           "sufficient": true
         },
         {
           "bucket": "0.25-0.50",
           "lo": 0.25,
           "hi": 0.5,
-          "n": 25,
-          "mean_predicted": 0.360668,
-          "actual_win_rate": 0.04,
-          "abs_gap": 0.320668,
+          "n": 28,
+          "mean_predicted": 0.3643821428571429,
+          "actual_win_rate": 0.14285714285714285,
+          "abs_gap": 0.22152500000000003,
           "sufficient": true
         },
         {
           "bucket": "0.50-0.75",
           "lo": 0.5,
           "hi": 0.75,
-          "n": 25,
-          "mean_predicted": 0.6174599999999999,
-          "actual_win_rate": 0.48,
-          "abs_gap": 0.13745999999999992,
+          "n": 26,
+          "mean_predicted": 0.6135346153846153,
+          "actual_win_rate": 0.5384615384615384,
+          "abs_gap": 0.07507307692307685,
           "sufficient": true
         },
         {
@@ -253,8 +253,8 @@
           "hi": 1.0,
           "n": 25,
           "mean_predicted": 0.877756,
-          "actual_win_rate": 0.96,
-          "abs_gap": 0.08224399999999998,
+          "actual_win_rate": 1.0,
+          "abs_gap": 0.12224400000000002,
           "sufficient": true
         }
       ]

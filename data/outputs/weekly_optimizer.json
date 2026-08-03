@@ -1,136 +1,136 @@
 {
-  "base_pwin": 0.36045,
-  "regime": "TRAILING",
-  "period": 17,
+  "base_pwin": 0.79725,
+  "regime": "LEADING",
+  "period": 18,
   "sims": 20000,
   "seed": 7,
-  "cap_remaining": 4,
+  "cap_remaining": 10,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.09179999999999999,
-  "plan_pwin_final": 0.45225,
+  "plan_total_dpwin": 0.08760000000000001,
+  "plan_pwin_final": 0.88485,
   "plan": [
     {
-      "add": "Luke Weaver",
-      "add_bucket": "RP",
-      "drop": "Hunter Greene",
+      "add": "Spencer Horwitz",
+      "add_bucket": "H",
+      "drop": "Drew Rasmussen",
       "drop_bucket": "SP",
-      "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481,
-      "pwin_after": 0.4128,
-      "dpwin_from_base": 0.05235,
-      "dtitle_equity_pp": 0.0393
+      "dpwin": 0.06440000000000001,
+      "mc_se": 0.002441,
+      "pwin_after": 0.86165,
+      "dpwin_from_base": 0.0644,
+      "dtitle_equity_pp": 0.1153
     },
     {
-      "add": "Jeff Hoffman",
-      "add_bucket": "RP",
-      "drop": "Reid Detmers",
+      "add": "Alec Bohm",
+      "add_bucket": "H",
+      "drop": "Griffin Jax",
       "drop_bucket": "SP",
-      "dpwin": 0.039449999999999985,
-      "mc_se": 0.003519,
-      "pwin_after": 0.45225,
-      "dpwin_from_base": 0.0918,
-      "dtitle_equity_pp": 0.0296
+      "dpwin": 0.0232,
+      "mc_se": 0.002257,
+      "pwin_after": 0.88485,
+      "dpwin_from_base": 0.0876,
+      "dtitle_equity_pp": 0.0415
     }
   ],
   "title_equity": {
-    "dtitle_pp": 0.75,
-    "status": "fresh",
-    "source_period": 17,
+    "dtitle_pp": 1.79,
+    "status": "stale",
+    "source_period": 18,
     "payload_period": 17,
-    "periods_stale": 0,
-    "note": "",
+    "periods_stale": 1,
+    "note": "season_sim.json was generated at period 17, now period 18 (1 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
     "plus2_pp": 0.68
   },
   "top_single_moves": [
     {
-      "add": "Luke Weaver",
-      "drop": "Hunter Greene",
-      "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481
+      "add": "Spencer Horwitz",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.06440000000000001,
+      "mc_se": 0.002441
+    },
+    {
+      "add": "Bryson Stott",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.05909999999999993,
+      "mc_se": 0.00248
     },
     {
       "add": "Luke Weaver",
-      "drop": "Reid Detmers",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.05779999999999996,
+      "mc_se": 0.002489
+    },
+    {
+      "add": "Alec Bohm",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.05764999999999998,
+      "mc_se": 0.00249
+    },
+    {
+      "add": "Yainer Diaz",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.054200000000000026,
+      "mc_se": 0.002515
+    },
+    {
+      "add": "Tyler Tolbert",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.05384999999999995,
+      "mc_se": 0.002517
+    },
+    {
+      "add": "Jeff Hoffman",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.05279999999999996,
+      "mc_se": 0.002525
+    },
+    {
+      "add": "Tyrone Taylor",
+      "drop": "Drew Rasmussen",
       "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481
+      "mc_se": 0.002528
     },
     {
-      "add": "Luke Weaver",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481
-    },
-    {
-      "add": "Luke Weaver",
-      "drop": "Eury Perez",
-      "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481
-    },
-    {
-      "add": "Luke Weaver",
-      "drop": "Logan Henderson",
-      "dpwin": 0.05235000000000001,
-      "mc_se": 0.003481
-    },
-    {
-      "add": "Jeff Hoffman",
-      "drop": "Hunter Greene",
-      "dpwin": 0.03985,
-      "mc_se": 0.003465
-    },
-    {
-      "add": "Jeff Hoffman",
-      "drop": "Reid Detmers",
-      "dpwin": 0.03985,
-      "mc_se": 0.003465
-    },
-    {
-      "add": "Jeff Hoffman",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.03985,
-      "mc_se": 0.003465
-    },
-    {
-      "add": "Jeff Hoffman",
-      "drop": "Eury Perez",
-      "dpwin": 0.03985,
-      "mc_se": 0.003465
-    },
-    {
-      "add": "Jeff Hoffman",
-      "drop": "Logan Henderson",
-      "dpwin": 0.03985,
-      "mc_se": 0.003465
+      "add": "Isaac Collins",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.049449999999999994,
+      "mc_se": 0.002548
     },
     {
       "add": "Kenley Jansen",
-      "drop": "Hunter Greene",
-      "dpwin": 0.03855000000000003,
-      "mc_se": 0.003463
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.04905000000000004,
+      "mc_se": 0.00255
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Reid Detmers",
-      "dpwin": 0.03855000000000003,
-      "mc_se": 0.003463
+      "add": "Adrian Morejon",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.04744999999999999,
+      "mc_se": 0.002561
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.03855000000000003,
-      "mc_se": 0.003463
+      "add": "James McCann",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.045499999999999985,
+      "mc_se": 0.002574
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Eury Perez",
-      "dpwin": 0.03855000000000003,
-      "mc_se": 0.003463
+      "add": "Brandyn Garcia",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.042749999999999955,
+      "mc_se": 0.002592
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Logan Henderson",
-      "dpwin": 0.03855000000000003,
-      "mc_se": 0.003463
+      "add": "Michael Massey",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.04149999999999998,
+      "mc_se": 0.0026
+    },
+    {
+      "add": "Bryan Abreu",
+      "drop": "Drew Rasmussen",
+      "dpwin": 0.04005000000000003,
+      "mc_se": 0.00261
     }
   ],
   "pair_check": {
@@ -139,28 +139,28 @@
     "best": {
       "moves": [
         {
-          "add": "Luke Weaver",
-          "add_bucket": "RP",
-          "drop": "Hunter Greene",
+          "add": "Spencer Horwitz",
+          "add_bucket": "H",
+          "drop": "Drew Rasmussen",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.05235000000000001,
-          "mc_se": 0.003481
+          "dpwin_solo": 0.06440000000000001,
+          "mc_se": 0.002441
         },
         {
-          "add": "Jeff Hoffman",
+          "add": "Luke Weaver",
           "add_bucket": "RP",
-          "drop": "Reid Detmers",
+          "drop": "Griffin Jax",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.03985,
-          "mc_se": 0.003465
+          "dpwin_solo": 0.025249999999999995,
+          "mc_se": 0.002702
         }
       ],
-      "dpwin": 0.0918,
-      "pwin": 0.45225,
-      "mc_se": 0.003519,
-      "sum_solo": 0.0922,
-      "interaction": -0.0003999999999999976
+      "dpwin": 0.08765,
+      "pwin": 0.8849,
+      "mc_se": 0.002257,
+      "sum_solo": 0.08965000000000001,
+      "interaction": -0.0020000000000000018
     }
   },
-  "dpwin_run_id": "2026-08-01T200714_7"
+  "dpwin_run_id": "2026-08-03T071820_7"
 }
