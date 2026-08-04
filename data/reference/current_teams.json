@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-03",
+ "as_of": "2026-08-04",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -505,12 +505,6 @@
    "abbr": "PIT",
    "name": "Rafael Flores Jr.",
    "pos": "C"
-  },
-  "676760": {
-   "team": "Pittsburgh Pirates",
-   "abbr": "PIT",
-   "name": "Ron Marinaccio",
-   "pos": "P"
   },
   "656811": {
    "team": "Pittsburgh Pirates",
@@ -1615,12 +1609,6 @@
    "abbr": "TB",
    "name": "Chandler Simpson",
    "pos": "LF"
-  },
-  "686678": {
-   "team": "Tampa Bay Rays",
-   "abbr": "TB",
-   "name": "Chase Solesky",
-   "pos": "P"
   },
   "688297": {
    "team": "Tampa Bay Rays",
@@ -3104,12 +3092,6 @@
    "name": "Joey Wentz",
    "pos": "P"
   },
-  "622761": {
-   "team": "Atlanta Braves",
-   "abbr": "ATL",
-   "name": "Jorge Mateo",
-   "pos": "SS"
-  },
   "657041": {
    "team": "Atlanta Braves",
    "abbr": "ATL",
@@ -3614,6 +3596,12 @@
    "name": "Heriberto Hernández",
    "pos": "LF"
   },
+  "667652": {
+   "team": "Miami Marlins",
+   "abbr": "MIA",
+   "name": "Jack Ralston",
+   "pos": "P"
+  },
   "805300": {
    "team": "Miami Marlins",
    "abbr": "MIA",
@@ -3943,6 +3931,12 @@
    "abbr": "NYY",
    "name": "Max Fried",
    "pos": "P"
+  },
+  "680474": {
+   "team": "New York Yankees",
+   "abbr": "NYY",
+   "name": "Max Schuemann",
+   "pos": "LF"
   },
   "665828": {
    "team": "New York Yankees",
@@ -4405,6 +4399,12 @@
    "abbr": "LAA",
    "name": "Mitch Farris",
    "pos": "P"
+  },
+  "694208": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Moisés Ballesteros",
+   "pos": "C"
   },
   "805373": {
    "team": "Los Angeles Angels",
@@ -6985,12 +6985,6 @@
    "abbr": "KC",
    "name": "Alex Lange",
    "pos": "P"
-  },
-  "623205": {
-   "team": "Kansas City Royals",
-   "abbr": "KC",
-   "name": "Andrew Velazquez",
-   "pos": "SS"
   },
   "694360": {
    "team": "Kansas City Royals",

@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-14_michael_harris_ii_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "CONTACT_HACKER",
     "archetype_overall": 62,
@@ -20,8 +24,19 @@
   "mlbam_id": 671739,
   "player_name": "Michael Harris II",
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-04",
+  "settlement": {
+    "actual_fp_per_unit": 0.5616438356164384,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.6199181337294798,
+    "proj_units_note": "native",
+    "residual": -0.05827429811304141,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-14",
   "verdict_top": "MIXED"
 }

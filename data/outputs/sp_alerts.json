@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-03",
+  "generated": "2026-08-04",
   "upgrade_floor_fpp": -0.0744,
-  "hit_upgrade_floor_xwoba": 0.324,
+  "hit_upgrade_floor_xwoba": 0.323,
   "alert_count": 6,
   "hitter_alert_count": 0,
   "alerts": [
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 28.0,
       "xwoba_con": 0.349,
-      "rp3_rank": 82
+      "rp3_rank": 83
     },
     {
       "name": "Christian Scott",
@@ -33,7 +33,7 @@
       "l4": "3/4",
       "whiff_pct": 25.6,
       "xwoba_con": 0.366,
-      "rp3_rank": 78
+      "rp3_rank": 77
     },
     {
       "name": "Chase Dollander",
@@ -63,7 +63,7 @@
       "l4": "3/4",
       "whiff_pct": 21.5,
       "xwoba_con": 0.378,
-      "rp3_rank": 120
+      "rp3_rank": 119
     },
     {
       "name": "Spencer Miles",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 18.2,
       "xwoba_con": 0.325,
-      "rp3_rank": 135
+      "rp3_rank": 134
     },
     {
       "name": "Kendry Rojas",
