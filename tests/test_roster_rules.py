@@ -60,6 +60,34 @@ def test_rp_for_rp_at_the_floor_is_legal():
     assert RR.check_swap(r, add=_p("FA RP", "RP", "RP"), drop=r[-1]) == []
 
 
+def test_cannot_add_a_fifth_rp_above_the_cap():
+    """4 is a CEILING as well as a floor — the league has 4 active RP slots.
+
+    Owner correction 2026-08-03: the optimizer proposed ADD Weaver / DROP
+    Detmers (an SP), taking the staff to 5 RPs and ranking it the #2 move of
+    the week. A 5th RP cannot occupy an active RP slot, so he banks no saves
+    or holds and burns a bench spot — the move was illegal, not merely
+    suboptimal, and nothing in the rules said so.
+    """
+    r = _roster(n_rp=4)
+    probs = RR.check_swap(r, add=_p("FA RP", "RP", "RP"), drop=r[-5])  # drop an SP
+    assert any("cap" in p or "4" in p for p in probs), (
+        f"adding a 5th RP must be blocked; got {probs}")
+
+
+def test_rp_for_rp_at_the_cap_stays_legal():
+    """The cap must not break the one move the floor rule explicitly allows."""
+    r = _roster(n_rp=4)
+    assert RR.check_swap(r, add=_p("FA RP", "RP", "RP"), drop=r[-1]) == []
+
+
+def test_cap_does_not_punish_a_preexisting_fifth_rp():
+    """Move-relative, like the floor: an existing 5-RP staff must not block an
+    unrelated hitter swap that leaves the RP count untouched."""
+    r = _roster(n_h=12, n_rp=5)
+    assert RR.check_swap(r, add=_p("FA H", "H", "OF", ["OF"]), drop=r[0]) == []
+
+
 def test_dropping_an_rp_above_the_floor_is_fine():
     r = _roster(n_rp=5)
     assert RR.check_swap(r, add=_p("FA SP", "SP", "SP"), drop=r[-1]) == []

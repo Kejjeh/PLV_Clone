@@ -41,6 +41,11 @@ ROSTER_TOTAL = ACTIVE_HITTERS + ACTIVE_PITCHERS + BENCH + IL_SLOTS   # 29
 
 # Standing owner rule (2026-07-18): a FLOOR, never a target.
 RP_FLOOR = 4
+# ...and equally a CEILING (owner correction 2026-08-03). The league has 4
+# active RP slots, so a 5th reliever cannot bank a save or a hold — he only
+# consumes a bench spot. Carrying 4 is therefore the single legal RP count,
+# which is why an RP may leave only in an RP-for-RP swap.
+RP_CAP = 4
 
 # Slots that must be fillable. UTIL/BE/IL are deliberately absent — they are
 # flex membership, not a position that needs covering.
@@ -184,6 +189,14 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
         problems.append(
             f"RP count would fall to {after_c['RP']} < floor {RP_FLOOR} "
             f"(standing rule 2026-07-18: 4 true RPs is a FLOOR, never a target)")
+    # ...and the matching ceiling. Move-relative for the same reason the floor
+    # is: a staff that is already over cap is run-level news, not this
+    # candidate's fault, so only a move that PUSHES it over is blocked.
+    if after_c['RP'] > RP_CAP and after_c['RP'] > before_c['RP']:
+        problems.append(
+            f"RP count would rise to {after_c['RP']} > cap {RP_CAP} "
+            f"(only 4 active RP slots — a 5th reliever banks no saves or "
+            f"holds and just burns a bench spot)")
     if (drop is not None and drop.get('bucket') == 'RP'
             and before_c['RP'] <= RP_FLOOR
             and (add is None or add.get('bucket') != 'RP')):
