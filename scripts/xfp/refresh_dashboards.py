@@ -422,6 +422,23 @@ def main():
         'python -X utf8 scripts/xfp/build_name_resolution_cache.py',
         timeout=120)
 
+    # 2c. Repoint `team` at the club the player is on NOW. The models derive
+    # team from historical Statcast, so a traded player keeps his old club
+    # until the new one accumulates history — after the 2026 deadline that left
+    # 85 players stale, with José Soriano reading LAA while starting for
+    # Toronto. Park factors, schedule joins, opponent context and every bullpen
+    # lens key on that column, so a stale code is quietly wrong in a dozen
+    # places rather than loudly wrong in one.
+    # MUST run here: after step 2 writes the CSVs, before anything reads them.
+    # Idempotent (a second run corrects 0) and non-gating; a failed roster pull
+    # keeps the previous map rather than writing a partial one.
+    ok_teams = run('2c. Repoint stale teams from live 40-man rosters',
+                   'python -X utf8 scripts/xfp/build_current_teams.py',
+                   timeout=600)
+    if not ok_teams:
+        print('  ⚠ team override failed — projections may carry pre-trade '
+              'clubs (non-gating; NOT an all-clear)')
+
     run('2.5. Build SP/hitter upgrade alerts',
         'python -X utf8 scripts/xfp/build_sp_alerts.py',
         timeout=120)
