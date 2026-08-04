@@ -379,6 +379,47 @@ def test_fetch_week_probables_never_predicts_two_starters_into_one_team_game():
     assert len(on_the_day) == 1, f"one HOU game, one starter expected; got {on_the_day}"
 
 
+def test_second_same_team_arm_slides_to_the_next_open_game_not_dropped():
+    """The team-game uniqueness rule must RELOCATE the loser, not delete him.
+
+    Canonical 2026-08-03: Josh owned two Rays starters (Jax, Rasmussen) and TB
+    had three unannounced games (8/7-8/9). Both arms' gaps landed on 8/7; Jax
+    won the slot and Rasmussen was dropped ENTIRELY, even though 8/8 and 8/9
+    sat open. That cost a real start — the week read 9 of 10 cap when it was
+    actually 10 of 10 — and every top optimizer move became "drop Rasmussen,
+    he does not pitch this week."
+    """
+    games = [{"gameDate": f"2026-08-0{d}T23:00:00Z",
+              "teams": {"home": {"team": {"id": 139, "abbreviation": "TB"}},
+                        "away": {"team": {"id": 136, "abbreviation": "SEA"}}}}
+             for d in (7, 8)]
+    schedule_payload = {"dates": [
+        {"date": "2026-08-07", "games": [games[0]]},
+        {"date": "2026-08-08", "games": [games[1]]},
+    ]}
+    # Both arms last started 8/1 on a clean 6-day cadence -> both predict 8/7.
+    log = {"stats": [{"splits": [
+        {"date": "2026-08-01", "stat": {"gamesStarted": "1"}},
+        {"date": "2026-07-26", "stat": {"gamesStarted": "1"}},
+        {"date": "2026-07-20", "stat": {"gamesStarted": "1"}},
+    ]}]}
+    result = fetch_week_probables(
+        week_start=date(2026, 8, 3), week_end=date(2026, 8, 9),
+        pitcher_ids=[643377, 656876],
+        http_get=_make_http_get({
+            "schedule?sportId=1": schedule_payload,
+            "people/643377?hydrate": {"people": [{"id": 643377, "currentTeam": {"id": 139}}]},
+            "people/656876?hydrate": {"people": [{"id": 656876, "currentTeam": {"id": 139}}]},
+            "people/643377/stats": log,
+            "people/656876/stats": log,
+        }),
+    )
+    assert len(result.starts) == 2, (
+        f"both arms start once in a 2-game window; got {result.starts}")
+    assert sorted(d for _, d in result.starts) == [date(2026, 8, 7), date(2026, 8, 8)], (
+        f"one per team-game, no double-booking; got {result.starts}")
+
+
 def test_rotation_gap_ignores_il_and_all_star_break_intervals():
     """Henderson's last three intervals were [5, 8, 48] — an ASG break and an IL
     stint. min() over that window returned 5 against a true cadence of 6, firing

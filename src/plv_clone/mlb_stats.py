@@ -319,6 +319,13 @@ def resolve_mlbam(
     return out
 
 
+# How far a rotation-gap prediction may be relocated when another arm on the
+# same club already holds the predicted team-game. Two days covers the ordinary
+# shuffle (an off-day, the back half of a series); past that the inferred gap is
+# no longer evidence for the new date and a phantom start is worse than none.
+_MAX_ROTATION_SLIDE_DAYS = 2
+
+
 def fetch_week_probables(
     *,
     week_start: date,
@@ -466,11 +473,28 @@ def fetch_week_probables(
         (pid_team_id[p], d) for (p, d) in mlb_confirmed_keys if p in pid_team_id
     }
     for r in sorted(pred_rows, key=lambda r: (r["slide"], r["gap"], r["pid"])):
-        key = (r["tid"], r["date"])
-        if r["tid"] is not None:
-            if key in taken:
+        if r["tid"] is None:
+            confirmed.setdefault((r["pid"], r["date"]), r["opp"])
+            continue
+        game_date, opp = r["date"], r["opp"]
+        if (r["tid"], game_date) in taken:
+            # Losing the coin-flip for a team-game does NOT mean he sits the
+            # week. A rotation has as many slots as the club has games, so the
+            # runner-up takes the next OPEN one — bounded, because a slot that
+            # has to move several days is no longer the same prediction.
+            # Dropping him outright cost a real start (2026-08-03: two Rays
+            # arms, three unannounced games, one start silently deleted).
+            game_date, opp = None, None
+            for cand_date, cand_opp in sorted(team_schedule_by_pid.get(r["pid"], [])):
+                if cand_date <= r["date"] or (r["tid"], cand_date) in taken:
+                    continue
+                if (cand_date - r["date"]).days > _MAX_ROTATION_SLIDE_DAYS:
+                    break
+                game_date, opp = cand_date, cand_opp
+                break
+            if game_date is None:
                 continue
-            taken.add(key)
-        confirmed.setdefault((r["pid"], r["date"]), r["opp"])
+        taken.add((r["tid"], game_date))
+        confirmed.setdefault((r["pid"], game_date), opp)
 
     return WeekProbables(starts=confirmed, confirmed_keys=frozenset(mlb_confirmed_keys))
