@@ -235,6 +235,74 @@ jobs:
           $lines | ForEach-Object { Write-Host $_ }
           exit 0
 
+      - name: Surface playing-time (volume) alerts (alert only — never gates)
+        # WHY THIS STEP EXISTS
+        # The volume models already ACCOUNT for role change; nothing TOLD Josh
+        # about it. /volume-watch is on-demand, so on 2026-08-01 Matt Chapman
+        # sat at ZERO PA over 21 days while rh3's naive expected_pa_remaining
+        # still projected him a full-time 3.20 PA/team-game — and no surface
+        # said a word. Step 4.945 now writes data/outputs/volume_alerts.csv;
+        # this reads it and prepends a marker so a role collapse is legible in
+        # `git log` forever.
+        #
+        # Only ROLE_LOSS (a player Josh OWNS losing playing time) sets the
+        # marker. ROLE_GAIN is an FA opportunity — worth reporting in the job
+        # summary, not worth an alert prefix. IL_ZERO is already visible in
+        # ESPN and /roster-audit, so it is summarised but never marks.
+        #
+        # ALERT ONLY: `if: always()` + terminal `exit 0` on every path.
+        if: always()
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $csv = 'data/outputs/volume_alerts.csv'
+          $sum = $env:GITHUB_STEP_SUMMARY
+          $lines = @()
+          $marker = ''
+          try {
+            if (-not (Test-Path $csv)) {
+              # NOT an all-clear: the detector did not run.
+              $lines += "- COULD NOT CHECK: $csv is absent (step 4.945 did not run or bailed early). NOT an all-clear."
+            } else {
+              $rows = @(Import-Csv $csv)
+              # NOTE: a scriptblock predicate ({ $_.is_new -eq 'True' }) works
+              # in Where-Object but NOT when invoked with & inside a foreach --
+              # $_ is unbound there and every row silently reads the same way.
+              # First cut labelled a genuinely NEW loss as "(ongoing)". Use an
+              # explicit per-row property test.
+              $loss = @($rows | Where-Object { $_.signal -eq 'ROLE_LOSS' })
+              $gain = @($rows | Where-Object { $_.signal -eq 'ROLE_GAIN' })
+              $il   = @($rows | Where-Object { $_.signal -eq 'IL_ZERO' })
+              # Only a TRANSITION marks the commit. A benching that persists
+              # for six weeks must not re-page for six weeks, or the prefix
+              # stops meaning anything and gets ignored.
+              $lossNew = @($loss | Where-Object { "$($_.is_new)" -match '^(?i)true$' })
+              $ilNew   = @($il   | Where-Object { "$($_.is_new)" -match '^(?i)true$' })
+              $lines += "- volume alerts: $($loss.Count) ROLE_LOSS ($($lossNew.Count) NEW), $($gain.Count) ROLE_GAIN (FA), $($il.Count) IL_ZERO ($($ilNew.Count) NEW)"
+              foreach ($r in $loss) {
+                $tag = if ("$($r.is_new)" -match '^(?i)true$') { '**ROLE LOSS (NEW)**' } else { 'role loss (ongoing)' }
+                $lines += "- $tag ``$($r.player_name)`` [$($r.side)] ($($r.team)): season $([math]::Round([double]$r.season_pace,2)) -> recent $([math]::Round([double]$r.recent_pace,2)) $($r.unit)/team-game (L21 $($r.events_last21))"
+              }
+              foreach ($r in $ilNew) {
+                $lines += "- **NEW IL** ``$($r.player_name)`` [$($r.side)]: recent volume went to zero and he is IL-flagged"
+              }
+              foreach ($r in ($gain | Select-Object -First 8)) {
+                $lines += "- FA role gain ``$($r.player_name)`` [$($r.side)] ($($r.team)): recent $([math]::Round([double]$r.recent_pace,2)) vs season $([math]::Round([double]$r.season_pace,2)) $($r.unit)/team-game"
+              }
+              if ($lossNew.Count -gt 0) { $marker = "ALERT[$($lossNew.Count) role loss] " }
+              elseif ($ilNew.Count -gt 0) { $marker = "ALERT[$($ilNew.Count) new IL] " }
+            }
+          } catch {
+            $lines += "- VOLUME ALERT DETECTION ITSELF FAILED: $($_.Exception.Message) (data work unaffected)"
+          }
+          "VOLUME_ALERT=$marker" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
+          if ($sum) {
+            "## Playing-time (volume) alerts" | Out-File $sum -Append -Encoding utf8
+            if ($marker) { "**$($marker.Trim())**" | Out-File $sum -Append -Encoding utf8 }
+            $lines | Out-File $sum -Append -Encoding utf8
+          }
+          $lines | ForEach-Object { Write-Host $_ }
+          exit 0
+
       - name: Commit & push regenerated plv_clone data
         run: |
           git add data
@@ -244,6 +312,10 @@ jobs:
             # Tripwire marker from the alert step above (empty when all clear),
             # so a FAIL is legible in `git log` and not only in a run page.
             $alert = $env:SCORECARD_ALERT
+            # Playing-time marker (step above). Concatenated rather than
+            # replacing: a scorecard tripwire and a role collapse are
+            # independent failures and both must survive into `git log`.
+            $alert = $alert + $env:VOLUME_ALERT
             # A gated publish means these CSVs came off yesterday's models.
             # Say so in the commit itself - `git log` is the only place this
             # is still legible weeks later.

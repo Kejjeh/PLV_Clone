@@ -918,6 +918,42 @@ def main():
     if not ok_settle:
         print('  ⚠ decision settlement failed — continuing (non-gating)')
 
+    # 4.945. Playing-time alerts off the volume models. The models themselves
+    # already ACCOUNT for role change (pa_last21 / lineup_spot_to / the IL
+    # features are all in VOLUME_FEATS) — what was missing was anything that
+    # TELLS Josh. /volume-watch is on-demand, so 2026-08-01 found Matt Chapman
+    # at ZERO PA in 21 days while rh3's naive expected_pa_remaining still
+    # projected him a full-time 3.20 PA/team-game, and nothing had said a word.
+    # Runs after 4.91 (needs the volume CSV) and after 4.94 so the day's
+    # snapshot is already logged. Writes data/outputs/volume_alerts.csv, which
+    # the daily-refresh workflow reads for its ALERT[] commit marker.
+    # Fail-soft and exit-0 on every path by construction.
+    ok_volalert = run(
+        '4.945. Playing-time (volume) alerts',
+        'python -X utf8 scripts/xfp/build_volume_alerts.py',
+        timeout=300,
+    )
+    if not ok_volalert:
+        print('  ⚠ volume alerts failed — no playing-time alert tonight '
+              '(non-gating; NOT an all-clear)')
+
+    # 4.946. Closer watch. The ninth-inning role is the single highest-leverage
+    # fact about a reliever in BrownU (a save is +5, a hold +2) and NOTHING here
+    # tracked it: on 2026-08-03 the Dodgers' job changed hands on the manager's
+    # word and every surface in this repo still read Scott as the closer. The
+    # box score alone cannot see a role announcement, so this reports a change
+    # only when saves actually moved, and says NO_CHANCES — never "role intact"
+    # — when the club had no save opportunities to reveal anything.
+    # Runs after 4.945; non-gating.
+    ok_closer = run(
+        '4.946. Closer watch (ninth-inning role changes)',
+        'python -X utf8 scripts/xfp/build_closer_watch.py',
+        timeout=300,
+    )
+    if not ok_closer:
+        print('  ⚠ closer watch failed — no role monitoring tonight '
+              '(non-gating; NOT an all-clear)')
+
     # 4.95 (was 4.11). Snapshot FanGraphs RoS projections (steamerr/rzips/ratcdc/
     # rfangraphsdc, bat+pit). Date-keyed accumulation for the ~4-week
     # forward validation of external playing-time/RoS systems. Idempotent

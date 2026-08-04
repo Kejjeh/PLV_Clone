@@ -1,0 +1,62 @@
+{
+ "edwin diaz": {
+  "name": "Edwin Díaz",
+  "team": "Los Angeles Dodgers",
+  "expect": "CLOSER",
+  "why": "Roberts 7/27: closer on return from elbow surgery"
+ },
+ "tanner scott": {
+  "name": "Tanner Scott",
+  "team": "Los Angeles Dodgers",
+  "expect": "SETUP",
+  "why": "moved to the 8th when Diaz returned; first in line if Diaz falters"
+ },
+ "luke weaver": {
+  "name": "Luke Weaver",
+  "team": "Pittsburgh Pirates",
+  "expect": "CLOSER",
+  "why": "acquired 8/3, Bednar traded to NYY"
+ },
+ "gregory soto": {
+  "name": "Gregory Soto",
+  "team": "Pittsburgh Pirates",
+  "expect": "SETUP",
+  "why": "13 saves before Weaver arrived; saved 1 of 2 chances in the current window — the incumbency Weaver must take"
+ },
+ "jeff hoffman": {
+  "name": "Jeff Hoffman",
+  "team": "Minnesota Twins",
+  "expect": "CLOSER",
+  "why": "MIN traded four relievers; best save environment in MLB"
+ },
+ "jhoan duran": {
+  "name": "Jhoan Duran",
+  "team": "Philadelphia Phillies",
+  "expect": "CLOSER",
+  "why": "MINE — fewest save chances in MLB"
+ },
+ "emilio pagan": {
+  "name": "Emilio Pagán",
+  "team": "Cincinnati Reds",
+  "expect": "CLOSER",
+  "why": "MINE — best save environment I own"
+ },
+ "jacob latz": {
+  "name": "Jacob Latz",
+  "team": "Texas Rangers",
+  "expect": "CLOSER",
+  "why": "MINE"
+ },
+ "david bednar": {
+  "name": "David Bednar",
+  "team": "New York Yankees",
+  "expect": "CLOSER",
+  "why": "NYY closer: 6 SV in L21d, next-most on staff is 1. Devin Williams is a MET, not a teammate — the SETUP tag came from a source that put them on the same club."
+ },
+ "louis varland": {
+  "name": "Louis Varland",
+  "team": "Toronto Blue Jays",
+  "expect": "CLOSER",
+  "why": "highest role-aware RoS of any RP checked"
+ }
+}

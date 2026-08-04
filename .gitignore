@@ -108,6 +108,11 @@ data/research/rp_archetype_career_panel.parquet
 
 # HR-14d analog research scratch (regenerable from statcast cache)
 data/research/hr14d_*.parquet
+
+# Volume-alert state panel (refresh step 4.945). Holds only the PREVIOUS
+# night's signal per player so the nightly can tell a NEW role collapse from
+# an ongoing one; losing it costs one silent bootstrap night, nothing more.
+data/research/volume_alert_history.parquet
 data/research/batter_name_map.parquet
 
 # Triangulate mega-research ephemeral outputs (live roster + FA snapshots).
@@ -241,3 +246,6 @@ scratch_*
 #    them — the `_2*` form is narrow enough to exclude them without a negation.
 #    Untracked 2026-08-01 (audit T46).
 data/research/fa_snapshots/fa_pool_*_2*.parquet
+
+# Closer-watch role state (refresh step 4.946); one night of state, regenerable
+data/research/closer_watch_state.json
