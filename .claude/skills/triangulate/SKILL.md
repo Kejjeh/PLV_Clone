@@ -206,6 +206,41 @@ The script:
 
 The `format_card()` output now includes a `**Confidence:** N (X of Y signals agree)` line and a `**Watch list:** ...; ...` line.
 
+### Step 2b — Window split (REQUIRED whenever a window is named)
+
+Trigger: any "since the ASG / since the trade / since he came off the IL /
+in his last N" framing, or a user thesis resting on a hot or cold streak.
+
+```bash
+python scripts/xfp/run_window_split.py "<name>" --since asg      # or --since YYYY-MM-DD
+```
+
+Engine `scripts/xfp/lib/window_split.py`; thresholds come from
+`plv_clone.stabilization` and are **never** hand-picked here.
+
+Three rules the engine enforces, and the card must not undo:
+
+1. **A metric is reported only when its window clears its own minimum.** A
+   LEVEL needs the after-window to clear; a CHANGE needs BOTH windows. Those
+   are different claims with different requirements.
+2. **Name the unreadable metrics out loud** (`NOT YET KNOWABLE in this
+   window: ...`). Dropping them silently reads as "we looked and found
+   nothing" — the same failure that let a quiet week look like a closer
+   keeping his job in `lib/closer_watch`.
+3. **Only readable metrics vote in the verdict.** Results (BrownU FP) are
+   always shown, but a results move that no readable process metric supports
+   is a streak, not a change.
+
+Use league-relative fields for bat speed. A raw cross-season delta is biased
+whenever the league baseline drifts — canonical 2026-08-03: Teoscar Hernández
+looked flat at 71.4 → 70.5 mph while his edge over the league collapsed
++1.71 → +0.33, a −1.38 relative move the raw number hid entirely.
+
+**Canonical trap this exists to stop:** "3 HR in 5 games, is he waking up?"
+Five games is ~19 PA; HR rate needs **275 PA**. That is not weak evidence, it
+is *no* evidence — while bat speed (50 swings), K% (50 PA) and hard-hit
+(50 BIP) all *were* readable in that same window and said the opposite.
+
 ### Step 3 — Read the output and offer follow-ups
 
 The verdict tag is one of:
