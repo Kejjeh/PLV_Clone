@@ -1,0 +1,11 @@
+player,team,expect,signal,note,saves_self,saves_teammates,team_chances,appearances,actionable
+Gregory Soto,Pittsburgh Pirates,SETUP,HOLDS_ROLE,recorded 1 save(s) of 2 chance(s),1,0,2,4,True
+Tanner Scott,Los Angeles Dodgers,SETUP,ROLE_LOST,1 save(s) went to a teammate over 1 chance(s) and he took none,0,1,1,2,False
+Edwin Díaz,Los Angeles Dodgers,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,0,1,2,False
+Emilio Pagán,Cincinnati Reds,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 3 chance(s),1,0,3,3,False
+Jacob Latz,Texas Rangers,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,0,1,2,False
+David Bednar,New York Yankees,CLOSER,HOLDS_ROLE,recorded 4 save(s) of 3 chance(s),4,0,3,4,False
+Louis Varland,Toronto Blue Jays,CLOSER,HOLDS_ROLE,recorded 3 save(s) of 3 chance(s),3,0,3,4,False
+Jhoan Duran,Philadelphia Phillies,CLOSER,NO_CHANCES,"club had no save opportunities in the window — role status UNKNOWN, not confirmed",0,0,0,2,False
+Luke Weaver,Pittsburgh Pirates,CLOSER,JUST_ARRIVED,no appearances yet for this club (traded/recalled) - role status UNKNOWN,0,1,2,2,False
+Jeff Hoffman,Minnesota Twins,CLOSER,JUST_ARRIVED,no appearances yet for this club (traded/recalled) - role status UNKNOWN,0,1,3,4,False
