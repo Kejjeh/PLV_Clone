@@ -78,6 +78,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import numpy as np
@@ -99,6 +100,7 @@ from scripts.xfp.lib.boom_bust import SP_BOOM, SP_BUST, H_BOOM, H_BUST  # noqa: 
 from build_matchup_dashboard import (  # noqa: E402
     project_player, ESPN_TO_MLB_TEAM, IL_INJURY_STATES, _norm,
 )
+from plv_clone.utils.name_match import safe_name_key as _ckey  # noqa: E402
 
 HIT_POS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH'}
 
@@ -107,7 +109,37 @@ HIT_POS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH'}
 # Candidate pool
 # ─────────────────────────────────────────────────────────────────────────────
 
-def build_candidates(state, top_n: int = 8, verbose: bool = True) -> list[dict]:
+def _realized_maps(days: int = 30) -> dict:
+    """{mlbam: realized FP per game/start over the trailing window}.
+
+    The realized leg's ranking key. Per-event rather than total so a player who
+    missed time is not punished for the games he did not get.
+    """
+    import pandas as _pd
+    out = {}
+    for path, col in (('boxscore_hitters.parquet', 'fp_h'),
+                      ('boxscore_pitchers.parquet', 'fp_sp')):
+        p = ROOT / 'data' / 'research' / 'xfp_cache' / path
+        if not p.exists():
+            continue
+        try:
+            df = _pd.read_parquet(p)
+        except Exception:
+            continue
+        df['game_date'] = _pd.to_datetime(df['game_date'])
+        cut = df['game_date'].max() - _pd.Timedelta(days=days)
+        w = df[df['game_date'] > cut]
+        if col == 'fp_sp' and 'gs' in w.columns:
+            w = w[w['gs'] > 0]
+        if not len(w):
+            continue
+        for mid, v in w.groupby('mlbam_id')[col].mean().items():
+            out[int(mid)] = float(v)
+    return out
+
+
+def build_candidates(state, top_n: int = 8, verbose: bool = True,
+                     realized_n: int = 0, include=()) -> list[dict]:
     """Top-N FA per bucket, projected through project_player.
 
     Uses the ONE FA pull already on the state (gotcha #6: never per-position
@@ -116,6 +148,7 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True) -> list[dict]:
     that matters most for RP, whose rprs2 sigma is a rest-of-season TOTAL derived
     from an IQR rather than a per-appearance number.
     """
+    _inc_keys = {_ckey(n) for n in (include or ())}
     league = state['mu']['league_obj']
     try:
         fas = league.free_agents(size=2000)
@@ -147,7 +180,8 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True) -> list[dict]:
             continue
         units = float(proj.get('units') or 0)
         fp = float(proj.get('fp') or 0)
-        if units <= 0 or fp <= 0:
+        forced = _ckey(p.name) in _inc_keys
+        if (units <= 0 or fp <= 0) and not forced:
             continue          # no remaining events in the window -> cannot help
         cands.append({
             'name': p.name, 'bucket': bucket, 'espn_pos': pos, 'eligible': elig,
@@ -159,21 +193,108 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True) -> list[dict]:
                        if b.get('type') == 'start'],
         })
 
-    # rank within bucket by projected FP over the remaining window — the honest
-    # pre-filter, since dpwin scoring is what actually orders them
-    out = []
-    for b in ('H', 'SP', 'RP'):
-        sub = sorted([c for c in cands if c['bucket'] == b],
-                     key=lambda c: -c['fp'])[:top_n]
-        out.extend(sub)
+    # realized leg needs ids; resolve before ranking so the key exists
+    if realized_n:
+        resolve_candidate_mlbams(state, cands, verbose=False)
+        rmap = _realized_maps()
+        for c in cands:
+            c['realized_fp'] = rmap.get(int(c['mlbam'])) if c.get('mlbam') else 0.0
+            c['realized_fp'] = float(c['realized_fp'] or 0.0)
+
+    missing = []
+    out = select_pool(cands, top_n=top_n, realized_n=realized_n,
+                      include=include, missing_out=missing)
     if verbose:
         n = {b: sum(1 for c in out if c['bucket'] == b) for b in ('H', 'SP', 'RP')}
         print(f'  candidate pool: {len(out)} FAs (H {n["H"]} / SP {n["SP"]} / RP {n["RP"]})'
-              f' from {len(cands)} projectable')
+              f' from {len(cands)} projectable'
+              + (f'  [top-{top_n} projected + top-{realized_n} realized]'
+                 if realized_n else ''))
+        forced = [c['name'] for c in out if c.get('forced_include')]
+        if forced:
+            print(f'  forced into pool via --include: {", ".join(forced)}')
+        if missing:
+            # NEVER silent: a typo'd --include must not read as a clean run.
+            print(f'  !! --include names NOT FOUND in the FA pool (ignored): '
+                  f'{", ".join(missing)}')
     return out
 
 
-def resolve_candidate_mlbams(state, cands: list[dict]) -> None:
+def parse_scratch(spec) -> list[tuple]:
+    """'Name:YYYY-MM-DD[,Name:YYYY-MM-DD...]' -> [(name, date), ...].
+
+    RAISES on anything malformed. A silently-dropped scratch is precisely the
+    failure this flag exists to prevent: the run would look clean while the SP
+    cap stayed wrong, which on 2026-08-01 moved one candidate by 7.7pp.
+    """
+    if not spec or not str(spec).strip():
+        return []
+    out = []
+    for chunk in str(spec).split(','):
+        chunk = chunk.strip()
+        if not chunk:
+            continue
+        if ':' not in chunk:
+            raise ValueError(
+                f'--scratch entry {chunk!r} is not NAME:YYYY-MM-DD')
+        name, _, dt = chunk.rpartition(':')
+        name, dt = name.strip(), dt.strip()
+        if not name:
+            raise ValueError(f'--scratch entry {chunk!r} has no player name')
+        try:
+            parsed = datetime.strptime(dt, '%Y-%m-%d').date()
+        except ValueError as exc:
+            raise ValueError(
+                f'--scratch entry {chunk!r}: {dt!r} is not YYYY-MM-DD') from exc
+        out.append((name, parsed.isoformat()))
+    return out
+
+
+def select_pool(cands: list[dict], *, top_n: int, realized_n: int,
+                include=(), missing_out=None) -> list[dict]:
+    """Candidate pool = top-N PROJECTED  U  top-N REALIZED  U  forced includes.
+
+    Two legs, because they fail differently. The projected leg cannot surface a
+    player the model underrates however much he is actually scoring; the
+    realized leg cannot surface a role change the box score has not caught up
+    to yet. Union, deduped by canonical name key, so neither displaces the
+    other.
+
+    `include` bypasses BOTH legs and every upstream filter — that is the point:
+    Griffin Jax projected 0.00 (unresolved mlbam, so no start was found) and
+    was therefore invisible to a pool ranked on projection.
+    """
+    inc = {_ckey(n) for n in (include or ())}
+    seen, out = set(), []
+
+    def _take(c, forced=False):
+        k = _ckey(c['name'])
+        if k in seen:
+            return
+        seen.add(k)
+        if forced:
+            c['forced_include'] = True
+        out.append(c)
+
+    for c in cands:
+        if _ckey(c['name']) in inc:
+            _take(c, forced=True)
+    for b in ('H', 'SP', 'RP'):
+        sub = [c for c in cands if c['bucket'] == b]
+        for c in sorted(sub, key=lambda x: -float(x.get('fp') or 0))[:top_n]:
+            _take(c)
+        if realized_n:
+            for c in sorted(sub, key=lambda x: -float(x.get('realized_fp') or 0)
+                            )[:realized_n]:
+                _take(c)
+    if missing_out is not None:
+        have = {_ckey(c['name']) for c in cands}
+        missing_out.extend(n for n in (include or ()) if _ckey(n) not in have)
+    return out
+
+
+def resolve_candidate_mlbams(state, cands: list[dict],
+                             verbose: bool = True) -> None:
     """Attach mlbam to each candidate (collision-safe), in place.
 
     A candidate without an id cannot be logged to dpwin history in a way the
@@ -261,7 +382,7 @@ def _hitter_games(state, cands) -> dict:
 
 def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
                        prior_adds=(), prior_drop_keys=(), cur_pwin=None,
-                       exclude_drops=(), verbose=True,
+                       exclude_drops=(), verbose=True, bench_scratch=(),
                        _dp=delta_pwin) -> list[dict]:
     """Every legal single swap + pure drop, scored by MARGINAL Delta-P(win).
 
@@ -305,7 +426,7 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
         if not probs:
             r = _dp(state, D, add=prior_adds,
                     drop=prior_drop_keys + [d['mlbam'] or d['name']],
-                    base_pwin=base_p)
+                    bench=list(bench_scratch), base_pwin=base_p)
             rows.append({'kind': 'drop', 'add': None, 'drop': d,
                          'dpwin': r['pwin'] - cur_pwin,
                          'dpwin_from_base': r['dpwin'], 'pwin': r['pwin'],
@@ -320,7 +441,7 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
                 continue
             r = _dp(state, D, add=prior_adds + [eng],
                     drop=prior_drop_keys + [d['mlbam'] or d['name']],
-                    base_pwin=base_p)
+                    bench=list(bench_scratch), base_pwin=base_p)
             rows.append({'kind': 'swap', 'add': c, 'drop': d, '_eng': eng,
                          'dpwin': r['pwin'] - cur_pwin,
                          'dpwin_from_base': r['dpwin'], 'pwin': r['pwin'],
@@ -362,7 +483,7 @@ def _regime_tiebreak(rows: list[dict], regime: str) -> list[dict]:
 
 
 def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True,
-             _dp=delta_pwin):
+             bench_scratch=(), _dp=delta_pwin):
     """Greedy best-swap over a virtual roster (cumulatively scored), then a pair
     check. ``_dp`` is the test seam threaded through to ``score_single_moves``.
     """
@@ -384,6 +505,7 @@ def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True,
         # no-op is what let the 2026-07-30 run recommend dropping its own add).
         rows, skipped = score_single_moves(
             state, D, roster, remaining, base_p, hgames=hgames,
+            bench_scratch=bench_scratch,
             prior_adds=prior_adds, prior_drop_keys=prior_drop_keys,
             cur_pwin=cur_pwin, exclude_drops=prior_added,
             verbose=verbose, _dp=_dp)
@@ -473,7 +595,7 @@ def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True,
                     add=[_cand_for_engine(a['add']), _cand_for_engine(b['add'])],
                     drop=[a['drop']['mlbam'] or a['drop']['name'],
                           b['drop']['mlbam'] or b['drop']['name']],
-                    base_pwin=base_p)
+                    bench=list(bench_scratch), base_pwin=base_p)
                 pairs.append({
                     'moves': [a, b], 'dpwin': r['dpwin'], 'pwin': r['pwin'],
                     'mc_se': r['mc_se'],
@@ -612,12 +734,43 @@ def main() -> int:
                     help='top-N FA candidates per bucket (default 8)')
     ap.add_argument('--no-log', action='store_true',
                     help='skip the dpwin_history write')
+    ap.add_argument('--realized-pool', type=int, default=4, metavar='N',
+                    help='ALSO include the top-N FAs per bucket by REALIZED '
+                         'FP/event over the last 30d (default 4). The projected '
+                         'leg cannot surface a player the model underrates.')
+    ap.add_argument('--include', default='', metavar='NAMES',
+                    help='comma-separated names to FORCE into the candidate '
+                         'pool, bypassing both ranking legs and the fp<=0 '
+                         'filter (e.g. "Griffin Jax,Trent Grisham")')
+    ap.add_argument('--scratch', default='', metavar='NAME:YYYY-MM-DD',
+                    help='comma-separated starts you KNOW will not happen. The '
+                         'engine models an unconfirmed start at ~0.80; a scratch '
+                         'it does not know about leaves the SP cap wrong (a '
+                         '7.7pp swing on 2026-08-01). Malformed input errors out '
+                         'rather than being ignored.')
     args = ap.parse_args()
+
+    try:
+        scratch = parse_scratch(args.scratch)
+    except ValueError as exc:
+        print(f'ERROR: {exc}')
+        return 2
+    bench_scratch = [('SP', n, d) for n, d in scratch]
+    include = [x.strip() for x in (args.include or '').split(',') if x.strip()]
 
     print('=== /weekly-optimizer — maximize P(win), not E[FP] ===')
     state = build_state(verbose=True)
     D = precompute_draws(state, args.sims, args.seed)
-    my, opp = assemble(state, D)
+    if scratch:
+        # Condition EVERYTHING on the scratch: the baseline, the regime call and
+        # every scenario. Scoring moves against an unscratched baseline would
+        # compare them to a world that is not going to happen.
+        bs = {(n, d) for n, d in scratch}
+        my, opp = assemble(state, D, bench_starts=bs)
+        print('\n  SCRATCHED (excluded from the cap + the baseline): '
+              + '; '.join(f'{n} {d}' for n, d in scratch))
+    else:
+        my, opp = assemble(state, D)
     base_p = pwin(my, opp)
     regime = classify_regime(base_p)
 
@@ -636,12 +789,14 @@ def main() -> int:
         print(f'  ⚠ {w}')
 
     print('\n--- CANDIDATES ---')
-    cands = build_candidates(state, top_n=args.pool)
+    cands = build_candidates(state, top_n=args.pool,
+                             realized_n=args.realized_pool,
+                             include=include)
     resolve_candidate_mlbams(state, cands)
 
     print('\n--- SEARCH ---')
     res = optimize(state, D, base_p, regime, cands,
-                   max_moves=args.max_moves)
+                   max_moves=args.max_moves, bench_scratch=bench_scratch)
 
     plan = assemble_plan(res, base_p)
 
