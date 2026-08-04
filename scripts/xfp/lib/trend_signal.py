@@ -107,8 +107,7 @@ def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
         ba[['sb_per_pa', 'sprint_speed']], rsuffix='_base', how='left')
     t['d_sb_pa'] = t['sb_per_pa'] - t['sb_per_pa_base']
     t['d_sprint'] = t['sprint_speed'] - t['sprint_speed_base']
-    sd = t['d_sb_pa'].std()
-    t['z_sb'] = t['d_sb_pa'] / sd if sd and sd > 0 else 0.0
+    t['z_sb'] = _centered_z(t['d_sb_pa'])
     # suppress the YoY SB delta when cur/base straddle the 2023 rule break (the level
     # jump would read as a fake league-wide "+running"). sb_recent (in-season L30d vs
     # 2026 season) is always same-regime, so it stays valid. sprint is unaffected.
@@ -136,6 +135,31 @@ def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     return t
 
 
+def _centered_z(s: pd.Series) -> pd.Series:
+    """Pool z-score: subtract the mean, THEN scale.
+
+    Scaling alone (the original `d / d.std()`) leaves a league-wide drift
+    sitting in every player's score. That is invisible to any RANKING — a
+    constant cannot reorder — but `trend_tag` compares the composite to the
+    absolute +/-1.0 sigma cutoffs, and there the whole pool walks across the
+    boundary together.
+
+    Measured 2026-08-03 on the live 2026-vs-2025 table (365 hitters): every
+    axis had drifted up (bat speed +0.207 sigma, fast-swing +0.185,
+    attack-angle +0.112), offsetting z_comp by +0.168 and mislabelling 33
+    players — 20 phantom "breakout watch" and 13 missed "decline watch".
+    Spearman against the uncentered score is exactly 1.000, which is what
+    makes this a calibration fix and not a change to the validated signal.
+
+    The question the lens is asked is "is this tool improving relative to the
+    field", not "did the number go up in a year when everyone's did".
+    """
+    sd = s.std()
+    if not sd or not np.isfinite(sd) or sd <= 0:
+        return pd.Series(0.0, index=s.index)
+    return (s - s.mean()) / sd
+
+
 @lru_cache(maxsize=None)  # perf: built once per process, not per-player; callers read tbl.loc[id]
 def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     """3-axis physical-trend table: bat speed (how hard) + attack angle (swing
@@ -150,9 +174,9 @@ def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     # direction-aware: positive = swing path moved TOWARD the productive band
     t['aa_toward'] = (t['attack_angle_base'] - AA_OPT).abs() - (t['attack_angle'] - AA_OPT).abs()
     t['d_xwobacon'] = t['xwobacon'] - t['xwobacon_base']
-    t['z_bs'] = t['d_bat_speed'] / t['d_bat_speed'].std()
-    t['z_fast'] = t['d_fast_swing'] / t['d_fast_swing'].std()
-    t['z_aa'] = t['aa_toward'] / t['aa_toward'].std()
+    t['z_bs'] = _centered_z(t['d_bat_speed'])
+    t['z_fast'] = _centered_z(t['d_fast_swing'])
+    t['z_aa'] = _centered_z(t['aa_toward'])
     t['z_comp'] = t[['z_bs', 'z_fast', 'z_aa']].mean(axis=1)
     t['z'] = t['z_bs']  # back-compat
     # orthogonal SB/sprint axis (display context #13; left-join keeps all bat-track rows)
@@ -204,7 +228,7 @@ def pitcher_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
     t = c.join(b[['velo', 'xwoba_allow']], rsuffix='_base', how='inner')
     t['d_velo'] = t['velo'] - t['velo_base']
     t['d_xwoba_allow'] = t['xwoba_allow'] - t['xwoba_allow_base']
-    t['z'] = t['d_velo'] / t['d_velo'].std()
+    t['z'] = _centered_z(t['d_velo'])
     return t
 
 
