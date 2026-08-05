@@ -954,6 +954,23 @@ def main():
         print('  ⚠ volume alerts failed — no playing-time alert tonight '
               '(non-gating; NOT an all-clear)')
 
+    # 4.947. IL stash boards. rp3/rh3 cannot read a player whose season the
+    # injury erased — rp3 says so by tagging him `marcel_il` and returning a
+    # SUPPRESSED prior. Ranking a stash pool on that put Corbin Burnes below
+    # replacement and made Schwellenbach look like the best arm available,
+    # when neither will pitch again this year. This scores prior-season value
+    # (lib/il_marcel, validated) x ESPN's return date x the empirical censor
+    # rate, so an arm with no runway scores 0 however good he is.
+    # Slow-ish: ~250 MLB year-by-year calls. Non-gating.
+    ok_stash = run(
+        '4.947. IL stash boards (prior-season value x return date x censor)',
+        'python -X utf8 scripts/xfp/build_il_stash_boards.py',
+        timeout=900,
+    )
+    if not ok_stash:
+        print('  ⚠ IL stash boards failed — stash pool not re-scored tonight '
+              '(non-gating; NOT an all-clear)')
+
     # 4.946. Closer watch. The ninth-inning role is the single highest-leverage
     # fact about a reliever in BrownU (a save is +5, a hold +2) and NOTHING here
     # tracked it: on 2026-08-03 the Dodgers' job changed hands on the manager's
