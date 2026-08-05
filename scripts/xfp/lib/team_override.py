@@ -131,5 +131,78 @@ def apply_team_override(df: pd.DataFrame, tmap: TeamMap, *,
     return out, int(changed.sum()), int((~known).sum())
 
 
-__all__ = ['MODEL_TEAM_CODES', 'DEFAULT_MAP', 'STALE_AFTER_DAYS', 'TeamMap',
-           'load_map', 'apply_team_override']
+# ESPN spells four clubs differently from the model vocabulary. A normalisation
+# miss here would read the whole league as mismatched, so these are load-bearing.
+ESPN_TEAM_ALIASES = {'ARI': 'AZ', 'CHW': 'CWS', 'OAK': 'ATH', 'WSN': 'WSH'}
+_NO_CLUB = {'FA', 'NAN', 'NONE', '', '--', 'N/A'}
+
+
+def normalize_team(code) -> Optional[str]:
+    """ESPN/statsapi spelling -> model vocabulary. None when it is not a club."""
+    c = str(code or '').strip().upper()
+    if c in _NO_CLUB:
+        return None
+    c = ESPN_TEAM_ALIASES.get(c, c)
+    return c if c in MODEL_TEAM_CODES else None
+
+
+def verify_identity(df: pd.DataFrame, tmap: TeamMap, *, mlbam_col: str,
+                    team_col: str, drop_statuses=('MISMATCH', 'NO_CLUB')):
+    """-> (kept, dropped). Adds an ``identity_status`` column to both.
+
+    Confirms that the mlbam a row was joined on actually plays for the club the
+    ESPN-sourced row claims. This catches the failure that duplicate-detection
+    structurally cannot: a name unique on BOTH sides of a join can still be two
+    different people.
+
+    Canonical case (surfaced three times on 2026-08-03/04): a 0.1%-owned catcher
+    named "Julio Rodriguez" is unique in the free-agent pool, the real Julio
+    Rodríguez is unique in rh3, no duplicate fires — and the join hands a
+    replacement-level catcher a #12 projection at the top of a board.
+
+    Statuses:
+      VERIFIED    the mlbam's club matches the row.
+      MISMATCH    it plays somewhere else -> different person. Dropped.
+      NO_CLUB     the row claims no major-league club at all. Dropped.
+      UNVERIFIED  the mlbam is on no 40-man (minors, released, 60-day IL). KEPT
+                  by default — a prospect is not a phantom, and dropping these
+                  quietly shrinks every board.
+    """
+    for c in (mlbam_col, team_col):
+        if c not in df.columns:
+            raise KeyError(
+                f'{c!r} not in frame (have: {list(df.columns)[:8]}...). A guard '
+                f'that silently passes everything reads as "checked, clean".')
+    out = df.copy()
+    if tmap.empty:
+        out['identity_status'] = 'UNVERIFIED'
+        return out, out.iloc[0:0].copy()
+    ids = pd.to_numeric(out[mlbam_col], errors='coerce')
+    true_team = ids.map(tmap.teams)
+    claimed = out[team_col].map(normalize_team)
+
+    status = pd.Series('VERIFIED', index=out.index, dtype=object)
+    status[true_team.isna()] = 'UNVERIFIED'
+    status[claimed.isna()] = 'NO_CLUB'
+    both = true_team.notna() & claimed.notna()
+    status[both & (true_team != claimed)] = 'MISMATCH'
+    out['identity_status'] = status
+    bad = status.isin(tuple(drop_statuses))
+    return out[~bad].copy(), out[bad].copy()
+
+
+def identity_report(kept: pd.DataFrame, dropped: pd.DataFrame) -> str:
+    """One-line summary for a board footer. Names WHAT was removed and why —
+    a silent drop is indistinguishable from a clean pool."""
+    if not len(dropped):
+        n_unv = int((kept.get('identity_status') == 'UNVERIFIED').sum()) if len(kept) else 0
+        tail = f', {n_unv} unverified (kept)' if n_unv else ''
+        return f'identity: {len(kept)} rows, none dropped{tail}'
+    counts = dropped['identity_status'].value_counts().to_dict()
+    why = ', '.join(f'{v} {k}' for k, v in sorted(counts.items()))
+    return f'identity: {len(kept)} kept, {len(dropped)} dropped ({why})'
+
+
+__all__ = ['MODEL_TEAM_CODES', 'ESPN_TEAM_ALIASES', 'DEFAULT_MAP',
+           'STALE_AFTER_DAYS', 'TeamMap', 'load_map', 'apply_team_override',
+           'normalize_team', 'verify_identity', 'identity_report']

@@ -235,6 +235,9 @@ def main() -> int:
                 "mlbam_id": int(proj["batter"]) if pd.notna(proj.get("batter")) else None,
                 "player_name": str(proj[h_name_col]),
                 "position": str(primary_pos),
+                # carried so the cross-source identity guard below can check
+                # this join against the club the mlbam actually plays for
+                "pro_team": str(getattr(p, "proTeam", "") or ""),
                 "eligible_slots": ",".join(str(s) for s in eligible_slots),
                 "ros": ros_h,
                 "blended_xfp_per_PA": per_pa,
@@ -244,6 +247,27 @@ def main() -> int:
 
         h_snap = pd.DataFrame(h_rows)
         print(f"\n  hitter snapshot rows (rh3-joined): {len(h_snap)}")
+        # Cross-source identity guard. join_key makes the name match exact, but
+        # exactness is not identity: a 0.1%-owned catcher named "Julio
+        # Rodriguez" is unique in the FA pool AND the real J-Rod is unique in
+        # rh3, so no duplicate fires and the join hands a replacement-level
+        # bat a #12 projection at the top of every downstream board. The only
+        # tell is that the joined mlbam plays for a club this row never claims.
+        # Fail-soft: no club map -> everything UNVERIFIED, nothing dropped.
+        if not h_snap.empty:
+            try:
+                from scripts.xfp.lib.team_override import (
+                    identity_report, load_map, verify_identity)
+                _kept, _drop = verify_identity(
+                    h_snap, load_map(), mlbam_col="mlbam_id", team_col="pro_team")
+                print(f"  {identity_report(_kept, _drop)}")
+                for _r in _drop.itertuples(index=False):
+                    print(f"    - dropped {_r.player_name} "
+                          f"[{_r.identity_status}] espn={_r.pro_team} "
+                          f"mlbam={_r.mlbam_id}")
+                h_snap = _kept.drop(columns=["identity_status"])
+            except Exception as _exc:
+                print(f"  identity guard skipped ({_exc}) — NOT an all-clear")
         if not h_snap.empty:
             h_dated = SNAP_DIR / f"fa_pool_H_{label}.parquet"
             h_latest = SNAP_DIR / "fa_pool_H_latest.parquet"
