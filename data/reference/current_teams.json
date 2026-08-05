@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-04",
+ "as_of": "2026-08-05",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -7,12 +7,6 @@
    "abbr": "ATH",
    "name": "Alika Williams",
    "pos": "SS"
-  },
-  "641386": {
-   "team": "Athletics",
-   "abbr": "ATH",
-   "name": "Ben Bowden",
-   "pos": "P"
   },
   "804556": {
    "team": "Athletics",
@@ -986,12 +980,6 @@
    "name": "Michael Rucker",
    "pos": "P"
   },
-  "641598": {
-   "team": "Seattle Mariners",
-   "abbr": "SEA",
-   "name": "Mitch Garver",
-   "pos": "C"
-  },
   "689546": {
    "team": "Seattle Mariners",
    "abbr": "SEA",
@@ -1010,12 +998,6 @@
    "name": "Randy Arozarena",
    "pos": "LF"
   },
-  "608701": {
-   "team": "Seattle Mariners",
-   "abbr": "SEA",
-   "name": "Rob Refsnyder",
-   "pos": "DH"
-  },
   "673662": {
    "team": "Seattle Mariners",
    "abbr": "SEA",
@@ -1033,12 +1015,6 @@
    "abbr": "SEA",
    "name": "Seranthony Domínguez",
    "pos": "P"
-  },
-  "656413": {
-   "team": "Seattle Mariners",
-   "abbr": "SEA",
-   "name": "Stuart Fairchild",
-   "pos": "CF"
   },
   "621493": {
    "team": "Seattle Mariners",
@@ -1147,6 +1123,12 @@
    "abbr": "SF",
    "name": "Dylan Smith",
    "pos": "P"
+  },
+  "678760": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Eddys Leonard",
+   "pos": "SS"
   },
   "687529": {
    "team": "San Francisco Giants",
@@ -2802,7 +2784,7 @@
    "team": "Philadelphia Phillies",
    "abbr": "PHI",
    "name": "Derek Hill",
-   "pos": "RF"
+   "pos": "CF"
   },
   "624641": {
    "team": "Philadelphia Phillies",
@@ -3866,6 +3848,12 @@
    "name": "Fernando Cruz",
    "pos": "P"
   },
+  "806146": {
+   "team": "New York Yankees",
+   "abbr": "NYY",
+   "name": "George Lombard Jr.",
+   "pos": "SS"
+  },
   "543037": {
    "team": "New York Yankees",
    "abbr": "NYY",
@@ -4292,6 +4280,12 @@
    "name": "Ben Joyce",
    "pos": "P"
   },
+  "676620": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Blake Weiman",
+   "pos": "P"
+  },
   "695049": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -4345,12 +4339,6 @@
    "abbr": "LAA",
    "name": "Jack Kochanowicz",
    "pos": "P"
-  },
-  "624585": {
-   "team": "Los Angeles Angels",
-   "abbr": "LAA",
-   "name": "Jorge Soler",
-   "pos": "DH"
   },
   "820862": {
    "team": "Los Angeles Angels",
@@ -4465,6 +4453,12 @@
    "abbr": "LAA",
    "name": "Sebastián Rivero",
    "pos": "C"
+  },
+  "641312": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Shaun Anderson",
+   "pos": "P"
   },
   "642048": {
    "team": "Los Angeles Angels",
@@ -5312,12 +5306,6 @@
    "name": "Romy Gonzalez",
    "pos": "DH"
   },
-  "670245": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Ryan Watson",
-   "pos": "P"
-  },
   "543243": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5496,12 +5484,6 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Jacob Webb",
-   "pos": "P"
-  },
-  "663765": {
-   "team": "Chicago Cubs",
-   "abbr": "CHC",
-   "name": "Jake Woodford",
    "pos": "P"
   },
   "701649": {
@@ -6338,6 +6320,12 @@
    "name": "Nick Frasso",
    "pos": "P"
   },
+  "656786": {
+   "team": "Colorado Rockies",
+   "abbr": "COL",
+   "name": "Parker Mushinski",
+   "pos": "P"
+  },
   "701487": {
    "team": "Colorado Rockies",
    "abbr": "COL",
@@ -7034,6 +7022,12 @@
    "name": "Connor Seabold",
    "pos": "P"
   },
+  "671162": {
+   "team": "Kansas City Royals",
+   "abbr": "KC",
+   "name": "Connor Thomas",
+   "pos": "P"
+  },
   "663738": {
    "team": "Kansas City Royals",
    "abbr": "KC",
@@ -7134,12 +7128,6 @@
    "team": "Kansas City Royals",
    "abbr": "KC",
    "name": "Mason Black",
-   "pos": "P"
-  },
-  "621381": {
-   "team": "Kansas City Royals",
-   "abbr": "KC",
-   "name": "Matt Strahm",
    "pos": "P"
   },
   "683090": {
@@ -7292,6 +7280,12 @@
    "name": "Ben Casparius",
    "pos": "P"
   },
+  "666163": {
+   "team": "Los Angeles Dodgers",
+   "abbr": "LAD",
+   "name": "Ben Rortvedt",
+   "pos": "C"
+  },
   "605483": {
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
@@ -7321,12 +7315,6 @@
    "abbr": "LAD",
    "name": "Brusdar Graterol",
    "pos": "P"
-  },
-  "642020": {
-   "team": "Los Angeles Dodgers",
-   "abbr": "LAD",
-   "name": "Chuckie Robinson",
-   "pos": "C"
   },
   "687221": {
    "team": "Los Angeles Dodgers",
@@ -7568,6 +7556,12 @@
    "name": "Andrew Alvarez",
    "pos": "P"
   },
+  "687605": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Andrew Pinckney",
+   "pos": "LF"
+  },
   "695418": {
    "team": "Washington Nationals",
    "abbr": "WSH",
@@ -7796,6 +7790,12 @@
    "name": "Trevor Williams",
    "pos": "P"
   },
+  "702021": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Will Dion",
+   "pos": "P"
+  },
   "672442": {
    "team": "Washington Nationals",
    "abbr": "WSH",
@@ -7838,12 +7838,6 @@
    "name": "Brett Baty",
    "pos": "3B"
   },
-  "676785": {
-   "team": "New York Mets",
-   "abbr": "NYM",
-   "name": "Bryce Conley",
-   "pos": "P"
-  },
   "701807": {
    "team": "New York Mets",
    "abbr": "NYM",
@@ -7867,6 +7861,12 @@
    "abbr": "NYM",
    "name": "Cionel Pérez",
    "pos": "P"
+  },
+  "665506": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Cristian Pache",
+   "pos": "OF"
   },
   "650960": {
    "team": "New York Mets",
@@ -7987,6 +7987,12 @@
    "abbr": "NYM",
    "name": "Mark Vientos",
    "pos": "1B"
+  },
+  "681320": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Nate Lavender",
+   "pos": "P"
   },
   "703492": {
    "team": "New York Mets",

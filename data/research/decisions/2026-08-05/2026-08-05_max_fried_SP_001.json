@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "SP",
+  "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-05_max_fried_SP_001",
+  "executed_at": null,
+  "inputs": {
+    "archetype_label": "PURE_MOVEMENT",
+    "archetype_overall": 65,
+    "archetype_traj": "TRENDING_UP",
+    "blended_xfp": 13.821856577789879,
+    "inputs_schema": 2,
+    "live_marginal": -110.16247043016494,
+    "model_rank": 27,
+    "override_tag": null,
+    "pl_rank": 19,
+    "proj_display": 13.006185766833422,
+    "proj_per": 13.006185766833422,
+    "proj_units": "fp_per_start",
+    "replacement_delta": null
+  },
+  "mlbam_id": 608331,
+  "player_name": "Max Fried",
+  "reason_tag": "strong_hold",
+  "record_schema": 2,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-05",
+  "verdict_top": "BUY"
+}

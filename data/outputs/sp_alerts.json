@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-04",
+  "generated": "2026-08-05",
   "upgrade_floor_fpp": -0.0744,
-  "hit_upgrade_floor_xwoba": 0.323,
+  "hit_upgrade_floor_xwoba": 0.309,
   "alert_count": 6,
   "hitter_alert_count": 0,
   "alerts": [
@@ -48,7 +48,7 @@
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
-      "rp3_rank": 168
+      "rp3_rank": 167
     },
     {
       "name": "Michael Soroka",
@@ -63,7 +63,7 @@
       "l4": "3/4",
       "whiff_pct": 21.5,
       "xwoba_con": 0.378,
-      "rp3_rank": 119
+      "rp3_rank": 120
     },
     {
       "name": "Spencer Miles",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 18.2,
       "xwoba_con": 0.325,
-      "rp3_rank": 134
+      "rp3_rank": 133
     },
     {
       "name": "Kendry Rojas",
@@ -93,7 +93,7 @@
       "l4": "1/4",
       "whiff_pct": 27.3,
       "xwoba_con": 0.293,
-      "rp3_rank": 88
+      "rp3_rank": 89
     }
   ],
   "hitter_alerts": [],

@@ -1,0 +1,36 @@
+{
+  "action": "swap",
+  "bucket": "RP",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.8329,
+    "dpwin_chosen": 0.0139,
+    "dpwin_gap": 0.0143,
+    "dpwin_rejected": -0.0004,
+    "dtitle_equity_chosen": 0.0249,
+    "regime": "LEADING",
+    "rejected_bucket": "RP",
+    "rejected_mlbam": 656546,
+    "rejected_name": "Jeff Hoffman",
+    "source_run_id": "2026-08-03T221924_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-04_luke_weaver_RP_001",
+  "executed_at": "2026-08-04T18:01:44",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Tanner Scott",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "7 candidate runs preceded the move, took latest (2026-08-03T221924_7)"
+  },
+  "mlbam_id": 596133,
+  "player_name": "Luke Weaver",
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-04",
+  "verdict_top": "SWAP"
+}
