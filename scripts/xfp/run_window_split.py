@@ -91,7 +91,13 @@ def _pitch_window(d: pd.DataFrame):
     ooz = ~inz
     sw = d['description'].isin(SWING)
     miss = d['description'].isin(MISS)
-    bip = d[d['launch_speed'].notna()]
+    # BATTED BALLS, not "every tracked contact". Statcast reports launch_speed
+    # on fouls too, and fouls are weakly hit by construction, so including them
+    # roughly halves the measured hard-hit rate. Requiring a PA-ending event
+    # restricts to balls in play, which is what hard-hit%/barrel% mean.
+    # (Caught 2026-08-05: Teoscar Hernandez post-ASG read 19.8% on the loose
+    # denominator vs a true 33.3% -- the DIRECTION held but every level was wrong.)
+    bip = d[d['launch_speed'].notna() & d['events'].notna()]
     pct = lambda n, dn: (100.0 * n / dn) if dn else None  # noqa: E731
     out = {
         'chase': (pct((sw & ooz).sum(), ooz.sum()), int(ooz.sum())),
@@ -169,7 +175,7 @@ def main() -> int:
         sc = pd.read_parquet(
             f'data/research/xfp_cache/statcast_{a.year}.parquet',
             columns=['batter', 'game_date', 'zone', 'description',
-                     'launch_speed', 'launch_angle'])
+                     'launch_speed', 'launch_angle', 'events'])
     except Exception as exc:
         print(f'statcast unavailable ({exc}) — results only, no process read')
         return 0
