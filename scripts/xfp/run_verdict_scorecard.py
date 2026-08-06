@@ -355,14 +355,25 @@ def main() -> int:
     # restatement of the one above.
     _decision_sections(today)
 
+    # ── §10: CLAIM accounting (2026-08-05) ───────────────────────────────────
+    # The third and last scoreboard. §1-6 grade the projection, §7-9 grade the
+    # choice, §10 grades the CLAIM — what was actually said, with a number and
+    # a deadline attached before the outcome was known.
+    _prediction_section(today)
+
     ladder.to_csv(a.out, index=False)
     print(f"\nwrote {a.out} ({len(ladder)} rows)")
     print("\nRule 13: scoreboard only — never moves rh3/rp3/rprs2 or any verdict.")
     return 0
 
 
-def _load_paired_records(today: date) -> list:
-    """Every v3 record carrying a paired settlement, from both trees."""
+def _load_records_where(keep) -> list:
+    """Every decision record satisfying `keep`, mirror-authoritative.
+
+    The settled/ mirror and the dated source tree can both hold the same
+    decision_id; sorted() puts 'settled' after the dates, so the later read
+    wins and the graded copy is the one returned.
+    """
     from plv_clone.decisions.logger import DecisionRecord
     root = Path(DECISIONS_ROOT) if not isinstance(DECISIONS_ROOT, Path) else DECISIONS_ROOT
     out, seen = [], set()
@@ -377,15 +388,119 @@ def _load_paired_records(today: date) -> list:
             rec = DecisionRecord(**payload)
         except TypeError:
             continue
-        if not getattr(rec, "counterfactual_settlement", None):
+        if not keep(rec):
             continue
-        # the settled/ mirror and the source tree can both hold a record; the
-        # mirror is authoritative, and sorted() puts 'settled' after the dates
         if rec.decision_id in seen:
             out = [r for r in out if r.decision_id != rec.decision_id]
         seen.add(rec.decision_id)
         out.append(rec)
     return out
+
+
+def _load_paired_records(today: date) -> list:
+    """Every v3 record carrying a paired settlement, from both trees."""
+    return _load_records_where(
+        lambda r: bool(getattr(r, "counterfactual_settlement", None)))
+
+
+def _load_prediction_records() -> list:
+    """Every v4 record carrying a claim — settled OR still open.
+
+    Open claims are loaded deliberately: a book that only showed resolved
+    predictions would let an unflattering outstanding claim quietly vanish
+    until it happened to settle well.
+    """
+    return _load_records_where(lambda r: bool(getattr(r, "prediction", None)))
+
+
+#: below this many resolved claims, a hit rate is noise dressed as a record
+_MIN_BOOK_FOR_RATE = 10
+
+
+def _prediction_section(today: date) -> None:
+    """§10 — was the stated CLAIM right?
+
+    The third scoreboard. §1-6 grade projections, §7-9 grade choices, this
+    grades claims: a number and a deadline written down before the outcome
+    was known. It is the only one of the three that can hold an advisor to
+    account for what they actually said out loud.
+
+    Open claims are listed with their deadlines, not just resolved ones. A
+    book that reported only settled predictions would let a claim heading for
+    a miss stay invisible until it settled, which is the failure this whole
+    ledger exists to prevent.
+    """
+    from plv_clone.decisions.prediction import HIT, MISS, PENDING, score_book
+
+    recs = _load_prediction_records()
+    print("\n" + "=" * 78)
+    print("CLAIM ACCOUNTING — was the stated CLAIM right? (grades what was said)")
+    print("=" * 78)
+    if not recs:
+        print("  no predictions logged yet.")
+        print("  Log one at verdict time with scripts/xfp/log_prediction.py —")
+        print("  a claim needs a number and a deadline, or it cannot be wrong.")
+        return
+
+    settlements, open_claims = [], []
+    for r in recs:
+        ps = getattr(r, "prediction_settlement", None)
+        if ps:
+            settlements.append(dict(ps, _rec=r))
+        else:
+            settlements.append({"status": PENDING})
+            open_claims.append(r)
+
+    s = score_book([{k: v for k, v in x.items() if k != "_rec"}
+                    for x in settlements])
+    print(f"\n--- §10 The prediction book (n={s['n_total']}) ---")
+    print(f"  resolved {s['n_resolved']} | open {s['n_pending']} | "
+          f"unsettleable {s['n_unsettleable']}")
+    if s["hit_rate"] is None:
+        print("  hit rate: n/a — nothing has resolved yet.")
+    elif s["n_resolved"] < _MIN_BOOK_FOR_RATE:
+        print(f"  hit rate: {s['hit_rate']:.0%} on only {s['n_resolved']} "
+              f"resolved — too few to read as skill; reported for completeness.")
+    else:
+        print(f"  hit rate: {s['hit_rate']:.0%} ({s['n_hit']}/{s['n_resolved']}), "
+              f"mean margin {s['mean_margin']:+.1f} FP")
+
+    # split by author: the point is telling whose calls hold up
+    by_author: dict[str, list] = {}
+    for x in settlements:
+        rec = x.get("_rec")
+        who = ((getattr(rec, "prediction", None) or {}).get("made_by")
+               if rec else None) or "unknown"
+        by_author.setdefault(who, []).append(x)
+    if len(by_author) > 1 or s["n_resolved"]:
+        print(f"\n  {'author':<12}{'resolved':>9}{'hit':>6}{'rate':>8}")
+        for who, xs in sorted(by_author.items()):
+            res = [x for x in xs if x.get("status") in (HIT, MISS)]
+            nh = sum(1 for x in res if x["status"] == HIT)
+            rate = f"{nh/len(res):.0%}" if res else "—"
+            print(f"  {who:<12}{len(res):>9}{nh:>6}{rate:>8}")
+
+    if open_claims:
+        print(f"\n  OPEN CLAIMS ({len(open_claims)}) — these settle themselves, "
+              f"whether or not anyone brings them up:")
+        for r in sorted(open_claims,
+                        key=lambda x: x.prediction.get("horizon_end", "")):
+            p = r.prediction
+            due = p.get("horizon_end", "?")
+            try:
+                days = (date.fromisoformat(due) - today).days
+                when = f"{due} ({days:+d}d)"
+            except ValueError:
+                when = due
+            print(f"    {when:<22} [{p.get('made_by', '?'):<6}] {p.get('claim')}")
+
+    misses = [x for x in settlements if x.get("status") == MISS and x.get("_rec")]
+    if misses:
+        print(f"\n  MISSES ({len(misses)}) — stated, then wrong:")
+        for x in sorted(misses, key=lambda y: y.get("margin", 0.0)):
+            p = x["_rec"].prediction
+            print(f"    {x.get('margin', 0.0):>+7.1f} FP short of "
+                  f"{x.get('threshold')}  {p.get('claim')}")
 
 
 def _decision_sections(today: date) -> None:

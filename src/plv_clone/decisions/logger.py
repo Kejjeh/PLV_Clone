@@ -87,6 +87,23 @@ class DecisionRecord:
     # Filled by the paired settler. Sibling of `settlement`, never a replacement.
     counterfactual_settlement: Optional[dict] = None
 
+    # ── schema v4 (2026-08-05): FALSIFIABLE predictions ──────────────────────
+    # Same optional-with-default discipline, so v1-v3 records keep parsing.
+    #
+    # WHY v4 EXISTS. v2 asks "was the projection right?", v3 asks "was the
+    # choice right?". Neither asks "was the CLAIM right?" — and a claim is the
+    # thing an advisor actually owes. The season review on 2026-08-05 found ten
+    # resolved swaps in four months and no way to say who had been correct
+    # about anything, because "BUY" is not a statement that can turn out false.
+    # A v4 record pins a number and a deadline at the moment the advice is
+    # given, so it can.
+    #
+    # See plv_clone.decisions.prediction for the claim shape and the rules that
+    # keep it honest (no settling before the horizon; zero playing time settles
+    # rather than excuses).
+    prediction: Optional[dict] = None
+    prediction_settlement: Optional[dict] = None
+
 
 # ---------------------------------------------------------------------------
 # Name normalization + decision_id construction
@@ -190,6 +207,52 @@ def build_executed_record(
         executed_at=executed_at,
         counterfactual=cf,
     )
+
+
+def build_prediction_record(
+    *,
+    snapshot_date: str,
+    player_name: str,
+    mlbam_id: Optional[int],
+    bucket: str,
+    prediction: Any,
+    verdict_top: str = "PREDICT",
+    reason_tag: Optional[str] = None,
+    confidence: Optional[float] = None,
+    seq: int = 1,
+    inputs: Optional[dict] = None,
+) -> DecisionRecord:
+    """Build a v4 record carrying a falsifiable claim.
+
+    ``prediction`` is a plv_clone.decisions.prediction.Prediction (or an
+    equivalent dict). It is stored verbatim; nothing downstream may edit it,
+    because a claim that can be revised after the fact is not a claim.
+    """
+    payload = prediction.as_dict() if hasattr(prediction, "as_dict") else dict(prediction)
+    for required in ("claim", "metric", "threshold", "horizon_end"):
+        if payload.get(required) in (None, ""):
+            raise ValueError(
+                f"prediction is missing {required!r} — refusing to log a claim "
+                f"that cannot be settled")
+
+    return DecisionRecord(
+        decision_id=build_decision_id(snapshot_date, player_name, bucket, seq=seq),
+        snapshot_date=snapshot_date,
+        player_name=player_name,
+        mlbam_id=(int(mlbam_id) if mlbam_id else None),
+        bucket=bucket,
+        verdict_top=verdict_top,
+        reason_tag=reason_tag,
+        confidence=confidence,
+        inputs=dict(inputs or {}, inputs_schema=4),
+        record_schema=4,
+        prediction=payload,
+    )
+
+
+def is_prediction_record(rec: DecisionRecord) -> bool:
+    """True for a v4 record carrying an unsettled or settled claim."""
+    return bool(getattr(rec, "prediction", None))
 
 
 def is_executed_record(rec: DecisionRecord) -> bool:

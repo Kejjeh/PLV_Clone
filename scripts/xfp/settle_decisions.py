@@ -373,6 +373,65 @@ def _merge_paired_into_mirror(
     )
 
 
+def _settle_prediction_one(rec: DecisionRecord, today: date,
+                           gamelog_cache: dict) -> DecisionRecord:
+    """Resolve a v4 falsifiable claim. No-op for anything else.
+
+    A third, independent question alongside residual and paired settlement:
+    not "was the projection right" or "was the choice right", but "was the
+    stated claim right". Gated on the claim's OWN horizon, not the bucket
+    settlement window, because the horizon was part of what was promised.
+    """
+    from plv_clone.decisions.prediction import is_ripe, settle_prediction
+
+    pred = getattr(rec, "prediction", None)
+    if not pred or rec.prediction_settlement:
+        return rec
+    if not is_ripe(pred, today):
+        return rec
+    if not rec.mlbam_id:
+        return replace(rec, prediction_settlement={
+            "status": "UNSETTLEABLE", "settled_on": today.isoformat(),
+            "note": "record carries no mlbam id"})
+
+    start = date.fromisoformat(rec.snapshot_date)
+    end = date.fromisoformat(pred["horizon_end"])
+    realized, n = _totals_in_window(rec.mlbam_id, rec.bucket, start, end,
+                                    gamelog_cache)
+    # A player who never appeared scored zero; that settles, it does not excuse.
+    # _totals_in_window signals "no games" and "no data" identically, so an
+    # empty window is read as 0.0 rather than left unsettleable.
+    realized = 0.0 if realized is None else realized
+
+    comp = None
+    if pred.get("metric") == "fp_margin_vs":
+        vs_id = pred.get("vs_mlbam")
+        if vs_id:
+            vs_bucket = pred.get("vs_bucket") or rec.bucket
+            comp, _ = _totals_in_window(int(vs_id), vs_bucket, start, end,
+                                        gamelog_cache)
+            comp = 0.0 if comp is None else comp
+
+    out = settle_prediction(pred, realized=realized, comparator_realized=comp,
+                            n_events=n, today=today)
+    return replace(rec, prediction_settlement=out,
+                   settled_at=rec.settled_at or today.isoformat())
+
+
+def _merge_prediction_into_mirror(
+    prior: Optional[DecisionRecord], rec: DecisionRecord
+) -> DecisionRecord:
+    """Persist a prediction grade without clobbering other settlement blocks."""
+    if prior is None:
+        return rec
+    return replace(
+        prior,
+        prediction=prior.prediction or rec.prediction,
+        prediction_settlement=rec.prediction_settlement,
+        settled_at=prior.settled_at or rec.settled_at,
+    )
+
+
 def _settle_one(
     rec: DecisionRecord, today: date, gamelog_cache: dict
 ) -> tuple[DecisionRecord, str]:
@@ -568,6 +627,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
     gamelog_cache: dict = {}
 
     paired_settled = 0
+    prediction_settled = 0
 
     for rec in records:
         # Existing settled mirror (if any), loaded FIRST so both the paired
@@ -605,6 +665,29 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
                 print(f'  WARN paired settlement failed for {rec.decision_id}: '
                       f'{type(exc).__name__}: {exc}')
 
+        # 0.5 Prediction (v4) settlement — the third independent question:
+        #     was the stated CLAIM right? Gated on the claim's own horizon,
+        #     and persisted immediately for the same reason as the paired
+        #     block: the source JSON is never mutated, so an unpersisted
+        #     grade would be recomputed (and re-fetched) every night.
+        if (prior is not None and getattr(prior, 'prediction_settlement', None)
+                and not rec.prediction_settlement):
+            rec = replace(rec,
+                          prediction_settlement=prior.prediction_settlement,
+                          settled_at=rec.settled_at or prior.settled_at)
+        if getattr(rec, 'prediction', None) and not rec.prediction_settlement:
+            try:
+                rec3 = _settle_prediction_one(rec, today, gamelog_cache)
+                if rec3.prediction_settlement:
+                    rec = rec3
+                    prediction_settled += 1
+                    mirror = _merge_prediction_into_mirror(prior, rec)
+                    _atomic_write_json(_settled_path(root, rec), asdict(mirror))
+                    prior = mirror
+            except Exception as exc:
+                print(f'  WARN prediction settlement failed for '
+                      f'{rec.decision_id}: {type(exc).__name__}: {exc}')
+
         # 1. Idempotency: reuse an existing RESIDUAL settlement if present.
         #    A paired-only mirror (settlement=None) must NOT short-circuit —
         #    the residual question is still open and is retried nightly, and
@@ -641,6 +724,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         "newly_settled": newly_settled,
         "reused_settled": reused_settled,
         "paired_settled": paired_settled,
+        "prediction_settled": prediction_settled,
         "pending": pending,
         "ripe_but_pending": ripe_pending,
         "not_ripe": not_ripe,
@@ -651,6 +735,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         f"  settled {len(settled_out)} ({newly_settled} new, "
         f"{reused_settled} reused) | "
         f"paired {paired_settled} new | "
+        f"predictions {prediction_settled} new | "
         f"pending {pending} ({not_ripe} not-ripe, "
         f"{ripe_pending} ripe-waiting-events)"
     )
