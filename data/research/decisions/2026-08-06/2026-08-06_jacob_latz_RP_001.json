@@ -1,0 +1,32 @@
+{
+  "action": null,
+  "bucket": "RP",
+  "confidence": 0.65,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-06_jacob_latz_RP_001",
+  "executed_at": null,
+  "inputs": {
+    "inputs_schema": 4
+  },
+  "mlbam_id": 656641,
+  "player_name": "Jacob Latz",
+  "prediction": {
+    "claim": "REVERSAL of my 8/5 call: Latz outscores Helsley by 10+ total FP over the next 20 days \u2014 Latz has a 75% save share and 21 SV, and the xfp_ros column that drove the original call is a season-total residual that penalizes arms who have already banked FP",
+    "direction": "at_least",
+    "horizon_end": "2026-08-26",
+    "made_by": "claude",
+    "metric": "fp_margin_vs",
+    "threshold": 10.0,
+    "vs_mlbam": 664854,
+    "vs_name": "Ryan Helsley",
+    "window_days": 20
+  },
+  "prediction_settlement": null,
+  "reason_tag": "reversal_of_0805_helsley_call",
+  "record_schema": 4,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-06",
+  "verdict_top": "PREDICT"
+}
