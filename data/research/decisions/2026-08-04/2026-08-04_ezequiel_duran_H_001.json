@@ -27,6 +27,8 @@
   },
   "mlbam_id": 677649,
   "player_name": "Ezequiel Duran",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "auto_reconciled",
   "record_schema": 3,
   "settled_at": null,

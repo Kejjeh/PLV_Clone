@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-16_luis_garcia_jr_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AGGRESSIVE_STAR",
     "archetype_overall": 68,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 671277,
   "player_name": "Luis Garc\u00eda Jr.",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-06",
+  "settlement": {
+    "actual_fp_per_unit": 0.6268656716417911,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 67,
+    "proj_per": 0.6516373459194712,
+    "proj_units_note": "native",
+    "residual": -0.024771674277680122,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-16",
   "verdict_top": "BUY"
 }

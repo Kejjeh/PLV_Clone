@@ -481,3 +481,5 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-08-04T09:19:07.830059,2026-08-04,18,New York Ligers,Frendy's Fantastic Team,15.5,397.57,3.0,352.61,0.7792,,,MA_v1,,
 2026-08-05T09:08:57.397411,2026-08-05,18,New York Ligers,Frendy's Fantastic Team,74.9,364.87,26.9,263.25,0.9762,,,baseline,,
 2026-08-05T09:08:59.273192,2026-08-05,18,New York Ligers,Frendy's Fantastic Team,74.9,408.16,26.9,302.9,0.9736,,,MA_v1,,
+2026-08-06T09:13:25.701237,2026-08-06,18,New York Ligers,Frendy's Fantastic Team,141.7,342.33,74.7,262.32,0.968,,,baseline,,
+2026-08-06T09:13:27.522562,2026-08-06,18,New York Ligers,Frendy's Fantastic Team,141.7,374.05,74.7,289.98,0.9682,,,MA_v1,,

@@ -1,0 +1,54 @@
+date,add,drop,add_fp,drop_fp,edge,banked,held,days
+2026-03-26,Bubba Chandler,Tim Anderson,,0.0,,,,132
+2026-03-26,Carlos Rodon,,,,,,,132
+2026-03-26,Hunter Greene,,,,,,,132
+2026-03-26,Cade Horton,,,,,,,132
+2026-04-07,Jose Soriano,Cade Horton,,,,,,120
+2026-04-14,Jeffrey Springs,Andrew Abbott,,,,,,113
+2026-04-18,Alex Vesia,Daniel Palencia,113.4,,,5.4,3.0,109
+2026-04-19,Parker Messick,Bubba Chandler,,,,,,108
+2026-04-19,Louis Varland,Trey Yesavage,,,,,,108
+2026-04-19,Kyle Stowers,Ceddanne Rafaela,166.0,236.0,-70.0,13.0,13.0,108
+2026-04-20,Tanner Scott,Louis Varland,,,,,,107
+2026-04-21,Robert Suarez,Alex Vesia,,108.0,,,,106
+2026-04-22,Michael Soroka,Jeffrey Springs,137.8,,,12.5,1.0,105
+2026-04-23,Will Warren,Michael Soroka,,137.8,,,,104
+2026-04-28,Jordan Walker,Eugenio Suarez,223.0,,,223.0,99.0,99
+2026-05-01,Eury Perez,Kris Bubic,,31.0,,,,96
+2026-05-02,Daniel Palencia,Kyle Stowers,,153.0,,,,95
+2026-05-06,Lucas Erceg,Robert Suarez,,,,,,91
+2026-05-08,Kris Bubic,Eury Perez,8.899999999999999,,,9.7,0.0,89
+2026-05-08,Kyle Bradish,Kris Bubic,,8.899999999999999,,,,89
+2026-05-15,Logan Henderson,Lucas Erceg,,,,,,82
+2026-05-19,Max Muncy,Brendan Donovan,,-1.0,,,,78
+2026-05-31,Merrill Kelly,Logan Henderson,86.9,,,1.0999999999999996,6.0,66
+2026-06-06,Jack Leiter,Merrill Kelly,-2.9,85.8,-88.7,-1.6,0.0,60
+2026-06-06,Roki Sasaki,Jack Leiter,,-2.9,,,,60
+2026-06-08,Jacob Latz,Daniel Palencia,,,,,,58
+2026-06-08,Hunter Goodman,Salvador Perez,116.0,81.0,35.0,116.0,58.0,58
+2026-06-11,Spencer Steer,Kyle Bradish,52.0,,,2.0,4.0,55
+2026-06-11,Reid Detmers,Framber Valdez,101.2,69.8,31.400000000000006,101.2,55.0,55
+2026-06-15,Dustin May,Spencer Steer,70.9,51.0,19.900000000000006,26.300000000000004,14.0,51
+2026-06-16,Dominic Canzone,Pete Fairbanks,77.0,,,41.0,34.0,50
+2026-06-19,Bryce Eldridge,Trea Turner,47.0,119.0,-72.0,2.0,9.0,47
+2026-06-26,Kyle Bradish,Will Warren,,,,,,40
+2026-06-28,Emmet Sheehan,Bryce Eldridge,,45.0,,,,38
+2026-06-28,Luis Garcia Jr.,Kyle Bradish,,,,,,38
+2026-06-29,Ryan Weathers,Roki Sasaki,73.3,,,-3.5,1.0,37
+2026-06-29,Kody Clemens,Dustin May,67.0,44.599999999999994,22.400000000000006,41.0,19.0,37
+2026-06-30,Shota Imanaga,Ryan Weathers,,76.8,,,,36
+2026-07-05,Brandon Sproat,Ryan Helsley,,0.0,,,,31
+2026-07-05,Eury Perez,Brandon Sproat,,,,,,31
+2026-07-10,Luke Weaver,Carlos Rodon,23.8,,,14.2,17.0,26
+2026-07-11,Griffin Jax,Emmet Sheehan,65.0,,,9.0,6.0,25
+2026-07-17,Logan Henderson,Griffin Jax,,54.5,,,,19
+2026-07-18,Curtis Mead,Kody Clemens,10.0,36.0,-26.0,10.0,11.0,18
+2026-07-20,Trent Grisham,Dominic Canzone,14.0,38.0,-24.0,1.0,7.0,16
+2026-07-21,Drew Rasmussen,Freddy Peralta,63.400000000000006,-4.7,68.10000000000001,63.400000000000006,15.0,15
+2026-07-27,Nick Pivetta,Bo Bichette,0.0,10.0,-10.0,0.0,9.0,9
+2026-07-27,Jackson Merrill,Trent Grisham,26.0,14.0,12.0,26.0,9.0,9
+2026-07-27,Emilio Pagan,Luke Weaver,,9.6,,,,9
+2026-07-29,Bo Bichette,Curtis Mead,6.0,0.0,6.0,0.0,4.0,7
+2026-08-02,Griffin Jax,Bo Bichette,18.5,4.0,14.5,18.5,2.0,3
+2026-08-04,Luke Weaver,Tanner Scott,0.0,,,0.0,1.0,1
+2026-08-04,Ezequiel Duran,Griffin Jax,9.0,0.0,9.0,9.0,1.0,1

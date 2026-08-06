@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-05",
+ "as_of": "2026-08-06",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -326,12 +326,6 @@
    "name": "Carmen Mlodzinski",
    "pos": "P"
   },
-  "606965": {
-   "team": "Pittsburgh Pirates",
-   "abbr": "PIT",
-   "name": "Chris Devenski",
-   "pos": "P"
-  },
   "682848": {
    "team": "Pittsburgh Pirates",
    "abbr": "PIT",
@@ -446,12 +440,6 @@
    "name": "Luke Weaver",
    "pos": "P"
   },
-  "542303": {
-   "team": "Pittsburgh Pirates",
-   "abbr": "PIT",
-   "name": "Marcell Ozuna",
-   "pos": "DH"
-  },
   "682254": {
    "team": "Pittsburgh Pirates",
    "abbr": "PIT",
@@ -499,6 +487,12 @@
    "abbr": "PIT",
    "name": "Rafael Flores Jr.",
    "pos": "C"
+  },
+  "682927": {
+   "team": "Pittsburgh Pirates",
+   "abbr": "PIT",
+   "name": "Ronny Simon",
+   "pos": "2B"
   },
   "656811": {
    "team": "Pittsburgh Pirates",
@@ -607,12 +601,6 @@
    "abbr": "SD",
    "name": "Gavin Sheets",
    "pos": "1B"
-  },
-  "608566": {
-   "team": "San Diego Padres",
-   "abbr": "SD",
-   "name": "Germán Márquez",
-   "pos": "P"
   },
   "656288": {
    "team": "San Diego Padres",
@@ -2300,6 +2288,12 @@
    "name": "Mason Fluharty",
    "pos": "P"
   },
+  "663362": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Matt Waldron",
+   "pos": "P"
+  },
   "453286": {
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
@@ -3205,12 +3199,6 @@
    "abbr": "CWS",
    "name": "Anthony Kay",
    "pos": "P"
-  },
-  "669720": {
-   "team": "Chicago White Sox",
-   "abbr": "CWS",
-   "name": "Austin Hays",
-   "pos": "LF"
   },
   "695731": {
    "team": "Chicago White Sox",
@@ -6014,12 +6002,6 @@
    "name": "Franco Aleman",
    "pos": "P"
   },
-  "672356": {
-   "team": "Cleveland Guardians",
-   "abbr": "CLE",
-   "name": "Gabriel Arias",
-   "pos": "3B"
-  },
   "668909": {
    "team": "Cleveland Guardians",
    "abbr": "CLE",
@@ -7676,12 +7658,6 @@
    "name": "James Wood",
    "pos": "RF"
   },
-  "686894": {
-   "team": "Washington Nationals",
-   "abbr": "WSH",
-   "name": "Joey Wiemer",
-   "pos": "RF"
-  },
   "678391": {
    "team": "Washington Nationals",
    "abbr": "WSH",
@@ -7800,12 +7776,6 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Yovanny Cruz",
-   "pos": "P"
-  },
-  "641793": {
-   "team": "Washington Nationals",
-   "abbr": "WSH",
-   "name": "Zack Littell",
    "pos": "P"
   },
   "687849": {

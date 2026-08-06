@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-16_dominic_canzone_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "CONTACT_POWER",
     "archetype_overall": 66,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 686527,
   "player_name": "Dominic Canzone",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-06",
+  "settlement": {
+    "actual_fp_per_unit": 0.4864864864864865,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 74,
+    "proj_per": 0.5274027696941261,
+    "proj_units_note": "native",
+    "residual": -0.040916283207639625,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-16",
   "verdict_top": "MIXED"
 }

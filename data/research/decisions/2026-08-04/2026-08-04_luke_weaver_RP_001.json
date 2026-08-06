@@ -27,6 +27,8 @@
   },
   "mlbam_id": 596133,
   "player_name": "Luke Weaver",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "auto_reconciled",
   "record_schema": 3,
   "settled_at": null,

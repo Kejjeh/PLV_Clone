@@ -1,127 +1,138 @@
 {
-  "base_pwin": 0.8329,
+  "base_pwin": 0.9632,
   "regime": "LEADING",
   "period": 18,
   "sims": 10000,
   "seed": 7,
-  "cap_remaining": 10,
+  "cap_remaining": 6,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.027000000000000024,
-  "plan_pwin_final": 0.8599,
+  "plan_total_dpwin": 0.019100000000000006,
+  "plan_pwin_final": 0.9823,
   "plan": [
     {
-      "add": "Spencer Horwitz",
+      "add": "Masataka Yoshida",
       "add_bucket": "H",
-      "drop": "Griffin Jax",
+      "drop": "Hunter Greene",
       "drop_bucket": "SP",
-      "dpwin": 0.027000000000000024,
-      "mc_se": 0.003471,
-      "pwin_after": 0.8599,
-      "dpwin_from_base": 0.027,
-      "dtitle_equity_pp": 0.0483
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509,
+      "pwin_after": 0.9767,
+      "dpwin_from_base": 0.0135,
+      "dtitle_equity_pp": -0.0026
+    },
+    {
+      "add": "Caleb Durbin",
+      "add_bucket": "H",
+      "drop": "Max Muncy",
+      "drop_bucket": "H",
+      "dpwin": 0.005599999999999938,
+      "mc_se": 0.001319,
+      "pwin_after": 0.9823,
+      "dpwin_from_base": 0.0191,
+      "dtitle_equity_pp": -0.0011
     }
   ],
   "title_equity": {
-    "dtitle_pp": 1.79,
-    "status": "stale",
+    "dtitle_pp": -0.19,
+    "status": "fresh",
     "source_period": 18,
-    "payload_period": 17,
-    "periods_stale": 1,
-    "note": "season_sim.json was generated at period 17, now period 18 (1 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
-    "plus2_pp": 0.68
+    "payload_period": 18,
+    "periods_stale": 0,
+    "note": "",
+    "plus2_pp": 0.94
   },
   "top_single_moves": [
     {
-      "add": "Spencer Horwitz",
-      "drop": "Griffin Jax",
-      "dpwin": 0.027000000000000024,
-      "mc_se": 0.003471
+      "add": "Caleb Durbin",
+      "drop": "Hunter Greene",
+      "dpwin": 0.01540000000000008,
+      "mc_se": 0.001447
     },
     {
-      "add": "Spencer Horwitz",
-      "drop": "Parker Messick",
-      "dpwin": 0.02639999999999998,
-      "mc_se": 0.003477
+      "add": "Caleb Durbin",
+      "drop": "Reid Detmers",
+      "dpwin": 0.01540000000000008,
+      "mc_se": 0.001447
     },
     {
-      "add": "Spencer Horwitz",
-      "drop": "Jose Soriano",
-      "dpwin": 0.023900000000000032,
-      "mc_se": 0.003503
+      "add": "Caleb Durbin",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.01540000000000008,
+      "mc_se": 0.001447
     },
     {
-      "add": "Spencer Horwitz",
-      "drop": "Max Fried",
-      "dpwin": 0.023399999999999976,
-      "mc_se": 0.003508
+      "add": "Caleb Durbin",
+      "drop": "Eury Perez",
+      "dpwin": 0.01540000000000008,
+      "mc_se": 0.001447
     },
     {
-      "add": "Spencer Horwitz",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.021100000000000008,
-      "mc_se": 0.003531
+      "add": "Caleb Durbin",
+      "drop": "Logan Henderson",
+      "dpwin": 0.01540000000000008,
+      "mc_se": 0.001447
     },
     {
-      "add": "Bryson Stott",
-      "drop": "Griffin Jax",
-      "dpwin": 0.020500000000000074,
-      "mc_se": 0.003537
+      "add": "Masataka Yoshida",
+      "drop": "Hunter Greene",
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509
     },
     {
-      "add": "Bryson Stott",
-      "drop": "Parker Messick",
-      "dpwin": 0.020000000000000018,
-      "mc_se": 0.003542
+      "add": "Masataka Yoshida",
+      "drop": "Reid Detmers",
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509
     },
     {
-      "add": "Bryson Stott",
-      "drop": "Jose Soriano",
-      "dpwin": 0.018100000000000005,
-      "mc_se": 0.003561
+      "add": "Masataka Yoshida",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509
     },
     {
-      "add": "Alec Bohm",
-      "drop": "Griffin Jax",
-      "dpwin": 0.01770000000000005,
-      "mc_se": 0.003565
+      "add": "Masataka Yoshida",
+      "drop": "Eury Perez",
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509
+    },
+    {
+      "add": "Masataka Yoshida",
+      "drop": "Logan Henderson",
+      "dpwin": 0.013500000000000068,
+      "mc_se": 0.001509
     },
     {
       "add": "Tyrone Taylor",
-      "drop": "Griffin Jax",
-      "dpwin": 0.01770000000000005,
-      "mc_se": 0.003565
+      "drop": "Hunter Greene",
+      "dpwin": 0.012700000000000045,
+      "mc_se": 0.001534
     },
     {
-      "add": "Yainer Diaz",
-      "drop": "Griffin Jax",
-      "dpwin": 0.017199999999999993,
-      "mc_se": 0.00357
-    },
-    {
-      "add": "Spencer Horwitz",
-      "drop": "Jordan Walker",
-      "dpwin": 0.016900000000000026,
-      "mc_se": 0.003573
-    },
-    {
-      "add": "Spencer Horwitz",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.016800000000000037,
-      "mc_se": 0.003574
-    },
-    {
-      "add": "Spencer Horwitz",
+      "add": "Tyrone Taylor",
       "drop": "Reid Detmers",
-      "dpwin": 0.01650000000000007,
-      "mc_se": 0.003577
+      "dpwin": 0.012700000000000045,
+      "mc_se": 0.001534
     },
     {
-      "add": "Alec Bohm",
-      "drop": "Parker Messick",
-      "dpwin": 0.01640000000000008,
-      "mc_se": 0.003578
+      "add": "Tyrone Taylor",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.012700000000000045,
+      "mc_se": 0.001534
+    },
+    {
+      "add": "Tyrone Taylor",
+      "drop": "Eury Perez",
+      "dpwin": 0.012700000000000045,
+      "mc_se": 0.001534
+    },
+    {
+      "add": "Tyrone Taylor",
+      "drop": "Logan Henderson",
+      "dpwin": 0.012700000000000045,
+      "mc_se": 0.001534
     }
   ],
   "pair_check": null,
-  "dpwin_run_id": "2026-08-03T221924_7"
+  "dpwin_run_id": "2026-08-06T071543_7"
 }
