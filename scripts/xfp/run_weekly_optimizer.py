@@ -91,7 +91,7 @@ sys.path.insert(0, str(ROOT / 'scripts' / 'xfp'))
 from scripts.xfp.lib.leverage_engine import (  # noqa: E402
     build_state, precompute_draws, assemble, pwin, mc_se, delta_pwin,
     ensure_candidate_draws, classify_regime, REGIME_BLURB, emp_series,
-    series_stats, _draw_key, OUT,
+    series_stats, _draw_key, OUT, resolve_player_mlbam,
 )
 from scripts.xfp.lib import roster_rules as RR  # noqa: E402
 from scripts.xfp.lib import dpwin_history  # noqa: E402
@@ -99,6 +99,7 @@ from scripts.xfp.lib import title_equity as TE  # noqa: E402
 from scripts.xfp.lib.boom_bust import SP_BOOM, SP_BUST, H_BOOM, H_BUST  # noqa: E402
 from build_matchup_dashboard import (  # noqa: E402
     project_player, ESPN_TO_MLB_TEAM, IL_INJURY_STATES, _norm,
+    build_sp_starts_by_pitcher,
 )
 from plv_clone.utils.name_match import safe_name_key as _ckey  # noqa: E402
 
@@ -157,7 +158,13 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
         return []
 
     maps = state['proj_maps']
-    cands: list[dict] = []
+
+    # Pass 1 — classify buckets, then extend the SP-start map to FA pitchers.
+    # build_state builds sp_starts_by_pitcher over ROSTERED ids only, so
+    # without this every FA SP projects 0 starts and dpwin pins at +0.00
+    # (found 2026-08-07 via the forced-include Griffin Jax scenario).
+    pool: list[tuple] = []
+    fa_pitcher_ids: set[int] = set()
     for p in fas:
         pos = (getattr(p, 'position', '') or '')
         elig = {str(s) for s in (getattr(p, 'eligibleSlots', []) or [])}
@@ -168,11 +175,28 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
             bucket = 'H'
         elif pos in ('SP', 'RP', 'P') or ({'SP', 'RP'} & elig):
             bucket = 'SP' if ('SP' in elig or pos == 'SP') else 'RP'
+            m = resolve_player_mlbam(p)
+            if m:
+                fa_pitcher_ids.add(int(m))
         else:
             continue
+        pool.append((p, bucket, pos, elig, inj))
+
+    starts_map = dict(state['sp_starts_by_pitcher'])
+    if fa_pitcher_ids:
+        try:
+            starts_map.update(build_sp_starts_by_pitcher(
+                fa_pitcher_ids, state['schedules_by_team'],
+                state['today'], state['week_end']))
+        except Exception as exc:
+            print(f'  WARN FA SP start-map build failed ({exc}) — '
+                  f'FA SP adds will project 0 starts')
+
+    cands: list[dict] = []
+    for p, bucket, pos, elig, inj in pool:
         try:
             proj = project_player(p, state['schedules_by_team'],
-                                  state['sp_starts_by_pitcher'],
+                                  starts_map,
                                   maps['rh3'], maps['rp3'], maps['rp3_by_mlbam'],
                                   maps['rprs2'], maps['ts'],
                                   state['today'], state['week_end'])
@@ -186,7 +210,8 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
         cands.append({
             'name': p.name, 'bucket': bucket, 'espn_pos': pos, 'eligible': elig,
             'team': getattr(p, 'proTeam', ''), 'proj': proj,
-            'fp': fp, 'units': units, 'per_unit': fp / units,
+            'fp': fp, 'units': units,
+            'per_unit': (fp / units) if units else 0.0,
             'pct_owned': float(getattr(p, 'percent_owned', 0) or 0),
             'injury_status': inj,
             'starts': [b for b in (proj.get('breakdown') or [])
