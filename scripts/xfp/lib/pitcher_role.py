@@ -20,8 +20,16 @@ Role detection priority:
      they short-circuit to 'RP' with no API call, exactly as before.
   3. Both SP+RP eligible                       → MLB Stats API gamesStarted
      • gamesStarted / gamesPlayed >= 0.4      → 'SP'
+     • else, if gamesStarted >= 1             → recent game log breaks the tie
      • else                                   → 'RP'
   4. Neither in eligible_slots                 → fall back to .position tag
+
+The season-cumulative ratio in (3) is blind to an IN-SEASON role change —
+early relief appearances stay in the denominator all year (issue #11,
+canonical: Ian Seymour 2026, 8 GS / 37 G = 0.216 cumulative while taking a
+regular 5-day rotation turn, several of those turns logged GS=0 as bulk
+behind an opener). The recency window fixes that; see
+`_recent_role_from_gamelog`.
 """
 from __future__ import annotations
 
@@ -54,9 +62,71 @@ def _elig_set(player_or_row) -> set[str]:
     return set(elig) if elig else set()
 
 
+_RECENT_WINDOW = 6          # outings inspected by the recency test
+_RECENT_SP_MIN = 3          # start-equivalents in that window to call it 'SP'
+_BULK_PITCHES = 60          # opener-bulk outing: pitch count ...
+_BULK_IP = 3.0              # ... and innings, both required
+
+
+def _ip_to_float(ip) -> float:
+    """MLB's innings string ('5.1' = 5 and 1/3) -> float. Never raises."""
+    try:
+        whole, _, outs = str(ip).partition('.')
+        return int(whole or 0) + (int(outs or 0) / 3.0)
+    except Exception:
+        return 0.0
+
+
+@lru_cache(maxsize=512)
+def _recent_role_from_gamelog(mlbam_id: int, season: int = 2026) -> str | None:
+    """Role from the LAST ``_RECENT_WINDOW`` outings, or None if undecidable.
+
+    The season-cumulative ratio cannot see an in-season role change: April
+    relief appearances sit in the denominator all year. This reads the actual
+    recent usage instead.
+
+    A "start-equivalent" is ``GS=1`` OR a bulk outing behind an opener
+    (>= _BULK_PITCHES pitches AND >= _BULK_IP innings). The bulk clause is
+    load-bearing for Rays-style staffs, where a rotation regular can log
+    ``GS=0`` on a 90-pitch, 6-inning outing.
+
+    Returns None (caller falls back to the cumulative test) when the log is
+    unavailable or too short to read.
+    """
+    try:
+        url = (
+            f'https://statsapi.mlb.com/api/v1/people/{mlbam_id}/stats'
+            f'?stats=gameLog&season={season}&group=pitching&sportId=1'
+        )
+        data = requests.get(url, timeout=8).json()
+        splits = data.get('stats', [{}])[0].get('splits', [])
+        if len(splits) < _RECENT_SP_MIN:
+            return None
+        recent = splits[-_RECENT_WINDOW:]
+        equiv = 0
+        for sp in recent:
+            stat = sp.get('stat', {})
+            if int(stat.get('gamesStarted', 0) or 0) >= 1:
+                equiv += 1
+            elif (int(stat.get('numberOfPitches', 0) or 0) >= _BULK_PITCHES
+                    and _ip_to_float(stat.get('inningsPitched')) >= _BULK_IP):
+                equiv += 1
+        return 'SP' if equiv >= _RECENT_SP_MIN else 'RP'
+    except Exception as e:
+        _warn(f'recent_role_from_gamelog({mlbam_id})', e)
+        return None
+
+
 @lru_cache(maxsize=512)
 def _role_from_mlb_stats(mlbam_id: int, season: int = 2026) -> str:
-    """Return 'SP' or 'RP' based on actual gamesStarted this season (cached)."""
+    """Return 'SP' or 'RP' based on actual gamesStarted this season (cached).
+
+    Cumulative ratio first; where it says 'RP' but the pitcher has made at
+    least one start, the recent game log breaks the tie (issue #11 — Seymour
+    2026: 8 GS / 37 G = 0.216 cumulative, but 4 of his last 6 outings were
+    starts on a 5-day turn). A pitcher with zero starts is never ambiguous,
+    so true relievers still cost exactly one API call.
+    """
     try:
         url = (
             f'https://statsapi.mlb.com/api/v1/people/{mlbam_id}/stats'
@@ -69,7 +139,13 @@ def _role_from_mlb_stats(mlbam_id: int, season: int = 2026) -> str:
         stat = splits[0]['stat']
         gs = int(stat.get('gamesStarted', 0))
         gp = max(int(stat.get('gamesPlayed', 1)), 1)
-        return 'SP' if gs / gp >= 0.4 else 'RP'
+        if gs / gp >= 0.4:
+            return 'SP'
+        if gs >= 1:
+            recent = _recent_role_from_gamelog(mlbam_id, season)
+            if recent is not None:
+                return recent
+        return 'RP'
     except Exception as e:
         _warn(f'role_from_mlb_stats({mlbam_id})', e)
         return 'SP'  # default: assume starter if API unavailable

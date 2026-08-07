@@ -178,3 +178,161 @@ def test_slotless_sp_tag_short_circuits():
     def _boom(pid, season):
         raise AssertionError('no API call expected for an SP tag')
     assert detect_pitcher_role(row, gs_lookup=_boom, rp3_keys=frozenset()) == 'SP'
+
+
+# ── In-season role change: recency beats the cumulative ratio (issue #11) ────
+# `_role_from_mlb_stats` used ONLY a season-cumulative gamesStarted/gamesPlayed
+# ratio, which cannot see a mid-season conversion: April relief appearances sit
+# in the denominator all year. Canonical: Ian Seymour 2026 (TB) — 8 GS / 37 G =
+# 0.216 cumulative -> 'RP', while actually taking a regular 5-day rotation turn,
+# several of those turns logged GS=0 as bulk work behind an opener.
+#
+# These drive the real `_role_from_mlb_stats` with a stubbed HTTP layer, so the
+# cumulative-vs-recency arbitration itself is under test (injecting `gs_lookup`
+# would bypass the very code that was wrong).
+
+import lib.pitcher_role as PR
+
+
+class _FakeResp:
+    def __init__(self, payload):
+        self._payload = payload
+
+    def json(self):
+        return self._payload
+
+
+def _season_payload(gs, gp):
+    return {'stats': [{'splits': [{'stat': {'gamesStarted': gs,
+                                            'gamesPlayed': gp}}]}]}
+
+
+def _log_payload(outings):
+    """outings: list of (gamesStarted, inningsPitched, numberOfPitches)."""
+    return {'stats': [{'splits': [
+        {'stat': {'gamesStarted': gs, 'inningsPitched': ip,
+                  'numberOfPitches': p}}
+        for gs, ip, p in outings
+    ]}]}
+
+
+def _stub_api(monkeypatch, season, gamelog):
+    """Route the season endpoint and the gameLog endpoint to fixtures."""
+    def _get(url, timeout=8):
+        return _FakeResp(gamelog if 'gameLog' in url else season)
+    monkeypatch.setattr(PR.requests, 'get', _get)
+    PR._role_from_mlb_stats.cache_clear()
+    PR._recent_role_from_gamelog.cache_clear()
+
+
+def test_seymour_recent_starts_beat_cumulative_ratio(monkeypatch):
+    """8 GS / 37 G = 0.216 cumulative, but 4 of the last 6 outings are starts
+    on a 5-day turn -> 'SP'. This is the issue #11 regression."""
+    _stub_api(
+        monkeypatch,
+        season=_season_payload(gs=8, gp=37),
+        gamelog=_log_payload([
+            (1, '6.0', 83),   # 7/02
+            (1, '5.1', 94),   # 7/07
+            (1, '3.1', 78),   # 7/12
+            (1, '3.0', 61),   # 7/18
+            (0, '6.0', 87),   # 7/23  bulk behind an opener
+            (0, '4.2', 71),   # 7/29  bulk behind an opener
+            (1, '6.0', 90),   # 8/03
+        ]),
+    )
+    assert PR._role_from_mlb_stats(693855) == 'SP'
+
+
+def test_opener_bulk_arm_without_a_logged_start_is_sp(monkeypatch):
+    """A pure bulk arm can go a full window at GS=0 while pitching 6 innings on
+    a rotation turn. Pitch count + innings must still read as 'SP'."""
+    _stub_api(
+        monkeypatch,
+        season=_season_payload(gs=2, gp=30),
+        gamelog=_log_payload([
+            (0, '5.2', 84), (0, '6.0', 91), (0, '4.1', 68),
+            (0, '5.0', 79), (0, '6.1', 88), (0, '5.2', 82),
+        ]),
+    )
+    assert PR._role_from_mlb_stats(999001) == 'SP'
+
+
+def test_montgomery_spot_starter_stays_rp(monkeypatch):
+    """Mason Montgomery 2026 (682254): 5 GS / 47 G, but ZERO starts in his last
+    6 outings — a multi-inning reliever who took spot starts. Must stay 'RP';
+    the recency fix must not over-correct short relief into the SP bucket."""
+    _stub_api(
+        monkeypatch,
+        season=_season_payload(gs=5, gp=47),
+        gamelog=_log_payload([
+            (0, '1.0', 18), (0, '1.1', 22), (0, '0.2', 14),
+            (0, '1.0', 16), (0, '2.0', 31), (0, '1.0', 19),
+        ]),
+    )
+    assert PR._role_from_mlb_stats(682254) == 'RP'
+
+
+def test_true_reliever_never_fetches_the_gamelog(monkeypatch):
+    """gamesStarted == 0 is unambiguous — the game log must not be requested,
+    so the fix costs true relievers no extra API call."""
+    calls = []
+
+    def _get(url, timeout=8):
+        calls.append(url)
+        assert 'gameLog' not in url, 'no game log for a 0-start pitcher'
+        return _FakeResp(_season_payload(gs=0, gp=60))
+
+    monkeypatch.setattr(PR.requests, 'get', _get)
+    PR._role_from_mlb_stats.cache_clear()
+    PR._recent_role_from_gamelog.cache_clear()
+    assert PR._role_from_mlb_stats(999002) == 'RP'
+    assert len(calls) == 1
+
+
+def test_clear_starter_skips_the_gamelog(monkeypatch):
+    """Cumulative ratio >= 0.4 settles it — no second call."""
+    calls = []
+
+    def _get(url, timeout=8):
+        calls.append(url)
+        assert 'gameLog' not in url, 'no game log needed for a clear starter'
+        return _FakeResp(_season_payload(gs=22, gp=22))
+
+    monkeypatch.setattr(PR.requests, 'get', _get)
+    PR._role_from_mlb_stats.cache_clear()
+    PR._recent_role_from_gamelog.cache_clear()
+    assert PR._role_from_mlb_stats(999003) == 'SP'
+    assert len(calls) == 1
+
+
+def test_short_gamelog_falls_back_to_cumulative(monkeypatch):
+    """Too few outings to read a pattern -> None from the recency probe, and
+    the cumulative verdict stands rather than a coin flip."""
+    _stub_api(
+        monkeypatch,
+        season=_season_payload(gs=1, gp=12),
+        gamelog=_log_payload([(1, '4.0', 62), (0, '1.0', 15)]),
+    )
+    assert PR._role_from_mlb_stats(999004) == 'RP'
+
+
+def test_gamelog_failure_falls_back_to_cumulative(monkeypatch):
+    """A game-log fetch error must degrade to the pre-fix answer, not crash."""
+    def _get(url, timeout=8):
+        if 'gameLog' in url:
+            raise RuntimeError('MLB API down')
+        return _FakeResp(_season_payload(gs=3, gp=40))
+
+    monkeypatch.setattr(PR.requests, 'get', _get)
+    PR._role_from_mlb_stats.cache_clear()
+    PR._recent_role_from_gamelog.cache_clear()
+    assert PR._role_from_mlb_stats(999005) == 'RP'
+
+
+def test_ip_to_float_handles_thirds():
+    assert PR._ip_to_float('5.1') == 5 + 1 / 3
+    assert PR._ip_to_float('6.2') == 6 + 2 / 3
+    assert PR._ip_to_float('6.0') == 6.0
+    assert PR._ip_to_float(None) == 0.0
+    assert PR._ip_to_float('garbage') == 0.0
