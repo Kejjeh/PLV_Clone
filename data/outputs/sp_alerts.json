@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-06",
+  "generated": "2026-08-07",
   "upgrade_floor_fpp": -0.0744,
   "hit_upgrade_floor_xwoba": 0.308,
   "alert_count": 6,
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 25.6,
       "xwoba_con": 0.367,
-      "rp3_rank": 75
+      "rp3_rank": 74
     },
     {
       "name": "Drew Anderson",
@@ -33,7 +33,7 @@
       "l4": "2/4",
       "whiff_pct": 27.6,
       "xwoba_con": 0.343,
-      "rp3_rank": 79
+      "rp3_rank": 80
     },
     {
       "name": "Chase Dollander",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 18.1,
       "xwoba_con": 0.322,
-      "rp3_rank": 133
+      "rp3_rank": 136
     },
     {
       "name": "Kendry Rojas",

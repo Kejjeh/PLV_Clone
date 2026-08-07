@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-06",
+ "as_of": "2026-08-07",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -684,7 +684,7 @@
    "team": "San Diego Padres",
    "abbr": "SD",
    "name": "Luis Rengifo",
-   "pos": "3B"
+   "pos": "LF"
   },
   "592518": {
    "team": "San Diego Padres",
@@ -1340,6 +1340,12 @@
    "name": "Cooper Hjerpe",
    "pos": "P"
   },
+  "677592": {
+   "team": "St. Louis Cardinals",
+   "abbr": "STL",
+   "name": "Everson Pereira",
+   "pos": "RF"
+  },
   "666277": {
    "team": "St. Louis Cardinals",
    "abbr": "STL",
@@ -1776,12 +1782,6 @@
    "team": "Tampa Bay Rays",
    "abbr": "TB",
    "name": "Steven Matz",
-   "pos": "P"
-  },
-  "621051": {
-   "team": "Tampa Bay Rays",
-   "abbr": "TB",
-   "name": "Steven Wilson",
    "pos": "P"
   },
   "670764": {
@@ -2586,7 +2586,7 @@
    "team": "Minnesota Twins",
    "abbr": "MIN",
    "name": "Royce Lewis",
-   "pos": "3B"
+   "pos": "1B"
   },
   "680777": {
    "team": "Minnesota Twins",
@@ -5204,12 +5204,6 @@
    "name": "Jarren Duran",
    "pos": "LF"
   },
-  "686747": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Joe La Sorsa",
-   "pos": "P"
-  },
   "670912": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5262,7 +5256,7 @@
    "team": "Boston Red Sox",
    "abbr": "BOS",
    "name": "Nick Sogard",
-   "pos": "3B"
+   "pos": "2B"
   },
   "663776": {
    "team": "Boston Red Sox",
@@ -5684,6 +5678,12 @@
    "name": "Chase Petty",
    "pos": "P"
   },
+  "686678": {
+   "team": "Cincinnati Reds",
+   "abbr": "CIN",
+   "name": "Chase Solesky",
+   "pos": "P"
+  },
   "683175": {
    "team": "Cincinnati Reds",
    "abbr": "CIN",
@@ -5826,6 +5826,12 @@
    "team": "Cincinnati Reds",
    "abbr": "CIN",
    "name": "Rhett Lowder",
+   "pos": "P"
+  },
+  "676760": {
+   "team": "Cincinnati Reds",
+   "abbr": "CIN",
+   "name": "Ron Marinaccio",
    "pos": "P"
   },
   "701398": {
@@ -7094,6 +7100,12 @@
    "name": "Luinder Avila",
    "pos": "P"
   },
+  "681432": {
+   "team": "Kansas City Royals",
+   "abbr": "KC",
+   "name": "Luke Little",
+   "pos": "P"
+  },
   "571912": {
    "team": "Kansas City Royals",
    "abbr": "KC",
@@ -7770,6 +7782,12 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Will Dion",
+   "pos": "P"
+  },
+  "670090": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Wyatt Mills",
    "pos": "P"
   },
   "672442": {

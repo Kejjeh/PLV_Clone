@@ -478,18 +478,18 @@ decision_id,snapshot_date,player_name,mlbam_id,bucket,verdict_top,reason_tag,con
 2026-07-03_vladimir_guerrero_jr_H_001,2026-07-03,Vladimir Guerrero Jr.,665489,H,MIXED,no_convergence,1.0,2026-07-24,MIXED_NEUTRAL,-0.23936507936507945,63.0
 2026-07-03_wyatt_langford_H_001,2026-07-03,Wyatt Langford,694671,H,CAUTION,process_red_flag,0.5,2026-07-24,CAUTION_NEUTRAL,0.10952380952380947,39.0
 2026-07-03_jacob_latz_RP_001,2026-07-03,Jacob Latz,656641,RP,BUY,strong_hold,1.0,,,,
-2026-07-03_jhoan_duran_RP_001,2026-07-03,Jhoan Duran,661395,RP,BUY,strong_hold,1.0,,,,
+2026-07-03_jhoan_duran_RP_001,2026-07-03,Jhoan Duran,661395,RP,BUY,strong_hold,1.0,2026-08-07,UNSETTLEABLE_V1_UNITS,,11.0
 2026-07-03_ryan_helsley_RP_001,2026-07-03,Ryan Helsley,664854,RP,BUY,strong_hold,0.75,,,,
-2026-07-03_tanner_scott_RP_001,2026-07-03,Tanner Scott,656945,RP,BUY,strong_hold,1.0,,,,
+2026-07-03_tanner_scott_RP_001,2026-07-03,Tanner Scott,656945,RP,BUY,strong_hold,1.0,2026-08-07,UNSETTLEABLE_V1_UNITS,,11.0
 2026-07-03_carlos_rodon_SP_001,2026-07-03,Carlos Rodón,607074,SP,BUY,strong_hold,1.0,,,,
-2026-07-03_emmet_sheehan_SP_001,2026-07-03,Emmet Sheehan,686218,SP,MIXED,no_convergence,1.0,,,,
-2026-07-03_freddy_peralta_SP_001,2026-07-03,Freddy Peralta,642547,SP,MIXED,no_convergence,1.0,,,,
-2026-07-03_hunter_greene_SP_001,2026-07-03,Hunter Greene,668881,SP,BUY,process_upgrade,0.75,,,,
+2026-07-03_emmet_sheehan_SP_001,2026-07-03,Emmet Sheehan,686218,SP,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-3.9835628595193056,5.0
+2026-07-03_freddy_peralta_SP_001,2026-07-03,Freddy Peralta,642547,SP,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-8.071372184835553,5.0
+2026-07-03_hunter_greene_SP_001,2026-07-03,Hunter Greene,668881,SP,BUY,process_upgrade,0.75,2026-08-07,BUY_MISS,-3.4100000000000037,5.0
 2026-07-03_jose_soriano_SP_001,2026-07-03,José Soriano,667755,SP,BUY,process_upgrade,1.0,,,,
 2026-07-03_max_fried_SP_001,2026-07-03,Max Fried,608331,SP,CAUTION,decline_veto,0.25,,,,
-2026-07-03_parker_messick_SP_001,2026-07-03,Parker Messick,800048,SP,CAUTION,process_red_flag,0.5,,,,
-2026-07-03_reid_detmers_SP_001,2026-07-03,Reid Detmers,672282,SP,BUY,process_upgrade,1.0,,,,
-2026-07-03_shota_imanaga_SP_001,2026-07-03,Shota Imanaga,684007,SP,BUY,strong_hold,0.75,,,,
+2026-07-03_parker_messick_SP_001,2026-07-03,Parker Messick,800048,SP,CAUTION,process_red_flag,0.5,2026-08-07,CAUTION_NEUTRAL,3.714132460292582,5.0
+2026-07-03_reid_detmers_SP_001,2026-07-03,Reid Detmers,672282,SP,BUY,process_upgrade,1.0,2026-08-07,BUY_MISS,-0.6578579383044509,6.0
+2026-07-03_shota_imanaga_SP_001,2026-07-03,Shota Imanaga,684007,SP,BUY,strong_hold,0.75,2026-08-07,BUY_HIT,3.589234467141889,6.0
 2026-07-03_tyler_glasnow_SP_001,2026-07-03,Tyler Glasnow,607192,SP,BUY,under_the_radar,0.5,,,,
 2026-07-04_aaron_judge_H_001,2026-07-04,Aaron Judge,592450,H,BUY,under_the_radar,0.5,,,,
 2026-07-04_bo_bichette_H_001,2026-07-04,Bo Bichette,666182,H,MIXED,no_convergence,1.0,2026-07-25,MIXED_NEUTRAL,-0.3323809523809524,60.0
@@ -869,20 +869,20 @@ decision_id,snapshot_date,player_name,mlbam_id,bucket,verdict_top,reason_tag,con
 2026-07-16_shota_imanaga_SP_001,2026-07-16,Shota Imanaga,684007,SP,MIXED,no_convergence,1.0,,,,
 2026-07-16_tyler_glasnow_SP_001,2026-07-16,Tyler Glasnow,607192,SP,BUY,under_the_radar,0.5,,,,
 2026-07-17_aaron_judge_H_001,2026-07-17,Aaron Judge,592450,H,BUY,under_the_radar,0.5,,,,
-2026-07-17_bo_bichette_H_001,2026-07-17,Bo Bichette,666182,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_corbin_carroll_H_001,2026-07-17,Corbin Carroll,682998,H,BUY,strong_hold,0.75,,,,
-2026-07-17_dominic_canzone_H_001,2026-07-17,Dominic Canzone,686527,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_elly_de_la_cruz_H_001,2026-07-17,Elly De La Cruz,682829,H,BUY,process_upgrade,1.0,,,,
-2026-07-17_hunter_goodman_H_001,2026-07-17,Hunter Goodman,696100,H,BUY,strong_hold,1.0,,,,
-2026-07-17_jordan_walker_H_001,2026-07-17,Jordan Walker,691023,H,BUY,archetype_breakout,1.0,,,,
-2026-07-17_kody_clemens_H_001,2026-07-17,Kody Clemens,665019,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_luis_arraez_H_001,2026-07-17,Luis Arraez,650333,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_luis_garcia_jr_H_001,2026-07-17,Luis García Jr.,671277,H,BUY,process_upgrade,1.0,,,,
-2026-07-17_max_muncy_H_001,2026-07-17,Max Muncy,571970,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_michael_harris_ii_H_001,2026-07-17,Michael Harris II,671739,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_pete_alonso_H_001,2026-07-17,Pete Alonso,624413,H,BUY,strong_hold,0.75,,,,
-2026-07-17_vladimir_guerrero_jr_H_001,2026-07-17,Vladimir Guerrero Jr.,665489,H,MIXED,no_convergence,1.0,,,,
-2026-07-17_wyatt_langford_H_001,2026-07-17,Wyatt Langford,694671,H,CAUTION,process_red_flag,0.5,,,,
+2026-07-17_bo_bichette_H_001,2026-07-17,Bo Bichette,666182,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.3319864706985228,81.0
+2026-07-17_corbin_carroll_H_001,2026-07-17,Corbin Carroll,682998,H,BUY,strong_hold,0.75,2026-08-07,BUY_MISS,-0.24350629273157837,88.0
+2026-07-17_dominic_canzone_H_001,2026-07-17,Dominic Canzone,686527,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.07849347102287035,78.0
+2026-07-17_elly_de_la_cruz_H_001,2026-07-17,Elly De La Cruz,682829,H,BUY,process_upgrade,1.0,2026-08-07,BUY_MISS,-0.02552776989341876,87.0
+2026-07-17_hunter_goodman_H_001,2026-07-17,Hunter Goodman,696100,H,BUY,strong_hold,1.0,2026-08-07,BUY_MISS,-0.039503289553798226,61.0
+2026-07-17_jordan_walker_H_001,2026-07-17,Jordan Walker,691023,H,BUY,archetype_breakout,1.0,2026-08-07,BUY_MISS,-0.3899781993035356,80.0
+2026-07-17_kody_clemens_H_001,2026-07-17,Kody Clemens,665019,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.17392535697095862,74.0
+2026-07-17_luis_arraez_H_001,2026-07-17,Luis Arraez,650333,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.046897703019640025,76.0
+2026-07-17_luis_garcia_jr_H_001,2026-07-17,Luis García Jr.,671277,H,BUY,process_upgrade,1.0,2026-08-07,BUY_MISS,-0.0245799886131004,67.0
+2026-07-17_max_muncy_H_001,2026-07-17,Max Muncy,571970,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.024054339219850673,62.0
+2026-07-17_michael_harris_ii_H_001,2026-07-17,Michael Harris II,671739,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,0.008071534437983585,86.0
+2026-07-17_pete_alonso_H_001,2026-07-17,Pete Alonso,624413,H,BUY,strong_hold,0.75,2026-08-07,BUY_MISS,-0.29879333406893466,79.0
+2026-07-17_vladimir_guerrero_jr_H_001,2026-07-17,Vladimir Guerrero Jr.,665489,H,MIXED,no_convergence,1.0,2026-08-07,MIXED_NEUTRAL,-0.36813160622652497,69.0
+2026-07-17_wyatt_langford_H_001,2026-07-17,Wyatt Langford,694671,H,CAUTION,process_red_flag,0.5,2026-08-07,CAUTION_NEUTRAL,-0.17197284202502722,81.0
 2026-07-17_jacob_latz_RP_001,2026-07-17,Jacob Latz,656641,RP,BUY,strong_hold,1.0,,,,
 2026-07-17_jhoan_duran_RP_001,2026-07-17,Jhoan Duran,661395,RP,BUY,strong_hold,1.0,,,,
 2026-07-17_tanner_scott_RP_001,2026-07-17,Tanner Scott,656945,RP,BUY,strong_hold,1.0,,,,
@@ -1475,3 +1475,31 @@ decision_id,snapshot_date,player_name,mlbam_id,bucket,verdict_top,reason_tag,con
 2026-08-06_reid_detmers_SP_001,2026-08-06,Reid Detmers,672282,SP,MIXED,no_convergence,1.0,,,,
 2026-08-06_shota_imanaga_SP_001,2026-08-06,Shota Imanaga,684007,SP,MIXED,no_convergence,1.0,,,,
 2026-08-06_tyler_glasnow_SP_001,2026-08-06,Tyler Glasnow,607192,SP,BUY,under_the_radar,0.5,,,,
+2026-08-07_aaron_judge_H_001,2026-08-07,Aaron Judge,592450,H,BUY,under_the_radar,0.5,,,,
+2026-08-07_corbin_carroll_H_001,2026-08-07,Corbin Carroll,682998,H,BUY,strong_hold,0.75,,,,
+2026-08-07_elly_de_la_cruz_H_001,2026-08-07,Elly De La Cruz,682829,H,BUY,strong_hold,1.0,,,,
+2026-08-07_ezequiel_duran_H_001,2026-08-07,Ezequiel Duran,677649,H,BUY,archetype_breakout,0.5,,,,
+2026-08-07_hunter_goodman_H_001,2026-08-07,Hunter Goodman,696100,H,MIXED,no_convergence,1.0,,,,
+2026-08-07_jackson_merrill_H_001,2026-08-07,Jackson Merrill,701538,H,CAUTION,process_red_flag,0.5,,,,
+2026-08-07_jordan_walker_H_001,2026-08-07,Jordan Walker,691023,H,BUY,archetype_breakout,0.75,,,,
+2026-08-07_luis_arraez_H_001,2026-08-07,Luis Arraez,650333,H,MIXED,no_convergence,1.0,,,,
+2026-08-07_luis_garcia_jr_H_001,2026-08-07,Luis García Jr.,671277,H,BUY,process_upgrade,1.0,,,,
+2026-08-07_michael_harris_ii_H_001,2026-08-07,Michael Harris II,671739,H,BUY,strong_hold,0.75,,,,
+2026-08-07_pete_alonso_H_001,2026-08-07,Pete Alonso,624413,H,BUY,strong_hold,0.75,,,,
+2026-08-07_vladimir_guerrero_jr_H_001,2026-08-07,Vladimir Guerrero Jr.,665489,H,MIXED,no_convergence,1.0,,,,
+2026-08-07_wyatt_langford_H_001,2026-08-07,Wyatt Langford,694671,H,CAUTION,process_red_flag,0.5,,,,
+2026-08-07_emilio_pagan_RP_001,2026-08-07,Emilio Pagán,641941,RP,BUY,strong_hold,0.75,,,,
+2026-08-07_jacob_latz_RP_001,2026-08-07,Jacob Latz,656641,RP,BUY,strong_hold,1.0,,,,
+2026-08-07_jhoan_duran_RP_001,2026-08-07,Jhoan Duran,661395,RP,BUY,strong_hold,1.0,,,,
+2026-08-07_drew_rasmussen_SP_001,2026-08-07,Drew Rasmussen,656876,SP,BUY,strong_hold,0.75,,,,
+2026-08-07_eury_perez_SP_001,2026-08-07,Eury Pérez,691587,SP,MIXED,no_convergence,1.0,,,,
+2026-08-07_hunter_greene_SP_001,2026-08-07,Hunter Greene,668881,SP,BUY,strong_hold,1.0,,,,
+2026-08-07_jose_soriano_SP_001,2026-08-07,José Soriano,667755,SP,MIXED,no_convergence,1.0,,,,
+2026-08-07_logan_henderson_SP_001,2026-08-07,Logan Henderson,701656,SP,BUY,strong_hold,0.75,,,,
+2026-08-07_luke_weaver_SP_001,2026-08-07,Luke Weaver,596133,SP,CAUTION,process_red_flag,0.75,,,,
+2026-08-07_max_fried_SP_001,2026-08-07,Max Fried,608331,SP,BUY,strong_hold,1.0,,,,
+2026-08-07_nick_pivetta_SP_001,2026-08-07,Nick Pivetta,601713,SP,MIXED,no_convergence,0.75,,,,
+2026-08-07_parker_messick_SP_001,2026-08-07,Parker Messick,800048,SP,CAUTION,process_red_flag,0.5,,,,
+2026-08-07_reid_detmers_SP_001,2026-08-07,Reid Detmers,672282,SP,MIXED,no_convergence,1.0,,,,
+2026-08-07_shota_imanaga_SP_001,2026-08-07,Shota Imanaga,684007,SP,MIXED,no_convergence,1.0,,,,
+2026-08-07_tyler_glasnow_SP_001,2026-08-07,Tyler Glasnow,607192,SP,BUY,under_the_radar,0.5,,,,
