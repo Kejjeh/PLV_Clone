@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.9632,
+  "base_pwin": 0.8813,
   "regime": "LEADING",
   "period": 18,
   "sims": 10000,
   "seed": 7,
-  "cap_remaining": 6,
+  "cap_remaining": 1,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.019100000000000006,
-  "plan_pwin_final": 0.9823,
+  "plan_total_dpwin": 0.028200000000000003,
+  "plan_pwin_final": 0.9095,
   "plan": [
-    {
-      "add": "Masataka Yoshida",
-      "add_bucket": "H",
-      "drop": "Hunter Greene",
-      "drop_bucket": "SP",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509,
-      "pwin_after": 0.9767,
-      "dpwin_from_base": 0.0135,
-      "dtitle_equity_pp": -0.0026
-    },
     {
       "add": "Caleb Durbin",
       "add_bucket": "H",
+      "drop": "Vladimir Guerrero Jr.",
+      "drop_bucket": "H",
+      "dpwin": 0.020500000000000074,
+      "mc_se": 0.002976,
+      "pwin_after": 0.9018,
+      "dpwin_from_base": 0.0205,
+      "dtitle_equity_pp": -0.0039
+    },
+    {
+      "add": "Masataka Yoshida",
+      "add_bucket": "H",
       "drop": "Max Muncy",
       "drop_bucket": "H",
-      "dpwin": 0.005599999999999938,
-      "mc_se": 0.001319,
-      "pwin_after": 0.9823,
-      "dpwin_from_base": 0.0191,
-      "dtitle_equity_pp": -0.0011
+      "dpwin": 0.007699999999999929,
+      "mc_se": 0.002869,
+      "pwin_after": 0.9095,
+      "dpwin_from_base": 0.0282,
+      "dtitle_equity_pp": -0.0015
     }
   ],
   "title_equity": {
@@ -44,95 +44,122 @@
   "top_single_moves": [
     {
       "add": "Caleb Durbin",
-      "drop": "Hunter Greene",
-      "dpwin": 0.01540000000000008,
-      "mc_se": 0.001447
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.020500000000000074,
+      "mc_se": 0.002976
     },
     {
       "add": "Caleb Durbin",
-      "drop": "Reid Detmers",
-      "dpwin": 0.01540000000000008,
-      "mc_se": 0.001447
+      "drop": "Max Muncy",
+      "dpwin": 0.016199999999999992,
+      "mc_se": 0.003033
     },
     {
       "add": "Caleb Durbin",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.01540000000000008,
-      "mc_se": 0.001447
+      "drop": "Jordan Walker",
+      "dpwin": 0.015900000000000025,
+      "mc_se": 0.003037
     },
     {
       "add": "Caleb Durbin",
-      "drop": "Eury Perez",
-      "dpwin": 0.01540000000000008,
-      "mc_se": 0.001447
+      "drop": "Pete Alonso",
+      "dpwin": 0.015100000000000002,
+      "mc_se": 0.003047
     },
     {
       "add": "Caleb Durbin",
-      "drop": "Logan Henderson",
-      "dpwin": 0.01540000000000008,
-      "mc_se": 0.001447
+      "drop": "Corbin Carroll",
+      "dpwin": 0.012600000000000056,
+      "mc_se": 0.00308
+    },
+    {
+      "add": "Bryson Stott",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.012500000000000067,
+      "mc_se": 0.003081
     },
     {
       "add": "Masataka Yoshida",
-      "drop": "Hunter Greene",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.012299999999999978,
+      "mc_se": 0.003083
+    },
+    {
+      "add": "Jacob Young",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.011900000000000022,
+      "mc_se": 0.003089
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Luis Garcia Jr.",
+      "dpwin": 0.011299999999999977,
+      "mc_se": 0.003096
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Wyatt Langford",
+      "dpwin": 0.011099999999999999,
+      "mc_se": 0.003099
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Michael Harris II",
+      "dpwin": 0.01090000000000002,
+      "mc_se": 0.003101
+    },
+    {
+      "add": "Tanner Scott",
+      "drop": "Jacob Latz",
+      "dpwin": 0.009400000000000075,
+      "mc_se": 0.00312
+    },
+    {
+      "add": "Jacob Young",
+      "drop": "Max Muncy",
+      "dpwin": 0.008900000000000019,
+      "mc_se": 0.003126
     },
     {
       "add": "Masataka Yoshida",
-      "drop": "Reid Detmers",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509
+      "drop": "Max Muncy",
+      "dpwin": 0.007800000000000029,
+      "mc_se": 0.00314
     },
     {
-      "add": "Masataka Yoshida",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Eury Perez",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Logan Henderson",
-      "dpwin": 0.013500000000000068,
-      "mc_se": 0.001509
-    },
-    {
-      "add": "Tyrone Taylor",
-      "drop": "Hunter Greene",
-      "dpwin": 0.012700000000000045,
-      "mc_se": 0.001534
-    },
-    {
-      "add": "Tyrone Taylor",
-      "drop": "Reid Detmers",
-      "dpwin": 0.012700000000000045,
-      "mc_se": 0.001534
-    },
-    {
-      "add": "Tyrone Taylor",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.012700000000000045,
-      "mc_se": 0.001534
-    },
-    {
-      "add": "Tyrone Taylor",
-      "drop": "Eury Perez",
-      "dpwin": 0.012700000000000045,
-      "mc_se": 0.001534
-    },
-    {
-      "add": "Tyrone Taylor",
-      "drop": "Logan Henderson",
-      "dpwin": 0.012700000000000045,
-      "mc_se": 0.001534
+      "add": "Bryson Stott",
+      "drop": "Max Muncy",
+      "dpwin": 0.007600000000000051,
+      "mc_se": 0.003143
     }
   ],
-  "pair_check": null,
-  "dpwin_run_id": "2026-08-06T071543_7"
+  "pair_check": {
+    "n_combos": 45,
+    "adopted": false,
+    "best": {
+      "moves": [
+        {
+          "add": "Caleb Durbin",
+          "add_bucket": "H",
+          "drop": "Vladimir Guerrero Jr.",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.020500000000000074,
+          "mc_se": 0.002976
+        },
+        {
+          "add": "Masataka Yoshida",
+          "add_bucket": "H",
+          "drop": "Max Muncy",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.007800000000000029,
+          "mc_se": 0.00314
+        }
+      ],
+      "dpwin": 0.0282,
+      "pwin": 0.9095,
+      "mc_se": 0.002869,
+      "sum_solo": 0.028300000000000103,
+      "interaction": -0.00010000000000010348
+    }
+  }
 }
