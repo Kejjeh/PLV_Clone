@@ -275,7 +275,7 @@ def banked_sp_starts_from_box(sp_mlbams: set[int], week_start: date, today: date
     return int(((dates >= week_start.isoformat()) & (dates < today.isoformat())).sum())
 
 
-def build_state(verbose=True):
+def build_state(verbose=True, banked_override: int | None = None):
     """Pull live matchup + schedules + projections; classify every active-slot
     player into H/SP/RP with remaining units and model mean/sigma."""
     mu = get_matchup()
@@ -448,6 +448,39 @@ def build_state(verbose=True):
         print(f'  WARNING: a side has banked >= cap ({banked_mine}/{banked_opp} vs cap '
               f'{sp_cap}) — if starts remain, the cap for period {period} may be too low.')
 
+    # ── Is the banked count STALE? (2026-08-07) ─────────────────────────────
+    # ESPN's statId-33 only increments once a game finalizes, and the boxscore
+    # cross-check deliberately stops at YESTERDAY. So while today's games are in
+    # flight, neither source sees them. That alone is harmless — today's starts
+    # are still in `my_sp` as remaining events, so the cap arithmetic balances.
+    #
+    # What does NOT balance is a start made TODAY by a pitcher who has since
+    # been DROPPED. ESPN will credit it (he was rostered when he threw it), but
+    # he is gone from the lineup, so it is in neither `banked_mine` nor
+    # `my_sp` — it is invisible, and cap_remaining is overstated by one per
+    # such start. Canonical: 2026-08-07, Drohan started and was dropped for Jax
+    # the same day; the engine saw 6 free cap slots when 1 remained, and
+    # recommended an add whose start would have scored zero.
+    #
+    # This is genuinely unknowable from the live roster, so WARN rather than
+    # guess — and let the caller pin the truth with banked_override.
+    today_iso = today.isoformat()
+    my_starts_today = sum(1 for e in my_sp if (e.get('date') or '') == today_iso)
+    banked_is_provisional = bool(my_starts_today) and banked_mine == box_mine
+    if banked_is_provisional and verbose:
+        print(f'  NOTE: banked ({banked_mine}) has not absorbed today\'s '
+              f'{my_starts_today} roster start(s) yet — it should settle near '
+              f'{banked_mine + my_starts_today}/{sp_cap}. Cap room is PROVISIONAL.')
+        print('        A start made today by a pitcher you have since DROPPED is '
+              'in neither count and cannot be detected here — if that happened, '
+              'pass --banked N to pin the real number.')
+
+    if banked_override is not None:
+        if verbose:
+            print(f'  banked OVERRIDE: using {banked_override} (was {banked_mine})')
+        banked_mine = int(banked_override)
+        banked_is_provisional = False
+
     return {
         'mu': mu, 'today': today, 'week_start': week_start, 'week_end': week_end,
         'period': period, 'sp_cap': sp_cap, 'period_weeks': weeks,
@@ -457,6 +490,8 @@ def build_state(verbose=True):
         'my_hitters': my_h, 'my_rps': my_rp, 'my_sp_events': my_sp,
         'opp_hitters': opp_h, 'opp_rps': opp_rp, 'opp_sp_events': opp_sp,
         'banked_mine': banked_mine, 'banked_opp': banked_opp,
+        'banked_provisional': banked_is_provisional,
+        'my_starts_today': my_starts_today,
         'cap_remaining_mine': max(sp_cap - banked_mine, 0),
         'cap_remaining_opp': max(sp_cap - banked_opp, 0),
         # ── added 2026-07-29 for the weekly optimizer (C3) ────────────────────

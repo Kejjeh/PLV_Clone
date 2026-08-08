@@ -783,6 +783,13 @@ def main() -> int:
                     help='comma-separated names to FORCE into the candidate '
                          'pool, bypassing both ranking legs and the fp<=0 '
                          'filter (e.g. "Griffin Jax,Trent Grisham")')
+    ap.add_argument('--banked', type=int, default=None, metavar='N',
+                    help='Pin the true banked SP-start count for this period. '
+                         'ESPN only credits a start once the game finalizes, and '
+                         'a start made TODAY by a pitcher you have since DROPPED '
+                         'lands in neither the ESPN count nor the live roster — '
+                         'so cap room can read high while games are in flight. '
+                         'Use this when the run says banked is PROVISIONAL.')
     ap.add_argument('--scratch', default='', metavar='NAME:YYYY-MM-DD',
                     help='comma-separated starts you KNOW will not happen. The '
                          'engine models an unconfirmed start at ~0.80; a scratch '
@@ -800,7 +807,7 @@ def main() -> int:
     include = [x.strip() for x in (args.include or '').split(',') if x.strip()]
 
     print('=== /weekly-optimizer — maximize P(win), not E[FP] ===')
-    state = build_state(verbose=True)
+    state = build_state(verbose=True, banked_override=args.banked)
     D = precompute_draws(state, args.sims, args.seed)
     if scratch:
         # Condition EVERYTHING on the scratch: the baseline, the regime call and
@@ -818,7 +825,8 @@ def main() -> int:
     print(f'\n--- BASELINE ---')
     print(f'  P(win) = {base_p*100:.1f}%   (+/- {mc_se(base_p, args.sims)*100:.2f}pp MC)')
     print(f'  REGIME: {regime} — {REGIME_BLURB[regime]}')
-    print(f'  cap remaining: {state["cap_remaining_mine"]} SP starts')
+    _prov = ' (PROVISIONAL — see NOTE above)' if state.get('banked_provisional') else ''
+    print(f'  cap remaining: {state["cap_remaining_mine"]} SP starts{_prov}')
     rc = {b: sum(1 for p in state['my_roster']
                  if p['bucket'] == b and not p['on_il']) for b in ('H', 'SP', 'RP')}
     print(f'  roster (active): {rc["H"]}H / {rc["SP"]}SP / {rc["RP"]}RP '
