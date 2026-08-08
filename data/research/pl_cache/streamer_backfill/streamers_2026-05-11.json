@@ -1,0 +1,224 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-5-11-5-12-5-13/",
+ "fetched": "2026-05-11",
+ "covers_dates": [
+  "2026-05-11",
+  "2026-05-12"
+ ],
+ "ranks_by_day": {
+  "2026-05-11": {
+   "Nathan Eovaldi": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Kevin Gausman": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Drew Rasmussen": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ TOR"
+   },
+   "George Kirby": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ HOU"
+   },
+   "Michael Soroka": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": "@ TEX"
+   },
+   "Ryan Weathers": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ BAL"
+   },
+   "Peter Lambert": {
+    "rank": 7,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Joey Cantillo": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Trevor McDonald": {
+    "rank": 9,
+    "tier": "Do Not Start",
+    "opp": "@ LAD"
+   },
+   "Brandon Young": {
+    "rank": 10,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Roki Sasaki": {
+    "rank": 11,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Alek Manoah": {
+    "rank": 12,
+    "tier": "Do Not Start",
+    "opp": "@ CLE"
+   }
+  },
+  "2026-05-12": {
+   "Paul Skenes": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Yoshinobu Yamamoto": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Bryan Woo": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ HOU"
+   },
+   "Zack Wheeler": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ BOS"
+   },
+   "Freddy Peralta": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Shane McClanahan": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ TOR"
+   },
+   "Will Warren": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ BAL"
+   },
+   "Eury P\u00e9rez": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ MIN"
+   },
+   "MacKenzie Gore": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Zac Gallen": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ TEX"
+   },
+   "Stephen Kolek": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ CHW"
+   },
+   "Jack Flaherty": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": "@ NYM"
+   },
+   "Slade Cecconi": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Walbert Ure\u00f1a": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": "@ CLE"
+   },
+   "Brandon Sproat": {
+    "rank": 15,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Brayan Bello": {
+    "rank": 16,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Trevor Rogers": {
+    "rank": 17,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Patrick Corbin": {
+    "rank": 18,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Colin Rea": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": "@ ATL"
+   },
+   "Bailey Ober": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Matt Waldron": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Jeffrey Springs": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Brady Singer": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Grant Holmes": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Erick Fedde": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Andre Pallante": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ ATH"
+   },
+   "Adrian Houser": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ LAD"
+   },
+   "Michael Lorenzen": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": "@ PIT"
+   },
+   "Miles Mikolas": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ CIN"
+   },
+   "Tatsuya Imai": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": null
+   }
+  }
+ }
+}

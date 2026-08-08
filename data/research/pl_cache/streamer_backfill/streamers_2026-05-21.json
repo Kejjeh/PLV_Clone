@@ -1,0 +1,229 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-5-21-5-22-5-23/",
+ "fetched": "2026-05-21",
+ "covers_dates": [
+  "2026-05-21",
+  "2026-05-22"
+ ],
+ "ranks_by_day": {
+  "2026-05-21": {
+   "Braxton Ashcraft": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ STL"
+   },
+   "Spencer Strider": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ MIA"
+   },
+   "Jos\u00e9 Soriano": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Carlos Rod\u00f3n": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Eduardo Rodriguez": {
+    "rank": 5,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Casey Mize": {
+    "rank": 6,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Cade Cavalli": {
+    "rank": 7,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Sandy Alcantara": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Dustin May": {
+    "rank": 9,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Joey Cantillo": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ DET"
+   },
+   "Luis Severino": {
+    "rank": 11,
+    "tier": "Do Not Start",
+    "opp": "@ LAA"
+   },
+   "David Peterson": {
+    "rank": 12,
+    "tier": "Do Not Start",
+    "opp": "@ WSH"
+   },
+   "Spencer Miles": {
+    "rank": 13,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   }
+  },
+  "2026-05-22": {
+   "Jacob deGrom": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ LAA"
+   },
+   "Cristopher S\u00e1nchez": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Logan Gilbert": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ KCR"
+   },
+   "Kevin Gausman": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Gavin Williams": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": "@ PHI"
+   },
+   "Freddy Peralta": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ MIA"
+   },
+   "Michael Soroka": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Davis Martin": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ SFG"
+   },
+   "Gerrit Cole": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Payton Tolle": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Connor Prielipp": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "@ BOS"
+   },
+   "Trevor McDonald": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Bryce Elder": {
+    "rank": 13,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Eury P\u00e9rez": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Logan Henderson": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Spencer Arrighetti": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": "@ CHC"
+   },
+   "Nick Martinez": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": "@ NYY"
+   },
+   "Noah Cameron": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Justin Wrobleski": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": "@ MIL"
+   },
+   "Jameson Taillon": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jeffrey Springs": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": "@ SDP"
+   },
+   "Bubba Chandler": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": "@ TOR"
+   },
+   "Jack Flaherty": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "@ BAL"
+   },
+   "Chris Bassitt": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Grayson Rodriguez": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Kyle Leahy": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ CIN"
+   },
+   "Chris Paddack": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Walker Buehler": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Tomoyuki Sugano": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ ARI"
+   },
+   "Miles Mikolas": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ ATL"
+   }
+  }
+ }
+}

@@ -1,0 +1,204 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-3-26-3-27-3-28/",
+ "fetched": "2026-03-26",
+ "covers_dates": [
+  "2026-03-26",
+  "2026-03-27"
+ ],
+ "ranks_by_day": {
+  "2026-03-26": {
+   "Garrett Crochet": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ CIN"
+   },
+   "Paul Skenes": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ NYM"
+   },
+   "Tarik Skubal": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ SDP"
+   },
+   "Yoshinobu Yamamoto": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Cristopher S\u00e1nchez": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Hunter Brown": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Logan Gilbert": {
+    "rank": 7,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Freddy Peralta": {
+    "rank": 8,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Trevor Rogers": {
+    "rank": 9,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Joe Ryan": {
+    "rank": 10,
+    "tier": "Auto-Start",
+    "opp": "@ BAL"
+   },
+   "Nick Pivetta": {
+    "rank": 11,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Jacob Misiorowski": {
+    "rank": 12,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Nathan Eovaldi": {
+    "rank": 13,
+    "tier": "Auto-Start",
+    "opp": "@ PHI"
+   },
+   "Matthew Boyd": {
+    "rank": 14,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Drew Rasmussen": {
+    "rank": 15,
+    "tier": "Auto-Start",
+    "opp": "@ STL"
+   },
+   "Andrew Abbott": {
+    "rank": 16,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Matthew Liberatore": {
+    "rank": 17,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Tanner Bibee": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ SEA"
+   },
+   "Shane Smith": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": "@ MIL"
+   },
+   "Zac Gallen": {
+    "rank": 20,
+    "tier": "Questionable",
+    "opp": "@ LAD"
+   },
+   "Jos\u00e9 Soriano": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": "@ HOU"
+   },
+   "Cade Cavalli": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": "@ CHC"
+   }
+  },
+  "2026-03-27": {
+   "Chris Sale": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Cole Ragans": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ ATL"
+   },
+   "Sandy Alcantara": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Cam Schlittler": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ SFG"
+   },
+   "George Kirby": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Framber Valdez": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": "@ SDP"
+   },
+   "Kevin Gausman": {
+    "rank": 7,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Gavin Williams": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ SEA"
+   },
+   "Mike Burrows": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Emmet Sheehan": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Michael King": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Robbie Ray": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Ryne Nelson": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ LAD"
+   },
+   "Kyle Freeland": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": "@ MIA"
+   },
+   "Luis Severino": {
+    "rank": 15,
+    "tier": "Do Not Start",
+    "opp": "@ TOR"
+   },
+   "Yusei Kikuchi": {
+    "rank": 16,
+    "tier": "Do Not Start",
+    "opp": "@ HOU"
+   }
+  }
+ }
+}

@@ -1,0 +1,234 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-7-2-7-3-7-4/",
+ "fetched": "2026-07-02",
+ "covers_dates": [
+  "2026-07-02",
+  "2026-07-03"
+ ],
+ "ranks_by_day": {
+  "2026-07-02": {
+   "Jacob Misiorowski": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Chase Burns": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ MIL"
+   },
+   "Bryce Miller": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Nathan Eovaldi": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Davis Martin": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": "@ CLE"
+   },
+   "Framber Valdez": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ TEX"
+   },
+   "Roki Sasaki": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Stephen Kolek": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Walbert Ure\u00f1a": {
+    "rank": 9,
+    "tier": "Questionable",
+    "opp": "@ SEA"
+   },
+   "Jared Jones": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ PHI"
+   },
+   "Dustin May": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ ATL"
+   },
+   "Ian Seymour": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": "@ KCR"
+   },
+   "Slade Cecconi": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Alan Rangel": {
+    "rank": 14,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Hurston Waldrep": {
+    "rank": 15,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Randy V\u00e1squez": {
+    "rank": 16,
+    "tier": "Do Not Start",
+    "opp": "@ LAD"
+   },
+   "Ryan Gusto": {
+    "rank": 17,
+    "tier": "Do Not Start",
+    "opp": "@ COL"
+   },
+   "Michael Lorenzen": {
+    "rank": 18,
+    "tier": "Do Not Start",
+    "opp": null
+   }
+  },
+  "2026-07-03": {
+   "Shohei Ohtani": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Dylan Cease": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ SEA"
+   },
+   "Kyle Harrison": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ ARI"
+   },
+   "Gavin Williams": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Logan Webb": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": "@ COL"
+   },
+   "Reid Detmers": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Foster Griffin": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Jake Bennett": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ LAA"
+   },
+   "Gerrit Cole": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Trevor Rogers": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ CIN"
+   },
+   "Nick Martinez": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ HOU"
+   },
+   "Jack Perkins": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Anthony Kay": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ CLE"
+   },
+   "Luis Castillo": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Jose Cabrera": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Christian Scott": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": "@ ATL"
+   },
+   "Spencer Arrighetti": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Michael King": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ LAD"
+   },
+   "Brady Singer": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Andre Pallante": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": "@ CHC"
+   },
+   "Mitch Keller": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": "@ WSH"
+   },
+   "David Peterson": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Grant Holmes": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Tyler Phillips": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ ATH"
+   },
+   "Mike Paredes": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   },
+   "Tomoyuki Sugano": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   }
+  }
+ }
+}

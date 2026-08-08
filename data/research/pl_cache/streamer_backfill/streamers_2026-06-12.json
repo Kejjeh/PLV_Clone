@@ -1,0 +1,309 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-6-12-6-13-6-14/",
+ "fetched": "2026-06-12",
+ "covers_dates": [
+  "2026-06-12",
+  "2026-06-13"
+ ],
+ "ranks_by_day": {
+  "2026-06-12": {
+   "Jacob Misiorowski": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Joe Ryan": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Braxton Ashcraft": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Bryce Miller": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ WSH"
+   },
+   "Shane McClanahan": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": "@ LAA"
+   },
+   "Sonny Gray": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Nolan McLean": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Ryan Weathers": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ TOR"
+   },
+   "Nick Lodolo": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Landen Roupp": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Roki Sasaki": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "@ CHW"
+   },
+   "Spencer Strider": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": "@ NYM"
+   },
+   "Sandy Alcantara": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ PIT"
+   },
+   "Tatsuya Imai": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": "@ KCR"
+   },
+   "Javier Assad": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": "@ SFG"
+   },
+   "Shane Baz": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Jack Flaherty": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": "@ CLE"
+   },
+   "Trey Yesavage": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Gage Jump": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Eduardo Rodriguez": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": "@ CIN"
+   },
+   "Tanner Bibee": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jack Leiter": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": "@ BOS"
+   },
+   "Kyle Leahy": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "@ MIN"
+   },
+   "Griffin Canning": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ BAL"
+   },
+   "Zack Littell": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Luinder Avila": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Andrew Painter": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Sam Aldegheri": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Anthony Kay": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Zach Agnos": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ ATH"
+   }
+  },
+  "2026-06-13": {
+   "Jacob deGrom": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ BOS"
+   },
+   "Yoshinobu Yamamoto": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ CHW"
+   },
+   "Cam Schlittler": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ TOR"
+   },
+   "Tarik Skubal": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": "@ CLE"
+   },
+   "Ranger Suarez": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Ben Brown": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ SFG"
+   },
+   "Griffin Jax": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ LAA"
+   },
+   "Kevin Gausman": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Noah Cameron": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Michael Soroka": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": "@ CIN"
+   },
+   "Jos\u00e9 Soriano": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Cade Cavalli": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Shane Drohan": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Connor Prielipp": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Matthew Liberatore": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": "@ MIN"
+   },
+   "Bubba Chandler": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Mart\u00edn P\u00e9rez": {
+    "rank": 17,
+    "tier": "Do Not Start",
+    "opp": "@ NYM"
+   },
+   "Trevor McDonald": {
+    "rank": 18,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Joey Cantillo": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Aaron Nola": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Luis Castillo": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": "@ WSH"
+   },
+   "Randy V\u00e1squez": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": "@ BAL"
+   },
+   "Sean Burke": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Rhett Lowder": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Mike Burrows": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "@ KCR"
+   },
+   "Sean Manaea": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jeffrey Springs": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Trey Gibson": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Kyle Freeland": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ ATH"
+   }
+  }
+ }
+}

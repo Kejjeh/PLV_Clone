@@ -1,0 +1,224 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-5-27-5-28-5-29/",
+ "fetched": "2026-05-27",
+ "covers_dates": [
+  "2026-05-27",
+  "2026-05-28"
+ ],
+ "ranks_by_day": {
+  "2026-05-27": {
+   "Cristopher S\u00e1nchez": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": "@ SDP"
+   },
+   "Shohei Ohtani": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Jacob deGrom": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Kevin Gausman": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Gerrit Cole": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": "@ KCR"
+   },
+   "Gavin Williams": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Jos\u00e9 Soriano": {
+    "rank": 7,
+    "tier": "Auto-Start",
+    "opp": "@ DET"
+   },
+   "Logan Gilbert": {
+    "rank": 8,
+    "tier": "Auto-Start",
+    "opp": "@ ATH"
+   },
+   "Bryce Elder": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": "@ BOS"
+   },
+   "Michael Soroka": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": "@ SFG"
+   },
+   "Connor Prielipp": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "@ CHW"
+   },
+   "Connelly Early": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Andrew Abbott": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ NYM"
+   },
+   "Eury P\u00e9rez": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": "@ TOR"
+   },
+   "Bubba Chandler": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Trevor McDonald": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Casey Mize": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Steven Matz": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ BAL"
+   },
+   "Chad Patrick": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "David Sandlin": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Trey Gibson": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Dustin May": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Mike Burrows": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "@ TEX"
+   },
+   "Jameson Taillon": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ PIT"
+   },
+   "Jeffrey Springs": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Noah Cameron": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jonah Tong": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Walker Buehler": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Tomoyuki Sugano": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ LAD"
+   },
+   "Miles Mikolas": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ CLE"
+   }
+  },
+  "2026-05-28": {
+   "Paul Skenes": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Chris Sale": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ BOS"
+   },
+   "Nathan Eovaldi": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Davis Martin": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Taj Bradley": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": "@ CHW"
+   },
+   "Spencer Arrighetti": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ TEX"
+   },
+   "Payton Tolle": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Colin Rea": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": "@ PIT"
+   },
+   "Jack Flaherty": {
+    "rank": 9,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Grayson Rodriguez": {
+    "rank": 10,
+    "tier": "Do Not Start",
+    "opp": "@ DET"
+   },
+   "Chris Bassitt": {
+    "rank": 11,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Patrick Corbin": {
+    "rank": 12,
+    "tier": "Do Not Start",
+    "opp": "@ BAL"
+   }
+  }
+ }
+}

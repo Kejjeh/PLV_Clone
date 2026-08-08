@@ -1,0 +1,224 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-4-9-4-10-4-11/",
+ "fetched": "2026-04-09",
+ "covers_dates": [
+  "2026-04-09",
+  "2026-04-10"
+ ],
+ "ranks_by_day": {
+  "2026-04-09": {
+   "Nolan McLean": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Randy V\u00e1squez": {
+    "rank": 2,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Max Meyer": {
+    "rank": 3,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Ryan Weathers": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Rhett Lowder": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": "@ MIA"
+   },
+   "Seth Lugo": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Mick Abel": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Anthony Kay": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": "@ KCR"
+   },
+   "Jack Flaherty": {
+    "rank": 9,
+    "tier": "Questionable",
+    "opp": "@ MIN"
+   },
+   "Eduardo Rodriguez": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ NYM"
+   },
+   "Chase Dollander": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ SDP"
+   },
+   "Jeffrey Springs": {
+    "rank": 12,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   }
+  },
+  "2026-04-10": {
+   "Tyler Glasnow": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Max Fried": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ TBR"
+   },
+   "Chase Burns": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Jes\u00fas Luzardo": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Shota Imanaga": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Kris Bubic": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Connelly Early": {
+    "rank": 7,
+    "tier": "Auto-Start",
+    "opp": "@ STL"
+   },
+   "Tatsuya Imai": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ SEA"
+   },
+   "Shane Baz": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Emerson Hancock": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Drew Rasmussen": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Clay Holmes": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Landen Roupp": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ BAL"
+   },
+   "Bryce Elder": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Chad Patrick": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Davis Martin": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": "@ KCR"
+   },
+   "Slade Cecconi": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": "@ ATL"
+   },
+   "Walker Buehler": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Michael Soroka": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": "@ PHI"
+   },
+   "Jack Kochanowicz": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": "@ CIN"
+   },
+   "Dustin May": {
+    "rank": 21,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Keider Montero": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Carmen Mlodzinski": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "@ CHC"
+   },
+   "Simeon Woods Richardson": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ TOR"
+   },
+   "Tomoyuki Sugano": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "@ SDP"
+   },
+   "Chris Paddack": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ DET"
+   },
+   "Jake Irvin": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Patrick Corbin": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Kumar Rocker": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ LAD"
+   },
+   "J.T. Ginn": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ NYM"
+   }
+  }
+ }
+}

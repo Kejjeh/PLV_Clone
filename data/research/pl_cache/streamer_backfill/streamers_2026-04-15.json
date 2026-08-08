@@ -1,0 +1,264 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-4-15-4-16-4-17/",
+ "fetched": "2026-04-15",
+ "covers_dates": [
+  "2026-04-15",
+  "2026-04-16"
+ ],
+ "ranks_by_day": {
+  "2026-04-15": {
+   "Shohei Ohtani": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Shota Imanaga": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": "@ PHI"
+   },
+   "Kyle Bradish": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Dylan Cease": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ MIL"
+   },
+   "Jes\u00fas Luzardo": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Connelly Early": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ MIN"
+   },
+   "Emerson Hancock": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ SDP"
+   },
+   "Randy V\u00e1squez": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Spencer Arrighetti": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Seth Lugo": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ DET"
+   },
+   "Eduardo Rodriguez": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ BAL"
+   },
+   "Sean Burke": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Slade Cecconi": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ STL"
+   },
+   "Rhett Lowder": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Dustin May": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Bryce Elder": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Chad Patrick": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Tyler Mahle": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ CIN"
+   },
+   "Clay Holmes": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": "@ LAD"
+   },
+   "Jack Flaherty": {
+    "rank": 20,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Luis Gil": {
+    "rank": 21,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "J.T. Ginn": {
+    "rank": 22,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jack Kochanowicz": {
+    "rank": 23,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   },
+   "Carmen Mlodzinski": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jake Irvin": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": "@ PIT"
+   },
+   "Jesse Scholtens": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": "@ CHW"
+   },
+   "Simeon Woods Richardson": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Kumar Rocker": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": "@ ATH"
+   },
+   "Chris Paddack": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ ATL"
+   },
+   "Jose Quintana": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ HOU"
+   }
+  },
+  "2026-04-16": {
+   "Max Fried": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Chase Burns": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Kris Bubic": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ DET"
+   },
+   "Shane Baz": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": "@ CLE"
+   },
+   "Braxton Ashcraft": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Parker Messick": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Steven Matz": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ CHW"
+   },
+   "Landen Roupp": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": "@ CIN"
+   },
+   "Foster Griffin": {
+    "rank": 9,
+    "tier": "Questionable",
+    "opp": "@ PIT"
+   },
+   "Luis Castillo": {
+    "rank": 10,
+    "tier": "Questionable",
+    "opp": "@ SDP"
+   },
+   "Jack Leiter": {
+    "rank": 11,
+    "tier": "Questionable",
+    "opp": "@ ATH"
+   },
+   "Anthony Kay": {
+    "rank": 12,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Brandon Sproat": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Lance McCullers Jr.": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Keider Montero": {
+    "rank": 15,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Jacob Lopez": {
+    "rank": 16,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Tomoyuki Sugano": {
+    "rank": 17,
+    "tier": "Do Not Start",
+    "opp": "@ HOU"
+   },
+   "Walker Buehler": {
+    "rank": 18,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Patrick Corbin": {
+    "rank": 19,
+    "tier": "Do Not Start",
+    "opp": "@ MIL"
+   },
+   "Walbert Ure\u00f1a": {
+    "rank": 20,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   }
+  }
+ }
+}

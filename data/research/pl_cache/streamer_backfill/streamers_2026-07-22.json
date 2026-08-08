@@ -1,0 +1,234 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-7-22-7-23-7-24/",
+ "fetched": "2026-07-22",
+ "covers_dates": [
+  "2026-07-22",
+  "2026-07-23"
+ ],
+ "ranks_by_day": {
+  "2026-07-22": {
+   "Logan Henderson": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Gerrit Cole": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Sandy Alcantara": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": "@ HOU"
+   },
+   "Griffin Jax": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": "@ TOR"
+   },
+   "Reid Detmers": {
+    "rank": 5,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Jake Bennett": {
+    "rank": 6,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Kyle Bradish": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ BOS"
+   },
+   "Gage Jump": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ ARI"
+   },
+   "Landen Roupp": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": "@ KCR"
+   },
+   "Peter Lambert": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Ranger Suarez": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Emerson Hancock": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Christian Scott": {
+    "rank": 13,
+    "tier": "Questionable",
+    "opp": "@ MIL"
+   },
+   "Michael King": {
+    "rank": 14,
+    "tier": "Questionable",
+    "opp": "@ ATL"
+   },
+   "Colin Rea": {
+    "rank": 15,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Max Fried": {
+    "rank": 16,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Dean Kremer": {
+    "rank": 17,
+    "tier": "Questionable",
+    "opp": "@ BOS"
+   },
+   "Brady Singer": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ SEA"
+   },
+   "Merrill Kelly": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Cade Cavalli": {
+    "rank": 20,
+    "tier": "Questionable",
+    "opp": "@ COL"
+   },
+   "Anthony Kay": {
+    "rank": 21,
+    "tier": "Questionable",
+    "opp": "@ TEX"
+   },
+   "Eric Lauer": {
+    "rank": 22,
+    "tier": "Questionable",
+    "opp": "@ PHI"
+   },
+   "Keider Montero": {
+    "rank": 23,
+    "tier": "Questionable",
+    "opp": "@ CHC"
+   },
+   "Slade Cecconi": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Seth Lugo": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Mart\u00edn P\u00e9rez": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Bailey Ober": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ CLE"
+   },
+   "Aaron Nola": {
+    "rank": 28,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Hunter Dobbins": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": "@ LAA"
+   },
+   "Mitch Keller": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   },
+   "Bubba Chandler": {
+    "rank": 31,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   },
+   "Spencer Miles": {
+    "rank": 32,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Tyler Alexander": {
+    "rank": 33,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Gabriel Hughes": {
+    "rank": 34,
+    "tier": "Do Not Start",
+    "opp": null
+   }
+  },
+  "2026-07-23": {
+   "Chris Sale": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Gavin Williams": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Troy Melton": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Ian Seymour": {
+    "rank": 4,
+    "tier": "Probably Start",
+    "opp": "@ TOR"
+   },
+   "Taj Bradley": {
+    "rank": 5,
+    "tier": "Questionable",
+    "opp": "@ CLE"
+   },
+   "Michael McGreevy": {
+    "rank": 6,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Brandon Pfaadt": {
+    "rank": 7,
+    "tier": "Questionable",
+    "opp": "@ STL"
+   },
+   "Shane Bieber": {
+    "rank": 8,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Griffin Canning": {
+    "rank": 9,
+    "tier": "Do Not Start",
+    "opp": "@ ATL"
+   },
+   "Randy Dobnak": {
+    "rank": 10,
+    "tier": "Do Not Start",
+    "opp": "@ DET"
+   }
+  }
+ }
+}

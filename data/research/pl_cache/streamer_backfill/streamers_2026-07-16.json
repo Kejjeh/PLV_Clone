@@ -1,0 +1,156 @@
+{
+ "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-7-16-7-17-7-18/",
+ "fetched": "2026-07-16",
+ "covers_dates": [
+  "2026-07-16"
+ ],
+ "ranks_by_day": {
+  "2026-07-16": {
+   "Chris Sale": {
+    "rank": 1,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Logan Gilbert": {
+    "rank": 2,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Sonny Gray": {
+    "rank": 3,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Gavin Williams": {
+    "rank": 4,
+    "tier": "Auto-Start",
+    "opp": null
+   },
+   "Logan Henderson": {
+    "rank": 5,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Troy Melton": {
+    "rank": 6,
+    "tier": "Probably Start",
+    "opp": "@ LAA"
+   },
+   "Griffin Jax": {
+    "rank": 7,
+    "tier": "Probably Start",
+    "opp": "@ BOS"
+   },
+   "Kyle Bradish": {
+    "rank": 8,
+    "tier": "Probably Start",
+    "opp": "@ HOU"
+   },
+   "Jake Bennett": {
+    "rank": 9,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Shane McClanahan": {
+    "rank": 10,
+    "tier": "Probably Start",
+    "opp": "@ BOS"
+   },
+   "Jared Jones": {
+    "rank": 11,
+    "tier": "Probably Start",
+    "opp": "@ CLE"
+   },
+   "Reid Detmers": {
+    "rank": 12,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Landen Roupp": {
+    "rank": 13,
+    "tier": "Probably Start",
+    "opp": "@ SEA"
+   },
+   "Foster Griffin": {
+    "rank": 14,
+    "tier": "Probably Start",
+    "opp": "@ ATH"
+   },
+   "Gerrit Cole": {
+    "rank": 15,
+    "tier": "Probably Start",
+    "opp": null
+   },
+   "Sandy Alcantara": {
+    "rank": 16,
+    "tier": "Probably Start",
+    "opp": "@ MIL"
+   },
+   "Michael King": {
+    "rank": 17,
+    "tier": "Probably Start",
+    "opp": "@ KCR"
+   },
+   "Taj Bradley": {
+    "rank": 18,
+    "tier": "Questionable",
+    "opp": "@ CHC"
+   },
+   "Gage Jump": {
+    "rank": 19,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Merrill Kelly": {
+    "rank": 20,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Colin Rea": {
+    "rank": 21,
+    "tier": "Questionable",
+    "opp": null
+   },
+   "Andre Pallante": {
+    "rank": 22,
+    "tier": "Questionable",
+    "opp": "@ ARI"
+   },
+   "Anthony Kay": {
+    "rank": 23,
+    "tier": "Questionable",
+    "opp": "@ TOR"
+   },
+   "Roki Sasaki": {
+    "rank": 24,
+    "tier": "Do Not Start",
+    "opp": "@ NYY"
+   },
+   "Seth Lugo": {
+    "rank": 25,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Spencer Arrighetti": {
+    "rank": 26,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Brady Singer": {
+    "rank": 27,
+    "tier": "Do Not Start",
+    "opp": "@ COL"
+   },
+   "Spencer Miles": {
+    "rank": 29,
+    "tier": "Do Not Start",
+    "opp": null
+   },
+   "Kyle Freeland": {
+    "rank": 30,
+    "tier": "Do Not Start",
+    "opp": null
+   }
+  }
+ }
+}
