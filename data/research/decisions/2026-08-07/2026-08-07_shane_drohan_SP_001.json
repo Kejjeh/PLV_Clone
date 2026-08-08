@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "SP",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.9156,
+    "dpwin_chosen": 0.0345,
+    "dpwin_gap": -0.0026,
+    "dpwin_rejected": 0.0371,
+    "dtitle_equity_chosen": -0.0066,
+    "regime": "LEADING",
+    "rejected_bucket": "SP",
+    "rejected_mlbam": null,
+    "rejected_name": "Walbert Urena",
+    "source_run_id": "2026-08-07T121407_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-07_shane_drohan_SP_001",
+  "executed_at": "2026-08-07T17:56:08",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Hunter Greene",
+    "id_source": "name_only",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "3 candidate runs preceded the move, took latest (2026-08-07T121407_7)"
+  },
+  "mlbam_id": null,
+  "player_name": "Shane Drohan",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-07",
+  "verdict_top": "SWAP"
+}

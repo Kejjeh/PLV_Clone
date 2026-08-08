@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "SP",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.9156,
+    "dpwin_chosen": 0.0343,
+    "dpwin_gap": -0.0028,
+    "dpwin_rejected": 0.0371,
+    "dtitle_equity_chosen": -0.0065,
+    "regime": "LEADING",
+    "rejected_bucket": "SP",
+    "rejected_mlbam": null,
+    "rejected_name": "Walbert Urena",
+    "source_run_id": "2026-08-07T121407_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-07_griffin_jax_SP_001",
+  "executed_at": "2026-08-07T21:59:58",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Shane Drohan",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "3 candidate runs preceded the move, took latest (2026-08-07T121407_7)"
+  },
+  "mlbam_id": 643377,
+  "player_name": "Griffin Jax",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-07",
+  "verdict_top": "SWAP"
+}
