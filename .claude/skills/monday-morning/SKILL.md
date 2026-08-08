@@ -1,6 +1,6 @@
 ---
 name: monday-morning
-description: Meta-skill that chains roster-verify → roster-audit (full) → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan into a single Monday workflow. Replaces 5-7 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
+description: Meta-skill that chains roster-verify → roster-audit (full) → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan → wakeup-board into a single Monday workflow. Replaces 5-7 separate invocations with one unified report. Use every Monday before lineups lock or after any significant IL transaction.
 ---
 
 # monday-morning
@@ -14,6 +14,7 @@ Runs the full Monday decision workflow in one pass:
 5. **cap-check** — the *exact* cap verdict: banked starts (ESPN statId-33) + projected remaining vs the live cap → the precise start to bench, value blended rp3 + recent L5 form (engine `weekly_cap_check.py`)
 6. **fa-monitor** — pull HIGH-priority alerts from all signals
 7. **conviction-scan** — league-wide model-vs-process divergence watch (buy-low / sell-high conviction; Rule 13 context only)
+8. **wakeup-board** — which FA bats are waking up, read on fast-stabilizing signals (bat speed 25-30 sw) rather than HR/ISO, which need ~275 PA and so lag by construction (Rule 13 context only)
 
 For any specific player flagged in steps 2-5, optionally run `/triangulate <name>` to get the full 3-lens verdict + confidence + watch-list before making the move.
 
@@ -196,6 +197,40 @@ additive signal (−0.069 FP/PA) — treat the hitter flavor as CONTEXT ONLY.
 
 ---
 
+## Step 6 — wake-up board (which FA bats are actually waking up)
+
+The "who's heating up" question, answered on signals that are readable NOW
+rather than on the ones that feel obvious. Watching home runs pile up is the
+natural instinct and the wrong instrument: **HR rate needs ~275 PA** to reach
+forward r≥0.50, so a HR run is a lagging indicator by construction — by the
+time it qualifies as a signal it has been true for months and the league has
+repriced him. Same for ISO (275 AB).
+
+```python
+# Engine: scripts/xfp/run_wakeup_board.py — FA-only, roster-scan verified
+python scripts/xfp/run_wakeup_board.py --min-pa-vol 2.0 --top 15
+```
+
+Reads the fast-stabilizing axes instead (2026-07-29 study): **bat speed at
+25-30 swings**, hard-hit/barrel at 50 BIP, K% at 50 PA. Bat speed is also the
+only process metric that adds forward-FP signal beyond a hitter's own FP level.
+
+**Read the tags, not the deltas.** Ranking on the YoY step inverts the board —
+Bichette 2026 (+1.21 mph off a **24th-pctile** level, a slow start washing out)
+outranks Cam Smith (98th-pctile level, +3.31) under delta sorting. The board is
+level-first and the step is a bounded bonus, so:
+
+- **LEVEL+STEP** — already-good bat that also stepped up. The real find.
+- **LEVEL** — elite bat, flat YoY. Often simply underowned.
+- **STEP-ONLY** — rose from a poor level. Surfaced but labelled: real movement,
+  unremarkable destination. Do NOT treat as a pickup signal on its own.
+
+**Rule 13:** ranks ATTENTION, not forward FP. rh3 rank prints alongside — a
+high wake-up score with a poor rh3 rank is a watch, not an add. Cross-check any
+name worth acting on with `/breakout-sustainability` before the move.
+
+---
+
 ## Output format
 
 ```markdown
@@ -235,6 +270,14 @@ Cap verdict (cap-check): banked B + projected P = T vs cap C → **UNDER by N** 
 ### MODEL>PROCESS (distrust / sell-high WATCH)
 <table>
 
+## Wake-up watch (context only — FA bats, fast signals)
+### LEVEL+STEP (already-good bat that stepped up — the real find)
+<table: name, rh3 rank, bat speed, pctl, YoY, barrel L21, proj PA/g>
+### LEVEL (elite bat, flat YoY — may be underowned)
+<table>
+### STEP-ONLY (rose from a poor level — the trap; watch, do not add)
+<table>
+
 ## Recommended moves (≤5, sequenced)
 1. ...
 2. ...
@@ -248,6 +291,14 @@ Cap verdict (cap-check): banked B + projected P = T vs cap C → **UNDER by N** 
 - Running fa-monitor before roster-audit — need cap math first to compute upgrade floor
 - Labeling a player "yours" from session context — always verify via Step 1
 - Reporting forced-drop date without pre-identifying the cut candidate — useless as a warning without the name
+- **Calling a bat "hot" off home runs.** HR rate needs ~275 PA and ISO ~275 AB to
+  stabilize, so a multi-week power run is a LAGGING indicator — real, already
+  priced, and no longer information. Step 6 answers the same question on bat
+  speed (25-30 swings), barrel (50 BIP) and K% (50 PA). If a HR streak is the
+  only evidence, it is not yet evidence.
+- **Ranking the wake-up board by its YoY step.** Level-first or the board
+  inverts: Bichette 2026 (+1.21 mph off a 24th-pctile level) outranks Cam Smith
+  (98th-pctile, +3.31). STEP-ONLY is a watch tag, never a pickup signal.
 
 ## When NOT to use
 
