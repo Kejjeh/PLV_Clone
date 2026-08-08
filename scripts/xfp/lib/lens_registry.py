@@ -52,10 +52,26 @@ LENS_FAMILIES: dict[str, dict] = {
     },
     "boom_bust": {
         "columns": ("bb_window", "bb_n", "bb_mean", "bb_std", "bb_boom_pct", "bb_bust_pct",
+                    "bb_boom_ci", "bb_bust_ci", "bb_rate_precise",
                     "bb_min", "bb_max", "bb_l3_mean", "bb_trend", "bb_last"),
         "context_only": True, "validated": True,
-        "desc": "realized boom/bust actuals (boxscore store)",
+        "desc": ("realized boom/bust actuals (boxscore store); rates carry n + a "
+                 "95% Wilson CI and bb_rate_precise — never RANK on a rate with "
+                 "bb_rate_precise False"),
         "accessor": "lib.boom_bust", "validation_ref": None,
+    },
+    "pl_streamer_tier": {
+        "columns": ("pl_stream_rank", "pl_stream_tier"),
+        "context_only": True, "validated": True,
+        "desc": ("Pitcher List daily streamer tier/rank. MEASURED on 2,016 "
+                 "pitcher-days / 86 slates: tiers are monotonic (Auto-Start "
+                 "13.86 FP -> Do Not Start 8.04) and Auto beats Probably by "
+                 "+2.68 FP [CI +1.62,+3.71]. It also adds signal BEYOND rp3 "
+                 "(partial r +0.068 [+0.028,+0.107]) — but a 50/50 blend gains "
+                 "only +0.03 FP at top-1/slate, the decision that matters, so "
+                 "this stays context-only pending a Rule-9 run."),
+        "accessor": "backfill_pl_streamers", "validation_ref":
+            "pl_streamer_tier_2026-08-07.md",
     },
     "in_season_trajectory": {
         "columns": ("traj_n", "traj_cadence", "traj_first_label", "traj_last_label",
