@@ -285,8 +285,18 @@ def assemble_candidates(days: int) -> tuple[list[dict], dict]:
         fa_meta = fa_by_mlbam.get(pid, {})
         rp3_row = rp3_by_pid.get(pid)
 
-        # rp3 fields (default to None if not in rp3)
-        rp3_per_start = float(rp3_row['xfp_rp3_per_start']) if rp3_row is not None and pd.notna(rp3_row['xfp_rp3_per_start']) else None
+        # rp3 fields (default to None if not in rp3).
+        # SCHEDULE-ADJUSTED is the right column here: this board picks ONE start
+        # against a NAMED opponent, and the raw per-start ignores the matchup
+        # entirely. On 2026-08-07 the raw numbers ranked Ureña (12.32) over Jax
+        # (11.86) while sched — which prices Jax's @SEA draw — reversed it to
+        # 12.84 vs 12.32. Falls back to raw when the sched column is absent.
+        rp3_per_start = None
+        if rp3_row is not None:
+            if pd.notna(rp3_row.get('xfp_rp3_per_start_sched')):
+                rp3_per_start = float(rp3_row['xfp_rp3_per_start_sched'])
+            elif pd.notna(rp3_row['xfp_rp3_per_start']):
+                rp3_per_start = float(rp3_row['xfp_rp3_per_start'])
         rp3_p25 = float(rp3_row['xfp_rp3_p25']) if rp3_row is not None and pd.notna(rp3_row.get('xfp_rp3_p25')) else None
         rp3_p75 = float(rp3_row['xfp_rp3_p75']) if rp3_row is not None and pd.notna(rp3_row.get('xfp_rp3_p75')) else None
         rp3_rank = int(rp3_row['rank']) if rp3_row is not None and pd.notna(rp3_row['rank']) else None

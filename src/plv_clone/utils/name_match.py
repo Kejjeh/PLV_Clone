@@ -308,18 +308,21 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, object, int]]] = {
         ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
+        ("MIN", "IF", 472610),   # same player, post-trade (audit 2026-08-07)
     ],
     "Luis García": [
         ("WSH", "2B", 671277),
         ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
+        ("MIN", "IF", 472610),   # same player, post-trade (audit 2026-08-07)
     ],
     "Luis García Jr.": [
         ("WSH", "2B", 671277),
         ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
+        ("MIN", "IF", 472610),   # same player, post-trade (audit 2026-08-07)
     ],
     # Unaccented "Jr." spelling (ESPN drift) — 2026-07-20 QA found it fell
     # through the collision gate (only the accented key existed) and then
@@ -330,12 +333,14 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, object, int]]] = {
         ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
+        ("MIN", "IF", 472610),   # same player, post-trade (audit 2026-08-07)
     ],
     "Luis Garcia Jr": [
         ("WSH", "2B", 671277),
         ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
+        ("MIN", "IF", 472610),   # same player, post-trade (audit 2026-08-07)
     ],
 }
 
