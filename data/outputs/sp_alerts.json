@@ -1,101 +1,10 @@
 {
-  "generated": "2026-08-07",
-  "upgrade_floor_fpp": -0.0744,
+  "generated": "2026-08-08",
+  "upgrade_floor_fpp": -0.0379,
   "hit_upgrade_floor_xwoba": 0.308,
-  "alert_count": 6,
+  "alert_count": 0,
   "hitter_alert_count": 0,
-  "alerts": [
-    {
-      "name": "Christian Scott",
-      "tier": "HIGH",
-      "signals": [
-        "SigH-HIGH(gap=+0.046)"
-      ],
-      "gs": 16,
-      "fpp": -0.0282,
-      "fpp_gap": 0.0462,
-      "gsp": 9,
-      "l4": "3/4",
-      "whiff_pct": 25.6,
-      "xwoba_con": 0.367,
-      "rp3_rank": 74
-    },
-    {
-      "name": "Drew Anderson",
-      "tier": "MONITOR",
-      "signals": [
-        "SigH-MONITOR(gap=+0.029)"
-      ],
-      "gs": 9,
-      "fpp": -0.045,
-      "fpp_gap": 0.0294,
-      "gsp": 6,
-      "l4": "2/4",
-      "whiff_pct": 27.6,
-      "xwoba_con": 0.343,
-      "rp3_rank": 80
-    },
-    {
-      "name": "Chase Dollander",
-      "tier": "MONITOR",
-      "signals": [
-        "SigH-MONITOR(gap=+0.029)"
-      ],
-      "gs": 8,
-      "fpp": -0.0452,
-      "fpp_gap": 0.0292,
-      "gsp": 4,
-      "l4": "2/4",
-      "whiff_pct": 27.4,
-      "xwoba_con": 0.358,
-      "rp3_rank": 169
-    },
-    {
-      "name": "Michael Soroka",
-      "tier": "MONITOR",
-      "signals": [
-        "SigH-MONITOR(gap=+0.029)"
-      ],
-      "gs": 14,
-      "fpp": -0.0455,
-      "fpp_gap": 0.0289,
-      "gsp": 8,
-      "l4": "3/4",
-      "whiff_pct": 21.5,
-      "xwoba_con": 0.378,
-      "rp3_rank": 120
-    },
-    {
-      "name": "Spencer Miles",
-      "tier": "MONITOR",
-      "signals": [
-        "SigH-MONITOR(gap=+0.028)"
-      ],
-      "gs": 12,
-      "fpp": -0.046,
-      "fpp_gap": 0.0284,
-      "gsp": 8,
-      "l4": "2/4",
-      "whiff_pct": 18.1,
-      "xwoba_con": 0.322,
-      "rp3_rank": 136
-    },
-    {
-      "name": "Kendry Rojas",
-      "tier": "MONITOR",
-      "signals": [
-        "SigH-MONITOR(gap=+0.026)"
-      ],
-      "gs": 8,
-      "fpp": -0.0485,
-      "fpp_gap": 0.0259,
-      "gsp": 4,
-      "l4": "1/4",
-      "whiff_pct": 27.3,
-      "xwoba_con": 0.293,
-      "rp3_rank": 91
-    }
-  ],
+  "alerts": [],
   "hitter_alerts": [],
-  "my_active_sp_count": 8
+  "my_active_sp_count": 7
 }

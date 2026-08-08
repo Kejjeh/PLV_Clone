@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.8813,
+  "base_pwin": 0.9691,
   "regime": "LEADING",
   "period": 18,
   "sims": 10000,
   "seed": 7,
   "cap_remaining": 1,
-  "plan_source": "greedy",
-  "plan_total_dpwin": 0.028200000000000003,
-  "plan_pwin_final": 0.9095,
+  "plan_source": "pair_check",
+  "plan_total_dpwin": 0.0104,
+  "plan_pwin_final": 0.9795,
   "plan": [
     {
       "add": "Caleb Durbin",
       "add_bucket": "H",
-      "drop": "Vladimir Guerrero Jr.",
-      "drop_bucket": "H",
-      "dpwin": 0.020500000000000074,
-      "mc_se": 0.002976,
-      "pwin_after": 0.9018,
-      "dpwin_from_base": 0.0205,
-      "dtitle_equity_pp": -0.0039
-    },
-    {
-      "add": "Masataka Yoshida",
-      "add_bucket": "H",
       "drop": "Max Muncy",
       "drop_bucket": "H",
-      "dpwin": 0.007699999999999929,
-      "mc_se": 0.002869,
-      "pwin_after": 0.9095,
-      "dpwin_from_base": 0.0282,
-      "dtitle_equity_pp": -0.0015
+      "dpwin": 0.006199999999999983,
+      "mc_se": 0.001552,
+      "pwin_after": 0.9753,
+      "dpwin_from_base": 0.006199999999999983,
+      "dtitle_equity_pp": -0.0012
+    },
+    {
+      "add": "Andruw Monasterio",
+      "add_bucket": "H",
+      "drop": "Vladimir Guerrero Jr.",
+      "drop_bucket": "H",
+      "dpwin": 0.004200000000000016,
+      "mc_se": 0.001417,
+      "pwin_after": 0.9795,
+      "dpwin_from_base": 0.0104,
+      "dtitle_equity_pp": -0.0008
     }
   ],
   "title_equity": {
@@ -44,122 +44,123 @@
   "top_single_moves": [
     {
       "add": "Caleb Durbin",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.020500000000000074,
-      "mc_se": 0.002976
-    },
-    {
-      "add": "Caleb Durbin",
       "drop": "Max Muncy",
-      "dpwin": 0.016199999999999992,
-      "mc_se": 0.003033
+      "dpwin": 0.006199999999999983,
+      "mc_se": 0.001552
+    },
+    {
+      "add": "Andruw Monasterio",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.005700000000000038,
+      "mc_se": 0.001567
     },
     {
       "add": "Caleb Durbin",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.005300000000000082,
+      "mc_se": 0.001579
+    },
+    {
+      "add": "Andruw Monasterio",
+      "drop": "Max Muncy",
+      "dpwin": 0.005300000000000082,
+      "mc_se": 0.001579
+    },
+    {
+      "add": "Andruw Monasterio",
       "drop": "Jordan Walker",
-      "dpwin": 0.015900000000000025,
-      "mc_se": 0.003037
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Pete Alonso",
-      "dpwin": 0.015100000000000002,
-      "mc_se": 0.003047
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Corbin Carroll",
-      "dpwin": 0.012600000000000056,
-      "mc_se": 0.00308
-    },
-    {
-      "add": "Bryson Stott",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.012500000000000067,
-      "mc_se": 0.003081
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.012299999999999978,
-      "mc_se": 0.003083
-    },
-    {
-      "add": "Jacob Young",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.011900000000000022,
-      "mc_se": 0.003089
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Luis Garcia Jr.",
-      "dpwin": 0.011299999999999977,
-      "mc_se": 0.003096
+      "dpwin": 0.0050000000000000044,
+      "mc_se": 0.001588
     },
     {
       "add": "Caleb Durbin",
       "drop": "Wyatt Langford",
-      "dpwin": 0.011099999999999999,
-      "mc_se": 0.003099
+      "dpwin": 0.0047000000000000375,
+      "mc_se": 0.001597
     },
     {
       "add": "Caleb Durbin",
       "drop": "Michael Harris II",
-      "dpwin": 0.01090000000000002,
-      "mc_se": 0.003101
+      "dpwin": 0.0044000000000000705,
+      "mc_se": 0.001606
     },
     {
-      "add": "Tanner Scott",
-      "drop": "Jacob Latz",
-      "dpwin": 0.009400000000000075,
-      "mc_se": 0.00312
+      "add": "Caleb Durbin",
+      "drop": "Jordan Walker",
+      "dpwin": 0.0044000000000000705,
+      "mc_se": 0.001606
     },
     {
-      "add": "Jacob Young",
-      "drop": "Max Muncy",
-      "dpwin": 0.008900000000000019,
-      "mc_se": 0.003126
+      "add": "Walbert Urena",
+      "drop": "Griffin Jax",
+      "dpwin": 0.0044000000000000705,
+      "mc_se": 0.001606
+    },
+    {
+      "add": "Bryson Stott",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.0042000000000000925,
+      "mc_se": 0.001612
+    },
+    {
+      "add": "Masataka Yoshida",
+      "drop": "Pete Alonso",
+      "dpwin": 0.0039000000000000146,
+      "mc_se": 0.001621
+    },
+    {
+      "add": "Tyler Tolbert",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 0.0038000000000000256,
+      "mc_se": 0.001624
     },
     {
       "add": "Masataka Yoshida",
       "drop": "Max Muncy",
-      "dpwin": 0.007800000000000029,
-      "mc_se": 0.00314
+      "dpwin": 0.0038000000000000256,
+      "mc_se": 0.001624
     },
     {
-      "add": "Bryson Stott",
-      "drop": "Max Muncy",
-      "dpwin": 0.007600000000000051,
-      "mc_se": 0.003143
+      "add": "Caleb Durbin",
+      "drop": "Corbin Carroll",
+      "dpwin": 0.0037000000000000366,
+      "mc_se": 0.001627
+    },
+    {
+      "add": "Andruw Monasterio",
+      "drop": "Pete Alonso",
+      "dpwin": 0.0036000000000000476,
+      "mc_se": 0.00163
     }
   ],
   "pair_check": {
     "n_combos": 45,
-    "adopted": false,
+    "adopted": true,
     "best": {
       "moves": [
         {
           "add": "Caleb Durbin",
           "add_bucket": "H",
-          "drop": "Vladimir Guerrero Jr.",
-          "drop_bucket": "H",
-          "dpwin_solo": 0.020500000000000074,
-          "mc_se": 0.002976
-        },
-        {
-          "add": "Masataka Yoshida",
-          "add_bucket": "H",
           "drop": "Max Muncy",
           "drop_bucket": "H",
-          "dpwin_solo": 0.007800000000000029,
-          "mc_se": 0.00314
+          "dpwin_solo": 0.006199999999999983,
+          "mc_se": 0.001552
+        },
+        {
+          "add": "Andruw Monasterio",
+          "add_bucket": "H",
+          "drop": "Vladimir Guerrero Jr.",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.005700000000000038,
+          "mc_se": 0.001567
         }
       ],
-      "dpwin": 0.0282,
-      "pwin": 0.9095,
-      "mc_se": 0.002869,
-      "sum_solo": 0.028300000000000103,
-      "interaction": -0.00010000000000010348
+      "dpwin": 0.0104,
+      "pwin": 0.9795,
+      "mc_se": 0.001417,
+      "sum_solo": 0.011900000000000022,
+      "interaction": -0.0015000000000000221
     }
-  }
+  },
+  "dpwin_run_id": "2026-08-08T074903_7"
 }

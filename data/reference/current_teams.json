@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-07",
+ "as_of": "2026-08-08",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1268,6 +1268,12 @@
    "name": "Spencer Bivens",
    "pos": "P"
   },
+  "805345": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Trent Harris",
+   "pos": "P"
+  },
   "686790": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -2054,12 +2060,6 @@
    "name": "Nicky Lopez",
    "pos": "2B"
   },
-  "663884": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Nolan Kingham",
-   "pos": "P"
-  },
   "682608": {
    "team": "Texas Rangers",
    "abbr": "TEX",
@@ -2143,6 +2143,12 @@
    "abbr": "TOR",
    "name": "Brendon Little",
    "pos": "P"
+  },
+  "703520": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Brett Bateman",
+   "pos": "CF"
   },
   "669310": {
    "team": "Toronto Blue Jays",
@@ -2323,12 +2329,6 @@
    "abbr": "TOR",
    "name": "Ricky Tiedemann",
    "pos": "P"
-  },
-  "657675": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Rudy Martin Jr.",
-   "pos": "RF"
   },
   "815873": {
    "team": "Toronto Blue Jays",
@@ -2522,6 +2522,12 @@
    "name": "Josh Bell",
    "pos": "DH"
   },
+  "701785": {
+   "team": "Minnesota Twins",
+   "abbr": "MIN",
+   "name": "Kaelen Culpepper",
+   "pos": "SS"
+  },
   "696070": {
    "team": "Minnesota Twins",
    "abbr": "MIN",
@@ -2604,12 +2610,6 @@
    "team": "Minnesota Twins",
    "abbr": "MIN",
    "name": "Taj Bradley",
-   "pos": "P"
-  },
-  "688497": {
-   "team": "Minnesota Twins",
-   "abbr": "MIN",
-   "name": "Taylor Rashi",
    "pos": "P"
   },
   "573124": {
@@ -4418,6 +4418,12 @@
    "name": "Ryan Johnson",
    "pos": "P"
   },
+  "670245": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Ryan Watson",
+   "pos": "P"
+  },
   "691951": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -5274,6 +5280,12 @@
    "team": "Boston Red Sox",
    "abbr": "BOS",
    "name": "Ranger Suarez",
+   "pos": "P"
+  },
+  "670103": {
+   "team": "Boston Red Sox",
+   "abbr": "BOS",
+   "name": "Raymond Burgos",
    "pos": "P"
   },
   "701350": {
@@ -7897,6 +7909,12 @@
    "abbr": "NYM",
    "name": "Francisco Lindor",
    "pos": "SS"
+  },
+  "672356": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Gabriel Arias",
+   "pos": "3B"
   },
   "663584": {
    "team": "New York Mets",
