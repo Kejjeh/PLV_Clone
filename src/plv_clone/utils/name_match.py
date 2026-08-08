@@ -31,6 +31,32 @@ def _normalize(name: str) -> str:
     return name.lower().strip()
 
 
+def _rows_for_name(df: pd.DataFrame, col: str, *names) -> pd.DataFrame:
+    """Rows of ``df`` whose ``col`` matches any of ``names``.
+
+    Exact match first (fast, and the historical behavior), then a
+    :func:`_normalize` comparison on both sides. The normalized leg is what
+    makes ESPN's ascii "Jose Soriano" find the cache's "José Soriano" — the
+    resolvers' docstrings promised accent normalization but the lookups were
+    raw ``==`` compares, so every accented name fell through to None and the
+    caller skipped the player (live_monitor dropped Soriano from the live
+    score entirely, 2026-08-07).
+
+    Normalization also folds suffixes ("Luis Garcia Jr." → "luis garcia"), so
+    this WIDENS the match set. Callers must keep their ambiguity guard —
+    return None when the widened set spans >1 id — rather than taking the
+    first row.
+    """
+    wanted = [n for n in names if n]
+    if not wanted:
+        return df.iloc[0:0]
+    hit = df[df[col].isin(wanted)]
+    if not hit.empty:
+        return hit
+    keys = {_normalize(n) for n in wanted}
+    return df[df[col].map(_normalize).isin(keys)]
+
+
 def join_key(name) -> str:
     """Order-independent normalization for use as a *dict join key*.
 
@@ -219,14 +245,20 @@ def _pick_collision_candidate(candidates, *, team=None, hint=None) -> Optional[i
     """
     if team is not None and str(team).strip():
         tk = team_key(team)
-        hits = [m for ct, _cp, m in candidates if team_key(ct) == tk]
-        return hits[0] if len(hits) == 1 else None
+        hits = {m for ct, _cp, m in candidates if team_key(ct) == tk}
+        return next(iter(hits)) if len(hits) == 1 else None
     if hint is not None and str(hint).strip():
         h = str(hint).upper().strip()
-        hits = [m for _ct, cp, m in candidates if h in _pos_hints(cp)]
-        return hits[0] if len(hits) == 1 else None
-    if len(candidates) == 1:
-        return candidates[0][2]
+        hits = {m for _ct, cp, m in candidates if h in _pos_hints(cp)}
+        return next(iter(hits)) if len(hits) == 1 else None
+    # Count DISTINCT IDS, not rows. One player can occupy several rows — a
+    # traded player carries one per team (Soriano LAA+TOR) — and counting rows
+    # made the hintless force fail the moment a trade row was added, which is
+    # the same silent-None this whole entry exists to prevent. Every gate above
+    # dedupes for the same reason: two rows for ONE player is not ambiguity.
+    ids = {m for _ct, _cp, m in candidates}
+    if len(ids) == 1:
+        return next(iter(ids))
     return None
 
 
@@ -264,18 +296,28 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, object, int]]] = {
     # Luis García family: PHI legacy IF 472610, HOU 2021 fringe 677651,
     # WSH 2B (Jr.) 671277. PL hitter-article references 2022+ are
     # consistently the Washington 2B regardless of "Jr." suffix presence.
+    # A candidate may carry MORE THAN ONE (team, pos) row for the same mlbam —
+    # team is the authoritative hint and callers pass the player's CURRENT
+    # team, so a mid-season trade otherwise strands him: 671277 moved WSH->NYY
+    # and `team="NYY"` matched zero candidates, returning None and silently
+    # dropping him from the live score (2026-08-07). Listing both teams keeps
+    # historical callers working while resolving the live one. Add a row here
+    # when a collision-listed player changes teams.
     "Luis Garcia": [
         ("WSH", "2B", 671277),
+        ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
     "Luis García": [
         ("WSH", "2B", 671277),
+        ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
     "Luis García Jr.": [
         ("WSH", "2B", 671277),
+        ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
@@ -285,11 +327,13 @@ KNOWN_COLLISIONS: dict[str, list[tuple[str, object, int]]] = {
     # "Luis García Jr." rows, returning None. Same candidate list.
     "Luis Garcia Jr.": [
         ("WSH", "2B", 671277),
+        ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
     "Luis Garcia Jr": [
         ("WSH", "2B", 671277),
+        ("NYY", "1B", 671277),   # same player, post-trade team (see note above)
         ("HOU", "IF", 677651),
         ("PHI", "IF", 472610),
     ],
@@ -324,11 +368,21 @@ KNOWN_PITCHER_COLLISIONS: dict[str, list[tuple[str, str, int]]] = {
     # path (it is a different dict key, so this entry does not shadow it).
     # (There is also a George Soriano RP, 666277 — distinct full name, so no key
     # collision, but it is why a bare "Soriano" must never be guessed.)
+    # TEAM ROWS GO STALE ON A TRADE. team is authoritative, so a candidate list
+    # pinned to last year's team matches ZERO on the live hint and returns None —
+    # which reads downstream as "no such player" and silently drops him (2026-08-07:
+    # live_monitor lost Soriano, LAA->TOR, from the scoreboard). A candidate may
+    # therefore carry MORE THAN ONE (team, pos) row for the same mlbam. Deliberately
+    # NOT fixed by short-circuiting single-candidate entries past the team gate:
+    # that would break the "a wrong team hint refuses" contract this module is
+    # built on. Add a row here when a listed player changes teams.
     "Jose Soriano": [
         ("LAA", "SP", 667755),
+        ("TOR", "SP", 667755),   # traded mid-2026; same player (see note above)
     ],
     "Soriano, Jose": [
         ("LAA", "SP", 667755),
+        ("TOR", "SP", 667755),   # traded mid-2026; same player (see note above)
     ],
     # Eury Pérez (MIA SP, 691587). Same accent-drift RESOLUTION FORCE as
     # Soriano (2026-07-20 QA): the SP cache spells him "Pérez, Eury", so the
@@ -483,13 +537,19 @@ def resolve_batter_id(
         multiyr = pd.read_csv(multiyr_path)
 
     # Prefer the most recent year's row for stable team/position info.
-    sub = multiyr[multiyr["player_name"] == name]
+    sub = _rows_for_name(multiyr, "player_name", name)
     if sub.empty:
         return None
     if team is not None and "team" in sub.columns:
         team_sub = sub[sub["team"].str.upper() == team.upper()]
         if not team_sub.empty:
             sub = team_sub
+    # Ambiguity guard. The normalized leg of _rows_for_name folds accents AND
+    # suffixes, so a widened match can span two real players that the
+    # KNOWN_COLLISIONS gate above did not list. Taking .iloc[0] here would be
+    # exactly the silent wrong-player bug this module exists to prevent.
+    if sub["batter"].nunique() > 1:
+        return None
     # Return the most recent batter ID for the (filtered) rows.
     if "year" in sub.columns:
         sub = sub.sort_values("year", ascending=False)
@@ -558,19 +618,16 @@ def resolve_pitcher_id(
                 sp_multiyr = pd.read_csv(sp_path)
             except FileNotFoundError:
                 return None
-        for n in (name, alt_name):
-            if n is None:
-                continue
-            sub = sp_multiyr[sp_multiyr["player_name"] == n]
-            if not sub.empty:
-                if "year" in sub.columns:
-                    sub = sub.sort_values("year", ascending=False)
-                # Multiple distinct IDs for the same name = unresolved
-                # collision the caller should have hit via KNOWN_PITCHER_COLLISIONS.
-                ids = sub["pitcher"].unique()
-                if len(ids) > 1:
-                    return None
-                return int(sub.iloc[0]["pitcher"])
+        sub = _rows_for_name(sp_multiyr, "player_name", name, alt_name)
+        if not sub.empty:
+            if "year" in sub.columns:
+                sub = sub.sort_values("year", ascending=False)
+            # Multiple distinct IDs for the same name = unresolved
+            # collision the caller should have hit via KNOWN_PITCHER_COLLISIONS.
+            ids = sub["pitcher"].unique()
+            if len(ids) > 1:
+                return None
+            return int(sub.iloc[0]["pitcher"])
         return None
 
     def _try_rp() -> Optional[int]:
@@ -580,21 +637,18 @@ def resolve_pitcher_id(
                 rp_multiyr = pd.read_csv(rp_path)
             except FileNotFoundError:
                 return None
-        for n in (name, alt_name):
-            if n is None:
-                continue
-            sub = rp_multiyr[rp_multiyr["name"] == n]
-            if not sub.empty:
-                if team is not None and "team_abbr" in sub.columns:
-                    team_sub = sub[sub["team_abbr"].astype(str).str.upper() == team.upper()]
-                    if not team_sub.empty:
-                        sub = team_sub
-                if "year" in sub.columns:
-                    sub = sub.sort_values("year", ascending=False)
-                ids = sub["pitcher"].unique()
-                if len(ids) > 1:
-                    return None
-                return int(sub.iloc[0]["pitcher"])
+        sub = _rows_for_name(rp_multiyr, "name", name, alt_name)
+        if not sub.empty:
+            if team is not None and "team_abbr" in sub.columns:
+                team_sub = sub[sub["team_abbr"].astype(str).str.upper() == team.upper()]
+                if not team_sub.empty:
+                    sub = team_sub
+            if "year" in sub.columns:
+                sub = sub.sort_values("year", ascending=False)
+            ids = sub["pitcher"].unique()
+            if len(ids) > 1:
+                return None
+            return int(sub.iloc[0]["pitcher"])
         return None
 
     # Role hint orders which cache we check first.

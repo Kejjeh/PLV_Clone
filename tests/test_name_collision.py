@@ -210,3 +210,121 @@ def test_boom_bust_engine_keys_by_mlbam():
     # and it must NOT filter the box by player_name substring
     assert "player_name'].str.contains" not in src
     assert 'player_name"].str.contains' not in src
+
+
+# ── Mid-season trades + accent drift starved the live scoreboard (2026-08-07) ──
+# live_monitor could not resolve José Soriano or Luis García Jr. and SKIPPED
+# both. A skipped player scores 0 and silently vanishes from the daily total,
+# which then reads as authoritative — the printed Ligers total was understated
+# by ~8 FP. Three distinct faults, locked below.
+
+def test_unaccented_espn_spelling_resolves_via_cache_2026_08_07():
+    """Fault 1: the resolvers promised accent normalization in their docstrings
+    but compared raw strings. ESPN sends ascii "Jose Soriano"; the SP cache
+    holds "Soriano, José"; the `==` compare missed and returned None."""
+    from plv_clone.utils.name_match import resolve_pitcher_id, resolve_batter_id
+
+    for spelling in ("Jose Soriano", "José Soriano", "Soriano, Jose",
+                     "Soriano, José"):
+        assert resolve_pitcher_id(spelling, team="TOR", role="SP") == 667755, spelling
+    # Hitter side shares the lookup; the accented cache spelling still resolves
+    # from the unaccented ESPN one.
+    assert resolve_batter_id("Jose Ramirez", team="CLE") == \
+        resolve_batter_id("José Ramírez", team="CLE")
+
+
+def test_traded_pitcher_resolves_on_new_team_2026_08_07():
+    """Fault 2a. Team is authoritative, so a candidate list pinned to last
+    year's team matches ZERO on the live hint and returns None — which reads
+    downstream as "no such player". Soriano moved LAA->TOR and vanished from
+    the live score.
+
+    Fixed by listing BOTH teams for the same id, NOT by short-circuiting
+    single-candidate entries past the team gate: that would resolve a wrong
+    hint too, breaking the refuse-on-wrong-hint contract asserted in
+    ``test_resolver_accent_and_suffix_forces_2026_07_20`` (line 80). The
+    guard below locks that distinction in."""
+    from plv_clone.utils.name_match import resolve_pitcher_id
+
+    assert resolve_pitcher_id("Jose Soriano", team="TOR", role="SP") == 667755
+    assert resolve_pitcher_id("Jose Soriano", team="LAA", role="SP") == 667755
+    assert resolve_pitcher_id("Soriano, Jose", team="TOR") == 667755
+    assert resolve_pitcher_id("Jose Soriano") == 667755          # hintless force
+    # A team he has never played for still REFUSES — adding the trade row must
+    # not turn the team gate into a no-op for single-candidate entries.
+    assert resolve_pitcher_id("Jose Soriano", team="NYY") is None
+    assert resolve_pitcher_id("Eury Perez", team="NYY") is None
+
+
+def test_traded_collision_member_resolves_on_new_team_2026_08_07():
+    """Fault 2b. Luis García Jr. (671277) is a MULTI-candidate name, so the
+    single-id shortcut above cannot apply and team stays authoritative. He moved
+    WSH->NYY, so the live team hint matched no candidate. Both teams must map to
+    the same id; the other Garcías are unaffected."""
+    from plv_clone.utils.name_match import resolve_batter_id
+
+    for spelling in ("Luis Garcia Jr.", "Luis García Jr.", "Luis Garcia Jr"):
+        assert resolve_batter_id(spelling, team="NYY") == 671277, spelling
+        assert resolve_batter_id(spelling, team="WSH") == 671277, spelling
+    assert resolve_batter_id("Luis Garcia", team="HOU") == 677651
+    assert resolve_batter_id("Luis Garcia", team="PHI") == 472610
+
+
+def test_trade_fix_does_not_weaken_the_refuse_to_guess_contract():
+    """The guards that matter most. Widening name matching and short-circuiting
+    single-candidate entries must NOT reintroduce a silent mispick: every name
+    below has >1 distinct id, so team stays authoritative and an unmatched or
+    absent hint must still refuse."""
+    from plv_clone.utils.name_match import resolve_batter_id, resolve_pitcher_id
+
+    # Muncy — the canonical mispick. Unchanged in both directions.
+    assert resolve_batter_id("Max Muncy", team="Oak", position="3B") == 691777
+    assert resolve_batter_id("Max Muncy", team="LAD") == 571970
+    assert resolve_batter_id("Max Muncy", team="NYY", position="3B") is None
+    assert resolve_batter_id("Max Muncy") is None
+    # García is multi-candidate: hintless must still refuse despite the new row.
+    assert resolve_batter_id("Luis Garcia") is None
+    assert resolve_batter_id("Luis Garcia Jr.") is None
+    assert resolve_batter_id("Luis Garcia Jr.", team="SEA") is None
+    # Warrens differ on FIRST name, so suffix/accent folding must not merge them.
+    assert resolve_pitcher_id("Will Warren", team="NYY", role="SP") == 701542
+    assert resolve_pitcher_id("Austin Warren", team="NYM", role="RP") == 681810
+    # Logan Allen stays ambiguous on role alone.
+    assert resolve_pitcher_id("Logan Allen", role="SP") is None
+
+
+def test_suffix_folding_cannot_return_an_arbitrary_player():
+    """_normalize folds ' Jr.', so the normalized leg WIDENS the match set and
+    could span two real players the collision table doesn't list. The ambiguity
+    guard must refuse rather than take .iloc[0] — the exact silent-wrong-player
+    failure this module exists to prevent."""
+    import pandas as _pd
+    from plv_clone.utils.name_match import resolve_batter_id
+
+    multiyr = _pd.DataFrame({
+        "player_name": ["Sammy Sosa Jr.", "Sammy Sosa II"],
+        "batter": [900001, 900002],
+        "team": ["CHC", "BAL"],
+        "year": [2026, 2026],
+    })
+    # No EXACT row for the query, so the normalized leg runs and folds both
+    # suffixes to "sammy sosa" — two distinct ids, no usable hint -> refuse.
+    assert resolve_batter_id("Sammy Sosa", multiyr=multiyr) is None
+    # A team hint that isolates one row still resolves.
+    assert resolve_batter_id("Sammy Sosa", team="BAL", multiyr=multiyr) == 900002
+    assert resolve_batter_id("Sammy Sosa", team="CHC", multiyr=multiyr) == 900001
+    # An EXACT match is unambiguous and must NOT be widened by folding: exact
+    # is tried first precisely so a real full-name hit never competes with a
+    # suffix-folded near-miss.
+    assert resolve_batter_id("Sammy Sosa II", multiyr=multiyr) == 900002
+
+
+def test_live_monitor_surfaces_unresolved_players():
+    """Fault 3: an unresolved player scores 0 and disappears, so the total reads
+    'he did nothing' instead of 'we cannot see him'. The module must expose the
+    gap list the dashboard reprints beside the scoreboard."""
+    import live_monitor
+
+    assert hasattr(live_monitor, "UNRESOLVED"), \
+        "live_monitor must track unresolved roster entries"
+    assert isinstance(live_monitor.UNRESOLVED, list)
