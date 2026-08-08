@@ -178,15 +178,32 @@ def pooled_series(bucket: str, before: str | None = None,
 
 
 def series_stats(vals: list[float], boom_thr: float, bust_thr: float) -> dict:
+    """Realized boom/bust rates, carrying their own precision.
+
+    ``rate_precise`` is False below lib.boom_bust.RATE_MIN_N events, and callers
+    that RANK on these rates must respect it — an 8-start window can only
+    express rates in eighths and its 95% interval spans most of the unit line.
+    Canonical failure 2026-08-07: a 1-in-12 bust rate (8%, CI [1%, 35%]) was
+    ranked ahead of a 5-in-24 rate (21%, CI [9%, 40%]) as though the gap were
+    real; the intervals overlap almost entirely.
+    """
     if not vals:
-        return {'n': 0, 'mean': None, 'std': None, 'boom_pct': None, 'bust_pct': None}
+        return {'n': 0, 'mean': None, 'std': None, 'boom_pct': None,
+                'bust_pct': None, 'rate_precise': False}
+    from .boom_bust import rate_is_usable, wilson_ci
     a = np.asarray(vals, dtype=float)
+    n = int(len(a))
+    n_boom = int((a >= boom_thr).sum())
+    n_bust = int((a < bust_thr).sum())
     return {
-        'n': int(len(a)),
+        'n': n,
         'mean': round(float(a.mean()), 2),
-        'std': round(float(a.std(ddof=1)), 2) if len(a) > 1 else 0.0,
-        'boom_pct': round(float((a >= boom_thr).mean()) * 100),
-        'bust_pct': round(float((a < bust_thr).mean()) * 100),
+        'std': round(float(a.std(ddof=1)), 2) if n > 1 else 0.0,
+        'boom_pct': round(n_boom / n * 100),
+        'bust_pct': round(n_bust / n * 100),
+        'boom_ci': wilson_ci(n_boom, n),
+        'bust_ci': wilson_ci(n_bust, n),
+        'rate_precise': rate_is_usable(n),
     }
 
 

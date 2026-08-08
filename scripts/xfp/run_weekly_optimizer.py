@@ -497,13 +497,29 @@ def _regime_tiebreak(rows: list[dict], regime: str) -> list[dict]:
             st = (series_stats(emp_series(c.get('mlbam'), c['bucket']),
                               SP_BOOM if c['bucket'] != 'H' else H_BOOM,
                               SP_BUST if c['bucket'] != 'H' else H_BUST)
-                  if c else {'boom_pct': None, 'bust_pct': None})
+                  if c else {'boom_pct': None, 'bust_pct': None,
+                             'rate_precise': False})
             r['_boom'] = st.get('boom_pct') or 0
             r['_bust'] = st.get('bust_pct') if st.get('bust_pct') is not None else 100
-        if regime == 'TRAILING':
-            tied.sort(key=lambda r: -r['_boom'])
-        elif regime == 'LEADING':
-            tied.sort(key=lambda r: r['_bust'])
+            r['_rate_precise'] = bool(st.get('rate_precise'))
+            r['_rate_n'] = st.get('n') or 0
+        # Rank only on rates precise enough to mean something. A thin window can
+        # show an 8% bust rate off ONE bust in twelve starts (CI [1%, 35%]) and
+        # outrank a genuinely steadier arm at 21% over 24 starts (CI [9%, 40%])
+        # — the intervals overlap almost entirely, so the ordering was noise
+        # dressed as a floor (2026-08-07, the Drohan/Cavalli tie-break). Sorting
+        # is STABLE, so imprecise candidates keep their dpwin order rather than
+        # being pushed to the back: an unmeasured floor is unknown, not bad.
+        precise = [r for r in tied if r['_rate_precise']]
+        if len(precise) > 1 and regime in ('TRAILING', 'LEADING'):
+            key = ((lambda r: -r['_boom']) if regime == 'TRAILING'
+                   else (lambda r: r['_bust']))
+            precise.sort(key=key)
+            # Slot the reordered precise rows back into the positions they
+            # already occupied, leaving imprecise rows exactly where dpwin put
+            # them.
+            it = iter(precise)
+            tied = [next(it) if r['_rate_precise'] else r for r in tied]
     return tied + rest
 
 

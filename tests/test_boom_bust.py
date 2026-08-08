@@ -137,3 +137,73 @@ def test_rp_fp_scores_zero_out_blowup():
          "strikeOuts": 0, "hits": 3, "earnedRuns": 4, "baseOnBalls": 1,
          "hitBatsmen": 0, "saves": 0, "holds": 0}
     assert _rp_fp(s) == pytest.approx(-12.0)
+
+
+# ── Rate precision (2026-08-07) ──────────────────────────────────────────────
+# A bare percentage reads as far more certain than a handful of games can
+# support. On 2026-08-07 an 8% bust rate was quoted as "the lowest on the
+# slate" and used to pick a streamer — it was ONE bust in twelve starts,
+# CI [1%, 35%], overlapping the alternative's [9%, 40%] almost entirely.
+
+def test_rates_ship_with_denominator_and_interval():
+    from lib.boom_bust import boom_bust_summary
+    # 1 bust in 12 -> the Drohan shape.
+    vals = [12.0] * 11 + [-4.5]
+    s = boom_bust_summary(vals, boom_thr=17, bust_thr=5)
+    assert s["n"] == 12
+    assert s["bust_n"] == 1
+    assert s["bust_pct"] == 8
+    lo, hi = s["bust_ci"]
+    assert lo < 8 < hi, "the point estimate must sit inside its own interval"
+    assert hi > 25, f"a 1-in-12 rate cannot be precise; got upper bound {hi}"
+
+
+def test_wilson_ci_stays_inside_zero_to_one_hundred():
+    """Normal-approximation intervals go negative near p=0 and imply a
+    precision that does not exist; Wilson does not."""
+    from lib.boom_bust import wilson_ci
+    lo, hi = wilson_ci(0, 8)
+    assert lo == 0.0 and 0 < hi <= 100
+    lo, hi = wilson_ci(8, 8)
+    assert hi == 100.0 and 0 <= lo < 100
+    for n in (1, 5, 12, 40, 200):
+        for k in range(n + 1):
+            lo, hi = wilson_ci(k, n)
+            assert 0.0 <= lo <= hi <= 100.0
+
+
+def test_interval_narrows_as_the_sample_grows():
+    from lib.boom_bust import wilson_ci
+    widths = []
+    for mult in (1, 4, 20):
+        lo, hi = wilson_ci(1 * mult, 12 * mult)   # same 8% rate throughout
+        widths.append(hi - lo)
+    assert widths[0] > widths[1] > widths[2], (
+        "the same point estimate must get MORE precise with more events")
+
+
+def test_rate_precise_gates_at_the_documented_minimum():
+    from lib.boom_bust import RATE_MIN_N, boom_bust_summary, rate_is_usable
+    assert rate_is_usable(RATE_MIN_N) and not rate_is_usable(RATE_MIN_N - 1)
+    thin = boom_bust_summary([12.0] * (RATE_MIN_N - 1), boom_thr=17, bust_thr=5)
+    assert thin["rate_precise"] is False
+    ok = boom_bust_summary([12.0] * RATE_MIN_N, boom_thr=17, bust_thr=5)
+    assert ok["rate_precise"] is True
+
+
+def test_series_stats_carries_the_same_precision_contract():
+    """leverage_engine.series_stats feeds the optimizer's regime tie-break, so
+    it must expose rate_precise too — that is the code path that ranked a
+    1-in-12 bust rate ahead of a 5-in-24 one."""
+    import sys
+    from pathlib import Path
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts" / "xfp"))
+    from lib.leverage_engine import series_stats
+
+    thin = series_stats([12.0] * 7 + [-4.0], 17, 5)
+    assert thin["n"] == 8 and thin["rate_precise"] is False
+    assert thin["bust_ci"][1] > thin["bust_pct"]
+
+    thick = series_stats([12.0] * 20 + [-4.0] * 5, 17, 5)
+    assert thick["rate_precise"] is True
+    assert series_stats([], 17, 5)["rate_precise"] is False

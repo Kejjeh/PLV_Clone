@@ -43,8 +43,46 @@ _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.par
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
 
 
+#: Below this many events a boom/bust RATE is not a usable discriminator.
+#: An 8-start window can only express rates in eighths, and its 95% interval
+#: spans most of the unit line — see ``RATE_MIN_N`` usage in ``rate_is_usable``.
+RATE_MIN_N = 12
+
+
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> tuple[float, float]:
+    """95% Wilson score interval for a proportion, as PERCENTAGES.
+
+    Wilson rather than normal-approximation because these samples are small and
+    the rates sit near 0 — the normal interval goes negative there and implies
+    a precision that does not exist.
+    """
+    if n <= 0:
+        return (0.0, 100.0)
+    p = successes / n
+    den = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / den
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / den
+    return (round(max(0.0, centre - half) * 100, 1),
+            round(min(1.0, centre + half) * 100, 1))
+
+
+def rate_is_usable(n: int) -> bool:
+    """Is an observed rate over ``n`` events precise enough to RANK on?"""
+    return n >= RATE_MIN_N
+
+
 def boom_bust_summary(fp_values, *, boom_thr, bust_thr) -> dict | None:
-    """Pure: mean/std/min/max/boom%/bust%/trend over realized FP values."""
+    """Pure: mean/std/min/max/boom%/bust%/trend over realized FP values.
+
+    Every rate ships with its denominator and a 95% Wilson interval, and with
+    ``rate_precise`` saying whether it is usable for ranking. A bare percentage
+    reads as far more certain than a handful of games can support: on
+    2026-08-07 an 8% bust rate was quoted as "the lowest on the slate" and used
+    to pick a streamer, when it was ONE bust in twelve starts — CI [1%, 35%],
+    overlapping the alternative's [9%, 40%] almost entirely. The two arms were
+    not distinguishable and the number said nothing about that. Consumers that
+    sort or filter on boom/bust MUST gate on ``rate_precise``.
+    """
     v = [x for x in fp_values if x is not None]
     if not v:
         return None
@@ -54,14 +92,21 @@ def boom_bust_summary(fp_values, *, boom_thr, bust_thr) -> dict | None:
     l3_mean = sum(l3) / len(l3)
     full_mean = sum(v) / n
     trend = "UP" if l3_mean > full_mean + 1 else "DOWN" if l3_mean < full_mean - 1 else "FLAT"
+    n_boom = sum(1 for x in v if x >= boom_thr)
+    n_bust = sum(1 for x in v if x < bust_thr)
     return {
         "n": n,
         "mean": round(full_mean, 1),
         "std": round(std, 1),
         "min": round(min(v), 1),
         "max": round(max(v), 1),
-        "boom_pct": round(sum(1 for x in v if x >= boom_thr) / n * 100),
-        "bust_pct": round(sum(1 for x in v if x < bust_thr) / n * 100),
+        "boom_pct": round(n_boom / n * 100),
+        "bust_pct": round(n_bust / n * 100),
+        "boom_n": n_boom,
+        "bust_n": n_bust,
+        "boom_ci": wilson_ci(n_boom, n),
+        "bust_ci": wilson_ci(n_bust, n),
+        "rate_precise": rate_is_usable(n),
         "l3_mean": round(l3_mean, 1),
         "trend": trend,
         "last": [round(x, 1) for x in v[-8:]],
