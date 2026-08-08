@@ -38,6 +38,12 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 OUT = ROOT / 'data' / 'outputs'
 
+# Roster entries that could not be mapped to an MLBAM id this run, as
+# (name, proTeam, reason). They score 0 and would otherwise vanish from the
+# live totals without trace — the dashboard reprints them beside the
+# scoreboard so an incomplete total is never mistaken for a complete one.
+UNRESOLVED: list[tuple[str, str, str]] = []
+
 # Lazy import shim — the lib modules touch parquet/CSV caches at first call,
 # which we only want to pay once per process. Wrapped in try so the live
 # monitor still runs on a stripped environment where these caches are missing.
@@ -404,9 +410,11 @@ def build_team_id_map(team):
                             role = role_hint or 'SP'
         except Exception as e:
             print(f'  WARN: resolver error for {name} ({proTeam}): {e}; skipping')
+            UNRESOLVED.append((name, proTeam, f'resolver error: {e}'))
             continue
         if pid is None:
             print(f'  WARN: could not resolve {name} ({proTeam}, slots={slots}); skipping')
+            UNRESOLVED.append((name, proTeam, 'no mlbam match'))
             continue
         roster.append({
             'name': name, 'mlbam': int(pid), 'role': role,
@@ -535,6 +543,20 @@ def render_console(d, games, my_rows, opp_rows, opp_name):
     print(f'  ║  HEAD-TO-HEAD TODAY:  Ligers {my_total:+.2f}  vs  Opp {opp_total:+.2f}      ')
     print(f'  ║  {"LIGERS UP" if gap >= 0 else "TRAILING"} by {abs(gap):.2f} FP {sign}                                  ')
     print(f'  ╚════════════════════════════════════════════════════════════════════════╝')
+
+    # An unresolved player contributes 0 to the totals above, so a silent skip
+    # reads as "he did nothing" rather than "we could not see him". On
+    # 2026-08-07 Soriano + García Jr. both failed to resolve and the only
+    # notice was a WARN line ~40 rows earlier, already scrolled away — the
+    # printed daily total was understated and looked authoritative. Repeat the
+    # roster gaps HERE, next to the number they corrupt.
+    if UNRESOLVED:
+        print(f'\n  ⚠  {len(UNRESOLVED)} player(s) UNRESOLVED — NOT counted in the '
+              f'totals above (this scoreboard is INCOMPLETE):')
+        for nm, tm, why in UNRESOLVED:
+            print(f'       · {nm} ({tm or "?"}) — {why}')
+        print('     ESPN\'s own period score is authoritative; fix the mapping '
+              'before trusting today\'s FP.')
 
 
 def _render_sp_alerts_html() -> str:
