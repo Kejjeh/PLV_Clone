@@ -8,6 +8,7 @@ an intact one. These lock the asymmetry that produced that reversal.
 """
 from __future__ import annotations
 
+import pytest
 import sys
 from pathlib import Path
 
@@ -15,7 +16,81 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 
-from run_prior_year_peg import FLAT_BAND, METRICS, classify  # noqa: E402
+import pandas as pd  # noqa: E402
+
+from run_prior_year_peg import (  # noqa: E402
+    BLEND_W1, FLAT_BAND, METRICS, PRIOR_MIN_PA, baseline_level, classify,
+)
+
+
+def _hist(*seasons):
+    """(year, pa, fp_per_pa) rows in the multiyr cache's shape."""
+    return pd.DataFrame([{"year": y, "pa": pa, "fp_per_pa_actual": fp}
+                         for y, pa, fp in seasons])
+
+
+# ── the baseline is a blend, not last season alone ───────────────────────────
+# Validated 2026-08-09 (n=1165): 1yr r=0.501/MAE=0.1010, 3yr r=0.558/MAE=0.0915,
+# blend 40/60 r=0.562/MAE=0.0906. The edge is asymmetric — after a CAREER year a
+# 1-year peg is biased -0.083 while 3-year is -0.012 — which is why the blend
+# exists rather than either endpoint.
+
+def test_the_baseline_blends_last_year_with_the_three_year_level():
+    h = _hist((2023, 600, 0.500), (2024, 600, 0.500), (2025, 600, 0.600))
+    base, three, mode = baseline_level(h, 2025)
+    assert three is not None
+    assert base == pytest.approx(BLEND_W1 * 0.600 + (1 - BLEND_W1) * three)
+    assert base < 0.600, "a career year must be pulled DOWN toward the 3yr level"
+    assert "40%" in mode
+
+
+def test_a_career_year_is_discounted_and_a_down_year_lifted():
+    """The two directions the bias table describes, in miniature."""
+    up = baseline_level(_hist((2023, 600, 0.50), (2024, 600, 0.50), (2025, 600, 0.70)), 2025)[0]
+    down = baseline_level(_hist((2023, 600, 0.50), (2024, 600, 0.50), (2025, 600, 0.30)), 2025)[0]
+    assert 0.50 < up < 0.70
+    assert 0.30 < down < 0.50
+
+
+def test_the_window_is_three_seasons_not_the_whole_career():
+    """A player's 2015 peak must not anchor a 2026 baseline."""
+    h = _hist((2019, 600, 5.0), (2023, 600, 0.50), (2024, 600, 0.50), (2025, 600, 0.50))
+    base, three, _ = baseline_level(h, 2025)
+    assert three == pytest.approx(0.50)
+    assert base == pytest.approx(0.50)
+
+
+def test_thin_seasons_do_not_join_the_three_year_level():
+    """A 40-PA cameo is not a season; letting it weight the level would import
+    exactly the small-sample noise the peg's stabilization gates exclude."""
+    h = _hist((2024, PRIOR_MIN_PA - 1, 5.0), (2025, 600, 0.50))
+    base, three, mode = baseline_level(h, 2025)
+    assert three is None and base == pytest.approx(0.50)
+    assert "1yr only" in mode
+
+
+def test_a_single_prior_season_falls_back_to_last_year_and_says_so():
+    """The rookie/sophomore case (Caleb Durbin, 2026-08-09). Falling back is
+    fine; falling back SILENTLY would misreport what the gap was measured
+    against."""
+    base, three, mode = baseline_level(_hist((2025, 600, 0.606)), 2025)
+    assert base == pytest.approx(0.606)
+    assert three is None
+    assert "1yr only" in mode
+
+
+def test_the_three_year_level_is_pa_weighted():
+    """A 600-PA season must outweigh a 200-PA one."""
+    h = _hist((2023, 200, 0.900), (2024, 600, 0.500), (2025, 600, 0.500))
+    _, three, _ = baseline_level(h, 2025)
+    assert three == pytest.approx((200 * 0.9 + 600 * 0.5 + 600 * 0.5) / 1400)
+    assert three < (0.9 + 0.5 + 0.5) / 3, "must not be a simple mean"
+
+
+def test_blend_weight_favours_the_three_year_level():
+    """The fitted optimum put most of the weight on the multi-year level; a
+    weight above 0.5 would invert the validated finding."""
+    assert 0.0 < BLEND_W1 < 0.5
 
 
 # ── the four regimes ─────────────────────────────────────────────────────────

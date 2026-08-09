@@ -43,9 +43,24 @@ Two prior-anchored checks carry extra weight because they are validated:
     predict this one; when it declines every year (the Turner pattern),
     recovery hits a lower ceiling than prior troughs. This is the single
     strongest RECOVERING-vs-STALLED discriminator.
-  * **expected-vs-actual wOBA** — a positive gap on an ABOVE-prior player is
-    the OVEREXTENDED tell; a negative gap on a BELOW-prior player is owed
-    bounce.
+  * **expected-vs-actual wOBA, pegged to the player's OWN luck baseline** — a
+    positive EXCESS on an ABOVE-prior player corroborates OVEREXTENDED; a
+    negative excess on a BELOW-prior player is owed bounce. "Excess" and not
+    "gap": the field's gap centers on zero, but some hitters' does not, and
+    judging those against zero invents a regression warning out of their
+    normal operating level. Canonical (2026-08-09): Jose Altuve had beaten
+    xwOBA in 10 of 11 seasons at +0.030, so his 2026 +0.030 was flagged "due
+    for negative regression" when it was simply him. lib/expected_stats
+    supplies the shrunk personal baseline; this reports the excess over it.
+
+    ANNOTATION, NOT A VOTE. It qualifies how much confidence the regime line
+    deserves and never changes which regime is returned — the regime comes
+    from production and the process vote. Wiring it as a vote would be a new
+    number-mover with no validation against regime outcomes, and Rule 13
+    forbids that. Stated explicitly because the previous version of this
+    docstring advertised the check while classify() ignored it entirely — the
+    same documented-but-unwired defect that let a 2/2 tie decide Jarren
+    Duran's verdict before xwOBACON was actually connected.
 
 RULE 13: context/awareness only. This never moves rh3 and never re-ranks a
 model. It answers "which direction is this player travelling relative to
@@ -90,9 +105,39 @@ METRICS = {
 #: fp/PA move (in either direction) below this is noise, not a regime
 FLAT_BAND = 0.030
 
+#: THE BASELINE IS A BLEND, NOT LAST SEASON ALONE (validated 2026-08-09).
+#: "Pegged to last year" is the intuitive frame, but last year is frequently
+#: the anomaly: on 1,916 player-seasons, |last year − 3yr level| exceeds
+#: FLAT_BAND itself **64.5%** of the time, so most of the time a 1-year peg
+#: sets its zero point further off the player's real level than the move it is
+#: trying to detect. Predicting the current season's fp/PA (n=1165, each with
+#: three full 200+ PA prior years):
+#:
+#:     prior 1 year        r=0.501  MAE=0.1010
+#:     prior 3 years wtd   r=0.558  MAE=0.0915
+#:     blend 40/60         r=0.562  MAE=0.0906   <- best, and best on decliners
+#:
+#: (MAE difference 1yr−3yr = +0.0096, 95% CI [+0.0062, +0.0131].)
+#:
+#: The edge is ASYMMETRIC, which is why a blend rather than pure 3-year: after
+#: a CAREER year a 1-year peg is biased −0.083 (nobody returns to it) while
+#: 3-year is only −0.012; after a DOWN year 1-year is +0.042 and 3-year −0.038,
+#: roughly a wash. Pure 3-year would therefore overstate the recovery owed by
+#: a declining veteran — exactly the Altuve/Duran case this board is used on.
+#: The blend has the most moderate bias in both directions.
+BLEND_W1 = 0.40
+#: Seasons in the 3-year window need this much playing time to join the
+#: weighted level — the floor the validation above was run under.
+PRIOR_MIN_PA = 200
+#: |last year − blended level| past this means last season was itself off the
+#: player's multi-year level by more than the peg calls a real move; the render
+#: says so, and in which direction, because that is when a "he is below his
+#: level" reading is most likely to be an artefact of the baseline.
+PRIOR_DIVERGENCE_BAND = FLAT_BAND
+
 #: Per-metric NOISE FLOOR in percentage points: a delta smaller than this does
 #: not vote in either direction. Set at 0.25 x the metric's own cross-player SD
-#: on the 2026 panel (>=200 PA) — scaled per metric because their spreads差 by
+#: on the 2026 panel (>=200 PA) — scaled per metric because their spreads differ by
 #: more than 2x (hard-hit SD 7.9pp vs SwStr 3.5pp), so one uniform floor would
 #: be simultaneously too strict for SwStr and too loose for hard-hit.
 #:
@@ -105,6 +150,32 @@ NOISE_FLOOR_PP = {
     "k_pct": 1.56, "chase": 1.49, "zswing": 1.41,
     "whiff": 1.62, "swstr": 0.87, "hard_hit": 1.96,
 }
+
+
+@functools.lru_cache(maxsize=1)
+def _luck_inputs() -> tuple:
+    """(statcast luck columns, season-gap cache) — read once per process.
+
+    Both are whole-file reads, so doing this per player would be quadratic on
+    a cohort sweep. Returns (None, None) when either is absent so the peg
+    degrades to "no luck line" instead of failing.
+    """
+    from lib.expected_stats import LUCK_SEASONS, _COLS
+    if not STATCAST.exists() or not LUCK_SEASONS.exists():
+        return None, None
+    return pd.read_parquet(STATCAST, columns=_COLS), pd.read_csv(LUCK_SEASONS)
+
+
+def _luck(pid: int, year: int) -> dict | None:
+    """Season-to-date expected-vs-actual for one hitter, pegged to his own
+    baseline. Season-to-date rather than the window: the personal baseline is
+    a season-level quantity, and a post-ASG slice is far too few PA to read a
+    wOBA gap against it."""
+    from lib.expected_stats import hitter_expected
+    sc, seasons = _luck_inputs()
+    if sc is None:
+        return None
+    return hitter_expected(pid, sc, year=year, seasons_df=seasons)
 
 
 @functools.lru_cache(maxsize=1)
@@ -180,6 +251,25 @@ def classify(fp_gap: float, support: int, oppose: int,
     return "STALLED", "below prior level with no process recovery yet"
 
 
+def baseline_level(hist: pd.DataFrame, prior_year: int) -> tuple[float, float | None, str]:
+    """(baseline fp/PA, the 3-year weighted level or None, how it was formed).
+
+    ``hist`` is one hitter's rows from the multiyr cache. The 3-year level is
+    PA-weighted over ``prior_year`` and the two seasons before it, keeping only
+    seasons that clear PRIOR_MIN_PA. With fewer than two such seasons there is
+    nothing to blend and the baseline falls back to last year alone — reported
+    honestly via the mode string rather than silently.
+    """
+    p1 = float(hist[hist["year"] == prior_year].iloc[0]["fp_per_pa_actual"])
+    win = hist[hist["year"].between(prior_year - 2, prior_year)
+               & (hist["pa"] >= PRIOR_MIN_PA)]
+    if len(win) < 2:
+        return p1, None, f"1yr only ({len(win)} qualifying season in the 3yr window)"
+    p3 = float((win["pa"] * win["fp_per_pa_actual"]).sum() / win["pa"].sum())
+    blended = BLEND_W1 * p1 + (1 - BLEND_W1) * p3
+    return blended, p3, f"{BLEND_W1:.0%}/{1 - BLEND_W1:.0%} over {len(win)} seasons"
+
+
 def peg(name: str, team: str | None, since: str, prior_year: int, cur_year: int,
         multiyr: pd.DataFrame, sc: pd.DataFrame) -> dict | None:
     pid = resolve_batter_id(name, team=team)
@@ -198,7 +288,13 @@ def peg(name: str, team: str | None, since: str, prior_year: int, cur_year: int,
     wm = window_metrics(win)
 
     n_pa = wm["k_pct"][1]
-    fp_prior = float(p["fp_per_pa_actual"])
+    # DIRECTION is judged against the blended level (see BLEND_W1). The process
+    # METRICS below stay pegged to the prior YEAR alone: the blend was validated
+    # on fp/PA only, and blending metric baselines is a separate untested change
+    # — Rule 9 says do not ship the untested half alongside the tested one.
+    fp_prior_1yr = float(p["fp_per_pa_actual"])
+    fp_prior, fp_prior_3yr, baseline_mode = baseline_level(
+        multiyr[multiyr["batter"] == pid], prior_year)
     # window fp/PA from the boxscore store (BrownU FP, same unit as the cache).
     # Cached: this used to re-read the parquet PER PLAYER, which is invisible on
     # a two-name compare and quadratic-feeling on a 150-name cohort sweep.
@@ -233,11 +329,55 @@ def peg(name: str, team: str | None, since: str, prior_year: int, cur_year: int,
     return {
         "name": name, "mlbam": pid, "n_pa": n_pa,
         "fp_prior": fp_prior, "fp_win": fp_win, "fp_gap": fp_win - fp_prior,
+        "fp_prior_1yr": fp_prior_1yr, "fp_prior_3yr": fp_prior_3yr,
+        "baseline_mode": baseline_mode, "prior_divergence": fp_prior_1yr - fp_prior,
         "xc_prior": xc_prior, "xc_cur": xc_cur, "xc_yoy": xc_cur - xc_prior,
         "xwoba_cur": xw_cur, "rows": rows,
         "support": support, "oppose": oppose,
+        "luck": _luck(pid, cur_year),
         "regime": regime, "meaning": meaning,
     }
+
+
+def _render_luck(r: dict, below: bool) -> None:
+    """The expected-vs-actual line, pegged to the hitter's own baseline.
+
+    Annotation only — it never moved the regime printed underneath it.
+    """
+    lk = r.get("luck")
+    if not lk or lk.get("gap") is None:
+        return
+    base, excess = lk.get("own_baseline"), lk.get("excess")
+    if base is None:
+        print(f"  luck      xwOBA {lk['xwoba']:.3f} vs actual {lk['woba']:.3f}"
+              f"  gap {lk['gap']:+.3f} vs the FIELD zero ({lk['regression']})")
+        print("    -> no personal baseline (needs 3+ prior seasons, 1000+ PA) — "
+              "read against the field, which regresses to zero")
+        return
+    print(f"  luck      xwOBA {lk['xwoba']:.3f} vs actual {lk['woba']:.3f}"
+          f"  gap {lk['gap']:+.3f}  his own baseline {base:+.3f}"
+          f"  excess {excess:+.3f} ({lk['regression']})")
+    if lk.get("luck_profile") == "PERSISTENT-BEATER":
+        print("    -> PERSISTENT xwOBA-BEATER: he repeatably out-hits his expected "
+              "line, so the raw gap is his normal level, not owed regression")
+    elif lk.get("luck_profile") == "PERSISTENT-UNDER":
+        print("    -> PERSISTENTLY UNDER his expected line: the raw gap overstates "
+              "how much bounce he is owed")
+    # Direction decides the meaning: the same excess is corroboration on one
+    # side of the prior-year line and a discount on the other.
+    if lk["regression"] == "ALIGNED":
+        print("    -> output matches what he normally converts — no regression "
+              "claim either way from this lens")
+    elif below:
+        print("    -> " + ("running BELOW even his own baseline: bounce owed on top "
+                           "of the process read" if excess < 0 else
+                           "already out-hitting his own baseline while below his "
+                           "prior level — the shortfall is NOT bad luck"))
+    else:
+        print("    -> " + ("above prior level AND beyond his own baseline: "
+                           "corroborates regression risk" if excess > 0 else
+                           "above prior level while UNDER his own baseline: the "
+                           "surplus is not luck-driven"))
 
 
 def render(r: dict, prior_year: int, since: str) -> None:
@@ -246,8 +386,23 @@ def render(r: dict, prior_year: int, since: str) -> None:
         return
     print(f"\n=== {r['name']} — pegged to {prior_year} "
           f"(window from {since}, {r['n_pa']} PA) ===")
-    print(f"  fp/PA   {prior_year}: {r['fp_prior']:.3f}   window: {r['fp_win']:.3f}   "
+    three = (f"{r['fp_prior_3yr']:.3f}" if r.get("fp_prior_3yr") is not None else "—")
+    print(f"  fp/PA   baseline {r['fp_prior']:.3f}   window: {r['fp_win']:.3f}   "
           f"gap: {r['fp_gap']:+.3f}")
+    print(f"    baseline = {r['baseline_mode']}   "
+          f"[{prior_year} alone {r['fp_prior_1yr']:.3f} | 3yr level {three}]")
+    # Last season being the anomaly is the common case (64.5% of player-seasons
+    # diverge by more than FLAT_BAND), and it is precisely when a naive
+    # "he is below last year" reading misleads — so name the direction.
+    dv = r.get("prior_divergence") or 0.0
+    if r.get("fp_prior_3yr") is not None and abs(dv) >= PRIOR_DIVERGENCE_BAND:
+        if dv > 0:
+            print(f"    !! {prior_year} was a CAREER YEAR ({dv:+.3f} above his 3yr level) — "
+                  "pegging to it alone would overstate the gap left to close "
+                  "(bias -0.083 historically)")
+        else:
+            print(f"    !! {prior_year} was a DOWN YEAR ({dv:+.3f} below his 3yr level) — "
+                  "pegging to it alone would flatter him")
     print(f"  {'metric':10s} {prior_year:>8d} {'window':>8s} {'delta':>8s}   direction")
     for met, pv, val, delta, note in r["rows"]:
         if delta is None:
@@ -278,6 +433,7 @@ def render(r: dict, prior_year: int, since: str) -> None:
         print("    -> contact quality RISING YoY: "
               + ("a real skill gain under the slump" if below
                  else "the surplus has contact support"))
+    _render_luck(r, below)
     print(f"  process vote (readable only): {r['support']} toward / {r['oppose']} away")
     print(f"  >> {r['regime']} — {r['meaning']}")
 

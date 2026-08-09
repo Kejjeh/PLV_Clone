@@ -299,6 +299,19 @@ def main():
               'idempotent on (batter, game_date) so the next run backfills the '
               'gap (non-gating)')
 
+    # Season-level, so it barely moves day to day — but it is cheap (one
+    # request per season) and a MISSING cache silently downgrades every hitter
+    # to the field-relative luck read, which is the exact false alarm the
+    # personal baseline exists to prevent. Fail-soft: the lens degrades, it
+    # does not break.
+    ok_luck = run('1.68. Refresh hitter luck baseline (wOBA vs xwOBA by season) [fail-soft]',
+                  'python -X utf8 scripts/xfp/build_hitter_luck_baseline.py',
+                  timeout=600)
+    if not ok_luck:
+        print('  ⚠ luck-baseline refresh failed — the existing cache stays in '
+              'place; hitters with no cached history read against the field '
+              'zero (non-gating)')
+
     run('1.7 (was 1b). Build batter rolling-feature cache',
         'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
 

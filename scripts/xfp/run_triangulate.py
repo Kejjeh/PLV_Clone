@@ -577,8 +577,20 @@ def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model,
         tail = {'OVERPERFORMING': (' — results luck-flattered; ratios should worsen' if bucket in ('SP', 'RP') else ' — due for negative regression'),
                 'UNDERPERFORMING': (' — ratios should improve' if bucket in ('SP', 'RP') else ' — bounce due'),
                 'ALIGNED': ''}.get(exp['regression'], '')
+        # Hitters are judged against their OWN baseline when they have the
+        # history for one, so show what the raw gap was measured against —
+        # otherwise "gap +0.039 — ALIGNED" reads like an arithmetic error.
+        ref = ""
+        if exp.get('own_baseline') is not None:
+            ref = (f", own baseline {exp['own_baseline']:+.3f} → excess "
+                   f"{exp['excess']:+.3f}")
+            tail += {'PERSISTENT-BEATER': " · PERSISTENT xwOBA-BEATER: the raw gap is"
+                                          " his normal level, not owed regression",
+                     'PERSISTENT-UNDER': " · persistently UNDER his expected line: the"
+                                         " raw gap overstates the bounce owed",
+                     }.get(exp.get('luck_profile'), "")
         lines.append(f"\n🎲 **Expected (luck)** {lab} {exp['xwoba']:.3f} vs actual {exp['woba']:.3f} "
-                     f"(gap {g:+.3f}) — {exp['regression']}{tail}")
+                     f"(gap {g:+.3f}{ref}) — {exp['regression']}{tail}")
     tto = model.get('tto_decay') or {}
     if bucket == 'SP' and tto.get('penalty') is not None:
         w = "" if tto.get('sample_ok') else " (small sample)"

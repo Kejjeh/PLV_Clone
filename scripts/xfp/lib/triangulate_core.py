@@ -20,7 +20,8 @@ from .blend_score import compute_blended_xfp
 from .sustainability_lens import sustainability_sp, sustainability_h, sustainability_rp
 from .splits import hitter_platoon, sp_platoon  # platoon (vs L/R) context lens
 from .expected_stats import (  # expected-vs-actual (luck) lens, overall + by-split
-    hitter_expected, sp_expected, hitter_expected_by_split, sp_expected_by_split)
+    CURRENT_SEASON, hitter_expected, sp_expected, hitter_expected_by_split,
+    sp_expected_by_split)
 from .lineup_pass import sp_lineup_pass  # times-through-order decay (SP)
 from .home_away import hitter_home_away, sp_home_away  # home/road split lens
 from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never headline)
@@ -361,9 +362,13 @@ def model_row(player: dict) -> dict:
             _splits_h = hitter_platoon(player['id'])
         except Exception:
             _splits_h = None
-        # Expected-vs-actual (luck) lens — context-only (CLAUDE.md #13)
+        # Expected-vs-actual (luck) lens — context-only (CLAUDE.md #13).
+        # `year` pegs the reading to the hitter's OWN luck baseline instead of
+        # the field zero. Without it this card called Jose Altuve "due for
+        # negative regression" at a +0.030 gap he had posted in 10 of 11
+        # seasons (2026-08-09) — his normal level read as luck.
         try:
-            _exp_h = hitter_expected(player['id'])
+            _exp_h = hitter_expected(player['id'], year=CURRENT_SEASON)
         except Exception:
             _exp_h = None
         try:

@@ -25,6 +25,37 @@ python scripts/xfp/run_prior_year_peg.py --since 2026-06-01 --team TOR "Bo Biche
 
 A move smaller than ±0.030 fp/PA is **AT-LEVEL** — noise, not a regime.
 
+## The baseline is a BLEND, not last season alone (validated 2026-08-09)
+
+"Pegged to last year" is the intuitive frame, but last year is usually the
+anomaly: **|last season − 3-year level| exceeds the ±0.030 band 64.5% of the
+time** (n=1,916), so a naive 1-year peg most often sets its zero point further
+off the player's real level than the move it is trying to detect. Predicting
+the current season's fp/PA (n=1,165 with three full 200+ PA prior years):
+
+| baseline | r | MAE |
+|---|---|---|
+| prior 1 year | 0.501 | 0.1010 |
+| prior 3 years, PA-weighted | 0.558 | 0.0915 |
+| **blend 40% 1yr / 60% 3yr** | **0.562** | **0.0906** |
+
+MAE difference 1yr−3yr = +0.0096, 95% CI [+0.0062, +0.0131].
+
+The edge is **asymmetric**, which is why a blend and not pure 3-year: after a
+**career year** the 1-year peg is biased **−0.083** (nobody returns to it)
+while 3-year is only −0.012; after a **down year** 1-year is +0.042 and 3-year
+−0.038, roughly a wash. Pure 3-year would overstate the recovery owed by a
+declining veteran — exactly the Altuve/Duran case this board gets used on.
+
+The report **shows both** baselines and flags when they diverge past the band,
+naming the direction the naive read would have erred. With fewer than two
+qualifying seasons it falls back to last year alone and **says so** — Durbin
+prints `1yr only (1 qualifying season in the 3yr window)`.
+
+Scope: the blend was validated on **fp/PA only**. The process metrics below
+still compare against the prior YEAR alone; blending those is an untested
+change and Rule 9 says don't ship the untested half beside the tested one.
+
 ## Why it exists (the canonical reversal, 2026-08-09)
 
 Choosing an FA hitter to replace Ezequiel Duran, **three independent lenses all
@@ -73,9 +104,25 @@ Two prior-anchored reads carry extra weight:
   direction** — stable contact under an overperformer says the surplus is *not*
   coming from better contact — so the engine glosses it per-regime and the
   report must too.
-- **expected-vs-actual wOBA** (from `/triangulate`) — a positive gap on an
-  above-prior player is the OVEREXTENDED tell; a negative gap on a below-prior
-  player is owed bounce.
+- **expected-vs-actual wOBA, pegged to the player's OWN luck baseline** — a
+  positive **excess** on an above-prior player corroborates OVEREXTENDED; a
+  negative excess on a below-prior player is owed bounce.
+
+  *Excess*, not *gap*. The ±0.020 luck threshold is calibrated to the field,
+  whose gap centers on zero and mean-reverts — but some hitters' does not,
+  because xwOBA is built from exit velocity and launch angle alone and is
+  blind to where a ball is hit and who is running. **Jose Altuve beat his
+  xwOBA in 10 of 11 full seasons at a PA-weighted +0.030**, so reading his
+  2026 +0.030 as "due for negative regression" flagged his normal operating
+  level as luck. Validated leave-one-season-out (n=1,583): prior gaps predict
+  the current gap at **r=0.334** [0.288, 0.379], slope **0.527** [0.452,
+  0.604] — real but regressing, so the baseline is **shrunk** by that slope.
+  Shrinking is load-bearing: MAE 0.0154 shrunk vs **0.0164 for the raw career
+  gap, identical to ignoring history entirely**.
+
+  Needs 3+ prior seasons and 1,000+ PA; below that it degrades to the field
+  zero and says so. **Annotation only — it never changes the regime.**
+  Cache: `scripts/xfp/build_hitter_luck_baseline.py` (refresh step 1.68).
 
 ## Reading the output
 
