@@ -123,3 +123,65 @@ def test_metric_directions_are_correct():
         else:
             raise AssertionError(f"unclassified peg metric {met!r} — "
                                  "add it to this test's direction sets")
+
+
+# ── noise floor: magnitude must clear noise before direction means anything ──
+# Found 2026-08-09 running the first cohort sweep. The vote was unweighted, so
+# a -0.0pp SwStr move and a -0.3pp chase move both scored as "toward prior
+# level" and OUTVOTED a +10.6pp K% collapse — returning RECOVERING for Eugenio
+# Suárez, whom every other lens had as a hard FADE.
+
+def test_noise_floors_are_scaled_per_metric():
+    """Spreads differ by >2x across these metrics (hard-hit SD 7.9pp vs SwStr
+    3.5pp), so one uniform floor would be simultaneously too strict for SwStr
+    and too loose for hard-hit."""
+    from run_prior_year_peg import METRICS, NOISE_FLOOR_PP
+    assert set(NOISE_FLOOR_PP) == set(METRICS), "every peg metric needs a floor"
+    assert all(v > 0 for v in NOISE_FLOOR_PP.values())
+    assert NOISE_FLOOR_PP["hard_hit"] > NOISE_FLOOR_PP["swstr"] * 1.5
+
+
+def test_a_near_zero_delta_must_not_vote():
+    """The Suárez failure in miniature: two noise-level 'improvements' must not
+    outvote one real deterioration."""
+    from run_prior_year_peg import NOISE_FLOOR_PP
+    for met, floor in NOISE_FLOOR_PP.items():
+        assert abs(-0.05) < floor, f"{met}: a 0.05pp move must be below the floor"
+
+
+# ── xwOBACON tie-break (the validated recovery-template condition) ───────────
+
+def test_stable_contact_breaks_a_tied_vote_toward_recovering():
+    """Jarren Duran 2026-08-09: 2 toward / 2 away with xwOBACON flat at -0.002.
+    The validated rule (memory gotcha #8) says stable contact means prior
+    recoveries predict this one — so a tie must not fall through to STALLED."""
+    regime, why = classify(fp_gap=-0.043, support=2, oppose=2, xc_yoy=-0.002)
+    assert regime == "RECOVERING"
+    assert "recovery-template" in why
+
+
+def test_declining_contact_leaves_a_tied_vote_stalled():
+    """The Turner pattern: contact eroding YoY means the recovery ceiling sits
+    BELOW prior troughs, so a tie stays STALLED."""
+    regime, _ = classify(fp_gap=-0.043, support=2, oppose=2, xc_yoy=-0.060)
+    assert regime == "STALLED"
+
+
+def test_the_tie_break_cannot_override_a_decided_vote():
+    """It breaks TIES only. Stable contact must not rescue a player whose
+    readable process is actually moving away from his level."""
+    regime, _ = classify(fp_gap=-0.20, support=0, oppose=3, xc_yoy=0.000)
+    assert regime == "STALLED"
+
+
+def test_the_tie_break_never_touches_the_above_prior_side():
+    """An overperformer with rock-stable contact is still OVEREXTENDED —
+    stability there says the surplus is NOT contact-driven, which is evidence
+    AGAINST him, never for him."""
+    regime, _ = classify(fp_gap=+0.142, support=2, oppose=2, xc_yoy=0.000)
+    assert regime == "OVEREXTENDED"
+
+
+def test_missing_xwobacon_falls_back_to_the_pessimistic_tie():
+    regime, _ = classify(fp_gap=-0.10, support=2, oppose=2, xc_yoy=None)
+    assert regime == "STALLED"

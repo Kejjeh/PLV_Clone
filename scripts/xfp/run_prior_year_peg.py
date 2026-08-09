@@ -59,6 +59,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import functools
 import sys
 from pathlib import Path
 
@@ -89,6 +90,31 @@ METRICS = {
 #: fp/PA move (in either direction) below this is noise, not a regime
 FLAT_BAND = 0.030
 
+#: Per-metric NOISE FLOOR in percentage points: a delta smaller than this does
+#: not vote in either direction. Set at 0.25 x the metric's own cross-player SD
+#: on the 2026 panel (>=200 PA) — scaled per metric because their spreads差 by
+#: more than 2x (hard-hit SD 7.9pp vs SwStr 3.5pp), so one uniform floor would
+#: be simultaneously too strict for SwStr and too loose for hard-hit.
+#:
+#: Without this the vote counted NOISE AS EVIDENCE. Canonical (Eugenio Suárez,
+#: 2026-08-09): chase -0.3pp and SwStr -0.0pp were both scored as "toward prior
+#: level" and outvoted a +10.6pp K% collapse, returning RECOVERING for a hitter
+#: every other lens had as a hard FADE. Magnitude has to clear noise before a
+#: direction means anything.
+NOISE_FLOOR_PP = {
+    "k_pct": 1.56, "chase": 1.49, "zswing": 1.41,
+    "whiff": 1.62, "swstr": 0.87, "hard_hit": 1.96,
+}
+
+
+@functools.lru_cache(maxsize=1)
+def _boxscores() -> pd.DataFrame:
+    """Hitter boxscore store, read once per process."""
+    box = pd.read_parquet(ROOT / "data/research/xfp_cache/boxscore_hitters.parquet",
+                          columns=["game_date", "mlbam_id", "fp_h"])
+    box["game_date"] = pd.to_datetime(box["game_date"])
+    return box
+
 
 def window_metrics(d: pd.DataFrame) -> dict:
     """(metric -> (value, denominator)) for one pitch-level slice."""
@@ -111,12 +137,32 @@ def window_metrics(d: pd.DataFrame) -> dict:
     return out
 
 
-def classify(fp_gap: float, support: int, oppose: int) -> tuple[str, str]:
-    """(regime, one-line meaning) from the fp/PA gap and the process vote.
+#: |xwOBACON YoY| under this reads as STABLE contact quality
+XC_STABLE_BAND = 0.015
 
-    The process vote counts only READABLE metrics, and counts them relative to
-    the PRIOR YEAR — not to earlier this season. A player can be improving on
-    his own bad first half and still be far below the level he needs to reach.
+
+def classify(fp_gap: float, support: int, oppose: int,
+             xc_yoy: float | None = None) -> tuple[str, str]:
+    """(regime, one-line meaning) from the fp/PA gap, the process vote, and —
+    ONLY to break a tied vote — xwOBACON YoY stability.
+
+    The process vote counts only READABLE metrics that clear their noise floor,
+    and counts them relative to the PRIOR YEAR — not to earlier this season. A
+    player can be improving on his own bad first half and still be far below
+    the level he needs to reach.
+
+    xwOBACON is the tie-break rather than an ordinary vote because it is the
+    VALIDATED recovery-template condition (memory gotcha #8): stable contact
+    quality means prior recoveries predict this one, while contact declining
+    every year (the Turner pattern) means the ceiling sits BELOW prior troughs.
+    Documenting it as "the strongest discriminator" and then leaving it out of
+    the classification — as this function originally did — let a 2/2 tie decide
+    a verdict the strongest signal could already settle (Jarren Duran,
+    2026-08-09: tied vote, xwOBACON flat at -0.002, so the recovery template
+    applies and STALLED was the wrong call).
+
+    Direction still comes from production alone; neither the vote nor the
+    tie-break can move a player across the above/below line.
     """
     if abs(fp_gap) < FLAT_BAND:
         return "AT-LEVEL", "producing at his prior-year level"
@@ -127,6 +173,10 @@ def classify(fp_gap: float, support: int, oppose: int) -> tuple[str, str]:
                                 "improved — regression risk")
     if support > oppose:
         return "RECOVERING", "below prior level, but the process is climbing back"
+    if support == oppose and xc_yoy is not None and abs(xc_yoy) < XC_STABLE_BAND:
+        return "RECOVERING", ("below prior level on a tied process vote, but "
+                              "contact quality held YoY — the validated "
+                              "recovery-template condition")
     return "STALLED", "below prior level with no process recovery yet"
 
 
@@ -149,10 +199,10 @@ def peg(name: str, team: str | None, since: str, prior_year: int, cur_year: int,
 
     n_pa = wm["k_pct"][1]
     fp_prior = float(p["fp_per_pa_actual"])
-    # window fp/PA from the boxscore store (BrownU FP, same unit as the cache)
-    box = pd.read_parquet(ROOT / "data/research/xfp_cache/boxscore_hitters.parquet",
-                          columns=["game_date", "mlbam_id", "fp_h"])
-    box["game_date"] = pd.to_datetime(box["game_date"])
+    # window fp/PA from the boxscore store (BrownU FP, same unit as the cache).
+    # Cached: this used to re-read the parquet PER PLAYER, which is invisible on
+    # a two-name compare and quadratic-feeling on a 150-name cohort sweep.
+    box = _boxscores()
     g = box[(box["mlbam_id"] == pid) & (box["game_date"] >= since)]
     fp_win = (g["fp_h"].sum() / n_pa) if n_pa else float("nan")
 
@@ -165,17 +215,21 @@ def peg(name: str, team: str | None, since: str, prior_year: int, cur_year: int,
             rows.append((met, pv, val, None, f"UNDER ({denom} of {need} {unit})"))
             continue
         delta = val - pv                      # window MINUS prior year
+        if abs(delta) < NOISE_FLOOR_PP[met]:
+            rows.append((met, pv, val, delta, "flat"))
+            continue
         toward = sign * delta > 0
         if toward:
             support += 1
-        elif sign * delta < 0:
+        else:
             oppose += 1
         rows.append((met, pv, val, delta, "toward" if toward else "away"))
 
     xc_prior = float(p["xwoba_on_contact"])
     xc_cur = float(c["xwoba_on_contact"]) if c is not None else float("nan")
     xw_cur = float(c["xwoba_per_pa"]) if c is not None else float("nan")
-    regime, meaning = classify(fp_win - fp_prior, support, oppose)
+    regime, meaning = classify(fp_win - fp_prior, support, oppose,
+                               xc_yoy=xc_cur - xc_prior)
     return {
         "name": name, "mlbam": pid, "n_pa": n_pa,
         "fp_prior": fp_prior, "fp_win": fp_win, "fp_gap": fp_win - fp_prior,
@@ -198,6 +252,9 @@ def render(r: dict, prior_year: int, since: str) -> None:
     for met, pv, val, delta, note in r["rows"]:
         if delta is None:
             print(f"  {met:10s} {pv:8.1f} {'—':>8s} {'—':>8s}   NOT READABLE ({note})")
+        elif note == "flat":
+            print(f"  {met:10s} {pv:8.1f} {val:8.1f} {delta:+8.1f}   flat "
+                  f"(< {NOISE_FLOOR_PP[met]:.2f}pp floor — no vote)")
         else:
             print(f"  {met:10s} {pv:8.1f} {val:8.1f} {delta:+8.1f}   {note} prior level")
     stab = ("STABLE" if abs(r["xc_yoy"]) < 0.015
