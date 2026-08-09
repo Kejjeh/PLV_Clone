@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.9691,
+  "base_pwin": 0.9999,
   "regime": "LEADING",
   "period": 18,
   "sims": 10000,
   "seed": 7,
   "cap_remaining": 1,
   "plan_source": "pair_check",
-  "plan_total_dpwin": 0.0104,
-  "plan_pwin_final": 0.9795,
+  "plan_total_dpwin": 0.0001,
+  "plan_pwin_final": 1.0,
   "plan": [
     {
-      "add": "Caleb Durbin",
-      "add_bucket": "H",
-      "drop": "Max Muncy",
-      "drop_bucket": "H",
-      "dpwin": 0.006199999999999983,
-      "mc_se": 0.001552,
-      "pwin_after": 0.9753,
-      "dpwin_from_base": 0.006199999999999983,
-      "dtitle_equity_pp": -0.0012
-    },
-    {
-      "add": "Andruw Monasterio",
+      "add": "Jarren Duran",
       "add_bucket": "H",
       "drop": "Vladimir Guerrero Jr.",
       "drop_bucket": "H",
-      "dpwin": 0.004200000000000016,
-      "mc_se": 0.001417,
-      "pwin_after": 0.9795,
-      "dpwin_from_base": 0.0104,
-      "dtitle_equity_pp": -0.0008
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0,
+      "pwin_after": 1.0,
+      "dpwin_from_base": 9.999999999998899e-05,
+      "dtitle_equity_pp": -0.0
+    },
+    {
+      "add": "Miguel Rojas",
+      "add_bucket": "H",
+      "drop": "Max Muncy",
+      "drop_bucket": "H",
+      "dpwin": 1.1018204577883939e-17,
+      "mc_se": 0.0,
+      "pwin_after": 1.0,
+      "dpwin_from_base": 0.0001,
+      "dtitle_equity_pp": -0.0
     }
   ],
   "title_equity": {
@@ -43,94 +43,94 @@
   },
   "top_single_moves": [
     {
-      "add": "Caleb Durbin",
-      "drop": "Max Muncy",
-      "dpwin": 0.006199999999999983,
-      "mc_se": 0.001552
-    },
-    {
-      "add": "Andruw Monasterio",
+      "add": "Jarren Duran",
       "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.005700000000000038,
-      "mc_se": 0.001567
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
     },
     {
-      "add": "Caleb Durbin",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.005300000000000082,
-      "mc_se": 0.001579
-    },
-    {
-      "add": "Andruw Monasterio",
-      "drop": "Max Muncy",
-      "dpwin": 0.005300000000000082,
-      "mc_se": 0.001579
-    },
-    {
-      "add": "Andruw Monasterio",
-      "drop": "Jordan Walker",
-      "dpwin": 0.0050000000000000044,
-      "mc_se": 0.001588
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Wyatt Langford",
-      "dpwin": 0.0047000000000000375,
-      "mc_se": 0.001597
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Michael Harris II",
-      "dpwin": 0.0044000000000000705,
-      "mc_se": 0.001606
-    },
-    {
-      "add": "Caleb Durbin",
-      "drop": "Jordan Walker",
-      "dpwin": 0.0044000000000000705,
-      "mc_se": 0.001606
-    },
-    {
-      "add": "Walbert Urena",
-      "drop": "Griffin Jax",
-      "dpwin": 0.0044000000000000705,
-      "mc_se": 0.001606
-    },
-    {
-      "add": "Bryson Stott",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.0042000000000000925,
-      "mc_se": 0.001612
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Pete Alonso",
-      "dpwin": 0.0039000000000000146,
-      "mc_se": 0.001621
-    },
-    {
-      "add": "Tyler Tolbert",
-      "drop": "Vladimir Guerrero Jr.",
-      "dpwin": 0.0038000000000000256,
-      "mc_se": 0.001624
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Max Muncy",
-      "dpwin": 0.0038000000000000256,
-      "mc_se": 0.001624
-    },
-    {
-      "add": "Caleb Durbin",
+      "add": "Jarren Duran",
       "drop": "Corbin Carroll",
-      "dpwin": 0.0037000000000000366,
-      "mc_se": 0.001627
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
     },
     {
-      "add": "Andruw Monasterio",
+      "add": "Jarren Duran",
+      "drop": "Elly De La Cruz",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Wyatt Langford",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Luis Arraez",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Michael Harris II",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Max Muncy",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Luis Garcia Jr.",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Jarren Duran",
+      "drop": "Jackson Merrill",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Lars Nootbaar",
       "drop": "Pete Alonso",
-      "dpwin": 0.0036000000000000476,
-      "mc_se": 0.00163
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Lars Nootbaar",
+      "drop": "Wyatt Langford",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Lars Nootbaar",
+      "drop": "Michael Harris II",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Blaze Jordan",
+      "drop": "Vladimir Guerrero Jr.",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Blaze Jordan",
+      "drop": "Elly De La Cruz",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
+    },
+    {
+      "add": "Blaze Jordan",
+      "drop": "Wyatt Langford",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.0
     }
   ],
   "pair_check": {
@@ -139,28 +139,27 @@
     "best": {
       "moves": [
         {
-          "add": "Caleb Durbin",
-          "add_bucket": "H",
-          "drop": "Max Muncy",
-          "drop_bucket": "H",
-          "dpwin_solo": 0.006199999999999983,
-          "mc_se": 0.001552
-        },
-        {
-          "add": "Andruw Monasterio",
+          "add": "Jarren Duran",
           "add_bucket": "H",
           "drop": "Vladimir Guerrero Jr.",
           "drop_bucket": "H",
-          "dpwin_solo": 0.005700000000000038,
-          "mc_se": 0.001567
+          "dpwin_solo": 9.999999999998899e-05,
+          "mc_se": 0.0
+        },
+        {
+          "add": "Miguel Rojas",
+          "add_bucket": "H",
+          "drop": "Max Muncy",
+          "drop_bucket": "H",
+          "dpwin_solo": 9.999999999998899e-05,
+          "mc_se": 0.0
         }
       ],
-      "dpwin": 0.0104,
-      "pwin": 0.9795,
-      "mc_se": 0.001417,
-      "sum_solo": 0.011900000000000022,
-      "interaction": -0.0015000000000000221
+      "dpwin": 0.0001,
+      "pwin": 1.0,
+      "mc_se": 0.0,
+      "sum_solo": 0.00019999999999997797,
+      "interaction": -9.999999999997797e-05
     }
-  },
-  "dpwin_run_id": "2026-08-08T074903_7"
+  }
 }
