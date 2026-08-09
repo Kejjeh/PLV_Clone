@@ -36,8 +36,34 @@ from scripts.xfp.lib.triangulate_core import (
 from scripts.xfp.lib.cached_data import _load_projection
 
 
+class _Any:
+    """Sentinel: 'this field is deliberately UNLOCKED — assert nothing'.
+
+    Needed because ``None`` is a MEANINGFUL expectation for override_tag: it
+    asserts the engine emitted NO tag. Before this sentinel existed, a row
+    author writing ``None`` to mean "we have no expectation here" silently got
+    a hard assertion instead — which is exactly how Ryan Weathers went red on
+    2026-08-09 (his bucket-only lock, added 2026-07-19, carried a ``None`` that
+    the engine's legitimate DECLINE_VETO then contradicted).
+
+    Use ANY for a bucket-only lock; use None only when the absence of a tag is
+    itself the thing under test.
+    """
+    __slots__ = ()
+    def __repr__(self):  # pragma: no cover - debug aid
+        return "ANY"
+
+
+ANY = _Any()
+
+
 # (name, expected_verdict_substring_or_None, expected_bucket,
-#  expected_verdict_top_or_None, expected_override_tag_or_None)
+#  expected_verdict_top_or_None, expected_override_tag)
+#
+# override_tag contract — THREE distinct values, no overlap:
+#   "<TAG>" -> assert the engine emitted exactly this tag
+#   None    -> assert the engine emitted NO tag
+#   ANY     -> unlocked; assert nothing (bucket-only locks)
 #
 # Substrings use the literal em-dash character emitted by the engine so
 # we don't have to care whether the running shell is cp1252 or utf-8.
@@ -100,7 +126,14 @@ CANONICAL_CASES = [
     #   him MIXED -> 'BUY — archetype breakout'). He sits on the same BUY/MIXED
     #   boundary as Detmers; executing the same pre-committed remedy:
     #   bucket-only lock (resolution + bucket stay enforced).
-    ("Ryan Weathers",   None,                      "SP", None,      None),
+    # 2026-08-09 — the bucket-only lock added above left override_tag=None,
+    #   which is an ASSERTION ("no tag"), not the intended "no expectation".
+    #   Weathers legitimately carries DECLINE_VETO whenever his base read is
+    #   BUY (SP + BUY + SEVERE velo fade + marcel_il rp3 — the documented
+    #   canonical case in .claude/skills/triangulate/SKILL.md), and carries no
+    #   tag when he reads MIXED. The tag therefore flips with the same data
+    #   that flips his verdict, so it belongs UNLOCKED alongside it: ANY.
+    ("Ryan Weathers",   None,                      "SP", None,      ANY),
     # Ryne Nelson straddles the PL Top-100 boundary: when PL-ranked with a big model
     # gap he's FADE (pl_outcome_chase); once he drops OFF the board (Wk14: pl='—',
     # model #133, archetype OVR 36 TRENDING_DOWN) the gap rule can't fire and he reads
@@ -217,9 +250,9 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
         assert result["verdict_top"] == verdict_top, (
             f"{name!r} verdict_top={result['verdict_top']!r}, expected {verdict_top!r}"
         )
-    # override_tag asserted only when we have a strong expectation.
-    # For None expectations we still check it's None — non-overridden
-    # verdicts should never carry a tag.
+    # override_tag: "<TAG>" asserts that exact tag, None asserts NO tag, and
+    # ANY skips the check entirely (bucket-only locks). None is NOT a way to
+    # opt out — see the _Any docstring for why that distinction is explicit.
     #
     # IL-DRIFT RELAXATION (2026-07-28). An 'IL' tag on a player the live
     # injury cache reports as injured is the engine correctly reporting
@@ -234,6 +267,8 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     #     il is None;
     #   - any other unexpected tag still fails.
     actual_tag = result["override_tag"]
+    if isinstance(override_tag, _Any):
+        return
     if actual_tag == "IL" and il is not None and override_tag is None:
         actual_tag = None
     assert actual_tag == override_tag, (
@@ -245,6 +280,27 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
 # --------------------------------------------------------------------
 # Structural / invariant tests
 # --------------------------------------------------------------------
+
+def test_canonical_cases_override_tag_contract():
+    """Guard the three-valued override_tag contract.
+
+    A row may only use a non-empty tag string (assert that tag), None (assert
+    NO tag), or ANY (unlocked). This keeps the None-means-assert semantics
+    visible: anyone reaching for "no expectation" has to type ANY, so a bare
+    None can never quietly become an assertion the author didn't intend.
+    """
+    for name, _sub, _bucket, _top, tag in CANONICAL_CASES:
+        assert tag is None or isinstance(tag, _Any) or (
+            isinstance(tag, str) and tag
+        ), f"{name!r}: override_tag={tag!r} is not a tag string, None, or ANY"
+
+
+def test_any_sentinel_is_not_none():
+    """ANY must never compare equal to None, or the contract collapses."""
+    assert ANY is not None
+    assert ANY != None  # noqa: E711 - the point of the assertion
+    assert not isinstance(None, _Any)
+
 
 def test_il_caveat_helper():
     """The pure IL-marker helper: IL states -> caveat string, else None."""
