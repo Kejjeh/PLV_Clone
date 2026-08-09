@@ -26,7 +26,27 @@ cross-player spreads → `stable / drifting ▲▼ / APPROACH SHIFT ▲▼`.
 ```bash
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/xfp/run_decision_trend.py            # my roster
 PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/xfp/run_decision_trend.py --names "A,B,C"
+PYTHONIOENCODING=utf-8 PYTHONUTF8=1 python scripts/xfp/run_decision_trend.py --scope fa  # FA pool
 ```
+
+### `--scope fa` (added 2026-08-09)
+
+Scans the free-agent hitter pool (live roster scan, never `percent_owned`),
+filtered to `--min-pa-vol` projected PA/team-game since an approach change on
+a bench bat is unactionable either way.
+
+**Expect most rows to come back `sample short — below stabilization min`, and
+treat that as the ANSWER, not a failure.** On the first live run **1 of 143**
+FA hitters cleared 150 OOZ + 150 IZ pitches in an L21 window. Part-time
+players simply do not accumulate decision-grade samples that fast — which is
+exactly why the gate exists, and exactly the read you would have gotten wrong
+by eyeballing raw chase% on 70 pitches.
+
+**FA scope answers "whose approach is changing out there", NOT "who should I
+add."** The FP-relevance finding below is unchanged by scope: a decision shift
+is real behavior with ~0 forward-FP value beyond the scoring level. An FA
+board is the single easiest place to misread that, so the flag help text says
+so too.
 
 ## Reading rules
 

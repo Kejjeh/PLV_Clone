@@ -168,6 +168,13 @@ def _mlb_search(name):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument('--names', default=None, help='comma-separated hitter names')
+    ap.add_argument('--scope', choices=('roster', 'fa'), default='roster',
+                    help="'roster' (default) or 'fa' — scan the free-agent pool. "
+                         "FA scope answers 'whose approach is changing out there', "
+                         "NOT 'who should I add': decision shifts are validated as "
+                         "real behavior with ~0 forward-FP value (see the skill).")
+    ap.add_argument('--min-pa-vol', type=float, default=2.0,
+                    help='FA scope only: min projected PA per team-game')
     args = ap.parse_args()
 
     sc = pd.read_parquet(STATCAST, columns=['batter', 'game_date', 'description', 'zone'])
@@ -195,6 +202,29 @@ def main() -> int:
             print(f'  ! roster snapshot {snap.name} is {snap_age} days old '
                   f'(bound {ROSTER_MAX_AGE_DAYS}d) — team hints may be wrong',
                   file=sys.stderr)
+    elif args.scope == 'fa':
+        # FA pool, verified against a LIVE roster scan — percent_owned is
+        # national data and never establishes availability here (Connelly
+        # Early). Filtered to hitters with real projected playing time, since
+        # an approach change on a bench bat is unactionable either way.
+        if str(ROOT) not in sys.path:
+            sys.path.insert(0, str(ROOT))      # `app` lives at the repo root
+        from app.espn_connector import _get_league, get_all_teams
+        from plv_clone.utils.name_match import safe_name_key as _nk
+        league = _get_league()
+        rostered = {_nk(n) for n in get_all_teams()['player_name']}
+        pool = {_nk(p.name): p.name for p in league.free_agents(size=2000)
+                if _nk(p.name) not in rostered
+                and (p.position or '') not in ('SP', 'RP', 'P')}
+        vol = pd.read_csv(ROOT / 'data/outputs/xfp_volume_projections.csv')
+        vcol = 'batter' if 'batter' in vol.columns else 'mlbam_id'
+        rh3 = pd.read_csv(ROOT / 'data/outputs/xfp_rh3_projections.csv')
+        keep = rh3.merge(vol[[vcol, 'proj_ros_pa_per_teamgame']],
+                         left_on='batter', right_on=vcol, how='left')
+        keep = keep[keep['proj_ros_pa_per_teamgame'].fillna(0) >= args.min_pa_vol]
+        names = [pool[k] for k in (_nk(n) for n in keep['player_name']) if k in pool]
+        print(f'  FA scope: {len(names)} free-agent hitters with '
+              f'>= {args.min_pa_vol} proj PA/team-game', file=sys.stderr)
     else:
         if roster is None:
             print('no live_rosters parquet; pass --names'); return 1
