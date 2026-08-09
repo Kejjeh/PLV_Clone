@@ -136,6 +136,7 @@ resolve through it.
 | slump-or-decline | active | Downside diagnostic; DROP needs 3/3 test convergence (standalone deep-dive per P3) |
 | breakout-sustainability | active | Single-hitter "is the breakout real" deep dive (standalone per P3) |
 | hitter-archetype | active | 20-80 C/P/D + SB overlay + trajectory + comps |
+| prior-year-peg | active | Direction vs the player's OWN prior-year level — RECOVERING / STALLED / SUSTAINED / OVEREXTENDED. The one lens field-relative ranks cannot express; reversed a 3-lens-agreed verdict 2026-08-09. Rule 13 |
 
 ### Cross-position lenses
 | Skill | Status | Role |

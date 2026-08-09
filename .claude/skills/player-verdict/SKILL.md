@@ -21,6 +21,17 @@ The choosing-domain master: N names in, one firm answer out, full stack shown.
    compare within bucket, then rank across buckets by replacement_delta.
 4. **Actuals check** — `/boom-bust-history` on the finalists (variance the
    model layers can't show; the Bradish-37%-boom vs Valdez-0% class of fact).
+5. **Prior-year peg (REQUIRED when the finalists sit on opposite sides of
+   their own baselines)** — `python scripts/xfp/run_prior_year_peg.py "<A>" "<B>"`.
+   Steps 2-4 are all FIELD-relative and structurally cannot see mean-reversion.
+   When one finalist is producing ABOVE his prior year and the other BELOW it,
+   the field-relative ranking can be exactly backwards: production above a
+   DECAYED process regresses, production below an INTACT process recovers.
+   Canonical 2026-08-09 — rh3 rank, post-ASG FP/g and the optimizer all
+   preferred Durbin over Jarren Duran; the peg reversed it (OVEREXTENDED,
+   1 toward / 5 away vs RECOVERING, 3 toward / 2 away). Skip only when both
+   finalists are on the same side of their baselines or one is a rookie with
+   no prior-year MLB line.
 
 ## Output format
 
@@ -43,7 +54,12 @@ What would flip it (the watch-list trigger)
    ranked by Stuff+ `proj_ros_fp`, not rp3.
 4. **User-veto slot** — a stated veto ("I don't trust X vs the Yankees")
    eliminates that option; re-rank the remainder rather than arguing.
-5. **Rookie STUFF-DECLINE gate (QA 2026-07-20)** — for a no-prior-year
+5. **A field-relative ranking is not a direction.** rh3 rank, RoS FP/game and
+   recent production all measure a player against the FIELD; none can see that
+   he is above or below his OWN prior level. When they agree and the prior-year
+   peg disagrees, SHOW the conflict and resolve it on the peg — that is the
+   case the peg exists for (2026-08-09: three lenses agreed and were reversed).
+6. **Rookie STUFF-DECLINE gate (QA 2026-07-20)** — for a no-prior-year
    rookie, the DECLINE-RISK auto-veto never fires from the in-season split
    alone (the lens is prior-year-gated, memo #11); route to the ≥2-of-3
    corroboration check (archetype slope + K/SwStr decomp + comp T+1).
