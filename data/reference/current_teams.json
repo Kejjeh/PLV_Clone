@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-09",
+ "as_of": "2026-08-10",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -247,6 +247,12 @@
    "abbr": "ATH",
    "name": "Shea Langeliers",
    "pos": "C"
+  },
+  "688497": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Taylor Rashi",
+   "pos": "P"
   },
   "695720": {
    "team": "Athletics",
@@ -541,6 +547,12 @@
    "abbr": "SD",
    "name": "Alek Jacob",
    "pos": "P"
+  },
+  "669720": {
+   "team": "San Diego Padres",
+   "abbr": "SD",
+   "name": "Austin Hays",
+   "pos": "LF"
   },
   "675448": {
    "team": "San Diego Padres",
@@ -1224,7 +1236,7 @@
    "team": "San Francisco Giants",
    "abbr": "SF",
    "name": "Osleivis Basabe",
-   "pos": "SS"
+   "pos": "2B"
   },
   "646240": {
    "team": "San Francisco Giants",
@@ -1975,6 +1987,12 @@
    "abbr": "TEX",
    "name": "Joc Pederson",
    "pos": "DH"
+  },
+  "681146": {
+   "team": "Texas Rangers",
+   "abbr": "TEX",
+   "name": "Jonah Bride",
+   "pos": "3B"
   },
   "656756": {
    "team": "Texas Rangers",
@@ -4088,12 +4106,6 @@
    "name": "David Hamilton",
    "pos": "3B"
   },
-  "680723": {
-   "team": "Milwaukee Brewers",
-   "abbr": "MIL",
-   "name": "Drew Rom",
-   "pos": "P"
-  },
   "669160": {
    "team": "Milwaukee Brewers",
    "abbr": "MIL",
@@ -4153,6 +4165,12 @@
    "abbr": "MIL",
    "name": "Jeferson Quero",
    "pos": "C"
+  },
+  "678225": {
+   "team": "Milwaukee Brewers",
+   "abbr": "MIL",
+   "name": "Jihwan Bae",
+   "pos": "CF"
   },
   "668941": {
    "team": "Milwaukee Brewers",
@@ -5294,6 +5312,12 @@
    "name": "Romy Gonzalez",
    "pos": "DH"
   },
+  "661527": {
+   "team": "Boston Red Sox",
+   "abbr": "BOS",
+   "name": "Seth Martinez",
+   "pos": "P"
+  },
   "543243": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -6234,7 +6258,7 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "Jake McCarthy",
-   "pos": "CF"
+   "pos": "LF"
   },
   "676105": {
    "team": "Colorado Rockies",
@@ -7909,6 +7933,12 @@
    "abbr": "NYM",
    "name": "Hayden Senger",
    "pos": "C"
+  },
+  "674073": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Jack Weisenburger",
+   "pos": "P"
   },
   "676724": {
    "team": "New York Mets",
