@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-10",
+ "as_of": "2026-08-11",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -151,12 +151,6 @@
    "abbr": "ATH",
    "name": "Jonah Heim",
    "pos": "C"
-  },
-  "680716": {
-   "team": "Athletics",
-   "abbr": "ATH",
-   "name": "Jonathan Ornelas",
-   "pos": "SS"
   },
   "660761": {
    "team": "Athletics",
@@ -986,6 +980,12 @@
    "name": "Nick Davila",
    "pos": "P"
   },
+  "663884": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Nolan Kingham",
+   "pos": "P"
+  },
   "621550": {
    "team": "Seattle Mariners",
    "abbr": "SEA",
@@ -1309,6 +1309,12 @@
    "abbr": "SF",
    "name": "Willy Adames",
    "pos": "SS"
+  },
+  "681439": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Zach Morgan",
+   "pos": "C"
   },
   "676475": {
    "team": "St. Louis Cardinals",
@@ -2354,6 +2360,12 @@
    "name": "Shane Bieber",
    "pos": "P"
   },
+  "680573": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Simeon Woods Richardson",
+   "pos": "P"
+  },
   "681293": {
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
@@ -2383,12 +2395,6 @@
    "abbr": "TOR",
    "name": "Vladimir Guerrero Jr.",
    "pos": "1B"
-  },
-  "680862": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Willie MacIver",
-   "pos": "C"
   },
   "554340": {
    "team": "Toronto Blue Jays",
@@ -3722,6 +3728,12 @@
    "name": "Victor Vodnik",
    "pos": "P"
   },
+  "682790": {
+   "team": "Miami Marlins",
+   "abbr": "MIA",
+   "name": "Wikelman González",
+   "pos": "P"
+  },
   "687531": {
    "team": "Miami Marlins",
    "abbr": "MIA",
@@ -4448,6 +4460,12 @@
    "name": "Sam Bachman",
    "pos": "P"
   },
+  "671111": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Sammy Peralta",
+   "pos": "P"
+  },
   "696519": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -4748,12 +4766,6 @@
    "name": "Nolan Arenado",
    "pos": "3B"
   },
-  "623149": {
-   "team": "Arizona Diamondbacks",
-   "abbr": "AZ",
-   "name": "Paul Sewald",
-   "pos": "P"
-  },
   "691769": {
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
@@ -4806,6 +4818,12 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Zac Gallen",
+   "pos": "P"
+  },
+  "641793": {
+   "team": "Arizona Diamondbacks",
+   "abbr": "AZ",
+   "name": "Zack Littell",
    "pos": "P"
   },
   "544150": {
@@ -6902,6 +6920,12 @@
    "name": "Mike Burrows",
    "pos": "P"
   },
+  "676369": {
+   "team": "Houston Astros",
+   "abbr": "HOU",
+   "name": "Nelson Velázquez",
+   "pos": "LF"
+  },
   "669397": {
    "team": "Houston Astros",
    "abbr": "HOU",
@@ -6925,12 +6949,6 @@
    "abbr": "HOU",
    "name": "Ronel Blanco",
    "pos": "P"
-  },
-  "694376": {
-   "team": "Houston Astros",
-   "abbr": "HOU",
-   "name": "Shay Whitcomb",
-   "pos": "3B"
   },
   "595345": {
    "team": "Houston Astros",
@@ -7038,6 +7056,12 @@
    "team": "Kansas City Royals",
    "abbr": "KC",
    "name": "Connor Thomas",
+   "pos": "P"
+  },
+  "518886": {
+   "team": "Kansas City Royals",
+   "abbr": "KC",
+   "name": "Craig Kimbrel",
    "pos": "P"
   },
   "663738": {
@@ -7334,6 +7358,12 @@
    "name": "Brusdar Graterol",
    "pos": "P"
   },
+  "656212": {
+   "team": "Los Angeles Dodgers",
+   "abbr": "LAD",
+   "name": "Charlie Barnes",
+   "pos": "P"
+  },
   "687221": {
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
@@ -7416,12 +7446,6 @@
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
    "name": "Jake Cousins",
-   "pos": "P"
-  },
-  "642546": {
-   "team": "Los Angeles Dodgers",
-   "abbr": "LAD",
-   "name": "Jonathan Hernández",
    "pos": "P"
   },
   "680736": {

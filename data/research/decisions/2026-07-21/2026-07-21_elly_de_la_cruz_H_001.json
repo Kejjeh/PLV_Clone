@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-21_elly_de_la_cruz_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 62,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 682829,
   "player_name": "Elly De La Cruz",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "strong_hold",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-11",
+  "settlement": {
+    "actual_fp_per_unit": 0.49382716049382713,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 81,
+    "proj_per": 0.5888730262292886,
+    "proj_units_note": "native",
+    "residual": -0.09504586573546148,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-21",
   "verdict_top": "BUY"
 }

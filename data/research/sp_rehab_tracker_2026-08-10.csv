@@ -1,0 +1,17 @@
+milb_pitches,outings,last_outing,fb_velo,fb_max,milb_k_pct,milb_bb_pct,milb_swstr,milb_csw,velo_delta,k_delta,bb_delta,swstr_delta,workload_curve,days_gap_max,verdict,name,pos,team,injury,mlbam,prior_year,prior_fb_velo,prior_k,prior_bb,prior_swstr,rehab_window
+0,0,,,,,,,,,,,,,,NO DATA,Robert Suarez,RP,Boone's Bad Bullpen,FIFTEEN_DAY_DL,663158,2025,98.58,0.279,0.052,0.127,
+0,0,,,,,,,,,,,,,,NO DATA,Garrett Crochet,SP,Team Solomon,SIXTY_DAY_DL,676979,2025,96.28,0.312,0.056,0.143,
+154,3,2026-08-04,95.36,97.5,0.286,0.143,0.162,0.26,0.24,0.005,0.045,0.013,07/18:32 → 07/24:49 → 08/04:73,11.0,ON TRACK,Blake Snell,SP,Team Solomon,SIXTY_DAY_DL,605483,2025,95.12,0.281,0.098,0.149,"filtered to post-2026-05-09 (pre-filter: 209, post-IL: 154)"
+0,0,,,,,,,,,,,,,,NO DATA,Max Meyer,SP,Late Night Bettsing,FIFTEEN_DAY_DL,676974,2025,94.71,0.239,0.07,0.119,
+0,0,,,,,,,,,,,,,,NO DATA,Ben Brown,SP,Late Night Bettsing,SIXTY_DAY_DL,676962,2025,95.85,0.254,0.063,0.116,
+0,0,,,,,,,,,,,,,,NO DATA,Trey Yesavage,SP,U Just Lost To Edwin Diaz,FIFTEEN_DAY_DL,702056,2025,94.72,0.258,0.113,0.146,"filtered to post-2026-08-04 (pre-filter: 231, post-IL: 0)"
+65,1,2026-08-05,93.24,94.4,0.211,0.105,0.123,0.277,-0.56,-0.03,0.058,-0.012,08/05:65,,WORKLOAD-ONLY,Nick Lodolo,SP,2015 Draft First Round,FIFTEEN_DAY_DL,666157,2025,93.8,0.241,0.047,0.135,"filtered to post-2026-07-11 (pre-filter: 184, post-IL: 65)"
+0,0,,,,,,,,,,,,,,NO DATA,Jakob Junis,RP,2015 Draft First Round,FIFTEEN_DAY_DL,596001,2025,91.09,0.2,0.058,0.095,
+47,1,2026-08-09,96.03,97.7,0.2,0.1,0.085,0.277,0.22,-0.09,-0.017,-0.012,08/09:47,,WORKLOAD-ONLY,Tyler Glasnow,SP,New York Ligers,SIXTY_DAY_DL,607192,2025,95.81,0.29,0.117,0.097,"filtered to post-2026-05-06 (pre-filter: 47, post-IL: 47)"
+0,0,,,,,,,,,,,,,,NO DATA,Nick Pivetta,SP,New York Ligers,SIXTY_DAY_DL,601713,2025,93.77,0.263,0.068,0.113,
+0,0,,,,,,,,,,,,,,NO DATA,Griffin Jax,RP,New York Ligers,FIFTEEN_DAY_DL,643377,2025,96.79,0.35,0.064,0.168,
+0,0,,,,,,,,,,,,,,NO DATA,Joe Ryan,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,657746,2025,93.57,0.278,0.056,0.127,
+0,0,,,,,,,,,,,,,,NO DATA,Brandon Woodruff,SP,Frendy's Fantastic Team,SIXTY_DAY_DL,605540,2025,92.96,0.323,0.054,0.138,
+0,0,,,,,,,,,,,,,,NO DATA,Connelly Early,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,813349,2025,93.72,0.367,0.051,0.17,
+0,0,,,,,,,,,,,,,,NO DATA,Shane McClanahan,SP,Frendy's Fantastic Team,FIFTEEN_DAY_DL,663556,2023,96.75,0.257,0.087,0.165,
+0,0,,,,,,,,,,,,,,NO DATA,Jared Jones,SP,FA (watchlist),IL (FA),683003,2024,97.33,0.259,0.075,0.15,"filtered to post-2026-08-09 (pre-filter: 171, post-IL: 0)"

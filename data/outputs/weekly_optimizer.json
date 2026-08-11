@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.6855,
+  "base_pwin": 0.6728,
   "regime": "LEADING",
   "period": 19,
-  "sims": 10000,
+  "sims": 20000,
   "seed": 7,
   "cap_remaining": 10,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.13970000000000005,
-  "plan_pwin_final": 0.8252,
+  "plan_total_dpwin": 0.1392000000000001,
+  "plan_pwin_final": 0.812,
   "plan": [
     {
       "add": "Caleb Durbin",
       "add_bucket": "H",
       "drop": "Griffin Jax",
       "drop_bucket": "SP",
-      "dpwin": 0.10229999999999995,
-      "mc_se": 0.004089,
-      "pwin_after": 0.7878,
-      "dpwin_from_base": 0.1023,
-      "dtitle_equity_pp": 0.1504
+      "dpwin": 0.10475000000000001,
+      "mc_se": 0.002941,
+      "pwin_after": 0.77755,
+      "dpwin_from_base": 0.10475,
+      "dtitle_equity_pp": 0.154
     },
     {
-      "add": "Andruw Monasterio",
+      "add": "Masataka Yoshida",
       "add_bucket": "H",
-      "drop": "Max Muncy",
+      "drop": "Jordan Walker",
       "drop_bucket": "H",
-      "dpwin": 0.0374000000000001,
-      "mc_se": 0.003798,
-      "pwin_after": 0.8252,
-      "dpwin_from_base": 0.1397,
-      "dtitle_equity_pp": 0.055
+      "dpwin": 0.03445000000000009,
+      "mc_se": 0.002763,
+      "pwin_after": 0.812,
+      "dpwin_from_base": 0.1392,
+      "dtitle_equity_pp": 0.0506
     }
   ],
   "title_equity": {
@@ -45,92 +45,92 @@
     {
       "add": "Caleb Durbin",
       "drop": "Griffin Jax",
-      "dpwin": 0.10229999999999995,
-      "mc_se": 0.004089
-    },
-    {
-      "add": "Andruw Monasterio",
-      "drop": "Griffin Jax",
-      "dpwin": 0.09840000000000004,
-      "mc_se": 0.004116
+      "dpwin": 0.10475000000000001,
+      "mc_se": 0.002941
     },
     {
       "add": "Masataka Yoshida",
       "drop": "Griffin Jax",
-      "dpwin": 0.09109999999999996,
-      "mc_se": 0.004165
+      "dpwin": 0.0948500000000001,
+      "mc_se": 0.002986
+    },
+    {
+      "add": "Nolan Schanuel",
+      "drop": "Griffin Jax",
+      "dpwin": 0.0908500000000001,
+      "mc_se": 0.003004
     },
     {
       "add": "Bryson Stott",
       "drop": "Griffin Jax",
-      "dpwin": 0.0887,
-      "mc_se": 0.004181
+      "dpwin": 0.09079999999999999,
+      "mc_se": 0.003004
     },
     {
       "add": "Joc Pederson",
       "drop": "Griffin Jax",
-      "dpwin": 0.08389999999999997,
-      "mc_se": 0.004212
+      "dpwin": 0.0877,
+      "mc_se": 0.003018
     },
     {
-      "add": "Andres Chaparro",
+      "add": "Chandler Simpson",
       "drop": "Griffin Jax",
-      "dpwin": 0.07310000000000005,
-      "mc_se": 0.004279
+      "dpwin": 0.08665,
+      "mc_se": 0.003022
     },
     {
-      "add": "James McCann",
+      "add": "Jac Caglianone",
       "drop": "Griffin Jax",
-      "dpwin": 0.06499999999999995,
-      "mc_se": 0.004327
+      "dpwin": 0.07755000000000001,
+      "mc_se": 0.00306
     },
     {
-      "add": "Jose Altuve",
+      "add": "Alec Bohm",
       "drop": "Griffin Jax",
-      "dpwin": 0.0615,
-      "mc_se": 0.004347
+      "dpwin": 0.0656500000000001,
+      "mc_se": 0.003108
     },
     {
-      "add": "Miguel Rojas",
+      "add": "Jonathan Aranda",
       "drop": "Griffin Jax",
-      "dpwin": 0.05579999999999996,
-      "mc_se": 0.004379
+      "dpwin": 0.056950000000000056,
+      "mc_se": 0.00314
     },
     {
-      "add": "Lars Nootbaar",
+      "add": "Bo Bichette",
       "drop": "Griffin Jax",
-      "dpwin": 0.05520000000000003,
-      "mc_se": 0.004383
-    },
-    {
-      "add": "Teoscar Hernandez",
-      "drop": "Griffin Jax",
-      "dpwin": 0.048900000000000055,
-      "mc_se": 0.004417
-    },
-    {
-      "add": "Andruw Monasterio",
-      "drop": "Max Muncy",
-      "dpwin": 0.048900000000000055,
-      "mc_se": 0.004417
-    },
-    {
-      "add": "Andruw Monasterio",
-      "drop": "Jordan Walker",
-      "dpwin": 0.04800000000000004,
-      "mc_se": 0.004421
+      "dpwin": 0.05390000000000006,
+      "mc_se": 0.003151
     },
     {
       "add": "Caleb Durbin",
       "drop": "Max Muncy",
-      "dpwin": 0.047900000000000054,
-      "mc_se": 0.004422
+      "dpwin": 0.05305000000000004,
+      "mc_se": 0.003154
     },
     {
-      "add": "Andruw Monasterio",
+      "add": "Caleb Durbin",
+      "drop": "Jordan Walker",
+      "dpwin": 0.05215000000000003,
+      "mc_se": 0.003158
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Shota Imanaga",
+      "dpwin": 0.04475000000000007,
+      "mc_se": 0.003183
+    },
+    {
+      "add": "Caleb Durbin",
       "drop": "Parker Messick",
-      "dpwin": 0.04590000000000005,
-      "mc_se": 0.004432
+      "dpwin": 0.04280000000000006,
+      "mc_se": 0.00319
+    },
+    {
+      "add": "Masataka Yoshida",
+      "drop": "Max Muncy",
+      "dpwin": 0.042300000000000004,
+      "mc_se": 0.003192
     }
   ],
   "pair_check": {
@@ -143,24 +143,24 @@
           "add_bucket": "H",
           "drop": "Griffin Jax",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.10229999999999995,
-          "mc_se": 0.004089
+          "dpwin_solo": 0.10475000000000001,
+          "mc_se": 0.002941
         },
         {
-          "add": "Andruw Monasterio",
+          "add": "Masataka Yoshida",
           "add_bucket": "H",
           "drop": "Max Muncy",
           "drop_bucket": "H",
-          "dpwin_solo": 0.048900000000000055,
-          "mc_se": 0.004417
+          "dpwin_solo": 0.042300000000000004,
+          "mc_se": 0.003192
         }
       ],
-      "dpwin": 0.1397,
-      "pwin": 0.8252,
-      "mc_se": 0.003798,
-      "sum_solo": 0.1512,
-      "interaction": -0.01150000000000001
+      "dpwin": 0.1385,
+      "pwin": 0.8113,
+      "mc_se": 0.002767,
+      "sum_solo": 0.14705000000000001,
+      "interaction": -0.008550000000000002
     }
   },
-  "dpwin_run_id": "2026-08-10T075018_7"
+  "dpwin_run_id": "2026-08-10T183005_7"
 }

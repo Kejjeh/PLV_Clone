@@ -1,0 +1,12 @@
+mlbam,role,n_pitches_avail,velo_window,velo_window_n,velo_window_full,whiff_window,whiff_window_pitches_n,whiff_window_swings,whiff_window_full,swstr_window,swstr_window_n,swstr_window_full,window_crosses_prior_season,days_since_last_pitch,k,name,pos,tm,own,inj,owner,is_mine,asof_date
+596133,RP,1708,92.3,150,True,29.7,150,74,False,18.0,200,True,False,0,lukeweaver,Luke Weaver,RP,Pit,,ACTIVE,New York Ligers,True,2026-08-07
+656876,SP,4228,93.6,150,True,27.6,150,76,False,14.3,175,True,False,0,drewrasmussen,Drew Rasmussen,SP,TB,,ACTIVE,New York Ligers,True,2026-08-07
+691587,SP,3470,93.1,150,True,27.2,150,81,False,14.9,175,True,False,2,euryperez,Eury Perez,SP,Mia,,ACTIVE,New York Ligers,True,2026-08-07
+667755,SP,4925,92.1,150,True,28.0,150,75,False,13.1,175,True,False,0,josesoriano,Jose Soriano,SP,Tor,,ACTIVE,New York Ligers,True,2026-08-07
+800048,SP,2736,91.2,150,True,23.8,150,80,False,14.3,175,True,False,0,messickparker,Parker Messick,SP,Cle,,ACTIVE,New York Ligers,True,2026-08-07
+601713,SP,3139,90.0,150,True,18.6,150,70,False,10.3,175,True,False,117,nickpivetta,Nick Pivetta,SP,SD,,SIXTY_DAY_DL,New York Ligers,True,2026-08-07
+607192,SP,2088,89.6,150,True,27.1,150,59,False,10.9,175,True,False,93,glasnowtyler,Tyler Glasnow,SP,LAD,,SIXTY_DAY_DL,New York Ligers,True,2026-08-07
+608331,SP,4318,89.5,150,True,25.3,150,79,False,11.4,175,True,False,0,friedmax,Max Fried,SP,NYY,,ACTIVE,New York Ligers,True,2026-08-07
+701656,SP,1169,88.5,150,True,31.5,150,73,False,13.1,175,True,False,3,hendersonlogan,Logan Henderson,SP,Mil,,ACTIVE,New York Ligers,True,2026-08-07
+672282,SP,3232,86.5,150,True,30.7,150,75,False,15.4,175,True,False,2,detmersreid,Reid Detmers,RP,LAA,,ACTIVE,New York Ligers,True,2026-08-07
+684007,SP,4184,86.2,150,True,22.0,150,82,False,12.6,175,True,False,2,imanagashota,Shota Imanaga,SP,ChC,,ACTIVE,New York Ligers,True,2026-08-07

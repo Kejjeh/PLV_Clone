@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "H",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.6855,
+    "dpwin_chosen": 0.0887,
+    "dpwin_gap": -0.0136,
+    "dpwin_rejected": 0.1023,
+    "dtitle_equity_chosen": 0.1304,
+    "regime": "LEADING",
+    "rejected_bucket": "H",
+    "rejected_mlbam": 702332,
+    "rejected_name": "Caleb Durbin",
+    "source_run_id": "2026-08-10T075018_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-10_bryson_stott_H_001",
+  "executed_at": "2026-08-10T18:27:18",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Griffin Jax",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "5 candidate runs preceded the move, took latest (2026-08-10T075018_7)"
+  },
+  "mlbam_id": 681082,
+  "player_name": "Bryson Stott",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-10",
+  "verdict_top": "SWAP"
+}
