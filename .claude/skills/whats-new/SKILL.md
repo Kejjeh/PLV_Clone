@@ -43,6 +43,15 @@ Engine: `scripts/xfp/run_whats_new.py`. State:
 | 6 | FA standouts: volume risers + velo risers | `volume_watch.csv` + `lib/trend_signal` |
 | 7 | Josh's inbox (Obsidian vault trial 2026-07-20) | `C:\Users\Joshua\Obsidian\Brain\inbox.md` |
 
+> **No xwOBA section — deliberate (2026-08-10).** A section 8 for rolling
+> xwOBA L225 movers was added and removed the same day, alongside its nightly
+> refresh step. Two reasons: without a scheduled build there is no reliable
+> snapshot pair to diff, and the forward study that afternoon measured xwOBA's
+> incremental value beyond the season FP level at **partial r = +0.069 with
+> unstable signs**. A daily briefing line for a metric that adds ~nothing over
+> the level is noise wearing a lab coat. Ask `/xwoba-l225` when you want the
+> board.
+
 ## last_seen semantics
 
 - Default run reads `last_seen` from the state file (first run: 7 days back)

@@ -674,6 +674,14 @@ def main():
     if not ok_hboom:
         print('  ⚠ hitter_boom_stack failed — continuing (non-gating)')
 
+    # NOTE (2026-08-10): a step 3.9 here built the xwoba_l225 leaderboard
+    # nightly. REMOVED the same day it shipped. The forward study run that
+    # afternoon (7 disjoint windows, 2 seasons) put xwOBA's incremental value
+    # beyond the season FP level at partial r = +0.069 with unstable signs —
+    # i.e. a legitimate Rule 13 context lens, but not something worth a
+    # permanent nightly slot. /xwoba-l225 builds on demand in ~90s; the CSV is
+    # cheap to regenerate and nothing downstream reads it on a schedule.
+
     # explicit timeout (audit 2026-07-19 item 16): the implicit default is
     # banned for publish-critical steps — same effective value (900s).
     run('4. Build matchup.html (weekly H2H)',

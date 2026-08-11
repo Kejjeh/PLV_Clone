@@ -151,6 +151,7 @@ resolve through it.
 | pl-cross-reference | active | Pure external-sanity PL-vs-us surface (RETAINED 2026-07-04) |
 | second-half-splits | active | Career pre/post-ASG splits in BrownU FP, role-truth bucketing (2026-07-18) |
 | decision-trend | active | Swing-decision approach-change tracker (L21/L7 validated windows), Rule 13 (2026-07-18) |
+| xwoba-l225 | active | Trailing-225-PA xwOBA leaderboard (FA / roster / league). Fixed PA window = the `stabilization` minimum, spans into the prior season so every row shares a denominator; calendar windows never stabilize for xwOBA (2026 FA pool median PA: L7 8 / L21 28 / L42 53, zero clearing 225). Engine `build_xwoba_l225.py`, **on demand — deliberately not nightly** (forward study 2026-08-10: xwOBA partial r beyond the FP level = +0.069, signs unstable). Rule 13 (2026-08-10) |
 
 ### League-wide / trade
 | Skill | Status | Role |
