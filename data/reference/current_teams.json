@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-11",
+ "as_of": "2026-08-12",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -61,6 +61,12 @@
    "abbr": "ATH",
    "name": "Donovan Walton",
    "pos": "2B"
+  },
+  "680723": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Drew Rom",
+   "pos": "P"
   },
   "665660": {
    "team": "Athletics",
@@ -1052,6 +1058,12 @@
    "name": "Adrian Houser",
    "pos": "P"
   },
+  "668800": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Andrew Knizner",
+   "pos": "C"
+  },
   "683627": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1123,12 +1135,6 @@
    "abbr": "SF",
    "name": "Dylan Smith",
    "pos": "P"
-  },
-  "678760": {
-   "team": "San Francisco Giants",
-   "abbr": "SF",
-   "name": "Eddys Leonard",
-   "pos": "SS"
   },
   "687529": {
    "team": "San Francisco Giants",
@@ -1302,7 +1308,7 @@
    "team": "San Francisco Giants",
    "abbr": "SF",
    "name": "Victor Bericoto",
-   "pos": "RF"
+   "pos": "LF"
   },
   "642715": {
    "team": "San Francisco Giants",
@@ -1988,17 +1994,17 @@
    "name": "Jalen Beeks",
    "pos": "P"
   },
+  "672284": {
+   "team": "Texas Rangers",
+   "abbr": "TEX",
+   "name": "Jarred Kelenic",
+   "pos": "RF"
+  },
   "592626": {
    "team": "Texas Rangers",
    "abbr": "TEX",
    "name": "Joc Pederson",
    "pos": "DH"
-  },
-  "681146": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Jonah Bride",
-   "pos": "3B"
   },
   "656756": {
    "team": "Texas Rangers",
@@ -4076,6 +4082,12 @@
    "name": "Brice Turang",
    "pos": "2B"
   },
+  "669060": {
+   "team": "Milwaukee Brewers",
+   "abbr": "MIL",
+   "name": "Bryse Wilson",
+   "pos": "P"
+  },
   "694477": {
    "team": "Milwaukee Brewers",
    "abbr": "MIL",
@@ -4219,12 +4231,6 @@
    "abbr": "MIL",
    "name": "Luis Lara",
    "pos": "RF"
-  },
-  "680689": {
-   "team": "Milwaukee Brewers",
-   "abbr": "MIL",
-   "name": "Lyon Richardson",
-   "pos": "P"
   },
   "682990": {
    "team": "Milwaukee Brewers",
@@ -5228,12 +5234,6 @@
    "name": "Jake Bennett",
    "pos": "P"
   },
-  "668670": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Jake Rogers",
-   "pos": "C"
-  },
   "680776": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5852,6 +5852,12 @@
    "name": "Matt McLain",
    "pos": "2B"
   },
+  "669911": {
+   "team": "Cincinnati Reds",
+   "abbr": "CIN",
+   "name": "Michael Toglia",
+   "pos": "1B"
+  },
   "666157": {
    "team": "Cincinnati Reds",
    "abbr": "CIN",
@@ -6114,7 +6120,7 @@
    "team": "Cleveland Guardians",
    "abbr": "CLE",
    "name": "Nathaniel Lowe",
-   "pos": "DH"
+   "pos": "1B"
   },
   "800048": {
    "team": "Cleveland Guardians",
@@ -6235,12 +6241,6 @@
    "abbr": "COL",
    "name": "Connor Norby",
    "pos": "1B"
-  },
-  "666397": {
-   "team": "Colorado Rockies",
-   "abbr": "COL",
-   "name": "Edouard Julien",
-   "pos": "2B"
   },
   "682769": {
    "team": "Colorado Rockies",
@@ -6673,6 +6673,12 @@
    "abbr": "DET",
    "name": "Spencer Torkelson",
    "pos": "1B"
+  },
+  "663432": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "Tanner Rainey",
+   "pos": "P"
   },
   "699073": {
    "team": "Detroit Tigers",
