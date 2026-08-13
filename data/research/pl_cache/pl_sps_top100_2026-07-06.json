@@ -102,5 +102,151 @@
     "Colin Rea": 98,
     "Tyler Mahle": 99,
     "Erick Fedde": 100
+  },
+  "injured": {
+    "Garrett Crochet": {
+      "tier": "1-10",
+      "injury": "Shoulder"
+    },
+    "Max Fried": {
+      "tier": "1-10",
+      "injury": "Elbow"
+    },
+    "Cole Ragans": {
+      "tier": "1-10",
+      "injury": "Elbow"
+    },
+    "Tyler Glasnow": {
+      "tier": "1-10",
+      "injury": "Back"
+    },
+    "Spencer Schwellenbach": {
+      "tier": "11-20",
+      "injury": "Elbow"
+    },
+    "Blake Snell": {
+      "tier": "11-20",
+      "injury": "Elbow"
+    },
+    "Ryan Pepiot": {
+      "tier": "21-30",
+      "injury": "Hip (OFS)"
+    },
+    "Corbin Burnes": {
+      "tier": "21-30",
+      "injury": "TJS"
+    },
+    "Nick Pivetta": {
+      "tier": "21-30",
+      "injury": "Elbow"
+    },
+    "Justin Steele": {
+      "tier": "21-30",
+      "injury": "Elbow"
+    },
+    "Brandon Woodruff": {
+      "tier": "21-30",
+      "injury": "Shoulder"
+    },
+    "Michael Soroka": {
+      "tier": "31-40",
+      "injury": "Glute"
+    },
+    "Ranger Suarez": {
+      "tier": "31-40",
+      "injury": "Adductor"
+    },
+    "Carlos Rodón": {
+      "tier": "31-40",
+      "injury": "Elbow"
+    },
+    "Joe Musgrove": {
+      "tier": "41-50",
+      "injury": "TJS"
+    },
+    "Cade Horton": {
+      "tier": "41-50",
+      "injury": "Forearm"
+    },
+    "Kris Bubic": {
+      "tier": "41-50",
+      "injury": "Elbow"
+    },
+    "Connelly Early": {
+      "tier": "41-50",
+      "injury": "Elbow"
+    },
+    "Clarke Schmidt": {
+      "tier": "51-60",
+      "injury": "TJS"
+    },
+    "Mick Abel": {
+      "tier": "51-60",
+      "injury": "Elbow"
+    },
+    "Jackson Jobe": {
+      "tier": "51-60",
+      "injury": "TJS"
+    },
+    "Robby Snelling": {
+      "tier": "51-60",
+      "injury": "Elbow"
+    },
+    "Ben Brown": {
+      "tier": "51-60",
+      "injury": "Neck"
+    },
+    "Clay Holmes": {
+      "tier": "61-70",
+      "injury": "Leg"
+    },
+    "Cody Ponce": {
+      "tier": "61-70",
+      "injury": "Knee"
+    },
+    "Zach Eflin": {
+      "tier": "61-70",
+      "injury": "Elbow (OFS)"
+    },
+    "Quinn Priester": {
+      "tier": "61-70",
+      "injury": "Wrist"
+    },
+    "Spencer Strider": {
+      "tier": "61-70",
+      "injury": "Elbow"
+    },
+    "Ryne Nelson": {
+      "tier": "61-70",
+      "injury": "Elbow"
+    },
+    "Edward Cabrera": {
+      "tier": "61-70",
+      "injury": "Hamstring"
+    },
+    "Chase Dollander": {
+      "tier": "71-80",
+      "injury": "Elbow"
+    },
+    "Kutter Crawford": {
+      "tier": "81-90",
+      "injury": "Wrist"
+    },
+    "Tylor Megill": {
+      "tier": "81-90",
+      "injury": "Elbow"
+    },
+    "AJ Smith-Shawver": {
+      "tier": "81-90",
+      "injury": "TJS"
+    },
+    "Cody Bradford": {
+      "tier": "91-100",
+      "injury": "Elbow"
+    },
+    "Martín Pérez": {
+      "tier": "91-100",
+      "injury": "Arm"
+    }
   }
 }

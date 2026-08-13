@@ -87,6 +87,27 @@ def pl_rank(name: str, bucket: str, model_rank=None):
     return 'UR', fetched
 
 
+def pl_injured_tier(name: str, bucket: str = 'SP'):
+    """Return (tier|None, injury|None, cache_date) from PL's injured table.
+
+    PL removes injured arms from the main 100 and lists them separately with the
+    tier they'd hold if healthy, so `pl_rank` correctly reports 'UR' for them
+    while PL in fact has an explicit opinion. Call this whenever a 'UR' needs
+    disambiguating between "PL dropped him" and "PL rates him but he's hurt" —
+    the IL-stash decision depends entirely on that difference.
+
+    Deliberately separate from pl_rank(): the tier is a RANGE string ("21-30"),
+    not an int, and pl_rank's (int|'UR'|'—') contract has ~20 consumers.
+    """
+    cache = _load_pl_cache(PL_CACHE_FILES[bucket])
+    fetched = cache.get('fetched')
+    nk = _norm(name)
+    for pl_name, info in (cache.get('injured') or {}).items():
+        if _norm(pl_name) == nk:
+            return info.get('tier'), info.get('injury'), fetched
+    return None, None, fetched
+
+
 def pl_streamer_rank(name: str):
     """For SPs only: return (rank+tier string, opp, cache_date)."""
     cache, date_str = _load_pl_streamer_cache()

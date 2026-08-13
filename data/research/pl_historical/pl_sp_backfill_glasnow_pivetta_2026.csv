@@ -1,0 +1,25 @@
+source,week,edition_date,player,list_rank,injured_tier,injury,note
+webfetch_pitcherlist,2,2026-03-30,Tyler Glasnow,17,,,"main list; badges Aces Gonna Ace / Strikeout Upside / injury risk"
+webfetch_pitcherlist,3,2026-04-06,Tyler Glasnow,16,,,main list
+webfetch_pitcherlist,4,2026-04-13,Tyler Glasnow,13,,,main list
+webfetch_pitcherlist,5,2026-04-20,Tyler Glasnow,12,,,"main list; Tier 2 AGA With Something To Prove"
+webfetch_pitcherlist,6,2026-04-27,Tyler Glasnow,12,,,main list
+webfetch_pitcherlist,7,2026-05-04,Tyler Glasnow,10,,,"main list; PEAK, +2 move; last start 5/6"
+webfetch_pitcherlist,8,2026-05-11,Tyler Glasnow,,1-10,Back,injured table
+webfetch_pitcherlist,9,2026-05-18,Tyler Glasnow,,1-10,Back,injured table
+webfetch_pitcherlist,10,2026-05-26,Tyler Glasnow,,1-10,Back,injured table
+webfetch_pitcherlist,11,2026-06-01,Tyler Glasnow,,1-10,Back,injured table
+webfetch_pitcherlist,16,2026-07-06,Tyler Glasnow,,1-10,Back,injured table
+webfetch_pitcherlist,21,2026-08-11,Tyler Glasnow,,1-10,Back,"injured table; current edition"
+webfetch_pitcherlist,2,2026-03-30,Nick Pivetta,25,,,"main list; badges Ace Potential / Strikeout Upside / injury risk; after 1 start"
+webfetch_pitcherlist,3,2026-04-06,Nick Pivetta,22,,,"main list; PEAK; after 2 starts"
+webfetch_pitcherlist,4,2026-04-13,Nick Pivetta,56,,,"main list; transitional downgrade, last start 4/12"
+webfetch_pitcherlist,5,2026-04-20,Nick Pivetta,,20-30,Elbow,"injured table; removed from The List this week"
+webfetch_pitcherlist,6,2026-04-27,Nick Pivetta,,20-30,Elbow,injured table
+webfetch_pitcherlist,7,2026-05-04,Nick Pivetta,,20-30,Elbow,injured table
+webfetch_pitcherlist,8,2026-05-11,Nick Pivetta,,20-30,Elbow,injured table
+webfetch_pitcherlist,9,2026-05-18,Nick Pivetta,,20-30,Elbow,injured table
+webfetch_pitcherlist,10,2026-05-26,Nick Pivetta,,21-30,Elbow,injured table
+webfetch_pitcherlist,11,2026-06-01,Nick Pivetta,,21-30,Elbow,injured table
+webfetch_pitcherlist,16,2026-07-06,Nick Pivetta,,21-30,Elbow,injured table
+webfetch_pitcherlist,21,2026-08-11,Nick Pivetta,,21-30,Elbow,"injured table; current edition"

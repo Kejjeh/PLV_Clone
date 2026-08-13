@@ -91,7 +91,7 @@ def parse_rank_table(html_text: str, limit: int):
     (PL articles also include a secondary by-position tier block; iterating the rank-table
     <tr> rows specifically avoids picking that up — the bug that mis-ranked hitters.)"""
     import html as _html
-    out, positions = {}, {}
+    out, positions, taken = {}, {}, set()
     for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html_text, re.S):
         rk = re.search(r'<td class="rank">(\d+)</td>', tr)
         nm = re.search(r'<td class="name"><a[^>]*>([^<]+)</a>', tr)
@@ -99,12 +99,62 @@ def parse_rank_table(html_text: str, limit: int):
             continue
         rank = int(rk.group(1))
         name = _html.unescape(nm.group(1)).strip()
-        if rank <= limit and name and name not in out:
+        # Dedupe on BOTH name and rank. A ranked list is a bijection: two players
+        # sharing a rank means a row from a secondary table leaked in, and the
+        # main table comes first in document order, so the first wins. Without
+        # this the stray row silently becomes a peak — the cached 2026-07-18 SP
+        # edition carried a phantom "#5" that outranked every real FA starter.
+        if rank <= limit and name and name not in out and rank not in taken:
             out[name] = rank
+            taken.add(rank)
             pos = re.search(r'<td class="positions">([^<]*)</td>', tr)
             if pos and pos.group(1).strip():
                 positions[name] = pos.group(1).strip()
     return out, positions
+
+
+def parse_injured_table(html_text: str):
+    """Parse PL's "Injured Pitchers Who Will Be Considered When Healthy" table.
+
+    PL pulls injured arms OUT of the main 100 and into a separate table holding
+    the tier they'd occupy if healthy. Without this, every IL'd pitcher parses
+    as absent and reads downstream as 'UR' — indistinguishable from "PL dropped
+    him". Canonical miss: Glasnow (1-10) and Pivetta (21-30) were held at those
+    tiers for 17 straight weeks while our cache showed them unranked all season.
+
+    The tier is a RANGE ("21-30"), not an integer, so it is deliberately kept
+    out of `ranks`: merging it there would corrupt rank arithmetic in every
+    consumer and inflate the _write_cache count guard with non-rank rows.
+
+    Rows: <td><a ... href=".../player/slug/">Name</a></td><td>Injury</td>
+          <td>Tier</td>. Returns {name: {"tier": str, "injury": str}}.
+    """
+    import html as _html
+    # Scope to the injured table: its branding title, through that table's end.
+    title = re.search(r'<div class="title">([^<]*Injured[^<]*)</div>', html_text, re.I)
+    if not title:
+        return {}
+    seg = html_text[title.end():]
+    end = seg.find("</table>")
+    if end == -1:
+        return {}
+    seg = seg[:end]
+
+    out = {}
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", seg, re.S):
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)
+        if len(cells) < 3:
+            continue
+        nm = re.search(r"<a[^>]*>([^<]+)</a>", cells[0])
+        if not nm:
+            continue
+        name = _html.unescape(nm.group(1)).strip()
+        injury = _html.unescape(re.sub(r"<[^>]+>", "", cells[1])).strip()
+        tier = _html.unescape(re.sub(r"<[^>]+>", "", cells[2])).strip()
+        # A tier is always a range like "21-30"; anything else is a parse slip.
+        if name and re.fullmatch(r"\d+\s*-\s*\d+", tier):
+            out[name] = {"tier": tier.replace(" ", ""), "injury": injury}
+    return out
 
 
 # Reliever role -> rank tier (closers rank above setup above middle relief; within a
@@ -177,7 +227,9 @@ def refresh(force=False):
             if not html:
                 continue
             ranks, _pos = parse_rank_table(html, 100)
-            if _write_cache("pl_sps_top100.json", url, ranks, edition):
+            injured = parse_injured_table(html)
+            if _write_cache("pl_sps_top100.json", url, ranks, edition,
+                            extra={"injured": injured} if injured else None):
                 wrote = True
                 break
         if not wrote:
