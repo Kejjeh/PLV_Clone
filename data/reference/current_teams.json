@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-12",
+ "as_of": "2026-08-13",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1051,6 +1051,12 @@
    "abbr": "SEA",
    "name": "Will Wilson",
    "pos": "3B"
+  },
+  "680862": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Willie MacIver",
+   "pos": "C"
   },
   "605288": {
    "team": "San Francisco Giants",
@@ -2346,6 +2352,12 @@
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
    "name": "Patrick Corbin",
+   "pos": "P"
+  },
+  "623149": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Paul Sewald",
    "pos": "P"
   },
   "694357": {
@@ -5330,12 +5342,6 @@
    "name": "Romy Gonzalez",
    "pos": "DH"
   },
-  "661527": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Seth Martinez",
-   "pos": "P"
-  },
   "543243": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -6494,6 +6500,12 @@
    "name": "Colt Keith",
    "pos": "3B"
   },
+  "667452": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "Corey Julks",
+   "pos": "LF"
+  },
   "693307": {
    "team": "Detroit Tigers",
    "abbr": "DET",
@@ -6702,12 +6714,6 @@
    "team": "Detroit Tigers",
    "abbr": "DET",
    "name": "Troy Melton",
-   "pos": "P"
-  },
-  "681890": {
-   "team": "Detroit Tigers",
-   "abbr": "DET",
-   "name": "Troy Watson",
    "pos": "P"
   },
   "680744": {
@@ -7700,6 +7706,12 @@
    "name": "Harry Ford",
    "pos": "C"
   },
+  "800600": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Jackson Kent",
+   "pos": "P"
+  },
   "696285": {
    "team": "Washington Nationals",
    "abbr": "WSH",
@@ -7770,12 +7782,6 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Max Kranick",
-   "pos": "P"
-  },
-  "571945": {
-   "team": "Washington Nationals",
-   "abbr": "WSH",
-   "name": "Miles Mikolas",
    "pos": "P"
   },
   "680730": {

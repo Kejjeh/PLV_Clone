@@ -180,9 +180,9 @@ def build_pitchers() -> pd.DataFrame:
                 "fp_total_base": fp_base,
                 "fp_per_start": fp_base / gs if gs > 0 else np.nan,
                 # RP FP only valid where holds exist (~2000+)
-                "fp_total_rp": (fp_base + 5 * sv + 2 * hld)
+                "fp_total_rp": (fp_base + 5 * sv + 3 * hld)
                                if np.isfinite(hld) else np.nan,
-                "fp_per_g_rp": ((fp_base + 5 * sv + 2 * hld) / g)
+                "fp_per_g_rp": ((fp_base + 5 * sv + 3 * hld) / g)
                                if (np.isfinite(hld) and g > 0) else np.nan,
             })
         print(f"  pitching {yr}: done ({len(rows)} cumulative rows)")

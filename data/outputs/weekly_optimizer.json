@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.753,
+  "base_pwin": 0.8583,
   "regime": "LEADING",
   "period": 19,
   "sims": 10000,
   "seed": 7,
   "cap_remaining": 6,
-  "plan_source": "greedy",
-  "plan_total_dpwin": 0.060699999999999976,
-  "plan_pwin_final": 0.8137,
+  "plan_source": "pair_check",
+  "plan_total_dpwin": 0.0365,
+  "plan_pwin_final": 0.8948,
   "plan": [
-    {
-      "add": "Masataka Yoshida",
-      "add_bucket": "H",
-      "drop": "Jordan Walker",
-      "drop_bucket": "H",
-      "dpwin": 0.03490000000000004,
-      "mc_se": 0.004088,
-      "pwin_after": 0.7879,
-      "dpwin_from_base": 0.0349,
-      "dtitle_equity_pp": 0.0513
-    },
     {
       "add": "Caleb Durbin",
       "add_bucket": "H",
+      "drop": "Jordan Walker",
+      "drop_bucket": "H",
+      "dpwin": 0.022400000000000087,
+      "mc_se": 0.003241,
+      "pwin_after": 0.8807,
+      "dpwin_from_base": 0.022400000000000087,
+      "dtitle_equity_pp": 0.0329
+    },
+    {
+      "add": "Joc Pederson",
+      "add_bucket": "H",
       "drop": "Max Muncy",
       "drop_bucket": "H",
-      "dpwin": 0.025799999999999934,
-      "mc_se": 0.003893,
-      "pwin_after": 0.8137,
-      "dpwin_from_base": 0.0607,
-      "dtitle_equity_pp": 0.0379
+      "dpwin": 0.014099999999999911,
+      "mc_se": 0.003068,
+      "pwin_after": 0.8948,
+      "dpwin_from_base": 0.0365,
+      "dtitle_equity_pp": 0.0207
     }
   ],
   "title_equity": {
@@ -43,124 +43,124 @@
   },
   "top_single_moves": [
     {
-      "add": "Joc Pederson",
-      "drop": "Jordan Walker",
-      "dpwin": 0.035599999999999965,
-      "mc_se": 0.004083
-    },
-    {
-      "add": "Jacob Young",
-      "drop": "Jordan Walker",
-      "dpwin": 0.035499999999999976,
-      "mc_se": 0.004084
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Jordan Walker",
-      "dpwin": 0.03490000000000004,
-      "mc_se": 0.004088
-    },
-    {
       "add": "Caleb Durbin",
       "drop": "Jordan Walker",
-      "dpwin": 0.033499999999999974,
-      "mc_se": 0.004098
+      "dpwin": 0.022400000000000087,
+      "mc_se": 0.003241
+    },
+    {
+      "add": "Joc Pederson",
+      "drop": "Jordan Walker",
+      "dpwin": 0.02180000000000004,
+      "mc_se": 0.003248
     },
     {
       "add": "Joc Pederson",
       "drop": "Max Muncy",
-      "dpwin": 0.02739999999999998,
-      "mc_se": 0.00414
+      "dpwin": 0.017400000000000082,
+      "mc_se": 0.003299
     },
     {
       "add": "Caleb Durbin",
       "drop": "Max Muncy",
-      "dpwin": 0.027200000000000002,
-      "mc_se": 0.004141
-    },
-    {
-      "add": "Jacob Young",
-      "drop": "Max Muncy",
-      "dpwin": 0.02639999999999998,
-      "mc_se": 0.004147
-    },
-    {
-      "add": "Masataka Yoshida",
-      "drop": "Max Muncy",
-      "dpwin": 0.0242,
-      "mc_se": 0.004161
+      "dpwin": 0.017000000000000015,
+      "mc_se": 0.003304
     },
     {
       "add": "Griffin Conine",
       "drop": "Jordan Walker",
-      "dpwin": 0.02410000000000001,
-      "mc_se": 0.004162
+      "dpwin": 0.014900000000000024,
+      "mc_se": 0.003327
     },
     {
-      "add": "Caleb Durbin",
-      "drop": "Luis Arraez",
-      "dpwin": 0.022699999999999942,
-      "mc_se": 0.004171
-    },
-    {
-      "add": "Jacob Young",
-      "drop": "Luis Arraez",
-      "dpwin": 0.022599999999999953,
-      "mc_se": 0.004172
-    },
-    {
-      "add": "Javier Sanoja",
+      "add": "Jac Caglianone",
       "drop": "Jordan Walker",
-      "dpwin": 0.021599999999999953,
-      "mc_se": 0.004178
+      "dpwin": 0.013900000000000023,
+      "mc_se": 0.003339
     },
     {
       "add": "Spencer Horwitz",
       "drop": "Jordan Walker",
-      "dpwin": 0.021100000000000008,
-      "mc_se": 0.004182
+      "dpwin": 0.0132000000000001,
+      "mc_se": 0.003346
     },
     {
-      "add": "Masataka Yoshida",
+      "add": "Joc Pederson",
       "drop": "Luis Arraez",
-      "dpwin": 0.01959999999999995,
-      "mc_se": 0.004192
+      "dpwin": 0.012300000000000089,
+      "mc_se": 0.003356
+    },
+    {
+      "add": "Javier Sanoja",
+      "drop": "Jordan Walker",
+      "dpwin": 0.011900000000000022,
+      "mc_se": 0.003361
     },
     {
       "add": "Zack Gelof",
       "drop": "Jordan Walker",
-      "dpwin": 0.019199999999999995,
-      "mc_se": 0.004194
+      "dpwin": 0.011700000000000044,
+      "mc_se": 0.003363
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Wyatt Langford",
+      "dpwin": 0.011600000000000055,
+      "mc_se": 0.003364
+    },
+    {
+      "add": "Griffin Conine",
+      "drop": "Max Muncy",
+      "dpwin": 0.011300000000000088,
+      "mc_se": 0.003367
+    },
+    {
+      "add": "Joc Pederson",
+      "drop": "Michael Harris II",
+      "dpwin": 0.011300000000000088,
+      "mc_se": 0.003367
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Luis Arraez",
+      "dpwin": 0.011200000000000099,
+      "mc_se": 0.003369
+    },
+    {
+      "add": "Jakob Marsee",
+      "drop": "Jordan Walker",
+      "dpwin": 0.01090000000000002,
+      "mc_se": 0.003372
     }
   ],
   "pair_check": {
     "n_combos": 45,
-    "adopted": false,
+    "adopted": true,
     "best": {
       "moves": [
         {
-          "add": "Jacob Young",
+          "add": "Caleb Durbin",
           "add_bucket": "H",
           "drop": "Jordan Walker",
           "drop_bucket": "H",
-          "dpwin_solo": 0.035499999999999976,
-          "mc_se": 0.004084
+          "dpwin_solo": 0.022400000000000087,
+          "mc_se": 0.003241
         },
         {
-          "add": "Caleb Durbin",
+          "add": "Joc Pederson",
           "add_bucket": "H",
           "drop": "Max Muncy",
           "drop_bucket": "H",
-          "dpwin_solo": 0.027200000000000002,
-          "mc_se": 0.004141
+          "dpwin_solo": 0.017400000000000082,
+          "mc_se": 0.003299
         }
       ],
-      "dpwin": 0.0623,
-      "pwin": 0.8153,
-      "mc_se": 0.003881,
-      "sum_solo": 0.06269999999999998,
-      "interaction": -0.00039999999999997676
+      "dpwin": 0.0365,
+      "pwin": 0.8948,
+      "mc_se": 0.003068,
+      "sum_solo": 0.03980000000000017,
+      "interaction": -0.003300000000000171
     }
   },
-  "dpwin_run_id": "2026-08-12T112805_7"
+  "dpwin_run_id": "2026-08-12T210739_7"
 }
