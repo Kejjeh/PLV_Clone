@@ -414,3 +414,29 @@ def build_role_lookup(
         result[name] = detect_pitcher_role(row, mlbam_id=mlbam)
 
     return result
+
+
+_PITCHER_TAGS = frozenset({"SP", "RP", "P"})
+
+
+def roster_buckets(roster_df, role_lookup: dict[str, str]) -> dict[str, list]:
+    """Split a roster into {'H', 'SP', 'RP'} by ROLE TRUTH, dropping nobody.
+
+    The board-level companion to ``build_role_lookup``. A row is a pitcher iff
+    its ESPN position tag is one of SP/RP/P — the tag is reliable for "is this a
+    pitcher at all" — but WHICH pitcher bucket it lands in comes from
+    ``role_lookup``, never from the tag. Detmers (tag 'RP', 23 starts) is the
+    canonical case; a caller that branched on the tag dropped him silently and
+    under-counted rotation starts against the period cap.
+
+    Exists as a pure function so the classification is testable without a live
+    ESPN pull. Every input row appears in exactly one output bucket.
+    """
+    out: dict[str, list] = {"H": [], "SP": [], "RP": []}
+    for _, row in roster_df.iterrows():
+        name = row["player_name"]
+        if str(row.get("position")) in _PITCHER_TAGS:
+            out[role_lookup.get(name, "RP")].append(name)
+        else:
+            out["H"].append(name)
+    return out

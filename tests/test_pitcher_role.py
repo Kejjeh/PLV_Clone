@@ -336,3 +336,31 @@ def test_ip_to_float_handles_thirds():
     assert PR._ip_to_float('6.0') == 6.0
     assert PR._ip_to_float(None) == 0.0
     assert PR._ip_to_float('garbage') == 0.0
+
+
+# ── roster_buckets: the board-level classification seam ───────────────────────
+# Regression for a defect shipped 2026-08-14: build_period_xfp_board bucketed
+# pitchers off the ESPN .position STRING, so Reid Detmers (tag 'RP', truly an
+# SP with 23 starts) was silently dropped from the board entirely. That
+# understated period-22 projected starts by 3.0 (21.8 vs the true 24.8 against
+# a cap of 20) and so understated how badly the cap binds.
+def test_roster_buckets_uses_role_truth_not_the_espn_position_tag():
+    import pandas as pd
+
+    from lib.pitcher_role import roster_buckets
+
+    roster = pd.DataFrame([
+        {"player_name": "Corbin Carroll", "position": "RF"},
+        {"player_name": "Max Fried", "position": "SP"},
+        {"player_name": "Reid Detmers", "position": "RP"},   # stale ESPN tag
+        {"player_name": "Jhoan Duran", "position": "RP"},    # genuinely an RP
+    ])
+    roles = {"Max Fried": "SP", "Reid Detmers": "SP", "Jhoan Duran": "RP"}
+
+    out = roster_buckets(roster, roles)
+
+    assert out["SP"] == ["Max Fried", "Reid Detmers"]
+    assert out["RP"] == ["Jhoan Duran"]
+    assert out["H"] == ["Corbin Carroll"]
+    # every roster row is accounted for — the board must never silently drop one
+    assert sum(len(v) for v in out.values()) == len(roster)
