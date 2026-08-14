@@ -67,8 +67,8 @@ def test_series_from_box_sp_filters_starts_and_orders():
 def test_series_from_box_rp_uses_relief_and_sv_hld():
     # reliever 200: 2 + 1*3.3 - 0 - 0 - 0 - 0 + 5*1 = 10.3
     assert _series_from_box(_pitcher_box(), 200, "RP") == pytest.approx([10.3])
-    # starter 100 viewed as RP -> only the gs=0 cameo: 2 + 1*3.3 + 2*1(hld) = 7.3
-    assert _series_from_box(_pitcher_box(), 100, "RP") == pytest.approx([7.3])
+    # starter 100 viewed as RP -> only the gs=0 cameo: 2 + 1*3.3 + 3*1(hld) = 8.3
+    assert _series_from_box(_pitcher_box(), 100, "RP") == pytest.approx([8.3])
 
 
 def test_series_from_box_hitter_all_games_ordered():

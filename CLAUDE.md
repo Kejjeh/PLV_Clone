@@ -70,7 +70,7 @@ surfaces stale `v9/v10/v11`-style duplicates.
 ```
 HITTER FP/game  = R + TB + RBI + BB + HBP + SB − K
 SP FP/start     = K + IP*3.3 − H − 2*ER − BB − HBP
-RP FP/g         = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 2*HLD
+RP FP/g         = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 3*HLD
 ```
 
 ## Validated models (use these — others are research-stage)

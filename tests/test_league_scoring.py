@@ -164,10 +164,10 @@ def test_pitcher_fp_starter_default_weights():
 
 
 def test_pitcher_fp_reliever_with_sv_hld():
-    """pitcher_fp adds 5*SV + 2*HLD on top of the base formula."""
+    """pitcher_fp adds 5*SV + 3*HLD on top of the base formula."""
     # 2 K, 1 IP, 1 H, 0 ER, 0 BB, 0 HBP, 1 SV, 1 HLD.
     base = 2 + 1 * 3.3 - 1 - 0 - 0 - 0
-    expected = base + 5 * 1 + 2 * 1
+    expected = base + 5 * 1 + 3 * 1
     assert pitcher_fp(k=2, ip=1.0, h=1, er=0, bb=0, hbp=0, sv=1, hld=1) == pytest.approx(
         expected
     )

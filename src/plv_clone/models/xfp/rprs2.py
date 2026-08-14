@@ -70,7 +70,7 @@ PROJ_CSV  = ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv'
 # analysis in rprs2_audit_phase0_REAUDIT_2026-06-05.md, which couldn't
 # fully reproduce read-only because fitted pipelines weren't persisted).
 COEF_DIR = ROOT / 'data' / 'research' / 'model_coefficients'
-_HLD_WEIGHT = 2  # BrownU RP scoring: SV*5 + HLD*2
+_HLD_WEIGHT = 3  # BrownU RP scoring: SV*5 + HLD*3 (ESPN statId 60 = 3.0, verified live 2026-08-12)
 
 # 2020 COVID-shortened season is excluded from TRAIN_YEARS by construction.
 

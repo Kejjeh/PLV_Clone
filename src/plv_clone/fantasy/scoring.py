@@ -66,7 +66,7 @@ class LeagueScoring:
     hb_pit: float = -1.0   # Hit batters
     k_pit:  float = 1.0    # Strikeouts (pitching)
     sv:     float = 5.0    # Saves
-    hd:     float = 2.0    # Holds (BrownU HLD×2; see data/models/league_scoring.json)
+    hd:     float = 3.0    # Holds (BrownU HLD×3, ESPN statId 60; see data/models/league_scoring.json)
 
     @classmethod
     def load(cls, path: str | Path) -> "LeagueScoring":

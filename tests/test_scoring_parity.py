@@ -30,10 +30,11 @@ def test_pitcher_fp_is_brownu_formula():
 
 
 def test_rp_fp_adds_sv_hld():
-    # + 5*SV + 2*HLD
+    # + 5*SV + 3*HLD  (HLD verified against the live ESPN league 2026-08-12:
+    # scoringItems statId 60 -> 3.0. Do not "correct" back to 2 from our own code.)
     base = pitcher_fp(k=3, ip=1.0, h=1, er=0, bb=0, hbp=0)
     assert pitcher_fp(k=3, ip=1.0, h=1, er=0, bb=0, hbp=0, sv=1, hld=0) == pytest.approx(base + 5)
-    assert pitcher_fp(k=3, ip=1.0, h=1, er=0, bb=0, hbp=0, hld=2) == pytest.approx(base + 4)
+    assert pitcher_fp(k=3, ip=1.0, h=1, er=0, bb=0, hbp=0, hld=2) == pytest.approx(base + 6)
 
 
 def test_hitter_fp_is_brownu_formula():
