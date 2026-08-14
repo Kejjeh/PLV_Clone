@@ -190,8 +190,20 @@ def test_hitter_board_season_stage_is_a_known_stage():
     path = REPO_ROOT / "data" / "outputs" / fname
     if not path.exists():
         pytest.skip(f"{path} not present in this checkout (pipeline not yet run)")
-    seen = set(pd.read_csv(path)["season_stage"].dropna().unique())
-    assert seen, f"{fname} wrote no season_stage values at all"
+    df = pd.read_csv(path)
+    # A board with no qualifying targets is a legitimate outcome, not a schema
+    # violation — mid-August 2026 the buy-target board is genuinely empty. The
+    # contract is "every stage value written is a declared one", which is
+    # vacuously satisfied by zero rows. What must still fail is rows present
+    # with the stage column blank: that IS a board scored against thresholds
+    # nobody recorded. (Fixed 2026-08-14; the test previously conflated the two
+    # and reported an empty board as a defect.)
+    if df.empty:
+        pytest.skip(f"{fname} has no rows (no qualifying targets) — "
+                    "no stage values to validate")
+    seen = set(df["season_stage"].dropna().unique())
+    assert seen, (f"{fname} has {len(df)} rows but no season_stage value on any "
+                  f"of them — the board was scored against undeclared thresholds")
     assert seen <= {"early", "mid", "mature"}, f"unknown season_stage values: {seen}"
 
 
