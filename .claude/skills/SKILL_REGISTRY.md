@@ -83,6 +83,7 @@ resolve through it.
 | stream-the-stack | alias | → `/streamer-precision-board --filter boom>=2` (holds the boom-stack recipe) |
 | sp-stuff-board | active | Stuff+ RoS FP/start single lens (Location+ REJECTED note carried) |
 | sp-floor | active | Bust-risk P(start <5 FP); K−BB% floor; bench-priority tilt |
+| sp-rp-stuff-windows | active | SP/RP velo + whiff% + swstr% over each metric's own validated stabilization minimum (L150 pitches / L150 swings / L175 SP·L200 RP pitches) instead of a calendar window. Engine `build_sp_rp_stuff_windows.py`. Rule 13 context-only |
 
 ### SP cap / week management
 | Skill | Status | Role |
