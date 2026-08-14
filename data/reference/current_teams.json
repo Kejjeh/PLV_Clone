@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-13",
+ "as_of": "2026-08-14",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1286,6 +1286,12 @@
    "name": "Sam Hentges",
    "pos": "P"
   },
+  "694376": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Shay Whitcomb",
+   "pos": "3B"
+  },
   "702352": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1309,6 +1315,12 @@
    "abbr": "SF",
    "name": "Tristan Beck",
    "pos": "P"
+  },
+  "806367": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Turner Hill",
+   "pos": "CF"
   },
   "682674": {
    "team": "San Francisco Giants",
@@ -1724,6 +1736,12 @@
    "name": "Jonny DeLuca",
    "pos": "RF"
   },
+  "622761": {
+   "team": "Tampa Bay Rays",
+   "abbr": "TB",
+   "name": "Jorge Mateo",
+   "pos": "SS"
+  },
   "691406": {
    "team": "Tampa Bay Rays",
    "abbr": "TB",
@@ -1819,12 +1837,6 @@
    "abbr": "TB",
    "name": "Taylor Walls",
    "pos": "SS"
-  },
-  "694680": {
-   "team": "Tampa Bay Rays",
-   "abbr": "TB",
-   "name": "Trevor Martin",
-   "pos": "P"
   },
   "669330": {
    "team": "Tampa Bay Rays",
@@ -4926,7 +4938,7 @@
    "team": "Baltimore Orioles",
    "abbr": "BAL",
    "name": "Christian Franklin",
-   "pos": "LF"
+   "pos": "CF"
   },
   "691723": {
    "team": "Baltimore Orioles",
@@ -5784,7 +5796,7 @@
    "team": "Cincinnati Reds",
    "abbr": "CIN",
    "name": "Héctor Rodríguez",
-   "pos": "LF"
+   "pos": "RF"
   },
   "668881": {
    "team": "Cincinnati Reds",
@@ -5964,7 +5976,7 @@
    "team": "Cleveland Guardians",
    "abbr": "CLE",
    "name": "Angel Genao",
-   "pos": "3B"
+   "pos": "2B"
   },
   "682657": {
    "team": "Cleveland Guardians",
@@ -7088,12 +7100,6 @@
    "name": "Easton McGee",
    "pos": "P"
   },
-  "669212": {
-   "team": "Kansas City Royals",
-   "abbr": "KC",
-   "name": "Eli Morgan",
-   "pos": "P"
-  },
   "686555": {
    "team": "Kansas City Royals",
    "abbr": "KC",
@@ -7286,6 +7292,12 @@
    "name": "Steven Zobac",
    "pos": "P"
   },
+  "664062": {
+   "team": "Kansas City Royals",
+   "abbr": "KC",
+   "name": "Tony Gonsolin",
+   "pos": "P"
+  },
   "686475": {
    "team": "Kansas City Royals",
    "abbr": "KC",
@@ -7370,12 +7382,6 @@
    "name": "Brusdar Graterol",
    "pos": "P"
   },
-  "656212": {
-   "team": "Los Angeles Dodgers",
-   "abbr": "LAD",
-   "name": "Charlie Barnes",
-   "pos": "P"
-  },
   "687221": {
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
@@ -7458,6 +7464,12 @@
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
    "name": "Jake Cousins",
+   "pos": "P"
+  },
+  "642546": {
+   "team": "Los Angeles Dodgers",
+   "abbr": "LAD",
+   "name": "Jonathan Hernández",
    "pos": "P"
   },
   "680736": {
