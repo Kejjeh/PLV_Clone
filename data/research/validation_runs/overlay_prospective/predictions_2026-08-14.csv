@@ -1,27 +1,27 @@
-player,bucket,tag,inj,mlbam,return_date_used,snapshot_date,model_pa_per_teamgame,team_games_remaining,rate,qual,flags,when_active_pa,ros_total,xfp_p20_diag,xfp_p21_diag,xfp_p22_diag,xfp_p23_diag,ros_overlay_diag,starts_p20,starts_p21,starts_p22,starts_p23
-Corbin Carroll,H,MINE,ACTIVE,682998.0,,2026-08-14,4.043,40.0,0.695,model_passthrough,,4.35,112.4,16.9,19.7,33.7,33.7,112.4,,,,
-Elly De La Cruz,H,MINE,ACTIVE,682829.0,,2026-08-14,4.053,42.0,0.596,model_passthrough,,4.49,101.5,19.3,14.5,29.0,31.4,101.5,,,,
-Pete Alonso,H,MINE,ACTIVE,624413.0,,2026-08-14,3.688,41.0,0.627,model_passthrough,,4.34,94.7,16.2,13.9,30.0,27.7,94.7,,,,
-Jackson Merrill,H,MINE,ACTIVE,701538.0,,2026-08-14,3.686,40.0,0.628,model_passthrough,,4.25,92.6,13.9,13.9,27.8,30.1,92.6,,,,
-Michael Harris II,H,MINE,ACTIVE,671739.0,,2026-08-14,3.57,41.0,0.614,model_passthrough,,4.04,89.8,15.3,13.1,28.5,26.3,89.8,,,,
-Luis Arraez,H,MINE,ACTIVE,650333.0,,2026-08-14,3.865,39.0,0.569,model_passthrough,,4.45,85.7,13.2,13.2,28.6,26.4,85.7,,,,
-Wyatt Langford,H,MINE,ACTIVE,694671.0,,2026-08-14,3.77,40.0,0.557,model_passthrough,,4.26,84.0,12.6,12.6,27.3,25.2,84.0,,,,
-Vladimir Guerrero Jr.,H,MINE,ACTIVE,665489.0,,2026-08-14,3.478,39.0,0.585,model_passthrough,,4.25,79.4,12.2,12.2,24.4,24.4,79.4,,,,
-Luis Garcia Jr.,H,MINE,ACTIVE,671277.0,,2026-08-14,2.965,41.0,0.646,model_passthrough,,3.63,78.5,11.5,13.4,23.0,24.9,78.5,,,,
-Hunter Goodman,H,MINE,ACTIVE,696100.0,,2026-08-14,3.322,41.0,0.571,model_passthrough,,4.14,77.8,11.4,13.3,22.8,24.7,77.8,,,,
-Bryson Stott,H,MINE,ACTIVE,681082.0,,2026-08-14,3.282,39.0,0.59,model_passthrough,,3.91,75.6,11.6,11.6,25.2,23.3,75.6,,,,
-Jordan Walker,H,MINE,ACTIVE,691023.0,,2026-08-14,3.547,41.0,0.515,model_passthrough,,4.26,74.9,14.6,11.0,21.9,21.9,74.9,,,,
-Aaron Judge,H,MINE,SIXTY_DAY_DL,592450.0,2026-08-25,2026-08-14,2.176,41.0,0.708,il_return_overlay,,4.42,63.2,0.0,21.9,37.6,40.7,100.2,,,,
-Max Muncy,H,MINE,ACTIVE,571970.0,,2026-08-14,2.598,40.0,0.538,model_passthrough,,3.8,55.9,8.4,8.4,16.8,18.2,55.9,,,,
-Ezequiel Duran,H,MINE,ACTIVE,677649.0,,2026-08-14,3.062,40.0,0.416,model_passthrough,,3.89,51.0,7.6,7.6,16.6,15.3,51.0,,,,
-Oneil Cruz,H,FA-TARGET,SIXTY_DAY_DL,665833.0,2026-08-14,2026-08-14,2.254,39.0,0.54,il_return_overlay,,4.49,47.4,14.5,14.5,29.1,29.1,94.5,,,,
-Drew Rasmussen,SP,MINE,ACTIVE,,,,,,13.89,data_driven_full,,,111.1,27.8,13.9,27.8,41.7,,2.0,1.0,2.0,3.0
-Max Fried,SP,MINE,ACTIVE,,,,,,13.28,data_driven_full,,,106.2,13.3,26.6,26.6,39.8,,1.0,2.0,2.0,3.0
-Parker Messick,SP,MINE,ACTIVE,,,,,,12.57,data_driven_full,,,100.5,12.6,25.1,25.1,37.7,,1.0,2.0,2.0,3.0
-Jose Soriano,SP,MINE,ACTIVE,,,,,,12.3,data_driven_full,,,98.4,24.6,12.3,24.6,36.9,,2.0,1.0,2.0,3.0
-Eury Perez,SP,MINE,ACTIVE,,,,,,13.51,data_driven_full,,,94.5,13.5,13.5,40.5,27.0,,1.0,1.0,3.0,2.0
-Logan Henderson,SP,MINE,ACTIVE,,,,,,12.81,data_driven_full,,,89.7,12.8,12.8,38.4,25.6,,1.0,1.0,3.0,2.0
-Shota Imanaga,SP,MINE,ACTIVE,,,,,,12.64,data_driven_full,,,88.5,12.6,12.6,37.9,25.3,,1.0,1.0,3.0,2.0
-Reid Detmers,SP,MINE,ACTIVE,,,,,,12.4,data_driven_full,,,86.8,12.4,12.4,37.2,24.8,,1.0,1.0,3.0,2.0
-Tyler Glasnow,SP,MINE,SIXTY_DAY_DL,,,,,,13.86,marcel_il,,,74.8,0.0,5.5,41.6,27.7,,0.0,0.4,3.0,2.0
-Nick Pivetta,SP,MINE,SIXTY_DAY_DL,,,,,,12.55,marcel_il,,,67.8,0.0,5.0,25.1,37.6,,0.0,0.4,2.0,3.0
+player,bucket,tag,inj,mlbam,return_date_used,snapshot_date,model_pa_per_teamgame,team_games_remaining,rate,qual,vol_source,flags,when_active_pa,ros_total,xfp_p20_diag,xfp_p21_diag,xfp_p22_diag,xfp_p23_diag,ros_overlay_diag,ros_reachwt_diag,starts_p20,starts_p21,starts_p22,starts_p23
+Corbin Carroll,H,MINE,ACTIVE,682998,,2026-08-14,3.953,40,0.695,model_passthrough,model_passthrough,,4.35,109.9,16.5,19.2,33.0,33.0,109.9,63.1,,,,
+Elly De La Cruz,H,MINE,ACTIVE,682829,,2026-08-14,4.135,42,0.593,model_passthrough,model_passthrough,,4.5,103.0,19.6,14.7,29.4,31.9,103.0,59.5,,,,
+Pete Alonso,H,MINE,ACTIVE,624413,,2026-08-14,3.69,41,0.626,model_passthrough,model_passthrough,,4.34,94.7,16.2,13.9,30.0,27.7,94.7,54.3,,,,
+Jackson Merrill,H,MINE,ACTIVE,701538,,2026-08-14,3.673,40,0.628,model_passthrough,model_passthrough,,4.25,92.2,13.8,13.8,27.7,30.0,92.2,51.3,,,,
+Michael Harris II,H,MINE,ACTIVE,671739,,2026-08-14,3.495,41,0.613,model_passthrough,model_passthrough,,4.04,87.9,15.0,12.9,27.9,25.7,87.9,50.4,,,,
+Luis Arraez,H,MINE,ACTIVE,650333,,2026-08-14,3.951,39,0.568,model_passthrough,model_passthrough,,4.45,87.6,13.5,13.5,29.2,26.9,87.6,50.5,,,,
+Wyatt Langford,H,MINE,ACTIVE,694671,,2026-08-14,3.834,40,0.554,model_passthrough,model_passthrough,,4.26,84.9,12.7,12.7,27.6,25.5,84.9,47.8,,,,
+Luis Garcia Jr.,H,MINE,ACTIVE,671277,,2026-08-14,3.029,41,0.644,model_passthrough,model_passthrough,,3.63,80.0,11.7,13.7,23.4,25.4,80.0,45.4,,,,
+Vladimir Guerrero Jr.,H,MINE,ACTIVE,665489,,2026-08-14,3.479,39,0.582,model_passthrough,model_passthrough,,4.25,79.0,12.2,12.2,24.3,24.3,79.0,44.5,,,,
+Hunter Goodman,H,MINE,ACTIVE,696100,,2026-08-14,3.323,41,0.571,model_passthrough,model_passthrough,,4.14,77.8,11.4,13.3,22.8,24.7,77.8,44.1,,,,
+Bryson Stott,H,MINE,ACTIVE,681082,,2026-08-14,3.367,39,0.587,model_passthrough,model_passthrough,,3.91,77.1,11.9,11.9,25.7,23.7,77.1,44.5,,,,
+Jordan Walker,H,MINE,ACTIVE,691023,,2026-08-14,3.488,41,0.517,model_passthrough,model_passthrough,,4.26,73.9,14.4,10.8,21.6,21.6,73.9,43.2,,,,
+Aaron Judge,H,MINE,SIXTY_DAY_DL,592450,2026-08-25,2026-08-14,2.178,41,0.707,il_return_overlay,il_return_overlay,,4.42,63.1,0.0,21.9,37.5,40.7,100.1,54.0,,,,
+Max Muncy,H,MINE,ACTIVE,571970,,2026-08-14,2.62,40,0.543,model_passthrough,model_passthrough,,3.78,56.9,8.5,8.5,17.1,18.5,56.9,31.7,,,,
+Ezequiel Duran,H,MINE,ACTIVE,677649,,2026-08-14,3.127,40,0.418,model_passthrough,model_passthrough,,3.89,52.2,7.8,7.8,17.0,15.7,52.2,29.4,,,,
+Oneil Cruz,H,FA-TARGET,SIXTY_DAY_DL,665833,2026-08-17,2026-08-14,2.255,39,0.539,il_return_overlay,il_return_overlay,,4.49,47.4,14.5,14.5,29.1,29.1,87.2,53.2,,,,
+Drew Rasmussen,SP,MINE,ACTIVE,656876,,2026-08-14,0.1823,42,13.9,data_driven_full,pace_forward_sp_volume,,,106.4,26.2,13.1,26.2,39.4,105.0,65.0,1.9,0.9,1.9,2.8
+Max Fried,SP,MINE,ACTIVE,608331,,2026-08-14,0.1921,41,13.05,data_driven_full,pace_forward_sp_volume,,,102.8,12.3,24.6,24.6,37.0,98.6,61.0,0.9,1.9,1.9,2.8
+Eury Perez,SP,MINE,ACTIVE,691587,,2026-08-14,0.1736,40,13.52,data_driven_full,pace_forward_sp_volume,,,93.9,12.8,12.8,38.3,25.5,89.4,53.6,0.9,0.9,2.8,1.9
+Shota Imanaga,SP,MINE,ACTIVE,684007,,2026-08-14,0.184,40,12.65,data_driven_full,pace_forward_sp_volume,,,93.1,11.9,11.9,35.8,23.9,83.6,50.2,0.9,0.9,2.8,1.9
+Parker Messick,SP,MINE,ACTIVE,800048,,2026-08-14,0.1734,40,12.43,data_driven_full,pace_forward_sp_volume,,,86.2,11.7,23.5,23.5,35.2,93.9,58.1,0.9,1.9,1.9,2.8
+Jose Soriano,SP,MINE,ACTIVE,667755,,2026-08-14,0.1691,39,12.31,data_driven_full,pace_forward_sp_volume,,,81.2,23.3,11.6,23.3,34.9,93.0,57.6,1.9,0.9,1.9,2.8
+Reid Detmers,SP,MINE,ACTIVE,672282,,2026-08-14,0.1609,40,12.41,data_driven_full,pace_forward_sp_volume,,,79.9,11.7,11.7,35.2,23.4,82.0,49.2,0.9,0.9,2.8,1.9
+Logan Henderson,SP,MINE,ACTIVE,701656,,2026-08-14,0.1526,40,12.82,data_driven_full,pace_forward_sp_volume,,,78.2,12.1,12.1,36.3,24.2,84.7,50.8,0.9,0.9,2.8,1.9
+Tyler Glasnow,SP,MINE,SIXTY_DAY_DL,607192,2026-08-27,2026-08-14,0.1257,40,13.87,marcel_il,pace_forward_sp_volume,,,69.7,0.0,4.8,39.3,26.2,70.3,33.6,0.0,0.3,2.8,1.9
+Nick Pivetta,SP,MINE,SIXTY_DAY_DL,601713,2026-08-29,2026-08-14,0.1128,40,12.56,marcel_il,pace_forward_sp_volume,,,56.7,0.0,4.3,23.7,35.6,63.6,27.5,0.0,0.3,1.9,2.8
