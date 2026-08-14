@@ -35,9 +35,32 @@ period or two behind the live matchup. Three cases, all handled explicitly:
     standings. It is surfaced WITH its staleness rather than suppressed, because
     this is a DISPLAY conversion under Rule 13 — dpwin remains the sort key — and
     silently dropping the column would hide real strategic information.
-  * **curve has no row for the period** (``josh_sensitivities`` skips periods
-    whose conditioning sample is under 50 sims) -> fall back to the mean of the
-    adjacent periods and mark ``interpolated``.
+  * **curve has an INTERIOR hole at the period** (``josh_sensitivities`` skips
+    periods whose conditioning sample is under 50 sims) -> fall back to the mean
+    of the adjacent periods and mark ``interpolated``.
+  * **the period is OUTSIDE the curve entirely** -> refuse: ``dtitle_pp`` is
+    None and ``status`` is ``out_of_range``. See below.
+
+WHY EXTRAPOLATION IS REFUSED (audit 2026-08-14)
+-----------------------------------------------
+The hole branch used to fire for ANY missing period, including ones past the end
+of the curve, and averaged whatever neighbours existed — which for a
+past-the-end ask means the single last row. In the live 2026 payload the curve
+covers [19, 20] while the period board asks for 20-23, so periods 21/22/23 (the
+PLAYOFF ROUNDS) were being assigned period 20's weight of 0.30pp and labelled
+``interpolated``.
+
+That is a category error, not a precision loss. With P(playoffs) already 1.00, a
+regular-season week is worth almost nothing; a playoff round is worth a large
+fraction of the title. The two live on opposite sides of a regime boundary, and
+no amount of averaging regular-season rows estimates a playoff row. Interpolating
+an interior hole is estimating a quantity we bracketed on both sides;
+extrapolating past the end is inventing one — and doing it under a label that
+reads as "estimated".
+
+So: interior holes interpolate, exterior asks refuse. Callers already handle
+``dtitle_pp is None`` (that is the documented unavailable path), and the return
+carries ``curve_periods`` so a caller can explain the gap and name the fix.
 
 What we never do is multiply against the WRONG period's weight while claiming it
 is the right one. Every return carries ``status`` and ``source_period`` so the
@@ -92,16 +115,20 @@ def win_value(period: int, payload: dict | None = None,
         'payload_period', 'periods_stale', 'note', 'plus2_pp'}
 
     ``dtitle_pp`` is None when nothing usable exists; ``status`` is one of
-    ``fresh`` / ``stale`` / ``interpolated`` / ``unknown_staleness`` /
-    ``unavailable``. ``unknown_staleness`` means the payload carried no
-    ``period``, so the weight is displayed but its age is undeterminable — it is
-    deliberately NOT collapsed into ``fresh``.
+    ``fresh`` / ``stale`` / ``interpolated`` / ``out_of_range`` /
+    ``unknown_staleness`` / ``unavailable``. ``unknown_staleness`` means the
+    payload carried no ``period``, so the weight is displayed but its age is
+    undeterminable — it is deliberately NOT collapsed into ``fresh``.
+    ``out_of_range`` means the period sits outside the curve and would require
+    EXTRAPOLATION (see the module docstring); the weight is refused, not guessed.
+    ``curve_periods`` reports the curve's (min, max) so a caller can say which
+    periods the sim actually covers.
     """
     pay = payload if payload is not None else load_payload(path)
     out = {'dtitle_pp': None, 'dplayoffs_pp': None, 'p_win_week': None,
            'status': 'unavailable', 'source_period': None,
            'payload_period': None, 'periods_stale': None, 'note': '',
-           'plus2_pp': None}
+           'plus2_pp': None, 'curve_periods': None}
     if not pay:
         out['note'] = ('season_sim.json missing — run /season-sim to enable '
                        'title-equity conversion')
@@ -116,6 +143,8 @@ def win_value(period: int, payload: dict | None = None,
         return out
 
     by_period = {int(r['period']): r for r in curve if r.get('period') is not None}
+    if by_period:
+        out['curve_periods'] = (min(by_period), max(by_period))
     row = by_period.get(int(period))
 
     if row is not None:
@@ -125,18 +154,23 @@ def win_value(period: int, payload: dict | None = None,
                    source_period=int(period))
     else:
         # josh_sensitivities skips a period whose conditioning sample is < 50
-        # sims, so a hole is expected rather than exceptional.
+        # sims, so an INTERIOR hole is expected rather than exceptional. A
+        # period outside the curve is a different animal — see the module
+        # docstring — and is refused rather than extrapolated.
         lo = [p for p in by_period if p < period]
         hi = [p for p in by_period if p > period]
-        neigh = []
-        if lo:
-            neigh.append(by_period[max(lo)])
-        if hi:
-            neigh.append(by_period[min(hi)])
-        if not neigh:
-            out['note'] = (f'no curve row for period {period} and no adjacent '
-                           f'periods to interpolate from')
+        if not (lo and hi):
+            c_lo, c_hi = (out['curve_periods'] or (None, None))
+            out['status'] = 'out_of_range'
+            out['note'] = (
+                f'period {period} is outside the value-of-win curve '
+                f'[{c_lo}, {c_hi}] — a weight here would be EXTRAPOLATED, not '
+                f'interpolated. Regular-season and playoff-round win values sit '
+                f'on opposite sides of a regime boundary, so neighbouring rows '
+                f'do not estimate this one. Re-run /season-sim to extend the '
+                f'curve through period {period}.')
             return out
+        neigh = [by_period[max(lo)], by_period[min(hi)]]
         vals = [r.get('dtitle_pp') for r in neigh if r.get('dtitle_pp') is not None]
         if not vals:
             out['note'] = f'adjacent curve rows carry no dtitle_pp for period {period}'
@@ -234,5 +268,37 @@ def banner(wv: dict) -> str:
     return line
 
 
+def dtitle_for_ros_delta(ros_fp_delta: float, *, remaining_weeks: float,
+                         payload: dict | None = None,
+                         path: Path | None = None) -> dict:
+    """ΔP(title) for a rest-of-season FP delta — linearized v1 (2026-08-12).
+
+    Converts a move's ΔRoS FP into weekly roster quality and applies the sim's
+    own sensitivity (``dtitle_mean_plus2_pp`` = title pp per +2 FP/wk). Built
+    when P(playoffs) hit 1.0 and regular-season win value collapsed (period 20
+    = 0.30pp): from there, roster quality flows to the title almost entirely
+    through playoff rounds, which the sensitivity already aggregates. The
+    joint bracket MC (seeding, byes, opponent-conditional draws) is the
+    registered upgrade; this stays honest by returning None — never 0.0 —
+    when the sim payload can't support the conversion.
+    """
+    out = {'dtitle_pp': None, 'status': 'unavailable', 'note': ''}
+    pay = payload if payload is not None else load_payload(path)
+    if not pay:
+        out['note'] = 'season_sim.json missing — run /season-sim'
+        return out
+    plus2 = ((pay.get('josh') or {}).get('sensitivity') or {}).get('dtitle_mean_plus2_pp')
+    if plus2 is None:
+        out['note'] = 'sim payload carries no sensitivity — re-run /season-sim'
+        return out
+    if remaining_weeks <= 0:
+        out['note'] = 'no remaining weeks'
+        return out
+    per_week = ros_fp_delta / remaining_weeks
+    out['dtitle_pp'] = (per_week / 2.0) * plus2
+    out['status'] = 'linearized_v1'
+    return out
+
+
 __all__ = ['SEASON_SIM_JSON', 'load_payload', 'win_value', 'equity',
-           'annotate', 'banner', 'STALE_PERIOD_HARD']
+           'annotate', 'banner', 'STALE_PERIOD_HARD', 'dtitle_for_ros_delta']

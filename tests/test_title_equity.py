@@ -123,11 +123,26 @@ def test_empty_curve_is_handled():
     assert wv["dtitle_pp"] is None and wv["status"] == "unavailable"
 
 
-def test_no_neighbours_to_interpolate_from():
+def test_a_single_neighbour_is_extrapolation_and_is_refused():
+    """REVERSED 2026-08-14. This test used to assert "a single neighbour is
+    still usable" — and that assertion was the defect, not a guard against it.
+
+    With one neighbour there is nothing to interpolate BETWEEN; the result is
+    whatever that lone row says, projected an arbitrary distance. Live, the
+    curve covered [19, 20] while the board asked for periods 21/22/23 (playoff
+    ROUNDS), so every playoff period was assigned period 20's regular-season
+    weight of 0.30pp and labelled `interpolated`. Regular-season and playoff win
+    values sit on opposite sides of a regime boundary; one cannot estimate the
+    other at any distance.
+
+    Interior holes still interpolate (see the test above). See
+    tests/test_title_equity_extrapolation.py for the full contract.
+    """
     pay = _payload(rows=((15, 2.0),))
     wv = TE.win_value(99, payload=pay)
-    # a single neighbour is still usable; the failure case is none at all
-    assert wv["status"] == "interpolated"
+    assert wv["status"] == "out_of_range"
+    assert wv["dtitle_pp"] is None
+    assert "extrapolat" in wv["note"].lower()
     pay["josh"]["value_of_win_curve"] = [{"period": 15, "dtitle_pp": None}]
     wv2 = TE.win_value(99, payload=pay)
     assert wv2["dtitle_pp"] is None
