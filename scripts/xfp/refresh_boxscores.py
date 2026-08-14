@@ -7,7 +7,7 @@ typically lags 1-2 days.
 
 Counting stats → BrownU FP:
   SP FP = K + IP*3.3 − H − 2*ER − BB − HBP
-  RP FP = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 2*HLD
+  RP FP = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 3*HLD
   H FP  = R + TB + RBI + BB + HBP + SB − K
 
 Outputs (cumulative, deduped by game_pk + mlbam_id):

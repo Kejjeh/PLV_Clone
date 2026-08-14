@@ -18,7 +18,7 @@ Per row:
       HITTER  brownu_fp = R + TB + RBI + BB + HBP + SB - SO
               (TB derived: H + 2B + 2*3B + 3*HR)
       PITCHER brownu_fp_sp = SO + IP*3.3 - H - 2*ER - BB - HBP
-              brownu_fp_rp = brownu_fp_sp + 5*SV + 2*HLD
+              brownu_fp_rp = brownu_fp_sp + 5*SV + 3*HLD
   - keeps ALL raw payload columns (projected PA and IP especially —
     playing time is the prize).
 
@@ -162,7 +162,9 @@ def process(rows: list, stats: str) -> tuple[pd.DataFrame, float]:
         base = (_num(df, 'SO') + ip.fillna(0) * 3.3 - _num(df, 'H')
                 - 2 * _num(df, 'ER') - _num(df, 'BB') - _num(df, 'HBP'))
         df['brownu_fp_sp'] = base
-        df['brownu_fp_rp'] = base + 5 * _num(df, 'SV') + 2 * _num(df, 'HLD')
+        from plv_clone.fantasy.scoring import DEFAULT as _SC
+        df['brownu_fp_rp'] = (base + _SC.sv * _num(df, 'SV')
+                              + _SC.hd * _num(df, 'HLD'))
         gs = _num(df, 'GS')
         df['brownu_fp_per_start'] = (base / gs).where(gs > 0)
         g = _num(df, 'G')

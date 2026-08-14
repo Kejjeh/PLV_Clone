@@ -29,7 +29,7 @@ Two subcommands
 Scoring (BrownU):
   H  FP/game = R + TB + RBI + BB + HBP + SB - K          (all games, PA >= 1)
   SP FP/start = K + IP*3.3 - H - 2*ER - BB - HBP         (starts only)
-  RP FP/app   = SP formula + 5*SV + 2*HLD                (relief apps only)
+  RP FP/app   = SP formula + 5*SV + 3*HLD                (relief apps only)
 
 Definitions
   horizon=game : unit = game/start/appearance. sd_fp_per_unit ==
@@ -294,7 +294,8 @@ def _game_rows(rec):
                   - _f(g, 'hits') - 2 * _f(g, 'earnedRuns')
                   - _f(g, 'baseOnBalls') - _f(g, 'hitBatsmen'))
             if role == 'RP':
-                fp += 5 * _f(g, 'saves') + 2 * _f(g, 'holds')
+                from plv_clone.fantasy.scoring import DEFAULT as _SC
+                fp += _SC.sv * _f(g, 'saves') + _SC.hd * _f(g, 'holds')
             rows.append((d, fp, 1.0))
     if not rows:
         return None

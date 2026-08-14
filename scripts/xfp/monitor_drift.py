@@ -21,6 +21,8 @@ import numpy as np
 import pandas as pd
 import joblib
 
+from plv_clone.fantasy.scoring import pitcher_fp
+
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
@@ -165,9 +167,10 @@ def check_rprs2(report_lines):
             return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
         return float(v)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
-    cnt_df['fp_actual'] = (cnt_df['strikeOuts'] + cnt_df['ip']*3.3 + cnt_df['saves']*5
-                           + cnt_df['holds']*2 - cnt_df['baseOnBalls'] - 2*cnt_df['earnedRuns']
-                           - cnt_df['hits'] - cnt_df['hitByPitch'])
+    cnt_df['fp_actual'] = pitcher_fp(
+        k=cnt_df['strikeOuts'], ip=cnt_df['ip'], h=cnt_df['hits'],
+        er=cnt_df['earnedRuns'], bb=cnt_df['baseOnBalls'],
+        hbp=cnt_df['hitByPitch'], sv=cnt_df['saves'], hld=cnt_df['holds'])
     # We compare projected FULL-YEAR FP vs PROJECTED-OUT actual (linear extrapolation).
     # Today is ~22% into season; simple extrapolation: full = actual / 0.22
     elapsed_frac = max((pd.Timestamp(date.today()) - pd.Timestamp('2026-03-26')).days / 185, 0.05)

@@ -14,7 +14,7 @@ Role classification (saves-focused per user spec):
   - 'long_low' : G < 30 (low-leverage / spot)
 
 Fantasy points formula (user's ESPN scoring):
-  FP = K + IP*3.3 + SV*5 + HLD*2 - BB - 2*ER - H - HBP
+  FP = K + IP*3.3 + SV*5 + HLD*3 - BB - 2*ER - H - HBP
 
 Output: data/research/xfp_cache/relievers_multiyr_2018_2026.csv
 """
@@ -24,6 +24,8 @@ from pathlib import Path
 import warnings
 import numpy as np
 import pandas as pd
+
+from plv_clone.fantasy.scoring import pitcher_fp
 
 warnings.filterwarnings('ignore')
 
@@ -41,9 +43,13 @@ SWSTR_DESC = {'swinging_strike','swinging_strike_blocked','foul_tip','missed_bun
 MIN_G = 20
 MAX_GS = 5
 
-# Scoring (user's ESPN)
+# Scoring (user's ESPN) — delegate to the canonical seam rather than inlining
+# the weights. This file builds rprs2's TRAINING data, so a drifted constant
+# here silently mis-trains the RP model. The HLD weight was wrong (2 vs the
+# live league's 3) from before 2026-08-12 precisely because it was hardcoded
+# in ~6 places; plv_clone.fantasy.scoring is the single source of truth.
 def fp_from(k, ip, sv, hld, bb, er, h, hbp):
-    return k + ip*3.3 + sv*5 + hld*2 - bb - 2*er - h - hbp
+    return pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp, sv=sv, hld=hld)
 
 
 def classify_role(g, gs, sv, svo, hld) -> str:
@@ -189,9 +195,13 @@ def build_year(year: int) -> pd.DataFrame:
                           axis=1)
     print(f'  RP-eligible (G≥{MIN_G}, GS≤{MAX_GS}): {len(rp)}')
 
-    # Compute FP from counting stats
-    rp['fp'] = (rp['k'] + rp['ip']*3.3 + rp['sv']*5 + rp['hld']*2
-                - rp['bb'] - 2*rp['er'] - rp['h'] - rp['hbp']).round(2)
+    # Compute FP from counting stats. Vectorized via the canonical weights —
+    # NOT literals: this is the rprs2 TRAINING TARGET, and it silently carried
+    # HLD=2 through the 2026-08-12 holds correction because the fix only
+    # touched the fp_from() helper above (which this line bypasses).
+    rp['fp'] = pitcher_fp(k=rp['k'], ip=rp['ip'], h=rp['h'], er=rp['er'],
+                          bb=rp['bb'], hbp=rp['hbp'], sv=rp['sv'],
+                          hld=rp['hld']).round(2)
     rp['fp_per_g'] = (rp['fp'] / rp['g'].replace(0, np.nan)).round(3)
     rp['fp_per_ip'] = (rp['fp'] / rp['ip'].replace(0, np.nan)).round(3)
     rp['k_pct'] = (rp['k'] / rp['tbf_api'].replace(0, np.nan)).round(4)

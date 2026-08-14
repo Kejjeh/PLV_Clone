@@ -61,10 +61,14 @@ def _ip_thirds(ip) -> float:
 
 
 def _pitch_fp(s: dict) -> float:
-    return (s.get('strikeOuts', 0) + _ip_thirds(s.get('inningsPitched', 0)) * 3.3
-            - s.get('hits', 0) - 2 * s.get('earnedRuns', 0)
-            - s.get('baseOnBalls', 0) - s.get('hitBatsmen', 0)
-            + 5 * s.get('saves', 0) + 2 * s.get('holds', 0))
+    # Weights come from plv_clone.fantasy.scoring, never literals — this lens
+    # silently desynced from the league when holds went 2 -> 3 (2026-08-12).
+    from plv_clone.fantasy.scoring import pitcher_fp
+    return pitcher_fp(k=s.get('strikeOuts', 0),
+                      ip=_ip_thirds(s.get('inningsPitched', 0)),
+                      h=s.get('hits', 0), er=s.get('earnedRuns', 0),
+                      bb=s.get('baseOnBalls', 0), hbp=s.get('hitBatsmen', 0),
+                      sv=s.get('saves', 0), hld=s.get('holds', 0))
 
 
 def _hit_fp(s: dict) -> float:

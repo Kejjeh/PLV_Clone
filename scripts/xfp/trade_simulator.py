@@ -6,7 +6,7 @@ using real historical statcast data + league scoring formulas.
 
 Hitter FP = TB + R + RBI + BB + HBP + SB − K (K = −1 in BrownU)
 SP  FP    = K + IP*3.3 − H − 2*ER − BB − HBP
-RP  FP    = K + IP*3.3 + SV*5 + HLD*2 − BB − 2*ER − H − HBP
+RP  FP    = K + IP*3.3 + SV*5 + HLD*3 − BB − 2*ER − H − HBP
 
 The R and RBI come from PA-event flow (post_bat_score − bat_score). SB
 isn't tracked per PA in statcast — use the year-aggregate sb_per_pa rate

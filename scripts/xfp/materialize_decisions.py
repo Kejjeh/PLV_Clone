@@ -263,7 +263,7 @@ def _rp_actuals_for_window(
     """Return (n_appearances, fp_per_g) for the RP over the window.
 
     Uses LeagueScoring.score_pitcher_relief (canonical BrownU scorer,
-    includes 5*SV + 2*HLD). Filters to gamesStarted==0.
+    includes 5*SV + 3*HLD). Filters to gamesStarted==0.
     """
     season = window_start.year
     if season == 2020:

@@ -12,6 +12,7 @@ from pathlib import Path
 import pandas as pd
 import numpy as np
 
+from plv_clone.fantasy.scoring import pitcher_fp
 from plv_clone.paths import CACHE, OUTPUTS as OUT
 
 
@@ -25,13 +26,14 @@ def main():
     rel = rel.dropna(subset=['team_abbr', 'year'])
     rel = rel[rel['ip_to'] >= 5]
 
-    # Compute RP FP from raw stats (formula: K + IP*3.3 + SV*5 + HLD*2 - BB - 2*ER - H - HBP)
-    # item 13: vectorized — owner is scoring.pitcher_fp scalar; kept inline for perf
-    rel['rp_fp_full'] = (
-        rel['k_to'].fillna(0) + rel['ip_to'].fillna(0) * 3.3
-        + rel['sv_to'].fillna(0) * 5 + rel['hld_to'].fillna(0) * 2
-        - rel['bb_to'].fillna(0) - 2 * rel['er_to'].fillna(0)
-        - rel['h_to'].fillna(0) - rel['hbp_to'].fillna(0)
+    # RP FP from raw stats. pitcher_fp is element-wise over Series, so the
+    # canonical weights come along for free — the previous inline literals
+    # drifted through the 2026-08-12 holds 2->3 correction undetected.
+    rel['rp_fp_full'] = pitcher_fp(
+        k=rel['k_to'].fillna(0), ip=rel['ip_to'].fillna(0),
+        h=rel['h_to'].fillna(0), er=rel['er_to'].fillna(0),
+        bb=rel['bb_to'].fillna(0), hbp=rel['hbp_to'].fillna(0),
+        sv=rel['sv_to'].fillna(0), hld=rel['hld_to'].fillna(0),
     )
 
     agg = rel.groupby(['team_abbr', 'year'], as_index=False).agg(

@@ -290,8 +290,10 @@ def build_year(year: int) -> pd.DataFrame:
             merged['k_to'] + merged['ip_to']*3.3 - merged['bb_to']
             - 2*merged['er_to'] - merged['h_to'] - merged['hbp_to']
         ).round(1)
+        # Role bonus from the canonical weights (holds went 2 -> 3, 2026-08-12).
+        from plv_clone.fantasy.scoring import DEFAULT as _SC
         merged['fp_with_role_to'] = (
-            merged['fp_skill_to'] + 5*merged['sv_to'] + 2*merged['hld_to']
+            merged['fp_skill_to'] + _SC.sv * merged['sv_to'] + _SC.hd * merged['hld_to']
         ).round(1)
 
         merged['year'] = year
@@ -317,6 +319,15 @@ def attach_lag_and_target(df: pd.DataFrame, multiyr: pd.DataFrame) -> pd.DataFra
     df['role_closer_lag1'] = (df['role_lag1'] == 'closer').astype(int)
     df['role_setup_lag1']  = (df['role_lag1'] == 'setup').astype(int)
     df['role_middle_lag1'] = (df['role_lag1'] == 'middle').astype(int)
+    # Prior-year usage RATES. rprs2 consumes sv_per_g_lag1 / hld_per_g_lag1
+    # (rprs2.py RPRS2_FEATS), not the raw counts above — the two files had
+    # drifted, so the pipeline only worked against a stale on-disk CSV built
+    # by an older version of this script and died the moment it was rebuilt
+    # (found 2026-08-14). Rates, not counts: a closer and a middle reliever
+    # can share a save total at very different appearance counts.
+    _g_lag = df['g_lag1'].replace(0, np.nan)
+    df['sv_per_g_lag1']  = df['sv_lag1'] / _g_lag
+    df['hld_per_g_lag1'] = df['hld_lag1'] / _g_lag
 
     # Year-T target: full-year FP from multiyr
     target = multiyr[['pitcher','year','fp']].rename(columns={'fp':'fp_year_total'})

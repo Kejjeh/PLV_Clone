@@ -19,7 +19,7 @@ Sources:
 BrownU scoring:
   HIT  FP/g  = R + TB + RBI + BB + HBP + SB - K
   SP   FP/st = K + IP*3.3 - H - 2*ER - BB - HBP
-  RP   FP/g  = K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 2*HLD
+  RP   FP/g  = K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 3*HLD
 
 Run:  python scripts/xfp/build_historical_panel.py
 """

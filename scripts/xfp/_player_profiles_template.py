@@ -3159,7 +3159,7 @@ const COL_TOOLTIPS = {
   sv: 'Saves',
   hld: 'Holds. NOTE: anti-signal for forward RP FP (half as sticky as saves, fwd −.08) — never weight holds like saves when projecting.',
   ip_per_appearance: 'Innings per outing — BULK_IP rating substrate',
-  fp_per_g: 'Fantasy points per game appearance: (K+IP*3.3−H−2*ER−BB−HBP+5*SV+2*HLD) / G',
+  fp_per_g: 'Fantasy points per game appearance: (K+IP*3.3−H−2*ER−BB−HBP+5*SV+3*HLD) / G',
   BATTED_BALL: 'Batted-ball domain 20-80: 0.50 GB% + 0.50 BULK_IP — RP only. Forward FP ~ZERO (2026-07-04) — excluded from FPwt.',
   BULK_IP: 'Multi-inning capacity 20-80 — IP per appearance',
   VELO: 'Average fastball velocity 20-80',
