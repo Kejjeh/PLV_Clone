@@ -19,9 +19,33 @@ Hence: prospective ledger, settled on realized outcomes.
   to data/research/validation_runs/overlay_prospective/predictions_{date}.csv
   containing, per player: headline pace-forward RoS PA-based total AND the
   diagnostic overlay total (ros_overlay_diag), plus return_date used.
-- Cohort: players whose snapshot-day source was `il_return_overlay` (i.e., on
-  IL with an ESPN return date at prediction time). First eligible snapshot per
-  player-stint is the scored one.
+- Cohort: rows with `bucket == 'H'` AND `vol_source == 'il_return_overlay'`
+  (i.e., a hitter on IL with an ESPN return date at prediction time). First
+  eligible snapshot per player-stint is the scored one.
+
+### Schema clarification, 2026-08-14 (pre-outcome, no gate changed)
+
+The cohort was originally written as "snapshot-day source was
+`il_return_overlay`", and the board wrote that value into a column named
+`qual`. When SP rows joined the same ledger, `qual` held the rp3
+`data_quality_tag` (`marcel_il`, `data_driven_full`) — a MODEL-quality label,
+not a VOLUME-construction label, in the same column of the same file. Nothing
+broke loudly; the filter still selected only hitters. But a pre-registered
+ledger that cannot be filtered unambiguously is precisely what this document's
+schema check exists to prevent.
+
+An explicit `vol_source` column now carries the volume construction on every
+row regardless of bucket (`il_return_overlay` / `model_passthrough` /
+`pace_forward_sp_volume` / `no_sp_volume`), and the cohort keys on it. `qual`
+keeps its per-bucket model meaning.
+
+The 2026-08-14 snapshot was rewritten with the corrected schema; the original
+is preserved beside it as `predictions_2026-08-14.csv.superseded-schema-incomplete`.
+This is permitted under "no revision after outcomes exist" because it happened
+the same day the snapshot was written, with zero elapsed outcome time — the
+gate, the metric, and the cohort definition are unchanged, and only the column
+the cohort is read from was disambiguated. `tests/test_overlay_ledger_schema.py`
+now enforces the schema so a future snapshot cannot silently regress.
 
 ## Primary metric & gate (locked now)
 
