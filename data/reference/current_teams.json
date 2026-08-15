@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-14",
+ "as_of": "2026-08-15",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -823,6 +823,12 @@
    "abbr": "SEA",
    "name": "Brennen Davis",
    "pos": "CF"
+  },
+  "801126": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Brock Rodden",
+   "pos": "2B"
   },
   "693433": {
    "team": "Seattle Mariners",
@@ -2072,16 +2078,16 @@
    "name": "Logan O'Hoppe",
    "pos": "C"
   },
-  "681168": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Luis Curvelo",
-   "pos": "P"
-  },
   "669022": {
    "team": "Texas Rangers",
    "abbr": "TEX",
    "name": "MacKenzie Gore",
+   "pos": "P"
+  },
+  "594835": {
+   "team": "Texas Rangers",
+   "abbr": "TEX",
+   "name": "Marco Gonzales",
    "pos": "P"
   },
   "680737": {
@@ -2449,12 +2455,6 @@
    "abbr": "MIN",
    "name": "Alan Roden",
    "pos": "RF"
-  },
-  "656577": {
-   "team": "Minnesota Twins",
-   "abbr": "MIN",
-   "name": "Alex Jackson",
-   "pos": "C"
   },
   "702193": {
    "team": "Minnesota Twins",
@@ -3344,11 +3344,11 @@
    "name": "Huascar Brazobán",
    "pos": "P"
   },
-  "697812": {
+  "668670": {
    "team": "Chicago White Sox",
    "abbr": "CWS",
-   "name": "Joe Rock",
-   "pos": "P"
+   "name": "Jake Rogers",
+   "pos": "C"
   },
   "663698": {
    "team": "Chicago White Sox",
@@ -3822,7 +3822,7 @@
    "team": "New York Yankees",
    "abbr": "NYY",
    "name": "Ben Rice",
-   "pos": "1B"
+   "pos": "DH"
   },
   "690440": {
    "team": "New York Yankees",

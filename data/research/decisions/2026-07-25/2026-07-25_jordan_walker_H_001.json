@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 0.75,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-25_jordan_walker_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "POWER_HITTER",
     "archetype_overall": 64,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 691023,
   "player_name": "Jordan Walker",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "archetype_breakout",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-15",
+  "settlement": {
+    "actual_fp_per_unit": 0.2465753424657534,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.5421619796929542,
+    "proj_units_note": "native",
+    "residual": -0.2955866372272008,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-25",
   "verdict_top": "BUY"
 }
