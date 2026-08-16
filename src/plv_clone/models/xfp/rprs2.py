@@ -39,6 +39,17 @@ Unit note (rest-of-season is NOT mis-scaled — verified 2026-06-11):
   Production already converts to RoS correctly, so NO production change is
   warranted here. (See the comment at the `xfp_ros` assignment below.)
 
+Ranking-layer fix (issue #9, fixed 2026-08-16):
+  `xfp_ros` itself was always correct (see above), but `rank` /
+  `replacement_xfp` / `replacement_delta` / `signal` were computed off
+  `xfp_full_year` — which INCLUDES banked FP — not off `xfp_ros`. Net effect:
+  an RP who missed time read as a false 'drop' regardless of forward outlook
+  (e.g. Pagán, 10 SV as CIN's current closer, ranked below Weaver, a low-SV
+  setup man, purely because Pagán's injury absence was baked into his total).
+  Fixed by `assign_ranking_columns()` below, which sorts/replaces on
+  `xfp_ros`/`xfp_ros_p25`/`xfp_ros_p75`. `xfp_full_year` remains in the
+  output CSV as a season-to-date diagnostic only — never the ranking basis.
+
 ADR-0001: this module owns its own fit_and_project orchestration. The shared
 `engine.py` is a toolkit composed at load-bearing steps, not an orchestrator.
 """
@@ -241,6 +252,39 @@ def train_final(df, feats):
         filter_fn=lambda d: d['g_to'] >= EVAL_G_MIN)
 
 
+def assign_ranking_columns(valid: pd.DataFrame, replacement_rank: int) -> pd.DataFrame:
+    """Compute replacement_xfp / replacement_delta / signal / rank off
+    `xfp_ros` — the genuine forward figure — not `xfp_full_year`, which
+    includes FP already banked this season. Ranking off xfp_full_year makes
+    the decision-facing columns read as season-to-date accounting instead of
+    a rest-of-season call: an RP who missed time reads as a false 'drop' no
+    matter his forward outlook, and a heavily-used healthy arm can read as a
+    false 'hold' even with a weak forward projection. See GitHub issue #9.
+    `xfp_full_year` is retained in the output CSV as a diagnostic only.
+    """
+    sorted_by_ros = valid.sort_values('xfp_ros', ascending=False).reset_index(drop=True)
+    if len(sorted_by_ros) >= replacement_rank:
+        repl = float(sorted_by_ros['xfp_ros'].iloc[replacement_rank - 1])
+    else:
+        repl = float(sorted_by_ros['xfp_ros'].median())
+    valid['replacement_xfp'] = round(repl, 1)
+    valid['replacement_delta'] = (valid['xfp_ros'] - repl).round(1)
+
+    _rep = valid['replacement_xfp']
+    valid['signal'] = np.select(
+        [
+            valid['replacement_delta'].isna() | _rep.isna(),
+            valid['xfp_ros_p25'].notna() & (valid['xfp_ros_p25'] > _rep),
+            valid['xfp_ros_p75'].notna() & (valid['xfp_ros_p75'] < _rep),
+        ],
+        ['hold', 'add', 'drop'],
+        default='hold',
+    )
+    valid = valid.sort_values('xfp_ros', ascending=False).reset_index(drop=True)
+    valid['rank'] = valid.index + 1
+    return valid
+
+
 def main():
     print('=== xfp_rprs2_pipeline (RoS RP + role-usage features) ===')
     rolling = pd.read_csv(ROLLING_CSV)
@@ -409,29 +453,10 @@ def main():
     valid['xfp_ros_p25'] = (valid['xfp_p25'] - valid['fp_actual_2026']).round(1).clip(lower=0)
     valid['xfp_ros_p75'] = (valid['xfp_p75'] - valid['fp_actual_2026']).round(1)
 
-    sorted_by_total = valid.sort_values('xfp_full_year', ascending=False).reset_index(drop=True)
-    if len(sorted_by_total) >= REPLACEMENT_RANK_RP:
-        repl = float(sorted_by_total['xfp_full_year'].iloc[REPLACEMENT_RANK_RP - 1])
-    else:
-        repl = float(sorted_by_total['xfp_full_year'].median())
-    valid['replacement_xfp'] = round(repl, 1)
-    valid['replacement_delta'] = (valid['xfp_full_year'] - repl).round(1)
-
-    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
-    # byte-identical vs the row-wise signal closure; NaN comparisons match
-    # row-wise semantics, NaN > x = False)
-    _rep = valid['replacement_xfp']
-    valid['signal'] = np.select(
-        [
-            valid['replacement_delta'].isna() | _rep.isna(),
-            valid['xfp_p25'].notna() & (valid['xfp_p25'] > _rep),
-            valid['xfp_p75'].notna() & (valid['xfp_p75'] < _rep),
-        ],
-        ['hold', 'add', 'drop'],
-        default='hold',
-    )
-    valid = valid.sort_values('xfp_full_year', ascending=False).reset_index(drop=True)
-    valid['rank'] = valid.index + 1
+    # rank / replacement_xfp / replacement_delta / signal are forward-looking
+    # (xfp_ros-based) as of the issue #9 fix — xfp_full_year is retained below
+    # as a season-to-date diagnostic only, not the ranking basis.
+    valid = assign_ranking_columns(valid, REPLACEMENT_RANK_RP)
 
     bundle = {
         'pipeline': pipe,
