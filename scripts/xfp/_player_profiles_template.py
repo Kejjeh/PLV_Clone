@@ -1237,6 +1237,62 @@ function snapshotDatesForYear(snaps, year) {
   return [...new Set(snaps.filter(r => r.year === year).map(r => r.date))].sort();
 }
 
+// ── Plotly chart theming (issue #7 item 2) ────────────────────────────────
+// The light/dark toggle (dashboard_chrome.theme_boot_js) flips
+// documentElement's data-theme attribute in place, no page reload — but
+// Plotly draws to canvas, so its colors can't be plain CSS `var(--x)`
+// strings the way the rest of the page is themed. Resolve the SAME custom
+// properties via getComputedStyle at render time instead, and re-apply them
+// to already-rendered charts when the toggle fires (see the
+// __xfpToggleTheme wrap in init(), below).
+function _plotlyChartTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  const v = (name, fallback) => {
+    const val = cs.getPropertyValue(name);
+    return val && val.trim() ? val.trim() : fallback;
+  };
+  return {
+    bg:     v('--bg', '#1a1815'),
+    panel:  v('--panel', '#211e1a'),
+    border: v('--border', '#34302a'),
+    text:   v('--text', '#f5f1ea'),
+    accent: v('--accent', '#d97757'),
+  };
+}
+
+// rgba() with alpha for a theme hex color (Plotly legend backgrounds want
+// translucency; CSS custom properties are plain hex, not rgba).
+function _themeRgba(hex, alpha) {
+  const h = hex.replace('#', '');
+  const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// Charts already on screen when the toggle fires need their layout colors
+// re-applied live — Plotly.relayout only touches layout, not traces, so this
+// is cheap and doesn't need to recompute any chart's data.
+const _THEMED_PLOTLY_DIVS = new Set();
+
+function _trackThemedPlotlyDiv(divId) {
+  _THEMED_PLOTLY_DIVS.add(divId);
+}
+
+function _reapplyPlotlyTheme() {
+  const t = _plotlyChartTheme();
+  _THEMED_PLOTLY_DIVS.forEach(divId => {
+    const el = document.getElementById(divId);
+    if (!el || !el.data) return;  // not rendered (e.g. modal chart, modal closed)
+    Plotly.relayout(divId, {
+      paper_bgcolor: t.panel, plot_bgcolor: t.bg,
+      'font.color': t.text,
+      'xaxis.gridcolor': t.border, 'xaxis.zerolinecolor': t.border,
+      'yaxis.gridcolor': t.border, 'yaxis.zerolinecolor': t.border,
+      'legend.font.color': t.text, 'legend.bgcolor': _themeRgba(t.panel, 0.85),
+      'legend.bordercolor': t.border,
+    }).catch(() => {});
+  });
+}
+
 // ── Axis labels (display only) ──────────────────────────────────────────
 const HITTER_AXIS_LABEL = { OVERALL: 'Overall', CONTACT: 'Contact', POWER: 'Power', DISCIPLINE: 'Discipline', SB: 'SB',
   rh3: 'rh3 (xFP/g)', t1_fp_projection: 'Archetype T+1', t2_fp_projection: 'Archetype T+2', fp_per_pa: 'FP/PA (actual)' };
@@ -1693,23 +1749,25 @@ function renderQuadrant(divId, rDispId, rows, xKey, yKey, role, opts) {
     );
   }
 
+  const _pt = _plotlyChartTheme();
   Plotly.react(divId, traces, {
-    paper_bgcolor: '#211e1a', plot_bgcolor: '#1a1815',
-    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    paper_bgcolor: _pt.panel, plot_bgcolor: _pt.bg,
+    font: { color: _pt.text, family: 'IBM Plex Mono, monospace', size: 11 },
     margin: { l: 56, r: 10, t: 10, b: 50 },
-    xaxis: { title: { text: axisLabel[xKey] || xKey, font: { size: 13, color: '#d97757' } },
-             gridcolor: '#34302a', zerolinecolor: '#34302a',
+    xaxis: { title: { text: axisLabel[xKey] || xKey, font: { size: 13, color: _pt.accent } },
+             gridcolor: _pt.border, zerolinecolor: _pt.border,
              range: xRange, tick0: 20, dtick: 10 },
-    yaxis: { title: { text: axisLabel[yKey] || yKey, font: { size: 13, color: '#d97757' } },
-             gridcolor: '#34302a', zerolinecolor: '#34302a',
+    yaxis: { title: { text: axisLabel[yKey] || yKey, font: { size: 13, color: _pt.accent } },
+             gridcolor: _pt.border, zerolinecolor: _pt.border,
              range: yRange, tick0: 20, dtick: 10 },
     shapes, annotations,
     showlegend: true,
-    legend: { font: { size: 10, color: '#f5f1ea', family: 'IBM Plex Mono' },
-              bgcolor: 'rgba(33,30,26,0.85)', bordercolor: '#34302a', borderwidth: 1,
+    legend: { font: { size: 10, color: _pt.text, family: 'IBM Plex Mono' },
+              bgcolor: _themeRgba(_pt.panel, 0.85), bordercolor: _pt.border, borderwidth: 1,
               groupclick: 'togglegroup', tracegroupgap: 8,
               x: 1.02, y: 1 },
   }, { displayModeBar: false, responsive: true });
+  _trackThemedPlotlyDiv(divId);
 
   // Click → modal
   const div = document.getElementById(divId);
@@ -2119,19 +2177,21 @@ function renderStackedArchDist(divId, rows, catMap, catOrder, colorMap, title) {
     type: 'bar',
     marker: { color: colorMap[label] || '#888' },
   }));
+  const _pt = _plotlyChartTheme();
   Plotly.react(divId, traces, {
     barmode: 'stack',
-    paper_bgcolor: '#211e1a', plot_bgcolor: '#1a1815',
-    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
-    title: { text: title, font: { color: '#d97757', family: 'Source Serif 4, serif', size: 16 },
+    paper_bgcolor: _pt.panel, plot_bgcolor: _pt.bg,
+    font: { color: _pt.text, family: 'IBM Plex Mono, monospace', size: 11 },
+    title: { text: title, font: { color: _pt.accent, family: 'Source Serif 4, serif', size: 16 },
              x: 0.02 },
     margin: { l: 60, r: 30, t: 50, b: 50 },
-    xaxis: { gridcolor: '#34302a', tickmode: 'linear', dtick: 1 },
-    yaxis: { gridcolor: '#34302a', title: { text: 'qualified players', font: { size: 11 } } },
-    legend: { font: { size: 9, color: '#f5f1ea', family: 'IBM Plex Mono' },
-              bgcolor: 'rgba(33,30,26,0.85)', bordercolor: '#34302a', borderwidth: 1,
+    xaxis: { gridcolor: _pt.border, tickmode: 'linear', dtick: 1 },
+    yaxis: { gridcolor: _pt.border, title: { text: 'qualified players', font: { size: 11 } } },
+    legend: { font: { size: 9, color: _pt.text, family: 'IBM Plex Mono' },
+              bgcolor: _themeRgba(_pt.panel, 0.85), bordercolor: _pt.border, borderwidth: 1,
               groupclick: 'togglegroup', tracegroupgap: 6 },
   }, { displayModeBar: false, responsive: true });
+  _trackThemedPlotlyDiv(divId);
 }
 
 // ── Boundary glossary ────────────────────────────────────────────────
@@ -2869,15 +2929,17 @@ function renderSnapshotTrajectory(rows, role) {
     { type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50, line:{ color:'#8d8579', dash:'dot', width:1 } },
     { type:'line', xref:'paper', x0:0, x1:1, y0:40, y1:40, line:{ color:'#c1666b', dash:'dot', width:1 } },
   ];
+  const _pt = _plotlyChartTheme();
   Plotly.react('modal-snap', traces, {
-    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
-    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    paper_bgcolor: _pt.panel, plot_bgcolor: _pt.bg,
+    font: { color: _pt.text, family: 'IBM Plex Mono, monospace', size: 11 },
     margin: { l: 50, r: 10, t: 10, b: 50 },
-    xaxis: { gridcolor: '#34302a', type: 'category' },
-    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
+    xaxis: { gridcolor: _pt.border, type: 'category' },
+    yaxis: { gridcolor: _pt.border, range: [20, 80], tick0: 20, dtick: 10 },
     shapes,
-    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono' } },
+    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono', color: _pt.text } },
   }, { displayModeBar: false, responsive: true });
+  _trackThemedPlotlyDiv('modal-snap');
 }
 
 // YoY overlay variant: same chart, but x-axis is day-of-year (1-366) so the
@@ -2928,20 +2990,22 @@ function renderSnapshotTrajectoryYoY(curRows, priorRows, role, curYear, priorYea
     { d: 182, m: 'Jul' }, { d: 213, m: 'Aug' }, { d: 244, m: 'Sep' },
     { d: 274, m: 'Oct' },
   ];
+  const _pt = _plotlyChartTheme();
   Plotly.react('modal-snap', traces, {
-    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
-    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    paper_bgcolor: _pt.panel, plot_bgcolor: _pt.bg,
+    font: { color: _pt.text, family: 'IBM Plex Mono, monospace', size: 11 },
     margin: { l: 50, r: 10, t: 10, b: 50 },
     xaxis: {
-      gridcolor: '#34302a', title: 'Day of season (aligned across years)',
+      gridcolor: _pt.border, title: 'Day of season (aligned across years)',
       tickmode: 'array',
       tickvals: monthStartDOY.map(o => o.d),
       ticktext: monthStartDOY.map(o => o.m),
     },
-    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
+    yaxis: { gridcolor: _pt.border, range: [20, 80], tick0: 20, dtick: 10 },
     shapes,
-    legend: { orientation: 'h', y: -0.18, font: { size: 10, family: 'IBM Plex Mono' } },
+    legend: { orientation: 'h', y: -0.18, font: { size: 10, family: 'IBM Plex Mono', color: _pt.text } },
   }, { displayModeBar: false, responsive: true });
+  _trackThemedPlotlyDiv('modal-snap');
 }
 
 function closeModal() { document.getElementById('modal-bg').classList.remove('open'); }
@@ -3038,15 +3102,17 @@ function renderSparkline(sorted, role) {
     { type:'line', xref:'paper', x0:0, x1:1, y0:50, y1:50, line:{ color:'#8d8579', dash:'dot', width:1 } },
     { type:'line', xref:'paper', x0:0, x1:1, y0:40, y1:40, line:{ color:'#c1666b', dash:'dot', width:1 } },
   ];
+  const _pt = _plotlyChartTheme();
   Plotly.react('modal-spark', traces, {
-    paper_bgcolor: '#1a1815', plot_bgcolor: '#211e1a',
-    font: { color: '#f5f1ea', family: 'IBM Plex Mono, monospace', size: 11 },
+    paper_bgcolor: _pt.panel, plot_bgcolor: _pt.bg,
+    font: { color: _pt.text, family: 'IBM Plex Mono, monospace', size: 11 },
     margin: { l: 50, r: 10, t: 10, b: 35 },
-    xaxis: { gridcolor: '#34302a', tickmode: 'linear', dtick: 1 },
-    yaxis: { gridcolor: '#34302a', range: [20, 80], tick0: 20, dtick: 10 },
+    xaxis: { gridcolor: _pt.border, tickmode: 'linear', dtick: 1 },
+    yaxis: { gridcolor: _pt.border, range: [20, 80], tick0: 20, dtick: 10 },
     shapes,
-    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono' } },
+    legend: { orientation: 'h', y: -0.15, font: { size: 10, family: 'IBM Plex Mono', color: _pt.text } },
   }, { displayModeBar: false, responsive: true });
+  _trackThemedPlotlyDiv('modal-spark');
 }
 
 // ── Search ──────────────────────────────────────────────────────────
@@ -4559,6 +4625,19 @@ function init() {
     overlay.classList.add('hidden');
     setTimeout(() => overlay.remove(), 300);
   }
+
+  // Plotly charts draw to canvas, so the light/dark toggle (defined in
+  // dashboard_chrome.theme_boot_js, runs pre-paint in <head>) can't theme
+  // them via CSS alone. Wrap the existing toggle so any chart already on
+  // screen gets its colors re-applied the moment data-theme flips.
+  if (typeof window.__xfpToggleTheme === 'function' && !window.__xfpToggleTheme._plotlyWrapped) {
+    const _origToggleTheme = window.__xfpToggleTheme;
+    window.__xfpToggleTheme = function () {
+      _origToggleTheme();
+      _reapplyPlotlyTheme();
+    };
+    window.__xfpToggleTheme._plotlyWrapped = true;
+  }
 }
 
 document.addEventListener('DOMContentLoaded', init);
@@ -4605,9 +4684,12 @@ def render_page(payload: dict, external_data_src: str | None = None) -> str:
     from lib.dashboard_chrome import (topnav as _topnav, theme_css as _theme_css,
                                        theme_boot_js as _theme_boot_js,
                                        theme_toggle_html as _theme_toggle)
-    # Plotly charts keep their hardcoded dark canvas (paper/plot_bgcolor) even in
-    # light mode — chart theming is set in JS at plot time and is out of scope for
-    # this pass; the surrounding page themes fully. (v1 compromise, 2026-07-23.)
+    # Plotly charts theme with the page (issue #7 item 2, fixed 2026-08-16):
+    # colors are resolved from the live CSS custom properties via
+    # _plotlyChartTheme() at plot time, and _reapplyPlotlyTheme() re-colors
+    # already-rendered charts when the toggle fires (see JS, __xfpToggleTheme
+    # wrap in init()) — canvas can't read `var(--x)` directly, so this is the
+    # JS-side equivalent of decision_console's CSS-var-driven theming.
     return (HEAD.replace('__THEME_CSS__', _theme_css()).replace('__THEME_BOOT__', _theme_boot_js())
             + '<body>\n'
             + BODY_HEADER.replace('__TOPNAV__PROFILES__', _topnav('player_profiles'))

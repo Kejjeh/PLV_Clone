@@ -201,7 +201,7 @@ function makeEditorialHeat(dark) {
 function SortTh({ col, label, align = 'r', width, sortCol, sortDir, onSort, colors }) {
   const active = sortCol === col;
   return (
-    <th onClick={() => onSort(col)} style={{
+    <th data-col={col} onClick={() => onSort(col)} style={{
       textAlign: align === 'l' ? 'left' : 'right', padding: '8px 8px',
       fontSize: 9, fontWeight: 600, letterSpacing: 1.5, textTransform: 'uppercase',
       fontFamily: MONO, whiteSpace: 'nowrap', minWidth: width,
@@ -213,6 +213,92 @@ function SortTh({ col, label, align = 'r', width, sortCol, sortDir, onSort, colo
     </th>
   );
 }
+
+// ═══ Column show/hide (issue #7 item 1) ═══════════════════════════════════════
+// index.html is a single-file React/Babel app, so the vanilla column_toggle_js
+// (scans a rendered <table data-cols> DOM, fingerprints columns by header
+// LABEL text) has no persistent DOM to scan here — a re-render replaces it.
+// This hook mirrors that contract instead of reusing the scanner: same
+// localStorage key SHAPE (`xfp_cols::{page}::{tableId}`), same lock-first-N
+// idea, but keyed on SortTh's existing `col` prop (already a stable per-
+// column identity — a better key than fingerprinting rendered label text).
+function useHiddenCols(tableKey, lockedCols) {
+  const storageKey = `xfp_cols::index::${tableKey}`;
+  const [hidden, setHidden] = React.useState(() => {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      const arr = raw ? JSON.parse(raw) : [];
+      return new Set(Array.isArray(arr) ? arr.filter(c => !lockedCols.includes(c)) : []);
+    } catch { return new Set(); }
+  });
+  React.useEffect(() => {
+    try { localStorage.setItem(storageKey, JSON.stringify([...hidden])); } catch {}
+  }, [hidden, storageKey]);
+  const toggleCol = (col) => {
+    if (lockedCols.includes(col)) return;
+    setHidden(prev => {
+      const next = new Set(prev);
+      if (next.has(col)) next.delete(col); else next.add(col);
+      return next;
+    });
+  };
+  return [hidden, toggleCol];
+}
+
+// A checkbox popover to drive useHiddenCols. `cols`: [{col, label}], in
+// display order — matches the vanilla dashboards' `.colpick` component
+// (dashboard_chrome.theme_css) in spirit, reimplemented inline here since
+// this page doesn't import the shared vanilla-dashboard CSS.
+function ColumnPicker({ cols, hidden, toggleCol, colors }) {
+  return (
+    <details style={{ position: 'relative', display: 'inline-block', marginLeft: 10 }}>
+      <summary style={{ cursor: 'pointer', color: colors.dim, listStyle: 'none', userSelect: 'none',
+                         padding: '3px 9px', border: `1px solid ${colors.border}`, borderRadius: 3,
+                         display: 'inline-block', fontFamily: MONO, fontSize: 9,
+                         textTransform: 'uppercase', letterSpacing: 1.2 }}>
+        columns {hidden.size > 0 ? `(${cols.length - hidden.size}/${cols.length})` : ''}
+      </summary>
+      <div style={{ position: 'absolute', zIndex: 30, marginTop: 4, background: colors.panel,
+                     border: `1px solid ${colors.border}`, borderRadius: 5, padding: '8px 12px',
+                     maxHeight: '60vh', overflow: 'auto', minWidth: 170,
+                     boxShadow: '0 6px 22px rgba(0,0,0,.35)' }}>
+        {cols.map(({ col, label }) => (
+          <label key={col} style={{ display: 'block', padding: '3px 0', fontFamily: MONO,
+                                     fontSize: 11, color: colors.text, cursor: 'pointer',
+                                     whiteSpace: 'nowrap' }}>
+            <input type="checkbox" checked={!hidden.has(col)}
+                   onChange={() => toggleCol(col)} style={{ marginRight: 8 }} />
+            {label}
+          </label>
+        ))}
+      </div>
+    </details>
+  );
+}
+
+const PROJECTIONS_HIDEABLE_COLS = [
+  { col: 'rosTotalFp',       label: 'Proj FP' },
+  { col: 'rosReplDeltaTotal', label: 'Δ Repl FP' },
+  { col: 'signal',           label: 'Sig' },
+  { col: 'xfpRoS',           label: 'RoS/St' },
+  { col: 'xfpRoSSched',      label: 'Sched' },
+  { col: 'recencyGap',       label: 'L21Δ' },
+  { col: 'gsToDate',         label: 'GS-to' },
+  { col: 'xfpV12',           label: 'xFP' },
+  { col: 'replDelta',        label: 'Δ Repl/St' },
+  { col: 'xfpV11',           label: 'prev' },
+  { col: 'il60Lag1',         label: 'IL60' },
+  { col: 'fpTotal',          label: 'FP Total' },
+  { col: 'delta',            label: 'Δ vs Act' },
+  { col: 'stuffXfp',         label: 'Stuff' },
+  { col: 'ipPremium',        label: 'IP Prem' },
+  { col: 'ipTrend',          label: 'Trend' },
+  { col: 'kPct',             label: 'K%' },
+  { col: 'swstrPct',         label: 'SwStr%' },
+  { col: 'gs',               label: 'GS' },
+  { col: 'fpActual',         label: '2026 FP' },
+  { col: 'roster',           label: 'Own' },
+];
 
 // ═══ Section heading ══════════════════════════════════════════════════════════
 function SectionHeading({ num, label, right, colors }) {
@@ -227,9 +313,12 @@ function SectionHeading({ num, label, right, colors }) {
 }
 
 // ═══ Projections Table ════════════════════════════════════════════════════════
-function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSort, favorites, toggleFavorite, expanded, setExpanded }) {
+function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSort, favorites, toggleFavorite, expanded, setExpanded, hidden }) {
   return (
     <div style={{ overflow: 'auto' }}>
+      {hidden.size > 0 && (
+        <style>{[...hidden].map(c => `[data-col="${c}"] { display: none; }`).join('\n')}</style>
+      )}
       <table style={{ width:'100%', borderCollapse:'collapse', fontVariantNumeric:'tabular-nums' }}>
         <thead>
           <tr style={{ borderBottom: `2px solid ${colors.text}` }}>
@@ -311,7 +400,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                     )}
                   </td>
                   {/* HEADLINE: Projected total RoS FP (= xfpRoS × est remaining starts) */}
-                  <td style={{ padding:'5px 8px', textAlign:'right',
+                  <td data-col="rosTotalFp" style={{ padding:'5px 8px', textAlign:'right',
                                background: editorialHeat(p.rosTotalFp, 100, 350) }}>
                     <span style={{ fontSize:17, fontFamily:SERIF, fontStyle:'italic',
                                    color: p.rosTotalFp != null ? colors.accent : colors.faint,
@@ -320,12 +409,12 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                     </span>
                   </td>
                   {/* Δ Repl FP (total) */}
-                  <td style={dataCell(colors,
+                  <td data-col="rosReplDeltaTotal" style={dataCell(colors,
                       p.rosReplDeltaTotal == null ? colors.faint :
                       p.rosReplDeltaTotal > 0 ? colors.pos : colors.warn)}>
                     {p.rosReplDeltaTotal == null ? '—' : fmtSign(p.rosReplDeltaTotal, 0)}
                   </td>
-                  <td style={{ padding:'5px 6px', textAlign:'center' }}>
+                  <td data-col="signal" style={{ padding:'5px 6px', textAlign:'center' }}>
                     {(() => {
                       const s = p.signal || 'hold';
                       const styles = {
@@ -345,7 +434,7 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                     })()}
                   </td>
                   {/* Per-start RoS rate (with CI bounds) */}
-                  <td style={{ padding:'5px 8px', textAlign:'right',
+                  <td data-col="xfpRoS" style={{ padding:'5px 8px', textAlign:'right',
                                background: editorialHeat(p.xfpRoS, 8, 17) }}>
                     <div style={{ display:'flex', flexDirection:'column', alignItems:'flex-end', lineHeight:1.0 }}>
                       <span style={{ fontSize:13, fontFamily:SERIF, fontStyle:'italic',
@@ -359,61 +448,61 @@ function ProjectionsTable({ rows, colors, editorialHeat, sortCol, sortDir, onSor
                       )}
                     </div>
                   </td>
-                  <td style={dataCell(colors,
+                  <td data-col="xfpRoSSched" style={dataCell(colors,
                       p.xfpRoSSched == null ? colors.faint : colors.text)}>
                     {p.xfpRoSSched == null ? '—' :
                       <span title={p.nextOpp ? `next: ${p.nextOpp}` : ''}>
                         {fmt(p.xfpRoSSched, 2)}
                       </span>}
                   </td>
-                  <td style={dataCell(colors,
+                  <td data-col="recencyGap" style={dataCell(colors,
                       p.recencyGap == null ? colors.faint :
                       p.recencyGap > 0.5 ? colors.pos :
                       p.recencyGap < -0.5 ? colors.warn : colors.dim)}>
                     {p.recencyGap == null ? '—' : fmtSign(p.recencyGap, 1)}
                   </td>
-                  <td style={dataCell(colors, colors.dim)}>{p.gsToDate ?? '—'}</td>
-                  <td style={{ padding:'5px 8px', textAlign:'right' }}>
+                  <td data-col="gsToDate" style={dataCell(colors, colors.dim)}>{p.gsToDate ?? '—'}</td>
+                  <td data-col="xfpV12" style={{ padding:'5px 8px', textAlign:'right' }}>
                     <span style={{ fontSize:13, fontFamily:SERIF, fontStyle:'italic',
                                    color:tierColor, fontVariantNumeric:'tabular-nums' }}>
                       {fmt(p.xfpV12, 2)}
                     </span>
                   </td>
-                  <td style={dataCell(colors,
+                  <td data-col="replDelta" style={dataCell(colors,
                       p.replDelta == null ? colors.faint :
                       p.replDelta > 0 ? colors.pos :
                       colors.warn)}>
                     {p.replDelta == null ? '—' : fmtSign(p.replDelta, 2)}
                   </td>
-                  <td style={dataCell(colors, colors.dim)}>{fmt(p.xfpV11, 2)}</td>
-                  <td style={dataCell(colors, p.il60Lag1 > 0 ? colors.warn : colors.faint)}>
+                  <td data-col="xfpV11" style={dataCell(colors, colors.dim)}>{fmt(p.xfpV11, 2)}</td>
+                  <td data-col="il60Lag1" style={dataCell(colors, p.il60Lag1 > 0 ? colors.warn : colors.faint)}>
                     {p.il60Lag1 > 0 ? p.il60Lag1 : '—'}
                   </td>
-                  <td style={dataCell(colors, p.fpTotal == null ? colors.faint : colors.text)}>
+                  <td data-col="fpTotal" style={dataCell(colors, p.fpTotal == null ? colors.faint : colors.text)}>
                     {p.fpTotal == null ? '—' : fmt(p.fpTotal, 1)}
                   </td>
-                  <td style={dataCell(colors, p.delta == null ? colors.faint : p.delta > 0.5 ? colors.neg : p.delta < -0.5 ? colors.pos : colors.dim)}>
+                  <td data-col="delta" style={dataCell(colors, p.delta == null ? colors.faint : p.delta > 0.5 ? colors.neg : p.delta < -0.5 ? colors.pos : colors.dim)}>
                     {p.delta == null ? '—' : fmtSign(p.delta, 2)}
                   </td>
-                  <td style={dataCell(colors)}>{fmt(p.stuffXfp, 2)}</td>
-                  <td style={dataCell(colors, p.ipPremium > 0.1 ? colors.pos : p.ipPremium < -0.1 ? colors.neg : colors.dim)}>
+                  <td data-col="stuffXfp" style={dataCell(colors)}>{fmt(p.stuffXfp, 2)}</td>
+                  <td data-col="ipPremium" style={dataCell(colors, p.ipPremium > 0.1 ? colors.pos : p.ipPremium < -0.1 ? colors.neg : colors.dim)}>
                     {fmtSign(p.ipPremium, 2)}
                   </td>
-                  <td style={{ padding:'7px 8px', textAlign:'center' }}>
+                  <td data-col="ipTrend" style={{ padding:'7px 8px', textAlign:'center' }}>
                     <span style={{ ...trendStyle, padding:'1px 6px', fontFamily:MONO,
                                    fontSize:9, letterSpacing:1, borderRadius:2 }}>
                       {p.ipTrend}
                     </span>
                   </td>
-                  <td style={dataCell(colors, p.kPct == null ? colors.faint : p.kPct > 0.28 ? colors.accent : colors.text)}>
+                  <td data-col="kPct" style={dataCell(colors, p.kPct == null ? colors.faint : p.kPct > 0.28 ? colors.accent : colors.text)}>
                     {p.kPct == null ? '—' : fmtPct(p.kPct, 1)}
                   </td>
-                  <td style={dataCell(colors, colors.dim)}>{p.swstrPct == null ? '—' : fmtPct(p.swstrPct, 1)}</td>
-                  <td style={dataCell(colors, p.gs == null ? colors.faint : colors.dim)}>{p.gs ?? '—'}</td>
-                  <td style={dataCell(colors, p.fpActual == null ? colors.faint : (p.gs ?? 0) >= 5 ? colors.text : colors.dim)}>
+                  <td data-col="swstrPct" style={dataCell(colors, colors.dim)}>{p.swstrPct == null ? '—' : fmtPct(p.swstrPct, 1)}</td>
+                  <td data-col="gs" style={dataCell(colors, p.gs == null ? colors.faint : colors.dim)}>{p.gs ?? '—'}</td>
+                  <td data-col="fpActual" style={dataCell(colors, p.fpActual == null ? colors.faint : (p.gs ?? 0) >= 5 ? colors.text : colors.dim)}>
                     {(p.gs ?? 0) >= 5 ? fmt(p.fpActual, 2) : '—'}
                   </td>
-                  <td style={{ padding:'7px 8px', textAlign:'right' }}>
+                  <td data-col="roster" style={{ padding:'7px 8px', textAlign:'right' }}>
                     {p.roster === 'mine' ? (
                       <span style={{ padding:'1px 6px', border:`1px solid ${colors.accent}`,
                                      color:colors.accent, fontFamily:MONO, fontSize:9,
@@ -828,6 +917,9 @@ function Dashboard({ dark }) {
   const hasMyTeam = !!(myTeam.teamName && myTeam.pitchers && myTeam.pitchers.length);
   const [activeTab, setActiveTab] = React.useState(hasMyTeam ? 'my-team' : 'projections');
 
+  // Column show/hide (issue #7 item 1) — rank/name locked, never hideable.
+  const [hiddenCols, toggleCol] = useHiddenCols('projections', ['rank', 'name']);
+
   // Favorites — localStorage-backed
   const [favorites, setFavorites] = React.useState(() => {
     try {
@@ -987,11 +1079,15 @@ function Dashboard({ dark }) {
         <>
           <SectionHeading num="I" label="Projections Leaderboard"
             right={`SORTED BY ${sortCol.toUpperCase()} ${sortDir === 'desc' ? '↓' : '↑'}`} colors={colors} />
+          <div style={{ padding:'0 32px 8px', display:'flex', justifyContent:'flex-end' }}>
+            <ColumnPicker cols={PROJECTIONS_HIDEABLE_COLS} hidden={hiddenCols}
+              toggleCol={toggleCol} colors={colors} />
+          </div>
           <div style={{ padding:'0 32px 24px' }}>
             <ProjectionsTable rows={sortedRows} colors={colors} editorialHeat={editorialHeat}
               sortCol={sortCol} sortDir={sortDir} onSort={handleSort}
               favorites={favorites} toggleFavorite={toggleFavorite}
-              expanded={expanded} setExpanded={setExpanded} />
+              expanded={expanded} setExpanded={setExpanded} hidden={hiddenCols} />
             <div style={{ paddingTop:10, fontSize:10, color:colors.dim, fontFamily:MONO,
                           letterSpacing:1, textAlign:'right' }}>
               ↳ CLICK ROW TO EXPAND · ★ TO PIN · CLICK HEADER TO SORT
