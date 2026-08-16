@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-15",
+ "as_of": "2026-08-16",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1038,6 +1038,12 @@
    "team": "Seattle Mariners",
    "abbr": "SEA",
    "name": "Troy Taylor",
+   "pos": "P"
+  },
+  "681890": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Troy Watson",
    "pos": "P"
   },
   "645302": {
@@ -2084,12 +2090,6 @@
    "name": "MacKenzie Gore",
    "pos": "P"
   },
-  "594835": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Marco Gonzales",
-   "pos": "P"
-  },
   "680737": {
    "team": "Texas Rangers",
    "abbr": "TEX",
@@ -2234,6 +2234,12 @@
    "name": "Davis Schneider",
    "pos": "LF"
   },
+  "663662": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Daz Cameron",
+   "pos": "RF"
+  },
   "656302": {
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
@@ -2311,12 +2317,6 @@
    "abbr": "TOR",
    "name": "Kazuma Okamoto",
    "pos": "3B"
-  },
-  "681751": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Lazaro Estrada",
-   "pos": "P"
   },
   "672820": {
    "team": "Toronto Blue Jays",
@@ -4214,12 +4214,6 @@
    "name": "Jeferson Quero",
    "pos": "C"
   },
-  "678225": {
-   "team": "Milwaukee Brewers",
-   "abbr": "MIL",
-   "name": "Jihwan Bae",
-   "pos": "CF"
-  },
   "668941": {
    "team": "Milwaukee Brewers",
    "abbr": "MIL",
@@ -4236,6 +4230,12 @@
    "team": "Milwaukee Brewers",
    "abbr": "MIL",
    "name": "Joey Ortiz",
+   "pos": "SS"
+  },
+  "680716": {
+   "team": "Milwaukee Brewers",
+   "abbr": "MIL",
+   "name": "Jonathan Ornelas",
    "pos": "SS"
   },
   "690986": {
@@ -4418,6 +4418,12 @@
    "name": "Luke Murphy",
    "pos": "P"
   },
+  "605242": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Michael Fulmer",
+   "pos": "P"
+  },
   "545361": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -4525,6 +4531,12 @@
    "abbr": "LAA",
    "name": "Travis d'Arnaud",
    "pos": "C"
+  },
+  "694680": {
+   "team": "Los Angeles Angels",
+   "abbr": "LAA",
+   "name": "Trevor Martin",
+   "pos": "P"
   },
   "623168": {
    "team": "Los Angeles Angels",
