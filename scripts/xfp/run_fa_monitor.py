@@ -862,6 +862,94 @@ def signal_o_rating_arc(fa_sps, fa_hits):
     return results
 
 
+def signal_p_short_hold_churn(league, rp3, rh3, rprs2, is_fa):
+    """Signal P — Short-Hold Churn Re-scan (issue #19).
+
+    Signal D only checks PRIOR-YEAR draft history, missing same-season
+    short-hold churn — a player added and dropped within a day or two
+    gets zero real evaluation (canonical: Louis Varland, added/dropped
+    same day 2026-04-19/20 by the Ligers, claimed by an opponent 8 days
+    later, later rprs2 #4 overall; Bryan Baker, same pattern, never even
+    rostered). This re-checks every player added-then-dropped within 48h
+    by ANY team in the last 30 days against current rp3/rh3/rprs2 rank,
+    waiting 3+ weeks from the churn event so real signal has had time to
+    show, and only surfaces him if he's STILL a free agent.
+
+    Args:
+        league: espn_api League (or a duck-typed stand-in for tests) —
+            must expose .recent_activity(size=...).
+        rp3/rh3/rprs2: projection DataFrames.
+        is_fa: (player_name) -> bool, from load_espn()'s live roster scan.
+    """
+    from datetime import datetime, timedelta, timezone
+
+    now = datetime.now(timezone.utc)
+    lookback_start = now - timedelta(days=30)
+    min_churn_age = now - timedelta(weeks=3)
+
+    try:
+        acts = league.recent_activity(size=300)
+    except Exception as e:
+        print(f"  (signal P: recent_activity unavailable — {e})")
+        return []
+
+    events = []
+    for act in acts:
+        try:
+            when = datetime.fromtimestamp(act.date / 1000, tz=timezone.utc)
+        except Exception:
+            continue
+        if when < lookback_start:
+            continue
+        for team, action, player in act.actions:
+            name = getattr(player, "name", None) or (player if isinstance(player, str) else None)
+            if not name:
+                continue
+            team_name = getattr(team, "team_name", None) or str(team)
+            events.append((team_name, name, action, when))
+
+    adds = [(t, p, w) for t, p, a, w in events if a in ("FA ADDED", "WAIVER ADDED")]
+    drops = [(t, p, w) for t, p, a, w in events if a == "DROPPED"]
+
+    # Earliest qualifying churn (add -> drop within 48h, same team+player).
+    churned: dict[str, datetime] = {}
+    for t, p, add_when in adds:
+        for dt, dp, drop_when in drops:
+            if dt != t or dp != p:
+                continue
+            if not (add_when <= drop_when <= add_when + timedelta(hours=48)):
+                continue
+            if p not in churned or drop_when < churned[p]:
+                churned[p] = drop_when
+
+    results = []
+    for player, churn_when in sorted(churned.items()):
+        if churn_when > min_churn_age:
+            continue  # too recent — real signal hasn't had time to show
+        if not is_fa(player):
+            continue  # rostered again since — not a current pickup
+        rp3_r = _rank_for(player, rp3)
+        rh3_r = _rank_for(player, rh3)
+        rprs2_r = _rank_for(player, rprs2)
+        best = min(rp3_r, rh3_r, rprs2_r)
+        if best > 80:
+            continue
+        model_tag = "rp3" if rp3_r == best else ("rprs2" if rprs2_r == best else "rh3")
+        results.append({
+            "signal": "P",
+            "player": player,
+            "best_rank": best,
+            "model": model_tag,
+            "churned_at": churn_when.date().isoformat(),
+            "priority": "HIGH" if best <= 30 else "MONITOR",
+            "note": (f"{model_tag} #{best}; short-hold churned "
+                     f"{churn_when.date().isoformat()}, still FA"),
+        })
+
+    results.sort(key=lambda x: x["best_rank"])
+    return results
+
+
 _SIG_LABELS = {
     "A": "SP first-start",
     "B": "RP closer/setup",
@@ -875,6 +963,7 @@ _SIG_LABELS = {
     "M": "VELO_SPIKE_RP",
     "N": "MULTI_INNING_BULK_VALUE",
     "O": "RATING_ARC_RISER",
+    "P": "SHORT_HOLD_CHURN_RESCAN",
 }
 
 _RP_NEW_SIGS = {"J", "K", "L", "M", "N"}
@@ -953,8 +1042,8 @@ def print_results(all_results: list[dict]):
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Weekly FA monitor — 11 signals")
-    parser.add_argument("--signals", default="A,B,C,D,E,F,J,K,L,M,N,O",
+    parser = argparse.ArgumentParser(description="Weekly FA monitor — 12 signals")
+    parser.add_argument("--signals", default="A,B,C,D,E,F,J,K,L,M,N,O,P",
                         help="Comma-separated list of signals to run (default: all)")
     parser.add_argument("--high-only", action="store_true",
                         help="print HIGH-priority alerts only (meta-skill "
@@ -1028,6 +1117,10 @@ def main():
     if "O" in active:
         print("Running Signal O (RATING_ARC_RISER — in-season STUFF/CONTACT arc)...")
         all_results += signal_o_rating_arc(fa_sps, fa_hits)
+
+    if "P" in active:
+        print("Running Signal P (SHORT_HOLD_CHURN_RESCAN)...")
+        all_results += signal_p_short_hold_churn(league, rp3, rh3, rprs2, is_fa)
 
     if args.high_only:
         n_all = len(all_results)
