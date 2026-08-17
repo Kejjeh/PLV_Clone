@@ -1,10 +1,26 @@
 {
-  "generated": "2026-08-16",
-  "upgrade_floor_fpp": -0.0324,
+  "generated": "2026-08-17",
+  "upgrade_floor_fpp": -0.0363,
   "hit_upgrade_floor_xwoba": 0.329,
-  "alert_count": 0,
+  "alert_count": 1,
   "hitter_alert_count": 0,
-  "alerts": [],
+  "alerts": [
+    {
+      "name": "Brandon Woodruff",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.066)"
+      ],
+      "gs": 8,
+      "fpp": 0.0296,
+      "fpp_gap": 0.0659,
+      "gsp": 6,
+      "l4": "3/4",
+      "whiff_pct": 22.9,
+      "xwoba_con": 0.333,
+      "rp3_rank": 30
+    }
+  ],
   "hitter_alerts": [],
   "my_active_sp_count": 7
 }

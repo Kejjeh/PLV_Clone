@@ -808,7 +808,7 @@ date,section,metric,segment,value,status,note
 2026-08-03,pipeline_staleness,espn_snapshot_ttl,all,23.0,PASS,oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering)
 2026-08-03,pipeline_staleness,trajectory_endpoint,all,0.0,PASS,max endpoint 2026-08-03 vs file date 2026-08-03 via traj_last_label MM-DD endpoints (gap >3d = frozen 04-25->06-20 trajectory class)
 2026-08-03,pipeline_staleness,golden_stash_leftover,all,0.0,PASS,no .golden_stash dir (nothing stashed)
-2026-08-10,forward_accuracy,window_7d,all,7,INFO,anchor=2026-08-03 fwd_days=7
+2026-08-10,forward_accuracy,window_7d,all,7.0,INFO,anchor=2026-08-03 fwd_days=7
 2026-08-10,forward_accuracy,rh3_spearman_rate_7d,all,0.202,INFO,anchor=2026-08-03 fwd_days=7 n=255 pa_floor=15 (survivorship: conditional on volume)
 2026-08-10,forward_accuracy,rh3_spearman_total_7d,all,0.292,INFO,n=255 rate-model vs fwd TOTAL fp
 2026-08-10,forward_accuracy,rh3_vs_prior_delta_7d,all,0.0835,INFO,n=255 spearman(model)-spearman(prior); >0 = in-season layer earning
@@ -827,7 +827,7 @@ date,section,metric,segment,value,status,note
 2026-08-10,forward_accuracy,rp3_spearman_rate_7d,marcel_il,,INSUFFICIENT,n=1
 2026-08-10,forward_accuracy,rprs2_spearman_total_7d,all,0.179,INFO,anchor=2026-08-03 fwd_days=7 n=100 app_floor=3 proj=RoS-total (rank-only; incl sv/hld)
 2026-08-10,forward_accuracy,rprs2_spearman_rate_7d,all,0.1806,INFO,n=100 vs fwd fp/appearance
-2026-08-10,forward_accuracy,window_14d,all,14,INFO,anchor=2026-07-27 fwd_days=14
+2026-08-10,forward_accuracy,window_14d,all,14.0,INFO,anchor=2026-07-27 fwd_days=14
 2026-08-10,forward_accuracy,rh3_spearman_rate_14d,all,0.252,INFO,anchor=2026-07-27 fwd_days=14 n=312 pa_floor=17 (survivorship: conditional on volume)
 2026-08-10,forward_accuracy,rh3_spearman_total_14d,all,0.4564,INFO,n=312 rate-model vs fwd TOTAL fp
 2026-08-10,forward_accuracy,rh3_vs_prior_delta_14d,all,0.0749,INFO,n=312 spearman(model)-spearman(prior); >0 = in-season layer earning
@@ -846,7 +846,7 @@ date,section,metric,segment,value,status,note
 2026-08-10,forward_accuracy,rp3_spearman_rate_14d,marcel_il,,INSUFFICIENT,n=6
 2026-08-10,forward_accuracy,rprs2_spearman_total_14d,all,0.3286,INFO,anchor=2026-07-27 fwd_days=14 n=181 app_floor=3 proj=RoS-total (rank-only; incl sv/hld)
 2026-08-10,forward_accuracy,rprs2_spearman_rate_14d,all,0.2959,INFO,n=181 vs fwd fp/appearance
-2026-08-10,forward_accuracy,window_21d,all,21,INFO,anchor=2026-07-20 fwd_days=21
+2026-08-10,forward_accuracy,window_21d,all,21.0,INFO,anchor=2026-07-20 fwd_days=21
 2026-08-10,forward_accuracy,rh3_spearman_rate_21d,all,0.2498,INFO,anchor=2026-07-20 fwd_days=21 n=316 pa_floor=25 (survivorship: conditional on volume)
 2026-08-10,forward_accuracy,rh3_spearman_total_21d,all,0.4842,INFO,n=316 rate-model vs fwd TOTAL fp
 2026-08-10,forward_accuracy,rh3_vs_prior_delta_21d,all,0.0583,INFO,n=316 spearman(model)-spearman(prior); >0 = in-season layer earning
@@ -865,7 +865,7 @@ date,section,metric,segment,value,status,note
 2026-08-10,forward_accuracy,rp3_spearman_rate_21d,marcel_il,,INSUFFICIENT,n=3
 2026-08-10,forward_accuracy,rprs2_spearman_total_21d,all,0.3068,INFO,anchor=2026-07-20 fwd_days=21 n=169 app_floor=5 proj=RoS-total (rank-only; incl sv/hld)
 2026-08-10,forward_accuracy,rprs2_spearman_rate_21d,all,0.3125,INFO,n=169 vs fwd fp/appearance
-2026-08-10,forward_accuracy,window_28d,all,28,INFO,anchor=2026-07-13 fwd_days=28
+2026-08-10,forward_accuracy,window_28d,all,28.0,INFO,anchor=2026-07-13 fwd_days=28
 2026-08-10,forward_accuracy,rh3_spearman_rate_28d,all,0.2338,INFO,anchor=2026-07-13 fwd_days=28 n=295 pa_floor=34 (survivorship: conditional on volume)
 2026-08-10,forward_accuracy,rh3_spearman_total_28d,all,0.4635,INFO,n=295 rate-model vs fwd TOTAL fp
 2026-08-10,forward_accuracy,rh3_vs_prior_delta_28d,all,0.0084,INFO,n=295 spearman(model)-spearman(prior); >0 = in-season layer earning
@@ -892,20 +892,20 @@ date,section,metric,segment,value,status,note
 2026-08-10,forward_accuracy,vol_sp_edge_vs_naive_volD31,all,0.0827,INFO,validated 2026-07-09 at +0.100 — watch for decay
 2026-08-10,data_health,il_join_match_rate,all_years,0.2824,PASS,healthy ~0.27-0.32; the 2026-07-09 dead-join bug read 0.0045 (n=31520)
 2026-08-10,data_health,il_join_match_rate,2026,0.2087,PASS,ratio 0.69 vs prior-year same-split-day comparator 0.302 (n=2933); collapse (<0.25x) = dead join
-2026-08-10,data_health,il_grid_coverage,rolling_pitchers,0,PASS,0/178 substrate grid cells absent from IL cache
-2026-08-10,data_health,il_grid_coverage,rolling_hitters,0,PASS,0/178 substrate grid cells absent from IL cache
-2026-08-10,data_health,il_grid_coverage,rolling_relievers,0,PASS,0/178 substrate grid cells absent from IL cache
-2026-08-10,data_health,il_tx_json_freshness,file_mtime,2,PASS,proves the STALE_AFTER_DAYS self-refresh is running (in-season natural cycle ~4d)
-2026-08-10,data_health,il_tx_json_freshness,newest_event,3,PASS,newest IL event 2026-08-07 (WARN-only: ASG break / transaction lulls are legitimate)
+2026-08-10,data_health,il_grid_coverage,rolling_pitchers,0.0,PASS,0/178 substrate grid cells absent from IL cache
+2026-08-10,data_health,il_grid_coverage,rolling_hitters,0.0,PASS,0/178 substrate grid cells absent from IL cache
+2026-08-10,data_health,il_grid_coverage,rolling_relievers,0.0,PASS,0/178 substrate grid cells absent from IL cache
+2026-08-10,data_health,il_tx_json_freshness,file_mtime,2.0,PASS,proves the STALE_AFTER_DAYS self-refresh is running (in-season natural cycle ~4d)
+2026-08-10,data_health,il_tx_json_freshness,newest_event,3.0,PASS,newest IL event 2026-08-07 (WARN-only: ASG break / transaction lulls are legitimate)
 2026-08-10,data_health,ros_opp_xwoba_nan_rate,2026,0.1214,PASS,fraction of 2026 rolling rows with no schedule-strength value pre-fill (n=2933)
-2026-08-10,data_health,ros_cache_split_day_lag,vs_rolling_grid,2,PASS,"rolling 2026 max split_day=137; ros max split_day=135, season day=137"
-2026-08-10,data_health,ros_cache_split_day_lag,vs_calendar,2,PASS,"ros max split_day=135, season day=137 (weekly grid: some lag is normal)"
-2026-08-10,data_health,statcast_max_date_lag_days,all,1,PASS,max date 2026-08-09 (gf bridge should keep this at ~1 day)
-2026-08-10,data_health,boxscore_hitters_lag_days,all,1,PASS,max date 2026-08-09
-2026-08-10,data_health,boxscore_pitchers_lag_days,all,1,PASS,max date 2026-08-09
-2026-08-10,data_health,fg_scrape_silent_fail,fg_pit_2026_current.csv,0,PASS,mtime-based; daily step (0.8)
-2026-08-10,data_health,fg_proj_cache_missing_days_14d,all,0,PASS,missing: none
-2026-08-10,data_health,fg_proj_cache_systems_latest,2026-08-10,8,PASS,8/8 systems; absent: none
+2026-08-10,data_health,ros_cache_split_day_lag,vs_rolling_grid,2.0,PASS,"rolling 2026 max split_day=137; ros max split_day=135, season day=137"
+2026-08-10,data_health,ros_cache_split_day_lag,vs_calendar,2.0,PASS,"ros max split_day=135, season day=137 (weekly grid: some lag is normal)"
+2026-08-10,data_health,statcast_max_date_lag_days,all,1.0,PASS,max date 2026-08-09 (gf bridge should keep this at ~1 day)
+2026-08-10,data_health,boxscore_hitters_lag_days,all,1.0,PASS,max date 2026-08-09
+2026-08-10,data_health,boxscore_pitchers_lag_days,all,1.0,PASS,max date 2026-08-09
+2026-08-10,data_health,fg_scrape_silent_fail,fg_pit_2026_current.csv,0.0,PASS,mtime-based; daily step (0.8)
+2026-08-10,data_health,fg_proj_cache_missing_days_14d,all,0.0,PASS,missing: none
+2026-08-10,data_health,fg_proj_cache_systems_latest,2026-08-10,8.0,PASS,8/8 systems; absent: none
 2026-08-10,data_health,proj_rowcount_delta_7d,rh3,0.0063,PASS,480 rows @ 2026-08-03 -> 483 rows @ 2026-08-10
 2026-08-10,data_health,proj_rowcount_delta_7d,rp3,0.0084,PASS,358 rows @ 2026-08-03 -> 361 rows @ 2026-08-10
 2026-08-10,data_health,proj_rowcount_delta_7d,rprs2,0.0315,PASS,349 rows @ 2026-08-03 -> 360 rows @ 2026-08-10
@@ -918,11 +918,129 @@ date,section,metric,segment,value,status,note
 2026-08-10,data_health,fa_join_coverage,RP,1.0,PASS,292/292 FA RP rows join xfp_rprs2_projections.csv by mlbam; no trailing baseline yet (need 3+ prior days) — absolute floors 0.70/0.40 applied
 2026-08-10,pipeline_staleness,console_data_freshness,all,0.0,PASS,console_data.json vs newest input xfp_rprs2_projections.csv; hours behind (>0 = stale decision console — the 2026-07-18 trap)
 2026-08-10,pipeline_staleness,tri_nightly_freshness,nightly_json,0.1,PASS,freshest triangulate_nightly_2026-08-10.json; age hours (>=26h = nightly not running)
-2026-08-10,pipeline_staleness,tri_nightly_freshness,cards_sidecar,1,PASS,triangulate_nightly_2026-08-10_cards.json present
+2026-08-10,pipeline_staleness,tri_nightly_freshness,cards_sidecar,1.0,PASS,triangulate_nightly_2026-08-10_cards.json present
 2026-08-10,pipeline_staleness,publish_freshness,index,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
 2026-08-10,pipeline_staleness,publish_freshness,matchup,24.4,PASS,hours behind console_data.json (>26h = stuck publish)
 2026-08-10,pipeline_staleness,publish_freshness,triangulate,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
 2026-08-10,pipeline_staleness,publish_freshness,xfp_board,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
 2026-08-10,pipeline_staleness,espn_snapshot_ttl,all,36.0,PASS,oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering)
-2026-08-10,pipeline_staleness,trajectory_endpoint,all,0,PASS,max endpoint 2026-08-10 vs file date 2026-08-10 via traj_last_label MM-DD endpoints (gap >3d = frozen 04-25->06-20 trajectory class)
-2026-08-10,pipeline_staleness,golden_stash_leftover,all,0,PASS,no .golden_stash dir (nothing stashed)
+2026-08-10,pipeline_staleness,trajectory_endpoint,all,0.0,PASS,max endpoint 2026-08-10 vs file date 2026-08-10 via traj_last_label MM-DD endpoints (gap >3d = frozen 04-25->06-20 trajectory class)
+2026-08-10,pipeline_staleness,golden_stash_leftover,all,0.0,PASS,no .golden_stash dir (nothing stashed)
+2026-08-17,forward_accuracy,window_7d,all,7,INFO,anchor=2026-08-10 fwd_days=7
+2026-08-17,forward_accuracy,rh3_spearman_rate_7d,all,0.2083,INFO,anchor=2026-08-10 fwd_days=7 n=241 pa_floor=15 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rh3_spearman_total_7d,all,0.3027,INFO,n=241 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rh3_vs_prior_delta_7d,all,0.0867,INFO,n=241 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rh3_bias_7d,T1_low,0.0074,INFO,n=81 MAE=0.256
+2026-08-17,forward_accuracy,rh3_bias_7d,T2_mid,0.0274,INFO,n=80 MAE=0.258
+2026-08-17,forward_accuracy,rh3_bias_7d,T3_high,0.0119,INFO,n=80 MAE=0.279
+2026-08-17,forward_accuracy,rh3_spearman_rate_7d,C,0.1975,INFO,n=21
+2026-08-17,forward_accuracy,rh3_spearman_rate_7d,non_C,0.2094,INFO,n=220
+2026-08-17,forward_accuracy,rp3_spearman_rate_7d,all,0.4794,INFO,anchor=2026-08-10 fwd_days=7 n=30 start_floor=2 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rp3_spearman_total_7d,all,0.4794,INFO,n=30 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rp3_vs_prior_delta_7d,all,0.2136,INFO,n=30 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rp3_bias_7d,T1_low,-0.2084,INFO,n=10 MAE=4.546
+2026-08-17,forward_accuracy,rp3_bias_7d,T2_mid,0.2607,INFO,n=10 MAE=5.341
+2026-08-17,forward_accuracy,rp3_bias_7d,T3_high,-2.4936,INFO,n=10 MAE=4.999
+2026-08-17,forward_accuracy,rp3_spearman_rate_7d,data_driven,0.4664,INFO,n=27
+2026-08-17,forward_accuracy,rp3_spearman_rate_7d,marcel_il,,INSUFFICIENT,n=3
+2026-08-17,forward_accuracy,rprs2_spearman_total_7d,all,0.1707,INFO,anchor=2026-08-10 fwd_days=7 n=82 app_floor=3 proj=RoS-total (rank-only; incl sv/hld)
+2026-08-17,forward_accuracy,rprs2_spearman_rate_7d,all,0.1695,INFO,n=82 vs fwd fp/appearance
+2026-08-17,forward_accuracy,window_14d,all,14,INFO,anchor=2026-08-03 fwd_days=14
+2026-08-17,forward_accuracy,rh3_spearman_rate_14d,all,0.2625,INFO,anchor=2026-08-03 fwd_days=14 n=310 pa_floor=17 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rh3_spearman_total_14d,all,0.4687,INFO,n=310 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rh3_vs_prior_delta_14d,all,0.0994,INFO,n=310 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rh3_bias_14d,T1_low,-0.0162,INFO,n=104 MAE=0.210
+2026-08-17,forward_accuracy,rh3_bias_14d,T2_mid,0.0389,INFO,n=103 MAE=0.203
+2026-08-17,forward_accuracy,rh3_bias_14d,T3_high,0.0146,INFO,n=103 MAE=0.186
+2026-08-17,forward_accuracy,rh3_spearman_rate_14d,C,0.102,INFO,n=43
+2026-08-17,forward_accuracy,rh3_spearman_rate_14d,non_C,0.2817,INFO,n=267
+2026-08-17,forward_accuracy,rp3_spearman_rate_14d,all,0.2834,INFO,anchor=2026-08-03 fwd_days=14 n=139 start_floor=2 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rp3_spearman_total_14d,all,0.2554,INFO,n=139 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rp3_vs_prior_delta_14d,all,0.1175,INFO,n=139 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rp3_bias_14d,T1_low,-0.5842,INFO,n=47 MAE=4.486
+2026-08-17,forward_accuracy,rp3_bias_14d,T2_mid,-0.7308,INFO,n=46 MAE=5.112
+2026-08-17,forward_accuracy,rp3_bias_14d,T3_high,0.3357,INFO,n=46 MAE=5.101
+2026-08-17,forward_accuracy,rp3_spearman_rate_14d,data_driven,0.281,INFO,n=132
+2026-08-17,forward_accuracy,rp3_spearman_rate_14d,marcel_il,,INSUFFICIENT,n=7
+2026-08-17,forward_accuracy,rprs2_spearman_total_14d,all,0.1815,INFO,anchor=2026-08-03 fwd_days=14 n=178 app_floor=3 proj=RoS-total (rank-only; incl sv/hld)
+2026-08-17,forward_accuracy,rprs2_spearman_rate_14d,all,0.2306,INFO,n=178 vs fwd fp/appearance
+2026-08-17,forward_accuracy,window_21d,all,21,INFO,anchor=2026-07-27 fwd_days=21
+2026-08-17,forward_accuracy,rh3_spearman_rate_21d,all,0.3041,INFO,anchor=2026-07-27 fwd_days=21 n=313 pa_floor=25 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rh3_spearman_total_21d,all,0.506,INFO,n=313 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rh3_vs_prior_delta_21d,all,0.0835,INFO,n=313 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rh3_bias_21d,T1_low,0.0037,INFO,n=105 MAE=0.178
+2026-08-17,forward_accuracy,rh3_bias_21d,T2_mid,0.0386,INFO,n=104 MAE=0.160
+2026-08-17,forward_accuracy,rh3_bias_21d,T3_high,0.0346,INFO,n=104 MAE=0.148
+2026-08-17,forward_accuracy,rh3_spearman_rate_21d,C,0.2637,INFO,n=46
+2026-08-17,forward_accuracy,rh3_spearman_rate_21d,non_C,0.307,INFO,n=267
+2026-08-17,forward_accuracy,rp3_spearman_rate_21d,all,0.3709,INFO,anchor=2026-07-27 fwd_days=21 n=76 start_floor=4 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rp3_spearman_total_21d,all,0.3709,INFO,n=76 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rp3_vs_prior_delta_21d,all,0.168,INFO,n=76 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rp3_bias_21d,T1_low,-0.974,INFO,n=26 MAE=4.649
+2026-08-17,forward_accuracy,rp3_bias_21d,T2_mid,-0.5822,INFO,n=25 MAE=3.923
+2026-08-17,forward_accuracy,rp3_bias_21d,T3_high,-1.1988,INFO,n=25 MAE=4.590
+2026-08-17,forward_accuracy,rp3_spearman_rate_21d,data_driven,0.3717,INFO,n=73
+2026-08-17,forward_accuracy,rp3_spearman_rate_21d,marcel_il,,INSUFFICIENT,n=3
+2026-08-17,forward_accuracy,rprs2_spearman_total_21d,all,0.2839,INFO,anchor=2026-07-27 fwd_days=21 n=169 app_floor=5 proj=RoS-total (rank-only; incl sv/hld)
+2026-08-17,forward_accuracy,rprs2_spearman_rate_21d,all,0.3079,INFO,n=169 vs fwd fp/appearance
+2026-08-17,forward_accuracy,window_28d,all,28,INFO,anchor=2026-07-20 fwd_days=28
+2026-08-17,forward_accuracy,rh3_spearman_rate_28d,all,0.2653,INFO,anchor=2026-07-20 fwd_days=28 n=312 pa_floor=34 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rh3_spearman_total_28d,all,0.5121,INFO,n=312 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rh3_vs_prior_delta_28d,all,0.0599,INFO,n=312 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rh3_bias_28d,T1_low,-0.0089,INFO,n=104 MAE=0.172
+2026-08-17,forward_accuracy,rh3_bias_28d,T2_mid,0.0355,INFO,n=104 MAE=0.137
+2026-08-17,forward_accuracy,rh3_bias_28d,T3_high,0.048,INFO,n=104 MAE=0.135
+2026-08-17,forward_accuracy,rh3_spearman_rate_28d,C,0.0861,INFO,n=44 (position backfilled from latest snapshot)
+2026-08-17,forward_accuracy,rh3_spearman_rate_28d,non_C,0.2915,INFO,n=268 (position backfilled from latest snapshot)
+2026-08-17,forward_accuracy,rp3_spearman_rate_28d,all,0.3023,INFO,anchor=2026-07-20 fwd_days=28 n=125 start_floor=4 (survivorship: conditional on volume)
+2026-08-17,forward_accuracy,rp3_spearman_total_28d,all,0.294,INFO,n=125 rate-model vs fwd TOTAL fp
+2026-08-17,forward_accuracy,rp3_vs_prior_delta_28d,all,0.1827,INFO,n=125 spearman(model)-spearman(prior); >0 = in-season layer earning
+2026-08-17,forward_accuracy,rp3_bias_28d,T1_low,-1.2561,INFO,n=42 MAE=3.701
+2026-08-17,forward_accuracy,rp3_bias_28d,T2_mid,-1.0667,INFO,n=41 MAE=3.937
+2026-08-17,forward_accuracy,rp3_bias_28d,T3_high,-0.5338,INFO,n=42 MAE=4.396
+2026-08-17,forward_accuracy,rp3_spearman_rate_28d,data_driven,0.3308,INFO,n=115
+2026-08-17,forward_accuracy,rp3_spearman_rate_28d,marcel_il,-0.2242,INSUFFICIENT,n=10
+2026-08-17,forward_accuracy,rprs2_spearman_total_28d,all,0.3105,INFO,anchor=2026-07-20 fwd_days=28 n=159 app_floor=7 proj=RoS-total (rank-only; incl sv/hld)
+2026-08-17,forward_accuracy,rprs2_spearman_rate_28d,all,0.3209,INFO,n=159 vs fwd fp/appearance
+2026-08-17,forward_accuracy,vol_h_spearman_volD38,model,0.7473,INFO,anchor=2026-07-10 fwd_days=38 n=402; naive(backward PA pace)=0.657
+2026-08-17,forward_accuracy,vol_h_spearman_volD38,naive,0.6567,INFO,backward season PA-pace comparator
+2026-08-17,forward_accuracy,vol_h_edge_vs_naive_volD38,all,0.0906,INFO,validated 2026-07-09 at +0.074 — watch for decay
+2026-08-17,forward_accuracy,vol_sp_spearman_volD38,model,0.6534,INFO,anchor=2026-07-10 fwd_days=38 n=216
+2026-08-17,forward_accuracy,vol_sp_spearman_volD38,naive,0.5553,INFO,backward season GS-pace comparator
+2026-08-17,forward_accuracy,vol_sp_edge_vs_naive_volD38,all,0.0982,INFO,validated 2026-07-09 at +0.100 — watch for decay
+2026-08-17,data_health,il_join_match_rate,all_years,0.2833,PASS,healthy ~0.27-0.32; the 2026-07-09 dead-join bug read 0.0045 (n=31732)
+2026-08-17,data_health,il_join_match_rate,2026,0.2235,PASS,ratio 0.72 vs prior-year same-split-day comparator 0.309 (n=3145); collapse (<0.25x) = dead join
+2026-08-17,data_health,il_grid_coverage,rolling_pitchers,0,PASS,0/179 substrate grid cells absent from IL cache
+2026-08-17,data_health,il_grid_coverage,rolling_hitters,0,PASS,0/179 substrate grid cells absent from IL cache
+2026-08-17,data_health,il_grid_coverage,rolling_relievers,0,PASS,0/179 substrate grid cells absent from IL cache
+2026-08-17,data_health,il_tx_json_freshness,file_mtime,0,PASS,proves the STALE_AFTER_DAYS self-refresh is running (in-season natural cycle ~4d)
+2026-08-17,data_health,il_tx_json_freshness,newest_event,1,PASS,newest IL event 2026-08-16 (WARN-only: ASG break / transaction lulls are legitimate)
+2026-08-17,data_health,ros_opp_xwoba_nan_rate,2026,0.1227,PASS,fraction of 2026 rolling rows with no schedule-strength value pre-fill (n=3145)
+2026-08-17,data_health,ros_cache_split_day_lag,vs_rolling_grid,2,PASS,"rolling 2026 max split_day=144; ros max split_day=142, season day=144"
+2026-08-17,data_health,ros_cache_split_day_lag,vs_calendar,2,PASS,"ros max split_day=142, season day=144 (weekly grid: some lag is normal)"
+2026-08-17,data_health,statcast_max_date_lag_days,all,1,PASS,max date 2026-08-16 (gf bridge should keep this at ~1 day)
+2026-08-17,data_health,boxscore_hitters_lag_days,all,1,PASS,max date 2026-08-16
+2026-08-17,data_health,boxscore_pitchers_lag_days,all,1,PASS,max date 2026-08-16
+2026-08-17,data_health,fg_scrape_silent_fail,fg_pit_2026_current.csv,0,PASS,mtime-based; daily step (0.8)
+2026-08-17,data_health,fg_proj_cache_missing_days_14d,all,0,PASS,missing: none
+2026-08-17,data_health,fg_proj_cache_systems_latest,2026-08-17,8,PASS,8/8 systems; absent: none
+2026-08-17,data_health,proj_rowcount_delta_7d,rh3,0.0166,PASS,483 rows @ 2026-08-10 -> 491 rows @ 2026-08-17
+2026-08-17,data_health,proj_rowcount_delta_7d,rp3,0.0139,PASS,361 rows @ 2026-08-10 -> 366 rows @ 2026-08-17
+2026-08-17,data_health,proj_rowcount_delta_7d,rprs2,0.0194,PASS,360 rows @ 2026-08-10 -> 367 rows @ 2026-08-17
+2026-08-17,data_health,proj_volume_fill_rate,hitter,1.0,PASS,491/491 rows @ 2026-08-17 (tail-rank players legitimately lack a volume row)
+2026-08-17,data_health,proj_volume_fill_rate,sp,0.7705,PASS,282/366 rows @ 2026-08-17 (tail-rank players legitimately lack a volume row)
+2026-08-17,data_health,collision_team_reachability,all,1.0,PASS,41/41 collision team hints reachable from 30 live ESPN codes
+2026-08-17,data_health,collision_smoke,all,1.0,PASS,12/12 canonical resolver cases
+2026-08-17,data_health,fa_join_coverage,H,1.0,PASS,222/222 FA H rows join xfp_rh3_projections.csv by mlbam; +0.000 vs trailing mean 1.000 (WARN -0.05 / FAIL -0.15)
+2026-08-17,data_health,fa_join_coverage,SP,1.0,PASS,218/218 FA SP rows join xfp_rp3_projections.csv by mlbam; +0.000 vs trailing mean 1.000 (WARN -0.05 / FAIL -0.15)
+2026-08-17,data_health,fa_join_coverage,RP,1.0,PASS,296/296 FA RP rows join xfp_rprs2_projections.csv by mlbam; +0.000 vs trailing mean 1.000 (WARN -0.05 / FAIL -0.15)
+2026-08-17,pipeline_staleness,console_data_freshness,all,0.0,PASS,console_data.json vs newest input xfp_rprs2_projections.csv; hours behind (>0 = stale decision console — the 2026-07-18 trap)
+2026-08-17,pipeline_staleness,tri_nightly_freshness,nightly_json,0.1,PASS,freshest triangulate_nightly_2026-08-17.json; age hours (>=26h = nightly not running)
+2026-08-17,pipeline_staleness,tri_nightly_freshness,cards_sidecar,1,PASS,triangulate_nightly_2026-08-17_cards.json present
+2026-08-17,pipeline_staleness,publish_freshness,index,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
+2026-08-17,pipeline_staleness,publish_freshness,matchup,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
+2026-08-17,pipeline_staleness,publish_freshness,triangulate,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
+2026-08-17,pipeline_staleness,publish_freshness,xfp_board,0.0,PASS,hours behind console_data.json (>26h = stuck publish)
+2026-08-17,pipeline_staleness,espn_snapshot_ttl,all,26.0,PASS,oldest free_agents_2000.pkl age minutes vs TTL 240min (WARN >960min = stale snapshot lingering)
+2026-08-17,pipeline_staleness,trajectory_endpoint,all,0,PASS,max endpoint 2026-08-17 vs file date 2026-08-17 via traj_last_label MM-DD endpoints (gap >3d = frozen 04-25->06-20 trajectory class)
+2026-08-17,pipeline_staleness,golden_stash_leftover,all,0,PASS,no .golden_stash dir (nothing stashed)

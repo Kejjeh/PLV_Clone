@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 0.75,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-27_trent_grisham_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AVERAGE_HITTER",
     "archetype_overall": 60,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 663757,
   "player_name": "Trent Grisham",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "process_upgrade",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-17",
+  "settlement": {
+    "actual_fp_per_unit": 0.52,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 75,
+    "proj_per": 0.5562755916343509,
+    "proj_units_note": "native",
+    "residual": -0.0362755916343509,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-27",
   "verdict_top": "BUY"
 }

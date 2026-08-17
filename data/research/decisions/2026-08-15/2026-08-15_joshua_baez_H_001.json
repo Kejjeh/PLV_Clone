@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "H",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": null,
+    "dpwin_chosen": null,
+    "dpwin_gap": null,
+    "dpwin_rejected": null,
+    "dtitle_equity_chosen": null,
+    "regime": null,
+    "rejected_bucket": null,
+    "rejected_mlbam": null,
+    "rejected_name": null,
+    "source_run_id": "2026-08-14T132148_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-15_joshua_baez_H_001",
+  "executed_at": "2026-08-15T16:16:35",
+  "inputs": {
+    "bucket_source": "resolver",
+    "dropped_name": "Ezequiel Duran",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "2 candidate runs preceded the move, took latest (2026-08-14T132148_7)"
+  },
+  "mlbam_id": 695491,
+  "player_name": "Joshua Baez",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-15",
+  "verdict_top": "SWAP"
+}

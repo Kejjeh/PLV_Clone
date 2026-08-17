@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-16",
+ "as_of": "2026-08-17",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -144,6 +144,12 @@
    "team": "Athletics",
    "abbr": "ATH",
    "name": "Jeffrey Springs",
+   "pos": "P"
+  },
+  "697812": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Joe Rock",
    "pos": "P"
   },
   "683155": {
@@ -3020,12 +3026,6 @@
    "name": "DaShawn Keirsey Jr.",
    "pos": "CF"
   },
-  "664849": {
-   "team": "Atlanta Braves",
-   "abbr": "ATL",
-   "name": "Danny Young",
-   "pos": "P"
-  },
   "800311": {
    "team": "Atlanta Braves",
    "abbr": "ATL",
@@ -3168,6 +3168,12 @@
    "team": "Atlanta Braves",
    "abbr": "ATL",
    "name": "Raisel Iglesias",
+   "pos": "P"
+  },
+  "678061": {
+   "team": "Atlanta Braves",
+   "abbr": "ATL",
+   "name": "Ray Kerr",
    "pos": "P"
   },
   "625643": {
@@ -4640,6 +4646,12 @@
    "name": "Cristian Mena",
    "pos": "P"
   },
+  "642701": {
+   "team": "Arizona Diamondbacks",
+   "abbr": "AZ",
+   "name": "Dennis Santana",
+   "pos": "P"
+  },
   "686753": {
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
@@ -4807,12 +4819,6 @@
    "abbr": "AZ",
    "name": "Nolan Arenado",
    "pos": "3B"
-  },
-  "691769": {
-   "team": "Arizona Diamondbacks",
-   "abbr": "AZ",
-   "name": "Philip Abner",
-   "pos": "P"
   },
   "657044": {
    "team": "Arizona Diamondbacks",
@@ -6512,6 +6518,12 @@
    "name": "Brenan Hanifee",
    "pos": "P"
   },
+  "814430": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "Brett Callahan",
+   "pos": "LF"
+  },
   "572143": {
    "team": "Detroit Tigers",
    "abbr": "DET",
@@ -6721,12 +6733,6 @@
    "abbr": "DET",
    "name": "Thayron Liranzo",
    "pos": "C"
-  },
-  "669360": {
-   "team": "Detroit Tigers",
-   "abbr": "DET",
-   "name": "Trei Cruz",
-   "pos": "CF"
   },
   "700242": {
    "team": "Detroit Tigers",
