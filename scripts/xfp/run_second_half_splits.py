@@ -72,9 +72,14 @@ def _pitch_fp(s: dict) -> float:
 
 
 def _hit_fp(s: dict) -> float:
-    return (s.get('runs', 0) + s.get('totalBases', 0) + s.get('rbi', 0)
-            + s.get('baseOnBalls', 0) + s.get('hitByPitch', 0)
-            + s.get('stolenBases', 0) - s.get('strikeOuts', 0))
+    # Weights come from plv_clone.fantasy.scoring, never literals — same
+    # reasoning as _pitch_fp above (issue #18: this sibling was never
+    # migrated, so a hitter-side league weight tune would silently desync).
+    from plv_clone.fantasy.scoring import hitter_fp
+    return hitter_fp(r=s.get('runs', 0), tb=s.get('totalBases', 0),
+                     rbi=s.get('rbi', 0), bb=s.get('baseOnBalls', 0),
+                     hbp=s.get('hitByPitch', 0), sb=s.get('stolenBases', 0),
+                     k=s.get('strikeOuts', 0))
 
 
 def _pct(n, d):
