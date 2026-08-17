@@ -546,7 +546,8 @@ def resolve_batter_id(
     if sub.empty:
         return None
     if team is not None and "team" in sub.columns:
-        team_sub = sub[sub["team"].str.upper() == team.upper()]
+        tk = team_key(team)
+        team_sub = sub[sub["team"].map(team_key) == tk]
         if not team_sub.empty:
             sub = team_sub
     # Ambiguity guard. The normalized leg of _rows_for_name folds accents AND
@@ -623,6 +624,10 @@ def resolve_pitcher_id(
                 sp_multiyr = pd.read_csv(sp_path)
             except FileNotFoundError:
                 return None
+        # NOTE (issue #12): sp_multiyr carries no team column, so a `team`
+        # hint can't be applied here the way _try_rp/resolve_batter_id do —
+        # a same-name SP collision not in KNOWN_PITCHER_COLLISIONS refuses
+        # below (len(ids) > 1) regardless of any team hint the caller passed.
         sub = _rows_for_name(sp_multiyr, "player_name", name, alt_name)
         if not sub.empty:
             if "year" in sub.columns:
@@ -645,7 +650,8 @@ def resolve_pitcher_id(
         sub = _rows_for_name(rp_multiyr, "name", name, alt_name)
         if not sub.empty:
             if team is not None and "team_abbr" in sub.columns:
-                team_sub = sub[sub["team_abbr"].astype(str).str.upper() == team.upper()]
+                tk = team_key(team)
+                team_sub = sub[sub["team_abbr"].astype(str).map(team_key) == tk]
                 if not team_sub.empty:
                     sub = team_sub
             if "year" in sub.columns:
