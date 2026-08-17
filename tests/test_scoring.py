@@ -74,18 +74,35 @@ class TestEPost:
         assert e_post.notna().all(), "E_post must not be NaN."
         assert np.isfinite(e_post).all(), "E_post must be finite."
 
-    def test_e_post_consistent_with_formula(self, mock_plv_model, feature_df):
-        """E_post with constant models = deterministic value we can compute by hand."""
-        # With constant models:
-        # p_swing=0.47, p_take=0.53
-        # p_cs|take=0.35, p_ball|take=0.65
-        # p_contact|swing=0.78, p_whiff|swing=0.22
-        # p_foul|contact=0.40, p_in_play|contact=0.60
-        # e_xwoba_in_play=0.32
-        # EV lookups come from count table; just check plausibility.
+    def test_e_post_consistent_with_formula(self, mock_plv_model, feature_df, tiny_count_table):
+        """E_post with constant models = a value independently hand-computed
+        from the same staged formula, not a tautological self-comparison
+        (issue #26 — the old assertion compared e_post.mean() to itself,
+        which is true by construction regardless of what compute_e_post
+        actually computes, and can never catch a formula regression)."""
+        from plv_clone.models.plv_model import _lookup_vec
+
+        # Constant sub-model outputs, per the mock fixture:
+        p_swing, p_take = 0.47, 0.53
+        p_cs_given_take, p_ball_given_take = 0.35, 0.65
+        p_contact_given_swing, p_whiff_given_swing = 0.78, 0.22
+        p_foul_given_contact, p_in_play_given_contact = 0.40, 0.60
+        e_xwoba_in_play = 0.32
+
+        balls = feature_df["balls"].fillna(0).astype(int)
+        strikes = feature_df["strikes"].fillna(0).astype(int)
+        ev_ball = _lookup_vec(tiny_count_table, balls, strikes, "ev_ball")
+        ev_cs = _lookup_vec(tiny_count_table, balls, strikes, "ev_called_strike")
+        ev_whiff = _lookup_vec(tiny_count_table, balls, strikes, "ev_whiff")
+        ev_foul = _lookup_vec(tiny_count_table, balls, strikes, "ev_foul")
+
+        e_take_branch = p_cs_given_take * ev_cs + p_ball_given_take * ev_ball
+        e_contact_branch = p_foul_given_contact * ev_foul + p_in_play_given_contact * e_xwoba_in_play
+        e_swing_branch = p_whiff_given_swing * ev_whiff + p_contact_given_swing * e_contact_branch
+        expected = p_take * e_take_branch + p_swing * e_swing_branch
+
         e_post = mock_plv_model.compute_e_post(feature_df)
-        # Should be in a plausible run-value range
-        assert e_post.mean() == pytest.approx(e_post.mean(), rel=1e-3)  # stable
+        assert e_post.values == pytest.approx(expected.values, rel=1e-6)
 
     def test_plv_raw_sign_convention(self, mock_plv_model, feature_df):
         """plv_raw = count_baseline - E_post; a pitch that moves E_post below baseline > 0."""
