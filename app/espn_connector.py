@@ -317,7 +317,7 @@ def get_league_standings() -> pd.DataFrame:
 def get_available_targets(
     model_hitters: pd.DataFrame,
     model_pitchers: pd.DataFrame,
-    size: int = 300,
+    size: int = 2000,
     min_signal_rank: int = 0,
 ) -> dict[str, pd.DataFrame]:
     """
