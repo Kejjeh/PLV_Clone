@@ -453,7 +453,9 @@ def build_records() -> tuple[list[dict], dict, list[dict]]:
             xfp_rec = (find_xfp_record(p['name'], by_key, mlbam=p.get('mlbId'),
                                        by_id=by_id)
                        if role == 'SP' else None)
-            rp_rec  = find_xfp_record(p['name'], rp_by_key) if role == 'RP' else None
+            rp_rec  = (find_xfp_record(p['name'], rp_by_key, mlbam=p.get('mlbId'),
+                                       by_id=rp_by_id)
+                       if role == 'RP' else None)
             if xfp_rec is not None:
                 xfp_rec['roster'] = 'mine'
                 xfp_rec['espnPos'] = espn_pos
