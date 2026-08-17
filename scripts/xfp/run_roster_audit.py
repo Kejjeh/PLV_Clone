@@ -81,6 +81,18 @@ def join_proj(df, df_proj, name_index, projection_col):
     return df
 
 
+def rank_drop_candidates(df: pd.DataFrame, n: int) -> pd.DataFrame:
+    """Bottom-`n` by `proj` — the real drop-candidate ranking (issue #23).
+
+    Rows with `proj == NaN` (a name-match FAILURE in join_proj, not a real
+    bad projection) must never occupy a drop-candidate slot ahead of a real
+    low-but-valid projection — `na_position='first'` on an ascending sort
+    put them there, so an unresolved-name player always read as the single
+    worst player on the roster regardless of anyone's actual projection.
+    """
+    return df.sort_values('proj', ascending=True, na_position='last').head(n)
+
+
 def main():
     import argparse
     _ap = argparse.ArgumentParser(description='Roster audit')
@@ -193,15 +205,15 @@ def main():
 
     hitters = roster[~roster['position'].isin(['SP', 'RP', 'P'])].copy()
     hitters = join_proj(hitters, rh3, rh3_idx, 'xfp_rh3_per_pa')
-    hit_drops = hitters.sort_values('proj', ascending=True, na_position='first').head(3)
+    hit_drops = rank_drop_candidates(hitters, 3)
 
     sps = roster[(roster['effective_role'] == 'SP') & (~roster['injured'])].copy()
     sps = join_proj(sps, rp3, rp3_idx, 'xfp_rp3_per_start')
-    sp_drops = sps.sort_values('proj', ascending=True, na_position='first').head(3)
+    sp_drops = rank_drop_candidates(sps, 3)
 
     rps = roster[(roster['effective_role'] == 'RP') & (~roster['injured'])].copy()
     rps = join_proj(rps, rprs2, rprs2_idx, 'xfp_ros')
-    rp_drops = rps.sort_values('proj', ascending=True, na_position='first').head(2)
+    rp_drops = rank_drop_candidates(rps, 2)
 
     # Bug fix: was get_free_agents(position='SP', size=200) — silently truncates pool.
     # available_fa() always pulls size=2000 internally.
