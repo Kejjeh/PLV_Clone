@@ -124,6 +124,29 @@ def hitter_fp_in_window(batter_id: int, start: pd.Timestamp, end: pd.Timestamp) 
             'days': (end - start).days + 1}
 
 
+def _estimate_rp_sv_hld(pitcher_id: int, year: int, games_in_window: int) -> tuple[float, float]:
+    """Prorate a reliever's season SV/HLD totals by the fraction of his
+    season appearances that fall inside the trade-sim window (issue #22).
+
+    Statcast pitch-level events carry no save/hold flag (those are game-
+    state-derived, not per-pitch), so an exact per-appearance count isn't
+    obtainable from the same source as K/BB/H/ER — this uses the same
+    proration approach the module already documents for SB (year-aggregate
+    rate x actual usage in window).
+    """
+    try:
+        rel = pd.read_csv(CACHE / 'relievers_multiyr_2018_2026.csv',
+                          usecols=['pitcher', 'season', 'g', 'sv', 'hld'])
+    except FileNotFoundError:
+        return 0.0, 0.0
+    row = rel[(rel['pitcher'] == pitcher_id) & (rel['season'] == year)]
+    if row.empty or not row.iloc[0]['g']:
+        return 0.0, 0.0
+    r = row.iloc[0]
+    share = min(games_in_window / r['g'], 1.0)
+    return float(r['sv']) * share, float(r['hld']) * share
+
+
 def pitcher_fp_in_window(pitcher_id: int, start: pd.Timestamp, end: pd.Timestamp,
                           role: str = 'sp') -> dict:
     """Compute pitcher fp from statcast in [start, end]. Approximate IP from outs."""
@@ -155,9 +178,11 @@ def pitcher_fp_in_window(pitcher_id: int, start: pd.Timestamp, end: pd.Timestamp
     outs = int(pa['outs'].sum())
     ip = outs / 3.0
 
-    fp = pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp)
+    sv, hld = _estimate_rp_sv_hld(pitcher_id, year, games) if role == 'rp' else (0.0, 0.0)
+    fp = pitcher_fp(k=k, ip=ip, h=h, er=er, bb=bb, hbp=hbp, sv=sv, hld=hld)
     return {'fp': round(fp, 1), 'g': games, 'gs': gs, 'k': k, 'bb': bb,
             'h': h, 'er': round(er, 1), 'ip': round(ip, 1),
+            'sv': round(sv, 1), 'hld': round(hld, 1),
             'days': (end - start).days + 1}
 
 
