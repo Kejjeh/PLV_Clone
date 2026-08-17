@@ -1454,16 +1454,28 @@ def apply_sp_cap(team_projections, cap=MAX_SP_STARTS_PER_WEEK):
     excess = cap_excess_starts([s['fp'] for s in sp_starts], cap)
     if not excess:
         return 0
+    # sigma2 is combined variance across ALL of a pitcher's starts this week
+    # (project_sp_starts: n_starts * sigma**2, a uniform per-start share) —
+    # zeroing a start's mean without also removing its variance share leaves
+    # win_probability() fed a mean/variance mismatch (issue #14). Capture
+    # each pitcher's ORIGINAL per-start share once, before any mutation —
+    # subtracting a fraction of the already-reduced sigma2 on a second
+    # capped start for the same pitcher would under-remove variance.
+    sigma2_per_start: dict[str, float] = {}
     capped_fp = 0.0
     for j in excess:
         c = sp_starts[j]
         proj = team_projections[c['name']]
+        if c['name'] not in sigma2_per_start:
+            n_starts = len(proj['breakdown'])
+            sigma2_per_start[c['name']] = proj['sigma2'] / n_starts if n_starts else 0.0
         b = proj['breakdown'][c['idx']]
         b['fp_capped'] = True
         b['fp_original'] = b['fp']
         proj['fp'] -= b['fp']
         capped_fp += b['fp']
         b['fp'] = 0
+        proj['sigma2'] -= sigma2_per_start[c['name']]
     return capped_fp
 
 
