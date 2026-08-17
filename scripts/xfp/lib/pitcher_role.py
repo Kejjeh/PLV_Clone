@@ -262,6 +262,7 @@ def detect_pitcher_role(
     gs_lookup=None,
     id_resolver=None,
     rp3_keys=None,
+    check_recent_starts: bool = False,
 ) -> str:
     """
     Return 'SP' or 'RP' for a pitcher.
@@ -291,6 +292,20 @@ def detect_pitcher_role(
         rp3_keys:    set of safe-keyed names in the rp3 SP model. Defaults to
                      the cached CSV loader. Inject to test the RP-only
                      conversion escalation offline.
+
+    check_recent_starts (issue #16): the RP-only escalation below only
+        fires for names already in rp3, which requires >= EVAL_GS_MIN (2)
+        real starts logged — so a pitcher's FIRST 1-2 starts after an
+        RP->SP conversion still fall through to a blind 'RP', reproducing
+        the exact Griffin Jax failure mode the rp3-membership check exists
+        to close, just for a shorter window. Pass True to also escalate an
+        RP-only-eligible pitcher NOT (yet) in rp3 to a real gamesStarted
+        check via _decide_by_starts — this costs one extra API call per
+        such pitcher (cached per process), so only set it for a BOUNDED
+        pitcher set (a ~29-man roster, not a 2000-player FA-pool scan)
+        where SP-cap accounting correctness matters more than call volume.
+        Default False preserves the original zero-extra-cost behavior for
+        FA-pool-wide scans, where a true reliever is by far the common case.
     """
     elig = _elig_set(player_or_row)
     has_sp = 'SP' in elig
@@ -312,7 +327,7 @@ def detect_pitcher_role(
         except Exception as e:
             _warn('rp3_membership', e)
             in_rp3 = False
-        if in_rp3:
+        if in_rp3 or check_recent_starts:
             return _decide_by_starts(player_or_row, mlbam_id, season,
                                      gs_lookup, id_resolver, fallback='RP')
         return 'RP'
@@ -345,7 +360,7 @@ def detect_pitcher_role(
     except Exception as e:
         _warn('rp3_membership_slotless', e)
         in_rp3 = False
-    if in_rp3:
+    if in_rp3 or check_recent_starts:
         return _decide_by_starts(player_or_row, mlbam_id, season,
                                  gs_lookup, id_resolver, fallback='RP')
     return 'RP'

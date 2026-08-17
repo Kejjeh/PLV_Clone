@@ -68,6 +68,51 @@ def test_rp_only_true_reliever_never_touches_resolver():
     assert role == "RP"
 
 
+def test_rp_only_not_in_rp3_but_check_recent_starts_escalates():
+    """Issue #16: a pitcher's first 1-2 starts after an RP->SP conversion
+    aren't in rp3 yet (needs >=EVAL_GS_MIN=2 logged starts), so the default
+    rp3-membership escalation can't fire — check_recent_starts=True is the
+    opt-in for a bounded pitcher set (e.g. a roster audit) that still wants
+    a real gamesStarted check instead of a blind 'RP' in that window."""
+    fresh_convert = _Player("Just Converted", "RP", ["P", "RP", "BE"], proTeam="TB")
+    role = detect_pitcher_role(
+        fresh_convert,
+        rp3_keys=frozenset(),                    # not yet in rp3 — the gap
+        id_resolver=lambda name, team: 111222,
+        gs_lookup=lambda pid, season: "SP",       # his 1 real start says SP
+        check_recent_starts=True,
+    )
+    assert role == "SP"
+
+
+def test_rp_only_true_reliever_still_zero_cost_with_check_recent_starts_off():
+    """Default (check_recent_starts=False) must be unaffected — the whole
+    point of gating behind an explicit flag is zero behavior change for
+    every existing FA-pool-wide caller."""
+    def _boom(*a, **k):
+        raise AssertionError("resolver must not be called when check_recent_starts=False")
+
+    closer = _Player("Jhoan Duran", "RP", ["P", "RP", "BE", "IL"], proTeam="PHI")
+    role = detect_pitcher_role(
+        closer, rp3_keys=frozenset(), id_resolver=_boom, gs_lookup=_boom,
+        check_recent_starts=False)
+    assert role == "RP"
+
+
+def test_slotless_rp_tag_not_in_rp3_check_recent_starts_escalates():
+    """Same fix, slotless branch (get_all_teams() rows carry no
+    eligible_slots — gotcha #3)."""
+    row = {"position": "RP", "player_name": "Just Converted", "pro_team": "TB"}
+    role = detect_pitcher_role(
+        row,
+        rp3_keys=frozenset(),
+        id_resolver=lambda name, team: 111222,
+        gs_lookup=lambda pid, season: "SP",
+        check_recent_starts=True,
+    )
+    assert role == "SP"
+
+
 def test_rp_only_in_rp3_but_unresolvable_stays_rp():
     """If the escalation fires but the id can't be resolved, fall back to the
     conservative 'RP' (the slots' own claim), not the position tag."""
