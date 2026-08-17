@@ -74,9 +74,40 @@ def fa_sp_mlbam_ids(fa_pool, *, sp_multiyr=None, rp_multiyr=None) -> set[int]:
     return ids
 
 
-def _bucket_order(hint: str | None) -> list[str]:
-    return ([hint] + [b for b in ('H', 'SP', 'RP') if b != hint]
-            if hint else ['H', 'SP', 'RP'])
+def _prefer_rp_over_sp(key: str, *, thin_start_threshold: int = 8) -> str | None:
+    """When a name-key matches BOTH the SP (rp3) and RP (rprs2) projection
+    pools — a real, currently-nonzero population of swingmen/spot-starters
+    who clear rp3's gs_to>=EVAL_GS_MIN inclusion bar while also having a
+    real relief-appearance record (issue #27) — decide which model
+    actually describes him instead of silently defaulting to SP by search
+    order. A pitcher with only a handful of real starts (below rp3's own
+    data_driven_full bar, gs_to>=8) who ALSO has an rprs2 row is much more
+    likely a reliever who made a spot start or two than a genuine starter;
+    prefer RP in that case. Returns None (no override) when he's not in
+    both pools, or SP evidence is strong (gs_to>=8) — this is a bounded,
+    two-model-only nudge, not a replacement for detect_pitcher_role
+    (which needs live ESPN eligible_slots this name-only lookup doesn't
+    have).
+    """
+    from .cached_data import _load_projection
+    sp_df = _load_projection('SP')
+    rp_df = _load_projection('RP')
+    sp_rows = sp_df[sp_df['_key'] == key]
+    rp_rows = rp_df[rp_df['_key'] == key]
+    if sp_rows.empty or rp_rows.empty:
+        return None
+    gs_to = sp_rows.iloc[0].get('gs_to')
+    if gs_to is not None and gs_to < thin_start_threshold:
+        return 'RP'
+    return None
+
+
+def _bucket_order(hint: str | None, key: str | None = None) -> list[str]:
+    if hint:
+        return [hint] + [b for b in ('H', 'SP', 'RP') if b != hint]
+    if key is not None and _prefer_rp_over_sp(key) == 'RP':
+        return ['H', 'RP', 'SP']
+    return ['H', 'SP', 'RP']
 
 
 def _find_by_id(mlbam: int, name: str, hint: str | None) -> dict | None:
@@ -89,7 +120,7 @@ def _find_by_id(mlbam: int, name: str, hint: str | None) -> dict | None:
     """
     from .cached_data import _load_projection, _load_archetype
 
-    for bucket in _bucket_order(hint):
+    for bucket in _bucket_order(hint, _norm(name)):
         df = _load_projection(bucket)
         id_col = 'batter' if bucket == 'H' else 'pitcher'
         name_col = 'player_name' if bucket in ('H', 'SP') else 'name_api'
@@ -204,7 +235,7 @@ def resolve_player(name: str, hint: str | None = None, *,
             collision_watch = True
 
     key = _norm(name)
-    for bucket in _bucket_order(hint):
+    for bucket in _bucket_order(hint, key):
         df = _load_projection(bucket)
         if bucket == 'H':
             id_col, name_col = 'batter', 'player_name'
