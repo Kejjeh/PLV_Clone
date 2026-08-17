@@ -456,6 +456,20 @@ def format_report(pred: dict) -> str:
     return '\n'.join(lines)
 
 
+def resolve_teams_to_predict(all_teams: bool, team: str | None) -> list[str]:
+    """Which teams `--all-teams`/`--team` should predict (issue #21).
+
+    `--all-teams` must predict OPPONENTS — never the user's own team.
+    `PROFILES` deliberately keeps a MY_TEAM_NAME entry (used elsewhere for
+    weighting calibration), but the all-teams report loop is titled
+    "predicted opponent moves" and must not present the user's own likely
+    adds/drops as if they were intel about an opponent.
+    """
+    if all_teams:
+        return [t for t in PROFILES if t != MY_TEAM_NAME]
+    return [team]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--team', type=str)
@@ -469,7 +483,7 @@ def main():
     if not args.team and not args.all_teams:
         ap.error('pass --team "Team Name" or --all-teams')
 
-    teams = list(PROFILES.keys()) if args.all_teams else [args.team]
+    teams = resolve_teams_to_predict(args.all_teams, args.team)
     for t in teams:
         pred = predict_team(t, top=args.top, weights_mode=args.weights)
         print(format_report(pred))
