@@ -65,18 +65,15 @@ def main():
 
     rows = []
     for name in targets:
-        first, last = name.split(maxsplit=1)
-        sub = rel[rel['name'].str.contains(last, case=False, na=False)]
-        # Sometimes more than one match for shared last names
-        sub = sub[sub['name'].str.contains(first[:3], case=False, na=False)]
+        nk = _norm(name)
+        sub = rel[rel['name'].apply(_norm) == nk]
         if sub.empty:
             print(f'{name}: not found in relievers_multiyr')
             continue
         career = career_summary(sub)
         recent = career_summary(sub[sub['season'] >= 2023])
         # rprs2 row
-        rp_row = rprs2[rprs2['name_api'].str.contains(last, case=False, na=False)]
-        rp_row = rp_row[rp_row['name_api'].str.contains(first[:3], case=False, na=False)]
+        rp_row = rprs2[rprs2['name_api'].apply(_norm) == nk]
         proj = rp_row.iloc[0].to_dict() if not rp_row.empty else {}
 
         rows.append({
