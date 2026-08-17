@@ -79,6 +79,35 @@ def align_columns(new_df: pd.DataFrame, base: pd.DataFrame):
     return new_df[base.columns.tolist()], base
 
 
+def _canonical_mask(df: pd.DataFrame) -> pd.Series:
+    """Rows NOT tagged source='gf_provisional' (issue #17). Mirrors
+    build_statcast_gf_bridge.py's own canon_max pattern — a cache without
+    a 'source' column (older years, or before the gf bridge ever ran) is
+    entirely canonical by definition."""
+    if 'source' not in df.columns:
+        return pd.Series(True, index=df.index)
+    return df['source'] != 'gf_provisional'
+
+
+def canonical_max_date(df: pd.DataFrame):
+    """Max game_date among CANONICAL rows only — a provisional row for a
+    date must not push the tail-pull window past that date, or it never
+    gets re-fetched as real data (issue #17)."""
+    canonical = df[_canonical_mask(df)]
+    if canonical.empty:
+        return df['game_date'].max().date()
+    return canonical['game_date'].max().date()
+
+
+def canonical_games(df: pd.DataFrame) -> pd.DataFrame:
+    """(game_pk, game_date) pairs among CANONICAL rows only — the gap-
+    repair scan's 'have' set must not count a provisional row as proof a
+    date already has real data, or a date stuck fully provisional is
+    never flagged deficient and never re-pulled (issue #17)."""
+    canonical = df[_canonical_mask(df)]
+    return canonical[['game_pk', 'game_date']].drop_duplicates()
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--year', type=int, default=date.today().year)
@@ -96,7 +125,7 @@ def main():
     combined = pd.read_parquet(path)
     combined['game_date'] = pd.to_datetime(combined['game_date'])
     n_start = len(combined)
-    last_date = combined['game_date'].max().date()
+    last_date = canonical_max_date(combined)
     available_through = date.today() - timedelta(days=args.lag)
     pull_start = last_date + timedelta(days=1)
     pull_end = available_through
@@ -128,7 +157,7 @@ def main():
             except Exception as e:
                 print(f'  gap scan skipped (schedule API error: {e})')
         if sched:
-            games = combined[['game_pk', 'game_date']].drop_duplicates()
+            games = canonical_games(combined)
             games['d'] = games['game_date'].dt.strftime('%Y-%m-%d')
             have = games.groupby('d')['game_pk'].agg(set).to_dict()
             deficient = [date.fromisoformat(d) for d, pks in sched.items()
