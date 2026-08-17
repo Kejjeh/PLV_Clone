@@ -201,6 +201,20 @@ TEAM_ALIASES = {'ARI': 'AZ', 'OAK': 'ATH', 'CHW': 'CWS', 'WSN': 'WSH',
                 'KCR': 'KC', 'TBR': 'TB', 'SFG': 'SF', 'SDP': 'SD'}
 
 
+def _resolve_opponent(team: str, g: dict) -> str:
+    """The other team in game `g` for a player on `team` (issue #20).
+
+    Compare the ALIASED team code against the game's away side, not
+    `team` against its own alias — the old inline check
+    `team in (g['away_team'], TEAM_ALIASES.get(team))` compared team to
+    its own alias (e.g. 'ARI' == TEAM_ALIASES['ARI'] == 'AZ'), which is
+    never true by construction, so an aliased team playing away always
+    fell through to `else` and showed its own team as the opponent.
+    """
+    away_key = TEAM_ALIASES.get(team, team)
+    return g['home_team'] if away_key == g['away_team'] else g['away_team']
+
+
 # _norm was join_key's exact algorithm (NFD-Mn + sorted alpha tokens); routed to
 # the name_match owner (item 10, 2026-07-04). Proven byte-identical, so this is a
 # pure move even though live_monitor produces live_dashboard.html.
@@ -497,8 +511,7 @@ def render_team_lines(team_roster, games, pregame_tags=None, box_cache=None):
         highlights = detect_highlights(lig['name'], lig['role'], bstat, pstat)
         inn = (f'{g["inning_state"]} {g["inning"]}' if g['inning'] and g['status'] == 'Live'
                else g['detailed'])
-        opp = g['home_team'] if team in (g['away_team'], TEAM_ALIASES.get(team)) \
-                                  and team != g['home_team'] else g['away_team']
+        opp = _resolve_opponent(team, g)
         tags = pregame_tags.get(lig['mlbam'], {'cli': '', 'html': ''})
         rows.append({
             'name': lig['name'], 'role': lig['role'], 'team': team,
