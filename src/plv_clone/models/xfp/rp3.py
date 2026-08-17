@@ -296,6 +296,35 @@ def report_name_completeness(valid: pd.DataFrame,
     return len(missing)
 
 
+def assign_data_quality_tag(valid: pd.DataFrame) -> pd.Series:
+    """data_quality_tag — bucket the signal-quality regime:
+      data_driven_full : gs_to >= 8 — Ridge has solid 2026 input
+      data_driven_thin : gs_to in 3..7 — Ridge has limited 2026 input
+      marcel_no_data   : gs_to == 0 and not IL — should be rare/empty
+      marcel_il        : a TRUE suppressed prior — prior_source == 'marcel_il',
+                         OR currently on IL with no real 2026 signal
+                         (is_on_il_at_split == 1 AND gs_to == 0)
+
+    `is_on_il_at_split` alone does NOT mean marcel_il (issue #13, fixed
+    2026-08-16): it is a genuine per-split-day feature carried on real
+    `prior_source == 'rp3_model'` rows too, so a pitcher with real
+    accumulated starts (gs_to >= 8) who happens to be on the IL at his most
+    recent snapshot was previously mislabeled identically to a true
+    zero-data IL-vet stash — discarding a genuinely trustworthy, data-driven
+    xfp_rp3_per_start for the coarser Stuff+ fallback. `is_on_il_at_split`
+    itself is still published as its own column for "he's hurt right now"
+    context; it just no longer overrides a real data-driven tag.
+    """
+    gs_to = valid['gs_to'].fillna(0)
+    truly_suppressed = (valid['prior_source'] == 'marcel_il') | (
+        (valid['is_on_il_at_split'] == 1) & (gs_to == 0))
+    return pd.Series(np.select(
+        [truly_suppressed, gs_to == 0, gs_to >= 8],
+        ['marcel_il', 'marcel_no_data', 'data_driven_full'],
+        default='data_driven_thin',
+    ), index=valid.index)
+
+
 def main():
     print('=== xfp_rp3 (RP2 + recency + CI + replacement + schedule) ===')
 
@@ -524,23 +553,9 @@ def main():
     # regression-to-mean fallback for an IL'd or zero-start pitcher.
     # No model semantics change: xfp_rp3_per_start remains the headline blend.
     #
-    # data_quality_tag — bucket the signal-quality regime:
-    #   data_driven_full : gs_to >= 8 — Ridge has solid 2026 input
-    #   data_driven_thin : gs_to in 3..7 — Ridge has limited 2026 input
-    #   marcel_no_data   : gs_to == 0 and not IL — should be rare/empty
-    #   marcel_il        : prior_source == 'marcel_il' OR is_on_il_at_split == 1
-    #                      (Marcel prior * IL_PRIOR_DISCOUNT, no 2026 form)
-    # (vectorized 2026-07-19, audit item 21/W3 — golden A/B verified
-    # byte-identical vs the row-wise _quality_tag closure)
-    valid['data_quality_tag'] = np.select(
-        [
-            (valid['prior_source'] == 'marcel_il') | (valid['is_on_il_at_split'] == 1),
-            valid['gs_to'] == 0,
-            valid['gs_to'] >= 8,
-        ],
-        ['marcel_il', 'marcel_no_data', 'data_driven_full'],
-        default='data_driven_thin',
-    )
+    # data_quality_tag — see assign_data_quality_tag() docstring (issue #13
+    # fix, 2026-08-16: is_on_il_at_split alone no longer forces marcel_il).
+    valid['data_quality_tag'] = assign_data_quality_tag(valid)
 
     # marcel_baseline — the pure Marcel prior (undiscounted), surfaced
     # explicitly so consumers can show "Marcel says X, 2026 data says Y,
