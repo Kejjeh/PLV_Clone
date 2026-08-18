@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-17",
+ "as_of": "2026-08-18",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -414,12 +414,6 @@
    "team": "Pittsburgh Pirates",
    "abbr": "PIT",
    "name": "Jhostynxon Garcia",
-   "pos": "RF"
-  },
-  "671286": {
-   "team": "Pittsburgh Pirates",
-   "abbr": "PIT",
-   "name": "Johnathan Rodríguez",
    "pos": "RF"
   },
   "694753": {
@@ -2364,7 +2358,7 @@
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
    "name": "Myles Straw",
-   "pos": "RF"
+   "pos": "CF"
   },
   "664770": {
    "team": "Toronto Blue Jays",
@@ -2461,6 +2455,12 @@
    "abbr": "MIN",
    "name": "Alan Roden",
    "pos": "RF"
+  },
+  "656577": {
+   "team": "Minnesota Twins",
+   "abbr": "MIN",
+   "name": "Alex Jackson",
+   "pos": "C"
   },
   "702193": {
    "team": "Minnesota Twins",
@@ -4598,12 +4598,6 @@
    "name": "Adrian Del Castillo",
    "pos": "DH"
   },
-  "694851": {
-   "team": "Arizona Diamondbacks",
-   "abbr": "AZ",
-   "name": "Andrew Hoffmann",
-   "pos": "P"
-  },
   "685314": {
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
@@ -4753,12 +4747,6 @@
    "abbr": "AZ",
    "name": "Kade Strowd",
    "pos": "P"
-  },
-  "606466": {
-   "team": "Arizona Diamondbacks",
-   "abbr": "AZ",
-   "name": "Ketel Marte",
-   "pos": "2B"
   },
   "656464": {
    "team": "Arizona Diamondbacks",
@@ -5222,12 +5210,6 @@
    "name": "Curtis Mead",
    "pos": "3B"
   },
-  "700842": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Eduardo Rivera",
-   "pos": "P"
-  },
   "642201": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5426,6 +5408,12 @@
    "name": "Wilyer Abreu",
    "pos": "RF"
   },
+  "681544": {
+   "team": "Boston Red Sox",
+   "abbr": "BOS",
+   "name": "Wyatt Olds",
+   "pos": "P"
+  },
   "677161": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5592,7 +5580,7 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Kevin Alcántara",
-   "pos": "DH"
+   "pos": "OF"
   },
   "592332": {
    "team": "Chicago Cubs",
@@ -5634,6 +5622,12 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Nico Hoerner",
+   "pos": "2B"
+  },
+  "680911": {
+   "team": "Chicago Cubs",
+   "abbr": "CHC",
+   "name": "Owen Miller",
    "pos": "2B"
   },
   "699393": {
@@ -5916,12 +5910,6 @@
    "team": "Cincinnati Reds",
    "abbr": "CIN",
    "name": "Rhett Lowder",
-   "pos": "P"
-  },
-  "676760": {
-   "team": "Cincinnati Reds",
-   "abbr": "CIN",
-   "name": "Ron Marinaccio",
    "pos": "P"
   },
   "701398": {
@@ -6372,12 +6360,6 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "McCade Brown",
-   "pos": "P"
-  },
-  "547179": {
-   "team": "Colorado Rockies",
-   "abbr": "COL",
-   "name": "Michael Lorenzen",
    "pos": "P"
   },
   "666160": {
@@ -7286,12 +7268,6 @@
    "name": "Seth Lugo",
    "pos": "P"
   },
-  "516782": {
-   "team": "Kansas City Royals",
-   "abbr": "KC",
-   "name": "Starling Marte",
-   "pos": "RF"
-  },
   "663568": {
    "team": "Kansas City Royals",
    "abbr": "KC",
@@ -7934,6 +7910,12 @@
    "name": "Christian Scott",
    "pos": "P"
   },
+  "666624": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Christopher Morel",
+   "pos": "1B"
+  },
   "672335": {
    "team": "New York Mets",
    "abbr": "NYM",
@@ -7987,12 +7969,6 @@
    "abbr": "NYM",
    "name": "Francisco Lindor",
    "pos": "SS"
-  },
-  "672356": {
-   "team": "New York Mets",
-   "abbr": "NYM",
-   "name": "Gabriel Arias",
-   "pos": "3B"
   },
   "663584": {
    "team": "New York Mets",

@@ -509,3 +509,5 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-08-16T07:37:04.184008,2026-08-16,19,New York Ligers,Boone's Bad Bullpen,331.5,410.79,248.0,310.05,0.9982,395.6,298.9,MA_v1,,
 2026-08-17T07:43:28.699720,2026-08-17,20,New York Ligers,2015 Draft First Round,0.0,376.05,0.0,310.85,0.8754,,,baseline,,
 2026-08-17T07:43:30.546120,2026-08-17,20,New York Ligers,2015 Draft First Round,0.0,419.42,0.0,346.74,0.893,,,MA_v1,,
+2026-08-18T07:42:13.374771,2026-08-18,20,New York Ligers,2015 Draft First Round,60.4,384.98,40.5,329.57,0.8548,,,baseline,,
+2026-08-18T07:42:15.444759,2026-08-18,20,New York Ligers,2015 Draft First Round,60.4,427.28,40.5,374.37,0.8276,,,MA_v1,,

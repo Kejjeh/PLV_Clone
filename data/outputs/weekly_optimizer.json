@@ -1,155 +1,166 @@
 {
-  "base_pwin": 0.6573,
+  "base_pwin": 0.7676,
   "regime": "LEADING",
-  "period": 19,
+  "period": 20,
   "sims": 10000,
   "seed": 7,
-  "cap_remaining": 2,
-  "plan_source": "greedy",
-  "plan_total_dpwin": 0.018199999999999994,
-  "plan_pwin_final": 0.6755,
+  "cap_remaining": 9,
+  "plan_source": "pair_check",
+  "plan_total_dpwin": 0.1253,
+  "plan_pwin_final": 0.8929,
   "plan": [
     {
-      "add": "Tanner Scott",
-      "add_bucket": "RP",
-      "drop": "Jhoan Duran",
-      "drop_bucket": "RP",
-      "dpwin": 0.018199999999999994,
-      "mc_se": 0.004682,
-      "pwin_after": 0.6755,
-      "dpwin_from_base": 0.0182,
-      "dtitle_equity_pp": 0.0286
+      "add": "Zack Gelof",
+      "add_bucket": "H",
+      "drop": "Joshua Baez",
+      "drop_bucket": "H",
+      "dpwin": 0.0797000000000001,
+      "mc_se": 0.003597,
+      "pwin_after": 0.8473,
+      "dpwin_from_base": 0.0797000000000001,
+      "dtitle_equity_pp": 0.0239
+    },
+    {
+      "add": "Bryce Miller",
+      "add_bucket": "SP",
+      "drop": "Max Fried",
+      "drop_bucket": "SP",
+      "dpwin": 0.04559999999999989,
+      "mc_se": 0.003092,
+      "pwin_after": 0.8929,
+      "dpwin_from_base": 0.1253,
+      "dtitle_equity_pp": 0.0137
     }
   ],
   "title_equity": {
-    "dtitle_pp": 1.57,
-    "status": "fresh",
-    "source_period": 19,
+    "dtitle_pp": 0.3,
+    "status": "stale",
+    "source_period": 20,
     "payload_period": 19,
-    "periods_stale": 0,
-    "note": "",
+    "periods_stale": 1,
+    "note": "season_sim.json was generated at period 19, now period 20 (1 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
     "plus2_pp": 1.18
   },
   "top_single_moves": [
     {
-      "add": "Tanner Scott",
-      "drop": "Jhoan Duran",
-      "dpwin": 0.018199999999999994,
-      "mc_se": 0.004682
+      "add": "Zack Gelof",
+      "drop": "Joshua Baez",
+      "dpwin": 0.0797000000000001,
+      "mc_se": 0.003597
     },
     {
-      "add": "Tanner Scott",
-      "drop": "Jacob Latz",
-      "dpwin": 0.0121,
-      "mc_se": 0.004704
+      "add": "Tyler Tolbert",
+      "drop": "Joshua Baez",
+      "dpwin": 0.06540000000000001,
+      "mc_se": 0.00373
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Jhoan Duran",
-      "dpwin": 0.005299999999999971,
-      "mc_se": 0.004728
+      "add": "Jeff McNeil",
+      "drop": "Joshua Baez",
+      "dpwin": 0.06330000000000002,
+      "mc_se": 0.003748
     },
     {
-      "add": null,
+      "add": "Joc Pederson",
+      "drop": "Joshua Baez",
+      "dpwin": 0.062100000000000044,
+      "mc_se": 0.003759
+    },
+    {
+      "add": "Nathaniel Lowe",
+      "drop": "Joshua Baez",
+      "dpwin": 0.061900000000000066,
+      "mc_se": 0.003761
+    },
+    {
+      "add": "Vinnie Pasquantino",
+      "drop": "Joshua Baez",
+      "dpwin": 0.05830000000000002,
+      "mc_se": 0.003792
+    },
+    {
+      "add": "Ian Seymour",
       "drop": "Max Fried",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "dpwin": 0.05810000000000004,
+      "mc_se": 0.003794
     },
     {
-      "add": null,
-      "drop": "Jose Soriano",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Ian Seymour",
+      "drop": "Joshua Baez",
+      "dpwin": 0.05810000000000004,
+      "mc_se": 0.003794
     },
     {
-      "add": null,
-      "drop": "Parker Messick",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
-    },
-    {
-      "add": null,
-      "drop": "Shota Imanaga",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
-    },
-    {
-      "add": null,
-      "drop": "Logan Henderson",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
-    },
-    {
-      "add": null,
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
-    },
-    {
-      "add": "Ryan Weathers",
+      "add": "Bryce Miller",
       "drop": "Max Fried",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "dpwin": 0.057800000000000074,
+      "mc_se": 0.003796
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Jose Soriano",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Bryce Miller",
+      "drop": "Joshua Baez",
+      "dpwin": 0.057800000000000074,
+      "mc_se": 0.003796
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Parker Messick",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Walbert Urena",
+      "drop": "Max Fried",
+      "dpwin": 0.05370000000000008,
+      "mc_se": 0.003831
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Shota Imanaga",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Walbert Urena",
+      "drop": "Joshua Baez",
+      "dpwin": 0.05370000000000008,
+      "mc_se": 0.003831
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Logan Henderson",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Robbie Ray",
+      "drop": "Max Fried",
+      "dpwin": 0.05360000000000009,
+      "mc_se": 0.003832
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.0,
-      "mc_se": 0.004746
+      "add": "Robbie Ray",
+      "drop": "Joshua Baez",
+      "dpwin": 0.05360000000000009,
+      "mc_se": 0.003832
+    },
+    {
+      "add": "Jackson Kent",
+      "drop": "Max Fried",
+      "dpwin": 0.052200000000000024,
+      "mc_se": 0.003844
     }
   ],
   "pair_check": {
     "n_combos": 45,
-    "adopted": false,
+    "adopted": true,
     "best": {
       "moves": [
         {
-          "add": "Tanner Scott",
-          "add_bucket": "RP",
-          "drop": "Jhoan Duran",
-          "drop_bucket": "RP",
-          "dpwin_solo": 0.018199999999999994,
-          "mc_se": 0.004682
+          "add": "Zack Gelof",
+          "add_bucket": "H",
+          "drop": "Joshua Baez",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.0797000000000001,
+          "mc_se": 0.003597
         },
         {
-          "add": "Ryan Weathers",
+          "add": "Bryce Miller",
           "add_bucket": "SP",
           "drop": "Max Fried",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.0,
-          "mc_se": 0.004746
+          "dpwin_solo": 0.057800000000000074,
+          "mc_se": 0.003796
         }
       ],
-      "dpwin": 0.0182,
-      "pwin": 0.6755,
-      "mc_se": 0.004682,
-      "sum_solo": 0.018199999999999994,
-      "interaction": 6.938893903907228e-18
+      "dpwin": 0.1253,
+      "pwin": 0.8929,
+      "mc_se": 0.003092,
+      "sum_solo": 0.13750000000000018,
+      "interaction": -0.012200000000000183
     }
   },
-  "dpwin_run_id": "2026-08-14T132148_7"
+  "dpwin_run_id": "2026-08-18T072117_7"
 }
