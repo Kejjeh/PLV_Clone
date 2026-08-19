@@ -1,7 +1,11 @@
 {
+  "action": null,
   "bucket": "H",
   "confidence": 1.0,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
   "decision_id": "2026-07-29_jackson_merrill_H_001",
+  "executed_at": null,
   "inputs": {
     "archetype_label": "AVERAGE_HITTER",
     "archetype_overall": 54,
@@ -19,9 +23,22 @@
   },
   "mlbam_id": 701538,
   "player_name": "Jackson Merrill",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "no_convergence",
-  "settled_at": null,
-  "settlement": null,
+  "record_schema": 2,
+  "settled_at": "2026-08-19",
+  "settlement": {
+    "actual_fp_per_unit": 0.5308641975308642,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 81,
+    "proj_per": 0.6021675038287269,
+    "proj_units_note": "native",
+    "residual": -0.07130330629786263,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-29",
   "verdict_top": "MIXED"
 }

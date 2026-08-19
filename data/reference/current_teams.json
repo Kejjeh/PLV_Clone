@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-18",
+ "as_of": "2026-08-19",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1880,12 +1880,6 @@
    "name": "Alejandro Osuna",
    "pos": "LF"
   },
-  "642851": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Austin Wynns",
-   "pos": "C"
-  },
   "687239": {
    "team": "Texas Rangers",
    "abbr": "TEX",
@@ -2317,12 +2311,6 @@
    "abbr": "TOR",
    "name": "Kazuma Okamoto",
    "pos": "3B"
-  },
-  "672820": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Lenyn Sosa",
-   "pos": "2B"
   },
   "686973": {
    "team": "Toronto Blue Jays",
@@ -3216,12 +3204,6 @@
    "team": "Atlanta Braves",
    "abbr": "ATL",
    "name": "Spencer Strider",
-   "pos": "P"
-  },
-  "641755": {
-   "team": "Atlanta Braves",
-   "abbr": "ATL",
-   "name": "Tyler Kinley",
    "pos": "P"
   },
   "641816": {
@@ -4836,7 +4818,7 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Tim Tawa",
-   "pos": "LF"
+   "pos": "1B"
   },
   "694371": {
    "team": "Arizona Diamondbacks",
@@ -5580,7 +5562,7 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Kevin Alcántara",
-   "pos": "OF"
+   "pos": "DH"
   },
   "592332": {
    "team": "Chicago Cubs",
@@ -6264,7 +6246,7 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "Connor Norby",
-   "pos": "1B"
+   "pos": "2B"
   },
   "682769": {
    "team": "Colorado Rockies",

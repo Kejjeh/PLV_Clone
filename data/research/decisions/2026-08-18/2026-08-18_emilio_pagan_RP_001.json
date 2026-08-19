@@ -12,14 +12,14 @@
     "archetype_traj": "STABLE",
     "blended_xfp": 4.476207587850619,
     "inputs_schema": 2,
-    "live_marginal": -4.6000000000000085,
+    "live_marginal": -3.8000000000000114,
     "model_rank": 4,
     "override_tag": null,
-    "pl_rank": 9,
+    "pl_rank": 12,
     "proj_display": 97.1,
     "proj_per": 7.412213740458015,
     "proj_units": "fp_per_g",
-    "replacement_delta": 32.6
+    "replacement_delta": 34.9
   },
   "mlbam_id": 641941,
   "player_name": "Emilio Pag\u00e1n",

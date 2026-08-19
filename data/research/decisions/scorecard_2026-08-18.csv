@@ -4,11 +4,11 @@ classification,BUY_MISS,223
 classification,FADE_HIT,4
 classification,HOLD_NEUTRAL,4
 classification,CAUTION_NEUTRAL,103
-classification,MIXED_NEUTRAL,329
+classification,MIXED_NEUTRAL,330
 classification,UNSETTLEABLE_V1_UNITS,64
 hit_rate_by_bucket,H,74/260 (28%)
 hit_rate_by_bucket,SP,12/45 (27%)
 hit_rate_by_bucket,RP,6/10 (60%)
-pending,total_pending,998
-pending,ripe_but_pending_events,205
-summary,settled_total,815
+pending,total_pending,997
+pending,ripe_but_pending_events,204
+summary,settled_total,816

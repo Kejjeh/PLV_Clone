@@ -8,18 +8,18 @@
   "executed_at": null,
   "inputs": {
     "archetype_label": "GENERIC_MIDDLE",
-    "archetype_overall": 61,
+    "archetype_overall": 62,
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 3.8153690500116597,
     "inputs_schema": 2,
     "live_marginal": null,
-    "model_rank": 54,
+    "model_rank": 55,
     "override_tag": null,
-    "pl_rank": 7,
+    "pl_rank": 6,
     "proj_display": 51.8,
     "proj_per": 4.584070796460177,
     "proj_units": "fp_per_g",
-    "replacement_delta": -12.7
+    "replacement_delta": -10.4
   },
   "mlbam_id": 656641,
   "player_name": "Jacob Latz",

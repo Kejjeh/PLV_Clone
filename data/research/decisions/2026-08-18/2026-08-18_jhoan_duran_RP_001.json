@@ -12,14 +12,14 @@
     "archetype_traj": "TRENDING_UP",
     "blended_xfp": 4.136567735981263,
     "inputs_schema": 2,
-    "live_marginal": -18.400000000000006,
+    "live_marginal": -17.60000000000001,
     "model_rank": 8,
     "override_tag": null,
-    "pl_rank": 2,
+    "pl_rank": 3,
     "proj_display": 83.3,
     "proj_per": 5.409090909090909,
     "proj_units": "fp_per_g",
-    "replacement_delta": 18.8
+    "replacement_delta": 21.1
   },
   "mlbam_id": 661395,
   "player_name": "Jhoan Duran",

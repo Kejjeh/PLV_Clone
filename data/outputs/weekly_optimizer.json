@@ -1,35 +1,35 @@
 {
-  "base_pwin": 0.7676,
-  "regime": "LEADING",
+  "base_pwin": 0.466,
+  "regime": "CLOSE",
   "period": 20,
-  "sims": 10000,
+  "sims": 8000,
   "seed": 7,
-  "cap_remaining": 9,
+  "cap_remaining": 8,
   "plan_source": "pair_check",
-  "plan_total_dpwin": 0.1253,
-  "plan_pwin_final": 0.8929,
+  "plan_total_dpwin": 0.18775,
+  "plan_pwin_final": 0.65375,
   "plan": [
     {
       "add": "Zack Gelof",
       "add_bucket": "H",
       "drop": "Joshua Baez",
       "drop_bucket": "H",
-      "dpwin": 0.0797000000000001,
-      "mc_se": 0.003597,
-      "pwin_after": 0.8473,
-      "dpwin_from_base": 0.0797000000000001,
-      "dtitle_equity_pp": 0.0239
+      "dpwin": 0.09799999999999992,
+      "mc_se": 0.005544,
+      "pwin_after": 0.564,
+      "dpwin_from_base": 0.09799999999999992,
+      "dtitle_equity_pp": 0.0294
     },
     {
-      "add": "Bryce Miller",
+      "add": "Ian Seymour",
       "add_bucket": "SP",
       "drop": "Max Fried",
       "drop_bucket": "SP",
-      "dpwin": 0.04559999999999989,
-      "mc_se": 0.003092,
-      "pwin_after": 0.8929,
-      "dpwin_from_base": 0.1253,
-      "dtitle_equity_pp": 0.0137
+      "dpwin": 0.08975000000000008,
+      "mc_se": 0.005319,
+      "pwin_after": 0.65375,
+      "dpwin_from_base": 0.18775,
+      "dtitle_equity_pp": 0.0269
     }
   ],
   "title_equity": {
@@ -43,94 +43,94 @@
   },
   "top_single_moves": [
     {
-      "add": "Zack Gelof",
-      "drop": "Joshua Baez",
-      "dpwin": 0.0797000000000001,
-      "mc_se": 0.003597
-    },
-    {
-      "add": "Tyler Tolbert",
-      "drop": "Joshua Baez",
-      "dpwin": 0.06540000000000001,
-      "mc_se": 0.00373
-    },
-    {
       "add": "Jeff McNeil",
       "drop": "Joshua Baez",
-      "dpwin": 0.06330000000000002,
-      "mc_se": 0.003748
+      "dpwin": 0.10099999999999992,
+      "mc_se": 0.00554
     },
     {
-      "add": "Joc Pederson",
+      "add": "Jeremy Pena",
       "drop": "Joshua Baez",
-      "dpwin": 0.062100000000000044,
-      "mc_se": 0.003759
+      "dpwin": 0.10037499999999994,
+      "mc_se": 0.005541
     },
     {
-      "add": "Nathaniel Lowe",
+      "add": "Zack Gelof",
       "drop": "Joshua Baez",
-      "dpwin": 0.061900000000000066,
-      "mc_se": 0.003761
+      "dpwin": 0.09799999999999992,
+      "mc_se": 0.005544
     },
     {
-      "add": "Vinnie Pasquantino",
+      "add": "Joey Cantillo",
+      "drop": "Max Fried",
+      "dpwin": 0.09699999999999992,
+      "mc_se": 0.005546
+    },
+    {
+      "add": "Joey Cantillo",
+      "drop": "Jose Soriano",
+      "dpwin": 0.09699999999999992,
+      "mc_se": 0.005546
+    },
+    {
+      "add": "Joey Cantillo",
       "drop": "Joshua Baez",
-      "dpwin": 0.05830000000000002,
-      "mc_se": 0.003792
+      "dpwin": 0.09699999999999992,
+      "mc_se": 0.005546
     },
     {
       "add": "Ian Seymour",
       "drop": "Max Fried",
-      "dpwin": 0.05810000000000004,
-      "mc_se": 0.003794
+      "dpwin": 0.09449999999999997,
+      "mc_se": 0.005549
+    },
+    {
+      "add": "Ian Seymour",
+      "drop": "Jose Soriano",
+      "dpwin": 0.09449999999999997,
+      "mc_se": 0.005549
     },
     {
       "add": "Ian Seymour",
       "drop": "Joshua Baez",
-      "dpwin": 0.05810000000000004,
-      "mc_se": 0.003794
+      "dpwin": 0.09449999999999997,
+      "mc_se": 0.005549
     },
     {
-      "add": "Bryce Miller",
+      "add": "Aaron Nola",
       "drop": "Max Fried",
-      "dpwin": 0.057800000000000074,
-      "mc_se": 0.003796
+      "dpwin": 0.08987499999999998,
+      "mc_se": 0.005555
     },
     {
-      "add": "Bryce Miller",
+      "add": "Aaron Nola",
+      "drop": "Jose Soriano",
+      "dpwin": 0.08987499999999998,
+      "mc_se": 0.005555
+    },
+    {
+      "add": "Aaron Nola",
       "drop": "Joshua Baez",
-      "dpwin": 0.057800000000000074,
-      "mc_se": 0.003796
+      "dpwin": 0.08987499999999998,
+      "mc_se": 0.005555
     },
     {
       "add": "Walbert Urena",
       "drop": "Max Fried",
-      "dpwin": 0.05370000000000008,
-      "mc_se": 0.003831
+      "dpwin": 0.08937499999999993,
+      "mc_se": 0.005556
+    },
+    {
+      "add": "Walbert Urena",
+      "drop": "Jose Soriano",
+      "dpwin": 0.08937499999999993,
+      "mc_se": 0.005556
     },
     {
       "add": "Walbert Urena",
       "drop": "Joshua Baez",
-      "dpwin": 0.05370000000000008,
-      "mc_se": 0.003831
-    },
-    {
-      "add": "Robbie Ray",
-      "drop": "Max Fried",
-      "dpwin": 0.05360000000000009,
-      "mc_se": 0.003832
-    },
-    {
-      "add": "Robbie Ray",
-      "drop": "Joshua Baez",
-      "dpwin": 0.05360000000000009,
-      "mc_se": 0.003832
-    },
-    {
-      "add": "Jackson Kent",
-      "drop": "Max Fried",
-      "dpwin": 0.052200000000000024,
-      "mc_se": 0.003844
+      "dpwin": 0.08937499999999993,
+      "mc_se": 0.005556
     }
   ],
   "pair_check": {
@@ -143,24 +143,23 @@
           "add_bucket": "H",
           "drop": "Joshua Baez",
           "drop_bucket": "H",
-          "dpwin_solo": 0.0797000000000001,
-          "mc_se": 0.003597
+          "dpwin_solo": 0.09799999999999992,
+          "mc_se": 0.005544
         },
         {
-          "add": "Bryce Miller",
+          "add": "Ian Seymour",
           "add_bucket": "SP",
           "drop": "Max Fried",
           "drop_bucket": "SP",
-          "dpwin_solo": 0.057800000000000074,
-          "mc_se": 0.003796
+          "dpwin_solo": 0.09449999999999997,
+          "mc_se": 0.005549
         }
       ],
-      "dpwin": 0.1253,
-      "pwin": 0.8929,
-      "mc_se": 0.003092,
-      "sum_solo": 0.13750000000000018,
-      "interaction": -0.012200000000000183
+      "dpwin": 0.18775,
+      "pwin": 0.65375,
+      "mc_se": 0.005319,
+      "sum_solo": 0.1924999999999999,
+      "interaction": -0.004749999999999893
     }
-  },
-  "dpwin_run_id": "2026-08-18T072117_7"
+  }
 }

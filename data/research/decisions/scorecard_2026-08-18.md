@@ -1,8 +1,8 @@
 # Decision Scorecard — 2026-08-18
 
-- Settled records: **815**
-- Pending (window not elapsed or too few events): **998**
-  - of which RIPE (time elapsed) but waiting on events/actuals: **205**
+- Settled records: **816**
+- Pending (window not elapsed or too few events): **997**
+  - of which RIPE (time elapsed) but waiting on events/actuals: **204**
 
 ## Classifications
 
@@ -13,7 +13,7 @@
 | FADE_HIT | 4 |
 | HOLD_NEUTRAL | 4 |
 | CAUTION_NEUTRAL | 103 |
-| MIXED_NEUTRAL | 329 |
+| MIXED_NEUTRAL | 330 |
 | UNSETTLEABLE_V1_UNITS | 64 |
 
 ## Directional hit-rate by bucket (BUY/FADE only)
