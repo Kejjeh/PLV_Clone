@@ -458,6 +458,28 @@ def main():
     # as a season-to-date diagnostic only, not the ranking basis.
     valid = assign_ranking_columns(valid, REPLACEMENT_RANK_RP)
 
+    # data_quality_tag — mirrors the rp3 convention so a prior-driven row is
+    # never mistaken for a measured one.
+    #
+    # 47% of the live RP universe (174/368 on 2026-08-18) has NO prior-year
+    # relief role: rookies, converted starters, and mid-season call-ups. For
+    # those rows `role_lag1` is null and the one-hots are all zero, but the
+    # NUMERIC lag features (sv_lag1 / hld_lag1) are mean-imputed by the
+    # pipeline — so the model effectively reads "had ~4 SV and ~8 HLD last
+    # year" where the truth is "unknown". The projection is then substantially
+    # prior-driven, exactly like rp3's `marcel_il` rows.
+    #
+    # Canonical miss this prevents: Jacob Latz, 25 SV and a 67% GF share in
+    # 2026 and PL's #6 reliever, projected BELOW replacement purely because his
+    # lag features were imputed — which read as a drop signal.
+    #
+    # This is a LABEL, not a model change: no feature is added, removed or
+    # reweighted, so it needs no /validate-feature gate. Fixing the imputation
+    # itself (e.g. a missing-role indicator feature) WOULD be a model change
+    # and must go through Rule 9 first.
+    valid['data_quality_tag'] = np.where(
+        valid['role_lag1'].isna(), 'lag_imputed', 'data_driven')
+
     bundle = {
         'pipeline': pipe,
         'features': FEATS_RPRS2,
@@ -491,19 +513,30 @@ def main():
     joblib.dump(bundle, MODEL_PKL)
     print(f'\nWrote {MODEL_PKL}')
 
-    keep = ['rank','pitcher','name_api','role_lag1','sv_lag1','hld_lag1',
+    keep = ['rank','pitcher','name_api','data_quality_tag',
+            'role_lag1','sv_lag1','hld_lag1',
             'g_to','sv_to','hld_to','gf_to','gf_pct_to','sv_per_g_to',
             'sv_2026','hld_2026',
             'fp_actual_2026','xfp_full_year','xfp_p25','xfp_p75',
             'xfp_ros','xfp_ros_p25','xfp_ros_p75',
             'replacement_xfp','replacement_delta','signal']
     keep = [c for c in keep if c in valid.columns]
-    valid[keep].to_csv(PROJ_CSV, index=False)
+    # ATOMIC write (temp + rename), matching _dump_coefs and the pl_cache
+    # writer. A plain to_csv leaves the file zero-length for a beat, and
+    # readers of this path are NOT coordinated with the writer: the nightly
+    # triangulate batch reads it via lib/cached_data._load_projection('RP')
+    # and died with `EmptyDataError: No columns to parse from file` on
+    # 2026-08-18 when a rebuild overlapped the daily refresh. Rename is atomic
+    # on the same filesystem, so a concurrent reader sees either the old file
+    # or the new one, never a truncated one.
+    _tmp = PROJ_CSV.with_suffix('.csv.tmp')
+    valid[keep].to_csv(_tmp, index=False)
+    _tmp.replace(PROJ_CSV)
     print(f'Wrote {PROJ_CSV}: {len(valid)} 2026 RP RoS projections')
 
     print('\nTop 15 by projected RoS FP:')
     show = valid.sort_values('xfp_ros', ascending=False).head(15)
-    cols_show = ['rank','name_api','role_lag1','g_to','sv_to','gf_to','sv_2026',
+    cols_show = ['rank','name_api','data_quality_tag','role_lag1','g_to','sv_to','gf_to','sv_2026',
                  'fp_actual_2026','xfp_full_year','xfp_ros','signal','replacement_delta']
     print(show[cols_show].to_string(index=False))
 

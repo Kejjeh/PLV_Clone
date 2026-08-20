@@ -663,7 +663,13 @@ def main():
     ]
     out_cols = [c for c in out_cols if c in valid.columns]
     report_name_completeness(valid)
-    valid[out_cols].to_csv(PROJ_CSV, index=False)
+    # ATOMIC write (temp + rename) — a plain to_csv leaves this path
+    # zero-length for a beat, and lib/cached_data._load_projection reads it
+    # from uncoordinated processes (nightly triangulate batch). See the
+    # EmptyDataError race fixed in rprs2.py on 2026-08-18.
+    _tmp = PROJ_CSV.with_suffix('.csv.tmp')
+    valid[out_cols].to_csv(_tmp, index=False)
+    _tmp.replace(PROJ_CSV)
     print(f'Wrote {PROJ_CSV}: {len(valid)} pitchers')
 
     print('\nTop 10 by replacement_delta (best add candidates):')
