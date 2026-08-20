@@ -235,6 +235,8 @@ data/research/boxscore_era/raw/
 data/research/boxscore_era/raw_probe/
 # ── ad-hoc session scratch dumps (roster/FA snapshots from one-off scripts)
 scratch_*
+scratchpad_*
+/fa_rp_pool_full.csv
 # ── FA pool snapshots: dated per-run copies are pure redundancy (213 tracked,
 #    3.0 MiB) against CLAUDE.md rule 5's no-parquet line. Consumers
 #    (blend_score, trade_target_scan, build_model_scorecard, session_context,
