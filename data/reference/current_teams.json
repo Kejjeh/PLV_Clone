@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-19",
+ "as_of": "2026-08-20",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -920,6 +920,12 @@
    "name": "J.P. Crawford",
    "pos": "SS"
   },
+  "646242": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Jhonathan Díaz",
+   "pos": "P"
+  },
   "640902": {
    "team": "Seattle Mariners",
    "abbr": "SEA",
@@ -1104,7 +1110,7 @@
    "team": "San Francisco Giants",
    "abbr": "SF",
    "name": "Buddy Kennedy",
-   "pos": "1B"
+   "pos": "3B"
   },
   "693313": {
    "team": "San Francisco Giants",
@@ -1250,6 +1256,12 @@
    "name": "Matt Gage",
    "pos": "P"
   },
+  "683363": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Matt Wilkinson",
+   "pos": "P"
+  },
   "801501": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1261,6 +1273,12 @@
    "abbr": "SF",
    "name": "Osleivis Basabe",
    "pos": "2B"
+  },
+  "691769": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Philip Abner",
+   "pos": "P"
   },
   "646240": {
    "team": "San Francisco Giants",
@@ -2180,6 +2198,12 @@
    "name": "Braydon Fisher",
    "pos": "P"
   },
+  "676454": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Brendan Cellucci",
+   "pos": "P"
+  },
   "663893": {
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
@@ -2328,12 +2352,6 @@
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
    "name": "Mason Fluharty",
-   "pos": "P"
-  },
-  "663362": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Matt Waldron",
    "pos": "P"
   },
   "453286": {
@@ -2756,12 +2774,6 @@
    "name": "Brandon Marsh",
    "pos": "LF"
   },
-  "662144": {
-   "team": "Philadelphia Phillies",
-   "abbr": "PHI",
-   "name": "Brian Keller",
-   "pos": "P"
-  },
   "548384": {
    "team": "Philadelphia Phillies",
    "abbr": "PHI",
@@ -2928,6 +2940,12 @@
    "team": "Philadelphia Phillies",
    "abbr": "PHI",
    "name": "Moisés Chace",
+   "pos": "P"
+  },
+  "641482": {
+   "team": "Philadelphia Phillies",
+   "abbr": "PHI",
+   "name": "Nestor Cortes",
    "pos": "P"
   },
   "689147": {
@@ -4428,7 +4446,7 @@
    "team": "Los Angeles Angels",
    "abbr": "LAA",
    "name": "Moisés Ballesteros",
-   "pos": "C"
+   "pos": "DH"
   },
   "805373": {
    "team": "Los Angeles Angels",
@@ -5492,6 +5510,12 @@
    "name": "Ethan Roberts",
    "pos": "P"
   },
+  "672356": {
+   "team": "Chicago Cubs",
+   "abbr": "CHC",
+   "name": "Gabriel Arias",
+   "pos": "3B"
+  },
   "668970": {
    "team": "Chicago Cubs",
    "abbr": "CHC",
@@ -6338,6 +6362,12 @@
    "name": "Kyle Karros",
    "pos": "3B"
   },
+  "815081": {
+   "team": "Colorado Rockies",
+   "abbr": "COL",
+   "name": "Mark Manfredi",
+   "pos": "P"
+  },
   "685326": {
    "team": "Colorado Rockies",
    "abbr": "COL",
@@ -6354,12 +6384,6 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "Nick Frasso",
-   "pos": "P"
-  },
-  "656786": {
-   "team": "Colorado Rockies",
-   "abbr": "COL",
-   "name": "Parker Mushinski",
    "pos": "P"
   },
   "701487": {
@@ -6834,6 +6858,12 @@
    "team": "Houston Astros",
    "abbr": "HOU",
    "name": "Enyel De Los Santos",
+   "pos": "P"
+  },
+  "814490": {
+   "team": "Houston Astros",
+   "abbr": "HOU",
+   "name": "Ethan Pecko",
    "pos": "P"
   },
   "669713": {
@@ -7442,12 +7472,6 @@
    "name": "Jake Cousins",
    "pos": "P"
   },
-  "642546": {
-   "team": "Los Angeles Dodgers",
-   "abbr": "LAD",
-   "name": "Jonathan Hernández",
-   "pos": "P"
-  },
   "680736": {
    "team": "Los Angeles Dodgers",
    "abbr": "LAD",
@@ -7680,6 +7704,12 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Eddy Yean",
+   "pos": "P"
+  },
+  "680899": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Erik Tolman",
    "pos": "P"
   },
   "681402": {

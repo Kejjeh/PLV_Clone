@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "RP",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.5,
+    "dpwin_chosen": 0.0045,
+    "dpwin_gap": 0.0103,
+    "dpwin_rejected": -0.0058,
+    "dtitle_equity_chosen": 0.0013,
+    "regime": "CLOSE",
+    "rejected_bucket": "RP",
+    "rejected_mlbam": null,
+    "rejected_name": "Logan VanWey",
+    "source_run_id": "2026-08-19T001815_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-19_tanner_scott_RP_001",
+  "executed_at": "2026-08-19T11:20:39",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Luke Weaver",
+    "id_source": "name_only",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "2 candidate runs preceded the move, took latest (2026-08-19T001815_7)"
+  },
+  "mlbam_id": null,
+  "player_name": "Tanner Scott",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-19",
+  "verdict_top": "SWAP"
+}
