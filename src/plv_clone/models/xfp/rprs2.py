@@ -252,6 +252,20 @@ def train_final(df, feats):
         filter_fn=lambda d: d['g_to'] >= EVAL_G_MIN)
 
 
+def ros_band(mean, sigma, z=0.6745):
+    """RoS p25/p75 as mean +/- z*sigma (issue #29).
+
+    Derived directly from the RoS mean so the band can never invert. The old
+    path differenced independently-clipped full-year quantiles, which forced
+    p25 to 0 while mean/p75 went negative for over-banked relievers.
+    Algebraically identical to the old values wherever no clip engaged.
+    """
+    import numpy as _np
+    p25 = _np.round(mean - z * sigma, 1)
+    p75 = _np.round(mean + z * sigma, 1)
+    return p25, p75
+
+
 def assign_ranking_columns(valid: pd.DataFrame, replacement_rank: int) -> pd.DataFrame:
     """Compute replacement_xfp / replacement_delta / signal / rank off
     `xfp_ros` — the genuine forward figure — not `xfp_full_year`, which
@@ -450,8 +464,10 @@ def main():
     # backtest-comparison artifact (its ranking lens compares full-season proj
     # vs partial actual on purpose); production is correct. See module docstring.
     valid['xfp_ros'] = (valid['xfp_full_year'] - valid['fp_actual_2026']).round(1)
-    valid['xfp_ros_p25'] = (valid['xfp_p25'] - valid['fp_actual_2026']).round(1).clip(lower=0)
-    valid['xfp_ros_p75'] = (valid['xfp_p75'] - valid['fp_actual_2026']).round(1)
+    valid['xfp_ros_p25'], valid['xfp_ros_p75'] = ros_band(
+        valid['xfp_ros'].to_numpy(), valid['xfp_sigma'].to_numpy())
+    assert ((valid['xfp_ros_p25'] <= valid['xfp_ros'])
+            & (valid['xfp_ros'] <= valid['xfp_ros_p75'])).all(),         'rprs2 RoS band inversion — see issue #29'
 
     # rank / replacement_xfp / replacement_delta / signal are forward-looking
     # (xfp_ros-based) as of the issue #9 fix — xfp_full_year is retained below
