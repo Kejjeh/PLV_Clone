@@ -52,8 +52,20 @@ PIT_POS = {"SP", "RP", "P"}
 
 SC_COLS = [
     "pitcher", "game_date", "game_pk", "at_bat_number", "pitch_number",
-    "release_speed", "description",
+    "release_speed", "description", "pitch_type",
 ]
+
+# Fastball family for `fb_velo_window`. `velo_window` is the pitch-weighted
+# mean over ALL pitch types -- that is the quantity the stabilization study
+# measured (`avg_velo`, r=.90 @ 150 pitches), so it keeps the validated gate.
+# But it is MIX-CONTAMINATED as a scouting read: a heavy off-speed mix drags it
+# 3-6 mph below the arm's actual fastball, and unevenly, so it MIS-RANKS.
+# Measured 2026-08-18 -- Detmers all-pitch 88.7 vs FB 94.0, Imanaga 85.9 vs
+# 91.1, Soriano 93.3 vs 96.6, Rasmussen 92.8 vs 93.7. Reading the all-pitch
+# column as "velo" made Detmers look like a soft-tosser and hid Soriano's 96.6.
+# Both are emitted: all-pitch carries the validated minimum, FB carries the
+# scouting meaning that /fa-monitor, /trending and stuff_command actually use.
+FB_TYPES = {"FF", "SI", "FC"}
 SWING_DESC = {
     "hit_into_play", "foul", "swinging_strike", "swinging_strike_blocked",
     "foul_tip", "missed_bunt", "foul_bunt",
@@ -210,6 +222,14 @@ def build(scope: str, season: int) -> pd.DataFrame:
         w_velo = d.tail(velo_n)
         velo = w_velo["release_speed"].mean()
 
+        # Fastball-only velo over the SAME window. Its denominator is the FB
+        # count inside that window (typically 55-80 of 150), which is NOT a
+        # separately validated stabilization minimum -- `fb_velo_window_n` is
+        # emitted so a thin-FB row can be discounted rather than trusted blind.
+        w_fb = w_velo[w_velo["pitch_type"].isin(FB_TYPES)]
+        fb_velo = w_fb["release_speed"].mean() if len(w_fb) else np.nan
+        fb_velo_n = len(w_fb)
+
         # whiff's minimum is in SWINGS (stabilization.SP_MINS/RP_MINS), so the
         # window must walk back until `whiff_n` SWINGS accumulate — NOT the
         # last `whiff_n` pitches, which contain far fewer swings than pitches
@@ -237,6 +257,8 @@ def build(scope: str, season: int) -> pd.DataFrame:
             "n_pitches_avail": n_total,
             "velo_window": round(velo, 1) if pd.notna(velo) else np.nan,
             "velo_window_n": velo_n,
+            "fb_velo_window": round(fb_velo, 1) if pd.notna(fb_velo) else np.nan,
+            "fb_velo_window_n": fb_velo_n,
             "velo_window_full": n_total >= velo_n,
             "whiff_window": round(whiff_pct, 1) if pd.notna(whiff_pct) else np.nan,
             "whiff_window_swings_n": whiff_n,
@@ -281,7 +303,8 @@ def main() -> int:
     if a.top <= 0:
         return 0
     cols = ["role", "name", "pos", "tm", "owner", "inj",
-            "velo_window", "whiff_window", "swstr_window",
+            "velo_window", "fb_velo_window", "fb_velo_window_n",
+            "whiff_window", "swstr_window",
             "n_pitches_avail", "window_crosses_prior_season"]
     with pd.option_context("display.width", 400, "display.max_rows", 400):
         for role in ("SP", "RP"):

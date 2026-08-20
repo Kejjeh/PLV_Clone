@@ -131,6 +131,12 @@ def load_pa(years: list[int], keep: set[int]) -> pd.DataFrame:
     pa = pd.concat(parts, ignore_index=True)
     pa["game_date"] = pd.to_datetime(pa["game_date"])
     # Savant's xwOBA numerator: xwOBAcon on batted balls, else the wOBA weight.
+    # ACTUAL wOBA over the same PA rows. `woba_value` is the realised linear
+    # weight per PA, so a plain mean over woba_denom==1 rows IS wOBA. Emitted
+    # beside xwOBA so the luck gap (woba - xwoba) is readable directly: a bat
+    # can be under- or over-performing its contact quality, and the xwOBA
+    # column alone cannot show which.
+    pa["wnum"] = pa["woba_value"]
     pa["xnum"] = pa["estimated_woba_using_speedangle"].where(
         pa["estimated_woba_using_speedangle"].notna(), pa["woba_value"]
     )
@@ -247,14 +253,18 @@ def build(scope: str, season: int) -> pd.DataFrame:
         rows.append({
             "mlbam": bid,
             "xwoba_window": w["xnum"].mean(),
+            "woba_window": w["wnum"].mean(),
+            "luck_gap": w["wnum"].mean() - w["xnum"].mean(),
             "pa_window": len(w),
             "pa_current_in_window": int((w["season"] == season).sum()),
             "pa_prior_in_window": int((w["season"] == season - 1).sum()),
             "window_from": w["game_date"].min().date().isoformat(),
             "window_to": w["game_date"].max().date().isoformat(),
             "xwoba_current": d_cur["xnum"].mean() if len(d_cur) else np.nan,
+            "woba_current": d_cur["wnum"].mean() if len(d_cur) else np.nan,
             "pa_current": len(d_cur),
             "xwoba_prior": d_pri["xnum"].mean() if len(d_pri) else np.nan,
+            "woba_prior": d_pri["wnum"].mean() if len(d_pri) else np.nan,
             "days_since_last_pa": int((asof - d["game_date"].max()).days),
         })
     x = pd.DataFrame(rows)
@@ -297,7 +307,8 @@ def main() -> int:
         return 0
     show = x[x["window_full"]].head(a.top)
     cols = ["rank_full_window", "name", "pos", "tm", "owner", "inj",
-            "xwoba_window", "pa_current_in_window", "pa_prior_in_window",
+            "xwoba_window", "woba_window", "luck_gap",
+            "pa_current_in_window", "pa_prior_in_window",
             "xwoba_current", "xwoba_prior"]
     with pd.option_context("display.width", 400, "display.max_rows", 400):
         print(show[cols].round(3).to_string(index=False))
