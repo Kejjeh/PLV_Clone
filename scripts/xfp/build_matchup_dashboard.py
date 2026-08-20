@@ -220,9 +220,14 @@ def compute_weekly_momentum(bs_h_week: dict, rh3_map: dict,
 # from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
 # per the user's spec — when in doubt, exclude.
 IL_INJURY_STATES = frozenset({
-    'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
+    # SEVEN_DAY_DL is MLB's concussion IL. It was missing here until
+    # 2026-08-18, so a concussed player projected as fully healthy and
+    # inflated the team total. It is rare (1 player league-wide the day it
+    # was found — Vladimir Guerrero Jr.), which is exactly why it survived:
+    # a state that shows up a few times a season never forces the bug.
+    'SEVEN_DAY_DL', 'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
     'INJURY_RESERVE', 'OUT', 'DAY_TO_DAY',
-    'IL10', 'IL15', 'IL60',
+    'IL7', 'IL10', 'IL15', 'IL60',
 })
 IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
 
