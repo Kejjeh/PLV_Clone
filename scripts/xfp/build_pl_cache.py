@@ -20,7 +20,9 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import requests
+import subprocess
+
+import requests  # noqa: F401  (kept: other callers import UA/this module)
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -33,9 +35,11 @@ YEAR = 2026
 _WEEK_ANCHOR_MONDAY = date(2026, 6, 22)
 _WEEK_ANCHOR_NUM = 14
 UA = {"User-Agent": "Mozilla/5.0 (compatible; plv-clone-pl-cache/1.0)"}
+_CURL_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+            "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 # (cache file, min valid count, universe label)
-_VALID_MIN = {"pl_sps_top100.json": 90, "pl_hitters_top150.json": 140, "pl_closers.json": 40}
+_VALID_MIN = {"pl_sps_top100.json": 90, "pl_hitters_top150.json": 140, "pl_closers.json": 90}
 
 
 def _sp_week(monday: date) -> int:
@@ -164,28 +168,74 @@ _CLOSER_ROLE_PRI = {"Closer": 0, "Co-Closer": 1, "Interim Closer": 2, "Closer?":
 
 
 def parse_closers(html_text: str):
-    """Parse PL's per-team reliever TABLE (role / player / save%). Returns
-    ({name: rank}, {name: {role, save_pct}}). Rank orders closers (by save% desc)
-    above setup above middle relief — a faithful fantasy-reliever ranking."""
+    """Parse PL's reliever article.
+
+    The article carries TWO structures and only one of them is a RANKING:
+
+    1. A global ranked table -- identical markup to the SP Top 100
+       (``td.rank`` + ``td.name``), 100 rows, ordered by PL's actual
+       saves+holds valuation. THIS is the ranking.
+    2. Per-team "CLOSER SITUATION" boxes giving role + save-chance %.
+       These are role CONTEXT for one bullpen, not a cross-team ordering.
+
+    Until 2026-08-18 this function ignored (1) entirely and SYNTHESIZED a rank
+    by sorting (2) on role-priority then save%. That ordering does not match
+    PL's published list and produced real errors: Latz parsed #9 vs a true #6,
+    Montgomery #21 vs a true #14, and Aroldis Chapman landed at #20 on a
+    save_pct of 0. Ranks now come from the ranked table; the role boxes are
+    kept as ``roles`` because save-chance % is genuinely useful and appears
+    nowhere else.
+
+    Returns ({name: rank}, {name: {role, save_pct, move}}).
+    """
     import html as _html
-    rows = re.findall(
-        r'<td class="emphasis"><strong>([^<]+)</strong></td>\s*'
-        r'<td><a[^>]*player/[^>]*>([^<]+)</a></td>'
-        r'(?:\s*<td><em>([^<]*)</em></td>)?', html_text)
-    recs = []
-    for role, name, pct in rows:
-        role = role.strip()
-        name = _html.unescape(name).strip()
-        sv = int(re.sub(r"[^0-9]", "", pct) or 0)
-        if name:
-            recs.append((role, name, sv))
-    recs.sort(key=lambda r: (_CLOSER_ROLE_PRI.get(r[0], 9), -r[2]))
-    ranks, roles = {}, {}
-    for role, name, sv in recs:
-        if name in ranks:
+    ranks, _pos = parse_rank_table(html_text, 100)
+
+    # PL's own week-over-week move lives in the ranked table's last cell
+    # ("+16", "-3", "+UR", "-"). Prefer it over diffing two cached editions:
+    # it is authoritative and survives a skipped edition.
+    #
+    # The page carries the CURRENT ranked table AND last week's, so a given
+    # pitcher appears twice with different rank/move. Document order puts the
+    # current table first, so FIRST WINS here -- exactly as parse_rank_table
+    # dedupes. Letting the last win silently swapped in stale moves (Tanner
+    # Scott read -1 from the prior table instead of his true +16).
+    moves = {}
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html_text, re.S):
+        nm = re.search(r'<td class="name"><a[^>]*>([^<]+)</a>', tr)
+        if not nm:
             continue
-        ranks[name] = len(ranks) + 1
-        roles[name] = {"role": role, "save_pct": sv}
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)
+        if len(cells) < 5:
+            continue
+        name = _html.unescape(nm.group(1)).strip()
+        if name in moves:
+            continue
+        mv = _html.unescape(re.sub(r"<[^>]+>", "", cells[-1])).strip()
+        moves[name] = mv
+
+    # Role / save-chance % from the per-team boxes (context, never the rank).
+    # Parsed structurally off the 3-cell role row rather than by a regex that
+    # assumed the percent sat in <em> -- it does not always, and the optional
+    # group silently yielded 0% (Chapman read 0 on a real 75).
+    roles = {}
+    for tr in re.findall(r"<tr[^>]*>(.*?)</tr>", html_text, re.S):
+        cells = re.findall(r"<td[^>]*>(.*?)</td>", tr, re.S)
+        if len(cells) != 3:
+            continue
+        nm = re.search(r'<a[^>]*player/[^>]*>([^<]+)</a>', cells[1])
+        if not nm:
+            continue
+        name = _html.unescape(nm.group(1)).strip()
+        if not name or name in roles:
+            continue
+        role = _html.unescape(re.sub(r"<[^>]+>", "", cells[0])).strip()
+        pct = re.sub(r"[^0-9]", "", re.sub(r"<[^>]+>", "", cells[2]))
+        roles[name] = {"role": role or None,
+                       "save_pct": int(pct) if pct else None}
+
+    for name, mv in moves.items():
+        roles.setdefault(name, {"role": None, "save_pct": None})["move"] = mv
     return ranks, roles
 
 
@@ -207,9 +257,25 @@ def _write_cache(fname: str, url: str, ranks: dict, edition: date, extra: dict |
 
 
 def _fetch(url: str):
+    """Fetch a PL article.
+
+    PL sits behind a bot filter that 403s python-requests on EVERY URL (the
+    homepage included) regardless of User-Agent -- it fingerprints the TLS
+    handshake, not the header. curl's handshake passes, so we shell out to it.
+    Verified 2026-08-18: requests -> 403 site-wide, curl -> 200 with the full
+    100-row rank table intact, so the parsers below are unchanged.
+    """
     try:
-        r = requests.get(url, headers=UA, timeout=25)
-        return r.text if r.status_code == 200 else None
+        r = subprocess.run(
+            ["curl", "-sS", "-L", "--compressed", "--max-time", "25",
+             "-A", _CURL_UA, "-w", "\n%{http_code}", url],
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=40,
+        )
+        if r.returncode != 0:
+            return None
+        body, _, code = r.stdout.rpartition("\n")
+        return body if code.strip() == "200" else None
     except Exception:
         return None
 
@@ -251,13 +317,22 @@ def refresh(force=False):
     # Hitters — Wednesday edition (position-tiered; try recent week-number URLs)
     if force or _stale("pl_hitters_top150.json", cur, now):
         wed = _latest_published_edition(now, 2)
+        # The hitter week number lags the SP week UNPREDICTABLY, so we probe
+        # backwards and take the newest week that resolves. The edition date
+        # stamped below is the calendar Wednesday, which is NOT necessarily the
+        # week that answered: on 2026-08-18, weeks 22 and 21 both 404'd and
+        # week 20 served -- yet the payload was stamped 2026-08-12 exactly as
+        # the previous week-19 pull had been. Two different editions carrying an
+        # identical `fetched` date made the cache look current while it sat a
+        # full week behind. Record the resolved week so staleness can be judged
+        # on CONTENT rather than on the calendar.
         for url, _w in hitters_urls(_sp_week(_latest_published_edition(now, 0))):
             html = _fetch(url)
             if html:
                 ranks, positions = parse_rank_table(html, 150)
                 if len(ranks) >= _VALID_MIN["pl_hitters_top150.json"]:
                     _write_cache("pl_hitters_top150.json", url, ranks, wed,
-                                 extra={"positions": positions})
+                                 extra={"positions": positions, "week": _w})
                     break
         else:
             print("  hitters: no week-number URL returned a full list (best-effort)", file=sys.stderr)

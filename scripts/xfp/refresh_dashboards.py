@@ -1125,7 +1125,15 @@ def main():
     # only as per-call WARNs on every triangulate. Fail-soft, display-only.
     print(f'\n{"="*70}\n  7. PL cache freshness (manual refresh — agent WebFetch)\n{"="*70}')
     try:
-        from scripts.xfp.lib.pl_cache import print_refresh_instructions
+        # `scripts` is not an importable package: this file runs as
+        # `python scripts/xfp/refresh_dashboards.py`, so sys.path[0] is
+        # scripts/xfp/ and `scripts.xfp.lib...` raises ModuleNotFoundError.
+        # The check is fail-soft, so it swallowed its own import error and
+        # printed a one-line non-gating warning EVERY run -- meaning the
+        # single loud checkpoint that exists to catch PL staleness had never
+        # actually run. The SP cache sat 8 days stale behind it (2026-08-18).
+        sys.path.insert(0, str(SCRIPTS))
+        from lib.pl_cache import print_refresh_instructions
         print_refresh_instructions()
     except Exception as e:
         print(f'  ! PL cache freshness check failed — continuing (non-gating): {e}')
