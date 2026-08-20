@@ -234,15 +234,42 @@ def attach_mlb_id(bref_df: pd.DataFrame, fg_df: pd.DataFrame) -> pd.DataFrame:
     return merged
 
 
+# Re-pull cadence for the CURRENT season. The cached-skip below only asked
+# "are all YEARS present?", which is permanently true once the in-progress
+# season has ANY rows -- so the current year froze at whatever date it was
+# first pulled and never refreshed. Found 2026-08-18: both this cache and the
+# BRef IR cache sat at 2026-05-30 (80.6 days) while the daily refresh reported
+# them as [FAIL] degraded, matching only 76.7% of the live reliever pool.
+CURRENT_SEASON_MAX_AGE_DAYS = 7
+
+
+def _current_season_stale(path, years) -> bool:
+    """True if `years` includes the in-progress season and `path` is older than
+    CURRENT_SEASON_MAX_AGE_DAYS. Completed seasons never go stale."""
+    import datetime as _dt
+    this_year = _dt.date.today().year
+    if this_year not in years:
+        return False
+    age_days = (_dt.datetime.now()
+                - _dt.datetime.fromtimestamp(path.stat().st_mtime)).days
+    return age_days > CURRENT_SEASON_MAX_AGE_DAYS
+
+
 def main():
-    if OUT_PATH.exists():
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument('--force', action='store_true',
+                    help='re-pull even if the cache looks complete')
+    args, _ = ap.parse_known_args()
+    if OUT_PATH.exists() and not args.force:
         try:
             ex = pd.read_csv(OUT_PATH)
             have = set(int(y) for y in ex['season'].dropna().unique())
             if all(y in have for y in YEARS) and ex['is_pct'].notna().sum() > 500 \
                     and ex['mlb_id'].notna().sum() > 500:
-                print(f'Cached {OUT_PATH.name} already has all years + IS% + mlb_id — skip.', flush=True)
-                return
+                if not _current_season_stale(OUT_PATH, YEARS):
+                    print(f'Cached {OUT_PATH.name} already has all years + IS% + mlb_id — skip.', flush=True)
+                    return
         except Exception:
             pass
 

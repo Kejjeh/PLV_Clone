@@ -190,8 +190,21 @@ def main():
     rolling = rolling.merge(rate_lag, left_on=['pitcher','year'],
                              right_on=['pitcher','year_target'], how='left')
     rolling = rolling.drop(columns=['year_target'], errors='ignore')
-    rolling['sv_per_g_lag1']  = rolling['sv_per_g_lag1'].fillna(0.0)
-    rolling['hld_per_g_lag1'] = rolling['hld_per_g_lag1'].fillna(0.0)
+    # Make the missing-lag encoding SELF-CONSISTENT. Until 2026-08-18 the counts
+    # above were imputed to the population MEAN while these rates were imputed to
+    # 0.0, so one lag-missing row simultaneously told the ridge "~4 SV and ~8 HLD
+    # last year" and "save rate exactly 0". Both halves now use the population
+    # mean.
+    #
+    # Measured, not assumed: validate_role_lag_missing.py cell C tested exactly
+    # this change against the full 28-feature baseline and scored -0.0002
+    # cross-year r (see validation_runs/rprs2_role_lag_missing_2026-08-18.md,
+    # verdict REJECTED). This is a CONSISTENCY fix with no accuracy claim --
+    # do not cite it as an improvement.
+    _mu_sv_per_g = float((multiyr['sv'] / multiyr['g'].replace(0, np.nan)).mean())
+    _mu_hld_per_g = float((multiyr['hld'] / multiyr['g'].replace(0, np.nan)).mean())
+    rolling['sv_per_g_lag1']  = rolling['sv_per_g_lag1'].fillna(_mu_sv_per_g)
+    rolling['hld_per_g_lag1'] = rolling['hld_per_g_lag1'].fillna(_mu_hld_per_g)
 
     rolling.to_csv(OUT, index=False)
     print(f'\nWrote {OUT}: {len(rolling)} rows')

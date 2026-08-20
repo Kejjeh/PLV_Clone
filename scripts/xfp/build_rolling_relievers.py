@@ -41,7 +41,17 @@ SEASON_STARTS = {
     2024: '2024-03-28', 2025: '2025-03-27', 2026: '2026-03-26',
 }
 MIN_G_TO = 5            # min in-season relief appearances to qualify
-MAX_GS_TO = 2           # exclude SP-types (more than 2 starts so far disqualifies)
+MAX_GS_TO = 2           # exclude SP-types (more than 2 REAL starts so far disqualifies)
+
+# An OPENER is nominally the starting pitcher but is a reliever by usage: one
+# inning, then the bulk arm follows. Counting openers toward gs_to disqualified
+# genuine relievers from this universe the moment a manager used them 3 times.
+# Found 2026-08-18: Mason Montgomery (PIT closer, 51 G / 42.1 IP / 0.83 IP per
+# appearance, 5 SV / 9 HLD) had 5 "starts", EVERY ONE exactly 1.0 IP on 7-25
+# pitches. He crossed MAX_GS_TO around split-day 44 and vanished from rprs2 for
+# the rest of the season. Same for Grant Taylor and Bryan Hudson - all three are
+# PL top-40 relievers. A start at or under this pitch count does not count.
+OPENER_MAX_PITCHES = 30
 
 SWING_DESC = {'swinging_strike','swinging_strike_blocked','foul','foul_tip',
               'hit_into_play','foul_bunt','missed_bunt'}
@@ -221,6 +231,15 @@ def build_year(year: int) -> pd.DataFrame:
     starts = (p_full[p_full['inning'] == 1]
               .groupby(['game_pk', 'inning_topbot'])['pitcher']
               .first().reset_index().rename(columns={'pitcher': 'starter_id'}))
+    # Drop opener appearances from the start count (see OPENER_MAX_PITCHES).
+    # Pitch totals are per completed game, so this is computed once here rather
+    # than per cutoff; the cutoff filter below still decides WHICH games count.
+    _np_game = (p_full.groupby(['game_pk', 'pitcher']).size()
+                .reset_index(name='starter_pitches'))
+    starts = starts.merge(_np_game, left_on=['game_pk', 'starter_id'],
+                          right_on=['game_pk', 'pitcher'], how='left')
+    starts = starts.drop(columns=['pitcher'])
+    starts = starts[starts['starter_pitches'].fillna(0) > OPENER_MAX_PITCHES]
 
     # Determine which split_days are usable: nominal cutoff <= max data date.
     # For an in-progress year, only completed cutoffs emit rows. Plus one
