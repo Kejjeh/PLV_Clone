@@ -160,7 +160,13 @@ CANONICAL_CASES = [
     #   boundary like Weathers/Detmers — same remedy: bucket-only lock.
     ("Casey Schmitt",   None,                      "H",  None,    None),
     ("Bailey Ober",     "CAUTION",                "SP", "CAUTION", None),
-    ("Bryan Woo",       "STRONG HOLD/BUY",         "SP", None,      None),
+    # 2026-08-20 — Woo's 2nd boundary flip (issue #42): the fresh 08-17 PL
+    #   cache moved him 29 -> 35, past the pl_r<=30 leg of the STRONG HOLD/BUY
+    #   rule, so the lock was pinning PL's live rank, not a code behavior.
+    #   Executing the pre-committed 2nd-flip remedy (Detmers/Weathers/Nelson/
+    #   Turner/Valdez precedent): bucket-only lock, override_tag ANY (he can
+    #   carry DECLINE_VETO when his base read is BUY, per the Weathers note).
+    ("Bryan Woo",       None,                      "SP", None,      ANY),
     # 2026-07-20: Bradish CAUTION -> MIXED on NEW DATA (his 2026-07-19 start
     #   @HOU landed in the overnight refresh; the post-TJ sample grew again).
     #   Re-pinned once; if he churns again, bucket-only lock per precedent.
