@@ -134,7 +134,8 @@ def is_period_covered(matchup_period: int | None) -> bool:
 # Every cap-projection consumer imports THIS, never re-types it (audit 2026-07-03).
 STARTS_PER_SP_PER_WEEK = 1.19
 
-IL_STATUSES = frozenset({"TEN_DAY_DL", "FIFTEEN_DAY_DL", "SIXTY_DAY_DL"})
+from plv_clone.il_states import IL_STATES_STRICT as IL_STATUSES  # issue #28
+# (widened 2026-08-20: SEVEN_DAY_DL/IR/OUT/IL* now also zero an SP's starts)
 
 
 def projected_starts(n_healthy_sps: int, *, rate: float = STARTS_PER_SP_PER_WEEK) -> float:

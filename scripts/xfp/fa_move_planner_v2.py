@@ -27,9 +27,9 @@ RES = ROOT / 'data' / 'research'
 
 HITTER_SLOTS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF',
                 'DH', 'UTIL', 'MI', 'CI'}
-IL_STATUSES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'DAY_TO_DAY',
-                'INJURY_RESERVE', 'IL_60', 'IL_15', 'IL_10', 'DAY-TO-DAY',
-                'OUT', 'PATERNITY', 'SUSPENSION'}
+from plv_clone.il_states import IL_STATES_WITH_DTD  # issue #28
+IL_STATUSES = IL_STATES_WITH_DTD | {'IL_60', 'IL_15', 'IL_10', 'DAY-TO-DAY',
+                                    'PATERNITY', 'SUSPENSION'}
 
 
 # Name join key — OWNER: plv_clone.utils.name_match.safe_name_key. Order-

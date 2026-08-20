@@ -219,16 +219,9 @@ def compute_weekly_momentum(bs_h_week: dict, rh3_map: dict,
 # Canonical IL statuses across ESPN. Any of these = IL'd; must be excluded
 # from pickup/streamer/add suggestions. DAY_TO_DAY is included paranoidally
 # per the user's spec — when in doubt, exclude.
-IL_INJURY_STATES = frozenset({
-    # SEVEN_DAY_DL is MLB's concussion IL. It was missing here until
-    # 2026-08-18, so a concussed player projected as fully healthy and
-    # inflated the team total. It is rare (1 player league-wide the day it
-    # was found — Vladimir Guerrero Jr.), which is exactly why it survived:
-    # a state that shows up a few times a season never forces the bug.
-    'SEVEN_DAY_DL', 'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-    'INJURY_RESERVE', 'OUT', 'DAY_TO_DAY',
-    'IL7', 'IL10', 'IL15', 'IL60',
-})
+from plv_clone.il_states import (  # issue #28 — canonical IL-state sets
+    IL_STATES_STRICT, IL_STATES_WITH_DTD, LONG_IL_STATES, IL_PARTIAL_CREDIT)
+IL_INJURY_STATES = IL_STATES_WITH_DTD
 IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
 
 # Slot-aware FP projection (validated 2026-06-03; ΔMAE +19.5 FP/team-period,
@@ -433,13 +426,7 @@ DEFAULT_RP_APP_RATE = 0.35
 # Logic: TEN/FIFTEEN-day DL with unknown return means ESPN hasn't set the date yet,
 # which typically happens early in the IL stint — player likely out most of the week.
 # SIXTY_DAY / INJURY_RESERVE / OUT: definitively zero.
-_IL_PARTIAL_CREDIT = {
-    'TEN_DAY_DL': 0.20,
-    'FIFTEEN_DAY_DL': 0.10,
-    'SIXTY_DAY_DL': 0.0,
-    'INJURY_RESERVE': 0.0,
-    'OUT': 0.0,
-}
+_IL_PARTIAL_CREDIT = IL_PARTIAL_CREDIT  # issue #28 — canonical, incl. SEVEN_DAY_DL
 
 
 def load_rp_appearance_rates(n_days: int = 21) -> dict:
@@ -817,7 +804,7 @@ def load_il_returns(mu):
     il_ids = []
     for p in (mu.get('my_lineup') or []) + (mu.get('opp_lineup') or []):
         inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
-        if inj in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+        if inj in IL_STATES_STRICT:
             pid = getattr(p, 'playerId', None)
             if pid: il_ids.append(int(pid))
     if not il_ids: return {}
@@ -1236,9 +1223,7 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
     # in main() which already filters healthy SPs upstream).
     il_factor = 1.0
     inj = (getattr(player, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
-    IL_STATES = ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-                 'INJURY_RESERVE', 'OUT')
-    if inj in IL_STATES:
+    if inj in IL_STATES_STRICT:
         pid_for_il = getattr(player, 'playerId', None)
         rd = adj.il_returns.get(pid_for_il) if pid_for_il else None
         if rd is None:
@@ -2240,7 +2225,9 @@ def _count_past_sp_starts(my_lineup, week_start, today, add_dates=None):
         if detect_pitcher_role(p) != 'SP':
             continue
         inj = (getattr(p, 'injuryStatus', 'ACTIVE') or 'ACTIVE').upper()
-        if inj in ('SIXTY_DAY_DL', 'INJURY_RESERVE', 'OUT'):
+        # Deliberately LONG-IL only: a 7/10/15-day IL SP can return within
+        # the window, so short-IL states must not drop him here (issue #28).
+        if inj in LONG_IL_STATES:
             continue
         pid = _resolve_pitcher_mlbam(p.name, team=(getattr(p, 'proTeam', None) or None), role='SP')
         if not pid:
@@ -3355,8 +3342,7 @@ def main():
         # Skip only true IL/out states. A DAY_TO_DAY pitcher with a scheduled
         # start still pitches (Soriano 2026: DTD but a confirmed probable), so
         # DTD must NOT drop him from the week's SP-start projection.
-        if inj_p in ('TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-                     'INJURY_RESERVE', 'OUT'):
+        if inj_p in IL_STATES_STRICT:
             continue
         pid_sp = _resolve_pitcher_mlbam(p.name, team=(getattr(p, 'proTeam', None) or None), role='SP')
         if not pid_sp:

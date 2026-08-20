@@ -3,7 +3,8 @@ FA rehab watchlist, into one master list. See test file for the WHY.
 """
 from __future__ import annotations
 
-REAL_IL_STATES = frozenset({"TEN_DAY_DL", "FIFTEEN_DAY_DL", "SIXTY_DAY_DL"})
+REAL_IL_STATES = frozenset({"SEVEN_DAY_DL", "TEN_DAY_DL", "FIFTEEN_DAY_DL",
+                            "SIXTY_DAY_DL"})  # issue #28
 
 
 def discover_il_players(roster_rows, my_team_name):

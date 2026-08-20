@@ -31,14 +31,7 @@ INJURY_CACHE = CACHE / "injury_status.json"
 
 # ESPN injury states that count as "on the IL" for the caveat (mirrors the
 # matchup dashboard's IL_INJURY_STATES, minus DAY_TO_DAY which is not the IL).
-_IL_STATES = frozenset({
-    # SEVEN_DAY_DL (concussion IL) added 2026-08-18 — it was absent from both
-    # this set and the matchup dashboard's, so a concussed player read as
-    # healthy in the triangulate IL caveat.
-    "SEVEN_DAY_DL", "TEN_DAY_DL", "FIFTEEN_DAY_DL", "SIXTY_DAY_DL",
-    "INJURY_RESERVE", "OUT",
-    "IL7", "IL10", "IL15", "IL60", "IL",
-})
+from plv_clone.il_states import IL_STATES_STRICT as _IL_STATES  # issue #28
 
 
 def load_il_map(path: Path | str = INJURY_CACHE) -> dict:

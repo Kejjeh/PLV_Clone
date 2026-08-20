@@ -144,6 +144,7 @@ def _dock_flat_rows(df: pd.DataFrame, flat_const: float):
 # Coarse IL-return heuristic (days from TODAY) when injury_details has no date.
 # Surgery / season-ending cases are OVER-estimated here (see module docstring).
 HEUR = {"SIXTY_DAY_DL": 56, "FIFTEEN_DAY_DL": 21, "TEN_DAY_DL": 15,
+        "SEVEN_DAY_DL": 9,
         "OUT": 14, "DAY_TO_DAY": 0, "DOUBTFUL": 5, "QUESTIONABLE": 0}
 
 # ESPN slot -> our hitter bucket membership

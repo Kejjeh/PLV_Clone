@@ -32,6 +32,7 @@ _STATUS_TO_CLASS = {
     "OUT":            "IL15",        # generic OUT — refined by detail if available
     "SUSPENSION":     "OUT_INDEFINITE",
     "INJURED_RESERVE": "IL60",
+    "SEVEN_DAY_DL":    "IL7",
     "FIFTEEN_DAY_DL":  "IL15",
     "TEN_DAY_DL":      "IL10",
     "SIXTY_DAY_DL":    "IL60",

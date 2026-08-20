@@ -46,7 +46,7 @@ from scripts.xfp.lib import late_season_volume as lsv           # noqa: E402
 from scripts.xfp.lib.team_override import (                     # noqa: E402
     ESPN_TEAM_ALIASES, load_map, verify_identity)
 
-IL_STATES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'OUT'}
+from plv_clone.il_states import IL_STATES_STRICT as IL_STATES  # issue #28
 OUT_CSV = Path('data/outputs/playoff_roster_fp.csv')
 # a full rotation slot; nobody starts more often than this over a long window
 MAX_GS_PER_TG = 0.21

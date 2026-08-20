@@ -22,8 +22,7 @@ _GROUP_LABELS.update({  # short rail headers
     'SP': 'Starting Pitchers', 'CLOSER': 'Closers', 'SETUP': 'Setup / Middle Relief',
 })
 
-_IL_STATES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'INJURY_RESERVE',
-              'OUT', 'IL', 'IL10', 'IL15', 'IL60'}
+from plv_clone.il_states import IL_STATES_STRICT as _IL_STATES  # issue #28
 
 
 def build_card_data(result: dict) -> dict:

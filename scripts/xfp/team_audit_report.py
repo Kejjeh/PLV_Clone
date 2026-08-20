@@ -204,7 +204,8 @@ def main():
         for p in il_players:
             nk = _norm(p['name'])
             ino = info_lookup.get(nk, {})
-            inj_label = {'FIFTEEN_DAY_DL': '15-day IL',
+            inj_label = {'SEVEN_DAY_DL': '7-day IL',
+                         'FIFTEEN_DAY_DL': '15-day IL',
                          'SIXTY_DAY_DL': '60-day IL',
                          'DAY_TO_DAY': 'day-to-day',
                          'OUT': 'out'}.get(p['injury_status'], p['injury_status'])

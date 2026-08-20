@@ -30,9 +30,8 @@ OUT = ROOT / 'data' / 'outputs'
 SP_REMAINING_STARTS = 24
 IL_DISCOUNT_STARTS = 4  # what we subtract for IL'd SPs
 
-IL_STATUSES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-                'DAY_TO_DAY', 'INJURY_RESERVE', 'OUT', 'SUSPENSION',
-                'PATERNITY'}
+from plv_clone.il_states import IL_STATES_WITH_DTD  # issue #28
+IL_STATUSES = IL_STATES_WITH_DTD | {'SUSPENSION', 'PATERNITY'}
 
 
 # _norm was join_key's exact algorithm (NFD-Mn + sorted alpha tokens); routed to

@@ -49,8 +49,9 @@ from scripts.xfp.lib.il_marcel import (  # noqa: E402
 OUT_P = Path('data/outputs/il_stash_board.csv')
 OUT_H = Path('data/outputs/il_stash_board_hitters.csv')
 PRIORS = Path('data/research/il_return_priors.csv')
-IL_STATES = {'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL', 'OUT'}
-TIER = {'SIXTY_DAY_DL': 'IL60', 'FIFTEEN_DAY_DL': 'IL15', 'TEN_DAY_DL': 'IL10'}
+from plv_clone.il_states import IL_STATES_STRICT as IL_STATES  # issue #28
+TIER = {'SIXTY_DAY_DL': 'IL60', 'FIFTEEN_DAY_DL': 'IL15', 'TEN_DAY_DL': 'IL10',
+        'SEVEN_DAY_DL': 'IL7', 'INJURY_RESERVE': 'IL60'}
 HIT_POS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH'}
 GAMES_PER_DAY = 6.0 / 7.0
 SP_SLOT_RATE = 0.20      # a rotation slot, in starts per team-game

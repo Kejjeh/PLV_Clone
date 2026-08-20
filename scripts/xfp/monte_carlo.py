@@ -35,8 +35,7 @@ OUT = ROOT / 'data' / 'outputs'
 
 N_SIMS = 20000
 PLAYOFF_TEAMS = 6  # BrownU
-IL_STATES = {'OUT', 'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-             'TEN_DAY_IL', 'FIFTEEN_DAY_IL', 'SIXTY_DAY_IL'}
+from plv_clone.il_states import IL_STATES_STRICT as IL_STATES  # issue #28
 H_GAMES_WK = 6.5      # hitter games per scoring week
 from plv_clone.cap_math import STARTS_PER_SP_PER_WEEK as SP_STARTS_WK  # owner (audit 2026-07-04)
 PLAYOFF_SIGMA_MULT = 1.4   # multi-week playoff rounds are wider

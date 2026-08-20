@@ -1110,10 +1110,7 @@ def build_watch_list(verdict_top: str, reason_tag: str, model: dict, arche: dict
 
 # ---------- public high-level entry point ----------
 
-_IL_STATES = frozenset({
-    'IL', 'IL10', 'IL15', 'IL60', 'OUT', 'INJURY_RESERVE',
-    'TEN_DAY_DL', 'FIFTEEN_DAY_DL', 'SIXTY_DAY_DL',
-})
+from plv_clone.il_states import IL_STATES_STRICT as _IL_STATES  # issue #28
 
 
 def il_caveat(il_status) -> str | None:
