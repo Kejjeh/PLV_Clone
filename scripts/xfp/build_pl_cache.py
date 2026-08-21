@@ -82,6 +82,28 @@ def closers_url(tuesday: date) -> str:
             f"{_md(tuesday)}/")
 
 
+def closers_url_candidates(latest_tuesday: date):
+    """Yield (url, edition_tuesday) newest-first (issue #35). Mirrors
+    sp_url_candidates: PL slips the reliever article to Wednesday on holiday
+    weeks, and a single-URL fetch stranded the cache indefinitely."""
+    for wk_back in range(3):
+        tue = latest_tuesday - timedelta(days=7 * wk_back)
+        for day_off in (0, 1):  # Tuesday, then the holiday-shifted Wednesday
+            yield closers_url(tue + timedelta(days=day_off)), tue
+
+
+def hitter_edition_stamp(prev_week, prev_fetched, resolved_week, calendar_wed):
+    """The `fetched` stamp for the hitter cache (issue #35). Re-serving the
+    already-cached week keeps the OLD stamp so staleness keeps accruing —
+    stamping the calendar date made a week-behind cache look current."""
+    if prev_week is not None and prev_fetched and resolved_week == prev_week:
+        try:
+            return date.fromisoformat(str(prev_fetched))
+        except ValueError:
+            pass
+    return calendar_wed
+
+
 def hitters_urls(sp_week: int):
     # hitter week number lags the SP week unpredictably -> try a few recent ones
     for w in (sp_week, sp_week - 1, sp_week - 2):
@@ -306,12 +328,21 @@ def refresh(force=False):
     # Closers — Tuesday edition (per-team role table -> role + save% + synthesized rank)
     if force or _stale("pl_closers.json", cur, now):
         tue = _latest_published_edition(now, 1)
-        html = _fetch(closers_url(tue))
-        if html:
+        wrote_cl = False
+        last_cl = None
+        for url, ed_tue in closers_url_candidates(tue):
+            last_cl = url
+            html = _fetch(url)
+            if not html:
+                continue
             ranks, roles = parse_closers(html)
-            _write_cache("pl_closers.json", closers_url(tue), ranks, tue, extra={"roles": roles})
-        else:
-            print(f"  closers fetch failed: {closers_url(tue)}", file=sys.stderr)
+            if len(ranks) >= _VALID_MIN["pl_closers.json"]:
+                _write_cache("pl_closers.json", url, ranks, ed_tue, extra={"roles": roles})
+                wrote_cl = True
+                break
+        if not wrote_cl:
+            print(f"  closers fetch failed (tried Tue/Wed across 3 weeks); last: {last_cl}",
+                  file=sys.stderr)
     else:
         print("  closers current — skip")
     # Hitters — Wednesday edition (position-tiered; try recent week-number URLs)
@@ -331,13 +362,29 @@ def refresh(force=False):
             if html:
                 ranks, positions = parse_rank_table(html, 150)
                 if len(ranks) >= _VALID_MIN["pl_hitters_top150.json"]:
-                    _write_cache("pl_hitters_top150.json", url, ranks, wed,
+                    _prev = _load_cache_raw("pl_hitters_top150.json")
+                    stamp = hitter_edition_stamp(
+                        (_prev.get("week") if _prev else None),
+                        (_prev.get("fetched") if _prev else None), _w, wed)
+                    _write_cache("pl_hitters_top150.json", url, ranks, stamp,
                                  extra={"positions": positions, "week": _w})
                     break
         else:
             print("  hitters: no week-number URL returned a full list (best-effort)", file=sys.stderr)
     else:
         print("  hitters current — skip")
+
+
+def _load_cache_raw(fname):
+    """Existing cache payload as a dict, or None (issue #35)."""
+    path = Path(PL_CACHE_DIR) / fname
+    if not path.exists():
+        return None
+    try:
+        import json
+        return json.loads(path.read_text(encoding="utf-8"))
+    except Exception:
+        return None
 
 
 def _cache_fetched(fname):

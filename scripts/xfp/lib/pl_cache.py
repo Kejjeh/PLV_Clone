@@ -67,7 +67,7 @@ PL_CACHE_FILES = {
 }
 
 # Article-universe sizes — distinguishes "snubbed" (UR) from "out-of-scope" (—).
-PL_UNIVERSE_SIZE = {'H': 150, 'SP': 100, 'RP': 50}
+PL_UNIVERSE_SIZE = {'H': 150, 'SP': 100, 'RP': 100}
 
 
 def pl_rank(name: str, bucket: str, model_rank=None):
@@ -81,7 +81,10 @@ def pl_rank(name: str, bucket: str, model_rank=None):
             return rk, fetched
     if not ranks:
         return '—', None
-    universe = PL_UNIVERSE_SIZE.get(bucket, 150)
+    # Universe = the parsed table when we have it (issue #35 — the closers
+    # parser moved 50 -> 100 rows and the static size silently lagged);
+    # static size is only the no-cache floor.
+    universe = max(PL_UNIVERSE_SIZE.get(bucket, 150), len(ranks))
     if isinstance(model_rank, int) and model_rank > universe:
         return '—', fetched
     return 'UR', fetched
