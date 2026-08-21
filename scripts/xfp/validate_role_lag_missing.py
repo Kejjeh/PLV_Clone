@@ -103,14 +103,21 @@ def split_curve(d, feats, years):
     return res
 
 
+HOLDOUT_YEARS = (2024, 2025)
+
+
 def main():
     r, mu, mu_rate = load()
     YEARS = M.TRAIN_YEARS
+    # Issue #41: the winning cell is selected on SEL_YEARS only — with the
+    # holdout inside the selection signal, a spurious 2025 gain could pick
+    # the cell that then "confirms" itself on 2025.
+    SEL_YEARS = [y for y in YEARS if y not in HOLDOUT_YEARS]
     base = M.FEATS_RPRS2
     print(f'Rule 9 baseline: {len(base)} production features')
     print(f'rows={len(r)}  lag_missing={int(r[FLAG].sum())}\n')
 
-    b_pool, b_year, b_sub, n = loo_r(r, base, YEARS)
+    b_pool, b_year, b_sub, n = loo_r(r, base, SEL_YEARS)
     print(f'BASELINE   pooled r={b_pool:.4f}  lag-missing-subgroup r={b_sub:.4f}  n={n}')
     print(f'           per-year {({k: round(v,4) for k,v in b_year.items()})}\n')
 
@@ -118,26 +125,37 @@ def main():
     for name in ['A', 'B', 'C']:
         d = variant(r, name, mu, mu_rate)
         feats = base + [FLAG]
-        p_pool, p_year, p_sub, _ = loo_r(d, feats, YEARS)
-        gain = p_pool - b_pool
-        yr_gain = {k: round(p_year[k] - b_year[k], 4) for k in p_year if k in b_year}
-        pos = sum(1 for v in yr_gain.values() if v > 0)
-        print(f'VARIANT {name}  pooled r={p_pool:.4f}  gain={gain:+.4f}  '
+        p_pool, p_year, p_sub, _ = loo_r(d, feats, SEL_YEARS)
+        # Issue #41: Rule 9 arithmetic comes from the tested helper, not an
+        # inline copy (a >0 vs >=0 tie-year difference can flip the verdict).
+        from lib.rule9 import rule9_lift
+        lift = rule9_lift({y: {'r': v} for y, v in b_year.items()},
+                          {y: {'r': v} for y, v in p_year.items()},
+                          r_base=b_pool, r_full=p_pool,
+                          holdout_years=())
+        print(f'VARIANT {name}  pooled r={p_pool:.4f}  gain={lift["lift"]:+.4f}  '
               f'subgroup r={p_sub:.4f} (gain {p_sub-b_sub:+.4f})')
-        print(f'           per-year gain {yr_gain}  -> {pos}/{len(yr_gain)} positive')
-        rows.append((name, p_pool, gain, p_sub - b_sub, pos, len(yr_gain)))
+        print(f'           per-year lift {lift["per_year_lift"]}  -> '
+              f'{lift["sign_match_years"]}/{lift["n_total_years"]} positive')
+        rows.append((name, p_pool, lift['lift'], p_sub - b_sub,
+                     lift['sign_match_years'], lift['n_total_years']))
     print()
 
-    # strict holdout on the best cell
+    # strict holdout — reported for ALL variants (issue #41), so the reader
+    # sees whether the SEL_YEARS winner is stable rather than one number
+    # chosen to be large. Selection above never saw HOLDOUT_YEARS.
     best = max(rows, key=lambda x: x[2])
-    print(f'--- strict holdout (train {M.TRAIN_YEARS[:1]+[2021,2022,2023]}, test 2024/2025), best cell = {best[0]} ---')
-    tr_y = [2019, 2021, 2022, 2023]
-    hb = holdout_r(r, base, tr_y, [2024, 2025])
-    d = variant(r, best[0], mu, mu_rate)
-    hv = holdout_r(d, base + [FLAG], tr_y, [2024, 2025])
-    for y in sorted(hb):
-        print(f'  {y}: baseline r={hb[y][0]:.4f}  variant r={hv[y][0]:.4f}  '
-              f'gain={hv[y][0]-hb[y][0]:+.4f}  n={hb[y][1]}')
+    print(f'--- strict holdout (train {[y for y in M.TRAIN_YEARS if y not in HOLDOUT_YEARS]}, '
+          f'test {list(HOLDOUT_YEARS)}), selection winner = {best[0]} ---')
+    tr_y = [y for y in M.TRAIN_YEARS if y not in HOLDOUT_YEARS]
+    hb = holdout_r(r, base, tr_y, list(HOLDOUT_YEARS))
+    for name in ['A', 'B', 'C']:
+        hv = holdout_r(variant(r, name, mu, mu_rate), base + [FLAG],
+                       tr_y, list(HOLDOUT_YEARS))
+        tag = ' <- winner' if name == best[0] else ''
+        for y in sorted(hb):
+            print(f'  {name} {y}: baseline r={hb[y][0]:.4f}  variant r={hv[y][0]:.4f}  '
+                  f'gain={hv[y][0]-hb[y][0]:+.4f}  n={hb[y][1]}{tag}')
     print()
     print(f'--- Rule 8 convergence by split_day (cell {best[0]}) ---')
     cb = split_curve(r, base, YEARS)
