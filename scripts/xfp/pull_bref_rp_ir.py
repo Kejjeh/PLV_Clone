@@ -240,19 +240,8 @@ def attach_mlb_id(bref_df: pd.DataFrame, fg_df: pd.DataFrame) -> pd.DataFrame:
 # first pulled and never refreshed. Found 2026-08-18: both this cache and the
 # BRef IR cache sat at 2026-05-30 (80.6 days) while the daily refresh reported
 # them as [FAIL] degraded, matching only 76.7% of the live reliever pool.
-CURRENT_SEASON_MAX_AGE_DAYS = 7
-
-
-def _current_season_stale(path, years) -> bool:
-    """True if `years` includes the in-progress season and `path` is older than
-    CURRENT_SEASON_MAX_AGE_DAYS. Completed seasons never go stale."""
-    import datetime as _dt
-    this_year = _dt.date.today().year
-    if this_year not in years:
-        return False
-    age_days = (_dt.datetime.now()
-                - _dt.datetime.fromtimestamp(path.stat().st_mtime)).days
-    return age_days > CURRENT_SEASON_MAX_AGE_DAYS
+from lib.cache_staleness import (  # issue #40 — one shared rule
+    current_season_stale as _current_season_stale)
 
 
 def main():
