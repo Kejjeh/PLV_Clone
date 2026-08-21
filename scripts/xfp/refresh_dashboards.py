@@ -525,9 +525,12 @@ def main():
     # snapshot (Top 100 SP Mon, closers ~Tue, Top 150 hitters ~Wed, streamers
     # rolling). Fail-soft: consumers (triangulate, sp-slate-grid, sp-pl-board)
     # fall back to the existing cached snapshots.
+    # 600s: build_pl_cache can issue up to ~10 curl fetches at 40s worst-case
+    # each (SP tries 3 weeks x Mon/Tue) — 120s guaranteed a killed step on any
+    # slow PL night and NO cache leg refreshed (issue #36).
     ok_pl = run('2.85. PL cache auto-pull',
                 'python -X utf8 scripts/xfp/build_pl_cache.py',
-                timeout=120)
+                timeout=600)
     if not ok_pl:
         print('  ⚠ PL cache auto-pull failed — consumers will use existing '
               'cached PL snapshots')
