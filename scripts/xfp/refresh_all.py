@@ -42,7 +42,10 @@ STAGES = [
     # Counting / API pulls (slow, daily-stable)
     ('Pitcher counting stats (MLB API)',         'build_pitcher_counting.py',     'counting',      True),
     ('Team strength index (statcast-based)',     'build_team_strength.py',        'team-strength', True),
-    ('Pitcher schedule (MLB API probables)',     'build_pitcher_schedule.py',     'schedule',      True),
+    # NON-gating (issue #37): nothing inside refresh_all consumes the
+    # schedule artifact — it feeds matchup/boom/triangulate OUTSIDE this
+    # driver and is refreshed independently at refresh_dashboards step 2.9.
+    ('Pitcher schedule (MLB API probables)',     'build_pitcher_schedule.py',     'schedule',      False),
     # Substrate builders
     ('Hitter lineup substrate (statcast)',       'build_hitter_lineup.py',        None,            True),
     ('Reliever role usage (statcast SV/HLD/GF)', 'build_role_usage.py',           None,            True),
@@ -175,7 +178,7 @@ def main():
     # failure kinds count — the caller's ok_models gate is unchanged.
     if nongating_missing:
         print(f'  ({nongating_missing} non-gating stage script(s) MISSING — '
-              f'reported above, not counted as failures)')
+              f'counted as non-gating failures; this run exits 1)')
     sys.exit(1 if (fail_count or soft_fail_count) else 0)
 
 
