@@ -118,6 +118,12 @@ def _kill_tree(proc):
         pass
 
 
+# Issue #38: every run() failure lands here regardless of whether the call
+# site checks the return value — the closing roll-up prints them all, so a
+# ⚠ 900 lines up the log can't be the only trace of a failed substrate.
+FAILED_STEPS: list = []
+
+
 def run(label, cmd, cwd=None, timeout=900, env=None):
     """Run a subprocess. `env` is an optional dict of EXTRA env vars merged
     on top of os.environ for THIS step only (scoped — does not leak).
@@ -145,10 +151,12 @@ def run(label, cmd, cwd=None, timeout=900, env=None):
         _kill_tree(proc)
         print(f'  ⚠ {label} TIMED OUT after {timeout}s — process tree killed, '
               'continuing with next step')
+        FAILED_STEPS.append(f'{label} (TIMEOUT)')
         return False
     elapsed = time.time() - t0
     if returncode != 0:
         print(f'  ⚠ {label} returned exit code {returncode} after {elapsed:.1f}s')
+        FAILED_STEPS.append(label)
         return False
     print(f'  ✓ {label} done in {elapsed:.1f}s')
     return True
@@ -312,8 +320,11 @@ def main():
               'place; hitters with no cached history read against the field '
               'zero (non-gating)')
 
-    run('1.7 (was 1b). Build batter rolling-feature cache',
-        'python -X utf8 scripts/xfp/build_batter_rolling_features.py')
+    # Issue #38: 1.7 is a SUBSTRATE for rh3 (which has no freshness guard on
+    # ROLLING_CSV), so its failure must gate the publish like step 2's.
+    ok_rolling = run('1.7 (was 1b). Build batter rolling-feature cache',
+                     'python -X utf8 scripts/xfp/build_batter_rolling_features.py',
+                     timeout=900)
 
     # Snapshot rolling caches — feed the Player-Profiles intra-season trajectory
     # view. AUDIT 2026-07-04 (-343s/day, 28% of the ritual): these write the
@@ -384,22 +395,34 @@ def main():
     # on --no-models (the fast path never does the heavy PLV rebuild). Fail-soft:
     # these are display-only boards; no publish-critical dashboard gates on them.
     if not args.no_models:
-        _pb_csv = ROOT / 'data' / 'outputs' / 'hitter_pre_breakout_2026.csv'
-        _pb_fresh = (_pb_csv.exists()
-                     and (time.time() - _pb_csv.stat().st_mtime) < 7 * 86400)
+        # Gate on a last-SUCCESS stamp, not the output csv's mtime (issue
+        # #38): a persistently-failing rebuild left the csv frozen, so the
+        # step re-ran and burned up to 1800s EVERY night, unobserved.
+        _pb_stamp = ROOT / '.cache' / 'plv_update_last_ok'
+        _pb_fresh = (_pb_stamp.exists()
+                     and (time.time() - _pb_stamp.stat().st_mtime) < 7 * 86400)
         if _pb_fresh:
             print('\n  1.98. PLV target boards fresh (<7 days) — skip weekly rebuild')
         else:
             # No season literal (item 42): cli.update's --year already defaults
             # to the current calendar year.
-            run('1.98. Rebuild PLV target boards (plv update, weekly, mtime-gated)',
-                'python -X utf8 -m plv_clone.cli update',
-                timeout=1800)
+            ok_plv = run('1.98. Rebuild PLV target boards (plv update, weekly, stamp-gated)',
+                         'python -X utf8 -m plv_clone.cli update',
+                         timeout=1800)
+            if ok_plv:
+                _pb_stamp.parent.mkdir(parents=True, exist_ok=True)
+                _pb_stamp.write_text(datetime.now().isoformat(), encoding='utf-8')
+            else:
+                print('  ⚠ plv update failed — will retry next run (stamp not written)')
 
     # ok_models gates the git publish (steps 5/6): a failed model rebuild means
     # every downstream dashboard is rendered from STALE projections — publishing
     # them as "fresh" is the failure mode the audit 2026-07-19 flagged (F2).
     ok_models = True
+    if not args.no_models and not ok_rolling:
+        ok_models = False
+        print('  ✖ batter rolling-feature cache FAILED — rh3 would train on '
+              'stale features; the publish will be GATED (issue #38)')
     if not args.no_models:
         # --skip-schedule: build_pitcher_schedule already ran as its own step
         # here (dead duplicate probables pull inside refresh_all otherwise).
@@ -582,8 +605,13 @@ def main():
     # subprocess entirely when the report already post-dates its input.
     _calib_in = ROOT / 'data' / 'outputs' / 'predictions_history.csv'
     _calib_out = ROOT / 'data' / 'outputs' / 'projection_accuracy_report.md'
-    _calib_fresh = (_calib_out.exists() and _calib_in.exists()
-                    and _calib_out.stat().st_mtime >= _calib_in.stat().st_mtime)
+    # report_calibration writes BOTH the .md and calibration_summary.json —
+    # gating on the .md alone meant a lost/corrupt JSON could never be
+    # regenerated (issue #38).
+    _calib_json = ROOT / 'data' / 'outputs' / 'calibration_summary.json'
+    _calib_fresh = (_calib_out.exists() and _calib_json.exists() and _calib_in.exists()
+                    and min(_calib_out.stat().st_mtime, _calib_json.stat().st_mtime)
+                    >= _calib_in.stat().st_mtime)
     if _calib_fresh:
         print('\n  3.6. calibration report newer than predictions_history.csv — skip')
     else:
@@ -687,9 +715,9 @@ def main():
 
     # explicit timeout (audit 2026-07-19 item 16): the implicit default is
     # banned for publish-critical steps — same effective value (900s).
-    run('4. Build matchup.html (weekly H2H)',
-        'python -X utf8 scripts/xfp/build_matchup_dashboard.py',
-        timeout=900)
+    ok_matchup = run('4. Build matchup.html (weekly H2H)',
+                     'python -X utf8 scripts/xfp/build_matchup_dashboard.py',
+                     timeout=900)
 
     # 4.05. Refresh the offline injury-status cache from live ESPN — powers the
     # triangulate IL caveat (so an injured star isn't surfaced as a naked BUY).
@@ -1069,56 +1097,6 @@ def main():
         if not ok_verdicts:
             print('  ! verdict scorecard failed — continuing (non-gating)')
 
-    if not args.no_push:
-        _marker = publish_gated_marker()
-        if not ok_models:
-            print('\n  ✖ PUBLISH GATED: the model rebuild (step 2) FAILED, so the '
-                  'dashboards above were rendered from STALE projections.\n'
-                  '    Nothing was committed or pushed to xfp-model. Fix the model '
-                  'rebuild and re-run refresh_dashboards.py (or push manually if '
-                  'the staleness is understood and acceptable).')
-            try:
-                _marker.parent.mkdir(parents=True, exist_ok=True)
-                _marker.write_text(datetime.now().isoformat(), encoding='utf-8')
-                print(f'    (wrote {_marker} — the workflow prefixes its commit '
-                      'message and job summary with GATED)')
-            except OSError as e:
-                print(f'    ! could not write the gate marker: {e}')
-            return
-        # Clear a previous night's marker so it can never alert on a clean run.
-        try:
-            _marker.unlink(missing_ok=True)
-        except OSError:
-            pass
-        if not XFP_MODEL.exists():
-            print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
-            return
-        # Dynamic publish list (audit 2026-07-04): one failed page must not
-        # block the other five dashboards from publishing — withhold ONLY the
-        # failed artifact. (--allow-empty dropped: a no-change day should not
-        # mint an empty commit into xfp-model's already-heavy history.)
-        pages = list(PUBLISH_PAGES_CORE)
-        if ok_profiles:
-            pages += list(PUBLISH_PAGES_PROFILES)
-        else:
-            print('\n  ⚠ player_profiles build failed — WITHHOLDING profiles from '
-                  'the publish; other dashboards still ship')
-        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
-        commit_cmd = (
-            f'git add {" ".join(pages)} && '
-            f'git commit -m "refresh: {timestamp} dashboards"'
-        )
-        # explicit timeouts (audit 2026-07-19 item 16): the implicit default is
-        # banned for publish-critical steps — git ops get a tighter 300s.
-        run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL,
-            timeout=300)
-        # Pull-before-push: the cloud live-matchup job also pushes to xfp-model
-        # throughout game days, so this local clone is often behind. Reconcile
-        # first (this full build wins on conflict) so the push can't be rejected.
-        run('6. Push to GitHub Pages',
-            'git fetch origin && git merge -X ours --no-edit origin/main && '
-            'git push origin main', cwd=XFP_MODEL, timeout=300)
-
     # 6.9. Retention prune (issue #44): dated snapshot families in
     # data/outputs are read only via their LATEST pointer; old dated copies
     # cost disk (261 MB found 2026-08-20) and glob latency. Fail-soft.
@@ -1151,6 +1129,78 @@ def main():
         print_refresh_instructions()
     except Exception as e:
         print(f'  ! PL cache freshness check failed — continuing (non-gating): {e}')
+
+    # Closing failed-steps roll-up (issue #38): every run() failure in one
+    # place, printed BEFORE the publish decision and on gated nights too.
+    if FAILED_STEPS:
+        print(f'\n{"="*70}\n  ⚠ FAILED STEPS THIS RUN ({len(FAILED_STEPS)})\n{"="*70}')
+        for _s in FAILED_STEPS:
+            print(f'    ✖ {_s}')
+    else:
+        print('\n  ✓ no failed steps this run')
+
+    if not args.no_push:
+        _marker = publish_gated_marker()
+        if not ok_models:
+            print('\n  ✖ PUBLISH GATED: the model rebuild (step 2) FAILED, so the '
+                  'dashboards above were rendered from STALE projections.\n'
+                  '    Nothing was committed or pushed to xfp-model. Fix the model '
+                  'rebuild and re-run refresh_dashboards.py (or push manually if '
+                  'the staleness is understood and acceptable).')
+            try:
+                _marker.parent.mkdir(parents=True, exist_ok=True)
+                _marker.write_text(datetime.now().isoformat(), encoding='utf-8')
+                print(f'    (wrote {_marker} — the workflow prefixes its commit '
+                      'message and job summary with GATED)')
+            except OSError as e:
+                print(f'    ! could not write the gate marker: {e}')
+            return
+        # Clear a previous night's marker so it can never alert on a clean run.
+        try:
+            _marker.unlink(missing_ok=True)
+        except OSError:
+            pass
+        if not XFP_MODEL.exists():
+            print(f'\n  ⚠ xfp-model repo not found at {XFP_MODEL}')
+            return
+        # Dynamic publish list (audit 2026-07-04): one failed page must not
+        # block the other five dashboards from publishing — withhold ONLY the
+        # failed artifact. (--allow-empty dropped: a no-change day should not
+        # mint an empty commit into xfp-model's already-heavy history.)
+        # Issue #38: the withholding promise now covers every artifact, not
+        # just profiles — a builder killed mid-write must not commit a
+        # truncated page. live_dashboard has no builder in this driver.
+        _page_ok = {
+            'docs/index.html': ok_index,
+            'docs/matchup.html': ok_matchup,
+            'docs/triangulate.html': ok_tri_page,
+            'docs/xfp_board.html': ok_xfp_board,
+        }
+        pages = [pg for pg in PUBLISH_PAGES_CORE if _page_ok.get(pg, True)]
+        for pg, ok in _page_ok.items():
+            if not ok:
+                print(f'\n  ⚠ {pg} build failed — WITHHOLDING it from the publish; '
+                      'other dashboards still ship')
+        if ok_profiles:
+            pages += list(PUBLISH_PAGES_PROFILES)
+        else:
+            print('\n  ⚠ player_profiles build failed — WITHHOLDING profiles from '
+                  'the publish; other dashboards still ship')
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+        commit_cmd = (
+            f'git add {" ".join(pages)} && '
+            f'git commit -m "refresh: {timestamp} dashboards"'
+        )
+        # explicit timeouts (audit 2026-07-19 item 16): the implicit default is
+        # banned for publish-critical steps — git ops get a tighter 300s.
+        run('5. Commit xfp-model dashboards', commit_cmd, cwd=XFP_MODEL,
+            timeout=300)
+        # Pull-before-push: the cloud live-matchup job also pushes to xfp-model
+        # throughout game days, so this local clone is often behind. Reconcile
+        # first (this full build wins on conflict) so the push can't be rejected.
+        run('6. Push to GitHub Pages',
+            'git fetch origin && git merge -X ours --no-edit origin/main && '
+            'git push origin main', cwd=XFP_MODEL, timeout=300)
 
     print(f'\n{"="*70}\n  ALL DONE — {datetime.now().strftime("%Y-%m-%d %H:%M")}\n{"="*70}')
     print(f'  Live: https://kejjeh.github.io/xfp-model/live_dashboard.html')

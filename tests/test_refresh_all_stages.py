@@ -22,3 +22,23 @@ def test_summary_never_claims_missing_stages_are_uncounted():
     the summary must not print the opposite."""
     src = (ROOT / 'scripts' / 'xfp' / 'refresh_all.py').read_text(encoding='utf-8')
     assert 'not counted as failures' not in src
+
+
+def test_refresh_driver_visibility_contracts():
+    """Issue #38 — driver-level visibility invariants, pinned as source
+    contracts (the driver has no importable API; these are the load-bearing
+    strings whose loss silently regresses the fix)."""
+    src = (ROOT / 'scripts' / 'xfp' / 'refresh_dashboards.py').read_text(encoding='utf-8')
+    # (A) closing roll-up exists and run() records failures
+    assert 'FAILED_STEPS.append' in src and 'FAILED STEPS THIS RUN' in src
+    # (B) the rh3 substrate gates the publish
+    assert 'ok_rolling = run' in src and 'not ok_rolling' in src
+    # (C) calibration idle-gate requires the JSON too
+    assert 'calibration_summary.json' in src
+    # (D) plv rebuild gated on a success stamp, not the output csv
+    assert 'plv_update_last_ok' in src
+    # (E) per-artifact withholding consults every builder flag
+    for flag in ('ok_index', 'ok_matchup', 'ok_tri_page', 'ok_xfp_board'):
+        assert f"'{flag}" in src or flag in src.split('_page_ok = {')[1][:400]
+    # (F) the PL staleness checkpoint prints BEFORE the publish decision
+    assert src.index('7. PL cache freshness') < src.index('if not args.no_push:')
