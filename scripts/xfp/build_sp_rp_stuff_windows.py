@@ -296,7 +296,8 @@ def main() -> int:
         return 1
 
     OUT.mkdir(parents=True, exist_ok=True)
-    x.to_csv(OUT / "sp_rp_stuff_windows.csv", index=False)
+    from lib.atomic_io import atomic_to_csv  # issue #34 — live-read artifact
+    atomic_to_csv(x, OUT / "sp_rp_stuff_windows.csv")
     x.to_csv(OUT / f"sp_rp_stuff_windows_{x['asof_date'].iloc[0]}.csv", index=False)
     print(f"  wrote {len(x)} rows -> data/outputs/sp_rp_stuff_windows.csv")
 
