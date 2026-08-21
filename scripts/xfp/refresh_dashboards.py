@@ -1119,6 +1119,17 @@ def main():
             'git fetch origin && git merge -X ours --no-edit origin/main && '
             'git push origin main', cwd=XFP_MODEL, timeout=300)
 
+    # 6.9. Retention prune (issue #44): dated snapshot families in
+    # data/outputs are read only via their LATEST pointer; old dated copies
+    # cost disk (261 MB found 2026-08-20) and glob latency. Fail-soft.
+    try:
+        from lib.retention import prune_dated_snapshots
+        _pruned = prune_dated_snapshots(ROOT / 'data' / 'outputs')
+        if _pruned:
+            print(f'  6.9. retention: pruned {len(_pruned)} dated snapshot(s) >30d old')
+    except Exception as _exc:
+        print(f'  ⚠ 6.9. retention prune failed: {_exc}')
+
     # 7. PL cache freshness — the SINGLE loud checkpoint (2026-07-20). The PL
     # rank/streamer caches can't be auto-refreshed here (they need a live
     # WebSearch/WebFetch of pitcherlist.com — an agent capability, not a
