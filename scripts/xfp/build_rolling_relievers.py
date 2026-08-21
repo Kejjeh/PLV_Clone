@@ -195,14 +195,36 @@ def per_appearance_aggregate(pitches: pd.DataFrame) -> pd.DataFrame:
     return by_p
 
 
-def relief_pitches_only(pitches_anno: pd.DataFrame, pitches_full: pd.DataFrame) -> pd.DataFrame:
+def true_starts(pitches_full: pd.DataFrame) -> pd.DataFrame:
+    """Per-game nominal starters with opener appearances dropped (issue #31).
+
+    ONE opener definition (<= OPENER_MAX_PITCHES pitches) drives both the
+    gs_to gate and the relief-pitch mask, so an opener's outings are neither
+    counted as starts nor excluded from his relief production.
+    """
     p = pitches_full.copy()
     p['inning'] = pd.to_numeric(p['inning'], errors='coerce')
     starts = (p[p['inning'] == 1]
               .groupby(['game_pk', 'inning_topbot'])['pitcher']
               .first().reset_index().rename(columns={'pitcher': 'starter_id'}))
-    p_marked = pitches_anno.merge(starts, on=['game_pk', 'inning_topbot'], how='left')
-    return p_marked[p_marked['pitcher'] != p_marked['starter_id']].copy()
+    np_game = (p.groupby(['game_pk', 'pitcher']).size()
+               .reset_index(name='starter_pitches'))
+    starts = starts.merge(np_game, left_on=['game_pk', 'starter_id'],
+                          right_on=['game_pk', 'pitcher'], how='left')
+    starts = starts.drop(columns=['pitcher'])
+    return starts[starts['starter_pitches'].fillna(0) > OPENER_MAX_PITCHES]
+
+
+def relief_pitches_only(pitches_anno: pd.DataFrame, pitches_full: pd.DataFrame) -> pd.DataFrame:
+    starts = true_starts(pitches_full)
+    p_marked = pitches_anno.merge(
+        starts[['game_pk', 'inning_topbot', 'starter_id']],
+        on=['game_pk', 'inning_topbot'], how='left')
+    # starter_id is NA for opener games (the opener was dropped above) — every
+    # pitch there is relief. With nullable Int64, `x != NA` is NA (falsy), so
+    # the NA case must be kept EXPLICITLY or opener-game relievers vanish.
+    keep = p_marked['starter_id'].isna() | (p_marked['pitcher'] != p_marked['starter_id'])
+    return p_marked[keep.fillna(True)].copy()
 
 
 def build_year(year: int) -> pd.DataFrame:
@@ -225,21 +247,10 @@ def build_year(year: int) -> pd.DataFrame:
     else:
         max_data_date = pitches['game_date'].max()
 
-    # Also separate relief-only from raw pitches for GS counting
-    p_full = pitches.copy()
-    p_full['inning'] = pd.to_numeric(p_full['inning'], errors='coerce')
-    starts = (p_full[p_full['inning'] == 1]
-              .groupby(['game_pk', 'inning_topbot'])['pitcher']
-              .first().reset_index().rename(columns={'pitcher': 'starter_id'}))
-    # Drop opener appearances from the start count (see OPENER_MAX_PITCHES).
-    # Pitch totals are per completed game, so this is computed once here rather
-    # than per cutoff; the cutoff filter below still decides WHICH games count.
-    _np_game = (p_full.groupby(['game_pk', 'pitcher']).size()
-                .reset_index(name='starter_pitches'))
-    starts = starts.merge(_np_game, left_on=['game_pk', 'starter_id'],
-                          right_on=['game_pk', 'pitcher'], how='left')
-    starts = starts.drop(columns=['pitcher'])
-    starts = starts[starts['starter_pitches'].fillna(0) > OPENER_MAX_PITCHES]
+    # GS counting uses the same opener-filtered starts as the relief mask
+    # (issue #31 — one opener definition, computed once per completed game;
+    # the cutoff filter below still decides WHICH games count).
+    starts = true_starts(pitches)
 
     # Determine which split_days are usable: nominal cutoff <= max data date.
     # For an in-progress year, only completed cutoffs emit rows. Plus one
@@ -269,7 +280,7 @@ def build_year(year: int) -> pd.DataFrame:
         # Cap cutoff at max data date (so the elapsed-days variant uses real data)
         actual_cutoff = min(cutoff, max_data_date)
         relief_cut = relief_anno[relief_anno['game_date'] <= actual_cutoff]
-        full_cut   = p_full[p_full['game_date'] <= actual_cutoff]
+        full_cut   = pitches[pitches['game_date'] <= actual_cutoff]
         if relief_cut.empty:
             continue
 
@@ -356,7 +367,7 @@ def attach_lag_and_target(df: pd.DataFrame, multiyr: pd.DataFrame) -> pd.DataFra
 
 # Bump when build_year logic changes (invalidates the per-year immutable cache).
 # NOTE: attach_lag_and_target (multiyr-dependent) runs POST-concat and is never cached.
-BUILDER_VERSION = 1
+BUILDER_VERSION = 3  # issue #31 — opener-aware relief mask (NA-safe)
 
 
 def main():

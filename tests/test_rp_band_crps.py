@@ -181,25 +181,18 @@ def test_implied_sigma_raises_on_non_positive_expected_appearances():
 
 
 @pytest.mark.skipif(not RPRS2.exists(), reason="rprs2 projections not built")
-def test_production_rprs2_really_ships_inverted_bands_and_they_are_rejected():
-    """Exercise the guard on REAL production rows.
-
-    This is the test that fails against the old behaviour: the unguarded
-    dashboard expression returns a finite NEGATIVE sigma for these rows, which
-    then reaches ``_blend_draws`` and is clamped to 1e-6.
+def test_production_rprs2_ships_no_inverted_bands():
+    """Flipped 2026-08-20: issue #29 fixed rprs2's band derivation (RoS mean
+    +/- z*sigma, no mid-stream clips), so the shipped CSV must now contain
+    ZERO inverted/zero-width bands. The downstream sigma guard tested above
+    stays — it protects against any future regression reaching _blend_draws.
     """
     import pandas as pd
     df = pd.read_csv(RPRS2)
     width = df["xfp_ros_p75"] - df["xfp_ros_p25"]
     bad = df[width <= 0]
-    assert len(bad) > 0, (
-        "expected at least one inverted band in the shipped rprs2 CSV; if this "
-        "now passes, rprs2.py's clip(lower=0) was fixed — update the memo")
-    for _, r in bad.iterrows():
-        naive = (r["xfp_ros_p75"] - r["xfp_ros_p25"]) / 1.35
-        assert np.isfinite(naive) and naive <= 0     # old behaviour: silent
-        with pytest.raises(ValueError):              # new behaviour: loud
-            implied_per_appearance_sigma(r["xfp_ros_p25"], r["xfp_ros_p75"], 25.0)
+    assert len(bad) == 0, bad[["player_name", "xfp_ros_p25", "xfp_ros_p75"]].head(10)
+
 
 
 # --------------------------------------------------------------------------- #
