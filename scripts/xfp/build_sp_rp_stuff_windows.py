@@ -66,6 +66,9 @@ SC_COLS = [
 # Both are emitted: all-pitch carries the validated minimum, FB carries the
 # scouting meaning that /fa-monitor, /trending and stuff_command actually use.
 FB_TYPES = {"FF", "SI", "FC"}
+# Min fastballs in-window for the FB velo to be rankable (issue #33). Below
+# this the column still displays but the row drops from the ranked cut.
+FB_VELO_MIN_N = 30
 SWING_DESC = {
     "hit_into_play", "foul", "swinging_strike", "swinging_strike_blocked",
     "foul_tip", "missed_bunt", "foul_bunt",
@@ -276,8 +279,14 @@ def build(scope: str, season: int) -> pd.DataFrame:
     for col in ("name", "pos", "tm", "own", "inj", "owner", "is_mine"):
         x[col] = x["k"].map(lambda z, c=col: pop[z][c])
     x["asof_date"] = asof.date().isoformat()
-    x["window_full"] = x["velo_window_full"] & x["whiff_window_full"] & x["swstr_window_full"]
-    x = x.sort_values(["role", "velo_window"], ascending=[True, False]).reset_index(drop=True)
+    x["fb_velo_window_full"] = x["fb_velo_window_n"] >= FB_VELO_MIN_N
+    x["window_full"] = (x["velo_window_full"] & x["whiff_window_full"]
+                        & x["swstr_window_full"] & x["fb_velo_window_full"])
+    # Rank on FB velo (issue #33): the all-pitch mean mis-ranks mix-heavy arms
+    # (Detmers 88.7 all-pitch vs 94.0 FB). velo_window keeps the validated
+    # 150-pitch gate and breaks ties.
+    x = x.sort_values(["role", "fb_velo_window", "velo_window"],
+                      ascending=[True, False, False]).reset_index(drop=True)
     return x
 
 
@@ -312,7 +321,7 @@ def main() -> int:
             full = x[(x["role"] == role) & x["window_full"]]
             thin = int((x["role"] == role).sum()) - len(full)
             sub = full.head(a.top)
-            print(f"\n--- {role} (top {len(sub)} by L-window velo, full-window only"
+            print(f"\n--- {role} (top {len(sub)} by L-window FB velo, full-window only"
                   f" — {thin} thin rows excluded from ranking) ---")
             print(sub[cols].to_string(index=False))
     return 0
