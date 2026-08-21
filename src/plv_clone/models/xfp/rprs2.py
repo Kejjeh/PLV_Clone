@@ -493,8 +493,22 @@ def main():
     # reweighted, so it needs no /validate-feature gate. Fixing the imputation
     # itself (e.g. a missing-role indicator feature) WOULD be a model change
     # and must go through Rule 9 first.
-    valid['data_quality_tag'] = np.where(
-        valid['role_lag1'].isna(), 'lag_imputed', 'data_driven')
+    #
+    # Issue #30: this ships as its OWN column (lag_quality_tag) — it tracks
+    # PRIOR-season availability, the opposite axis from rp3's current-season
+    # data_quality_tag, and reusing that name inverted its meaning (Latz, 25
+    # SV in 2026, read as untrustworthy). data_quality_tag below mirrors
+    # rp3's convention on CURRENT-season sample size instead.
+    if 'role_lag1' in valid.columns:
+        valid['lag_quality_tag'] = np.where(
+            valid['role_lag1'].isna(), 'lag_imputed', 'lag_observed')
+    else:  # schema drift upstream must not KeyError mid-write
+        valid['lag_quality_tag'] = 'lag_imputed'
+    _g_to = valid['g_to'].fillna(0)
+    valid['data_quality_tag'] = np.select(
+        [_g_to == 0, _g_to >= 10],
+        ['marcel_no_data', 'data_driven_full'],
+        default='data_driven_thin')
 
     bundle = {
         'pipeline': pipe,
@@ -529,7 +543,7 @@ def main():
     joblib.dump(bundle, MODEL_PKL)
     print(f'\nWrote {MODEL_PKL}')
 
-    keep = ['rank','pitcher','name_api','data_quality_tag',
+    keep = ['rank','pitcher','name_api','data_quality_tag','lag_quality_tag',
             'role_lag1','sv_lag1','hld_lag1',
             'g_to','sv_to','hld_to','gf_to','gf_pct_to','sv_per_g_to',
             'sv_2026','hld_2026',
@@ -552,7 +566,7 @@ def main():
 
     print('\nTop 15 by projected RoS FP:')
     show = valid.sort_values('xfp_ros', ascending=False).head(15)
-    cols_show = ['rank','name_api','data_quality_tag','role_lag1','g_to','sv_to','gf_to','sv_2026',
+    cols_show = ['rank','name_api','data_quality_tag','lag_quality_tag','role_lag1','g_to','sv_to','gf_to','sv_2026',
                  'fp_actual_2026','xfp_full_year','xfp_ros','signal','replacement_delta']
     print(show[cols_show].to_string(index=False))
 
