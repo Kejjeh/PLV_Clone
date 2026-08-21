@@ -569,6 +569,10 @@ def resolve_pitcher_id(
     role: Optional[str] = None,
     sp_multiyr: Optional[pd.DataFrame] = None,
     rp_multiyr: Optional[pd.DataFrame] = None,
+    # NOTE (issue #39): despite the filename, this file is refreshed daily
+    # and carries the current season — tests/test_optimizer_resolution.py
+    # tripwires that. Do not "fix" the name by repointing at
+    # sp_multiyr.csv (2021+ only): that drops 235 historical pitchers.
     sp_path: str = "data/research/xfp_cache/sp_multiyr_2015_2025.csv",
     rp_path: str = "data/research/xfp_cache/relievers_multiyr_2018_2026.csv",
 ) -> Optional[int]:

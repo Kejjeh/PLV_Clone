@@ -193,14 +193,21 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
                   f'FA SP adds will project 0 starts')
 
     cands: list[dict] = []
+    _proj_drops: dict = {}
+    _pool_by_bucket: dict = {}
     for p, bucket, pos, elig, inj in pool:
+        _pool_by_bucket[bucket] = _pool_by_bucket.get(bucket, 0) + 1
         try:
             proj = project_player(p, state['schedules_by_team'],
                                   starts_map,
                                   maps['rh3'], maps['rp3'], maps['rp3_by_mlbam'],
                                   maps['rprs2'], maps['ts'],
                                   state['today'], state['week_end'])
-        except Exception:
+        except Exception as exc:
+            # issue #39: a silent per-row drop can empty a whole bucket and
+            # report "no pitching upgrade exists" — collect and gate below.
+            _proj_drops[bucket] = _proj_drops.get(bucket, 0) + 1
+            _proj_drops.setdefault('_names', []).append((p.name, repr(exc)))
             continue
         units = float(proj.get('units') or 0)
         fp = float(proj.get('fp') or 0)
@@ -220,6 +227,12 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
 
     # realized leg needs ids; resolve before ranking so the key exists
     if realized_n:
+        _names = _proj_drops.pop('_names', [])
+        if _names:
+            print(f'  !! {len(_names)} candidate(s) dropped on projection error: '
+                  f'{", ".join(n for n, _ in _names[:6])}'
+                  f'{" ..." if len(_names) > 6 else ""}')
+        check_projection_drops(_proj_drops, _pool_by_bucket)
         resolve_candidate_mlbams(state, cands, verbose=False)
         rmap = _realized_maps()
         for c in cands:
@@ -318,6 +331,20 @@ def select_pool(cands: list[dict], *, top_n: int, realized_n: int,
     return out
 
 
+def check_projection_drops(drops_by_bucket: dict, pool_by_bucket: dict,
+                           max_frac: float = 0.20) -> None:
+    """Refuse to report a silently-emptied candidate bucket as a clean run
+    (issue #39). Raises when any bucket lost more than max_frac of its pool
+    to projection errors."""
+    for bucket, n_drop in drops_by_bucket.items():
+        n_pool = pool_by_bucket.get(bucket, 0)
+        if n_pool and (n_drop / n_pool) > max_frac:
+            raise RuntimeError(
+                f'{n_drop}/{n_pool} {bucket} candidates dropped on projection '
+                f'errors (> {max_frac:.0%}) — a schema change upstream would '
+                f'otherwise masquerade as "no upgrade exists"')
+
+
 def resolve_candidate_mlbams(state, cands: list[dict],
                              verbose: bool = True) -> None:
     """Attach mlbam to each candidate (collision-safe), in place.
@@ -343,6 +370,20 @@ def resolve_candidate_mlbams(state, cands: list[dict],
                 if s.get('mlbam') or s.get('pid'):
                     m = s.get('mlbam') or s.get('pid')
                     break
+        if not m:
+            # issue #39: CSV-only lookups miss current-season debutants; the
+            # sibling resolvers already layer CSV -> MLB Stats API. Same here.
+            try:
+                from lib.leverage_engine import (_resolve_pitcher_mlbam,
+                                                 _resolve_mlbam_via_api)
+                if c['bucket'] in ('SP', 'RP'):
+                    m = _resolve_pitcher_mlbam(c['name'],
+                                               team=c.get('team') or None,
+                                               role=c['bucket'])
+                else:
+                    m = _resolve_mlbam_via_api(c['name'])
+            except Exception:
+                m = None
         c['mlbam'] = int(m) if m else None
     # Visibility only (C1 companion, 2026-08-01): a None mlbam is legitimate —
     # the engine and dpwin history now key such candidates by normalized name —
