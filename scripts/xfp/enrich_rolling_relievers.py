@@ -64,6 +64,40 @@ def identify_team_prior_closer(multiyr: pd.DataFrame, year: int,
     return out
 
 
+def lag_imputation_means(multiyr, current_year=None):
+    """Population-mean lag imputation constants (issue #32).
+
+    Two invariants:
+    - SELF-CONSISTENT: the imputed rate is exactly the imputed counts'
+      quotient (ratio of means, not mean of per-player ratios — the latter
+      ran ~13% lower, telling the ridge two different save rates for one row).
+    - REBUILD-STABLE: computed from complete full-length seasons only.
+      2020 (60 games) and the in-progress season are excluded so the
+      constants cannot drift nightly as the current season accumulates.
+
+    Measured, not assumed: validate_role_lag_missing.py scored the imputation
+    variants at ~-0.0002 cross-year r (verdict REJECTED) — this is a
+    consistency fix with NO accuracy claim.
+    """
+    import datetime as _dt
+    cy = current_year or _dt.date.today().year
+    full = multiyr[~multiyr['year'].isin([2020, cy])]
+    if full.empty:
+        full = multiyr
+    g_mu = float(full['g'].mean())
+    mu = {
+        'sv_lag1': float(full['sv'].mean()),
+        'hld_lag1': float(full['hld'].mean()),
+        'g_lag1': g_mu,
+        'ip_lag1': float(full['ip'].mean()),
+        'fp_per_g_lag1': float(full['fp_per_g'].mean()),
+        'fp_lag1': float(full['fp'].mean()),
+    }
+    mu['sv_per_g_lag1'] = mu['sv_lag1'] / g_mu if g_mu else 0.0
+    mu['hld_per_g_lag1'] = mu['hld_lag1'] / g_mu if g_mu else 0.0
+    return mu
+
+
 def main():
     print('=== enrich_rolling_relievers ===')
     rolling = pd.read_csv(OUT)
@@ -163,16 +197,10 @@ def main():
 
     # Backfill missing lag features for rookies / returnees:
     # use long_low role default + population-mean values.
-    pop_means = {
-        'sv_lag1': float(multiyr['sv'].mean()),
-        'hld_lag1': float(multiyr['hld'].mean()),
-        'g_lag1': float(multiyr['g'].mean()),
-        'ip_lag1': float(multiyr['ip'].mean()),
-        'fp_per_g_lag1': float(multiyr['fp_per_g'].mean()),
-        'fp_lag1': float(multiyr['fp'].mean()),
-    }
-    for col, mu in pop_means.items():
-        rolling[col] = rolling[col].fillna(mu)
+    pop_means = lag_imputation_means(multiyr)  # issue #32
+    for col in ('sv_lag1', 'hld_lag1', 'g_lag1', 'ip_lag1',
+                'fp_per_g_lag1', 'fp_lag1'):
+        rolling[col] = rolling[col].fillna(pop_means[col])
     # role one-hot defaults: long_low (all role flags = 0)
     for col in ['role_closer_lag1', 'role_setup_lag1', 'role_middle_lag1']:
         rolling[col] = rolling[col].fillna(0)
@@ -201,10 +229,8 @@ def main():
     # cross-year r (see validation_runs/rprs2_role_lag_missing_2026-08-18.md,
     # verdict REJECTED). This is a CONSISTENCY fix with no accuracy claim --
     # do not cite it as an improvement.
-    _mu_sv_per_g = float((multiyr['sv'] / multiyr['g'].replace(0, np.nan)).mean())
-    _mu_hld_per_g = float((multiyr['hld'] / multiyr['g'].replace(0, np.nan)).mean())
-    rolling['sv_per_g_lag1']  = rolling['sv_per_g_lag1'].fillna(_mu_sv_per_g)
-    rolling['hld_per_g_lag1'] = rolling['hld_per_g_lag1'].fillna(_mu_hld_per_g)
+    rolling['sv_per_g_lag1']  = rolling['sv_per_g_lag1'].fillna(pop_means['sv_per_g_lag1'])
+    rolling['hld_per_g_lag1'] = rolling['hld_per_g_lag1'].fillna(pop_means['hld_per_g_lag1'])
 
     rolling.to_csv(OUT, index=False)
     print(f'\nWrote {OUT}: {len(rolling)} rows')
