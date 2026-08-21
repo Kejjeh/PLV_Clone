@@ -206,6 +206,10 @@ def _fmt(x, nd=2):
     if x is None:
         return '—'
     if isinstance(x, float):
+        # NaN leaked as literal 'nan' into user-facing cards (found by the
+        # issue #43 smoke test — RP '3-yr slope nan'); NaN is not a value.
+        if x != x:
+            return '—'
         return f'{x:.{nd}f}'
     return h(str(x))
 
