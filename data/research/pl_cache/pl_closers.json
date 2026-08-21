@@ -23,11 +23,11 @@
     "Justin Martinez": 19,
     "Daniel Palencia": 20,
     "Yoendrys Gómez": 21,
-    "Grant Taylor": 22,
-    "Jacob Webb": 23,
-    "Dylan Smith": 24,
-    "Samy Natera Jr.": 25,
-    "Ben Joyce": 26,
+    "Ben Joyce": 22,
+    "Grant Taylor": 23,
+    "Jacob Webb": 24,
+    "Dylan Smith": 25,
+    "Samy Natera Jr.": 26,
     "Steven Cruz": 27,
     "Hogan Harris": 28,
     "Kodai Senga": 29,
@@ -209,7 +209,7 @@
     "Jacob Webb": {
       "role": "Setup Role",
       "save_pct": 30,
-      "move": "-1"
+      "move": "-2"
     },
     "Ryan Zeferjahn": {
       "role": "Setup Role",
@@ -224,7 +224,7 @@
     "Grant Taylor": {
       "role": "Co-Closer",
       "save_pct": 40,
-      "move": "-3"
+      "move": "-4"
     },
     "Bryan Hudson": {
       "role": "Co-Closer",
@@ -357,15 +357,15 @@
       "role": "Middle Relief",
       "save_pct": 10
     },
-    "Samy Natera Jr.": {
-      "role": "Co-Closer",
-      "save_pct": 45,
-      "move": "-4"
-    },
     "Ben Joyce": {
       "role": "Co-Closer",
-      "save_pct": 35,
-      "move": "+9"
+      "save_pct": 50,
+      "move": "+13"
+    },
+    "Samy Natera Jr.": {
+      "role": "Co-Closer",
+      "save_pct": 30,
+      "move": "-5"
     },
     "José Fermín": {
       "role": "Setup Role",
@@ -549,7 +549,7 @@
     "Dylan Smith": {
       "role": "Closer",
       "save_pct": 60,
-      "move": "-"
+      "move": "-1"
     },
     "Sam Hentges": {
       "role": "Setup Role",

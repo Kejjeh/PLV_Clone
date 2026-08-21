@@ -23,10 +23,22 @@
   },
   "mlbam_id": 671739,
   "player_name": "Michael Harris II",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "strong_hold",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-21",
+  "settlement": {
+    "actual_fp_per_unit": 0.3835616438356164,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 73,
+    "proj_per": 0.6154044539327553,
+    "proj_units_note": "native",
+    "residual": -0.23184281009713892,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-31",
   "verdict_top": "BUY"
 }

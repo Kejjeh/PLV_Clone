@@ -23,10 +23,22 @@
   },
   "mlbam_id": 682998,
   "player_name": "Corbin Carroll",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "strong_hold",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-21",
+  "settlement": {
+    "actual_fp_per_unit": 0.5542168674698795,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 83,
+    "proj_per": 0.6878851521986176,
+    "proj_units_note": "native",
+    "residual": -0.13366828472873804,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-07-31",
   "verdict_top": "BUY"
 }

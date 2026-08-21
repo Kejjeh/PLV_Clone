@@ -1,24 +1,114 @@
 {
-  "generated": "2026-08-20",
-  "upgrade_floor_fpp": -0.0363,
+  "generated": "2026-08-21",
+  "upgrade_floor_fpp": -0.0779,
   "hit_upgrade_floor_xwoba": 0.329,
-  "alert_count": 1,
+  "alert_count": 7,
   "hitter_alert_count": 0,
   "alerts": [
     {
       "name": "Brandon Woodruff",
       "tier": "HIGH",
       "signals": [
-        "SigH-HIGH(gap=+0.066)"
+        "SigH-HIGH(gap=+0.107)"
       ],
       "gs": 8,
       "fpp": 0.0296,
-      "fpp_gap": 0.0659,
+      "fpp_gap": 0.1075,
       "gsp": 6,
       "l4": "3/4",
       "whiff_pct": 22.9,
       "xwoba_con": 0.333,
       "rp3_rank": 31
+    },
+    {
+      "name": "Christian Scott",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.045)"
+      ],
+      "gs": 18,
+      "fpp": -0.0327,
+      "fpp_gap": 0.0452,
+      "gsp": 10,
+      "l4": "3/4",
+      "whiff_pct": 26.2,
+      "xwoba_con": 0.371,
+      "rp3_rank": 77
+    },
+    {
+      "name": "Carlos Rod\u00f3n",
+      "tier": "HIGH",
+      "signals": [
+        "SigH-HIGH(gap=+0.031)"
+      ],
+      "gs": 10,
+      "fpp": -0.0472,
+      "fpp_gap": 0.0307,
+      "gsp": 5,
+      "l4": "1/4",
+      "whiff_pct": 27.5,
+      "xwoba_con": 0.343,
+      "rp3_rank": 52
+    },
+    {
+      "name": "Chase Dollander",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.033)"
+      ],
+      "gs": 8,
+      "fpp": -0.0452,
+      "fpp_gap": 0.0327,
+      "gsp": 4,
+      "l4": "2/4",
+      "whiff_pct": 27.4,
+      "xwoba_con": 0.358,
+      "rp3_rank": 177
+    },
+    {
+      "name": "Spencer Miles",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.032)"
+      ],
+      "gs": 12,
+      "fpp": -0.046,
+      "fpp_gap": 0.0319,
+      "gsp": 8,
+      "l4": "2/4",
+      "whiff_pct": 18.0,
+      "xwoba_con": 0.32,
+      "rp3_rank": 175
+    },
+    {
+      "name": "Michael Soroka",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.029)"
+      ],
+      "gs": 16,
+      "fpp": -0.0484,
+      "fpp_gap": 0.0295,
+      "gsp": 9,
+      "l4": "3/4",
+      "whiff_pct": 21.4,
+      "xwoba_con": 0.381,
+      "rp3_rank": 136
+    },
+    {
+      "name": "Kendry Rojas",
+      "tier": "MONITOR",
+      "signals": [
+        "SigH-MONITOR(gap=+0.029)"
+      ],
+      "gs": 8,
+      "fpp": -0.0485,
+      "fpp_gap": 0.0294,
+      "gsp": 4,
+      "l4": "1/4",
+      "whiff_pct": 27.3,
+      "xwoba_con": 0.293,
+      "rp3_rank": 110
     }
   ],
   "hitter_alerts": [],
