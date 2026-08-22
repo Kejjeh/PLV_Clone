@@ -521,3 +521,5 @@ timestamp,date,period,my_team,opp_team,my_wtd,my_projected_total,opp_wtd,opp_pro
 2026-08-20T07:43:32.503269,2026-08-20,20,New York Ligers,2015 Draft First Round,147.5,367.9,129.3,347.2,0.6922,,,MA_v1,,
 2026-08-21T07:53:32.860632,2026-08-21,20,New York Ligers,2015 Draft First Round,186.8,370.79,158.5,334.34,0.8222,,,baseline,,
 2026-08-21T07:53:34.902203,2026-08-21,20,New York Ligers,2015 Draft First Round,186.8,396.13,158.5,348.87,0.8702,,,MA_v1,,
+2026-08-22T07:37:25.052827,2026-08-22,20,New York Ligers,2015 Draft First Round,270.7,403.62,206.7,308.97,0.9948,,,baseline,,
+2026-08-22T07:37:27.106802,2026-08-22,20,New York Ligers,2015 Draft First Round,270.7,420.07,206.7,322.51,0.9966,,,MA_v1,,

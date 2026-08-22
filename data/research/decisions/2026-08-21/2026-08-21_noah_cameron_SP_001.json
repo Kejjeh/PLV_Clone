@@ -1,0 +1,38 @@
+{
+  "action": "swap",
+  "bucket": "SP",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": 0.805667,
+    "dpwin_chosen": 0.053666,
+    "dpwin_gap": -0.013667,
+    "dpwin_rejected": 0.067333,
+    "dtitle_equity_chosen": 0.0161,
+    "regime": "LEADING",
+    "rejected_bucket": "SP",
+    "rejected_mlbam": 607074,
+    "rejected_name": "Carlos Rodon",
+    "source_run_id": "2026-08-21T073049_7"
+  },
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-21_noah_cameron_SP_001",
+  "executed_at": "2026-08-21T15:13:42",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Nick Pivetta",
+    "id_source": "name_only",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "3 candidate runs preceded the move, took latest (2026-08-21T073049_7)"
+  },
+  "mlbam_id": null,
+  "player_name": "Noah Cameron",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": null,
+  "settlement": null,
+  "snapshot_date": "2026-08-21",
+  "verdict_top": "SWAP"
+}

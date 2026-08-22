@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-21",
+ "as_of": "2026-08-22",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -158,6 +158,12 @@
    "name": "Joey Estes",
    "pos": "P"
   },
+  "671286": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Johnathan Rodríguez",
+   "pos": "RF"
+  },
   "641680": {
    "team": "Athletics",
    "abbr": "ATH",
@@ -229,6 +235,12 @@
    "abbr": "ATH",
    "name": "Max Muncy",
    "pos": "3B"
+  },
+  "683021": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Michael Stefanic",
+   "pos": "2B"
   },
   "701762": {
    "team": "Athletics",
@@ -828,7 +840,7 @@
    "team": "Seattle Mariners",
    "abbr": "SEA",
    "name": "Brock Rodden",
-   "pos": "2B"
+   "pos": "SS"
   },
   "693433": {
    "team": "Seattle Mariners",
@@ -1038,7 +1050,7 @@
    "team": "Seattle Mariners",
    "abbr": "SEA",
    "name": "Taylor Ward",
-   "pos": "LF"
+   "pos": "DH"
   },
   "700187": {
    "team": "Seattle Mariners",
@@ -3132,7 +3144,7 @@
    "team": "Atlanta Braves",
    "abbr": "ATL",
    "name": "Lane Thomas",
-   "pos": "CF"
+   "pos": "LF"
   },
   "527048": {
    "team": "Atlanta Braves",
@@ -3691,6 +3703,12 @@
    "abbr": "MIA",
    "name": "Leo Jiménez",
    "pos": "3B"
+  },
+  "686482": {
+   "team": "Miami Marlins",
+   "abbr": "MIA",
+   "name": "Logan Driscoll",
+   "pos": "C"
   },
   "676974": {
    "team": "Miami Marlins",
@@ -4874,12 +4892,6 @@
    "name": "Zack Littell",
    "pos": "P"
   },
-  "544150": {
-   "team": "Baltimore Orioles",
-   "abbr": "BAL",
-   "name": "Albert Suárez",
-   "pos": "P"
-  },
   "695380": {
    "team": "Baltimore Orioles",
    "abbr": "BAL",
@@ -5221,6 +5233,12 @@
    "abbr": "BOS",
    "name": "Curtis Mead",
    "pos": "3B"
+  },
+  "700842": {
+   "team": "Boston Red Sox",
+   "abbr": "BOS",
+   "name": "Eduardo Rivera",
+   "pos": "P"
   },
   "642201": {
    "team": "Boston Red Sox",
@@ -5640,12 +5658,6 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Nico Hoerner",
-   "pos": "2B"
-  },
-  "680911": {
-   "team": "Chicago Cubs",
-   "abbr": "CHC",
-   "name": "Owen Miller",
    "pos": "2B"
   },
   "699393": {

@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-21",
+  "generated": "2026-08-22",
   "upgrade_floor_fpp": -0.0779,
-  "hit_upgrade_floor_xwoba": 0.329,
+  "hit_upgrade_floor_xwoba": 0.328,
   "alert_count": 7,
   "hitter_alert_count": 0,
   "alerts": [
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 22.9,
       "xwoba_con": 0.333,
-      "rp3_rank": 31
+      "rp3_rank": 32
     },
     {
       "name": "Christian Scott",
@@ -33,7 +33,7 @@
       "l4": "3/4",
       "whiff_pct": 26.2,
       "xwoba_con": 0.371,
-      "rp3_rank": 77
+      "rp3_rank": 79
     },
     {
       "name": "Carlos Rod\u00f3n",
@@ -48,7 +48,7 @@
       "l4": "1/4",
       "whiff_pct": 27.5,
       "xwoba_con": 0.343,
-      "rp3_rank": 52
+      "rp3_rank": 53
     },
     {
       "name": "Chase Dollander",
@@ -63,7 +63,7 @@
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
-      "rp3_rank": 177
+      "rp3_rank": 175
     },
     {
       "name": "Spencer Miles",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 18.0,
       "xwoba_con": 0.32,
-      "rp3_rank": 175
+      "rp3_rank": 187
     },
     {
       "name": "Michael Soroka",
@@ -93,7 +93,7 @@
       "l4": "3/4",
       "whiff_pct": 21.4,
       "xwoba_con": 0.381,
-      "rp3_rank": 136
+      "rp3_rank": 137
     },
     {
       "name": "Kendry Rojas",
