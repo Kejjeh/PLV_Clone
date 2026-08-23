@@ -23,10 +23,22 @@
   },
   "mlbam_id": 665489,
   "player_name": "Vladimir Guerrero Jr.",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "model_anchored",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.2553191489361702,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 47,
+    "proj_per": 0.6423781790385845,
+    "proj_units_note": "native",
+    "residual": -0.3870590301024143,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-02",
   "verdict_top": "BUY"
 }

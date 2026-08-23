@@ -23,10 +23,22 @@
   },
   "mlbam_id": 682829,
   "player_name": "Elly De La Cruz",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "archetype_breakout",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.29545454545454547,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 88,
+    "proj_per": 0.5580209813461458,
+    "proj_units_note": "native",
+    "residual": -0.2625664358916003,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-02",
   "verdict_top": "BUY"
 }

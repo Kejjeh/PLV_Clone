@@ -23,10 +23,22 @@
   },
   "mlbam_id": 671277,
   "player_name": "Luis Garc\u00eda Jr.",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "process_upgrade",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.421875,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 64,
+    "proj_per": 0.6346110326763663,
+    "proj_units_note": "native",
+    "residual": -0.21273603267636632,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-02",
   "verdict_top": "BUY"
 }

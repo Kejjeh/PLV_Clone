@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-22",
+ "as_of": "2026-08-23",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -932,12 +932,6 @@
    "name": "J.P. Crawford",
    "pos": "SS"
   },
-  "646242": {
-   "team": "Seattle Mariners",
-   "abbr": "SEA",
-   "name": "Jhonathan Díaz",
-   "pos": "P"
-  },
   "640902": {
    "team": "Seattle Mariners",
    "abbr": "SEA",
@@ -967,6 +961,12 @@
    "abbr": "SEA",
    "name": "Julio Rodríguez",
    "pos": "CF"
+  },
+  "807739": {
+   "team": "Seattle Mariners",
+   "abbr": "SEA",
+   "name": "Kade Anderson",
+   "pos": "P"
   },
   "660844": {
    "team": "Seattle Mariners",
@@ -3606,7 +3606,7 @@
    "team": "Miami Marlins",
    "abbr": "MIA",
    "name": "Deyvison De Los Santos",
-   "pos": "1B"
+   "pos": "3B"
   },
   "665923": {
    "team": "Miami Marlins",
@@ -4038,7 +4038,7 @@
    "team": "New York Yankees",
    "abbr": "NYY",
    "name": "Spencer Jones",
-   "pos": "CF"
+   "pos": "RF"
   },
   "657612": {
    "team": "New York Yankees",
@@ -4404,7 +4404,7 @@
    "team": "Los Angeles Angels",
    "abbr": "LAA",
    "name": "Gustavo Campero",
-   "pos": "C"
+   "pos": "OF"
   },
   "686799": {
    "team": "Los Angeles Angels",
@@ -6576,7 +6576,7 @@
    "team": "Detroit Tigers",
    "abbr": "DET",
    "name": "Eduardo Valencia",
-   "pos": "C"
+   "pos": "DH"
   },
   "646241": {
    "team": "Detroit Tigers",
@@ -7812,6 +7812,12 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Luis Perales",
+   "pos": "P"
+  },
+  "663362": {
+   "team": "Washington Nationals",
+   "abbr": "WSH",
+   "name": "Matt Waldron",
    "pos": "P"
   },
   "668820": {

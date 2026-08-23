@@ -23,10 +23,22 @@
   },
   "mlbam_id": 650333,
   "player_name": "Luis Arraez",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "model_anchored",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.5609756097560976,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 82,
+    "proj_per": 0.6645120662248676,
+    "proj_units_note": "native",
+    "residual": -0.10353645646876997,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-02",
   "verdict_top": "BUY"
 }

@@ -23,10 +23,22 @@
   },
   "mlbam_id": 691023,
   "player_name": "Jordan Walker",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "archetype_breakout",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-23",
+  "settlement": {
+    "actual_fp_per_unit": 0.7341772151898734,
+    "classification": "BUY_HIT",
+    "event_unit": "PA",
+    "n_events": 79,
+    "proj_per": 0.4911502307293433,
+    "proj_units_note": "native",
+    "residual": 0.24302698446053017,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-02",
   "verdict_top": "BUY"
 }
