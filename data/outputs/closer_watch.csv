@@ -1,11 +1,11 @@
 player,team,expect,signal,note,saves_self,saves_teammates,team_chances,appearances,actionable
 Edwin Díaz,Los Angeles Dodgers,CLOSER,ROLE_LOST,3 save(s) went to a teammate over 4 chance(s) and he took none,0,3,4,1,True
 Luke Weaver,Pittsburgh Pirates,CLOSER,ROLE_LOST,1 save(s) went to a teammate over 2 chance(s) and he took none,0,1,2,2,True
-Jeff Hoffman,Minnesota Twins,CLOSER,ROLE_LOST,3 save(s) went to a teammate over 3 chance(s) and he took none,0,3,3,2,True
+Jeff Hoffman,Minnesota Twins,CLOSER,ROLE_LOST,3 save(s) went to a teammate over 3 chance(s) and he took none,0,3,3,3,True
 Tanner Scott,Los Angeles Dodgers,SETUP,HOLDS_ROLE,recorded 3 save(s) of 4 chance(s),3,0,4,3,True
 Gregory Soto,Pittsburgh Pirates,SETUP,ROLE_LOST,1 save(s) went to a teammate over 2 chance(s) and he took none,0,1,2,3,False
-Jhoan Duran,Philadelphia Phillies,CLOSER,HOLDS_ROLE,recorded 3 save(s) of 5 chance(s),3,1,5,4,False
+Jhoan Duran,Philadelphia Phillies,CLOSER,HOLDS_ROLE,recorded 2 save(s) of 5 chance(s),2,1,5,3,False
 Emilio Pagán,Cincinnati Reds,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 2 chance(s),1,0,2,2,False
-Jacob Latz,Texas Rangers,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 2 chance(s),1,0,2,2,False
-David Bednar,New York Yankees,CLOSER,HOLDS_ROLE,recorded 3 save(s) of 4 chance(s),3,2,4,4,False
+Jacob Latz,Texas Rangers,CLOSER,HOLDS_ROLE,recorded 2 save(s) of 3 chance(s),2,0,3,3,False
+David Bednar,New York Yankees,CLOSER,HOLDS_ROLE,recorded 3 save(s) of 3 chance(s),3,1,3,3,False
 Louis Varland,Toronto Blue Jays,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,0,1,2,False

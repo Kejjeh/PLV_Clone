@@ -1,0 +1,454 @@
+name,pos,source,team,own,inj,pa26,xw26,xc26,d_xw,d_xc,shrunk_gap,pow_axes,proc_axes,career_best,distinguish,score,tier,sub_tag,peak_xc,mlb_yrs
+Aaron Judge,RF,MY_ROSTER,Ligers,100.0,True,261,0.425,0.546,-0.058,-0.047,-0.037,0.0,1.0,False,True,1.0,DECLINE,,0.643,11
+Vladimir Guerrero Jr.,1B,MY_ROSTER,Ligers,100.0,False,492,0.338,0.347,-0.053,-0.061,-0.041,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.47,8
+Corbin Carroll,RF,MY_ROSTER,Ligers,100.0,False,548,0.355,0.393,-0.023,-0.062,-0.018,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.455,5
+Elly De La Cruz,SS,MY_ROSTER,Ligers,100.0,False,498,0.367,0.461,0.038,0.059,0.029,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.461,4
+Pete Alonso,1B,MY_ROSTER,Ligers,100.0,False,564,0.397,0.484,0.008,0.013,0.007,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.484,8
+Wyatt Langford,LF,MY_ROSTER,Ligers,100.0,False,333,0.309,0.359,-0.041,-0.063,-0.029,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.421,3
+Luis Arraez,1B,MY_ROSTER,Ligers,100.0,False,541,0.319,0.302,0.006,0.012,0.004,2.0,1.0,False,False,1.0,HOT_STREAK,,0.359,8
+Michael Harris II,CF,MY_ROSTER,Ligers,100.0,False,500,0.346,0.415,0.028,0.032,0.021,2.0,1.0,False,False,2.0,MIXED,,0.427,5
+Jordan Walker,RF,MY_ROSTER,Ligers,100.0,False,544,0.356,0.44,0.077,0.069,0.06,2.0,2.0,True,True,5.0,SUSTAINABLE,,0.44,4
+Max Muncy,3B,MY_ROSTER,Ligers,100.0,False,227,0.281,0.37,0.01,0.013,0.006,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.37,2
+Hunter Goodman,C,MY_ROSTER,Ligers,100.0,True,460,0.338,0.463,0.013,0.047,0.01,1.0,0.0,True,False,1.0,HOT_STREAK,,0.463,4
+Luis Garcia Jr.,2B,MY_ROSTER,Ligers,100.0,False,438,0.351,0.407,0.011,0.022,0.008,2.0,1.0,True,False,2.0,MIXED,,0.407,7
+Jackson Merrill,CF,MY_ROSTER,Ligers,100.0,False,533,0.334,0.418,-0.015,-0.003,-0.011,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.437,3
+Bryson Stott,2B,MY_ROSTER,Ligers,100.0,False,487,0.333,0.352,0.018,0.02,0.014,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.352,5
+Junior Caminero,3B,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,567,0.371,0.409,0.025,0.005,0.019,1.0,2.0,True,False,2.0,MIXED,,0.409,4
+Gunnar Henderson,SS,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,584,0.321,0.365,-0.026,-0.031,-0.02,0.0,1.0,False,False,0.0,DECLINE,,0.444,5
+William Contreras,C,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,517,0.338,0.35,0.006,0.002,0.005,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.439,7
+Steven Kwan,LF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,499,0.328,0.294,0.015,-0.011,0.012,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.329,5
+Pete Crow-Armstrong,CF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,579,0.363,0.443,0.03,0.04,0.024,2.0,2.0,True,False,4.0,SUSTAINABLE,,0.443,4
+Freddie Freeman,1B,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,541,0.377,0.412,0.021,0.006,0.016,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.506,12
+Bryan Reynolds,RF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,570,0.35,0.405,0.012,-0.019,0.009,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.437,8
+Zach Neto,SS,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,563,0.304,0.384,-0.045,-0.063,-0.036,0.0,0.0,False,True,1.0,DECLINE,,0.447,4
+Kazuma Okamoto,3B,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,516,0.315,0.414,,,,,,,,,ROOKIE_DEBUT,,0.414,1
+Konnor Griffin,SS,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,True,248,0.304,0.378,,,,,,,,,ROOKIE_DEBUT,,0.378,1
+Mauricio Dubon,LF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,496,0.311,0.324,0.029,0.042,0.022,3.0,0.0,False,False,2.0,MIXED,[POWER-ONLY],0.334,8
+Angel Martinez,CF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,319,0.304,0.371,0.044,0.071,0.03,3.0,1.0,True,True,4.0,SUSTAINABLE,,0.371,3
+Dillon Dingler,C,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,509,0.355,0.424,0.002,-0.013,0.001,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.438,3
+Michael Busch,1B,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,575,0.33,0.366,-0.052,-0.098,-0.042,0.0,1.0,False,True,1.0,DECLINE,,0.464,4
+Ceddanne Rafaela,CF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,523,0.289,0.335,-0.017,-0.02,-0.013,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.359,4
+Jac Caglianone,RF,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,469,0.361,0.465,0.04,0.09,0.03,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.465,2
+Ezequiel Duran,SS,OTHER:Boone's Bad Bullpen,Boone's Bad Bullpen,100.0,False,464,0.302,0.358,0.055,0.058,0.041,3.0,2.0,False,True,4.0,SUSTAINABLE,,0.415,5
+Cal Raleigh,C,OTHER:Team Solomon,Team Solomon,100.0,False,401,0.296,0.361,-0.085,-0.109,-0.062,0.0,0.0,False,True,1.0,DECLINE,,0.47,6
+Manny Machado,3B,OTHER:Team Solomon,Team Solomon,100.0,False,542,0.336,0.382,-0.022,-0.031,-0.017,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.425,12
+Matt Olson,1B,OTHER:Team Solomon,Team Solomon,100.0,False,565,0.365,0.455,0.003,0.023,0.003,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.495,11
+James Wood,LF,OTHER:Team Solomon,Team Solomon,100.0,True,537,0.428,0.559,0.061,0.058,0.048,2.0,3.0,True,True,5.0,SUSTAINABLE,,0.559,3
+Seiya Suzuki,DH,OTHER:Team Solomon,Team Solomon,100.0,False,492,0.335,0.401,-0.021,-0.034,-0.016,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.442,5
+Corey Seager,SS,OTHER:Team Solomon,Team Solomon,100.0,False,295,0.347,0.413,-0.062,-0.052,-0.041,0.0,0.0,False,True,1.0,DECLINE,,0.47,12
+Bryce Harper,1B,OTHER:Team Solomon,Team Solomon,100.0,False,555,0.391,0.438,0.019,0.014,0.015,1.0,2.0,False,False,1.0,HOT_STREAK,,0.526,12
+Mike Trout,DH,OTHER:Team Solomon,Team Solomon,100.0,False,497,0.394,0.464,0.024,-0.022,0.019,1.0,2.0,False,False,1.0,HOT_STREAK,,0.543,12
+JJ Wetherholt,SS,OTHER:Team Solomon,Team Solomon,100.0,False,567,0.357,0.364,,,,,,,,,ROOKIE_DEBUT,,0.364,1
+Jazz Chisholm Jr.,2B,OTHER:Team Solomon,Team Solomon,100.0,False,471,0.294,0.372,-0.054,-0.065,-0.041,0.0,1.0,False,True,1.0,DECLINE,,0.438,7
+Brandon Nimmo,LF,OTHER:Team Solomon,Team Solomon,100.0,False,523,0.362,0.426,0.039,0.051,0.031,1.0,1.0,True,True,3.0,NARROW,,0.426,11
+Trea Turner,SS,OTHER:Team Solomon,Team Solomon,100.0,False,557,0.298,0.347,-0.025,-0.009,-0.02,0.0,0.0,False,False,0.0,DECLINE,,0.426,12
+Esmerlyn Valdez,RF,OTHER:Team Solomon,Team Solomon,100.0,False,239,0.338,0.482,,,,,,,,,ROOKIE_DEBUT,,0.482,1
+Bo Bichette,SS,OTHER:Team Solomon,Team Solomon,100.0,False,557,0.327,0.369,-0.029,-0.021,-0.023,0.0,0.0,False,False,0.0,DECLINE,,0.425,8
+Christian Yelich,DH,OTHER:Team Solomon,Team Solomon,100.0,False,395,0.316,0.384,-0.02,-0.025,-0.014,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.509,12
+Jose Ramirez,3B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,419,0.356,0.348,-0.001,-0.007,-0.001,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.401,12
+Kyle Tucker,RF,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,503,0.328,0.345,-0.052,-0.043,-0.04,0.0,0.0,False,True,1.0,DECLINE,,0.443,9
+Yordan Alvarez,DH,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,561,0.477,0.53,0.073,0.093,0.058,1.0,1.0,False,True,2.0,MIXED,,0.544,8
+Mookie Betts,SS,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,391,0.331,0.343,-0.001,0.013,-0.001,3.0,2.0,False,False,2.0,MIXED,,0.472,12
+Ben Rice,1B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,533,0.372,0.453,-0.02,0.005,-0.016,0.0,0.0,True,False,1.0,HOT_STREAK,,0.453,3
+Gleyber Torres,2B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,321,0.332,0.341,-0.032,-0.039,-0.022,0.0,0.0,False,False,0.0,DECLINE,,0.42,9
+Alec Burleson,LF,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,549,0.387,0.432,0.039,0.056,0.031,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.432,5
+Yandy Diaz,DH,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,551,0.36,0.38,0.003,0.002,0.002,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.415,10
+Andy Pages,CF,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,True,552,0.34,0.386,0.025,0.007,0.02,1.0,2.0,False,False,1.0,HOT_STREAK,,0.398,3
+CJ Abrams,SS,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,536,0.341,0.402,0.03,0.052,0.024,2.0,0.0,True,False,3.0,NARROW,[POWER-ONLY],0.402,5
+Willson Contreras,1B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,488,0.385,0.466,0.024,0.028,0.019,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.466,11
+Isaac Paredes,3B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,523,0.322,0.315,0.0,-0.013,0.0,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.328,7
+Jake McCarthy,LF,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,448,0.32,0.357,0.027,0.031,0.02,2.0,1.0,True,False,3.0,NARROW,,0.357,6
+Tommy Edman,2B,OTHER:Late Night Bettsing,Late Night Bettsing,100.0,False,199,0.316,0.357,-0.004,0.004,-0.002,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.375,8
+Ronald Acuna Jr.,RF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,343,0.361,0.425,-0.041,-0.056,-0.029,0.0,1.0,False,True,1.0,DECLINE,,0.53,9
+Geraldo Perdomo,SS,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,543,0.325,0.302,-0.039,-0.044,-0.031,0.0,0.0,False,True,1.0,DECLINE,,0.346,6
+Ernie Clement,3B,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,512,0.269,0.28,-0.024,-0.021,-0.019,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.301,6
+Shea Langeliers,C,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,True,417,0.366,0.438,0.035,0.055,0.026,1.0,0.0,True,False,2.0,MIXED,,0.438,5
+Byron Buxton,CF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,396,0.346,0.424,-0.008,-0.033,-0.006,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.523,12
+Otto Lopez,SS,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,548,0.328,0.348,-0.004,-0.005,-0.003,2.0,1.0,False,False,1.0,HOT_STREAK,,0.359,5
+Xavier Edwards,2B,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,545,0.321,0.318,0.019,0.011,0.015,1.0,2.0,True,False,2.0,MIXED,,0.318,4
+Chase DeLauter,RF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,461,0.345,0.36,,,,,,,,,ROOKIE_DEBUT,,0.36,1
+Liam Hicks,C,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,466,0.319,0.295,0.002,-0.013,0.001,1.0,2.0,False,False,1.0,HOT_STREAK,,0.308,2
+Christian Walker,1B,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,512,0.304,0.351,-0.011,-0.051,-0.009,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.456,11
+Mickey Moniak,RF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,340,0.288,0.357,-0.051,-0.069,-0.035,0.0,0.0,False,True,1.0,DECLINE,,0.463,7
+Jake Bauers,1B,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,469,0.381,0.455,0.022,0.019,0.017,2.0,1.0,False,False,1.0,HOT_STREAK,,0.481,7
+TJ Rumfield,3B,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,506,0.327,0.323,,,,,,,,,ROOKIE_DEBUT,,0.323,1
+Cole Carrigg,CF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,241,0.325,0.357,,,,,,,,,ROOKIE_DEBUT,,0.357,1
+Gabriel Moreno,C,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,424,0.375,0.399,0.022,0.014,0.016,1.0,2.0,True,False,2.0,MIXED,,0.399,5
+JJ Bleday,CF,OTHER:U Just Lost To Edwin Diaz,U Just Lost To Edwin Diaz,100.0,False,425,0.356,0.391,0.077,0.064,0.057,2.0,3.0,True,True,5.0,SUSTAINABLE,,0.391,5
+Bobby Witt Jr.,SS,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,494,0.391,0.435,0.021,0.011,0.016,2.0,1.0,False,False,1.0,HOT_STREAK,,0.457,5
+Ketel Marte,2B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,True,519,0.353,0.383,-0.041,-0.037,-0.032,0.0,1.0,False,True,1.0,DECLINE,,0.45,12
+Kyle Schwarber,DH,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,556,0.373,0.511,-0.032,-0.002,-0.025,0.0,0.0,True,False,1.0,DECLINE,,0.513,12
+Alex Bregman,3B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,581,0.319,0.322,-0.021,-0.023,-0.017,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.363,11
+Will Smith,C,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,True,201,0.385,0.422,0.011,0.002,0.006,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.42,8
+Ian Happ,LF,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,532,0.31,0.386,-0.049,-0.027,-0.038,0.0,0.0,False,True,1.0,DECLINE,,0.461,10
+Riley Greene,LF,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,True,493,0.367,0.458,0.031,0.0,0.024,1.0,3.0,False,False,2.0,MIXED,,0.481,5
+Daylen Lile,RF,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,536,0.313,0.362,-0.037,-0.026,-0.029,0.0,0.0,False,True,1.0,DECLINE,,0.388,2
+Brandon Lowe,2B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,537,0.325,0.422,-0.014,-0.011,-0.011,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.489,9
+Dansby Swanson,SS,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,True,460,0.305,0.344,-0.042,-0.098,-0.032,0.0,1.0,False,True,1.0,DECLINE,,0.45,11
+Josh Jung,3B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,True,396,0.348,0.384,0.039,0.0,0.028,1.0,3.0,False,True,3.0,NARROW,,0.449,5
+Jung Hoo Lee,CF,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,480,0.312,0.324,-0.009,-0.002,-0.007,0.0,1.0,True,False,1.0,HOT_STREAK,,0.326,3
+Keibert Ruiz,C,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,292,0.283,0.294,-0.004,-0.006,-0.003,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.339,7
+Sam Antonacci,2B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,437,0.343,0.352,,,,,,,,,ROOKIE_DEBUT,,0.352,1
+Ty France,1B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,376,0.334,0.39,0.006,0.031,0.004,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.39,8
+Royce Lewis,3B,OTHER:2015 Draft First Round,2015 Draft First Round,100.0,False,388,0.317,0.384,0.02,0.041,0.014,3.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.384,5
+Shohei Ohtani,DH,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,551,0.421,0.508,-0.014,-0.045,-0.011,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.569,9
+Julio Rodriguez,CF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,518,0.349,0.414,0.001,0.001,0.001,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.439,5
+Jackson Chourio,CF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,433,0.347,0.418,0.038,0.055,0.028,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.418,3
+Cody Bellinger,LF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,435,0.35,0.368,0.024,0.029,0.018,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.484,10
+Nico Hoerner,2B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,559,0.332,0.321,0.009,0.001,0.007,0.0,1.0,True,False,1.0,HOT_STREAK,,0.323,8
+George Springer,DH,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,415,0.305,0.323,-0.106,-0.141,-0.078,0.0,1.0,False,True,1.0,DECLINE,,0.468,12
+Ozzie Albies,2B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,554,0.286,0.292,-0.016,-0.018,-0.012,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.385,10
+Taylor Ward,LF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,555,0.341,0.352,0.007,-0.055,0.005,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.423,9
+Drake Baldwin,C,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,474,0.376,0.432,0.022,0.049,0.016,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.432,2
+Kevin McGonigle,SS,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,567,0.35,0.347,,,,,,,,,ROOKIE_DEBUT,,0.347,1
+Munetaka Murakami,3B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,411,0.377,0.511,,,,,,,,,ROOKIE_DEBUT,,0.511,1
+Sal Stewart,1B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,564,0.351,0.411,-0.048,-0.118,-0.038,0.0,2.0,True,True,3.0,DECLINE,[DISCIPLINE-ONLY],0.411,2
+Josh Naylor,1B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,521,0.324,0.334,-0.016,-0.023,-0.012,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.381,8
+Miguel Vargas,3B,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,560,0.396,0.427,0.076,0.087,0.06,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.427,5
+Ivan Herrera,DH,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,582,0.333,0.338,-0.042,-0.074,-0.033,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.432,5
+Kyle Stowers,LF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,True,399,0.333,0.442,-0.046,-0.045,-0.034,1.0,0.0,False,True,1.0,DECLINE,,0.487,5
+Oneil Cruz,CF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,299,0.367,0.533,0.04,0.1,0.026,2.0,0.0,True,False,3.0,NARROW,[POWER-ONLY],0.533,6
+Trent Grisham,CF,OTHER:Frendy's Fantastic Team,Frendy's Fantastic Team,100.0,False,438,0.341,0.364,-0.03,-0.07,-0.022,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.443,8
+Juan Soto,RF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,True,359,0.437,0.441,-0.001,-0.051,-0.0,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.518,9
+Fernando Tatis Jr.,RF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,564,0.377,0.424,0.001,0.013,0.001,3.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.545,7
+Roman Anthony,RF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,True,131,0.355,0.414,-0.018,-0.055,-0.008,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.469,2
+Francisco Lindor,SS,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,318,0.342,0.373,-0.007,-0.007,-0.005,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.434,12
+Nick Kurtz,1B,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,True,436,0.387,0.512,0.011,0.005,0.008,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.512,2
+Brice Turang,2B,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,549,0.347,0.41,0.007,0.014,0.005,1.0,0.0,True,False,1.0,HOT_STREAK,,0.41,4
+Adley Rutschman,C,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,325,0.34,0.356,0.014,0.017,0.01,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.393,5
+Randy Arozarena,LF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,527,0.352,0.391,0.024,-0.004,0.019,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.397,8
+Rafael Devers,DH,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,547,0.326,0.399,-0.047,-0.053,-0.037,0.0,1.0,False,True,1.0,DECLINE,,0.473,10
+Luke Keaschall,2B,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,481,0.317,0.311,-0.011,-0.016,-0.008,1.0,1.0,True,False,1.0,HOT_STREAK,,0.311,2
+Alejandro Kirk,C,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,216,0.32,0.306,-0.042,-0.067,-0.025,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.373,7
+Spencer Torkelson,1B,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,503,0.315,0.403,-0.023,-0.004,-0.018,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.426,5
+Wilyer Abreu,RF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,552,0.358,0.406,0.015,-0.007,0.012,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.413,4
+Carson Benge,CF,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,512,0.343,0.402,,,,,,,,,ROOKIE_DEBUT,,0.402,1
+Agustin Ramirez,C,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,169,0.283,0.304,-0.05,-0.08,-0.027,0.0,1.0,False,False,0.0,DECLINE,,0.384,2
+Nolan Arenado,3B,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,473,0.299,0.327,0.006,0.029,0.005,2.0,1.0,False,False,1.0,HOT_STREAK,,0.406,12
+Jacob Wilson,SS,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,True,337,0.285,0.299,-0.022,-0.003,-0.015,1.0,0.0,True,False,1.0,HOT_STREAK,,0.302,3
+Xander Bogaerts,SS,OTHER:Treasure Island Mashers,Treasure Island Mashers,100.0,False,490,0.323,0.337,-0.009,-0.022,-0.007,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.406,12
+Jose Altuve,2B,FA,,72.7,False,441,0.279,0.304,-0.024,-0.019,-0.018,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.402,12
+Jarren Duran,LF,FA,,68.3,False,516,0.302,0.379,-0.025,-0.01,-0.019,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.405,6
+Salvador Perez,C,FA,,64.7,False,506,0.304,0.347,-0.058,-0.079,-0.045,0.0,1.0,False,True,1.0,DECLINE,,0.48,11
+Jeremy Pena,SS,FA,,63.7,False,345,0.33,0.387,-0.007,0.017,-0.005,1.0,0.0,True,False,1.0,HOT_STREAK,,0.387,5
+Austin Riley,3B,FA,,61.4,False,516,0.299,0.394,-0.033,-0.046,-0.025,0.0,0.0,False,False,0.0,DECLINE,,0.479,8
+Maikel Garcia,3B,FA,,58.6,False,309,0.318,0.342,-0.019,-0.004,-0.013,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.381,5
+Tyler Soderstrom,LF,FA,,56.2,False,454,0.335,0.362,-0.008,-0.044,-0.006,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.406,4
+Ryan O'Hearn,1B,FA,,50.1,False,399,0.322,0.372,-0.025,-0.013,-0.018,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.402,9
+Caleb Durbin,3B,FA,,49.8,False,469,0.292,0.286,-0.021,-0.012,-0.016,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.298,2
+Chandler Simpson,CF,FA,,47.7,False,491,0.266,0.265,-0.036,-0.044,-0.028,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.31,2
+Willy Adames,SS,FA,,47.6,False,502,0.295,0.373,-0.036,-0.022,-0.028,0.0,0.0,False,True,1.0,DECLINE,,0.423,9
+Teoscar Hernandez,RF,FA,,47.5,False,366,0.315,0.401,-0.01,-0.01,-0.007,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.478,11
+Vinnie Pasquantino,1B,FA,,44.9,False,362,0.328,0.345,-0.009,-0.022,-0.006,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.385,5
+Matt Chapman,3B,FA,,43.1,False,352,0.292,0.311,-0.051,-0.076,-0.036,0.0,1.0,False,True,1.0,DECLINE,,0.431,10
+Ryan Jeffers,C,FA,,42.8,False,268,0.357,0.367,0.028,0.014,0.018,2.0,2.0,False,False,2.0,MIXED,,0.432,7
+Brooks Lee,SS,FA,,42.6,False,498,0.272,0.289,-0.017,-0.031,-0.013,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.32,3
+Brent Rooker,DH,FA,,40.7,False,203,0.316,0.424,-0.038,0.006,-0.022,1.0,0.0,False,False,0.0,DECLINE,,0.513,7
+Yainer Diaz,C,FA,,40.3,False,257,0.303,0.344,-0.026,-0.035,-0.016,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.431,5
+Jonathan Aranda,1B,FA,,38.4,False,550,0.351,0.411,-0.034,-0.072,-0.027,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.482,5
+Eugenio Suarez,3B,FA,,38.4,False,393,0.283,0.38,-0.039,-0.04,-0.028,0.0,1.0,False,True,1.0,DECLINE,,0.462,12
+Brandon Marsh,CF,FA,,36.1,False,485,0.318,0.397,-0.016,-0.016,-0.012,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.474,6
+Jo Adell,CF,FA,,35.3,False,523,0.329,0.408,-0.038,-0.067,-0.03,0.0,1.0,False,True,1.0,DECLINE,,0.474,7
+Marcus Semien,2B,FA,,34.7,False,431,0.306,0.356,-0.013,0.015,-0.01,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.385,12
+Brendan Donovan,2B,FA,,34.4,False,160,0.313,0.305,-0.036,-0.059,-0.019,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.374,5
+Colson Montgomery,SS,FA,,33.1,False,516,0.309,0.422,-0.035,-0.029,-0.027,0.0,0.0,False,True,1.0,DECLINE,,0.452,2
+Carter Jensen,C,FA,,32.3,False,482,0.291,0.355,-0.157,-0.158,-0.12,0.0,0.0,True,True,2.0,DECLINE,,0.355,2
+Alec Bohm,3B,FA,,30.8,False,512,0.323,0.339,-0.002,-0.02,-0.001,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.394,7
+Kody Clemens,1B,FA,,29.4,False,456,0.336,0.399,0.003,-0.005,0.002,0.0,1.0,True,False,1.0,HOT_STREAK,,0.404,5
+Zack Gelof,2B,FA,,27.0,False,298,0.302,0.363,0.08,0.001,0.053,1.0,3.0,False,True,3.0,NARROW,,0.421,4
+Casey Schmitt,2B,FA,,26.2,False,409,0.355,0.428,0.025,0.032,0.018,1.0,2.0,True,False,2.0,MIXED,,0.428,4
+Jakob Marsee,CF,FA,,26.0,False,499,0.305,0.31,-0.042,-0.089,-0.032,0.0,1.0,True,True,2.0,DECLINE,,0.31,2
+Samuel Basallo,C,FA,,25.8,False,323,0.338,0.427,0.052,0.08,0.036,2.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.427,2
+Jose Caballero,RF,FA,,25.7,False,373,0.283,0.334,-0.02,-0.009,-0.015,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.343,4
+Ildemaro Vargas,2B,FA,,25.7,False,401,0.312,0.316,0.017,0.003,0.012,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.316,10
+Jackson Holliday,2B,FA,,24.9,False,272,0.313,0.349,-0.002,-0.011,-0.001,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.36,3
+Sal Frelick,RF,FA,,23.6,False,313,0.292,0.274,-0.013,-0.031,-0.008,1.0,3.0,False,False,1.0,HOT_STREAK,,0.305,4
+Brayan Rocchio,SS,FA,,21.4,False,483,0.298,0.304,0.001,-0.03,0.001,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.334,4
+Nick Gonzales,2B,FA,,20.0,False,503,0.321,0.352,0.029,0.021,0.023,1.0,2.0,False,False,2.0,MIXED,,0.376,4
+Willi Castro,RF,FA,,19.9,False,443,0.312,0.381,0.004,0.025,0.003,3.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.381,8
+Josh Bell,DH,FA,,19.2,False,509,0.33,0.379,-0.031,-0.01,-0.024,0.0,0.0,False,False,0.0,DECLINE,,0.444,11
+Max Clark,CF,FA,,19.2,False,82,0.295,0.345,,,,,,,,,ROOKIE_DEBUT,,0.345,1
+Travis Bazzana,2B,FA,,17.0,False,409,0.299,0.322,,,,,,,,,ROOKIE_DEBUT,,0.322,1
+Chase Meidroth,SS,FA,,16.8,False,523,0.3,0.332,-0.002,0.029,-0.001,1.0,0.0,True,False,1.0,HOT_STREAK,,0.332,2
+J.T. Realmuto,C,FA,,15.7,False,366,0.32,0.363,0.003,-0.018,0.002,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.426,12
+Lawrence Butler,RF,FA,,15.5,False,402,0.317,0.371,0.011,-0.015,0.008,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.421,4
+Giancarlo Stanton,DH,FA,,15.1,False,96,0.326,0.444,-0.035,-0.072,-0.014,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.574,12
+Luis Robert Jr.,CF,FA,,14.2,False,192,0.32,0.382,-0.008,-0.019,-0.005,1.0,2.0,False,False,1.0,HOT_STREAK,,0.47,7
+Dominic Canzone,RF,FA,,12.8,False,394,0.354,0.413,-0.022,-0.043,-0.016,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.456,4
+Cole Young,2B,FA,,12.0,False,526,0.32,0.351,0.02,0.041,0.015,3.0,2.0,True,False,3.0,NARROW,,0.351,2
+Spencer Steer,1B,FA,,11.5,False,384,0.347,0.402,0.052,0.069,0.037,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.402,5
+Carson Kelly,C,FA,,11.0,False,338,0.313,0.328,-0.009,-0.02,-0.006,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.394,11
+Heliot Ramos,LF,FA,,10.6,False,367,0.323,0.414,-0.001,0.04,-0.001,3.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.432,5
+Francisco Alvarez,C,FA,,10.1,False,339,0.331,0.418,0.002,0.02,0.001,1.0,0.0,True,False,1.0,HOT_STREAK,,0.418,5
+Trevor Story,SS,FA,,10.1,False,176,0.248,0.34,-0.069,-0.064,-0.037,0.0,0.0,False,True,1.0,DECLINE,,0.517,11
+Jeff McNeil,2B,FA,,10.0,False,397,0.314,0.317,-0.021,-0.01,-0.016,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.367,9
+Javier Sanoja,LF,FA,,9.5,False,355,0.279,0.277,-0.005,-0.015,-0.003,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.292,3
+Spencer Jones,CF,FA,,8.8,False,175,0.322,0.466,,,,,,,,,ROOKIE_DEBUT,,0.466,1
+Jake Burger,1B,FA,,8.7,False,489,0.304,0.375,-0.022,-0.039,-0.017,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.469,6
+Andres Gimenez,2B,FA,,8.5,False,422,0.268,0.3,-0.04,-0.031,-0.03,0.0,0.0,False,True,1.0,DECLINE,,0.375,7
+Bryce Eldridge,DH,FA,,8.5,False,352,0.352,0.433,-0.011,-0.057,-0.008,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.433,2
+TJ Friedl,CF,FA,,8.4,False,250,0.244,0.245,-0.058,-0.047,-0.036,0.0,0.0,False,True,1.0,DECLINE,,0.293,6
+Daulton Varsho,CF,FA,,8.4,False,432,0.289,0.321,-0.04,-0.113,-0.03,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.434,7
+Gavin Sheets,LF,FA,,8.3,False,403,0.318,0.34,-0.025,-0.05,-0.018,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.39,6
+Cam Smith,RF,FA,,8.0,False,465,0.324,0.395,0.019,0.018,0.015,3.0,1.0,True,False,2.0,MIXED,,0.395,2
+Matt McLain,2B,FA,,7.9,False,394,0.325,0.391,0.032,0.03,0.023,1.0,2.0,False,False,2.0,MIXED,,0.429,3
+A.J. Ewing,CF,FA,,7.9,False,367,0.324,0.393,,,,,,,,,ROOKIE_DEBUT,,0.393,1
+Dalton Rushing,C,FA,,7.8,False,245,0.34,0.435,0.057,0.014,0.035,1.0,2.0,True,True,4.0,SUSTAINABLE,,0.435,2
+Carlos Correa,SS,FA,,7.6,False,141,0.367,0.403,0.027,0.013,0.013,2.0,1.0,False,False,1.0,HOT_STREAK,,0.48,12
+Curtis Mead,1B,FA,,7.4,False,331,0.364,0.393,0.069,0.055,0.047,3.0,3.0,True,True,5.0,SUSTAINABLE,,0.393,4
+Nasim Nunez,SS,FA,,7.4,False,425,0.278,0.284,-0.021,-0.056,-0.016,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.284,3
+Griffin Conine,LF,FA,,7.1,False,206,0.381,0.514,0.082,0.128,0.047,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.514,3
+Kerry Carpenter,RF,FA,,6.8,False,259,0.298,0.376,-0.045,-0.041,-0.029,0.0,0.0,False,False,0.0,DECLINE,,0.486,5
+Nick Sogard,1B,FA,,6.7,False,148,0.332,0.325,0.03,-0.034,0.015,1.0,3.0,False,False,1.0,HOT_STREAK,,0.402,3
+Jake Mangum,LF,FA,,6.2,False,390,0.29,0.32,0.006,0.017,0.005,1.0,0.0,True,False,1.0,HOT_STREAK,,0.32,2
+Austin Wells,C,FA,,6.0,False,298,0.296,0.344,0.0,-0.02,0.0,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.386,4
+Tyler Stephenson,C,FA,,5.9,False,363,0.346,0.426,0.031,-0.005,0.022,0.0,3.0,True,False,3.0,NARROW,[DISCIPLINE-ONLY],0.431,7
+Andruw Monasterio,SS,FA,,5.9,False,294,0.302,0.335,0.022,-0.0,0.014,1.0,3.0,False,False,1.0,HOT_STREAK,,0.345,4
+Dylan Crews,RF,FA,,5.7,False,318,0.32,0.38,0.013,0.017,0.009,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.38,3
+Jorge Polanco,DH,FA,,5.5,False,145,0.235,0.277,-0.11,-0.098,-0.054,0.0,0.0,False,True,1.0,DECLINE,,0.431,12
+Masyn Winn,SS,FA,,5.5,False,490,0.3,0.333,0.013,0.017,0.01,1.0,1.0,True,False,1.0,HOT_STREAK,,0.333,4
+Colt Keith,DH,FA,,5.3,False,369,0.338,0.382,-0.005,-0.015,-0.004,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.397,3
+Noelvi Marte,RF,FA,,5.1,False,201,0.248,0.294,-0.059,-0.084,-0.034,1.0,0.0,False,True,1.0,DECLINE,,0.377,4
+Jeremiah Jackson,RF,FA,,4.9,False,249,0.288,0.345,-0.003,-0.025,-0.002,1.0,2.0,False,False,1.0,HOT_STREAK,,0.37,2
+Paul Goldschmidt,1B,FA,,4.9,False,334,0.308,0.368,-0.031,-0.013,-0.022,0.0,0.0,False,False,0.0,DECLINE,,0.487,12
+J.P. Crawford,SS,FA,,4.8,False,364,0.325,0.34,-0.011,-0.017,-0.008,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.361,10
+Braden Montgomery,CF,FA,,4.7,False,252,0.32,0.354,,,,,,,,,ROOKIE_DEBUT,,0.354,1
+Garrett Mitchell,CF,FA,,4.6,False,430,0.353,0.469,0.062,0.091,0.046,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.469,5
+Brenton Doyle,CF,FA,,4.6,False,166,0.245,0.306,-0.053,-0.069,-0.028,0.0,0.0,False,False,0.0,DECLINE,,0.409,4
+Nolan Schanuel,1B,FA,,4.5,False,446,0.338,0.342,0.004,0.016,0.003,3.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.342,4
+Spencer Horwitz,1B,FA,,4.5,False,353,0.319,0.299,-0.01,-0.052,-0.007,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.367,4
+Trevor Larnach,DH,FA,,4.3,False,386,0.33,0.351,0.012,-0.01,0.009,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.408,6
+Tim Tawa,CF,FA,,4.3,False,234,0.321,0.377,0.029,0.014,0.018,2.0,2.0,True,False,3.0,NARROW,,0.377,2
+Troy Johnston,RF,FA,,4.3,False,379,0.333,0.353,-0.005,-0.049,-0.003,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.353,2
+Adolis Garcia,RF,FA,,4.3,False,259,0.293,0.39,-0.011,0.011,-0.007,3.0,1.0,False,False,1.0,HOT_STREAK,,0.47,8
+Jorge Soler,RF,FA,,4.1,False,362,0.295,0.386,-0.001,0.013,-0.001,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.508,12
+Henry Bolte,RF,FA,,4.0,False,328,0.309,0.368,,,,,,,,,ROOKIE_DEBUT,,0.368,1
+Colt Emerson,SS,FA,,4.0,False,242,0.249,0.34,,,,,,,,,ROOKIE_DEBUT,,0.34,1
+Ramon Laureano,LF,FA,,4.0,False,206,0.318,0.405,-0.048,-0.047,-0.028,0.0,0.0,False,False,0.0,DECLINE,,0.452,9
+Justin Crawford,CF,FA,,3.8,False,379,0.285,0.314,,,,,,,,,ROOKIE_DEBUT,,0.314,1
+Andrew Vaughn,1B,FA,,3.7,False,273,0.344,0.349,-0.006,-0.049,-0.004,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.398,6
+Luke Raley,RF,FA,,3.6,False,287,0.344,0.484,0.027,0.11,0.018,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.484,6
+Joey Ortiz,SS,FA,,3.6,False,323,0.297,0.323,0.017,0.029,0.011,3.0,1.0,False,False,1.0,HOT_STREAK,,0.329,4
+Marcell Ozuna,DH,FA,,3.5,False,281,0.305,0.382,-0.052,-0.026,-0.034,0.0,0.0,False,True,1.0,DECLINE,,0.533,12
+Andrew Benintendi,LF,FA,,3.5,False,387,0.325,0.374,0.002,0.022,0.002,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.398,11
+Blaze Alexander,3B,FA,,3.4,False,246,0.369,0.438,0.06,0.04,0.037,2.0,2.0,True,True,5.0,SUSTAINABLE,,0.398,3
+Luis Rengifo,3B,FA,,3.3,False,337,0.31,0.307,0.007,-0.038,0.005,1.0,2.0,False,False,1.0,HOT_STREAK,,0.351,8
+Jake Cronenworth,2B,FA,,3.2,False,303,0.287,0.313,-0.038,-0.015,-0.025,0.0,0.0,False,False,0.0,DECLINE,,0.37,7
+Zach McKinstry,3B,FA,,3.1,False,357,0.294,0.291,-0.012,-0.053,-0.009,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.359,7
+Carlos Cortes,RF,FA,,3.0,False,299,0.323,0.333,0.009,-0.049,0.006,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.333,2
+Kyle Karros,3B,FA,,3.0,False,405,0.338,0.369,0.08,0.079,0.059,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.369,2
+Ezequiel Tovar,SS,FA,,2.9,False,426,0.274,0.333,-0.051,-0.074,-0.037,0.0,1.0,False,True,1.0,DECLINE,,0.407,5
+Heriberto Hernandez,LF,FA,,2.8,False,359,0.344,0.439,0.009,0.03,0.006,2.0,1.0,True,False,2.0,MIXED,,0.439,2
+Javier Baez,SS,FA,,2.8,False,148,0.269,0.309,-0.003,-0.033,-0.001,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.454,12
+Joc Pederson,DH,FA,,2.7,False,388,0.35,0.406,0.033,0.063,0.024,2.0,0.0,False,False,2.0,MIXED,[POWER-ONLY],0.444,12
+Christian Encarnacion-Strand,1B,FA,,2.7,False,101,0.347,0.451,0.072,0.11,0.029,1.0,0.0,False,False,1.0,HOT_STREAK,,0.458,4
+Brett Baty,3B,FA,,2.6,False,397,0.305,0.379,-0.03,-0.037,-0.022,0.0,0.0,False,False,0.0,DECLINE,,0.416,5
+Cooper Pratt,SS,FA,,2.6,False,170,0.312,0.342,,,,,,,,,ROOKIE_DEBUT,,0.342,1
+Jonah Heim,C,FA,,2.5,False,302,0.302,0.325,0.023,0.014,0.015,2.0,2.0,False,False,2.0,MIXED,,0.371,7
+Lars Nootbaar,LF,FA,,2.5,False,233,0.345,0.37,0.024,0.02,0.015,1.0,2.0,False,False,1.0,HOT_STREAK,,0.4,6
+Jasson Dominguez,LF,FA,,2.4,False,214,0.29,0.345,-0.018,-0.03,-0.01,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.375,4
+Joey Wiemer,RF,FA,,2.4,False,85,0.315,0.417,0.003,-0.059,0.001,1.0,3.0,True,False,2.0,MIXED,,0.356,4
+Owen Caissie,RF,FA,,2.4,False,297,0.301,0.45,0.067,0.075,0.044,3.0,3.0,True,True,5.0,SUSTAINABLE,,0.45,2
+Cedric Mullins,CF,FA,,2.4,False,427,0.271,0.271,-0.014,-0.05,-0.011,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.384,9
+Vaughn Grissom,2B,FA,,2.3,False,337,0.31,0.342,,,,,,,,,ROOKIE_DEBUT,,0.342,4
+Anthony Volpe,SS,FA,,2.3,False,194,0.29,0.322,-0.012,-0.045,-0.007,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.386,4
+Kyle Manzardo,DH,FA,,2.2,False,356,0.306,0.397,-0.019,0.006,-0.013,0.0,0.0,True,False,1.0,HOT_STREAK,,0.397,3
+Tristan Peters,CF,FA,,2.2,False,383,0.31,0.339,0.163,-0.016,0.117,1.0,3.0,True,True,4.0,SUSTAINABLE,,0.339,2
+Jacob Young,CF,FA,,2.2,False,390,0.321,0.345,0.015,0.02,0.011,2.0,1.0,True,False,2.0,MIXED,,0.345,4
+Gary Sanchez,C,FA,,2.1,False,229,0.352,0.363,0.037,-0.03,0.022,0.0,2.0,False,False,2.0,MIXED,[DISCIPLINE-ONLY],0.489,12
+Nick Fortes,C,FA,,2.1,False,277,0.289,0.295,0.017,0.004,0.011,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.295,6
+Luis Lara,CF,FA,,2.0,False,120,0.322,0.351,,,,,,,,,ROOKIE_DEBUT,,0.351,1
+Dominic Smith,1B,FA,,2.0,False,286,0.301,0.32,-0.005,-0.023,-0.003,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.389,10
+Evan Carter,CF,FA,,2.0,False,371,0.289,0.304,-0.021,-0.022,-0.015,1.0,0.0,True,False,1.0,HOT_STREAK,,0.304,4
+Mark Vientos,3B,FA,,1.9,False,254,0.31,0.383,-0.011,-0.013,-0.007,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.449,5
+Ryan Waldschmidt,LF,FA,,1.9,False,230,0.319,0.386,,,,,,,,,ROOKIE_DEBUT,,0.386,1
+Nathaniel Lowe,1B,FA,,1.9,False,332,0.343,0.414,0.038,0.047,0.026,2.0,2.0,False,False,3.0,NARROW,,0.422,8
+Moises Ballesteros,DH,FA,,1.9,False,245,0.306,0.346,-0.036,-0.014,-0.022,1.0,0.0,False,False,0.0,DECLINE,,0.36,2
+Michael Massey,2B,FA,,1.8,False,363,0.298,0.337,0.032,0.04,0.023,3.0,0.0,False,False,2.0,MIXED,[POWER-ONLY],0.381,5
+Coby Mayo,1B,FA,,1.7,False,337,0.31,0.427,0.021,0.073,0.015,3.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.427,3
+Victor Caratini,C,FA,,1.7,False,336,0.321,0.346,-0.008,-0.011,-0.005,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.393,10
+Joe Mack,C,FA,,1.7,False,255,0.304,0.372,,,,,,,,,ROOKIE_DEBUT,,0.372,1
+Matt Shaw,3B,FA,,1.7,False,147,0.302,0.321,-0.006,-0.025,-0.003,1.0,2.0,False,False,1.0,HOT_STREAK,,0.346,2
+Esteury Ruiz,LF,FA,,1.6,False,184,0.305,0.362,0.056,0.028,0.031,3.0,3.0,True,False,4.0,SUSTAINABLE,,0.31,5
+Colton Cowser,CF,FA,,1.6,False,308,0.317,0.404,0.02,-0.014,0.013,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.445,4
+Marcelo Mayer,3B,FA,,1.6,False,228,0.262,0.28,-0.005,-0.075,-0.003,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.354,2
+Jesus Sanchez,RF,FA,,1.5,False,277,0.331,0.398,0.007,0.018,0.004,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.454,7
+Blaze Jordan,1B,FA,,1.4,False,189,0.309,0.345,,,,,,,,,ROOKIE_DEBUT,,0.345,1
+Logan O'Hoppe,C,FA,,1.4,False,256,0.267,0.314,-0.035,-0.098,-0.022,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.446,5
+Nolan Gorman,3B,FA,,1.4,False,230,0.282,0.362,-0.017,-0.036,-0.01,2.0,1.0,False,False,1.0,HOT_STREAK,,0.484,5
+Rhys Hoskins,1B,FA,,1.3,False,319,0.297,0.353,-0.02,-0.027,-0.014,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.462,9
+Hao-Yu Lee,3B,FA,,1.3,False,233,0.301,0.362,,,,,,,,,ROOKIE_DEBUT,,0.362,1
+Daniel Schneemann,2B,FA,,1.2,False,276,0.285,0.362,-0.014,-0.007,-0.009,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.369,3
+Mike Yastrzemski,RF,FA,,1.2,False,327,0.312,0.358,-0.022,0.001,-0.015,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.434,8
+Josh Smith,SS,FA,,1.2,False,188,0.281,0.301,-0.034,-0.029,-0.019,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.341,5
+Kyle Isbel,CF,FA,,1.2,False,235,0.28,0.311,0.015,0.035,0.009,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.335,6
+Pedro Ramirez,3B,FA,,1.2,False,161,0.297,0.326,,,,,,,,,ROOKIE_DEBUT,,0.326,1
+Samad Taylor,2B,FA,,1.2,False,102,0.335,0.415,0.126,0.205,0.051,3.0,1.0,True,True,4.0,SUSTAINABLE,,0.415,4
+David Hamilton,2B,FA,,1.1,False,312,0.279,0.298,0.016,-0.009,0.011,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.348,4
+Harrison Bader,CF,FA,,1.1,False,111,0.271,0.375,-0.028,0.013,-0.012,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.386,10
+Jared Young,DH,FA,,1.1,False,262,0.319,0.354,0.023,-0.068,0.015,2.0,3.0,True,False,3.0,NARROW,,0.354,4
+Dylan Beavers,LF,FA,,1.1,False,244,0.308,0.374,-0.039,-0.015,-0.024,1.0,0.0,False,False,0.0,DECLINE,,0.389,2
+Brandon Valenzuela,C,FA,,1.1,False,236,0.311,0.379,,,,,,,,,ROOKIE_DEBUT,,0.379,1
+Miguel Andujar,3B,FA,,1.1,False,254,0.305,0.329,0.003,0.002,0.002,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.36,10
+Jose Fernandez,SS,FA,,1.1,False,198,0.288,0.336,,,,,,,,,ROOKIE_DEBUT,,0.336,1
+Mickey Gasper,C,FA,,1.0,False,138,0.318,0.333,0.081,0.114,0.039,3.0,2.0,False,True,4.0,SUSTAINABLE,,0.39,3
+Lane Thomas,CF,FA,,1.0,False,353,0.314,0.363,0.07,0.072,0.049,3.0,3.0,False,True,4.0,SUSTAINABLE,,0.402,8
+Luis Torrens,C,FA,,1.0,False,232,0.307,0.334,-0.032,-0.06,-0.019,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.402,9
+Ryan McMahon,3B,FA,,0.9,False,306,0.305,0.402,-0.018,-0.025,-0.012,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.449,10
+Carlos Narvaez,C,FA,,0.9,False,242,0.272,0.351,-0.025,-0.0,-0.015,0.0,0.0,True,False,1.0,HOT_STREAK,,0.351,3
+Luis Campusano,DH,FA,,0.9,False,159,0.349,0.38,0.14,0.234,0.072,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.318,7
+Endy Rodriguez,1B,FA,,0.9,False,159,0.341,0.397,0.09,0.113,0.047,3.0,0.0,True,True,4.0,SUSTAINABLE,[POWER-ONLY],0.397,3
+Tommy White,3B,FA,,0.9,False,121,0.29,0.333,,,,,,,,,ROOKIE_DEBUT,,0.333,1
+Nathan Church,CF,FA,,0.9,False,360,0.286,0.323,0.033,0.033,0.023,2.0,2.0,True,False,4.0,SUSTAINABLE,,0.323,2
+Oswald Peraza,3B,FA,,0.9,False,325,0.275,0.345,0.024,0.028,0.017,1.0,1.0,True,False,1.0,HOT_STREAK,,0.345,5
+Hyeseong Kim,2B,FA,,0.9,False,131,0.307,0.358,0.051,0.021,0.024,2.0,3.0,True,False,4.0,SUSTAINABLE,,0.358,2
+Masataka Yoshida,DH,FA,,0.9,False,297,0.319,0.314,0.002,-0.015,0.001,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.349,4
+Richie Palacios,LF,FA,,0.9,False,318,0.311,0.32,-0.05,-0.086,-0.034,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.346,5
+Patrick Bailey,C,FA,,0.9,False,278,0.299,0.365,0.032,0.026,0.021,3.0,2.0,False,False,3.0,NARROW,,0.408,4
+Miguel Rojas,2B,FA,,0.8,False,197,0.331,0.328,0.032,0.016,0.018,2.0,2.0,True,False,3.0,NARROW,,0.314,12
+Brady House,3B,FA,,0.8,False,260,0.329,0.43,0.045,0.045,0.028,1.0,1.0,True,False,2.0,MIXED,,0.43,2
+Tyler Tolbert,CF,FA,,0.8,False,118,0.324,0.33,0.009,-0.028,0.004,1.0,2.0,False,False,1.0,HOT_STREAK,,0.358,2
+Nathan Lukes,RF,FA,,0.8,False,343,0.291,0.304,-0.038,-0.025,-0.027,0.0,0.0,False,False,0.0,DECLINE,,0.328,4
+Tyler O'Neill,RF,FA,,0.8,False,260,0.307,0.374,-0.056,-0.064,-0.035,1.0,0.0,False,True,1.0,DECLINE,,0.541,9
+Bo Naylor,C,FA,,0.7,False,90,0.29,0.347,-0.005,0.016,-0.002,2.0,2.0,True,False,3.0,NARROW,,0.345,5
+Leody Taveras,CF,FA,,0.7,False,398,0.288,0.325,0.052,0.017,0.038,2.0,2.0,False,True,4.0,SUSTAINABLE,,0.38,7
+Jacob Gonzalez,2B,FA,,0.7,False,179,0.311,0.349,,,,,,,,,ROOKIE_DEBUT,,0.349,1
+Connor Norby,3B,FA,,0.7,False,265,0.287,0.342,-0.02,-0.048,-0.013,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.39,3
+Nick Loftin,LF,FA,,0.7,False,329,0.303,0.297,0.003,-0.005,0.002,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.297,4
+Brett Sullivan,C,FA,,0.7,False,188,0.296,0.313,-0.076,-0.174,-0.042,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.487,4
+Christian Vazquez,C,FA,,0.7,False,237,0.249,0.264,-0.022,-0.007,-0.014,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.362,11
+Luisangel Acuna,2B,FA,,0.7,False,205,0.263,0.303,-0.01,0.006,-0.006,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.385,3
+Miguel Amaya,C,FA,,0.6,False,212,0.291,0.319,-0.007,-0.034,-0.004,2.0,1.0,False,False,1.0,HOT_STREAK,,0.332,4
+Josh Lowe,RF,FA,,0.6,False,262,0.294,0.38,-0.008,0.017,-0.005,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.43,6
+Victor Scott II,CF,FA,,0.6,False,184,0.293,0.312,-0.001,-0.012,-0.001,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.324,3
+Lourdes Gurriel Jr.,LF,FA,,0.6,False,189,0.277,0.307,-0.039,-0.031,-0.022,0.0,0.0,False,False,0.0,DECLINE,,0.428,9
+Amed Rosario,3B,FA,,0.6,False,202,0.307,0.389,-0.024,0.012,-0.014,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.372,10
+Austin Martin,LF,FA,,0.6,False,336,0.311,0.308,-0.037,-0.059,-0.026,0.0,1.0,False,False,0.0,DECLINE,,0.333,3
+Isaac Collins,LF,FA,,0.6,False,428,0.303,0.322,-0.021,-0.023,-0.015,2.0,1.0,False,False,1.0,HOT_STREAK,,0.345,3
+Wade Meckler,CF,FA,,0.6,False,229,0.31,0.344,,,,,,,,,ROOKIE_DEBUT,,0.372,2
+Henry Davis,C,FA,,0.6,False,261,0.285,0.302,-0.017,-0.064,-0.011,1.0,3.0,False,False,1.0,HOT_STREAK,,0.366,4
+Taylor Walls,SS,FA,,0.5,False,368,0.259,0.265,-0.011,-0.029,-0.008,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.309,6
+Donovan Walton,2B,FA,,0.5,False,176,0.321,0.33,0.022,0.017,0.012,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.33,7
+Jordan Beck,LF,FA,,0.5,False,126,0.256,0.307,-0.046,-0.088,-0.021,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.394,3
+Andres Chaparro,1B,FA,,0.5,False,144,0.371,0.43,0.117,0.111,0.057,2.0,3.0,True,True,5.0,SUSTAINABLE,,0.43,3
+Matt Wallner,RF,FA,,0.5,False,135,0.28,0.408,-0.045,0.007,-0.021,0.0,0.0,False,False,0.0,DECLINE,,0.522,5
+Jorge Mateo,SS,FA,,0.5,False,150,0.316,0.426,0.109,0.134,0.055,3.0,2.0,True,True,5.0,SUSTAINABLE,,0.354,7
+Alek Thomas,CF,FA,,0.5,False,104,0.289,0.358,-0.005,-0.01,-0.002,1.0,2.0,False,False,1.0,HOT_STREAK,,0.368,5
+Jonny DeLuca,CF,FA,,0.5,False,264,0.28,0.33,0.012,0.003,0.008,1.0,2.0,True,False,2.0,MIXED,,0.33,4
+Anthony Seigler,3B,FA,,0.5,False,158,0.313,0.33,0.004,-0.005,0.002,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.335,2
+Lenyn Sosa,2B,FA,,0.5,False,117,0.251,0.309,-0.077,-0.102,-0.034,0.0,2.0,False,True,2.0,DECLINE,[DISCIPLINE-ONLY],0.411,5
+Randal Grichuk,RF,FA,,0.5,False,205,0.341,0.426,0.013,0.036,0.007,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.479,12
+Nick Castellanos,RF,FA,,0.5,False,122,0.29,0.386,-0.012,0.021,-0.005,2.0,1.0,False,False,1.0,HOT_STREAK,,0.493,12
+Tyrone Taylor,CF,FA,,0.5,False,190,0.317,0.353,0.015,0.0,0.008,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.387,8
+Edmundo Sosa,2B,FA,,0.4,False,209,0.333,0.393,0.035,0.042,0.021,3.0,1.0,True,False,3.0,NARROW,,0.373,8
+Freddy Fermin,C,FA,,0.4,False,224,0.277,0.29,-0.004,-0.017,-0.003,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.313,5
+Edgar Quero,C,FA,,0.4,False,210,0.286,0.303,-0.005,-0.007,-0.003,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.31,2
+Drew Gilbert,RF,FA,,0.4,False,313,0.324,0.339,0.058,0.049,0.039,1.0,1.0,True,True,3.0,NARROW,,0.339,2
+Kyle Higashioka,C,FA,,0.4,False,186,0.295,0.341,0.0,-0.008,0.0,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.412,10
+Michael Conforto,LF,FA,,0.4,False,231,0.316,0.393,-0.018,0.007,-0.011,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.467,11
+Starling Marte,DH,FA,,0.4,False,168,0.288,0.345,-0.031,-0.017,-0.017,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.411,12
+Jared Triolo,SS,FA,,0.4,False,298,0.292,0.314,-0.022,-0.029,-0.015,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.355,4
+Isiah Kiner-Falefa,SS,FA,,0.4,False,133,0.314,0.322,0.049,0.03,0.023,1.0,1.0,False,False,1.0,HOT_STREAK,,0.328,9
+Ke'Bryan Hayes,3B,FA,,0.4,False,204,0.303,0.348,0.016,0.029,0.009,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.382,7
+Pedro Pages,C,FA,,0.3,False,189,0.275,0.338,0.008,0.006,0.004,1.0,1.0,True,False,1.0,HOT_STREAK,,0.332,3
+Tyler Freeman,RF,FA,,0.3,False,288,0.314,0.311,-0.012,-0.013,-0.008,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.325,5
+Daniel Susac,C,FA,,0.3,False,161,0.298,0.351,,,,,,,,,ROOKIE_DEBUT,,0.351,1
+Jose Fermin,2B,FA,,0.3,False,281,0.309,0.304,-0.027,-0.03,-0.017,1.0,2.0,True,False,2.0,MIXED,,0.304,4
+Sung-Mun Song,3B,FA,,0.3,False,134,0.271,0.25,,,,,,,,,ROOKIE_DEBUT,,0.25,1
+Connor Wong,C,FA,,0.3,False,195,0.306,0.35,0.038,0.053,0.022,3.0,1.0,False,False,2.0,MIXED,,0.378,6
+Ha-Seong Kim,SS,FA,,0.3,False,85,0.208,0.215,-0.09,-0.115,-0.032,0.0,0.0,False,True,1.0,DECLINE,,0.336,6
+Alex Freeland,3B,FA,,0.3,False,224,0.282,0.346,0.019,0.006,0.011,1.0,2.0,True,False,2.0,MIXED,,0.346,2
+Wenceel Perez,RF,FA,,0.3,False,175,0.272,0.286,-0.038,-0.076,-0.021,0.0,3.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.362,3
+Danny Jansen,C,FA,,0.3,False,152,0.249,0.258,-0.051,-0.078,-0.026,0.0,0.0,False,False,0.0,DECLINE,,0.356,9
+Jim Jarvis,SS,FA,,0.3,False,124,0.275,0.294,,,,,,,,,ROOKIE_DEBUT,,0.294,1
+Tommy Troy,2B,FA,,0.3,False,135,0.315,0.368,,,,,,,,,ROOKIE_DEBUT,,0.368,1
+Brice Matthews,2B,FA,,0.3,False,227,0.258,0.34,-0.043,-0.172,-0.026,0.0,3.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.512,2
+Ryan Vilade,RF,FA,,0.3,False,217,0.326,0.381,0.031,0.001,0.018,1.0,1.0,True,False,1.0,HOT_STREAK,,0.381,4
+Edwin Arroyo,SS,FA,,0.3,False,142,0.309,0.37,,,,,,,,,ROOKIE_DEBUT,,0.37,1
+Victor Robles,RF,FA,,0.3,False,141,0.284,0.296,0.048,0.019,0.023,1.0,3.0,False,False,2.0,MIXED,,0.36,10
+Davis Schneider,LF,FA,,0.3,False,140,0.277,0.311,-0.047,-0.053,-0.023,1.0,1.0,False,False,0.0,DECLINE,,0.377,4
+Jake Meyers,CF,FA,,0.3,False,153,0.256,0.284,-0.075,-0.075,-0.038,0.0,0.0,False,True,1.0,DECLINE,,0.359,6
+Ben Williamson,3B,FA,,0.3,False,271,0.292,0.318,0.018,-0.0,0.012,0.0,3.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.318,2
+James McCann,C,FA,,0.3,False,123,0.28,0.34,-0.034,-0.034,-0.015,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.427,12
+Denzer Guzman,SS,FA,,0.3,False,204,0.273,0.33,0.061,-0.092,0.035,0.0,2.0,False,True,3.0,NARROW,[DISCIPLINE-ONLY],0.422,2
+Dane Myers,CF,FA,,0.2,False,249,0.319,0.361,0.014,-0.003,0.009,0.0,1.0,True,False,1.0,HOT_STREAK,,0.364,4
+Victor Mesa Jr.,LF,FA,,0.2,False,179,0.319,0.368,-0.018,0.043,-0.01,1.0,0.0,True,False,1.0,HOT_STREAK,,0.368,2
+Edouard Julien,1B,FA,,0.2,False,276,0.338,0.396,0.008,-0.025,0.005,1.0,3.0,False,False,1.0,HOT_STREAK,,0.44,4
+Gabriel Arias,SS,FA,,0.2,False,139,0.276,0.455,-0.012,0.049,-0.006,2.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.418,5
+Austin Hedges,C,FA,,0.2,False,192,0.298,0.296,0.044,0.027,0.025,1.0,3.0,False,False,2.0,MIXED,,0.346,12
+Nicky Lopez,3B,FA,,0.2,False,224,0.259,0.273,0.018,0.076,0.011,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.29,8
+Joey Bart,C,FA,,0.2,False,128,0.293,0.346,-0.026,-0.034,-0.012,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.443,7
+Taylor Trammell,CF,FA,,0.2,False,210,0.302,0.391,0.03,0.069,0.018,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.461,6
+Derek Hill,CF,FA,,0.2,False,184,0.303,0.418,-0.01,-0.01,-0.006,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.427,7
+Ryan Kreidler,CF,FA,,0.2,False,217,0.287,0.334,0.024,-0.043,0.014,1.0,3.0,False,False,1.0,HOT_STREAK,,0.377,5
+Matt Vierling,CF,FA,,0.2,False,292,0.304,0.337,-0.034,-0.069,-0.022,0.0,1.0,False,False,0.0,DECLINE,,0.375,6
+Hunter Feduccia,C,FA,,0.2,False,195,0.322,0.386,0.046,0.083,0.026,3.0,2.0,True,False,4.0,SUSTAINABLE,,0.386,3
+Bryan Torres,RF,FA,,0.2,False,132,0.295,0.327,,,,,,,,,ROOKIE_DEBUT,,0.327,1
+Myles Straw,CF,FA,,0.2,False,255,0.296,0.303,-0.01,-0.023,-0.006,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.328,9
+Blake Dunn,RF,FA,,0.2,False,155,0.286,0.32,-0.018,-0.03,-0.009,1.0,2.0,False,False,1.0,HOT_STREAK,,0.35,3
+Eli White,RF,FA,,0.2,False,166,0.261,0.302,-0.056,-0.101,-0.029,0.0,1.0,False,False,0.0,DECLINE,,0.403,7
+Tristan Gray,2B,FA,,0.2,False,189,0.269,0.358,-0.083,-0.067,-0.046,0.0,0.0,False,True,1.0,DECLINE,,0.655,4
+Alex Call,RF,FA,,0.2,False,155,0.274,0.255,-0.051,-0.075,-0.026,0.0,1.0,False,False,0.0,DECLINE,,0.33,5
+Drew Romo,C,FA,,0.2,False,181,0.257,0.279,0.257,,0.14,0.0,3.0,True,True,4.0,SUSTAINABLE,[DISCIPLINE-ONLY],0.279,3
+Elias Diaz,C,FA,,0.2,False,169,0.265,0.328,-0.009,0.006,-0.005,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.37,12
+Yohendrick Pinango,LF,FA,,0.2,False,180,0.308,0.381,,,,,,,,,ROOKIE_DEBUT,,0.381,1
+Tyler Heineman,C,FA,,0.1,False,156,0.268,0.265,-0.011,-0.014,-0.005,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.355,7
+Justin Foscue,2B,FA,,0.1,False,176,0.329,0.389,0.14,0.105,0.076,2.0,1.0,True,True,4.0,SUSTAINABLE,,0.389,3
+Joey Loperfido,LF,FA,,0.1,False,120,0.305,0.346,-0.012,-0.054,-0.006,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.369,3
+Jake Rogers,C,FA,,0.1,False,142,0.286,0.327,0.009,0.006,0.004,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.44,6
+Victor Bericoto,1B,FA,,0.1,False,85,0.286,0.394,,,,,,,,,ROOKIE_DEBUT,,0.394,1
+Yoan Moncada,3B,FA,,0.1,False,130,0.269,0.331,-0.059,-0.052,-0.028,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.472,11
+Jimmy Crooks,C,FA,,0.1,False,140,0.28,0.369,0.057,0.028,0.028,3.0,1.0,True,False,3.0,NARROW,,0.369,2
+Max Kepler,LF,FA,,0.1,False,124,0.278,0.315,-0.057,-0.056,-0.026,0.0,0.0,False,False,0.0,DECLINE,,0.427,12
+David Fry,DH,FA,,0.1,False,168,0.26,0.286,0.058,0.012,0.03,1.0,3.0,False,False,2.0,MIXED,,0.371,4
+Brandon Lockridge,LF,FA,,0.1,False,112,0.26,0.31,-0.011,-0.014,-0.005,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.324,3
+Nick Yorke,2B,FA,,0.1,False,100,0.304,0.344,0.046,0.038,0.018,3.0,1.0,False,False,1.0,HOT_STREAK,,0.506,3
+Kahlil Watson,CF,FA,,0.1,False,91,0.253,0.362,,,,,,,,,ROOKIE_DEBUT,,0.362,1
+Jose Trevino,C,FA,,0.1,False,108,0.218,0.259,-0.065,-0.038,-0.027,0.0,0.0,False,False,0.0,DECLINE,,0.339,9
+Pavin Smith,DH,FA,,0.1,False,89,0.255,0.258,-0.067,-0.155,-0.025,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.413,7
+Mitch Garver,C,FA,,0.1,False,149,0.301,0.373,0.001,0.013,0.001,2.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.466,10
+Adrian Del Castillo,DH,FA,,0.1,False,192,0.265,0.334,-0.004,-0.052,-0.003,0.0,3.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.406,3
+Rafael Marchan,C,FA,,0.1,False,92,0.207,0.219,-0.056,-0.038,-0.021,0.0,1.0,False,False,0.0,DECLINE,,0.625,5
+Tyler Callihan,2B,FA,,0.1,False,107,0.254,0.339,0.059,0.106,0.025,2.0,0.0,True,False,3.0,NARROW,[POWER-ONLY],0.339,2
+Jose Siri,CF,FA,,0.1,False,164,0.32,0.425,0.114,0.117,0.059,3.0,2.0,False,True,4.0,SUSTAINABLE,,0.451,6
+MJ Melendez,LF,FA,,0.1,False,145,0.281,0.346,0.074,0.077,0.036,3.0,2.0,False,True,4.0,SUSTAINABLE,,0.413,5
+Andrew McCutchen,DH,FA,,0.1,False,83,0.24,0.262,-0.099,-0.117,-0.035,0.0,0.0,False,True,1.0,DECLINE,,0.45,12
+Jake Fraley,RF,FA,,0.1,False,90,0.276,0.338,-0.042,-0.02,-0.016,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.387,8
+Adam Frazier,2B,FA,,0.1,False,116,0.26,0.305,-0.022,-0.001,-0.009,1.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.341,11
+Jahmai Jones,RF,FA,,0.1,False,132,0.318,0.424,-0.085,-0.046,-0.04,0.0,0.0,False,True,1.0,DECLINE,,0.47,6
+Jorbit Vivas,2B,FA,,0.1,False,280,0.296,0.279,-0.023,-0.048,-0.015,0.0,2.0,True,False,2.0,MIXED,[DISCIPLINE-ONLY],0.279,2
+Thomas Saggese,2B,FA,,0.1,False,82,0.274,0.365,-0.007,0.002,-0.002,1.0,0.0,True,False,1.0,HOT_STREAK,,0.363,3
+Max Schuemann,2B,FA,,0.1,False,89,0.311,0.324,0.01,0.027,0.004,3.0,0.0,False,False,1.0,HOT_STREAK,[POWER-ONLY],0.352,3
+Darell Hernaiz,SS,FA,,0.1,False,144,0.271,0.268,-0.036,-0.042,-0.018,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.309,3
+LaMonte Wade Jr.,1B,FA,,0.1,False,107,0.29,0.294,0.002,-0.015,0.001,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.414,8
+Will Benson,RF,FA,,0.1,False,114,0.307,0.39,-0.046,-0.054,-0.02,0.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.445,5
+Rob Refsnyder,RF,FA,,0.1,False,129,0.259,0.316,-0.082,-0.096,-0.038,0.0,0.0,False,True,1.0,DECLINE,,0.4,11
+Jose Tena,3B,FA,,0.1,False,254,0.305,0.394,0.003,0.048,0.002,3.0,0.0,True,False,2.0,MIXED,[POWER-ONLY],0.394,4
+Nelson Velazquez,RF,FA,,0.1,False,88,0.355,0.474,,,,,,,,,ROOKIE_DEBUT,,0.492,4
+J.C. Escarra,C,FA,,0.1,False,92,0.258,0.287,-0.043,-0.006,-0.017,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.293,2
+Everson Pereira,CF,FA,,0.1,False,111,0.299,0.403,0.056,0.065,0.024,1.0,2.0,True,False,3.0,NARROW,,0.403,3
+James Outman,CF,FA,,0.1,False,174,0.225,0.338,-0.041,-0.078,-0.022,0.0,1.0,False,False,0.0,DECLINE,,0.418,5
+Petey Halpin,CF,FA,,0.1,False,148,0.287,0.331,0.006,0.119,0.003,3.0,1.0,True,False,2.0,MIXED,,0.331,2
+Leo Rivas,2B,FA,,0.1,False,135,0.255,0.261,-0.034,-0.003,-0.016,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.365,3
+Gabriel Rincones Jr.,RF,FA,,0.1,False,89,0.205,0.279,,,,,,,,,ROOKIE_DEBUT,,0.279,1
+Alika Williams,3B,FA,,0.1,False,154,0.244,0.29,,,,,,,,,ROOKIE_DEBUT,,0.312,3
+Nick Allen,SS,FA,,0.1,False,135,0.248,0.269,-0.009,-0.019,-0.004,2.0,1.0,False,False,1.0,HOT_STREAK,,0.288,5
+Alejandro Osuna,LF,FA,,0.1,False,222,0.318,0.296,-0.023,-0.073,-0.014,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.369,2
+Colby Thomas,RF,FA,,0.1,False,121,0.254,0.344,-0.028,-0.078,-0.013,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.422,2
+Jhonny Pereda,C,FA,,0.1,False,80,0.337,0.378,0.08,0.086,0.028,1.0,2.0,True,False,3.0,NARROW,,0.378,3
+Braden Shewmake,SS,FA,,0.1,False,91,0.307,0.35,,,,,,,,,ROOKIE_DEBUT,,0.35,3
+Christian Koss,2B,FA,,0.1,False,102,0.236,0.292,-0.078,-0.09,-0.031,0.0,1.0,False,True,1.0,DECLINE,,0.382,2
+Drew Millas,C,FA,,0.1,False,152,0.278,0.291,-0.038,-0.028,-0.019,0.0,0.0,False,False,0.0,HOT_STREAK_DEEP,,0.363,4
+Graham Pauley,3B,FA,,0.1,False,115,0.227,0.261,-0.078,-0.058,-0.034,0.0,1.0,False,True,1.0,DECLINE,,0.402,3
+Austin Wynns,C,FA,,0.1,False,89,0.245,0.3,-0.059,-0.099,-0.022,0.0,2.0,False,False,1.0,DECLINE,[DISCIPLINE-ONLY],0.399,8
+Jorge Barrosa,CF,FA,,0.1,False,158,0.255,0.261,0.062,0.017,0.032,1.0,2.0,False,True,3.0,NARROW,,0.394,3
+Leo Jimenez,2B,FA,,0.1,False,176,0.311,0.331,0.064,0.043,0.035,2.0,1.0,False,True,3.0,NARROW,,0.373,3
+Jarred Kelenic,RF,FA,,0.1,False,83,0.33,0.486,0.058,0.102,0.02,3.0,1.0,True,False,3.0,NARROW,,0.458,6
+Drew Cavanaugh,C,FA,,0.1,False,99,0.324,0.352,,,,,,,,,ROOKIE_DEBUT,,0.352,1
+Eric Haase,C,FA,,0.0,False,85,0.278,0.371,-0.006,-0.053,-0.002,1.0,1.0,False,False,0.0,HOT_STREAK_DEEP,,0.439,9
+Blake Perkins,CF,FA,,0.0,False,102,0.266,0.279,-0.014,-0.061,-0.006,1.0,2.0,False,False,1.0,HOT_STREAK,,0.323,4
+Jase Bowen,CF,FA,,0.0,False,81,0.263,0.396,,,,,,,,,ROOKIE_DEBUT,,0.396,1
+Josh Rojas,3B,FA,,0.0,False,80,0.209,0.226,-0.055,-0.069,-0.019,0.0,2.0,False,False,1.0,HOT_STREAK,[DISCIPLINE-ONLY],0.345,8
+Weston Wilson,LF,FA,,0.0,False,122,0.268,0.314,-0.065,-0.101,-0.029,0.0,0.0,False,False,0.0,DECLINE,,0.494,4
+Zach Dezenzo,LF,FA,,0.0,False,82,0.254,0.364,-0.064,-0.077,-0.022,0.0,0.0,False,False,0.0,DECLINE,,0.443,3
+Rodolfo Duran,C,FA,,0.0,False,91,0.262,0.292,,,,,,,,,ROOKIE_DEBUT,,0.292,1

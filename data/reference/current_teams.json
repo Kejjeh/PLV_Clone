@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-23",
+ "as_of": "2026-08-24",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1488,7 +1488,7 @@
    "team": "St. Louis Cardinals",
    "abbr": "STL",
    "name": "Joshua Báez",
-   "pos": "RF"
+   "pos": "LF"
   },
   "677865": {
    "team": "St. Louis Cardinals",
@@ -1669,12 +1669,6 @@
    "abbr": "TB",
    "name": "Chandler Simpson",
    "pos": "LF"
-  },
-  "688297": {
-   "team": "Tampa Bay Rays",
-   "abbr": "TB",
-   "name": "Chris Roycroft",
-   "pos": "P"
   },
   "642121": {
    "team": "Tampa Bay Rays",
@@ -2047,12 +2041,6 @@
    "abbr": "TEX",
    "name": "Jalen Beeks",
    "pos": "P"
-  },
-  "672284": {
-   "team": "Texas Rangers",
-   "abbr": "TEX",
-   "name": "Jarred Kelenic",
-   "pos": "RF"
   },
   "592626": {
    "team": "Texas Rangers",
@@ -3674,12 +3662,6 @@
    "name": "Joe Mack",
    "pos": "C"
   },
-  "667463": {
-   "team": "Miami Marlins",
-   "abbr": "MIA",
-   "name": "John King",
-   "pos": "P"
-  },
   "694795": {
    "team": "Miami Marlins",
    "abbr": "MIA",
@@ -4448,12 +4430,6 @@
    "name": "Luke Murphy",
    "pos": "P"
   },
-  "605242": {
-   "team": "Los Angeles Angels",
-   "abbr": "LAA",
-   "name": "Michael Fulmer",
-   "pos": "P"
-  },
   "545361": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -4884,12 +4860,6 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Zac Gallen",
-   "pos": "P"
-  },
-  "641793": {
-   "team": "Arizona Diamondbacks",
-   "abbr": "AZ",
-   "name": "Zack Littell",
    "pos": "P"
   },
   "695380": {
@@ -5334,7 +5304,7 @@
    "team": "Boston Red Sox",
    "abbr": "BOS",
    "name": "Mickey Gasper",
-   "pos": "C"
+   "pos": "DH"
   },
   "681987": {
    "team": "Boston Red Sox",
@@ -6426,7 +6396,7 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "Ryan Ritter",
-   "pos": "2B"
+   "pos": "SS"
   },
   "807743": {
    "team": "Colorado Rockies",
@@ -6498,6 +6468,12 @@
    "team": "Colorado Rockies",
    "abbr": "COL",
    "name": "Zach Agnos",
+   "pos": "P"
+  },
+  "808825": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "Andrew Sears",
    "pos": "P"
   },
   "690544": {
@@ -6631,12 +6607,6 @@
    "abbr": "DET",
    "name": "Jake Miller",
    "pos": "P"
-  },
-  "681546": {
-   "team": "Detroit Tigers",
-   "abbr": "DET",
-   "name": "James Outman",
-   "pos": "CF"
   },
   "595879": {
    "team": "Detroit Tigers",

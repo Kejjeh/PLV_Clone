@@ -23,10 +23,22 @@
   },
   "mlbam_id": 694671,
   "player_name": "Wyatt Langford",
+  "prediction": null,
+  "prediction_settlement": null,
   "reason_tag": "process_red_flag",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-24",
+  "settlement": {
+    "actual_fp_per_unit": 0.2692307692307692,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 78,
+    "proj_per": 0.5761172814874211,
+    "proj_units_note": "native",
+    "residual": -0.3068865122566519,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-03",
   "verdict_top": "CAUTION"
 }

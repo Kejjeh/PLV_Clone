@@ -1,127 +1,166 @@
 {
-  "base_pwin": 0.805667,
+  "base_pwin": 0.976,
   "regime": "LEADING",
   "period": 20,
-  "sims": 3000,
+  "sims": 10000,
   "seed": 7,
-  "cap_remaining": 6,
+  "cap_remaining": 2,
   "plan_source": "greedy",
-  "plan_total_dpwin": 0.06733333333333336,
-  "plan_pwin_final": 0.873,
+  "plan_total_dpwin": 0.01870000000000005,
+  "plan_pwin_final": 0.9947,
   "plan": [
     {
-      "add": "Carlos Rodon",
-      "add_bucket": "SP",
-      "drop": "Parker Messick",
+      "add": "Alec Bohm",
+      "add_bucket": "H",
+      "drop": "Joshua Baez",
+      "drop_bucket": "H",
+      "dpwin": 0.011900000000000022,
+      "mc_se": 0.001093,
+      "pwin_after": 0.9879,
+      "dpwin_from_base": 0.0119,
+      "dtitle_equity_pp": null
+    },
+    {
+      "add": "Javier Sanoja",
+      "add_bucket": "H",
+      "drop": "Jose Soriano",
       "drop_bucket": "SP",
-      "dpwin": 0.06733333333333336,
-      "mc_se": 0.006079,
-      "pwin_after": 0.873,
-      "dpwin_from_base": 0.067333,
-      "dtitle_equity_pp": 0.0202
+      "dpwin": 0.006800000000000028,
+      "mc_se": 0.000726,
+      "pwin_after": 0.9947,
+      "dpwin_from_base": 0.0187,
+      "dtitle_equity_pp": null
     }
   ],
   "title_equity": {
-    "dtitle_pp": 0.3,
-    "status": "stale",
-    "source_period": 20,
-    "payload_period": 19,
-    "periods_stale": 1,
-    "note": "season_sim.json was generated at period 19, now period 20 (1 behind, stale) \u2014 the leverage weight is estimated from older standings. Re-run /season-sim to refresh.",
-    "plus2_pp": 1.18
+    "dtitle_pp": null,
+    "status": "unavailable",
+    "source_period": null,
+    "payload_period": 20,
+    "periods_stale": null,
+    "note": "value_of_win_curve empty (sim ran but produced no rows)",
+    "plus2_pp": 0.96
   },
   "top_single_moves": [
     {
-      "add": "Carlos Rodon",
-      "drop": "Parker Messick",
-      "dpwin": 0.06733333333333336,
-      "mc_se": 0.006079
-    },
-    {
-      "add": "Carlos Rodon",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.06733333333333336,
-      "mc_se": 0.006079
-    },
-    {
-      "add": "Carlos Rodon",
-      "drop": "Nick Pivetta",
-      "dpwin": 0.06733333333333336,
-      "mc_se": 0.006079
-    },
-    {
-      "add": "Carlos Rodon",
+      "add": "Caleb Durbin",
       "drop": "Joshua Baez",
-      "dpwin": 0.06733333333333336,
-      "mc_se": 0.006079
+      "dpwin": 0.0131,
+      "mc_se": 0.001038
     },
     {
-      "add": "Joey Cantillo",
-      "drop": "Parker Messick",
-      "dpwin": 0.06566633333333338,
-      "mc_se": 0.006113
-    },
-    {
-      "add": "Joey Cantillo",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.06566633333333338,
-      "mc_se": 0.006113
-    },
-    {
-      "add": "Joey Cantillo",
-      "drop": "Nick Pivetta",
-      "dpwin": 0.06566633333333338,
-      "mc_se": 0.006113
-    },
-    {
-      "add": "Joey Cantillo",
+      "add": "Alec Bohm",
       "drop": "Joshua Baez",
-      "dpwin": 0.06566633333333338,
-      "mc_se": 0.006113
+      "dpwin": 0.011900000000000022,
+      "mc_se": 0.001093
     },
     {
-      "add": "Bryce Miller",
-      "drop": "Parker Messick",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
-    },
-    {
-      "add": "Bryce Miller",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
-    },
-    {
-      "add": "Bryce Miller",
-      "drop": "Nick Pivetta",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
-    },
-    {
-      "add": "Bryce Miller",
+      "add": "Luis Torrens",
       "drop": "Joshua Baez",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
+      "dpwin": 0.011400000000000077,
+      "mc_se": 0.001115
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Parker Messick",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
+      "add": "Vinnie Pasquantino",
+      "drop": "Joshua Baez",
+      "dpwin": 0.011099999999999999,
+      "mc_se": 0.001128
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Drew Rasmussen",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
+      "add": "Angel Genao",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010700000000000043,
+      "mc_se": 0.001146
     },
     {
-      "add": "Ryan Weathers",
-      "drop": "Nick Pivetta",
-      "dpwin": 0.06166633333333338,
-      "mc_se": 0.006193
+      "add": "Javier Sanoja",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010400000000000076,
+      "mc_se": 0.001158
+    },
+    {
+      "add": "Griffin Conine",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010299999999999976,
+      "mc_se": 0.001162
+    },
+    {
+      "add": "Jakob Marsee",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010299999999999976,
+      "mc_se": 0.001162
+    },
+    {
+      "add": "Mickey Gasper",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010199999999999987,
+      "mc_se": 0.001167
+    },
+    {
+      "add": "Ryan Jeffers",
+      "drop": "Joshua Baez",
+      "dpwin": 0.010000000000000009,
+      "mc_se": 0.001175
+    },
+    {
+      "add": "Nathaniel Lowe",
+      "drop": "Joshua Baez",
+      "dpwin": 0.009800000000000031,
+      "mc_se": 0.001183
+    },
+    {
+      "add": "Ildemaro Vargas",
+      "drop": "Joshua Baez",
+      "dpwin": 0.009000000000000008,
+      "mc_se": 0.001216
+    },
+    {
+      "add": "Alec Bohm",
+      "drop": "Wyatt Langford",
+      "dpwin": 0.008199999999999985,
+      "mc_se": 0.001247
+    },
+    {
+      "add": "Caleb Durbin",
+      "drop": "Wyatt Langford",
+      "dpwin": 0.007800000000000029,
+      "mc_se": 0.001262
+    },
+    {
+      "add": "Travis Bazzana",
+      "drop": "Joshua Baez",
+      "dpwin": 0.007299999999999973,
+      "mc_se": 0.001281
     }
   ],
-  "pair_check": null,
-  "dpwin_run_id": "2026-08-21T073049_7"
+  "pair_check": {
+    "n_combos": 45,
+    "adopted": false,
+    "best": {
+      "moves": [
+        {
+          "add": "Caleb Durbin",
+          "add_bucket": "H",
+          "drop": "Joshua Baez",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.0131,
+          "mc_se": 0.001038
+        },
+        {
+          "add": "Alec Bohm",
+          "add_bucket": "H",
+          "drop": "Wyatt Langford",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.008199999999999985,
+          "mc_se": 0.001247
+        }
+      ],
+      "dpwin": 0.0171,
+      "pwin": 0.9931,
+      "mc_se": 0.000828,
+      "sum_solo": 0.021299999999999986,
+      "interaction": -0.004199999999999985
+    }
+  },
+  "dpwin_run_id": "2026-08-24T031137_7"
 }
