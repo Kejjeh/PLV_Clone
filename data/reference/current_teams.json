@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-24",
+ "as_of": "2026-08-25",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -595,6 +595,12 @@
    "abbr": "SD",
    "name": "David Morgan",
    "pos": "P"
+  },
+  "687957": {
+   "team": "San Diego Padres",
+   "abbr": "SD",
+   "name": "Dustin Harris",
+   "pos": "LF"
   },
   "665487": {
    "team": "San Diego Padres",
@@ -6218,6 +6224,12 @@
    "name": "Adael Amador",
    "pos": "2B"
   },
+  "687060": {
+   "team": "Colorado Rockies",
+   "abbr": "COL",
+   "name": "Blake Adams",
+   "pos": "P"
+  },
   "680604": {
    "team": "Colorado Rockies",
    "abbr": "COL",
@@ -6674,12 +6686,6 @@
    "name": "Reese Olson",
    "pos": "P"
   },
-  "676568": {
-   "team": "Detroit Tigers",
-   "abbr": "DET",
-   "name": "Ricky Vanasco",
-   "pos": "P"
-  },
   "682985": {
    "team": "Detroit Tigers",
    "abbr": "DET",
@@ -6738,6 +6744,12 @@
    "team": "Detroit Tigers",
    "abbr": "DET",
    "name": "Tyler Holton",
+   "pos": "P"
+  },
+  "641755": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "Tyler Kinley",
    "pos": "P"
   },
   "672761": {
@@ -6949,6 +6961,12 @@
    "abbr": "HOU",
    "name": "Mike Burrows",
    "pos": "P"
+  },
+  "676369": {
+   "team": "Houston Astros",
+   "abbr": "HOU",
+   "name": "Nelson Velázquez",
+   "pos": "LF"
   },
   "669397": {
    "team": "Houston Astros",

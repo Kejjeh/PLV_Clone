@@ -1,0 +1,994 @@
+owner,name,team,own,slots,per_game,rank,signal,etfr,src,vol,inj,ret,xfp_ros,xfp_po,buckets,k
+FA,Jose Altuve,Hou,72.4,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.79,121.0,hold,16.0,id·vol,3.31,,,41.0,24.0,"{'2B/SS', 'UTIL', 'OF'}",jose altuve
+FA,Jarren Duran,Bos,68.3,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.71,164.0,hold,19.0,id·vol,3.55,,,42.0,25.0,"{'UTIL', 'OF'}",jarren duran
+FA,Salvador Perez,KC,64.8,"['C', '1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.64,222.0,hold,17.0,id·vol,3.13,,,36.0,21.0,"{'C', 'UTIL', '1B/3B'}",salvador perez
+FA,Jeremy Pena,Hou,63.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.81,114.0,hold,13.0,id·vol,3.69,,,46.0,27.0,"{'2B/SS', 'UTIL'}",jeremy pena
+FA,Austin Riley,Atl,61.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.45,349.0,drop,16.0,id·vol,3.11,,,31.0,18.0,"{'UTIL', '1B/3B'}",austin riley
+FA,Maikel Garcia,KC,58.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.79,122.0,hold,12.0,id·vol,2.6,TEN_DAY_DL,2026-09-01,23.0,13.0,"{'UTIL', '1B/3B'}",maikel garcia
+FA,Tyler Soderstrom,Oak,54.4,"['1B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.91,80.0,hold,18.0,id·vol,2.88,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', '1B/3B', 'OF'}",tyler soderstrom
+FA,Caleb Durbin,Bos,50.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.94,73.0,hold,19.0,id·vol,3.43,,,46.0,27.0,"{'UTIL', '1B/3B'}",caleb durbin
+FA,Ryan O'Hearn,Pit,49.8,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.77,133.0,hold,15.0,id·vol,2.04,TEN_DAY_DL,2026-09-18,2.0,1.0,"{'UTIL', '1B/3B', 'OF'}",ryan ohearn
+FA,Chandler Simpson,TB,47.8,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.83,108.0,hold,19.0,id·vol,3.59,,,46.0,27.0,"{'UTIL', 'OF'}",chandler simpson
+FA,Willy Adames,SF,47.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.7,169.0,hold,18.0,id·vol,3.16,TEN_DAY_DL,2026-09-07,18.0,11.0,"{'2B/SS', 'UTIL'}",willy adames
+FA,Teoscar Hernandez,LAD,47.1,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.49,324.0,drop,12.0,id·vol,2.85,,,29.0,17.0,"{'UTIL', 'OF'}",teoscar hernandez
+FA,Vinnie Pasquantino,KC,45.2,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",2.08,39.0,hold,16.0,id·vol,3.01,,,44.0,26.0,"{'UTIL', '1B/3B'}",vinnie pasquantino
+FA,Brooks Lee,Min,44.5,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.7,175.0,hold,17.0,id·vol,3.28,,,39.0,23.0,"{'2B/SS', 'UTIL', '1B/3B'}",brooks lee
+FA,Ryan Jeffers,Min,43.3,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.95,67.0,hold,11.0,id·vol,2.98,,,40.0,24.0,"{'C', 'UTIL'}",ryan jeffers
+FA,Matt Chapman,SF,42.8,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.49,320.0,drop,11.0,id·vol,1.93,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', '1B/3B'}",matt chapman
+FA,Brent Rooker,Oak,40.5,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.56,274.0,hold,7.0,id·vol,2.14,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",brent rooker
+FA,Yainer Diaz,Hou,40.1,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.67,200.0,hold,9.0,id·vol,2.58,,,30.0,18.0,"{'C', 'UTIL'}",yainer diaz
+FA,Eugenio Suarez,Cin,38.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.42,372.0,hold,12.0,id·vol,3.22,,,32.0,19.0,"{'UTIL', '1B/3B'}",eugenio suarez
+FA,Jonathan Aranda,TB,38.1,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.73,147.0,hold,20.0,id·vol,3.79,,,46.0,27.0,"{'UTIL', '1B/3B'}",jonathan aranda
+FA,Jo Adell,Cle,37.9,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.58,262.0,hold,17.0,id·vol,3.35,,,37.0,22.0,"{'UTIL', 'OF'}",jo adell
+FA,Brandon Marsh,Phi,36.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.77,135.0,hold,18.0,id·vol,3.13,,,38.0,23.0,"{'UTIL', 'OF'}",brandon marsh
+FA,Marcus Semien,NYM,34.5,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.77,134.0,hold,16.0,id·vol,2.92,,,36.0,21.0,"{'2B/SS', 'UTIL'}",marcus semien
+FA,Brendan Donovan,Sea,33.9,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.77,131.0,hold,6.0,id·vol,3.21,SEVEN_DAY_DL,2026-08-29,32.0,19.0,"{'2B/SS', 'UTIL', '1B/3B'}",brendan donovan
+FA,Colson Montgomery,ChW,33.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.73,152.0,hold,19.0,id·vol,3.49,,,42.0,25.0,"{'2B/SS', 'UTIL', '1B/3B'}",colson montgomery
+FA,Carter Jensen,KC,32.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.54,288.0,drop,15.0,id·vol,3.06,,,33.0,19.0,"{'C', 'UTIL'}",carter jensen
+FA,Kody Clemens,Min,30.3,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'LF', 'RF']",1.82,112.0,hold,17.0,id·vol,3.12,,,39.0,23.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",kody clemens
+FA,Alec Bohm,Phi,30.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '1B']",1.93,75.0,hold,20.0,id·vol,3.3,,,44.0,26.0,"{'UTIL', '1B/3B'}",alec bohm
+FA,Jakob Marsee,Mia,26.2,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.89,87.0,hold,19.0,id·vol,3.22,,,42.0,25.0,"{'UTIL', 'OF'}",jakob marsee
+FA,Zack Gelof,Oak,26.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'CF', '3B', '1B/3B', 'LF']",1.68,193.0,hold,10.0,id·vol,2.76,,,32.0,19.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",zack gelof
+FA,Ildemaro Vargas,Ari,26.0,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.86,98.0,hold,16.0,id·vol,2.41,,,31.0,18.0,"{'2B/SS', 'UTIL', '1B/3B'}",ildemaro vargas
+FA,Casey Schmitt,SF,25.7,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH', '1B', 'LF', 'OF']",1.87,96.0,hold,16.0,id·vol,2.06,TEN_DAY_DL,2027-02-01,0.0,0.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",casey schmitt
+FA,Samuel Basallo,Bal,25.6,"['C', 'UTIL', 'BE', 'IL', 'DH']",1.56,278.0,drop,11.0,id·vol,1.95,,,21.0,12.0,"{'C', 'UTIL'}",samuel basallo
+FA,Jose Caballero,NYY,25.4,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.68,189.0,hold,13.0,id·vol,2.27,,,26.0,16.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jose caballero
+FA,Jackson Holliday,Bal,24.7,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.45,350.0,drop,8.0,id·vol,2.98,,,30.0,18.0,"{'2B/SS', 'UTIL'}",jackson holliday
+FA,Sal Frelick,Mil,23.5,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.83,110.0,hold,12.0,id·vol,1.71,TEN_DAY_DL,2026-08-25,21.0,12.0,"{'UTIL', 'OF'}",sal frelick
+FA,George Lombard Jr.,NYY,22.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.46,344.0,drop,2.0,id·vol,2.59,,,26.0,15.0,"{'2B/SS', 'UTIL'}",george lombard
+FA,Brayan Rocchio,Cle,21.3,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.56,275.0,drop,16.0,id·vol,2.88,,,31.0,18.0,"{'2B/SS', 'UTIL'}",brayan rocchio
+FA,Willi Castro,Col,20.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'SS', '1B']",1.51,309.0,drop,14.0,id·vol,3.12,,,33.0,19.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",willi castro
+FA,Nick Gonzales,Pit,20.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.45,356.0,drop,15.0,id·vol,3.24,,,33.0,19.0,"{'2B/SS', 'UTIL', '1B/3B'}",nick gonzales
+FA,Josh Bell,Min,19.2,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.72,158.0,hold,18.0,id·vol,3.32,,,40.0,23.0,"{'UTIL', '1B/3B'}",josh bell
+FA,Max Clark,Det,18.9,"['CF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.59,254.0,hold,3.0,id·vol,2.65,,,29.0,17.0,"{'UTIL', 'OF'}",max clark
+FA,Travis Bazzana,Cle,16.9,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.61,239.0,hold,14.0,id·vol,3.19,,,36.0,21.0,"{'2B/SS', 'UTIL'}",travis bazzana
+FA,Chase Meidroth,ChW,16.4,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.5,317.0,drop,16.0,id·vol,3.58,,,37.0,22.0,"{'2B/SS', 'UTIL'}",chase meidroth
+FA,Lawrence Butler,Oak,16.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.66,207.0,hold,14.0,id·vol,3.1,,,36.0,21.0,"{'UTIL', 'OF'}",lawrence butler
+FA,J.T. Realmuto,Phi,15.9,"['C', 'UTIL', 'BE', 'IL']",1.5,318.0,drop,12.0,id·vol,2.62,,,27.0,16.0,"{'C', 'UTIL'}",jt realmuto
+FA,Giancarlo Stanton,NYY,14.8,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.46,348.0,hold,3.0,id·vol,1.44,TEN_DAY_DL,2026-09-22,0.0,0.0,"{'UTIL', 'OF'}",giancarlo stanton
+FA,Luis Robert Jr.,NYM,14.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.64,214.0,hold,7.0,id·vol,2.85,,,32.0,19.0,"{'UTIL', 'OF'}",luis robert
+FA,Nick Sogard,Bos,13.2,"['1B', '2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.52,303.0,drop,5.0,id·vol,3.35,,,35.0,21.0,"{'2B/SS', 'UTIL', '1B/3B'}",nick sogard
+FA,Dominic Canzone,Sea,12.6,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.73,156.0,hold,14.0,id·vol,2.9,,,35.0,20.0,"{'UTIL', 'OF'}",dominic canzone
+FA,Cole Young,Sea,11.9,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.56,281.0,hold,17.0,id·vol,3.26,,,35.0,21.0,"{'2B/SS', 'UTIL'}",cole young
+FA,Spencer Steer,Cin,11.3,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'LF', 'RF', '2B', '2B/SS']",1.91,79.0,hold,15.0,id·vol,1.95,TEN_DAY_DL,2026-09-22,0.0,0.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",spencer steer
+FA,Carson Kelly,ChC,11.0,"['C', 'UTIL', 'BE', 'IL']",1.42,367.0,drop,10.0,id·vol,2.27,,,22.0,13.0,"{'C', 'UTIL'}",carson kelly
+FA,Heliot Ramos,NYY,10.5,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.54,290.0,hold,12.0,id·vol,3.34,,,36.0,21.0,"{'UTIL', 'OF'}",heliot ramos
+FA,Jeff McNeil,Oak,10.3,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL', '1B', '1B/3B']",1.87,95.0,hold,16.0,id·vol,2.47,,,32.0,19.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jeff mcneil
+FA,Trevor Story,Bos,10.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.38,391.0,drop,5.0,id·vol,1.89,SIXTY_DAY_DL,2026-08-28,15.0,9.0,"{'2B/SS', 'UTIL'}",trevor story
+FA,Francisco Alvarez,NYM,9.9,"['C', 'UTIL', 'BE', 'IL', 'DH']",1.55,287.0,drop,11.0,id·vol,2.62,,,28.0,17.0,"{'C', 'UTIL'}",francisco alvarez
+FA,Spencer Jones,NYY,9.8,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.59,252.0,hold,6.0,id·vol,2.42,,,27.0,16.0,"{'UTIL', 'OF'}",spencer jones
+FA,Javier Sanoja,Mia,9.8,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'P', 'RP', 'BE', 'IL', 'RF']",2.03,50.0,add,15.0,id·vol,2.5,,,35.0,21.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",javier sanoja
+FA,Jake Burger,Tex,8.7,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.68,194.0,drop,17.0,id·vol,2.99,,,35.0,20.0,"{'UTIL', '1B/3B'}",jake burger
+FA,Jordan Westburg,Bal,8.5,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.79,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,"{'UTIL', '1B/3B'}",jordan westburg
+FA,TJ Friedl,Cin,8.4,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.57,273.0,hold,8.0,id·vol,2.01,,,22.0,13.0,"{'UTIL', 'OF'}",tj friedl
+FA,Daulton Varsho,Hou,8.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.86,97.0,hold,17.0,id·vol,3.06,,,40.0,23.0,"{'UTIL', 'OF'}",daulton varsho
+FA,Andres Gimenez,Tor,8.3,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'SS']",1.52,305.0,drop,14.0,id·vol,2.61,,,28.0,16.0,"{'2B/SS', 'UTIL'}",andres gimenez
+FA,Bryce Eldridge,SF,8.2,"['DH', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF']",1.73,149.0,hold,13.0,id·vol,2.95,BEREAVEMENT,2026-08-27,31.0,19.0,"{'UTIL', '1B/3B'}",bryce eldridge
+FA,Gavin Sheets,SD,8.2,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF']",1.68,184.0,drop,14.0,id·vol,2.39,,,28.0,16.0,"{'UTIL', '1B/3B', 'OF'}",gavin sheets
+FA,Matt McLain,Cin,8.2,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'SS']",1.62,232.0,hold,13.0,id·vol,3.28,,,37.0,22.0,"{'2B/SS', 'UTIL'}",matt mclain
+FA,Cam Smith,Hou,7.7,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.53,295.0,hold,15.0,id·vol,2.96,,,31.0,18.0,"{'UTIL', 'OF'}",cam smith
+FA,A.J. Ewing,NYM,7.7,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.65,213.0,hold,13.0,id·vol,3.33,,,38.0,22.0,"{'UTIL', 'OF'}",aj ewing
+FA,Dalton Rushing,LAD,7.7,"['C', 'UTIL', 'BE', 'IL']",1.64,220.0,hold,8.0,id·vol,1.18,TEN_DAY_DL,2026-09-18,1.0,1.0,"{'C', 'UTIL'}",dalton rushing
+FA,Carlos Correa,Hou,7.6,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.66,208.0,hold,5.0,id·vol,1.92,SIXTY_DAY_DL,2026-09-24,0.0,0.0,"{'2B/SS', 'UTIL', '1B/3B'}",carlos correa
+FA,Nasim Nunez,Wsh,7.5,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.59,248.0,hold,14.0,id·vol,2.61,,,29.0,17.0,"{'2B/SS', 'UTIL'}",nasim nunez
+FA,Curtis Mead,Bos,7.3,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.75,142.0,hold,12.0,id·vol,1.75,TEN_DAY_DL,2026-09-11,7.0,4.0,"{'UTIL', '1B/3B'}",curtis mead
+FA,Kerry Carpenter,Det,6.8,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.69,182.0,hold,9.0,id·vol,1.47,TEN_DAY_DL,2026-08-28,15.0,9.0,"{'UTIL', 'OF'}",kerry carpenter
+FA,Griffin Conine,Mia,6.8,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'DH', '1B', '1B/3B', 'IF']",1.94,72.0,hold,8.0,id·vol,2.53,,,34.0,20.0,"{'UTIL', '1B/3B', 'OF'}",griffin conine
+FA,Rafael Flores Jr.,Pit,6.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'C']",1.6,245.0,drop,2.0,id·vol,1.74,,,19.0,11.0,"{'C', 'UTIL', '1B/3B'}",rafael flores
+FA,Austin Wells,NYY,6.0,"['C', 'UTIL', 'BE', 'IL']",1.42,368.0,drop,9.0,id·vol,2.22,,,22.0,13.0,"{'C', 'UTIL'}",austin wells
+FA,Jake Mangum,Pit,5.9,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.69,178.0,hold,14.0,id·vol,3.26,,,38.0,23.0,"{'UTIL', 'OF'}",jake mangum
+FA,Tyler Stephenson,Cin,5.9,"['C', 'UTIL', 'BE', 'IL']",1.63,224.0,hold,13.0,id·vol,2.55,,,29.0,17.0,"{'C', 'UTIL'}",tyler stephenson
+FA,Eduardo Valencia,Det,5.8,"['C', '1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.78,125.0,hold,2.0,id·vol,1.66,,,21.0,12.0,"{'C', 'UTIL', '1B/3B'}",eduardo valencia
+FA,Dylan Crews,Wsh,5.8,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.52,307.0,hold,10.0,id·vol,3.07,,,32.0,19.0,"{'UTIL', 'OF'}",dylan crews
+FA,Tim Tawa,Ari,5.7,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'LF', '3B']",1.49,323.0,drop,7.0,id·vol,2.67,,,28.0,16.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",tim tawa
+FA,Jorge Polanco,NYM,5.4,"['2B', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.34,424.0,drop,4.0,id·vol,1.99,TEN_DAY_DL,2027-02-01,0.0,0.0,"{'2B/SS', 'UTIL'}",jorge polanco
+FA,Colt Keith,Det,5.4,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL', '1B']",1.75,141.0,hold,14.0,id·vol,2.55,,,31.0,18.0,"{'2B/SS', 'UTIL', '1B/3B'}",colt keith
+FA,Andruw Monasterio,Bos,5.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'DH', '2B']",1.62,237.0,drop,10.0,id·vol,2.57,,,29.0,17.0,"{'2B/SS', 'UTIL'}",andruw monasterio
+FA,Masyn Winn,StL,5.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.52,300.0,drop,16.0,id·vol,3.24,,,34.0,20.0,"{'2B/SS', 'UTIL'}",masyn winn
+FA,Abimelec Ortiz,Wsh,5.2,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.69,183.0,drop,2.0,id·vol,2.44,,,29.0,17.0,"{'UTIL', '1B/3B', 'OF'}",abimelec ortiz
+FA,Noelvi Marte,Cin,5.1,"['3B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.42,374.0,drop,6.0,id·vol,1.77,,,17.0,10.0,"{'UTIL', '1B/3B', 'OF'}",noelvi marte
+FA,Jeremiah Jackson,Bal,4.9,"['3B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL', '2B', '2B/SS']",1.7,174.0,hold,9.0,id·vol,1.56,,,18.0,11.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jeremiah jackson
+FA,Paul Goldschmidt,NYY,4.8,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.58,256.0,drop,11.0,id·vol,2.02,,,22.0,13.0,"{'UTIL', '1B/3B'}",paul goldschmidt
+FA,J.P. Crawford,Sea,4.8,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.59,249.0,drop,12.0,id·vol,2.13,TEN_DAY_DL,2026-08-25,23.0,13.0,"{'2B/SS', 'UTIL', '1B/3B'}",jp crawford
+FA,Braden Montgomery,ChW,4.7,"['CF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.48,326.0,drop,8.0,id·vol,3.07,,,32.0,19.0,"{'UTIL', 'OF'}",braden montgomery
+FA,Jurickson Profar,Atl,4.7,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.94,,stash,,talent_prior·flat↓,,,,34.0,20.0,"{'UTIL', 'OF'}",jurickson profar
+FA,Brenton Doyle,ChW,4.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.3,439.0,drop,4.0,id·vol,2.18,,,20.0,12.0,"{'UTIL', 'OF'}",brenton doyle
+FA,Garrett Mitchell,Mil,4.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.7,173.0,hold,15.0,id·vol,2.66,,,31.0,18.0,"{'UTIL', 'OF'}",garrett mitchell
+FA,Spencer Horwitz,Pit,4.5,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",2.03,53.0,hold,15.0,id·vol,3.09,,,43.0,26.0,"{'UTIL', '1B/3B'}",spencer horwitz
+FA,Zac Veen,Col,4.4,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",zac veen
+FA,Nolan Schanuel,LAA,4.4,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.77,129.0,hold,16.0,id·vol,3.25,TEN_DAY_DL,2026-08-31,30.0,17.0,"{'UTIL', '1B/3B'}",nolan schanuel
+FA,Troy Johnston,Col,4.3,"['1B', '1B/3B', 'IF', 'LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.67,198.0,hold,13.0,id·vol,2.12,,,25.0,14.0,"{'UTIL', '1B/3B', 'OF'}",troy johnston
+FA,Adolis Garcia,Phi,4.2,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.28,444.0,drop,7.0,id·vol,1.69,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",adolis garcia
+FA,Trevor Larnach,Min,4.2,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL', 'LF']",1.74,144.0,hold,14.0,id·vol,2.77,,,33.0,20.0,"{'UTIL', 'OF'}",trevor larnach
+FA,Henry Bolte,Oak,4.2,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.48,332.0,drop,10.0,id·vol,3.13,,,32.0,19.0,"{'UTIL', 'OF'}",henry bolte
+FA,Kyle Teel,ChW,4.1,"['C', 'UTIL', 'BE', 'IL']",1.47,335.0,drop,2.0,id·vol,1.5,TEN_DAY_DL,2026-08-28,13.0,8.0,"{'C', 'UTIL'}",kyle teel
+FA,Jorge Soler,FA,4.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.42,375.0,hold,10.0,id·vol,1.91,,,19.0,11.0,"{'UTIL', 'OF'}",jorge soler
+FA,Colt Emerson,Sea,3.9,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.19,484.0,drop,6.0,id·vol,1.69,TEN_DAY_DL,2027-02-01,0.0,0.0,"{'2B/SS', 'UTIL', '1B/3B'}",colt emerson
+FA,Ramon Laureano,SD,3.9,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.58,258.0,hold,7.0,id·vol,1.73,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",ramon laureano
+FA,Addison Barger,Tor,3.9,"['3B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.63,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', '1B/3B', 'OF'}",addison barger
+FA,Justin Crawford,Phi,3.7,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.73,148.0,hold,14.0,id·vol,2.35,,,28.0,17.0,"{'UTIL', 'OF'}",justin crawford
+FA,Andrew Vaughn,Mil,3.7,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '3B']",1.71,166.0,drop,10.0,id·vol,2.7,,,32.0,19.0,"{'UTIL', '1B/3B'}",andrew vaughn
+FA,Jonathan India,KC,3.6,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.54,289.0,drop,2.0,id·vol,1.5,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jonathan india
+FA,Andrew Benintendi,ChW,3.5,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.62,233.0,hold,13.0,id·vol,2.38,,,27.0,16.0,"{'UTIL', 'OF'}",andrew benintendi
+FA,Luke Raley,Sea,3.5,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.47,336.0,drop,9.0,id·vol,1.16,SIXTY_DAY_DL,2026-09-29,0.0,0.0,"{'UTIL', '1B/3B', 'OF'}",luke raley
+FA,Angel Genao,Cle,3.5,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.74,143.0,hold,2.0,id·vol,2.5,,,30.0,18.0,"{'2B/SS', 'UTIL'}",angel genao
+FA,Marcell Ozuna,FA,3.5,"['DH', 'UTIL', 'BE', 'IL']",1.37,398.0,hold,8.0,id·vol,1.76,,,17.0,10.0,{'UTIL'},marcell ozuna
+FA,Blaze Alexander,Bal,3.4,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'OF', 'SS']",1.61,241.0,hold,8.0,id·vol,1.34,TEN_DAY_DL,2026-08-28,13.0,7.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",blaze alexander
+FA,Joey Ortiz,Mil,3.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.65,210.0,hold,11.0,id·vol,2.32,,,27.0,16.0,"{'2B/SS', 'UTIL', '1B/3B'}",joey ortiz
+FA,Luis Rengifo,SD,3.3,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'LF', 'OF']",1.61,240.0,hold,12.0,id·vol,2.91,,,32.0,19.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",luis rengifo
+FA,Jordan Lawlar,Ari,3.2,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'CF', 'LF']",1.42,373.0,drop,2.0,id·vol,1.85,,,18.0,11.0,"{'UTIL', '1B/3B', 'OF'}",jordan lawlar
+FA,Jake Cronenworth,SD,3.2,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.4,384.0,drop,9.0,id·vol,3.31,,,32.0,19.0,"{'2B/SS', 'UTIL'}",jake cronenworth
+FA,Zach McKinstry,Det,3.1,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL', '2B']",1.36,406.0,drop,10.0,id·vol,2.59,,,24.0,14.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",zach mckinstry
+FA,Kaelen Culpepper,Min,3.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.54,292.0,drop,2.0,id·vol,2.13,,,23.0,13.0,"{'2B/SS', 'UTIL'}",kaelen culpepper
+FA,Carlos Cortes,Oak,3.0,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'DH', 'LF', 'P', 'RP']",1.85,103.0,hold,12.0,id·vol,2.12,,,27.0,16.0,"{'UTIL', 'OF'}",carlos cortes
+FA,Ezequiel Tovar,Col,2.9,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.26,454.0,drop,11.0,id·vol,2.56,,,22.0,13.0,"{'2B/SS', 'UTIL'}",ezequiel tovar
+FA,Heriberto Hernandez,Mia,2.9,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.82,111.0,hold,14.0,id·vol,2.95,,,37.0,22.0,"{'UTIL', 'OF'}",heriberto hernandez
+FA,Kyle Karros,Col,2.8,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.56,279.0,hold,13.0,id·vol,2.39,SEVEN_DAY_DL,2026-08-30,20.0,12.0,"{'UTIL', '1B/3B'}",kyle karros
+FA,Javier Baez,Det,2.8,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.33,426.0,drop,4.0,id·vol,2.15,,,20.0,12.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",javier baez
+FA,Joc Pederson,Tex,2.7,"['DH', 'UTIL', 'BE', 'IL']",1.87,93.0,hold,15.0,id·vol,2.27,,,30.0,17.0,{'UTIL'},joc pederson
+FA,Brett Baty,NYM,2.6,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'RF', 'OF', '1B']",1.29,441.0,drop,11.0,id·vol,2.28,,,20.0,12.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",brett baty
+FA,Tristan Peters,ChW,2.5,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.73,155.0,hold,14.0,id·vol,2.15,,,26.0,15.0,"{'UTIL', 'OF'}",tristan peters
+FA,Jonah Heim,Oak,2.5,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.51,308.0,drop,10.0,id·vol,2.58,,,27.0,16.0,"{'C', 'UTIL'}",jonah heim
+FA,Lars Nootbaar,Ari,2.5,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.76,138.0,hold,8.0,id·vol,2.56,,,31.0,18.0,"{'UTIL', 'OF'}",lars nootbaar
+FA,Cooper Pratt,Mil,2.5,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.52,304.0,drop,5.0,id·vol,2.0,,,21.0,12.0,"{'2B/SS', 'UTIL'}",cooper pratt
+FA,Christian Encarnacion-Strand,Bal,2.4,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.6,246.0,hold,4.0,id·vol,2.24,,,25.0,15.0,"{'UTIL', '1B/3B'}",christian encarnacion strand
+FA,Jasson Dominguez,NYY,2.4,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'DH']",1.67,203.0,hold,8.0,id·vol,2.1,,,24.0,14.0,"{'UTIL', 'OF'}",jasson dominguez
+FA,Joey Wiemer,FA,2.4,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.51,310.0,hold,3.0,id·vol,1.03,,,11.0,6.0,"{'UTIL', 'OF'}",joey wiemer
+FA,Owen Caissie,Mia,2.4,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.38,396.0,drop,9.0,id·vol,2.08,,,20.0,12.0,"{'UTIL', 'OF'}",owen caissie
+FA,Vaughn Grissom,LAA,2.4,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '1B', '1B/3B', '3B']",1.45,353.0,drop,10.0,id·vol,2.98,,,30.0,18.0,"{'2B/SS', 'UTIL', '1B/3B'}",vaughn grissom
+FA,Cedric Mullins,TB,2.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.7,167.0,hold,15.0,id·vol,2.87,,,34.0,20.0,"{'UTIL', 'OF'}",cedric mullins
+FA,Anthony Volpe,NYY,2.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.32,431.0,drop,5.0,id·vol,1.58,,,14.0,9.0,"{'2B/SS', 'UTIL'}",anthony volpe
+FA,Jesus Made,Mil,2.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jesus made
+FA,Kyle Manzardo,Cle,2.2,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.47,339.0,drop,11.0,id·vol,1.91,,,19.0,11.0,"{'UTIL', '1B/3B'}",kyle manzardo
+FA,Jacob Young,Wsh,2.2,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.65,209.0,hold,14.0,id·vol,2.72,,,31.0,18.0,"{'UTIL', 'OF'}",jacob young
+FA,Gary Sanchez,Mil,2.1,"['C', 'UTIL', 'BE', 'IL', 'DH']",1.56,280.0,drop,8.0,id·vol,1.6,,,17.0,10.0,"{'C', 'UTIL'}",gary sanchez
+FA,Nick Fortes,TB,2.0,"['C', 'UTIL', 'BE', 'IL']",1.45,351.0,drop,8.0,id·vol,1.35,,,14.0,8.0,"{'C', 'UTIL'}",nick fortes
+FA,Luis Lara,Mil,2.0,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.62,235.0,hold,4.0,id·vol,2.37,,,27.0,16.0,"{'UTIL', 'OF'}",luis lara
+FA,Mickey Gasper,Bos,2.0,"['C', 'UTIL', 'BE', 'IL', 'DH']",1.67,197.0,hold,5.0,id·vol,1.68,,,19.0,11.0,"{'C', 'UTIL'}",mickey gasper
+FA,Dominic Smith,Atl,2.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.46,347.0,hold,9.0,id·vol,1.4,,,14.0,8.0,"{'UTIL', '1B/3B'}",dominic smith
+FA,Evan Carter,Tex,2.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.63,225.0,hold,13.0,id·vol,2.5,,,28.0,17.0,"{'UTIL', 'OF'}",evan carter
+FA,Ryan Waldschmidt,Ari,1.9,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.32,428.0,drop,6.0,id·vol,2.54,,,23.0,14.0,"{'UTIL', 'OF'}",ryan waldschmidt
+FA,Hao-Yu Lee,Det,1.9,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.57,270.0,hold,8.0,id·vol,1.84,,,20.0,12.0,"{'2B/SS', 'UTIL', '1B/3B'}",hao yu lee
+FA,Mark Vientos,NYM,1.9,"['3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL', '1B']",1.47,333.0,drop,8.0,id·vol,1.54,TEN_DAY_DL,2026-09-04,9.0,6.0,"{'UTIL', '1B/3B'}",mark vientos
+FA,Moises Ballesteros,LAA,1.9,"['DH', 'UTIL', 'BE', 'IL', 'C']",1.9,83.0,hold,10.0,id·vol,2.43,,,32.0,19.0,"{'C', 'UTIL'}",moises ballesteros
+FA,Walker Jenkins,Min,1.9,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",walker jenkins
+FA,Nathaniel Lowe,Cle,1.9,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.8,116.0,hold,13.0,id·vol,2.66,,,33.0,20.0,"{'UTIL', '1B/3B'}",nathaniel lowe
+FA,Leo De Vries,Oak,1.7,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",leo de vries
+FA,Joe Mack,Mia,1.7,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.59,251.0,drop,9.0,id·vol,1.94,,,21.0,13.0,"{'C', 'UTIL'}",joe mack
+FA,Coby Mayo,Bal,1.7,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '3B', 'DH']",1.43,364.0,drop,10.0,id·vol,2.49,,,25.0,15.0,"{'UTIL', '1B/3B'}",coby mayo
+FA,Charlie Condon,Col,1.7,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",charlie condon
+FA,Victor Caratini,Min,1.7,"['C', 'DH', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF']",1.48,327.0,drop,11.0,id·vol,2.05,,,21.0,12.0,"{'C', 'UTIL', '1B/3B'}",victor caratini
+FA,Matt Shaw,ChC,1.7,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'RF', 'OF', 'DH']",1.79,119.0,hold,6.0,id·vol,1.24,TEN_DAY_DL,2026-08-24,15.0,9.0,"{'UTIL', '1B/3B', 'OF'}",matt shaw
+FA,Michael Massey,KC,1.6,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.7,170.0,hold,13.0,id·vol,2.47,,,29.0,17.0,"{'2B/SS', 'UTIL'}",michael massey
+FA,Colton Cowser,Bal,1.6,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.14,492.0,drop,8.0,id·vol,1.95,,,15.0,9.0,"{'UTIL', 'OF'}",colton cowser
+FA,Esteury Ruiz,Mia,1.6,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.73,153.0,hold,7.0,id·vol,1.33,,,16.0,9.0,"{'UTIL', 'OF'}",esteury ruiz
+FA,Marcelo Mayer,SF,1.6,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'SS']",1.46,346.0,drop,7.0,id·vol,1.24,TEN_DAY_DL,2026-08-28,11.0,6.0,"{'2B/SS', 'UTIL', '1B/3B'}",marcelo mayer
+FA,Jesus Sanchez,Tor,1.5,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.59,253.0,hold,9.0,id·vol,2.23,,,25.0,14.0,"{'UTIL', 'OF'}",jesus sanchez
+FA,Logan O'Hoppe,Tex,1.4,"['C', 'UTIL', 'BE', 'IL']",1.08,499.0,drop,6.0,id·vol,1.58,,,12.0,7.0,"{'C', 'UTIL'}",logan ohoppe
+FA,Blaze Jordan,StL,1.4,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.69,177.0,hold,7.0,id·vol,2.34,,,28.0,16.0,"{'UTIL', '1B/3B'}",blaze jordan
+FA,Nolan Gorman,StL,1.4,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.05,500.0,drop,5.0,id·vol,1.65,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",nolan gorman
+FA,Joshua Kuroda-Grauer,Oak,1.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.71,163.0,hold,2.0,id·vol,1.42,TEN_DAY_DL,2026-09-01,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",joshua kuroda grauer
+FA,Franklin Arias,Bos,1.4,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",franklin arias
+FA,Pedro Ramirez,ChC,1.4,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.68,190.0,hold,6.0,id·vol,2.23,,,26.0,15.0,"{'2B/SS', 'UTIL', '1B/3B'}",pedro ramirez
+FA,Kyle Isbel,KC,1.4,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.57,269.0,hold,8.0,id·vol,2.32,,,25.0,15.0,"{'UTIL', 'OF'}",kyle isbel
+FA,Rhys Hoskins,Cle,1.3,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.33,427.0,drop,9.0,id·vol,1.67,TEN_DAY_DL,2026-08-29,13.0,7.0,"{'UTIL', '1B/3B'}",rhys hoskins
+FA,Daniel Schneemann,Cle,1.2,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.2,480.0,drop,7.0,id·vol,1.61,,,13.0,8.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",daniel schneemann
+FA,Josh Smith,Tor,1.2,"['1B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B']",1.26,455.0,drop,5.0,id·vol,1.9,TEN_DAY_DL,2026-08-30,13.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",josh smith
+FA,Mike Yastrzemski,Atl,1.2,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.64,218.0,hold,11.0,id·vol,1.98,,,23.0,13.0,"{'UTIL', 'OF'}",mike yastrzemski
+FA,Samad Taylor,SD,1.2,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.43,366.0,drop,3.0,id·vol,1.32,TEN_DAY_DL,2026-08-24,13.0,8.0,"{'2B/SS', 'UTIL', 'OF'}",samad taylor
+FA,Osleivis Basabe,SF,1.1,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.66,205.0,hold,3.0,id·vol,2.57,,,30.0,18.0,"{'2B/SS', 'UTIL', '1B/3B'}",osleivis basabe
+FA,Harrison Bader,SF,1.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.44,360.0,drop,3.0,id·vol,1.43,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",harrison bader
+FA,David Hamilton,Mil,1.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B', 'SS']",1.62,234.0,hold,11.0,id·vol,2.29,,,26.0,15.0,"{'2B/SS', 'UTIL', '1B/3B'}",david hamilton
+FA,Jared Young,NYM,1.1,"['DH', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF']",1.97,64.0,hold,11.0,id·vol,2.46,,,34.0,20.0,"{'UTIL', '1B/3B'}",jared young
+FA,Josue De Paula,LAD,1.1,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",josue de paula
+FA,Dylan Beavers,Bal,1.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.53,297.0,hold,8.0,id·vol,2.39,,,25.0,15.0,"{'UTIL', 'OF'}",dylan beavers
+FA,Brandon Valenzuela,Tor,1.1,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.55,284.0,drop,8.0,id·vol,1.81,,,20.0,12.0,"{'C', 'UTIL'}",brandon valenzuela
+FA,Jose Fernandez,Ari,1.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'DH', '1B', '1B/3B', '3B']",1.74,146.0,hold,7.0,id·vol,1.8,,,22.0,13.0,"{'2B/SS', 'UTIL', '1B/3B'}",jose fernandez
+FA,Miguel Andujar,SD,1.1,"['3B', '1B/3B', 'IF', 'LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.84,106.0,hold,10.0,id·vol,1.39,TEN_DAY_DL,2026-09-04,10.0,6.0,"{'UTIL', '1B/3B', 'OF'}",miguel andujar
+FA,Lane Thomas,Atl,1.0,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.73,154.0,hold,13.0,id·vol,1.88,,,23.0,13.0,"{'UTIL', 'OF'}",lane thomas
+FA,Enrique Hernandez,LAD,1.0,"['1B', '3B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.5,,stash,,talent_prior·vol,0.74,,,8.0,5.0,"{'UTIL', '1B/3B', 'OF'}",enrique hernandez
+FA,Sebastian Walcott,Tex,0.9,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",sebastian walcott
+FA,Luis Torrens,NYM,0.9,"['C', 'UTIL', 'BE', 'IL']",1.39,390.0,drop,7.0,id·vol,1.38,,,13.0,8.0,"{'C', 'UTIL'}",luis torrens
+FA,Ryan McMahon,NYY,0.9,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.23,467.0,drop,8.0,id·vol,1.86,TEN_DAY_DL,2026-08-30,12.0,7.0,"{'UTIL', '1B/3B'}",ryan mcmahon
+FA,Carlos Narvaez,Bal,0.9,"['C', 'UTIL', 'BE', 'IL']",1.18,486.0,drop,6.0,id·vol,2.01,,,16.0,10.0,"{'C', 'UTIL'}",carlos narvaez
+FA,Luis Campusano,SD,0.9,"['DH', 'UTIL', 'BE', 'IL', 'C']",1.7,172.0,hold,6.0,id·vol,1.75,,,21.0,12.0,"{'C', 'UTIL'}",luis campusano
+FA,Tommy White,Oak,0.9,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '1B']",1.55,286.0,drop,4.0,id·vol,2.7,,,29.0,17.0,"{'UTIL', '1B/3B'}",tommy white
+FA,Endy Rodriguez,Pit,0.9,"['C', '1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.6,244.0,drop,6.0,id·vol,1.39,TEN_DAY_DL,2026-08-28,13.0,8.0,"{'C', 'UTIL', '1B/3B'}",endy rodriguez
+FA,Nathan Church,StL,0.9,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.57,272.0,hold,12.0,id·vol,2.45,,,27.0,16.0,"{'UTIL', 'OF'}",nathan church
+FA,Oswald Peraza,LAA,0.9,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS']",1.01,501.0,drop,7.0,id·vol,1.94,,,14.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",oswald peraza
+FA,Patrick Bailey,Cle,0.9,"['C', 'UTIL', 'BE', 'IL']",1.19,482.0,drop,7.0,id·vol,2.04,,,17.0,10.0,"{'C', 'UTIL'}",patrick bailey
+FA,Hyeseong Kim,LAD,0.9,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'SS']",1.58,261.0,drop,4.0,id·vol,1.07,,,12.0,7.0,"{'2B/SS', 'UTIL'}",hyeseong kim
+FA,Masataka Yoshida,Bos,0.9,"['DH', 'UTIL', 'BE', 'IL']",1.89,86.0,add,12.0,id·vol,2.1,TEN_DAY_DL,2026-09-22,0.0,0.0,{'UTIL'},masataka yoshida
+FA,Brady House,Wsh,0.9,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.18,485.0,drop,6.0,id·vol,2.76,,,23.0,13.0,"{'UTIL', '1B/3B'}",brady house
+FA,Miguel Rojas,LAD,0.8,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.72,162.0,hold,7.0,id·vol,0.98,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",miguel rojas
+FA,Connor Norby,Col,0.8,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '1B', 'DH', '2B', '2B/SS']",1.31,436.0,drop,8.0,id·vol,2.14,,,19.0,11.0,"{'2B/SS', 'UTIL', '1B/3B'}",connor norby
+FA,Tyler Tolbert,KC,0.8,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'SS', '2B/SS', 'IF', 'P', 'RP', 'RF', '2B']",1.87,94.0,hold,5.0,id·vol,1.32,,,17.0,10.0,"{'2B/SS', 'UTIL', 'OF'}",tyler tolbert
+FA,Nathan Lukes,Tor,0.8,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.65,212.0,hold,12.0,id·vol,3.22,,,37.0,22.0,"{'UTIL', 'OF'}",nathan lukes
+FA,Donovan Walton,Oak,0.8,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.53,293.0,drop,6.0,id·vol,1.61,,,17.0,10.0,"{'2B/SS', 'UTIL', '1B/3B'}",donovan walton
+FA,Brett Bateman,Tor,0.8,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.44,361.0,drop,2.0,id·vol,3.04,,,30.0,18.0,"{'UTIL', 'OF'}",brett bateman
+FA,Richie Palacios,TB,0.8,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.54,291.0,drop,10.0,id·vol,2.22,,,24.0,14.0,"{'2B/SS', 'UTIL', 'OF'}",richie palacios
+FA,Bo Naylor,Mil,0.7,"['C', 'UTIL', 'BE', 'IL']",1.56,277.0,drop,3.0,id·vol,1.12,,,12.0,7.0,"{'C', 'UTIL'}",bo naylor
+FA,Tyler O'Neill,Bal,0.7,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.58,259.0,hold,9.0,id·vol,2.09,,,23.0,13.0,"{'UTIL', 'OF'}",tyler oneill
+FA,Leody Taveras,Bal,0.7,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.37,402.0,drop,11.0,id·vol,2.48,,,24.0,14.0,"{'UTIL', 'OF'}",leody taveras
+FA,Nick Loftin,KC,0.7,"['LF', 'OF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'IF', '3B', '1B/3B']",1.55,285.0,drop,11.0,id·vol,2.64,,,28.0,17.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",nick loftin
+FA,Jacob Gonzalez,Pit,0.7,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '1B', '1B/3B']",1.64,216.0,hold,6.0,id·vol,1.83,,,21.0,12.0,"{'2B/SS', 'UTIL', '1B/3B'}",jacob gonzalez
+FA,Brett Sullivan,Col,0.7,"['C', 'UTIL', 'BE', 'IL', 'P', 'RP']",1.64,217.0,hold,7.0,id·vol,1.54,,,18.0,10.0,"{'C', 'UTIL'}",brett sullivan
+FA,Christian Vazquez,Hou,0.7,"['C', 'UTIL', 'BE', 'IL']",1.25,456.0,drop,6.0,id·vol,1.17,,,10.0,6.0,"{'C', 'UTIL'}",christian vazquez
+FA,Luisangel Acuna,ChW,0.7,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'CF', 'OF', 'SS']",1.4,383.0,drop,6.0,id·vol,1.34,,,13.0,8.0,"{'2B/SS', 'UTIL', 'OF'}",luisangel acuna
+FA,Lourdes Gurriel Jr.,Ari,0.6,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.67,204.0,hold,7.0,id·vol,1.7,TEN_DAY_DL,2026-08-24,20.0,12.0,"{'UTIL', 'OF'}",lourdes gurriel
+FA,Miguel Amaya,ChC,0.6,"['C', 'UTIL', 'BE', 'IL']",1.41,379.0,drop,6.0,id·vol,1.47,,,14.0,8.0,"{'C', 'UTIL'}",miguel amaya
+FA,Josh Lowe,LAA,0.6,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'LF', 'CF']",1.45,354.0,drop,8.0,id·vol,2.21,,,22.0,13.0,"{'UTIL', 'OF'}",josh lowe
+FA,Anthony Santander,Tor,0.6,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.79,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,"{'UTIL', 'OF'}",anthony santander
+FA,Eli Willits,Wsh,0.6,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",eli willits
+FA,Victor Scott II,StL,0.6,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.17,488.0,drop,4.0,id·vol,1.26,,,10.0,6.0,"{'UTIL', 'OF'}",victor scott
+FA,Ralphy Velazquez,Cle,0.6,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",ralphy velazquez
+FA,Aidan Miller,Phi,0.6,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",aidan miller
+FA,Amed Rosario,NYY,0.6,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.64,219.0,hold,7.0,id·vol,1.09,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",amed rosario
+FA,Sean Murphy,Atl,0.6,"['C', 'UTIL', 'BE', 'IL']",1.58,,stash,,talent_prior·vol,1.62,,,18.0,10.0,"{'C', 'UTIL'}",sean murphy
+FA,Austin Martin,Min,0.6,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.57,265.0,hold,11.0,id·vol,2.0,TEN_DAY_DL,2026-08-28,19.0,11.0,"{'UTIL', 'OF'}",austin martin
+FA,Isaac Collins,KC,0.6,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.76,137.0,hold,16.0,id·vol,2.79,,,34.0,20.0,"{'UTIL', 'OF'}",isaac collins
+FA,Hector Rodriguez,Cin,0.6,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",hector rodriguez
+FA,Henry Davis,Pit,0.6,"['C', 'UTIL', 'BE', 'IL']",1.11,496.0,drop,6.0,id·vol,1.85,,,14.0,8.0,"{'C', 'UTIL'}",henry davis
+FA,Wade Meckler,LAA,0.6,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.52,299.0,drop,7.0,id·vol,2.33,SEVEN_DAY_DL,2026-08-28,21.0,12.0,"{'UTIL', 'OF'}",wade meckler
+FA,Jonny DeLuca,TB,0.5,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.67,196.0,hold,10.0,id·vol,2.23,,,26.0,15.0,"{'UTIL', 'OF'}",jonny deluca
+FA,Taylor Walls,TB,0.5,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.19,483.0,drop,9.0,id·vol,2.57,,,21.0,12.0,"{'2B/SS', 'UTIL'}",taylor walls
+FA,Jordan Beck,Col,0.5,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.22,472.0,drop,3.0,id·vol,2.18,,,18.0,11.0,"{'UTIL', 'OF'}",jordan beck
+FA,Jorge Mateo,TB,0.5,"['SS', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.63,226.0,hold,5.0,id·vol,0.82,,,9.0,5.0,"{'2B/SS', 'UTIL', 'OF'}",jorge mateo
+FA,Alek Thomas,LAD,0.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.39,389.0,drop,3.0,id·vol,1.42,,,14.0,8.0,"{'UTIL', 'OF'}",alek thomas
+FA,Triston Casas,Bos,0.5,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.63,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,"{'UTIL', '1B/3B'}",triston casas
+FA,Zyhir Hope,Det,0.5,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",zyhir hope
+FA,Matt Wallner,Min,0.5,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.25,458.0,drop,4.0,id·vol,1.58,,,14.0,8.0,"{'UTIL', 'OF'}",matt wallner
+FA,Anthony Seigler,Bos,0.5,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS']",1.31,437.0,drop,4.0,id·vol,1.9,,,17.0,10.0,"{'2B/SS', 'UTIL', '1B/3B'}",anthony seigler
+FA,Ethan Holliday,Col,0.5,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ethan holliday
+FA,Theo Gillen,TB,0.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",theo gillen
+FA,Lenyn Sosa,Tor,0.5,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.32,432.0,drop,3.0,id·vol,1.52,,,14.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",lenyn sosa
+FA,Andres Chaparro,Wsh,0.5,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.68,192.0,hold,5.0,id·vol,1.67,,,20.0,11.0,"{'UTIL', '1B/3B'}",andres chaparro
+FA,James Tibbs III,LAD,0.5,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",james tibbs
+FA,Lazaro Montes,Sea,0.5,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",lazaro montes
+FA,Nick Castellanos,FA,0.5,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.46,343.0,drop,4.0,id·vol,1.05,,,11.0,6.0,"{'UTIL', 'OF'}",nick castellanos
+FA,Mike Sirota,LAD,0.5,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",mike sirota
+FA,Edmundo Sosa,Phi,0.5,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'LF', 'OF', 'SS']",1.63,228.0,hold,7.0,id·vol,1.45,,,16.0,10.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",edmundo sosa
+FA,Ethan Salas,SD,0.5,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",ethan salas
+FA,Gavin Lux,TB,0.5,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.52,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-09-22,0.0,0.0,"{'UTIL', 'OF'}",gavin lux
+FA,Rainiel Rodriguez,StL,0.5,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",rainiel rodriguez
+FA,Freddy Fermin,SD,0.4,"['C', 'UTIL', 'BE', 'IL']",1.28,446.0,drop,6.0,id·vol,1.95,,,17.0,10.0,"{'C', 'UTIL'}",freddy fermin
+FA,Randal Grichuk,ChW,0.4,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL', 'LF']",1.9,85.0,hold,8.0,id·vol,1.22,,,16.0,9.0,"{'UTIL', 'OF'}",randal grichuk
+FA,Tyrone Taylor,ChC,0.4,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.64,215.0,hold,7.0,id·vol,1.42,,,16.0,9.0,"{'UTIL', 'OF'}",tyrone taylor
+FA,Harry Ford,Wsh,0.4,"['C', 'UTIL', 'BE', 'IL']",1.45,352.0,drop,2.0,id·vol,1.59,,,16.0,9.0,"{'C', 'UTIL'}",harry ford
+FA,Kyle Higashioka,Tex,0.4,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.34,420.0,drop,5.0,id·vol,1.24,TEN_DAY_DL,2026-09-01,8.0,5.0,"{'C', 'UTIL'}",kyle higashioka
+FA,Edgar Quero,ChW,0.4,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.42,371.0,drop,6.0,id·vol,1.72,,,17.0,10.0,"{'C', 'UTIL'}",edgar quero
+FA,Austin Hays,SD,0.4,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.44,357.0,drop,2.0,id·vol,1.81,,,18.0,11.0,"{'UTIL', 'OF'}",austin hays
+FA,Drew Gilbert,SF,0.4,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'CF', 'LF']",1.62,230.0,hold,11.0,id·vol,2.12,,,24.0,14.0,"{'UTIL', 'OF'}",drew gilbert
+FA,Kristian Campbell,Bos,0.4,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.29,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'2B/SS', 'UTIL'}",kristian campbell
+FA,Michael Conforto,ChC,0.4,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'DH', 'RF']",1.49,319.0,hold,7.0,id·vol,1.56,,,16.0,9.0,"{'UTIL', 'OF'}",michael conforto
+FA,Parker Meadows,Det,0.4,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.48,,stash,,talent_prior·vol,1.04,SIXTY_DAY_DL,2026-09-14,2.0,1.0,"{'UTIL', 'OF'}",parker meadows
+FA,Starling Marte,FA,0.4,"['DH', 'UTIL', 'BE', 'IL', 'OF', 'RF']",1.32,429.0,drop,4.0,id·vol,1.25,,,11.0,7.0,"{'UTIL', 'OF'}",starling marte
+FA,Jared Triolo,Pit,0.4,"['1B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.67,201.0,hold,10.0,id·vol,2.31,,,27.0,16.0,"{'2B/SS', 'UTIL', '1B/3B'}",jared triolo
+FA,Luis Pena,Mil,0.4,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luis pena
+FA,Ke'Bryan Hayes,Cin,0.4,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.5,313.0,drop,6.0,id·vol,2.05,,,21.0,13.0,"{'UTIL', '1B/3B'}",kebryan hayes
+FA,Isiah Kiner-Falefa,Bos,0.4,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B']",1.6,247.0,hold,5.0,id·vol,1.03,SIXTY_DAY_DL,2026-08-28,10.0,6.0,"{'2B/SS', 'UTIL', '1B/3B'}",isiah kiner falefa
+FA,Pedro Pages,StL,0.3,"['C', 'UTIL', 'BE', 'IL']",1.23,465.0,drop,5.0,id·vol,1.57,,,13.0,8.0,"{'C', 'UTIL'}",pedro pages
+FA,Jett Williams,Mil,0.3,"['2B', 'SS', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",jett williams
+FA,Tyler Freeman,Col,0.3,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'IF']",1.72,160.0,hold,10.0,id·vol,1.88,,,22.0,13.0,"{'2B/SS', 'UTIL', 'OF'}",tyler freeman
+FA,Jose Fermin,StL,0.3,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'LF', 'CF', '3B', '1B/3B']",1.64,221.0,hold,10.0,id·vol,2.12,,,24.0,14.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jose fermin
+FA,Andrew Fischer,Mil,0.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",andrew fischer
+FA,Caleb Bonemer,ChW,0.3,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",caleb bonemer
+FA,Edward Florentino,Pit,0.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",edward florentino
+FA,Daniel Susac,SF,0.3,"['C', 'UTIL', 'BE', 'IL']",1.5,316.0,drop,5.0,id·vol,1.65,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'C', 'UTIL'}",daniel susac
+FA,Dane Myers,Cin,0.3,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.36,408.0,drop,7.0,id·vol,2.51,,,24.0,14.0,"{'UTIL', 'OF'}",dane myers
+FA,Carson Williams,TB,0.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",carson williams
+FA,Christian Moore,LAA,0.3,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",christian moore
+FA,Connor Wong,Bos,0.3,"['C', 'UTIL', 'BE', 'IL']",1.57,271.0,drop,6.0,id·vol,1.53,,,17.0,10.0,"{'C', 'UTIL'}",connor wong
+FA,Sung-Mun Song,SD,0.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'SS']",1.53,298.0,drop,4.0,id·vol,1.13,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",sung mun song
+FA,Roch Cholowsky,ChW,0.3,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'2B/SS', 'UTIL'}",roch cholowsky
+FA,Ha-Seong Kim,Atl,0.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.32,434.0,drop,2.0,id·vol,1.17,,,11.0,6.0,"{'2B/SS', 'UTIL'}",ha seong kim
+FA,Ryan Vilade,TB,0.3,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF', '2B', '2B/SS']",1.73,151.0,hold,8.0,id·vol,1.52,,,18.0,11.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",ryan vilade
+FA,Alex Freeland,LAD,0.3,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.14,493.0,drop,5.0,id·vol,1.11,,,9.0,5.0,"{'2B/SS', 'UTIL', '1B/3B'}",alex freeland
+FA,Eduardo Quintero,LAD,0.3,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eduardo quintero
+FA,Wenceel Perez,Det,0.3,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.7,168.0,hold,6.0,id·vol,1.35,SIXTY_DAY_DL,2026-09-04,9.0,6.0,"{'UTIL', 'OF'}",wenceel perez
+FA,Danny Jansen,Tex,0.3,"['C', 'UTIL', 'BE', 'IL']",1.26,452.0,drop,4.0,id·vol,1.48,,,13.0,8.0,"{'C', 'UTIL'}",danny jansen
+FA,Ryan Mountcastle,Bal,0.3,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.53,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-09-21,0.0,0.0,"{'UTIL', '1B/3B'}",ryan mountcastle
+FA,Emmanuel Rodriguez,Min,0.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",emmanuel rodriguez
+FA,Eric Hartman,Atl,0.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eric hartman
+FA,Victor Robles,Sea,0.3,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.75,139.0,hold,6.0,id·vol,1.29,,,16.0,9.0,"{'UTIL', 'OF'}",victor robles
+FA,Tommy Troy,Ari,0.3,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.47,337.0,drop,4.0,id·vol,1.26,TEN_DAY_DL,2026-08-24,13.0,8.0,"{'2B/SS', 'UTIL', 'OF'}",tommy troy
+FA,Edwin Arroyo,Cin,0.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '2B']",1.31,438.0,drop,4.0,id·vol,1.32,,,12.0,7.0,"{'2B/SS', 'UTIL'}",edwin arroyo
+FA,Brett Callahan,Det,0.3,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brett callahan
+FA,Brice Matthews,Hou,0.3,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'LF', 'CF']",1.49,321.0,drop,7.0,id·vol,1.04,SIXTY_DAY_DL,2026-09-12,3.0,2.0,"{'2B/SS', 'UTIL', 'OF'}",brice matthews
+FA,Davis Schneider,Tor,0.3,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.35,416.0,drop,4.0,id·vol,0.95,,,9.0,5.0,"{'2B/SS', 'UTIL', 'OF'}",davis schneider
+FA,Jim Jarvis,Atl,0.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.48,325.0,drop,4.0,id·vol,1.69,,,17.0,10.0,"{'2B/SS', 'UTIL'}",jim jarvis
+FA,Jake Meyers,Hou,0.3,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.27,451.0,drop,4.0,id·vol,1.46,,,13.0,8.0,"{'UTIL', 'OF'}",jake meyers
+FA,Ben Williamson,TB,0.3,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'SS', 'P', 'RP']",1.38,397.0,drop,8.0,id·vol,1.48,TEN_DAY_DL,2026-09-15,3.0,2.0,"{'2B/SS', 'UTIL', '1B/3B'}",ben williamson
+FA,Denzer Guzman,LAA,0.3,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.41,377.0,drop,6.0,id·vol,2.26,,,22.0,13.0,"{'2B/SS', 'UTIL', '1B/3B'}",denzer guzman
+FA,James McCann,Ari,0.2,"['C', 'UTIL', 'BE', 'IL']",1.41,380.0,drop,4.0,id·vol,1.47,,,14.0,8.0,"{'C', 'UTIL'}",james mccann
+FA,Bryce Rainer,Det,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",bryce rainer
+FA,Josue Briceno,Det,0.2,"['C', '1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', '1B/3B'}",josue briceno
+FA,Michael Arroyo,Sea,0.2,"['2B', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",michael arroyo
+FA,Josuar Gonzalez,SF,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",josuar gonzalez
+FA,Wander Franco,TB,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",2.11,,stash,,talent_prior·flat↓,,OUT,2026-09-07,18.0,11.0,"{'2B/SS', 'UTIL'}",wander franco
+FA,Victor Mesa Jr.,TB,0.2,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.78,124.0,hold,7.0,id·vol,1.86,,,23.0,14.0,"{'UTIL', 'OF'}",victor mesa
+FA,Jesus Rodriguez,SF,0.2,"['C', '3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.57,266.0,drop,2.0,id·vol,0.69,TEN_DAY_DL,2026-08-24,8.0,4.0,"{'C', 'UTIL', '1B/3B'}",jesus rodriguez
+FA,Alfredo Duno,Cin,0.2,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",alfredo duno
+FA,JoJo Parker,Tor,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jojo parker
+FA,Edouard Julien,Col,0.2,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.34,418.0,drop,8.0,id·vol,1.51,,,14.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",edouard julien
+FA,Kevin Alcantara,ChC,0.2,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kevin alcantara
+FA,Charles McAdoo,Tor,0.2,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.49,322.0,drop,2.0,id·vol,2.01,,,21.0,12.0,"{'UTIL', '1B/3B'}",charles mcadoo
+FA,Gabriel Arias,ChC,0.2,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",0.67,503.0,drop,2.0,id·vol,1.44,,,7.0,4.0,"{'2B/SS', 'UTIL', '1B/3B'}",gabriel arias
+FA,Austin Hedges,Cle,0.2,"['C', 'UTIL', 'BE', 'IL']",1.37,400.0,drop,6.0,id·vol,1.24,,,12.0,7.0,"{'C', 'UTIL'}",austin hedges
+FA,Bryan De La Cruz,Phi,0.2,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.35,,stash,,talent_prior·vol,1.02,,,10.0,6.0,"{'UTIL', 'OF'}",bryan de la cruz
+FA,Joey Bart,ChW,0.2,"['C', 'UTIL', 'BE', 'IL']",1.25,461.0,drop,3.0,id·vol,0.88,TEN_DAY_DL,2026-09-17,1.0,0.0,"{'C', 'UTIL'}",joey bart
+FA,Derek Hill,Phi,0.2,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.46,342.0,drop,5.0,id·vol,0.9,,,9.0,5.0,"{'UTIL', 'OF'}",derek hill
+FA,Ryan Kreidler,Min,0.2,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'SS', '2B/SS', 'IF']",1.19,481.0,drop,6.0,id·vol,1.35,,,11.0,7.0,"{'2B/SS', 'UTIL', 'OF'}",ryan kreidler
+FA,Nicky Lopez,Tex,0.2,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS', 'SS']",1.34,419.0,drop,6.0,id·vol,1.44,,,13.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",nicky lopez
+FA,Seaver King,Wsh,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",seaver king
+FA,Matt Vierling,Det,0.2,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.62,236.0,hold,10.0,id·vol,1.29,TEN_DAY_DL,2026-09-01,10.0,6.0,"{'UTIL', 'OF'}",matt vierling
+FA,Hunter Feduccia,LAD,0.2,"['C', 'UTIL', 'BE', 'IL']",1.21,476.0,drop,5.0,id·vol,1.39,,,12.0,7.0,"{'C', 'UTIL'}",hunter feduccia
+FA,Bryan Torres,StL,0.2,"['2B', '2B/SS', 'IF', 'LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.5,314.0,drop,4.0,id·vol,1.59,,,17.0,10.0,"{'2B/SS', 'UTIL', 'OF'}",bryan torres
+FA,Taylor Trammell,Hou,0.2,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.38,393.0,drop,6.0,id·vol,1.91,,,18.0,11.0,"{'UTIL', 'OF'}",taylor trammell
+FA,Christopher Morel,NYM,0.2,"['LF', 'OF', 'UTIL', 'BE', 'IL', '1B', '1B/3B', 'IF']",0.92,502.0,drop,2.0,id·vol,1.38,,,9.0,5.0,"{'UTIL', '1B/3B', 'OF'}",christopher morel
+FA,Myles Straw,Tor,0.2,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.58,257.0,hold,9.0,id·vol,1.74,,,19.0,11.0,"{'UTIL', 'OF'}",myles straw
+FA,Romy Gonzalez,Bos,0.2,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.44,359.0,hold,2.0,id·vol,1.41,,,14.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",romy gonzalez
+FA,Blake Dunn,Cin,0.2,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.25,460.0,drop,4.0,id·vol,1.79,SIXTY_DAY_DL,2027-03-01,0.0,0.0,"{'UTIL', 'OF'}",blake dunn
+FA,Drew Romo,ChW,0.2,"['C', 'UTIL', 'BE', 'IL']",1.46,341.0,drop,5.0,id·vol,1.45,,,15.0,9.0,"{'C', 'UTIL'}",drew romo
+FA,Eli White,Bos,0.2,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.38,392.0,drop,5.0,id·vol,1.07,,,10.0,6.0,"{'UTIL', 'OF'}",eli white
+FA,Tristan Gray,Min,0.2,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.13,494.0,drop,4.0,id·vol,1.01,,,8.0,5.0,"{'2B/SS', 'UTIL', '1B/3B'}",tristan gray
+FA,Zach Cole,Hou,0.2,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.44,358.0,drop,2.0,id·vol,1.31,,,13.0,8.0,"{'UTIL', 'OF'}",zach cole
+FA,Brock Rodden,Sea,0.2,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",brock rodden
+FA,Alex Call,LAD,0.2,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.47,334.0,drop,5.0,id·vol,1.12,,,11.0,7.0,"{'UTIL', 'OF'}",alex call
+FA,Elias Diaz,Tex,0.2,"['C', 'UTIL', 'BE', 'IL']",1.41,376.0,drop,5.0,id·vol,1.47,,,14.0,8.0,"{'C', 'UTIL'}",elias diaz
+FA,Carlos Santana,FA,0.2,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.73,,stash,,talent_prior·flat↓,,,,31.0,18.0,"{'UTIL', '1B/3B'}",carlos santana
+FA,Josiah Hartshorn,ChC,0.2,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",josiah hartshorn
+FA,Emil Morales,LAD,0.2,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",emil morales
+FA,Yohendrick Pinango,Tor,0.1,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.56,283.0,hold,6.0,id·vol,1.33,,,14.0,8.0,"{'UTIL', 'OF'}",yohendrick pinango
+FA,Jhostynxon Garcia,Pit,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.25,457.0,drop,1.0,id·vol,0.78,,,7.0,4.0,"{'UTIL', 'OF'}",jhostynxon garcia
+FA,Tyler Heineman,LAA,0.1,"['C', 'UTIL', 'BE', 'IL', 'P', 'RP']",1.35,415.0,drop,5.0,id·vol,1.18,,,11.0,6.0,"{'C', 'UTIL'}",tyler heineman
+FA,Justin Foscue,Tex,0.1,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",1.67,199.0,hold,6.0,id·vol,1.4,,,16.0,10.0,"{'2B/SS', 'UTIL', '1B/3B'}",justin foscue
+FA,Aiva Arquette,Mia,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",aiva arquette
+FA,Joey Loperfido,Hou,0.1,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.5,312.0,drop,4.0,id·vol,1.22,,,13.0,7.0,"{'UTIL', 'OF'}",joey loperfido
+FA,Jake Rogers,ChW,0.1,"['C', 'UTIL', 'BE', 'IL']",1.37,399.0,drop,4.0,id·vol,1.19,,,11.0,7.0,"{'C', 'UTIL'}",jake rogers
+FA,Otto Kemp,Phi,0.1,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'LF', 'OF']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",otto kemp
+FA,Deyvison De Los Santos,Mia,0.1,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",deyvison de los santos
+FA,Denzel Clarke,Oak,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.35,414.0,drop,2.0,id·vol,0.86,SIXTY_DAY_DL,2026-09-01,6.0,3.0,"{'UTIL', 'OF'}",denzel clarke
+FA,Victor Bericoto,SF,0.1,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.6,243.0,hold,3.0,id·vol,1.61,TEN_DAY_DL,2026-09-02,12.0,7.0,"{'UTIL', '1B/3B', 'OF'}",victor bericoto
+FA,Gabriel Gonzalez,Min,0.1,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",gabriel gonzalez
+FA,Ronny Mauricio,NYM,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'SS', '2B/SS']",1.35,413.0,drop,2.0,id·vol,0.96,,,9.0,5.0,"{'2B/SS', 'UTIL', '1B/3B'}",ronny mauricio
+FA,Arjun Nimmala,LAA,0.1,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",arjun nimmala
+FA,Felnin Celesten,Sea,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",felnin celesten
+FA,Jimmy Crooks,StL,0.1,"['C', 'UTIL', 'BE', 'IL']",1.34,423.0,drop,4.0,id·vol,1.46,,,14.0,8.0,"{'C', 'UTIL'}",jimmy crooks
+FA,Jose Trevino,Cin,0.1,"['C', 'UTIL', 'BE', 'IL']",1.4,385.0,drop,3.0,id·vol,1.43,,,14.0,8.0,"{'C', 'UTIL'}",jose trevino
+FA,Max Kepler,Ari,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.48,331.0,drop,4.0,id·vol,1.75,,,18.0,11.0,"{'UTIL', 'OF'}",max kepler
+FA,David Fry,Cle,0.1,"['DH', 'UTIL', 'BE', 'IL', 'RF', 'OF', 'LF']",1.43,365.0,drop,5.0,id·vol,0.78,,,8.0,5.0,"{'UTIL', 'OF'}",david fry
+FA,Brandon Lockridge,Mil,0.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.35,411.0,drop,3.0,id·vol,1.62,,,15.0,9.0,"{'UTIL', 'OF'}",brandon lockridge
+FA,Cooper Ingle,Cle,0.1,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",cooper ingle
+FA,Yoan Moncada,LAA,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.28,445.0,drop,3.0,id·vol,1.09,SIXTY_DAY_DL,2026-09-01,7.0,4.0,"{'UTIL', '1B/3B'}",yoan moncada
+FA,Nick Yorke,Pit,0.1,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '3B']",1.45,355.0,drop,3.0,id·vol,1.64,,,17.0,10.0,"{'2B/SS', 'UTIL', '1B/3B'}",nick yorke
+FA,Kahlil Watson,Cle,0.1,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.33,425.0,drop,3.0,id·vol,1.31,,,12.0,7.0,"{'UTIL', 'OF'}",kahlil watson
+FA,Ryan Clifford,NYM,0.1,"['1B', '1B/3B', 'IF', 'LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",ryan clifford
+FA,Dax Kilby,NYY,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",dax kilby
+FA,Luis Hernandez,SF,0.1,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luis hernandez
+FA,Pavin Smith,Ari,0.1,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.46,345.0,drop,2.0,id·vol,1.27,,,13.0,8.0,"{'UTIL', '1B/3B'}",pavin smith
+FA,Mitch Garver,FA,0.1,"['C', 'DH', 'UTIL', 'BE', 'IL']",1.23,469.0,drop,4.0,id·vol,0.91,,,8.0,5.0,"{'C', 'UTIL'}",mitch garver
+FA,Adrian Del Castillo,Ari,0.1,"['DH', 'UTIL', 'BE', 'IL', 'C']",1.52,301.0,hold,6.0,id·vol,1.34,,,14.0,8.0,"{'C', 'UTIL'}",adrian del castillo
+FA,Rafael Marchan,Phi,0.1,"['C', 'UTIL', 'BE', 'IL']",1.36,407.0,drop,3.0,id·vol,0.58,TEN_DAY_DL,2026-08-24,6.0,3.0,"{'C', 'UTIL'}",rafael marchan
+FA,Tyler Callihan,Pit,0.1,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.21,474.0,drop,3.0,id·vol,0.87,,,7.0,4.0,"{'2B/SS', 'UTIL', 'OF'}",tyler callihan
+FA,CJ Kayfus,Cle,0.1,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",cj kayfus
+FA,Jose Siri,LAA,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.47,338.0,drop,5.0,id·vol,1.38,,,14.0,8.0,"{'UTIL', 'OF'}",jose siri
+FA,MJ Melendez,NYM,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.39,388.0,hold,4.0,id·vol,0.77,,,7.0,4.0,"{'UTIL', 'OF'}",mj melendez
+FA,Jorbit Vivas,Wsh,0.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.39,387.0,drop,8.0,id·vol,1.89,,,18.0,11.0,"{'2B/SS', 'UTIL', '1B/3B'}",jorbit vivas
+FA,Thomas Saggese,StL,0.1,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'LF', 'OF']",1.09,498.0,drop,2.0,id·vol,1.03,,,8.0,5.0,"{'2B/SS', 'UTIL', 'OF'}",thomas saggese
+FA,Adael Amador,Col,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",adael amador
+FA,Andrew McCutchen,FA,0.1,"['DH', 'UTIL', 'BE', 'IL', 'OF']",1.13,495.0,drop,2.0,id·vol,0.43,,,3.0,2.0,"{'UTIL', 'OF'}",andrew mccutchen
+FA,Sheng-En Lin,Cin,0.1,"['DH', 'UTIL', 'P', 'SP', 'BE', 'IL']",,,,,NO_DATA,,,,,,{'UTIL'},sheng en lin
+FA,Ethan Conrad,ChC,0.1,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ethan conrad
+FA,Grady Emerson,TB,0.1,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",grady emerson
+FA,Jake Fraley,TB,0.1,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.53,296.0,hold,3.0,id·vol,1.1,SIXTY_DAY_DL,2026-08-28,10.0,6.0,"{'UTIL', 'OF'}",jake fraley
+FA,Adam Frazier,LAA,0.1,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.24,464.0,drop,3.0,id·vol,1.19,,,10.0,6.0,"{'2B/SS', 'UTIL', 'OF'}",adam frazier
+FA,Jahmai Jones,Bos,0.1,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.57,267.0,hold,4.0,id·vol,0.48,,,5.0,3.0,"{'UTIL', 'OF'}",jahmai jones
+FA,Ryan Ward,LAD,0.1,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.51,311.0,drop,2.0,id·vol,1.05,,,11.0,6.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",ryan ward
+FA,Ben Rortvedt,LAD,0.1,"['C', 'UTIL', 'BE', 'IL']",1.13,,stash,,talent_prior·flat↓,,,,20.0,12.0,"{'C', 'UTIL'}",ben rortvedt
+FA,Max Schuemann,NYY,0.1,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'OF', 'LF', 'RF']",1.35,412.0,drop,2.0,id·vol,0.84,,,8.0,5.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",max schuemann
+FA,Nolan Jones,Sea,0.1,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.4,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', 'OF'}",nolan jones
+FA,Darell Hernaiz,Oak,0.1,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.28,443.0,drop,4.0,id·vol,1.33,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",darell hernaiz
+FA,Dylan Moore,Phi,0.1,"['2B', 'SS', '2B/SS', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.52,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'2B/SS', 'UTIL', 'OF'}",dylan moore
+FA,Tyler Locklear,Ari,0.1,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",tyler locklear
+FA,Druw Jones,Ari,0.1,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",druw jones
+FA,Xavier Isaac,TB,0.1,"['DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,{'UTIL'},xavier isaac
+FA,Jefferson Rojas,ChC,0.1,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jefferson rojas
+FA,Cam Cannarella,Mia,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cam cannarella
+FA,Travis d'Arnaud,LAA,0.1,"['C', 'UTIL', 'BE', 'IL']",1.17,490.0,drop,1.0,id·vol,0.95,,,8.0,5.0,"{'C', 'UTIL'}",travis darnaud
+FA,Will Benson,Cin,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.32,430.0,drop,3.0,id·vol,0.72,,,7.0,4.0,"{'UTIL', 'OF'}",will benson
+FA,Ramon Urias,StL,0.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.56,276.0,hold,2.0,id·vol,1.2,,,13.0,8.0,"{'2B/SS', 'UTIL', '1B/3B'}",ramon urias
+FA,Heston Kjerstad,Bal,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",heston kjerstad
+FA,Tyler Black,Mil,0.1,"['1B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",tyler black
+FA,LaMonte Wade Jr.,Hou,0.1,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.24,463.0,drop,3.0,id·vol,1.54,,,13.0,8.0,"{'UTIL', '1B/3B', 'OF'}",lamonte wade
+FA,Blake Burke,Mil,0.1,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",blake burke
+FA,Justin Gonzales,Bos,0.1,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",justin gonzales
+FA,Angeibel Gomez,KC,0.1,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",angeibel gomez
+FA,Vahn Lackey,Min,0.1,"['C', 21, 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",vahn lackey
+FA,J.C. Escarra,NYY,0.1,"['C', 'UTIL', 'BE', 'IL']",1.34,422.0,drop,3.0,id·vol,0.91,,,8.0,5.0,"{'C', 'UTIL'}",jc escarra
+FA,Everson Pereira,StL,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.17,489.0,drop,3.0,id·vol,1.87,TEN_DAY_DL,2026-09-01,11.0,6.0,"{'UTIL', 'OF'}",everson pereira
+FA,Rob Refsnyder,FA,0.1,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.28,448.0,drop,3.0,id·vol,0.7,,,6.0,4.0,"{'UTIL', 'OF'}",rob refsnyder
+FA,Jose Tena,Wsh,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH', '2B', '2B/SS', 'OF', 'LF']",1.42,369.0,hold,8.0,id·vol,1.71,,,17.0,10.0,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jose tena
+FA,Nelson Velazquez,Hou,0.1,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL', 'LF']",1.57,263.0,hold,3.0,id·vol,0.97,,,11.0,6.0,"{'UTIL', 'OF'}",nelson velazquez
+FA,Jeferson Quero,Mil,0.1,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",jeferson quero
+FA,James Outman,Det,0.1,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.09,497.0,drop,4.0,id·vol,0.72,,,5.0,3.0,"{'UTIL', 'OF'}",james outman
+FA,Kris Bryant,Col,0.1,"['DH', 'UTIL', 'BE', 'IL']",1.25,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,{'UTIL'},kris bryant
+FA,Petey Halpin,Cle,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.5,315.0,drop,5.0,id·vol,1.35,,,14.0,8.0,"{'UTIL', 'OF'}",petey halpin
+FA,Oswaldo Cabrera,NYY,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.48,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', '1B/3B'}",oswaldo cabrera
+FA,Jace Jung,Det,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jace jung
+FA,Leo Rivas,Sea,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B', 'SS']",1.2,479.0,drop,3.0,id·vol,1.37,,,11.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",leo rivas
+FA,Yohandy Morales,Wsh,0.1,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",yohandy morales
+FA,James Triantos,ChC,0.1,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",james triantos
+FA,Jonny Farmelo,Sea,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jonny farmelo
+FA,Ike Irish,Bal,0.1,"['C', '1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', '1B/3B', 'OF'}",ike irish
+FA,Jaison Chourio,Cle,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jaison chourio
+FA,Juneiker Caceres,Cle,0.1,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",juneiker caceres
+FA,Jhonny Level,SF,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jhonny level
+FA,Alan Roden,Min,0.1,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.68,186.0,hold,2.0,id·vol,1.43,,,17.0,10.0,"{'UTIL', 'OF'}",alan roden
+FA,Garrett Stubbs,Phi,0.1,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",garrett stubbs
+FA,Jacob Melton,TB,0.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jacob melton
+FA,Eric Wagaman,NYM,0.1,"['1B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.36,403.0,drop,2.0,id·vol,0.64,,,6.0,4.0,"{'UTIL', '1B/3B', 'OF'}",eric wagaman
+FA,George Valera,Cle,0.1,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",george valera
+FA,Ryan Ritter,Col,0.1,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ryan ritter
+FA,Cam Cauley,Tex,0.1,"['2B', 'SS', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.34,421.0,drop,2.0,id·vol,0.96,,,9.0,5.0,"{'2B/SS', 'UTIL', 'OF'}",cam cauley
+FA,Alika Williams,Oak,0.1,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.25,459.0,drop,4.0,id·vol,1.33,,,12.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",alika williams
+FA,Nick Allen,Hou,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '2B', '3B', '1B/3B']",1.4,382.0,drop,4.0,id·vol,1.28,,,13.0,7.0,"{'2B/SS', 'UTIL', '1B/3B'}",nick allen
+FA,Christian Koss,SF,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.32,433.0,drop,3.0,id·vol,1.89,,,17.0,10.0,"{'2B/SS', 'UTIL', '1B/3B'}",christian koss
+FA,Max Anderson,Det,0.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",max anderson
+FA,Tsung-Che Cheng,Bos,0.1,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",tsung che cheng
+FA,Termarr Johnson,Pit,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",termarr johnson
+FA,Cam Collier,Cin,0.1,"['1B', '3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",cam collier
+FA,Murf Gray,Pit,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",murf gray
+FA,Jesus Baez,StL,0.1,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",jesus baez
+FA,Joshua Adamczewski,Mil,0.1,"['2B', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",joshua adamczewski
+FA,Devin Fitz-Gerald,Wsh,0.1,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",devin fitz gerald
+FA,Tate Southisene,Atl,0.1,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",tate southisene
+FA,Steele Hall,Cin,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",steele hall
+FA,Gabriel Rincones Jr.,Phi,0.1,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.29,442.0,drop,2.0,id·vol,1.3,,,12.0,7.0,"{'UTIL', 'OF'}",gabriel rincones
+FA,Alejandro Osuna,Tex,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'CF']",1.25,462.0,drop,6.0,id·vol,1.26,,,11.0,6.0,"{'UTIL', 'OF'}",alejandro osuna
+FA,Colby Thomas,Phi,0.1,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.41,378.0,drop,4.0,id·vol,0.81,,,8.0,5.0,"{'UTIL', 'OF'}",colby thomas
+FA,Yohel Pozo,Bal,0.1,"['C', 'UTIL', 'BE', 'IL']",1.57,268.0,drop,2.0,id·vol,0.34,,,4.0,2.0,"{'C', 'UTIL'}",yohel pozo
+FA,Cody Freeman,Tex,0.1,"['2B', '2B/SS', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",cody freeman
+FA,Ali Sanchez,NYY,0.1,"['C', 'UTIL', 'BE', 'IL']",1.23,466.0,drop,2.0,id·vol,0.26,,,2.0,1.0,"{'C', 'UTIL'}",ali sanchez
+FA,John Rave,KC,0.1,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.48,330.0,drop,2.0,id·vol,1.48,,,15.0,9.0,"{'UTIL', 'OF'}",john rave
+FA,Jhonny Pereda,Sea,0.1,"['C', 'UTIL', 'BE', 'IL']",1.79,120.0,hold,3.0,id·vol,1.09,,,14.0,8.0,"{'C', 'UTIL'}",jhonny pereda
+FA,Braden Shewmake,Mil,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B', '2B']",1.4,386.0,drop,3.0,id·vol,1.14,,,11.0,6.0,"{'2B/SS', 'UTIL', '1B/3B'}",braden shewmake
+FA,Ronny Simon,Pit,0.1,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",ronny simon
+FA,Jonatan Clase,Tor,0.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,TEN_DAY_DL,2026-08-25,,,"{'UTIL', 'OF'}",jonatan clase
+FA,Orlando Arcia,Min,0.1,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.36,405.0,drop,2.0,id·vol,0.73,,,7.0,4.0,"{'2B/SS', 'UTIL', '1B/3B'}",orlando arcia
+FA,Jeimer Candelario,LAA,0.1,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.59,,stash,,talent_prior·flat↓,,,,28.0,17.0,"{'UTIL', '1B/3B'}",jeimer candelario
+FA,Sean Keys,Tor,0.1,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",sean keys
+FA,Demetrio Crisantes,Ari,0.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",demetrio crisantes
+FA,Xavier Neyens,Hou,0.1,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",xavier neyens
+FA,Daz Cameron,Tor,0.1,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",daz cameron
+FA,Luis Carpio,Det,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luis carpio
+FA,Ben Malgeri,Det,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.58,260.0,hold,3.0,id·vol,1.2,,,13.0,8.0,"{'UTIL', 'OF'}",ben malgeri
+FA,Francisco Renteria,Phi,0.1,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",francisco renteria
+FA,Drew Millas,Wsh,0.1,"['C', 'UTIL', 'BE', 'IL']",1.32,435.0,drop,4.0,id·vol,0.96,TEN_DAY_DL,2026-08-25,8.0,5.0,"{'C', 'UTIL'}",drew millas
+FA,Braxton Fulford,Col,0.1,"['C', 'UTIL', 'BE', 'IL', 'DH']",1.21,475.0,drop,2.0,id·vol,0.52,,,4.0,3.0,"{'C', 'UTIL'}",braxton fulford
+FA,Robert Hassell III,Pit,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",robert hassell
+FA,Felix Reyes,Phi,0.1,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,SIXTY_DAY_DL,2027-02-01,,,"{'UTIL', 'OF'}",felix reyes
+FA,Luis Matos,Mil,0.1,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.69,,stash,,talent_prior·flat↓,,,,30.0,17.0,"{'UTIL', 'OF'}",luis matos
+FA,Graham Pauley,Mia,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '1B']",1.38,395.0,drop,3.0,id·vol,0.94,,,9.0,5.0,"{'UTIL', '1B/3B'}",graham pauley
+FA,Jorge Barrosa,Ari,0.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.28,447.0,drop,4.0,id·vol,0.9,,,8.0,5.0,"{'UTIL', 'OF'}",jorge barrosa
+FA,Luke Maile,KC,0.1,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",luke maile
+FA,Rikuu Nishida,ChW,0.1,"['2B', '2B/SS', 'IF', 'LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",rikuu nishida
+FA,Jarred Kelenic,Tex,0.1,"['RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.21,477.0,drop,2.0,id·vol,0.78,,,7.0,4.0,"{'UTIL', 'OF'}",jarred kelenic
+FA,Enrique Bradfield Jr.,Bal,0.1,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",enrique bradfield
+FA,Santiago Espinal,LAD,0.1,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', '2B', '2B/SS']",1.48,329.0,drop,2.0,id·vol,0.37,,,4.0,2.0,"{'2B/SS', 'UTIL', '1B/3B'}",santiago espinal
+FA,Gage Workman,SD,0.1,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",gage workman
+FA,Rowdy Tellez,Atl,0.1,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.54,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'UTIL', '1B/3B'}",rowdy tellez
+FA,Will Wilson,Sea,0.1,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,SIXTY_DAY_DL,2026-08-30,,,"{'2B/SS', 'UTIL', '1B/3B'}",will wilson
+FA,Luis Urias,Tor,0.1,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.66,206.0,hold,2.0,id·vol,0.78,TEN_DAY_DL,2026-09-11,3.0,2.0,"{'2B/SS', 'UTIL'}",luis urias
+FA,Weston Wilson,Sea,0.1,"['LF', 'OF', 'UTIL', 'BE', 'IL', '3B', '1B/3B', 'IF']",1.37,401.0,drop,4.0,id·vol,1.16,,,11.0,6.0,"{'UTIL', '1B/3B', 'OF'}",weston wilson
+FA,Michael Toglia,Cin,0.1,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.23,,stash,,talent_prior·flat↓,,TEN_DAY_DL,2026-09-25,0.0,0.0,"{'UTIL', '1B/3B'}",michael toglia
+FA,Brooks Baldwin,ChW,0.1,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",brooks baldwin
+FA,Blake Mitchell,KC,0.1,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",blake mitchell
+FA,Bo Davidson,SF,0.1,"['CF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",bo davidson
+FA,Caden Bodine,TB,0.1,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",caden bodine
+FA,Kevin Alvarez,Hou,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kevin alvarez
+FA,Braylon Payne,Mil,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",braylon payne
+FA,Jace LaViolette,Cle,0.1,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jace laviolette
+FA,Anthony Rizzo,FA,0.1,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.48,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', '1B/3B'}",anthony rizzo
+FA,Alexander Frias,Mil,0.1,"[21, 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",alexander frias
+FA,Drew Cavanaugh,SF,0.1,"['C', 'UTIL', 'BE', 'IL']",1.34,417.0,drop,3.0,id·vol,1.51,,,14.0,8.0,"{'C', 'UTIL'}",drew cavanaugh
+FA,Drew Burress,Oak,0.1,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",drew burress
+FA,Eric Haase,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",1.23,468.0,drop,2.0,id·vol,0.66,,,6.0,3.0,"{'C', 'UTIL'}",eric haase
+FA,Blake Perkins,Cle,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.57,264.0,hold,3.0,id·vol,0.62,,,7.0,4.0,"{'UTIL', 'OF'}",blake perkins
+FA,Mike Tauchman,NYM,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.68,,stash,,talent_prior·flat↓,,,,30.0,17.0,"{'UTIL', 'OF'}",mike tauchman
+FA,Jase Bowen,SD,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.38,394.0,drop,2.0,id·vol,0.94,,,9.0,5.0,"{'UTIL', 'OF'}",jase bowen
+FA,Reese McGuire,ChW,0.0,"['C', 'UTIL', 'BE', 'IL']",1.41,,stash,,talent_prior·vol,0.72,,,7.0,4.0,"{'C', 'UTIL'}",reese mcguire
+FA,Austin Wynns,Tex,0.0,"['C', 'UTIL', 'BE', 'IL']",1.35,410.0,drop,2.0,id·vol,0.9,,,8.0,5.0,"{'C', 'UTIL'}",austin wynns
+FA,Chuckie Robinson,LAD,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",chuckie robinson
+FA,Sandy Leon,Atl,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",sandy leon
+FA,Leo Jimenez,Mia,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', '3B', '1B/3B']",1.42,370.0,drop,5.0,id·vol,1.62,,,16.0,9.0,"{'2B/SS', 'UTIL', '1B/3B'}",leo jimenez
+FA,Jonah Cox,SF,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.36,404.0,drop,2.0,id·vol,1.02,,,10.0,6.0,"{'UTIL', 'OF'}",jonah cox
+FA,Billy Cook,Pit,0.0,"['1B', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL', 'RF', 'LF']",1.22,471.0,drop,1.0,id·vol,0.3,,,3.0,1.0,"{'UTIL', '1B/3B', 'OF'}",billy cook
+FA,Justyn-Henry Malloy,TB,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.24,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'UTIL', 'OF'}",justyn henry malloy
+FA,Miles Mastrobuoni,Sea,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",miles mastrobuoni
+FA,Nelson Rada,LAA,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",nelson rada
+FA,Eloy Jimenez,Tor,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.49,,stash,,talent_prior·vol,0.94,,,10.0,6.0,"{'UTIL', 'OF'}",eloy jimenez
+FA,Andy Ibanez,NYM,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.63,,stash,,talent_prior·flat↓,,,,29.0,17.0,"{'UTIL', '1B/3B'}",andy ibanez
+FA,Josh Rojas,KC,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.26,453.0,drop,2.0,id·vol,0.93,,,8.0,5.0,"{'2B/SS', 'UTIL', '1B/3B'}",josh rojas
+FA,Jhonkensy Noel,Bal,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-08-25,,,"{'UTIL', 'OF'}",jhonkensy noel
+FA,Christian Franklin,Bal,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",christian franklin
+FA,Nacho Alvarez Jr.,LAA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",nacho alvarez
+FA,Trey Sweeney,Det,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.21,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,"{'2B/SS', 'UTIL'}",trey sweeney
+FA,Wilmer Flores,FA,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.74,,stash,,talent_prior·flat↓,,,,31.0,18.0,"{'UTIL', '1B/3B'}",wilmer flores
+FA,Jonathon Long,ChC,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jonathon long
+FA,Justin Turner,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.72,,stash,,talent_prior·flat↓,,,,31.0,18.0,"{'UTIL', '1B/3B'}",justin turner
+FA,Ronaldo Hernandez,Bos,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",ronaldo hernandez
+FA,Tommy Pham,NYM,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.59,,stash,,talent_prior·flat↓,,,,28.0,17.0,"{'UTIL', 'OF'}",tommy pham
+FA,Jerar Encarnacion,SF,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jerar encarnacion
+FA,Hunter Renfroe,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.5,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', 'OF'}",hunter renfroe
+FA,Warming Bernabel,Wsh,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",warming bernabel
+FA,Nathan Flewelling,TB,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",nathan flewelling
+FA,Eduardo Tait,Min,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",eduardo tait
+FA,Vance Honeycutt,Bal,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",vance honeycutt
+FA,Charles Davalan,LAD,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",charles davalan
+FA,Nate George,Bal,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",nate george
+FA,Elian Peña,NYM,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",elian pena
+FA,Wehiwa Aloy,Bal,0.0,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wehiwa aloy
+FA,Kayson Cunningham,Ari,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",kayson cunningham
+FA,Billy Carlson,ChW,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'2B/SS', 'UTIL'}",billy carlson
+FA,Alex Jackson,Min,0.0,"['C', 'UTIL', 'BE', 'IL']",1.27,450.0,drop,2.0,id·vol,0.6,,,5.0,3.0,"{'C', 'UTIL'}",alex jackson
+FA,Will Wagner,SD,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL', 'DH']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",will wagner
+FA,Andrew Knizner,SF,0.0,"['C', 'UTIL', 'BE', 'IL']",1.39,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'C', 'UTIL'}",andrew knizner
+FA,Nate Eaton,Bos,0.0,"['3B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",nate eaton
+FA,Sebastian Rivero,LAA,0.0,"['C', 'UTIL', 'BE', 'IL']",1.27,449.0,drop,2.0,id·vol,0.56,SIXTY_DAY_DL,2026-08-28,4.0,2.0,"{'C', 'UTIL'}",sebastian rivero
+FA,Sterlin Thompson,Col,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'DH']",1.44,362.0,drop,2.0,id·vol,1.13,,,11.0,7.0,"{'UTIL', 'OF'}",sterlin thompson
+FA,P.J. Higgins,Cin,0.0,"['C', '1B', '3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', '1B/3B'}",pj higgins
+FA,Stuart Fairchild,Sea,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.57,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', 'OF'}",stuart fairchild
+FA,Juan Brito,Cin,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.2,478.0,drop,1.0,id·vol,1.39,,,12.0,7.0,"{'2B/SS', 'UTIL'}",juan brito
+FA,Bryce Teodosio,LAA,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",1.3,440.0,drop,2.0,id·vol,0.82,,,7.0,4.0,"{'UTIL', 'OF'}",bryce teodosio
+FA,Jihwan Bae,Mil,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,,,24.0,15.0,"{'UTIL', 'OF'}",jihwan bae
+FA,Dylan Carlson,ChC,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.26,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'UTIL', 'OF'}",dylan carlson
+FA,LuJames Groover,Ari,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.61,238.0,drop,2.0,id·vol,1.21,,,14.0,8.0,"{'UTIL', '1B/3B'}",lujames groover
+FA,Connor Joe,Sea,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.49,,stash,,talent_prior·vol,0.32,,,3.0,2.0,"{'UTIL', 'OF'}",connor joe
+FA,Kyren Paris,LAA,0.0,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",kyren paris
+FA,Yanquiel Fernandez,NYY,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",yanquiel fernandez
+FA,Justin Dean,ChC,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",justin dean
+FA,Rece Hinds,Bal,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",rece hinds
+FA,Gustavo Campero,LAA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",gustavo campero
+FA,Kyle Farmer,FA,0.0,"['2B', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.49,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'2B/SS', 'UTIL'}",kyle farmer
+FA,Trei Cruz,Det,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",trei cruz
+FA,Cesar Prieto,StL,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",cesar prieto
+FA,Jacob Reimer,NYM,0.0,"['3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jacob reimer
+FA,Jose Iglesias,FA,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.63,,stash,,talent_prior·flat↓,,,,29.0,17.0,"{'2B/SS', 'UTIL', '1B/3B'}",jose iglesias
+FA,Tyler Fitzgerald,LAD,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.44,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'2B/SS', 'UTIL'}",tyler fitzgerald
+FA,Thairo Estrada,FA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.55,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'2B/SS', 'UTIL'}",thairo estrada
+FA,Johan Rojas,Phi,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.56,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",johan rojas
+FA,Alex Verdugo,SD,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.61,,stash,,talent_prior·flat↓,,OUT,2027-02-01,0.0,0.0,"{'UTIL', 'OF'}",alex verdugo
+FA,Brock Wilken,Mil,0.0,"['3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",brock wilken
+FA,Gio Urshela,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.43,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', '1B/3B'}",gio urshela
+FA,DJ LeMahieu,FA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.38,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'2B/SS', 'UTIL'}",dj lemahieu
+FA,Anthony Rendon,LAA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.52,,stash,,talent_prior·flat↓,,SIXTY_DAY_DL,2026-10-19,0.0,0.0,"{'UTIL', '1B/3B'}",anthony rendon
+FA,Brian Navarreto,Mia,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",brian navarreto
+FA,Tim Anderson,FA,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",0.91,,stash,,talent_prior·flat↓,,,,16.0,9.0,"{'2B/SS', 'UTIL'}",tim anderson
+FA,Brayden Taylor,TB,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",brayden taylor
+FA,Brewer Hicklen,Atl,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brewer hicklen
+FA,Anthony Vilar,FA,0.0,"['C', '2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', '2B/SS', 'UTIL', 'OF'}",anthony vilar
+FA,Brian Serven,Oak,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",brian serven
+FA,Andrew Pinckney,Wsh,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",andrew pinckney
+FA,Keston Hiura,LAD,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",keston hiura
+FA,Chase Harlan,LAD,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",chase harlan
+FA,George Wolkow,ChW,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",george wolkow
+FA,Gavin Kilen,SF,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",gavin kilen
+FA,Josh Hammond,KC,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",josh hammond
+FA,Marek Houston,Min,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",marek houston
+FA,Gavin Fien,Wsh,0.0,"['DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,{'UTIL'},gavin fien
+FA,Ronny Cruz,Wsh,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ronny cruz
+FA,Kyler Murray,Oak,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kyler murray
+FA,Roldy Brito,Col,0.0,"[21, '2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL', 'CF', 'OF']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",roldy brito
+FA,Taitn Gray,TB,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",taitn gray
+FA,Zach Dezenzo,Hou,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL', 'RF']",1.18,487.0,drop,2.0,id·vol,0.74,,,6.0,4.0,"{'UTIL', 'OF'}",zach dezenzo
+FA,Owen Ayers,ChC,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",owen ayers
+FA,Turner Hill,SF,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",turner hill
+FA,Jacob Lombard,Mia,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jacob lombard
+FA,Rodolfo Duran,SD,0.0,"['C', 'UTIL', 'BE', 'IL']",1.43,363.0,drop,3.0,id·vol,0.93,,,9.0,5.0,"{'C', 'UTIL'}",rodolfo duran
+FA,Kameron Misner,Phi,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kameron misner
+FA,Jesse Winker,FA,0.0,"['DH', 'UTIL', 'BE', 'IL']",1.63,,stash,,talent_prior·flat↓,,,,29.0,17.0,{'UTIL'},jesse winker
+FA,Cesar Salazar,Hou,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",cesar salazar
+FA,Riley Adams,Wsh,0.0,"['C', 'UTIL', 'BE', 'IL']",1.04,,stash,,talent_prior·flat↓,,,,18.0,11.0,"{'C', 'UTIL'}",riley adams
+FA,Chadwick Tromp,Bal,0.0,"['C', 'UTIL', 'BE', 'IL']",1.36,409.0,drop,2.0,id·vol,0.2,,,2.0,1.0,"{'C', 'UTIL'}",chadwick tromp
+FA,Matt Thaiss,Bos,0.0,"['C', 'UTIL', 'BE', 'IL']",1.26,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'C', 'UTIL'}",matt thaiss
+FA,Sam Huff,Bal,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",sam huff
+FA,Michael Helman,Tex,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,SIXTY_DAY_DL,2026-08-26,,,"{'UTIL', 'OF'}",michael helman
+FA,Korey Lee,ChW,0.0,"['C', 'UTIL', 'BE', 'IL']",1.14,,stash,,talent_prior·flat↓,,,,20.0,12.0,"{'C', 'UTIL'}",korey lee
+FA,Kyle McCann,Col,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",kyle mccann
+FA,Aramis Garcia,Ari,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",aramis garcia
+FA,Bryce Johnson,SD,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",bryce johnson
+FA,CJ Stubbs,Tor,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",cj stubbs
+FA,Jack Suwinski,LAD,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.38,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', 'OF'}",jack suwinski
+FA,Johnathan Rodriguez,Oak,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",johnathan rodriguez
+FA,Nick Madrigal,LAA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.65,211.0,hold,2.0,id·vol,1.1,,,13.0,7.0,"{'UTIL', '1B/3B'}",nick madrigal
+FA,Tirso Ornelas,SD,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",tirso ornelas
+FA,Chas McCormick,ChC,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.54,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'UTIL', 'OF'}",chas mccormick
+FA,Nick Morabito,NYM,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",nick morabito
+FA,Sam Haggerty,FA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",sam haggerty
+FA,Dustin Harris,SD,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.41,381.0,drop,2.0,id·vol,0.78,,,8.0,4.0,"{'UTIL', 'OF'}",dustin harris
+FA,Grant McCray,SF,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",grant mccray
+FA,Greg Jones,Mil,0.0,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",greg jones
+FA,Braiden Ward,Bos,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",braiden ward
+FA,Payton Eeles,Bal,0.0,"['2B', 'SS', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",payton eeles
+FA,Trey Lipscomb,Wsh,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",trey lipscomb
+FA,Marco Luciano,NYY,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",marco luciano
+FA,Mark Canha,Tex,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.56,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', 'OF'}",mark canha
+FA,Scott Kingery,ChC,0.0,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",scott kingery
+FA,Kemp Alderman,Mia,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kemp alderman
+FA,Jacob Berry,Mia,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",jacob berry
+FA,Carlos Rodriguez,SD,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",carlos rodriguez
+FA,Maximo Acosta,Mia,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",maximo acosta
+FA,Vidal Brujan,NYM,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.38,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', '1B/3B'}",vidal brujan
+FA,Buddy Kennedy,SF,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",buddy kennedy
+FA,Ryan Bliss,Sea,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ryan bliss
+FA,Shay Whitcomb,SF,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",shay whitcomb
+FA,Tanner Murray,ChW,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,SIXTY_DAY_DL,2026-09-01,,,"{'2B/SS', 'UTIL', '1B/3B'}",tanner murray
+FA,Zack Short,NYM,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.15,491.0,drop,2.0,id·vol,0.44,,,3.0,2.0,"{'2B/SS', 'UTIL'}",zack short
+FA,Raynel Delgado,Hou,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",raynel delgado
+FA,Liover Peguero,Phi,0.0,"['1B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.34,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'2B/SS', 'UTIL', '1B/3B'}",liover peguero
+FA,Trey Mancini,LAA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.28,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'UTIL', '1B/3B'}",trey mancini
+FA,Blaine Crim,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",blaine crim
+FA,Ryan Fitzgerald,LAD,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ryan fitzgerald
+FA,Abraham Toro,KC,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.56,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', '1B/3B'}",abraham toro
+FA,Tre' Morgan,TB,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",tre morgan
+FA,Enmanuel Valdez,Pit,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.54,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'UTIL', '1B/3B'}",enmanuel valdez
+FA,Joey Meneses,Oak,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.51,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'UTIL', '1B/3B'}",joey meneses
+FA,Brandon Drury,KC,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,,,24.0,15.0,"{'UTIL', '1B/3B'}",brandon drury
+FA,Will Brennan,SF,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.61,,stash,,talent_prior·flat↓,,,,28.0,17.0,"{'UTIL', 'OF'}",will brennan
+FA,Jose Miranda,SD,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.59,,stash,,talent_prior·flat↓,,,,28.0,17.0,"{'UTIL', '1B/3B'}",jose miranda
+FA,Chris Taylor,LAA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.35,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'UTIL', 'OF'}",chris taylor
+FA,Paul DeJong,NYY,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.25,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'UTIL', '1B/3B'}",paul dejong
+FA,Cristian Pache,NYM,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cristian pache
+FA,Jacob Stallings,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",1.24,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'C', 'UTIL'}",jacob stallings
+FA,Leonardo Bernal,StL,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",leonardo bernal
+FA,Thayron Liranzo,Det,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",thayron liranzo
+FA,Jason Heyward,FA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.76,,stash,,talent_prior·flat↓,,,,31.0,18.0,"{'UTIL', 'OF'}",jason heyward
+FA,Hendry Mendez,Min,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",hendry mendez
+FA,Brendan Rodgers,Bos,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,OUT,2027-02-01,0.0,0.0,"{'2B/SS', 'UTIL'}",brendan rodgers
+FA,Travis Jankowski,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.47,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', 'OF'}",travis jankowski
+FA,Alexander Canario,FA,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.15,,stash,,talent_prior·flat↓,,,,20.0,12.0,"{'UTIL', 'OF'}",alexander canario
+FA,Orelvis Martinez,Wsh,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",orelvis martinez
+FA,Jack Winkler,Hou,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jack winkler
+FA,Mikey Romero,Bos,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",mikey romero
+FA,Jonathan Ornelas,Mil,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jonathan ornelas
+FA,Gavin Cross,KC,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",gavin cross
+FA,Kenny Piper,TB,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",kenny piper
+FA,Matt Mervis,Wsh,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",matt mervis
+FA,Dante Nori,Phi,0.0,"['CF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",dante nori
+FA,Eliezer Alfonzo,LAD,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",eliezer alfonzo
+FA,John Gil,Atl,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",john gil
+FA,Kendall George,LAD,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'UTIL', 'OF'}",kendall george
+FA,Parks Harber,SF,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",parks harber
+FA,Juan Sanchez,Tor,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",juan sanchez
+FA,J.D. Davis,FA,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,,,24.0,15.0,"{'UTIL', '1B/3B'}",jd davis
+FA,Mitch Voit,NYM,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",mitch voit
+FA,Luke Dickerson,Wsh,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luke dickerson
+FA,Joendry Vargas,LAD,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",joendry vargas
+FA,Ethan Frey,Hou,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ethan frey
+FA,Devin Taylor,Oak,0.0,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",devin taylor
+FA,Shotaro Morii,Oak,0.0,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",shotaro morii
+FA,Ivan Johnson,Cin,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ivan johnson
+FA,Hayden Alvarez,LAA,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",hayden alvarez
+FA,Elijah Green,Wsh,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",elijah green
+FA,Aidan Smith,NYM,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",aidan smith
+FA,Slade Caldwell,Ari,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",slade caldwell
+FA,Brady Ebel,Mil,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",brady ebel
+FA,Oscar Colas,FA,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",1.2,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'UTIL', 'OF'}",oscar colas
+FA,Bobby Dalbec,FA,0.0,"['1B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",bobby dalbec
+FA,Donovan Solano,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.47,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', '1B/3B'}",donovan solano
+FA,Martin Maldonado,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",0.85,,stash,,talent_prior·flat↓,,,,15.0,9.0,"{'C', 'UTIL'}",martin maldonado
+FA,Yan Gomes,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",1.43,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'C', 'UTIL'}",yan gomes
+FA,Nick Martini,FA,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",nick martini
+FA,Daniel Vogelbach,FA,0.0,"['DH', 'UTIL', 'BE', 'IL']",1.56,,stash,,talent_prior·flat↓,,,,28.0,16.0,{'UTIL'},daniel vogelbach
+FA,Joey Gallo,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.17,,stash,,talent_prior·flat↓,,,,20.0,12.0,"{'UTIL', '1B/3B'}",joey gallo
+FA,Rougned Odor,FA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",rougned odor
+FA,Jiman Choi,NYM,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jiman choi
+FA,Maikel Franco,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",maikel franco
+FA,Matthew Batten,Atl,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",matthew batten
+FA,Kungkuan Giljegiljaw,Cle,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",kungkuan giljegiljaw
+FA,Luis Guerrero,Hou,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luis guerrero
+FA,Franklin Primera,Bos,0.0,"['C', 21, 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",franklin primera
+FA,Justin Lebron,Cin,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",justin lebron
+FA,Eric Booth Jr.,Bal,0.0,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eric booth
+FA,Austin Slater,TB,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.23,470.0,drop,2.0,id·vol,0.72,,,6.0,4.0,"{'UTIL', 'OF'}",austin slater
+FA,Collin Price,Hou,0.0,"['C', '1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', '1B/3B'}",collin price
+FA,Luken Baker,Ari,0.0,"['DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,{'UTIL'},luken baker
+FA,Hayden Senger,NYM,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",hayden senger
+FA,Jason Delay,Bos,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",jason delay
+FA,Logan Porter,LAA,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",logan porter
+FA,Tomas Nido,Det,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",tomas nido
+FA,Blake Hunt,SD,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",blake hunt
+FA,Kyler Fedko,Min,0.0,"['1B', '1B/3B', 'IF', 'LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",kyler fedko
+FA,Luca Tresh,KC,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",luca tresh
+FA,Austin Barnes,NYM,0.0,"['C', 'UTIL', 'BE', 'IL']",1.09,,stash,,talent_prior·flat↓,,,,19.0,12.0,"{'C', 'UTIL'}",austin barnes
+FA,Chad Wallach,Oak,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",chad wallach
+FA,Jorge Alfaro,KC,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",jorge alfaro
+FA,Yuli Gurriel,FA,0.0,"['DH', 'UTIL', 'BE', 'IL']",1.46,,stash,,talent_prior·flat↓,,,,25.0,15.0,{'UTIL'},yuli gurriel
+FA,Willie MacIver,Sea,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",willie maciver
+FA,Dom Keegan,Bal,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",dom keegan
+FA,Jair Camargo,Atl,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",jair camargo
+FA,Omar Martinez,LAA,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",omar martinez
+FA,Tyler Austin,ChC,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,SIXTY_DAY_DL,2026-10-19,,,"{'UTIL', 'OF'}",tyler austin
+FA,Dairon Blanco,Tex,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",dairon blanco
+FA,Akil Baddoo,Mil,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.36,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'UTIL', 'OF'}",akil baddoo
+FA,Jared Oliva,FA,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jared oliva
+FA,Daniel Johnson,Hou,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",daniel johnson
+FA,Pedro Leon,Phi,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",pedro leon
+FA,Brett Harris,Bos,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",brett harris
+FA,Oliver Dunn,TB,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",oliver dunn
+FA,Garrett Hampson,Cin,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.18,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'UTIL', 'OF'}",garrett hampson
+FA,Cavan Biggio,Hou,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.37,,stash,,talent_prior·flat↓,,,,24.0,15.0,"{'UTIL', 'OF'}",cavan biggio
+FA,Steward Berroa,Phi,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",steward berroa
+FA,Junior Perez,ChW,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL', 'LF']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",junior perez
+FA,Dominic Fletcher,Pit,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.23,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'UTIL', 'OF'}",dominic fletcher
+FA,Matt Koperniak,StL,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",matt koperniak
+FA,Matthew Lugo,KC,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",matthew lugo
+FA,Kenedy Corona,NYY,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kenedy corona
+FA,Michael Siani,Bal,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.19,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'UTIL', 'OF'}",michael siani
+FA,Jordyn Adams,Mil,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jordyn adams
+FA,RJ Schreck,Tor,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",rj schreck
+FA,Christian Cairo,Phi,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",christian cairo
+FA,Jose Azocar,Atl,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jose azocar
+FA,Manuel Margot,Det,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.57,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', 'OF'}",manuel margot
+FA,Brennen Davis,Sea,0.0,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brennen davis
+FA,Drew Waters,KC,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.24,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'UTIL', 'OF'}",drew waters
+FA,Chad Stevens,Col,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",chad stevens
+FA,Nick Solak,SD,0.0,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",nick solak
+FA,Kevin Newman,KC,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.57,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', '1B/3B'}",kevin newman
+FA,Jonah Bride,Tex,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.33,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', '1B/3B'}",jonah bride
+FA,Mason McCoy,SD,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",mason mccoy
+FA,Bryan Ramos,Bal,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",bryan ramos
+FA,Jon Berti,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.55,,stash,,talent_prior·flat↓,,,,28.0,16.0,"{'UTIL', '1B/3B'}",jon berti
+FA,Brett Wisely,Atl,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.25,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'2B/SS', 'UTIL'}",brett wisely
+FA,Luis Vazquez,Bal,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",luis vazquez
+FA,Michael Stefanic,Oak,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",michael stefanic
+FA,Jared Serna,Mia,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jared serna
+FA,Josh Kasevich,Tor,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",josh kasevich
+FA,B.J. Murray Jr.,ChC,0.0,"['1B', '3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",bj murray
+FA,Owen Miller,ChC,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.41,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'2B/SS', 'UTIL'}",owen miller
+FA,Patrick Wisdom,Sea,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.51,,stash,,talent_prior·vol,0.9,,,9.0,6.0,"{'UTIL', '1B/3B'}",patrick wisdom
+FA,Tim Elko,ChW,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",tim elko
+FA,Bligh Madris,StL,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",bligh madris
+FA,Logan Davidson,TB,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",logan davidson
+FA,Niko Kavadas,LAA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",niko kavadas
+FA,Sam McMillan,Det,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",sam mcmillan
+FA,Ronnier Quintero,ChC,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",ronnier quintero
+FA,A.J. Vukovich,Ari,0.0,"['LF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",aj vukovich
+FA,William Bergolla Jr.,ChW,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",william bergolla
+FA,Tom Murphy,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'C', 'UTIL'}",tom murphy
+FA,Jose Ramos,NYM,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jose ramos
+FA,Kristian Robinson,Ari,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kristian robinson
+FA,Vimael Machin,Col,0.0,"['1B', '2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",vimael machin
+FA,Jose Herrera,Tex,0.0,"['C', 'UTIL', 'BE', 'IL']",1.19,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'C', 'UTIL'}",jose herrera
+FA,Tyler Wade,Tex,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",tyler wade
+FA,Will Banfield,Cin,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",will banfield
+FA,Seth Brown,NYY,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.31,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', 'OF'}",seth brown
+FA,Corey Julks,Det,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.35,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'UTIL', 'OF'}",corey julks
+FA,Carson McCusker,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",carson mccusker
+FA,Aaron Schunk,Atl,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",aaron schunk
+FA,Dom Nunez,Cle,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",dom nunez
+FA,Ryan Noda,Bal,0.0,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.18,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'UTIL', '1B/3B', 'OF'}",ryan noda
+FA,Jose Ramos,Oak,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jose ramos
+FA,Billy McKinney,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",billy mckinney
+FA,Rafael Lantigua,Tor,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",rafael lantigua
+FA,Eddys Leonard,SF,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B', 'OF'}",eddys leonard
+FA,Luke Williams,Atl,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luke williams
+FA,Jax Biggers,Hou,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jax biggers
+FA,Cam Devanney,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",cam devanney
+FA,Aroon Escobar,Phi,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",aroon escobar
+FA,Riley Tirotta,Phi,0.0,"['1B', '3B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",riley tirotta
+FA,Michael Chavis,Cin,0.0,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",michael chavis
+FA,Jesus Bastidas,Mia,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",jesus bastidas
+FA,Carter Kieboom,Cle,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",carter kieboom
+FA,Jose Rodriguez,Phi,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jose rodriguez
+FA,Sergio Alcantara,Wsh,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",sergio alcantara
+FA,Blake Sabol,TB,0.0,"['C', 'UTIL', 'BE', 'IL']",1.27,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'C', 'UTIL'}",blake sabol
+FA,David Banuelos,Min,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",david banuelos
+FA,Rene Pinto,Phi,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",rene pinto
+FA,Walker Janek,Hou,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",walker janek
+FA,Luke Stevenson,Sea,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",luke stevenson
+FA,Connor Burns,Cin,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",connor burns
+FA,Daniel Hernandez,Wsh,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",daniel hernandez
+FA,Shawn Ross,NYM,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",shawn ross
+FA,Billy Amick,NYM,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",billy amick
+FA,Matthew Wood,Mil,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",matthew wood
+FA,Nate Furman,SF,0.0,"['2B', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",nate furman
+FA,Andrew Velazquez,KC,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",andrew velazquez
+FA,Ivan Melendez,Ari,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",ivan melendez
+FA,Tristin English,Atl,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",tristin english
+FA,Jon Adams,Mil,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jon adams
+FA,Nathan Hickey,Bos,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",nathan hickey
+FA,Leonado Balcazar,Cin,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",leonado balcazar
+FA,Chase Davis,StL,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",chase davis
+FA,Aron Estrada,Bal,0.0,"['2B', '2B/SS', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",aron estrada
+FA,Raudi Rodriguez,LAA,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",raudi rodriguez
+FA,Diego Cartaya,SF,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",diego cartaya
+FA,Christian Bethancourt,Pit,0.0,"['C', 'UTIL', 'BE', 'IL']",1.44,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'C', 'UTIL'}",christian bethancourt
+FA,Nick Senzel,LAD,0.0,"['3B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",1.49,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', '1B/3B', 'OF'}",nick senzel
+FA,Ryan Spikes,TB,0.0,"['3B', '1B/3B', 'IF', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",ryan spikes
+FA,Duke Ellis,NYY,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",duke ellis
+FA,Matt Gorski,LAD,0.0,"['1B', '1B/3B', 'IF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",matt gorski
+FA,Yolmer Sanchez,LAA,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",yolmer sanchez
+FA,Luke Waddell,Atl,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",luke waddell
+FA,Creed Willems,Bal,0.0,"['C', '1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', '1B/3B'}",creed willems
+FA,Jared Thomas,Col,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jared thomas
+FA,Abrahan Gutierrez,NYY,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",abrahan gutierrez
+FA,Christopher Suero,NYM,0.0,"['C', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', 'OF'}",christopher suero
+FA,Ricardo Olivar,Min,0.0,"['C', 'LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', 'OF'}",ricardo olivar
+FA,Alex Lodise,Atl,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",alex lodise
+FA,Zachary Ehrhard,LAD,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",zachary ehrhard
+FA,Lucas Spence,Hou,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",lucas spence
+FA,Kevin Parada,NYM,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",kevin parada
+FA,Malcolm Moore,Tex,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",malcolm moore
+FA,Marco Dinges,Mil,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",marco dinges
+FA,Jase Mitchell,Hou,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",jase mitchell
+FA,Omar Narvaez,FA,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",omar narvaez
+FA,Carlos Colmenarez,TB,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",carlos colmenarez
+FA,Caleb Knight,ChC,0.0,"['C', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",caleb knight
+FA,Derian Cruz,Atl,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",derian cruz
+FA,Myles Naylor,Oak,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",myles naylor
+FA,Emilien Pitre,NYM,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",emilien pitre
+FA,Nikau Pouaka-Grego,Phi,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",nikau pouaka grego
+FA,Deniel Ortiz,StL,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",deniel ortiz
+FA,Damiano Palmegiani,Tor,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",damiano palmegiani
+FA,Kyle DeBarge,Min,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",kyle debarge
+FA,Yoeilin Cespedes,Bos,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",yoeilin cespedes
+FA,Sammy Stafura,Pit,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",sammy stafura
+FA,Emmanuel Rivera,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.34,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'UTIL', '1B/3B'}",emmanuel rivera
+FA,Terrin Vavra,FA,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",terrin vavra
+FA,Adrian Placencia,LAA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",adrian placencia
+FA,Kevin Ereu,Mil,0.0,"['1B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",kevin ereu
+FA,Alex De Jesus,Tor,0.0,"['1B', '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",alex de jesus
+FA,Wyatt Sanford,Pit,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wyatt sanford
+FA,Tyson Lewis,Cin,0.0,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",tyson lewis
+FA,JD Dix,Ari,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jd dix
+FA,Roc Riggio,Col,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",roc riggio
+FA,Jose Salas,Min,0.0,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",jose salas
+FA,Jeremy Rodriguez,NYM,0.0,"['2B', '3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",jeremy rodriguez
+FA,Yolfran Castillo,Tex,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",yolfran castillo
+FA,Wilman Diaz,LAD,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wilman diaz
+FA,Ethan Petry,Wsh,0.0,"['LF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ethan petry
+FA,Jack Gurevitch,StL,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jack gurevitch
+FA,Tanner Thach,Col,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",tanner thach
+FA,Fernando Cruz,ChC,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",fernando cruz
+FA,Darell Morel,Pit,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",darell morel
+FA,Dylan Dreiling,Tex,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",dylan dreiling
+FA,Kane Kepley,ChC,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",kane kepley
+FA,Austin Overn,TB,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",austin overn
+FA,Aaron Walton,Cle,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",aaron walton
+FA,Nolan Schubart,Cle,0.0,"['1B', '1B/3B', 'IF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B', 'OF'}",nolan schubart
+FA,Miguel Bleis,Bos,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",miguel bleis
+FA,Benny Montgomery,Col,0.0,"['RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",benny montgomery
+FA,Elorky Rodriguez,Tex,0.0,"['2B', '2B/SS', 'IF', 'CF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', 'OF'}",elorky rodriguez
+FA,Diego Tornes,Atl,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",diego tornes
+FA,Yorger Bautista,Sea,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",yorger bautista
+FA,Cris Rodriguez,Det,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cris rodriguez
+FA,Ching-Hsien Ko,LAD,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ching hsien ko
+FA,Enddy Azocar,Bos,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",enddy azocar
+FA,Paulino Santana,Tex,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",paulino santana
+FA,Josiah Ragsdale,Mil,0.0,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",josiah ragsdale
+FA,Cristhian Vaquero,Wsh,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cristhian vaquero
+FA,Robert Calaz,Col,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",robert calaz
+FA,PJ Morlando,Mia,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",pj morlando
+FA,Luis Guanipa,Atl,0.0,"['CF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",luis guanipa
+FA,Brailer Guerrero,TB,0.0,"['CF', 'RF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brailer guerrero
+FA,Dillon Head,Mia,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",dillon head
+FA,Brando Mayea,NYY,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brando mayea
+FA,Sean Gamble,KC,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",sean gamble
+FA,Slater de Brun,TB,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",slater de brun
+FA,Brendan Summerhill,TB,0.0,"['CF', 'OF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",brendan summerhill
+FA,Tai Peete,StL,0.0,"['LF', 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",tai peete
+FA,Andrew Salas,Mia,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",andrew salas
+FA,Dakota Jordan,SF,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",dakota jordan
+FA,Jancel Villarroel,SF,0.0,"['C', 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL', 'OF'}",jancel villarroel
+FA,Ryan Wideman,SD,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",ryan wideman
+FA,Jhoan De La Cruz,SD,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jhoan de la cruz
+FA,Cristian Hernandez,Mia,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",cristian hernandez
+FA,Rodolfo Castro,Phi,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.23,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'2B/SS', 'UTIL'}",rodolfo castro
+FA,Roderick Arias,NYY,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",roderick arias
+FA,Welbyn Francisca,Cle,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",welbyn francisca
+FA,Starlyn Caba,Mia,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",starlyn caba
+FA,Adrian Santana,TB,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",adrian santana
+FA,Jose Perdomo,Atl,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jose perdomo
+FA,Yandel Ricardo,KC,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",yandel ricardo
+FA,Kellon Lindsey,LAD,0.0,"['SS', '2B/SS', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",kellon lindsey
+FA,Daniel Pierce,TB,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",daniel pierce
+FA,Jordan Yost,Det,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jordan yost
+FA,Austin Charles,KC,0.0,"['3B', 'SS', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",austin charles
+FA,Dorian Soto,Bos,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",dorian soto
+FA,Nick Pratto,Tex,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.05,,stash,,talent_prior·flat↓,,,,19.0,11.0,"{'UTIL', '1B/3B'}",nick pratto
+FA,Jon Singleton,FA,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.39,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', '1B/3B'}",jon singleton
+FA,Jose Devers,Atl,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",jose devers
+FA,Danny Diaz,Bos,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",danny diaz
+FA,Brian Anderson,Atl,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.32,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', '1B/3B'}",brian anderson
+FA,Tyler Nevin,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.3,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', '1B/3B'}",tyler nevin
+FA,Miguel Sano,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",miguel sano
+FA,Eddie Rosario,FA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.52,,stash,,talent_prior·flat↓,,,,27.0,16.0,"{'UTIL', 'OF'}",eddie rosario
+FA,Trey Cabbage,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",trey cabbage
+FA,Bubba Thompson,Cin,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",bubba thompson
+FA,Avisail Garcia,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",avisail garcia
+FA,Franmil Reyes,KC,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",franmil reyes
+FA,Jeisson Rosario,Oak,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",jeisson rosario
+FA,Austin Nola,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",austin nola
+FA,Yasmani Grandal,FA,0.0,"['C', 'UTIL', 'BE', 'IL']",1.47,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'C', 'UTIL'}",yasmani grandal
+FA,Kevin Pillar,FA,0.0,"['CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.64,,stash,,talent_prior·flat↓,,,,29.0,17.0,"{'UTIL', 'OF'}",kevin pillar
+FA,Michael A. Taylor,FA,0.0,"['LF', 'CF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",1.21,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'UTIL', 'OF'}",michael a taylor
+FA,Charlie Blackmon,Col,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.83,,stash,,talent_prior·flat↓,,,,32.0,19.0,"{'UTIL', 'OF'}",charlie blackmon
+FA,Robbie Grossman,FA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.47,,stash,,talent_prior·flat↓,,,,26.0,15.0,"{'UTIL', 'OF'}",robbie grossman
+FA,Adam Duvall,FA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",1.41,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', 'OF'}",adam duvall
+FA,Kevin Kiermaier,FA,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",1.42,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', 'OF'}",kevin kiermaier
+FA,Mitch Haniger,FA,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",1.25,,stash,,talent_prior·flat↓,,,,22.0,13.0,"{'UTIL', 'OF'}",mitch haniger
+FA,Joey Wendle,Atl,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.21,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'2B/SS', 'UTIL'}",joey wendle
+FA,Matt Carpenter,FA,0.0,"['DH', 'UTIL', 'BE', 'IL']",1.3,,stash,,talent_prior·flat↓,,,,23.0,14.0,{'UTIL'},matt carpenter
+FA,J.D. Martinez,FA,0.0,"['DH', 'UTIL', 'BE', 'IL']",1.68,,stash,,talent_prior·flat↓,,,,30.0,17.0,{'UTIL'},jd martinez
+FA,Nick Ahmed,FA,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.12,,stash,,talent_prior·flat↓,,,,20.0,12.0,"{'2B/SS', 'UTIL'}",nick ahmed
+FA,David Hensley,Det,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",david hensley
+FA,Jose Abreu,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.43,,stash,,talent_prior·flat↓,,,,25.0,15.0,"{'UTIL', '1B/3B'}",jose abreu
+FA,Cole Tucker,FA,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",cole tucker
+FA,Niko Goodrum,SD,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",niko goodrum
+FA,Mike Brosseau,SD,0.0,"['3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",mike brosseau
+FA,Whit Merrifield,FA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.66,,stash,,talent_prior·flat↓,,,,29.0,17.0,"{'2B/SS', 'UTIL'}",whit merrifield
+FA,Jean Segura,Bal,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.34,,stash,,talent_prior·flat↓,,,,24.0,14.0,"{'2B/SS', 'UTIL'}",jean segura
+FA,Juan Yepez,Tor,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.61,,stash,,talent_prior·flat↓,,,,28.0,17.0,"{'UTIL', '1B/3B'}",juan yepez
+FA,Elehuris Montero,Col,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",1.31,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', '1B/3B'}",elehuris montero
+FA,Garrett Cooper,Atl,0.0,"['1B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",1.32,,stash,,talent_prior·flat↓,,,,23.0,14.0,"{'UTIL', '1B/3B'}",garrett cooper
+FA,Bryce Ball,Phi,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",bryce ball
+FA,Jesus Aguilar,Oak,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",jesus aguilar
+FA,Kevin Smith,FA,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",kevin smith
+FA,Jace Peterson,Ari,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.29,,stash,,talent_prior·flat↓,,,,23.0,13.0,"{'2B/SS', 'UTIL'}",jace peterson
+FA,Livan Soto,Bal,0.0,"['2B', 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",livan soto
+FA,Austin Shenton,FA,0.0,"['1B', '3B', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",austin shenton
+FA,Robinson Cano,FA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",robinson cano
+FA,Eduardo Diaz,Ari,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eduardo diaz
+FA,Eguy Rosario,FA,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",eguy rosario
+FA,Aledmys Diaz,FA,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.2,,stash,,talent_prior·flat↓,,,,21.0,12.0,"{'2B/SS', 'UTIL'}",aledmys diaz
+FA,Brandon Crawford,FA,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",1.22,,stash,,talent_prior·flat↓,,,,22.0,12.0,"{'2B/SS', 'UTIL'}",brandon crawford
+FA,Ray-Patrick Elijah Didder,SD,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",ray patrick elijah didder
+FA,Tucupita Marcano,SD,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",tucupita marcano
+FA,Peniel Brito,Tor,0.0,"['DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,{'UTIL'},peniel brito
+FA,Juan Alonso,LAD,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",juan alonso
+FA,Yu Chang,TB,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",yu chang
+FA,Freudis Nova,Hou,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",freudis nova
+FA,Erick Pena,KC,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",erick pena
+FA,Carlos Soto,StL,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",carlos soto
+FA,Jamie Westbrook,TB,0.0,"['2B', '3B', '2B/SS', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",jamie westbrook
+FA,Micker Adolfo,ChW,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",micker adolfo
+FA,Samir Duenez,KC,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",samir duenez
+FA,Gianfranco Wawoe,Sea,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",gianfranco wawoe
+FA,B.J. Lopez,Mia,0.0,"['C', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",bj lopez
+FA,Bayron Lora,Tex,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",bayron lora
+FA,Wander Javier,Min,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wander javier
+FA,Travis Blankenhorn,LAA,0.0,"['LF', 'RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",travis blankenhorn
+FA,Gregory Guerrero,LAA,0.0,"['2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",gregory guerrero
+FA,Allen Cordoba,Cin,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",allen cordoba
+FA,Andre Lipcius,ChW,0.0,"['1B', '2B', '2B/SS', '1B/3B', 'IF', 'DH', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL', '1B/3B'}",andre lipcius
+FA,Eliezer Alvarez,Tex,0.0,"['CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eliezer alvarez
+FA,Omar Carrizales,Col,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",omar carrizales
+FA,Edwin Espinal,Det,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",edwin espinal
+FA,Trent Deveaux,LAA,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",trent deveaux
+FA,Larry Ernesto,Mil,0.0,"['LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",larry ernesto
+FA,Freddy Valdez,Bos,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",freddy valdez
+FA,Wilmer Andres Reyes,NYM,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wilmer andres reyes
+FA,Juremi Profar,Tex,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",juremi profar
+FA,Renato Nunez,FA,0.0,"['1B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",renato nunez
+FA,Marcos Brito,Oak,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",marcos brito
+FA,Cullen Large,Tor,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cullen large
+FA,Carlos Rincon,NYM,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",carlos rincon
+FA,Engelb Vielma,Bal,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",engelb vielma
+FA,Christopher Torres,Sea,0.0,"['SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",christopher torres
+FA,Eduardo Lopez,Phi,0.0,"['RF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",eduardo lopez
+FA,Derek Curiel,Pit,0.0,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",derek curiel
+FA,Tyler Bell,Col,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'2B/SS', 'UTIL'}",tyler bell
+FA,Cristian Arguelles,Col,0.0,"[21, 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",cristian arguelles
+FA,Cooper Flemming,TB,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",cooper flemming
+FA,Wandy Asigen,NYM,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",wandy asigen
+FA,Johenssy Colome,Oak,0.0,"[21, 'SS', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",johenssy colome
+FA,Ryder Helfrick,Ari,0.0,"['C', 21, 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",ryder helfrick
+FA,Daniel Jackson,Col,0.0,"['C', 21, 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'C', 'UTIL'}",daniel jackson
+FA,AJ Gracia,Atl,0.0,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,OUT,2026-09-07,,,"{'UTIL', 'OF'}",aj gracia
+FA,Zion Rose,KC,0.0,"[21, 'LF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",zion rose
+FA,Ace Reese,Sea,0.0,"[21, '3B', '1B/3B', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', '1B/3B'}",ace reese
+FA,Trevor Condon,StL,0.0,"[21, 'CF', 'OF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'UTIL', 'OF'}",trevor condon
+FA,Landon Thome,ChW,0.0,"[21, '2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",landon thome
+FA,Chris Hacopian,Wsh,0.0,"[21, '2B', '2B/SS', 'IF', 'UTIL', 'BE', 'IL']",,,,,NO_DATA,,,,,,"{'2B/SS', 'UTIL'}",chris hacopian

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-24",
+  "generated": "2026-08-25",
   "upgrade_floor_fpp": -0.0828,
   "hit_upgrade_floor_xwoba": 0.329,
   "alert_count": 5,
@@ -48,7 +48,7 @@
       "l4": "1/4",
       "whiff_pct": 27.3,
       "xwoba_con": 0.293,
-      "rp3_rank": 105
+      "rp3_rank": 106
     },
     {
       "name": "Chase Dollander",
@@ -63,7 +63,7 @@
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
-      "rp3_rank": 178
+      "rp3_rank": 179
     },
     {
       "name": "Spencer Miles",
