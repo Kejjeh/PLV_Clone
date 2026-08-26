@@ -6,11 +6,26 @@ Baseline is `xfp_rp3_per_start` (the validated SP RoS model) everywhere, so the
 delta column is model-relative and not mixed with the console's Stuff+·vol
 display rate — that rate is carried as a separate context column.
 
-`adj` = rp3, EXCEPT where sp_regime_scan found a CORROBORATED structural break,
-in which case the post-break mean is shrunk toward the pitcher's prior-year
-level with a W_PRIOR pseudo-start count. Corroborated means post-break K% is
-within 5pp of prior-year K% — i.e. a return to an established level, not a run
-of luck.
+`adj` = rp3, EXCEPT where sp_regime_scan found a CORROBORATED **ABSENCE** break
+(an objective >=25-day gap), in which case the post-break mean is shrunk toward
+the pitcher's prior-year level with a W_PRIOR pseudo-start count.
+
+SEARCHED breaks DO NOT MOVE THE NUMBER (added 2026-08-26 after backtest).
+`backtest_sp_regime.py` showed the SEARCHED adjustment is actively HARMFUL and
+consistently so — holdout MAE 3.08 -> 3.41 (+0.33 WORSE), r 0.499 -> 0.400,
+and it beat the plain season-to-date level in only 38-44% of cases across every
+slice (train/holdout x pooled/one-row). Root cause: `find_searched` has no
+magnitude or significance gate, so it returns the max-separation split
+unconditionally and "finds a break" in 80% of pitcher-seasons. It is not
+detecting structure, it is splitting each season at its noisiest point.
+
+ABSENCE, which has an objective trigger and fires on ~20% of seasons, backtests
+POSITIVELY: holdout MAE 3.39 -> 3.17 (-0.22), r 0.453 -> 0.469. Independent-
+sample n is still thin (23 train / 9 holdout pitcher-seasons), so this remains a
+diagnostic, not a validated ranker.
+
+SEARCHED rows are still surfaced as a flag for human review — they just never
+move `adj`.
 """
 from __future__ import annotations
 
@@ -58,11 +73,15 @@ def main() -> int:
                 continue
             base = float(r3["xfp_rp3_per_start"])
             s = scan.get(pid)
-            if s and s["corroborated"] == "True":
+            # ABSENCE only — SEARCHED backtested worse than doing nothing.
+            if s and s["corroborated"] == "True" and s["break_type"] == "ABSENCE":
                 n, fp = float(s["n_post"]), float(s["fp_post"])
                 pri = float(s["fp_prior"]) if s["fp_prior"] else fp
                 adj = (n * fp + W_PRIOR * pri) / (n + W_PRIOR)
                 note = f"{s['break_type'][:3]} {s['break_date'][5:]} n={int(n)}"
+            elif s and s["corroborated"] == "True":
+                adj = base
+                note = f"[{s['break_type'][:3]} unvalidated]"
             else:
                 adj, note = base, ""
             rows.append(dict(
