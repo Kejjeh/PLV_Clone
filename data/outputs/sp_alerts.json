@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-25",
+  "generated": "2026-08-26",
   "upgrade_floor_fpp": -0.0828,
-  "hit_upgrade_floor_xwoba": 0.329,
+  "hit_upgrade_floor_xwoba": 0.323,
   "alert_count": 5,
   "hitter_alert_count": 0,
   "alerts": [
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 22.9,
       "xwoba_con": 0.333,
-      "rp3_rank": 30
+      "rp3_rank": 32
     },
     {
       "name": "Christian Scott",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 18.0,
       "xwoba_con": 0.319,
-      "rp3_rank": 188
+      "rp3_rank": 190
     }
   ],
   "hitter_alerts": [],

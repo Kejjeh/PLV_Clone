@@ -1,0 +1,256 @@
+{
+  "fetched": "2026-08-24",
+  "source_url": "https://pitcherlist.com/top-100-starting-pitchers-for-2026-fantasy-baseball-8-25-week-23-rankings/",
+  "ranks": {
+    "Jacob Misiorowski": 1,
+    "Tarik Skubal": 2,
+    "Chris Sale": 3,
+    "Cam Schlittler": 4,
+    "Yoshinobu Yamamoto": 5,
+    "Drew Rasmussen": 6,
+    "Chase Burns": 7,
+    "Logan Gilbert": 8,
+    "Blake Snell": 9,
+    "Dylan Cease": 10,
+    "Gerrit Cole": 11,
+    "Jacob deGrom": 12,
+    "Jesús Luzardo": 13,
+    "Gavin Williams": 14,
+    "Logan Henderson": 15,
+    "Payton Tolle": 16,
+    "Cade Cavalli": 17,
+    "Parker Messick": 18,
+    "Tyler Glasnow": 19,
+    "Kyle Harrison": 20,
+    "Nolan McLean": 21,
+    "Eury Pérez": 22,
+    "Cristopher Sánchez": 23,
+    "Zack Wheeler": 24,
+    "Paul Skenes": 25,
+    "Troy Melton": 26,
+    "Bryan Woo": 27,
+    "Reid Detmers": 28,
+    "Sean Burke": 29,
+    "Sandy Alcantara": 30,
+    "Braxton Ashcraft": 31,
+    "Trevor Rogers": 32,
+    "Sonny Gray": 33,
+    "Carlos Rodón": 34,
+    "Logan Webb": 35,
+    "Kevin Gausman": 36,
+    "MacKenzie Gore": 37,
+    "Jacob Lopez": 38,
+    "Dustin May": 39,
+    "Walbert Ureña": 40,
+    "Ian Seymour": 41,
+    "Shota Imanaga": 42,
+    "Andrew Painter": 43,
+    "Kade Anderson": 44,
+    "Peter Lambert": 45,
+    "Jared Jones": 46,
+    "Robbie Ray": 47,
+    "Shane McClanahan": 48,
+    "Emerson Hancock": 49,
+    "Noah Cameron": 50,
+    "Kyle Bradish": 51,
+    "Hunter Brown": 52,
+    "Ranger Suarez": 53,
+    "Joey Cantillo": 54,
+    "Eduardo Rodriguez": 55,
+    "Shane Bieber": 56,
+    "Tyler Mahle": 57,
+    "Brandon Pfaadt": 58,
+    "Christian Scott": 59,
+    "Sean Manaea": 60,
+    "Griffin Jax": 61,
+    "Jackson Jobe": 62,
+    "Michael King": 63,
+    "George Klassen": 64,
+    "George Kirby": 65,
+    "Michael Wacha": 66,
+    "Foster Griffin": 67,
+    "Brayan Bello": 68,
+    "Shane Baz": 69,
+    "Will Warren": 70,
+    "Nick Martinez": 71,
+    "Matthew Boyd": 72,
+    "Clay Holmes": 73,
+    "Roki Sasaki": 74,
+    "José Soriano": 75,
+    "Taj Bradley": 76,
+    "Connor Prielipp": 77,
+    "Nick Lodolo": 78,
+    "Landen Roupp": 79,
+    "Bryce Miller": 80,
+    "Bubba Chandler": 81,
+    "Framber Valdez": 82,
+    "Cal Quantrill": 83,
+    "Shane Drohan": 84,
+    "Quinn Mathews": 85,
+    "Cristian Javier": 86,
+    "Anthony Kay": 87,
+    "Aaron Nola": 88,
+    "Zebby Matthews": 89,
+    "Adrian Houser": 90,
+    "David Peterson": 91,
+    "Jake Bennett": 92,
+    "Cody Bradford": 93,
+    "Dean Kremer": 94,
+    "Keider Montero": 95,
+    "Hayden Wesneski": 96,
+    "Martín Pérez": 97,
+    "Zac Thornton": 98,
+    "Kumar Rocker": 99,
+    "Andrew Alvarez": 100
+  },
+  "injured": {
+    "Garrett Crochet": {
+      "tier": "1-10",
+      "injury": "Shoulder"
+    },
+    "Cole Ragans": {
+      "tier": "1-10",
+      "injury": "Elbow (OFS)"
+    },
+    "Shohei Ohtani": {
+      "tier": "1-10",
+      "injury": "Knee"
+    },
+    "Spencer Schwellenbach": {
+      "tier": "11-20",
+      "injury": "Elbow"
+    },
+    "Joe Ryan": {
+      "tier": "11-20",
+      "injury": "Glute"
+    },
+    "Hunter Greene": {
+      "tier": "11-20",
+      "injury": "Elbow"
+    },
+    "Ryan Pepiot": {
+      "tier": "21-30",
+      "injury": "Hip (OFS)"
+    },
+    "Corbin Burnes": {
+      "tier": "21-30",
+      "injury": "TJS"
+    },
+    "Max Meyer": {
+      "tier": "21-30",
+      "injury": "Neck"
+    },
+    "Nick Pivetta": {
+      "tier": "21-30",
+      "injury": "Elbow"
+    },
+    "Justin Steele": {
+      "tier": "21-30",
+      "injury": "Elbow"
+    },
+    "Brandon Woodruff": {
+      "tier": "21-30",
+      "injury": "Shoulder (OFS)"
+    },
+    "Nathan Eovaldi": {
+      "tier": "41-50",
+      "injury": "Elbow"
+    },
+    "Cade Horton": {
+      "tier": "41-50",
+      "injury": "Forearm"
+    },
+    "Kris Bubic": {
+      "tier": "41-50",
+      "injury": "Elbow"
+    },
+    "Connelly Early": {
+      "tier": "41-50",
+      "injury": "Elbow"
+    },
+    "Ryan Weathers": {
+      "tier": "41-50",
+      "injury": "Forearm"
+    },
+    "Clarke Schmidt": {
+      "tier": "51-60",
+      "injury": "TJS"
+    },
+    "Mick Abel": {
+      "tier": "51-60",
+      "injury": "Elbow"
+    },
+    "Robby Snelling": {
+      "tier": "51-60",
+      "injury": "Elbow"
+    },
+    "Ben Brown": {
+      "tier": "51-60",
+      "injury": "Neck"
+    },
+    "Cody Ponce": {
+      "tier": "61-70",
+      "injury": "Knee"
+    },
+    "Zach Eflin": {
+      "tier": "61-70",
+      "injury": "Elbow (OFS)"
+    },
+    "Quinn Priester": {
+      "tier": "61-70",
+      "injury": "Wrist"
+    },
+    "Spencer Strider": {
+      "tier": "61-70",
+      "injury": "Elbow"
+    },
+    "Ryne Nelson": {
+      "tier": "61-70",
+      "injury": "Elbow"
+    },
+    "Edward Cabrera": {
+      "tier": "61-70",
+      "injury": "Blister"
+    },
+    "Trey Yesavage": {
+      "tier": "61-70",
+      "injury": "Knee"
+    },
+    "Michael Soroka": {
+      "tier": "61-70",
+      "injury": "Shoulder"
+    },
+    "Joe Musgrove": {
+      "tier": "61-70",
+      "injury": "Elbow"
+    },
+    "Chase Dollander": {
+      "tier": "71-80",
+      "injury": "UCL Internal Brace"
+    },
+    "Jack Flaherty": {
+      "tier": "71-80",
+      "injury": "Elbow"
+    },
+    "Kutter Crawford": {
+      "tier": "81-90",
+      "injury": "Wrist"
+    },
+    "Tylor Megill": {
+      "tier": "81-90",
+      "injury": "Elbow"
+    },
+    "Reynaldo López": {
+      "tier": "91-100",
+      "injury": "Knee"
+    },
+    "Stephen Kolek": {
+      "tier": "91-100",
+      "injury": "Forearm"
+    },
+    "Hunter Dobbins": {
+      "tier": "91-100",
+      "injury": "Forearm"
+    }
+  }
+}

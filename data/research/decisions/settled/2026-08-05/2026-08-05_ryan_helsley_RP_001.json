@@ -1,0 +1,41 @@
+{
+  "action": null,
+  "bucket": "RP",
+  "confidence": 0.55,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-05_ryan_helsley_RP_001",
+  "executed_at": null,
+  "inputs": {
+    "inputs_schema": 4
+  },
+  "mlbam_id": 664854,
+  "player_name": "Ryan Helsley",
+  "prediction": {
+    "claim": "Helsley outscores Latz by 12+ total FP over the next 21 days",
+    "direction": "at_least",
+    "horizon_end": "2026-08-26",
+    "made_by": "claude",
+    "metric": "fp_margin_vs",
+    "threshold": 12.0,
+    "vs_mlbam": 656641,
+    "vs_name": "Jacob Latz",
+    "window_days": 21
+  },
+  "prediction_settlement": {
+    "comparator_realized": 55.4,
+    "margin": -67.4,
+    "n_events": 0,
+    "observed": -55.4,
+    "realized": 0.0,
+    "settled_on": "2026-08-26",
+    "status": "MISS",
+    "threshold": 12.0
+  },
+  "reason_tag": "rp_for_rp_upgrade",
+  "record_schema": 4,
+  "settled_at": "2026-08-26",
+  "settlement": null,
+  "snapshot_date": "2026-08-05",
+  "verdict_top": "PREDICT"
+}

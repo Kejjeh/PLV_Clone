@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-25",
+ "as_of": "2026-08-26",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -43,6 +43,12 @@
    "abbr": "ATH",
    "name": "Carlos Cortes",
    "pos": "RF"
+  },
+  "688297": {
+   "team": "Athletics",
+   "abbr": "ATH",
+   "name": "Chris Roycroft",
+   "pos": "P"
   },
   "687231": {
    "team": "Athletics",
@@ -3956,6 +3962,12 @@
    "name": "José Caballero",
    "pos": "SS"
   },
+  "623437": {
+   "team": "New York Yankees",
+   "abbr": "NYY",
+   "name": "Justin Topa",
+   "pos": "P"
+  },
   "665645": {
    "team": "New York Yankees",
    "abbr": "NYY",
@@ -4248,12 +4260,6 @@
    "team": "Milwaukee Brewers",
    "abbr": "MIL",
    "name": "Joey Ortiz",
-   "pos": "SS"
-  },
-  "680716": {
-   "team": "Milwaukee Brewers",
-   "abbr": "MIL",
-   "name": "Jonathan Ornelas",
    "pos": "SS"
   },
   "690986": {
@@ -6374,6 +6380,12 @@
    "name": "Mark Manfredi",
    "pos": "P"
   },
+  "690279": {
+   "team": "Colorado Rockies",
+   "abbr": "COL",
+   "name": "Mason Adams",
+   "pos": "P"
+  },
   "685326": {
    "team": "Colorado Rockies",
    "abbr": "COL",
@@ -7860,12 +7872,6 @@
    "team": "Washington Nationals",
    "abbr": "WSH",
    "name": "Tom Cosgrove",
-   "pos": "P"
-  },
-  "592866": {
-   "team": "Washington Nationals",
-   "abbr": "WSH",
-   "name": "Trevor Williams",
    "pos": "P"
   },
   "702021": {

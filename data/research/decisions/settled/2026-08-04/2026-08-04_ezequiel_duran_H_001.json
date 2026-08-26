@@ -1,0 +1,53 @@
+{
+  "action": "swap",
+  "bucket": "H",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": null,
+    "dpwin_chosen": null,
+    "dpwin_gap": null,
+    "dpwin_rejected": 0.027,
+    "dtitle_equity_chosen": null,
+    "regime": null,
+    "rejected_bucket": "H",
+    "rejected_mlbam": 687462,
+    "rejected_name": "Spencer Horwitz",
+    "source_run_id": "2026-08-03T221924_7"
+  },
+  "counterfactual_settlement": {
+    "chosen_total_fp": 26.0,
+    "classification": "RIGHT_CALL",
+    "dpwin_gap": null,
+    "event_unit": "PA",
+    "fp_gained": 18.0,
+    "low_sample": false,
+    "n_events_chosen": 78,
+    "n_events_rejected": 59,
+    "rejected_never_played": false,
+    "rejected_total_fp": 8.0,
+    "threshold": 10.0,
+    "window_days": 21,
+    "window_end": "2026-08-26",
+    "window_start": "2026-08-05"
+  },
+  "decision_id": "2026-08-04_ezequiel_duran_H_001",
+  "executed_at": "2026-08-04T18:16:14",
+  "inputs": {
+    "bucket_source": "resolver",
+    "dropped_name": "Griffin Jax",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "7 candidate runs preceded the move, took latest (2026-08-03T221924_7)"
+  },
+  "mlbam_id": 677649,
+  "player_name": "Ezequiel Duran",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": "2026-08-26T07:55:36",
+  "settlement": null,
+  "snapshot_date": "2026-08-04",
+  "verdict_top": "SWAP"
+}

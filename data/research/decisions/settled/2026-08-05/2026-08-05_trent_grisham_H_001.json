@@ -1,0 +1,41 @@
+{
+  "action": null,
+  "bucket": "H",
+  "confidence": 0.6,
+  "counterfactual": null,
+  "counterfactual_settlement": null,
+  "decision_id": "2026-08-05_trent_grisham_H_001",
+  "executed_at": null,
+  "inputs": {
+    "inputs_schema": 4
+  },
+  "mlbam_id": 663757,
+  "player_name": "Trent Grisham",
+  "prediction": {
+    "claim": "Grisham outscores Ezequiel Duran by 15+ total FP over the next 21 days",
+    "direction": "at_least",
+    "horizon_end": "2026-08-26",
+    "made_by": "claude",
+    "metric": "fp_margin_vs",
+    "threshold": 15.0,
+    "vs_mlbam": 677649,
+    "vs_name": "Ezequiel Duran",
+    "window_days": 21
+  },
+  "prediction_settlement": {
+    "comparator_realized": 26.0,
+    "margin": 12.0,
+    "n_events": 74,
+    "observed": 27.0,
+    "realized": 53.0,
+    "settled_on": "2026-08-26",
+    "status": "HIT",
+    "threshold": 15.0
+  },
+  "reason_tag": "playoff_fp_upgrade",
+  "record_schema": 4,
+  "settled_at": "2026-08-26",
+  "settlement": null,
+  "snapshot_date": "2026-08-05",
+  "verdict_top": "PREDICT"
+}
