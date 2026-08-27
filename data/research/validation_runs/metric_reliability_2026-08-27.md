@@ -172,3 +172,45 @@ model. It does not; it was measured on an easier problem.
 **Methodological rule to carry forward:** never compare an r across frames.
 Target-window length alone moved r by +0.16 here, which is larger than any
 feature effect measured anywhere in this session.
+
+---
+
+# ADDENDUM 2 — bat speed DOES add over the hitter FP level. Gotcha #12 confirmed.
+
+CLAUDE.md #12 names bat speed as the ONE process metric that adds forward-FP
+signal beyond the scoring level. Tested here on an independent panel.
+
+Cohort: **572 hitter-seasons / 312 hitters, 2024-2026** (bat tracking is 2024+;
+requires >= 80 swings in the first half). Player-grouped 5-fold OOS, matched
+200-PA halves, predicting 2nd-half FP/game.
+
+| model | r |
+|---|---|
+| FP level ALONE | 0.3970 |
+| FP level + bat speed | 0.4070 |
+| FP level + bat speed + fast-swing% | 0.4158 |
+| ALL features | **0.4536** |
+| ALL except the bat-speed pair | 0.3957 |
+
+- bat speed over the FP level: **+0.0100 r**
+- **bat-speed PAIR over everything else: +0.0579 r**
+- **partial r(bat speed, 2H FP | 1H FP level) = +0.1233**,
+  95% CI **[+0.042, +0.203]** — **excludes zero**, n=572.
+
+Power check: the smallest partial r detectable at 80% power with n=572 is ~0.117,
+and the observed effect is 0.123. So this sits right at the edge of power — the
+CI excluding zero is real but the estimate is not precise. Treat +0.12 as
+"positive, magnitude uncertain," not as a calibrated coefficient.
+
+**Contrast that earns the headline:** the five ordinary hitter rates
+(K%/BB%/TB/HR/SB) added **+0.010** over the FP level on the 9-year panel. The
+bat-speed pair adds **+0.058** here. Bat speed is not one of the rates — it is
+the exception, exactly as gotcha #12 says, now confirmed from a second direction.
+
+Consistent with gotcha #12's other half: this measures the LEVEL of first-half
+bat speed, not its trajectory. The in-season DELTA remains REJECTED
+(`bat_speed_stabilization_and_delta_2026-07-29.md`).
+
+**Frame note, applying this session's own rule:** the FP-level baseline reads
+0.397 here vs 0.480 on the 9-year panel. Different cohort (2024-26, bat-speed
+coverage required). Compare only WITHIN this table — never across frames.

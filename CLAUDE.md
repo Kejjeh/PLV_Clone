@@ -365,6 +365,46 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
     **(Both closed: σ-coverage 2026-07-10 NO-CHANGE α=2.41; logged-snapshot retro 2026-07-19
     CONFIRMED — registry entry same date. New watch: SP volume edge decay, next 4.13 run.)**
 
+14. **In-season "he's a different player now" is a CLOSED question — do not re-derive
+    (2026-08-26/27).** Five independent attempts failed: short-window K% delta (REJECTED),
+    searched changepoint (REJECTED, actively harmful), a 150-cell parameter sweep (no cell
+    replicates), an event taxonomy (no event beats a matched random split), and a properly
+    tested structural break (`sp_structural_break.py`: permutation null + BH-FDR → only
+    **3 of 1339** pitcher-seasons have a real in-season K% break, 0.22%). **Nothing regime-
+    derived may move rh3/rp3/rprs2.** What IS true and reusable:
+    - **~89% of apparent in-season change is sampling noise.** Over-dispersion vs pure
+      binomial is only **1.114x** (SP) / 1.104x (hitters).
+    - **Two bars, and confusing them is the classic error.** Split point GIVEN by an event
+      (IL, trade, role) → judge at **z > 1.83** (one test). Split point you SEARCHED for →
+      **SP 2.58 / hitters 2.79**, because the max of ~100 draws is not one draw. 39% of
+      pitcher-seasons and 50% of hitter-seasons clear the *given* bar at their best split
+      BY CONSTRUCTION; the hitter max-split MEDIAN is exactly 1.83.
+    - **Events do not CAUSE breaks** — excess |ΔK-BB%| over matched same-position controls
+      is ~0 for every type (IL_SHORT +0.02, IL_MED +0.14, TRADE +0.09, IL_LONG −0.07, all
+      n.s.). An event only supplies a split point that is *given*, so it pays no search
+      penalty. IL returns LOOK like breaks purely because of where in the season they fall.
+    - Use `scripts/xfp/lib/split_floor.py` (`/split-check`) as a SCREEN. Clearing the floor
+      means the gap is real; it does NOT mean it predicts (the best rule lost on holdout,
+      t = −2.16).
+    Memo: `data/research/validation_runs/sp_regime_break_finding_2026-08-26.md`.
+
+15. **Read the OUTCOME for hitters, the PROCESS for pitchers (validated 2026-08-27).**
+    1st-half feature vs 2nd-half scoring, matched halves:
+    - **Hitters — the FP LEVEL (+0.480) beats every rate metric** (TB/PA +0.288, K% −0.234,
+      HR/PA +0.230, BB% +0.167, SB/PA +0.067). Five rates add **+0.010** OOS over the level.
+    - **SPs — K% (+0.540) beats the pitcher's own FP level (+0.463).** Everything else adds
+      +0.001 over K%. But K% is NOT uniquely informative: dropping it costs only +0.004
+      because K is a term in the SP FP formula, so the two are algebraically linked.
+    - **Bat speed is the real hitter exception** (confirms gotcha #12 from a fresh panel):
+      partial r vs the FP level **+0.123, 95% CI [+0.042, +0.203]**, n=572 hitter-seasons
+      2024-26; the bat-speed pair (mean + fast-swing%) adds **+0.058 r** over all other
+      features. Read the LEVEL, never the trajectory.
+    - **Pitchers and hitters INVERT on walks.** SP BB% is the weakest signal measured
+      (r_fwd −0.144, wrong sign; reliability 0.483) while hitter BB% reliability is 0.625.
+      The walk belongs to the batter — independent proof of "watch STUFF, not walks" and of
+      `stabilization.NEVER_STABILIZES` listing pitcher `bb_pct`.
+    Memo: `data/research/validation_runs/metric_reliability_2026-08-27.md`.
+
 ## The P(win) decision layer (built 2026-07-29) — read before roster advice
 
 `P(my_total > opp_total)` is what wins BrownU, and it is NOT the same objective as
@@ -532,6 +572,26 @@ Rule 13 throughout: this layer never touches rh3/rp3/rprs2/baseline xFP.
     every player added-then-dropped within 48h by ANY team in the last 30 days
     against current rp3/rh3/rprs2 rank, 3+ weeks after the churn event so real
     signal has had time to show. Run as part of the regular `/fa-monitor` sweep.
+
+17. **Two statistical traps that cost this repo real time — check both, every study
+    (2026-08-27).**
+    a. **NEVER compare an r across frames.** Target-window length alone moved r from
+       0.363 (2-3 remaining starts) to 0.523 (16+) — larger than ANY feature effect
+       measured in that session. A durability filter moved it 0.247 → 0.529. An
+       "our metric beats the model" claim is a frame artifact until both sides are
+       measured on the SAME population and the SAME target window. This retracted a
+       headline finding the same day it was made.
+    b. **A permutation p cannot go below 1/(B+1).** BH-FDR over M tests needs the
+       smallest p ≤ q/M. With B=400 and M=1339 the floor is 0.0025 against a bar of
+       7.5e-5, so NO test can EVER be rejected — a guaranteed null that looks like a
+       finding. **Always assert `1/(B+1) < q/M` before believing a permutation null.**
+    c. Corollary already bitten twice: **always report one-row-per-player-season next to
+       any pooled result.** A pooled partial r of +0.047 (N=14,601) came from 1,327
+       pitcher-seasons and flipped to −0.049 once collapsed. Pooled n is not sample size.
+    d. **Dispersion (observed/binomial variance) is only valid on genuine 0/1-per-event
+       rates.** TB/PA (0-4 per PA) and ER/TBF (a count) inflate to 1.81/1.36 while having
+       the LOWEST reliability; including them flips the pooled correlation from +0.459 to
+       −0.526.
 
 ## Memory pointers (for context-dense lookups)
 
