@@ -140,7 +140,20 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # the moment this file was written would go red on a NEIGHBOUR's legitimate new
 # guard rather than on a real regression. Re-tighten to census+2 / census+4 once
 # the audit's test additions have all landed.
-MAX_GUARDED_FILES = 50
+# 2026-08-27, +3 files (50 -> 53): the bug-audit wave converted three HARD
+# FAILURES into honest data gates, which is what this ratchet wants to see
+# happen deliberately rather than reflexively:
+#   test_leverage_index / test_trend_signal_centering — both read gitignored
+#     statcast parquets and ERRORED on a fresh checkout, so "no data here"
+#     was indistinguishable from "code is broken". That confusion is exactly
+#     what let a stale baseline of 8 failures go unexamined for weeks.
+#   test_triangulate — skips a verdict lock when the lens stack degraded
+#     (new result['degraded_lenses']), because a verdict synthesized without
+#     statcast is not evidence about the code.
+#   test_hygiene_python_floor / test_lens_health — NEW guard-bearing files,
+#     each guarding on interpreter version rather than on data.
+# Sites stayed under 100, so only the file bound moved.
+MAX_GUARDED_FILES = 53
 MAX_GUARD_SITES = 100
 
 

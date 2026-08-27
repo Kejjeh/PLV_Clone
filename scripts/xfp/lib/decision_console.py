@@ -57,7 +57,7 @@ from plv_clone.cap_math import (
 )
 
 try:
-    from lib.period_meta import resolve_current_period_meta, espn_period_meta
+    from .period_meta import resolve_current_period_meta, espn_period_meta
 except ImportError:                                       # imported as lib sibling
     from period_meta import resolve_current_period_meta, espn_period_meta
 
@@ -159,7 +159,7 @@ def _counted_total(starts):
 
 def _default_role_detector(player_or_row):
     try:
-        from lib.pitcher_role import detect_pitcher_role
+        from .pitcher_role import detect_pitcher_role
     except ImportError:
         from pitcher_role import detect_pitcher_role
     return detect_pitcher_role(player_or_row)

@@ -101,7 +101,15 @@ def test_a_real_decline_still_trips_the_cutoff_under_drift():
 
 def test_live_table_exposes_centered_axes():
     """Smoke: the production table still builds and its axes are centred."""
-    t = TS.hitter_trend_table(2026, 2025)
+    # The empty-table guard below sat one step too late: hitter_trend_table
+    # reads statcast_{year}.parquet, which is gitignored, so on a fresh
+    # checkout it raised FileNotFoundError before it could return anything to
+    # check. That turned "no data here" into a hard failure, which is how a
+    # data-gated test ends up masquerading as a broken one. (Fixed 2026-08-27.)
+    try:
+        t = TS.hitter_trend_table(2026, 2025)
+    except FileNotFoundError as exc:
+        pytest.skip(f"statcast substrate not present in this checkout ({exc})")
     if not len(t):
         pytest.skip("no bat-tracking table available in this checkout")
     for z in ("z_bs", "z_fast", "z_aa"):
