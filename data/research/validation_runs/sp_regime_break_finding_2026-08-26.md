@@ -386,3 +386,86 @@ Practical rule, replacing "which events matter":
 
 Steps 1-4 are a screen against fooling yourself. Step 5 is why nothing in this
 family may move a projection.
+
+---
+
+# v5 — THE FLOOR IS BINOMIAL. Two bars, and pitchers/hitters invert on walks.
+
+`scripts/xfp/lib/split_floor.py` (+ `build_hitter_event_panel.py`).
+26,954 SP splits over 1,331 pitcher-seasons; 243,667 hitter splits over 2,469
+hitter-seasons; 2017-2026.
+
+## 1. The floor is a FORMULA, not a table
+
+Express the gap in z units against the sampling SE and the p90 is flat:
+
+| | z p90 |
+|---|---|
+| across sample size (50 → 300+ TBF) | 1.79 · 1.79 · 1.85 · 1.83 · 1.88 |
+| across K-BB% talent quintiles | 1.77 · 1.79 · 1.83 · 1.84 · 1.92 |
+| **hitters** | **1.82** |
+| **pitchers** | **1.83** |
+
+Raw p90 rises with a pitcher's rate (8.68 → 9.97pp across quintiles) ONLY because
+p(1−p) does. **The archetype effect is entirely mechanical.** One constant covers
+every player, so this replaces the v4 lookup table with
+
+    threshold = z* · sqrt( V · (1/n1 + 1/n2) ),  V = (p_k + p_bb) − (p_k − p_bb)²
+
+## 2. Almost all apparent in-season change is sampling noise
+
+Observed |z| mean 0.889 vs 0.798 for a pure half-normal → **over-dispersion of
+only 1.114x**. About **89% of what looks like a pitcher changing mid-season is
+sampling noise**; the true-talent wander component is ~0.49x the sampling SE.
+
+## 3. TWO BARS — confusing them is the easiest way to fool yourself
+
+| how you got the split point | bar | why |
+|---|---|---|
+| **given by an EVENT** (IL, trade, role) | **1.83** | one test |
+| **SEARCHED** (you found the biggest gap) | **SP 2.58 / H 2.79** | ~100 tests; the max of 100 draws is not one draw |
+
+Measured on the max-split statistic itself. **39% of pitcher-seasons and 50% of
+hitter-seasons clear the GIVEN bar at their best split by construction.** The
+hitter max-split MEDIAN is 1.83 — exactly the single-split p90.
+
+Live demonstration: 6 of 11 Ligers hitters "EXCEED FLOOR" at their most extreme
+split — 55%, which is precisely the league-wide rate. Re-judged against the
+search-corrected 2.79, **all six are ordinary** (max z = 2.41, Guerrero).
+
+## 4. Pitchers and hitters INVERT on walks
+
+| metric | SP dispersion | Hitter dispersion |
+|---|---|---|
+| K% | 1.134 | 1.104 |
+| K−BB% | 1.114 | 1.104 |
+| **BB%** | **1.053** (least real) | **1.139** (MOST real) |
+
+**The walk belongs to the batter.** Pitcher command barely moves within a season
+— independently ratifying `stabilization.NEVER_STABILIZES` listing pitcher
+`bb_pct`, and CLAUDE.md gotcha #11's "watch STUFF, not walks". Hitter plate
+discipline genuinely does move. Neither was assumed; both fall out of the same
+estimator applied to both sides.
+
+## 5. The rule STILL fails predictively — final closure
+
+Best-designed rule (EVENT-triggered AND K-BB% AND ≥100 TBF/side AND z>1.83),
+no lookahead:
+
+    TRAIN    fired 0.8%   MAE 3.91 → 3.82   gain +0.168   t = +0.25
+    HOLDOUT  fired 1.0%   MAE 3.36 → 5.31   gain −1.462   t = **−2.16**
+
+Significantly WORSE on holdout. Five independent attempts have now failed:
+short-window delta (REJECTED), searched break (REJECTED), 150-cell sweep (no
+replication), event taxonomy (no event exceeds control), and this.
+
+## FINAL DISPOSITION
+
+`split_floor` ships as a **screen**, never a number. Clearing the floor means the
+gap is real; it does **not** mean it predicts. Nothing in this family may move
+rh3/rp3/rprs2, and `sp_regime_board.adj` stays equal to rp3.
+
+Carry forward, independent of breaks entirely:
+- the two-bar distinction (given 1.83 vs searched 2.58/2.79)
+- over-dispersion ~1.11x → most in-season movement is noise
+- the SP/hitter walk inversion
