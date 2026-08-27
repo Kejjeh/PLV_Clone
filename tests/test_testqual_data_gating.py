@@ -167,11 +167,15 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # module-level importorskip as test_leverage_engine (the engine needs the
 # dashboard import chain). It guards the two SP levers of assemble(), which
 # silently reported "benching/dropping him costs nothing" on a malformed key.
-MAX_GUARDED_FILES = 56
+# 2026-08-27, +1 file (56 -> 57): test_settlement_lookup_failure uses one
+# module-level importorskip for settle_decisions (a driver import). It guards
+# the fetch-failure vs real-zero distinction in the settlement layer, which
+# had been graded as a free win for the chosen player.
+MAX_GUARDED_FILES = 57
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 101
+MAX_GUARD_SITES = 102
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

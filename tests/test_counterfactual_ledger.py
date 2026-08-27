@@ -181,15 +181,46 @@ def test_wash_inside_the_threshold_band():
 def test_a_rejected_player_who_never_played_scores_zero_not_missing():
     """THE design decision: playing time is part of what you chose. If the
     alternative got hurt or benched, that is the decision paying off — not a
-    missing value to discard."""
+    missing value to discard.
+
+    UNCHANGED as a rule; only how "never played" reaches here changed.
+    It used to arrive as ``None``, which ALSO meant "the gamelog lookup
+    failed" — so a decision with no data behind it was graded a RIGHT_CALL
+    with the full fp_gained. `_totals_in_window` now returns a real 0.0 for a
+    successful lookup with no games in the window, and reserves None for a
+    failed fetch (2026-08-27). The behaviour this test pins is identical."""
     out = CF.settle_counterfactual(_rec("H"), today=date(2026, 7, 25),
-                                   chosen_total_fp=35.0, rejected_total_fp=None,
+                                   chosen_total_fp=35.0, rejected_total_fp=0.0,
                                    n_events_chosen=80, n_events_rejected=0)
     blk = out.counterfactual_settlement
     assert blk["rejected_total_fp"] == 0.0
     assert blk["rejected_never_played"] is True
     assert blk["fp_gained"] == pytest.approx(35.0)
     assert blk["classification"] == CF.RIGHT_CALL
+
+
+def test_a_failed_rejected_lookup_is_unsettleable_not_a_free_win():
+    """The case that used to be indistinguishable from "never played".
+
+    A None on the rejected side means the gamelog fetch failed. Coercing it
+    to 0.0 credited the chosen player with the entire fp_gained and graded a
+    decision we have no data for as RIGHT_CALL — a bias pointing one way, on
+    the side issue #54 established is usually an unrostered FA.
+    """
+    out = CF.settle_counterfactual(_rec("H"), today=date(2026, 7, 25),
+                                   chosen_total_fp=35.0, rejected_total_fp=None,
+                                   n_events_chosen=80, n_events_rejected=0)
+    blk = out.counterfactual_settlement
+    assert blk["classification"] == CF.UNSETTLEABLE
+    assert blk["lookup_failed_side"] == "rejected"
+    assert "fp_gained" not in blk, "a failed lookup must not report a gain"
+
+
+def test_a_failed_lookup_on_both_sides_names_both():
+    out = CF.settle_counterfactual(_rec("H"), today=date(2026, 7, 25),
+                                   chosen_total_fp=None, rejected_total_fp=None,
+                                   n_events_chosen=0, n_events_rejected=0)
+    assert out.counterfactual_settlement["lookup_failed_side"] == "both"
 
 
 def test_a_chosen_player_with_no_events_is_unsettleable_not_wrong():

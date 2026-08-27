@@ -165,11 +165,17 @@ def _load_existing_settlement(root: Path, rec: DecisionRecord) -> Optional[Decis
 # ---------------------------------------------------------------------------
 
 
-def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> list[dict]:
+def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> Optional[list[dict]]:
     """Pull a season gameLog from the MLB Stats API for `group` in {hitting,pitching}.
 
     Returns one dict per game with the box-score fields the BrownU scorer
-    needs. Network/JSON failure returns [] (caller treats as 'no data').
+    needs.
+
+    Returns **None** when the fetch itself failed, and a (possibly empty)
+    list when it succeeded. Those used to be the same value — [] — which
+    collapsed "the API did not answer" into "this player did not play". The
+    settlement layer then graded a decision against data it never received.
+    (Fixed 2026-08-27.)
     """
     url = (
         f"https://statsapi.mlb.com/api/v1/people/{mlbam_id}"
@@ -181,10 +187,10 @@ def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> list[dict]:
             payload = json.loads(r.read())
     except Exception as exc:
         print(f"  WARN gameLog fetch failed for {mlbam_id} {group} {season}: {exc}")
-        return []
+        return None
     stats_list = payload.get("stats", []) or []
     if not stats_list:
-        return []
+        return []   # answered, and he has no games this season
     splits = stats_list[0].get("splits", []) or []
     out: list[dict] = []
     for s in splits:
@@ -293,12 +299,21 @@ def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
     Total rather than per-unit, deliberately: a decision includes the playing time
     you chose, so a player who was hurt or benched should score 0, not be dropped
     as unsettleable. See plv_clone.decisions.counterfactual for the full argument.
+
+    That is now what actually happens. This used to return None whenever `rel`
+    was empty, which is the hurt-or-benched case the docstring above says
+    should score 0 — so the code contradicted its own contract. None is
+    reserved for a FAILED LOOKUP; a successful lookup with no relevant games
+    returns a real 0.0. (Fixed 2026-08-27.)
     """
     group = "hitting" if bucket == "H" else "pitching"
     key = (int(mlbam), start.year, group)
     if key not in gamelog_cache:
         gamelog_cache[key] = _fetch_gamelog(int(mlbam), start.year, group)
-    games = _games_in_window(gamelog_cache[key], start, end)
+    log = gamelog_cache[key]
+    if log is None:
+        return None, 0          # the fetch failed — nothing to grade against
+    games = _games_in_window(log, start, end)
     if bucket == "H":
         rel = games
         total = sum(_SCORING.score_hitter_game(g) for g in rel)
@@ -312,7 +327,9 @@ def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
         total = sum(_SCORING.score_pitcher_relief(g) for g in rel)
         n = len(rel)
     if not rel:
-        return None, 0
+        # Fetched successfully; he simply did not appear in the window. That
+        # is a real zero and part of what was chosen — not missing data.
+        return 0.0, 0
     return float(total), int(n)
 
 
@@ -451,7 +468,7 @@ def _settle_one(
     cache_key = (int(rec.mlbam_id), snap.year, group)
     if cache_key not in gamelog_cache:
         gamelog_cache[cache_key] = _fetch_gamelog(int(rec.mlbam_id), snap.year, group)
-    games = gamelog_cache[cache_key]
+    games = gamelog_cache[cache_key] or []   # None (fetch failed) -> no data
 
     if rec.bucket == "H":
         actuals = _hitter_actuals(games, snap, window_end)
