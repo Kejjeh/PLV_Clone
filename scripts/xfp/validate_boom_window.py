@@ -37,6 +37,8 @@ ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(ROOT, "scripts/xfp"))
 from metric_reliability import load, PIT, HIT  # noqa: E402
 
+RP_PANEL = os.path.join(ROOT, "data/research/xfp_cache/rp_event_panel_2017_2026.csv")
+
 # Per-side config. Thresholds are the shipped display cutoffs from
 # lib/boom_bust (SP_BOOM/BUST, H_BOOM/BUST); windows are the /boom-bust-history
 # defaults; sigma is the panel-mean per-unit SD.
@@ -45,6 +47,11 @@ SIDES = {
                grid=(3, 5, 8, 12, 20), panel="PIT", unit="start"),
     "H":  dict(boom=5.0, bust=0.0, window=21, sigma=3.30,
                grid=(7, 14, 21, 28, 40), panel="HIT", unit="game"),
+    # RP: thresholds from lib/boom_bust RP_BOOM/RP_BUST, window = the
+    # /boom-bust-history RP default (L15 appearances). sigma is the panel SD of
+    # RP FP per relief appearance (54,561 appearances, 2017-2026).
+    "RP": dict(boom=6.0, bust=0.0, window=15, sigma=4.34,
+               grid=(5, 10, 15, 20, 30), panel="RP", unit="appearance"),
 }
 SIDE = os.environ.get("PLV_BOOM_SIDE", "SP")
 CFG = SIDES[SIDE]
@@ -81,12 +88,14 @@ def brier(p, y):
 
 def main() -> int:
     is_sp = SIDE == "SP"
-    by = load(PIT if is_sp else HIT, "pitcher" if is_sp else "batter")
+    panel = {"PIT": PIT, "HIT": HIT, "RP": RP_PANEL}[CFG["panel"]]
+    by = load(panel, "pitcher" if CFG["panel"] != "HIT" else "batter")
     print(f"side={SIDE}  boom>={SP_BOOM}  bust<{SP_BUST}  window=L{W}  "
           f"sigma={SIGMA_GLOBAL}\n")
     rows = []
     for (pid, yr), g in by.items():
         st = [r for r in g if (int(r["gs"] or 0) == 1)] if is_sp else list(g)
+        # RP panel is already relief-only (gs==0 rows were excluded at fetch).
         if len(st) < W + 2:
             continue
         fp = np.array([float(r["fp"]) for r in st])
@@ -106,7 +115,7 @@ def main() -> int:
                 nxt8_boom=boom[i:i + W].mean() if i + W <= len(fp) else np.nan,
             ))
     n = len(rows)
-    ent = "pitcher" if SIDE == "SP" else "hitter"
+    ent = "hitter" if SIDE == "H" else "pitcher"
     print(f"panel: {n:,} forecasts / {len({r['key'] for r in rows}):,} {ent}-seasons")
     base_b = np.mean([r["y_boom"] for r in rows])
     base_u = np.mean([r["y_bust"] for r in rows])

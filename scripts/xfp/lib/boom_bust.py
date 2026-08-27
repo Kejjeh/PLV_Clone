@@ -323,8 +323,15 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
 BOOM_SHRINK_SLOPE = {3: 0.179, 5: 0.261, 8: 0.353, 12: 0.431, 20: 0.575}
 BOOM_SHRINK_SLOPE_H = {7: 0.105, 14: 0.192, 21: 0.267, 28: 0.330,
                        40: 0.414, 60: 0.520}
+# RP measured 2026-08-27 on 54,561 relief appearances / 1,282 RP-seasons
+# (rp_event_panel_2017_2026.csv, boom >= 6 FP incl. 5*SV + 3*HLD). RPs sit
+# BETWEEN the two: an L15 relief read retains 57% of its signal, more than a
+# hitter's L21 (25%) and more than an SP's L8 (35%). Save/hold leverage is a
+# durable role property, so relievers separate more than hitters do.
+BOOM_SHRINK_SLOPE_RP = {5: 0.336, 10: 0.491, 15: 0.568, 20: 0.586, 30: 0.601}
 SP_BOOM_BASE = 0.305   # league SP boom rate on the same panel
 H_BOOM_BASE = 0.207    # league hitter boom rate on the same panel
+RP_BOOM_BASE = 0.266   # league RP boom rate on the same panel
 
 
 def forward_rate(observed_rate: float, window: int, side: str = "SP",
@@ -332,9 +339,10 @@ def forward_rate(observed_rate: float, window: int, side: str = "SP",
     """Shrink an observed short-window boom/bust rate toward the base rate.
 
     ``observed_rate`` is a fraction (3/8 -> 0.375), ``window`` the number of
-    units it came from (STARTS for SP, GAMES for a hitter), ``side`` one of
-    "SP" / "H". Interpolates the slope for an unlisted window and clamps to the
-    measured range rather than extrapolating off the end.
+    units it came from (STARTS for SP, GAMES for a hitter, APPEARANCES for an
+    RP), ``side`` one of "SP" / "H" / "RP". Interpolates the slope for an
+    unlisted window and clamps to the measured range rather than extrapolating
+    off the end.
 
     Returns the forward estimate: ``base + slope * (observed - base)``.
 
@@ -342,12 +350,16 @@ def forward_rate(observed_rate: float, window: int, side: str = "SP",
     0.33
     >>> round(forward_rate(0.0, 21, "H"), 3)
     0.152
+    >>> round(forward_rate(6/15, 15, "RP"), 3)
+    0.342
     """
     if observed_rate is None or window is None or window <= 0:
         return float("nan")
-    table = BOOM_SHRINK_SLOPE_H if side == "H" else BOOM_SHRINK_SLOPE
+    table = {"H": BOOM_SHRINK_SLOPE_H,
+             "RP": BOOM_SHRINK_SLOPE_RP}.get(side, BOOM_SHRINK_SLOPE)
     if base is None:
-        base = H_BOOM_BASE if side == "H" else SP_BOOM_BASE
+        base = {"H": H_BOOM_BASE,
+                "RP": RP_BOOM_BASE}.get(side, SP_BOOM_BASE)
     ws = sorted(table)
     if window in table:
         slope = table[window]
