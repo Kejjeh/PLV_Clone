@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-26",
+ "as_of": "2026-08-27",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1124,6 +1124,12 @@
    "name": "Blade Tidwell",
    "pos": "P"
   },
+  "694820": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Braxton Roxby",
+   "pos": "P"
+  },
   "805811": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1374,7 +1380,7 @@
    "team": "San Francisco Giants",
    "abbr": "SF",
    "name": "Turner Hill",
-   "pos": "CF"
+   "pos": "LF"
   },
   "682674": {
    "team": "San Francisco Giants",
@@ -1422,6 +1428,12 @@
    "team": "St. Louis Cardinals",
    "abbr": "STL",
    "name": "Brycen Mautz",
+   "pos": "P"
+  },
+  "685464": {
+   "team": "St. Louis Cardinals",
+   "abbr": "STL",
+   "name": "Cade Winquest",
    "pos": "P"
   },
   "657571": {
@@ -3206,6 +3218,12 @@
    "name": "Reynaldo López",
    "pos": "P"
   },
+  "676568": {
+   "team": "Atlanta Braves",
+   "abbr": "ATL",
+   "name": "Ricky Vanasco",
+   "pos": "P"
+  },
   "663158": {
    "team": "Atlanta Braves",
    "abbr": "ATL",
@@ -3734,6 +3752,12 @@
    "name": "Owen Caissie",
    "pos": "RF"
   },
+  "687287": {
+   "team": "Miami Marlins",
+   "abbr": "MIA",
+   "name": "Patrick Monteverde",
+   "pos": "P"
+  },
   "664126": {
    "team": "Miami Marlins",
    "abbr": "MIA",
@@ -3997,6 +4021,12 @@
    "abbr": "NYY",
    "name": "Max Schuemann",
    "pos": "LF"
+  },
+  "605242": {
+   "team": "New York Yankees",
+   "abbr": "NYY",
+   "name": "Michael Fulmer",
+   "pos": "P"
   },
   "665828": {
    "team": "New York Yankees",
@@ -4716,7 +4746,7 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Jordan Lawlar",
-   "pos": "LF"
+   "pos": "CF"
   },
   "678489": {
    "team": "Arizona Diamondbacks",
@@ -5047,6 +5077,12 @@
    "abbr": "BAL",
    "name": "Leody Taveras",
    "pos": "CF"
+  },
+  "676679": {
+   "team": "Baltimore Orioles",
+   "abbr": "BAL",
+   "name": "Luis Vázquez",
+   "pos": "SS"
   },
   "675919": {
    "team": "Baltimore Orioles",
@@ -6786,7 +6822,7 @@
    "team": "Detroit Tigers",
    "abbr": "DET",
    "name": "Zach McKinstry",
-   "pos": "2B"
+   "pos": "RF"
   },
   "805123": {
    "team": "Houston Astros",
@@ -7056,6 +7092,12 @@
    "team": "Kansas City Royals",
    "abbr": "KC",
    "name": "Alex Lange",
+   "pos": "P"
+  },
+  "543238": {
+   "team": "Kansas City Royals",
+   "abbr": "KC",
+   "name": "Anthony Gose",
    "pos": "P"
   },
   "694360": {

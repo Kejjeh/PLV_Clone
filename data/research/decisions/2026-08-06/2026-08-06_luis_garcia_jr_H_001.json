@@ -27,8 +27,18 @@
   "prediction_settlement": null,
   "reason_tag": "process_upgrade",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-27",
+  "settlement": {
+    "actual_fp_per_unit": 0.5970149253731343,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 67,
+    "proj_per": 0.6491556868657057,
+    "proj_units_note": "native",
+    "residual": -0.05214076149257141,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-06",
   "verdict_top": "BUY"
 }

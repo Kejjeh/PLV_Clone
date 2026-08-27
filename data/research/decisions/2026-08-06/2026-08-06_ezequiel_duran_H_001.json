@@ -27,8 +27,18 @@
   "prediction_settlement": null,
   "reason_tag": "archetype_breakout",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-27",
+  "settlement": {
+    "actual_fp_per_unit": 0.2911392405063291,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 79,
+    "proj_per": 0.4301644187472422,
+    "proj_units_note": "native",
+    "residual": -0.1390251782409131,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-06",
   "verdict_top": "BUY"
 }

@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-26",
+  "generated": "2026-08-27",
   "upgrade_floor_fpp": -0.0828,
-  "hit_upgrade_floor_xwoba": 0.323,
+  "hit_upgrade_floor_xwoba": 0.319,
   "alert_count": 5,
   "hitter_alert_count": 0,
   "alerts": [
@@ -33,7 +33,7 @@
       "l4": "2/4",
       "whiff_pct": 26.5,
       "xwoba_con": 0.374,
-      "rp3_rank": 83
+      "rp3_rank": 87
     },
     {
       "name": "Kendry Rojas",
@@ -48,7 +48,7 @@
       "l4": "1/4",
       "whiff_pct": 27.3,
       "xwoba_con": 0.293,
-      "rp3_rank": 106
+      "rp3_rank": 107
     },
     {
       "name": "Chase Dollander",
@@ -63,7 +63,7 @@
       "l4": "2/4",
       "whiff_pct": 27.4,
       "xwoba_con": 0.358,
-      "rp3_rank": 179
+      "rp3_rank": 175
     },
     {
       "name": "Spencer Miles",
@@ -76,9 +76,9 @@
       "fpp_gap": 0.0368,
       "gsp": 8,
       "l4": "2/4",
-      "whiff_pct": 18.0,
-      "xwoba_con": 0.319,
-      "rp3_rank": 190
+      "whiff_pct": 17.6,
+      "xwoba_con": 0.318,
+      "rp3_rank": 185
     }
   ],
   "hitter_alerts": [],
