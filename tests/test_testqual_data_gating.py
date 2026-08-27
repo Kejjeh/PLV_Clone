@@ -180,11 +180,16 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # its tests without PowerShell — on Linux the nightly gate's exit-code
 # contract was pinned by nothing. This one checks the same contract statically
 # so it holds on every platform.
-MAX_GUARDED_FILES = 59
+# 2026-08-27, +1 file (59 -> 60): test_gate_marker_chain importorskips pyyaml
+# (and refresh_dashboards). Like test_refresh_gate_structure it exists BECAUSE
+# a sibling skips entirely without PowerShell — test_refresh_workflow_gate's
+# three invariants were pinned by nothing on Linux. Two guard-bearing files
+# added this way is the cost of closing issue #81 for the two dark files.
+MAX_GUARDED_FILES = 60
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 104
+MAX_GUARD_SITES = 106
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
