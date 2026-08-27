@@ -33,6 +33,7 @@ from plv_clone.utils.name_match import join_key as _norm  # noqa: E402
 # Empirical sample-size minimums (measured 2026-07-29). Never hand-pick a
 # window gate here — see docs/stabilization_minimums.md.
 from plv_clone import stabilization as _stab  # noqa: E402
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 
 def _warn(section: str, exc: BaseException) -> None:
@@ -297,7 +298,7 @@ def _statcast_2026_pitch():
         return None
 
 
-def stuff_command_lens(mlbam, season=2026):
+def stuff_command_lens(mlbam, season=SEASON_YEAR):
     """Within-season STUFF-vs-COMMAND divergence for an SP (mlbam id). Splits the
     pitcher's 2026 pitches into early (first 50%) vs recent (last 30%) and compares
     SwStr% / FB velo (stuff) against BB% / zone% (command). Returns {tag, swstr_d,

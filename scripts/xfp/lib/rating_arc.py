@@ -26,6 +26,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 import sys
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 _XFP = Path(__file__).resolve().parents[1]
 if str(_XFP) not in sys.path:
@@ -98,7 +99,7 @@ def compute_arcs(snapshots: list[dict], role: str,
     return out
 
 
-def rating_arcs(role: str, year: int = 2026, lookback_days: int = 28):
+def rating_arcs(role: str, year: int = SEASON_YEAR, lookback_days: int = 28):
     """Production loader: build in-season snapshots via the dashboard builder
     functions (the established reuse seam — lib/season_snapshots does the same)
     and return arcs as a DataFrame."""

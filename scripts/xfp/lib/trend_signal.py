@@ -17,6 +17,7 @@ import sys as _sys
 import numpy as np
 import pandas as pd
 from pathlib import Path
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 
 def _warn(section, exc):
@@ -87,7 +88,7 @@ def _pitcher_season(y: int, min_fb: int) -> pd.DataFrame:
 
 
 @lru_cache(maxsize=None)  # perf: pure(cur,base); joined fresh into hitter_trend_table
-def hitter_sb_sprint_trend(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
+def hitter_sb_sprint_trend(cur: int = SEASON_YEAR, base: int = SEASON_YEAR - 1) -> pd.DataFrame:
     """SB/sprint trend (display CONTEXT, ORTHOGONAL to the validated 3 bat-tracking
     axes — NOT part of the CV-R² family; never a number-mover, CLAUDE.md #13).
     Two reads, both anchored on the fact that SB rate is a very STICKY skill (YoY
@@ -161,7 +162,7 @@ def _centered_z(s: pd.Series) -> pd.Series:
 
 
 @lru_cache(maxsize=None)  # perf: built once per process, not per-player; callers read tbl.loc[id]
-def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
+def hitter_trend_table(cur: int = SEASON_YEAR, base: int = SEASON_YEAR - 1) -> pd.DataFrame:
     """3-axis physical-trend table: bat speed (how hard) + attack angle (swing
     path, scored toward the AA_OPT band) + fast-swing% (intent). Each z-scored;
     z_comp is the equal-weight composite. SB/sprint columns (d_sb_pa, z_sb,
@@ -186,7 +187,7 @@ def hitter_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
 
 
 @lru_cache(maxsize=None)  # perf: pure(cur,min_sw); already .copy()s _hitter_season before mutate
-def hitter_level_table(cur: int = 2026, min_sw: int = HIT_MIN_SW_CUR) -> pd.DataFrame:
+def hitter_level_table(cur: int = SEASON_YEAR, min_sw: int = HIT_MIN_SW_CUR) -> pd.DataFrame:
     """Single-year LEVEL read (no YoY baseline) for rookies / no-prior-year hitters
     the change-detector can't read. Population percentiles of the SAME three
     fast-stabilizing axes: bat speed (how hard), swing-path closeness to the
@@ -223,7 +224,7 @@ def level_for_mlbam(mlbam: int, lvl_tbl=None):
 
 
 @lru_cache(maxsize=None)  # perf: built once per process, not per-player; callers read tbl.loc[id]
-def pitcher_trend_table(cur: int = 2026, base: int = 2025) -> pd.DataFrame:
+def pitcher_trend_table(cur: int = SEASON_YEAR, base: int = SEASON_YEAR - 1) -> pd.DataFrame:
     c, b = _pitcher_season(cur, PIT_MIN_FB_CUR), _pitcher_season(base, PIT_MIN_FB_BASE)
     t = c.join(b[['velo', 'xwoba_allow']], rsuffix='_base', how='inner')
     t['d_velo'] = t['velo'] - t['velo_base']

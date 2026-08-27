@@ -120,6 +120,7 @@ validated per-game numbers). The blend is a SECOND-OPINION headline
 displayed beneath the verdict.
 """
 from __future__ import annotations
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 import json
 import os
@@ -404,7 +405,7 @@ def _load_pl_panel() -> Optional[pd.DataFrame]:
         return None
 
 
-def _pl_rank_mid_inv_for(mlbam_id: int, bucket: str, year: int = 2026) -> Optional[float]:
+def _pl_rank_mid_inv_for(mlbam_id: int, bucket: str, year: int = SEASON_YEAR) -> Optional[float]:
     """Pull the mid-season PL rank for current year if available, return
     as 1/log1p(rank)-style inverse so smaller rank -> larger feature. We
     use the simple inverse: pl_rank_mid_inv = max(0, (150 - rank) / 150)

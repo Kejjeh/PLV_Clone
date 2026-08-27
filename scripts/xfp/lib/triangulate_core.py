@@ -32,6 +32,7 @@ from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never he
 
 import os as _os
 from functools import lru_cache as _lru_cache
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 _PITCHER_SCHEDULE_PATH = _os.path.join(
     _os.path.dirname(__file__), '..', '..', '..',
@@ -711,7 +712,7 @@ def archetype_row(player: dict) -> dict:
     rows = p[p[id_col] == player['id']].sort_values('year')
     if rows.empty:
         return {'have': False, 'reason': 'not in archetype panel (insufficient innings/PA)'}
-    cur = rows[rows['year'] == 2026]
+    cur = rows[rows['year'] == SEASON_YEAR]
     if cur.empty:
         cur = rows.iloc[[-1]]
     r = cur.iloc[0]

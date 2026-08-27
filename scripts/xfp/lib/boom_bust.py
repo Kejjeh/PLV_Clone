@@ -41,6 +41,7 @@ _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.par
 # The BrownU scoring formula has ONE owner (audit 2026-07-03). Proven identical to the
 # old inline formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 
 #: Below this many events a boom/bust RATE is not a usable discriminator.
@@ -171,7 +172,7 @@ def _series_from_box(df, mlbam, bucket: str):
 # ---------------------------------------------------------------------------
 
 @functools.lru_cache(maxsize=512)
-def _gamelog(mlbam: int, group: str, season: int = 2026):
+def _gamelog(mlbam: int, group: str, season: int = SEASON_YEAR):
     """Raw per-game stat splits from the live MLB Stats API (cached)."""
     import requests
     url = (f"https://statsapi.mlb.com/api/v1/people/{mlbam}/stats"
@@ -245,7 +246,7 @@ def _h_fp(s) -> float | None:
                      k=int(s.get("strikeOuts", 0)))
 
 
-def _live_series(mlbam, bucket: str, season: int = 2026):
+def _live_series(mlbam, bucket: str, season: int = SEASON_YEAR):
     """Live-API per-game FP list for one player (fallback tier)."""
     group = "hitting" if bucket == "H" else "pitching"
     fpf = {"SP": _sp_fp, "RP": _rp_fp, "H": _h_fp}[bucket]
@@ -257,9 +258,9 @@ def _live_series(mlbam, bucket: str, season: int = 2026):
 # Dispatcher — parquet first, live fallback
 # ---------------------------------------------------------------------------
 
-def _fp_series(mlbam, bucket: str, season: int = 2026):
+def _fp_series(mlbam, bucket: str, season: int = SEASON_YEAR):
     """Per-game FP list: materialized boxscore slice if present, else live API.
-    season != 2026 (cross-year stash fallback) always uses the live API since the
+    season != SEASON_YEAR (cross-year stash fallback) always uses the live API since the
     boxscore store is current-season only. PLV_BOOMBUST_FORCE_LIVE=1 forces live.
 
     Each per-game FP is rounded to 1 decimal — its true grain. BrownU FP is integer
@@ -268,7 +269,7 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
     differ by float dust; rounding to the real grain makes the two tiers agree exactly
     even at boom/bust thresholds."""
     s = None
-    if season == 2026 and os.environ.get("PLV_BOOMBUST_FORCE_LIVE") != "1":
+    if season == SEASON_YEAR and os.environ.get("PLV_BOOMBUST_FORCE_LIVE") != "1":
         kind = "H" if bucket == "H" else "P"
         s = _series_from_box(_load_box(kind), mlbam, bucket)
     if not s:
@@ -379,16 +380,16 @@ RP_BOOM, RP_BUST = 6, 0      # per-appearance FP
 H_BOOM, H_BUST = 5, 0        # per-game FP: ~top-quintile / negative day
 
 
-def sp_boom_bust(mlbam, n: int = 8, season: int = 2026) -> dict | None:
+def sp_boom_bust(mlbam, n: int = 8, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "SP", season)[-n:]
     return boom_bust_summary(fp, boom_thr=SP_BOOM, bust_thr=SP_BUST)
 
 
-def rp_boom_bust(mlbam, n: int = 15, season: int = 2026) -> dict | None:
+def rp_boom_bust(mlbam, n: int = 15, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "RP", season)[-n:]
     return boom_bust_summary(fp, boom_thr=RP_BOOM, bust_thr=RP_BUST)
 
 
-def hitter_boom_bust(mlbam, n: int = 21, season: int = 2026) -> dict | None:
+def hitter_boom_bust(mlbam, n: int = 21, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "H", season)[-n:]
     return boom_bust_summary(fp, boom_thr=H_BOOM, bust_thr=H_BUST)
