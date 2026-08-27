@@ -187,13 +187,30 @@ def settle_counterfactual(
     if not is_ripe(record, today=today):
         return record
 
-    if chosen_total_fp is None:
-        # The chosen player produced no measurable events at all. Recorded rather
-        # than scored: grading this as a WRONG_CALL would confuse "he did not
-        # play" with "the alternative outperformed".
+    if chosen_total_fp is None or rejected_total_fp is None:
+        # A None here now means ONE thing: the gamelog lookup FAILED. (It used
+        # to also mean "he did not appear in the window", which is a real zero
+        # and is now reported as 0.0 — see settle_decisions._totals_in_window.)
+        #
+        # Both sides are treated the same, which they were not: a failed lookup
+        # on the CHOSEN side was already UNSETTLEABLE, but on the REJECTED side
+        # it was silently coerced to 0.0 — crediting the chosen player with the
+        # entire fp_gained and classifying a decision we have no data for as a
+        # RIGHT_CALL. That bias points one way, and issue #54 established the
+        # rejected side is usually an unrostered FA, i.e. exactly the side most
+        # likely to fail to resolve. (Fixed 2026-08-27.)
+        #
+        # prediction.py rule 3 already draws this line correctly for the
+        # falsifiable-prediction book: a real 0.0 settles, a failed lookup is
+        # UNSETTLEABLE. This makes the counterfactual book agree with it.
+        _who = ("chosen" if chosen_total_fp is None else "rejected")
+        if chosen_total_fp is None and rejected_total_fp is None:
+            _who = "both"
         block = {
             "classification": UNSETTLEABLE,
-            "reason": "no realized events for the chosen player in the window",
+            "reason": f"gamelog lookup failed for the {_who} player — "
+                      f"nothing to grade the decision against",
+            "lookup_failed_side": _who,
             "window_start": start.isoformat(),
             "window_end": end.isoformat(),
             "window_days": int(spec.get("days", 0)),
@@ -204,7 +221,11 @@ def settle_counterfactual(
         return replace(record, counterfactual_settlement=block,
                        settled_at=datetime.now().isoformat(timespec="seconds"))
 
-    rej = 0.0 if rejected_total_fp is None else float(rejected_total_fp)
+    # Both sides are non-None past the guard above: a None is a failed lookup
+    # and returned UNSETTLEABLE. A genuine 0.0 (hurt, benched, never called up)
+    # reaches here and is graded, which is the point — playing time is part of
+    # what was chosen.
+    rej = float(rejected_total_fp)
     gained = float(chosen_total_fp) - rej
     thr = COUNTERFACTUAL_THRESHOLDS.get(record.bucket)
     min_ev = int(spec.get("min_events", 0) or 0)
