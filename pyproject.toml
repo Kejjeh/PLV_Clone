@@ -14,6 +14,11 @@ dependencies = [
     "pyarrow>=14.0",
     "duckdb>=0.10",
     "lightgbm>=4.3",
+    # xgboost is imported by models/xfp/ceiling.py::_xgb_factory. It is a HARD
+    # dependency, not optional: nonlinear_ceiling takes max(xgb_gap, rf_gap),
+    # so degrading to RF-only would silently WEAKEN the /validate-feature
+    # Rule 9 gate rather than fail it. Declared 2026-08-27.
+    "xgboost>=2.0",
     "scikit-learn>=1.4",
     "scipy>=1.12",
     "pydantic>=2.0",

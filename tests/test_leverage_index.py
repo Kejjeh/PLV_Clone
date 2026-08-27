@@ -13,7 +13,14 @@ from lib.leverage_index import build_li_table, li_lookup, STATE_COLS  # noqa: E4
 
 @pytest.fixture(scope="module")
 def table():
-    return build_li_table()
+    # build_li_table() falls back to reading statcast_{year}.parquet for
+    # TABLE_YEARS when the cached li_table parquet is absent. Both are
+    # gitignored, so a fresh checkout has neither and every test in this
+    # module errored at setup instead of skipping. (Fixed 2026-08-27.)
+    try:
+        return build_li_table()
+    except FileNotFoundError as exc:
+        pytest.skip(f"LI substrate not present in this checkout ({exc})")
 
 
 def _li(table, inning_c, is_top, outs, base_code, diff_c):

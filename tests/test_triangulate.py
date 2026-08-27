@@ -248,6 +248,20 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
             pytest.xfail(
                 f"{name}: PL {bucket} cache {_age}d stale -> pl_main={result.get('pl_main')!r}; "
                 f"refresh PL Top 150 to re-enforce the verdict lock.")
+    # A verdict synthesized on a DEGRADED lens stack is not evidence about the
+    # code. The relaxation above covers a stale PL cache; this covers a missing
+    # lens substrate (gitignored statcast parquets on a fresh checkout), which
+    # can flip the verdict with nothing else changing — canonical: Bailey Ober
+    # reads CAUTION with statcast present, MIXED without it. Skip rather than
+    # xfail: unlike a stale cache this says nothing at all about the lock.
+    # (Added 2026-08-27 with result['degraded_lenses'].)
+    degraded = result.get("degraded_lenses") or []
+    if degraded and (verdict_sub is not None or verdict_top is not None):
+        pytest.skip(
+            f"{name}: verdict built on a degraded lens stack "
+            f"({len(degraded)} suppressed: {degraded[0][:80]}...) — "
+            f"refresh the statcast cache to re-enforce the verdict lock."
+        )
     if verdict_sub is not None:
         assert verdict_sub in result["verdict"], (
             f"{name!r} verdict={result['verdict']!r} did not contain {verdict_sub!r}"

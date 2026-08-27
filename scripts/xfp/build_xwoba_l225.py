@@ -299,7 +299,7 @@ def main() -> int:
     OUT.mkdir(parents=True, exist_ok=True)
     from lib.atomic_io import atomic_to_csv  # issue #34 — live-read artifact
     atomic_to_csv(x, OUT / "xwoba_l225.csv")
-    x.to_csv(OUT / f"xwoba_l225_{x["asof_date"].iloc[0]}.csv", index=False)
+    x.to_csv(OUT / f"xwoba_l225_{x['asof_date'].iloc[0]}.csv", index=False)
     full = int(x["window_full"].sum())
     print(f"  wrote {len(x)} rows ({full} with a full window) -> "
           f"data/outputs/xwoba_l225.csv")

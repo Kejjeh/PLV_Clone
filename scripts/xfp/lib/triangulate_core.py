@@ -1206,6 +1206,13 @@ def triangulate_player(name: str, bucket: str | None = None,
 
     Returns a structured dict, or None if the player couldn't be resolved.
     """
+    # Fresh degradation registry for this build — see lib/lens_health.
+    try:
+        from .lens_health import reset as _reset_lens_health
+        _reset_lens_health()
+    except Exception:
+        pass
+
     player = resolve_player(name, bucket)
     if not player:
         return None
@@ -1273,5 +1280,17 @@ def triangulate_player(name: str, bucket: str | None = None,
                 f"[triangulate_player] decision log failed: {_exc}",
                 file=_sys.stderr,
             )
+
+    # Which lenses were suppressed while building this verdict. Empty on a
+    # healthy build. A caller that shows a verdict MUST caveat it when this is
+    # non-empty: the same player can synthesize to a different verdict when a
+    # lens substrate is missing (canonical: Bailey Ober read CAUTION with
+    # statcast present and MIXED without it, with nothing on the result dict
+    # to say so). Rule 13: recording this moves no rank. Added 2026-08-27.
+    try:
+        from .lens_health import snapshot as _lens_snapshot
+        result['degraded_lenses'] = list(_lens_snapshot())
+    except Exception:
+        result['degraded_lenses'] = []
 
     return result

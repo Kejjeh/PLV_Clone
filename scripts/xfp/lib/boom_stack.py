@@ -59,6 +59,14 @@ def _warn(section: str, exc: BaseException) -> None:
     silent excepts hide dead components for weeks). Semantics unchanged — loud only."""
     import sys
     print(f"  ⚠ [boom_stack.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+    # Also record it where a CALLER can see it: the stderr breadcrumb
+    # is invisible to code, and a verdict built on a degraded lens
+    # stack must not look healthy (don't-do #12). Added 2026-08-27.
+    try:
+        from .lens_health import record as _record_degraded
+        _record_degraded(f"boom_stack.{section}", exc)
+    except Exception:
+        pass
 
 # park_friendly uses PRIOR-year park factor (strict pre-cutoff per validation
 # spec: 2026 in-season starts use 2025 pf_wOBA). See
@@ -292,7 +300,7 @@ def _load_park_friendly_set() -> tuple[frozenset, float, int]:
     # AFTER the prior year has no valid prior-year park read — exclude it from
     # the friendly set rather than rate the WRONG park (the ATH-class bug).
     try:
-        from lib.extra_lenses import VENUE_ERAS
+        from .extra_lenses import VENUE_ERAS
         moved = {t for t, y0 in VENUE_ERAS.items() if y0 > _PARK_PF_YEAR}
         if moved:
             pf = pf[~pf['team_abbr'].isin(moved)]

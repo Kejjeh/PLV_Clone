@@ -68,8 +68,13 @@ for _, r in mydf.iterrows():
     print(f"  {r['name']:<22} {str(r['pos']):<4} per_g={r.get('per_g','—')} ros={r.get('ros','—')} "
           f"slot={r['slot']} inj={r['inj']}")
 weak = mydf.dropna(subset=['per_g']).head(4)
+# Hoisted: a nested same-quote f-string is PEP 701 (Python 3.12+)
+# and this repo targets >=3.11.
+_weakest = ", ".join(
+    "{} ({:.2f}/g)".format(r["name"], r["per_g"]) for _, r in weak.iterrows()
+)
 print(f"\n  WEAKEST active hitters (FA must beat these to start): "
-      f"{', '.join(f'{r['name']} ({r['per_g']:.2f}/g)' for _,r in weak.iterrows())}")
+      f"{_weakest}")
 
 print("\n", "="*70, "\n(3) MY RP STAFF (Fairbanks drop context)\n", "="*70)
 _rp_name_col = next((c for c in (RPRS2.columns if RPRS2 is not None else []) if 'name' in c.lower()), None)

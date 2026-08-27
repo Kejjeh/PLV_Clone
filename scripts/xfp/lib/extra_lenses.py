@@ -40,6 +40,14 @@ def _warn(section: str, exc: BaseException) -> None:
     silent excepts hide dead lenses for weeks). Semantics unchanged — loud only."""
     import sys
     print(f"  ⚠ [extra_lenses.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+    # Also record it where a CALLER can see it: the stderr breadcrumb
+    # is invisible to code, and a verdict built on a degraded lens
+    # stack must not look healthy (don't-do #12). Added 2026-08-27.
+    try:
+        from .lens_health import record as _record_degraded
+        _record_degraded(f"extra_lenses.{section}", exc)
+    except Exception:
+        pass
 
 
 # --------------------------------------------------------------------------
@@ -116,7 +124,7 @@ def floor_lens(name: str) -> dict | None:
 def trend_lens(mlbam, role: str) -> dict | None:
     """Physical getting-better/worse tag for a resolved MLBAM id. Context-only."""
     try:
-        from lib.trend_signal import trend_for_mlbam
+        from .trend_signal import trend_for_mlbam
         tag, row = trend_for_mlbam(int(mlbam), role)
     except Exception as e:
         _warn("trend_lens", e)
@@ -135,7 +143,7 @@ def shadow_lens(name: str) -> dict | None:
     """20-80 process grade for an SP with no rp3/archetype. None when the player
     has no usable 2026 MLB sample (verdict NO_MLB_DATA)."""
     try:
-        from lib.shadow_scout import shadow_scout
+        from .shadow_scout import shadow_scout
         res = shadow_scout([name])
     except Exception as e:
         _warn("shadow_lens", e)
