@@ -239,3 +239,63 @@ Nothing regime-derived moves any number, in either direction.
 and the structural-break variant (this) are dead for SP projection. Re-open only
 with a detector that needs materially less than 100 TBF post-break to reach
 power — which the stabilization curves say does not exist for K%.
+
+---
+
+# v3 — PARAMETER SWEEP: the surface is mapped, and it has no peak
+
+`scripts/xfp/sweep_break_params.py`. 150 cells: metric {K-BB%, K%, FP} x
+min_tbf {40,60,80,100,150} x z_gate {1.5..3.5} x trigger {absence, search}.
+Evaluated by PREDICTIVE value (MAE vs rest-of-season FP/start), strictly no
+lookahead, with the paired t computed at ONE ROW PER PITCHER-SEASON so
+pseudo-replication cannot inflate it.
+
+## What each knob actually does (conditional on firing, train)
+
+| axis | value | cells | mean gain | best cell |
+|---|---|---|---|---|
+| **metric** | **K-BB%** | 32 | **−0.259** | **+0.240** |
+| | K% | 21 | −0.300 | +0.012 |
+| | **FP/start** | 17 | **−1.010** | −0.593 |
+| **trigger** | **absence** | 10 | **−0.158** (3 positive) | +0.240 |
+| | **search** | 60 | **−0.503** (0 positive) | −0.099 |
+
+**Every one of the 30 cells with |t| > 2 is NEGATIVE. Zero positive.**
+The worst are FP + search: t = −4.57 to **−6.67**. That configuration is v1.
+
+## Ranked lessons, strongest first
+
+1. **Never split on FP/start.** Mean gain −1.010 and the most significant harm in
+   the entire sweep. FP bundles sequencing luck; its biggest split is BABIP.
+2. **Never use a searched split.** 0 of 60 cells positive. An event must supply
+   the split point, or the split point is noise.
+3. **K-BB% is the right metric** — better than K% alone, far better than FP.
+4. **min_tbf ≈ 100 per side** sits at the peak, matching `SP_MINS['k_pct']`.
+
+## The peak does not replicate
+
+| cell | TRAIN gain (t, seasons) | HOLDOUT gain (t, seasons) |
+|---|---|---|
+| K-BB%, 100 TBF, z1.5, absence | **+0.240** (t=0.45, n=20) | **−0.141** (t=−0.46, n=9) |
+| K-BB%, 40 TBF, z1.5, absence | +0.081 (t=0.18, n=38) | +0.318 (t=0.67, n=17) |
+| K% , 40 TBF, z1.5, absence | +0.012 (t=0.02, n=15) | +1.279 (t=1.72, **n=4**) |
+
+The best train cell **flips sign** on holdout. Nothing replicates. Best-case
+unconditional gain across all 150 cells was +0.011 MAE on a 3.355 baseline — 0.3%.
+
+## FINAL DISPOSITION — family CLOSED, with a usable practice rule
+
+No parameterisation of "break up a player's stats" produces a replicable forecast
+gain. `adj` stays equal to rp3; breaks remain annotation only.
+
+What the sweep DOES license, as practice rather than as a number:
+
+- **Split only on an objective event** (IL absence, role change, trade) — never
+  because the numbers look different.
+- **Judge the change on K-BB%**, never on FP or ERA.
+- **Require ~100 TBF on each side** before the halves are comparable at all.
+- **Expect the split to add nothing to the forecast.** It is a story about what
+  happened, not evidence about what comes next.
+
+Re-open condition: a trigger that is BOTH objective AND arrives with enough
+post-break sample to test — which for SP rate stats does not currently exist.
