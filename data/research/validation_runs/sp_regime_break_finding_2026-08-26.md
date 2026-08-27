@@ -299,3 +299,90 @@ What the sweep DOES license, as practice rather than as a number:
 
 Re-open condition: a trigger that is BOTH objective AND arrives with enough
 post-break sample to test — which for SP rate stats does not currently exist.
+
+---
+
+# v4 — WHICH EVENTS? None of them. But the noise floor is the usable answer.
+
+`scripts/xfp/build_sp_event_panel.py` (35,849 appearances incl. relief, with
+team-per-game) + `scripts/xfp/analyze_break_events.py`.
+
+## Event base rates (1,331 pitcher-seasons)
+
+IL_SHORT 15-29d **27.0%** · IL_MED 30-59d 16.6% · ROLE_PEN 16.1% ·
+ROLE_ROT 15.0% · TRADE **9.5%** · IL_LONG 60d+ 5.1%
+
+## Does the line actually break at the event? (vs matched same-position controls)
+
+Each event matched to 30 random split dates at the SAME fractional season
+position for the SAME pitcher, under the same 100-TBF-per-side gate. Paired t at
+one row per pitcher-season.
+
+| event | n | seasons | \|dK-BB%\| | control | **excess** | t |
+|---|---|---|---|---|---|---|
+| IL_SHORT | 244 | 219 | 4.40 | 4.37 | **+0.02** | 0.66 |
+| IL_MED | 136 | 134 | 5.05 | 4.91 | **+0.14** | 1.87 |
+| ROLE_ROT | 92 | 77 | 4.59 | 4.57 | +0.02 | 0.06 |
+| TRADE | 88 | 86 | 3.92 | 3.83 | **+0.09** | 0.99 |
+| ROLE_PEN | 87 | 75 | 4.80 | 4.80 | −0.00 | 0.14 |
+| IL_LONG | 37 | 37 | 4.04 | 4.11 | **−0.07** | −0.57 |
+
+**No event type moves the line more than a random split at the same time of
+year.** Largest excess is IL_MED at +0.14pp (t=1.87, p≈.06, fails even
+unadjusted; with 6 events tested BH needs p≈.008). Trade: +0.09pp, t=0.99.
+IL_LONG is NEGATIVE.
+
+Well powered, not a null from thinness: IL_SHORT's SE is 0.030pp, so an effect
+of 0.09pp would have been detected — that is 2% of the 4.4pp baseline.
+
+**Why IL returns LOOK like breaks:** the raw |dK-BB%| after an IL_MED stint is
+5.05pp, which feels enormous. Its matched control is 4.91pp. The apparent break
+is explained by *where in the season it happens*, not by the stint.
+
+## THE USABLE OUTPUT — empirical within-season noise floor for K-BB%
+
+|K-BB% difference| between two halves of the SAME pitcher-season, no event
+involved. ~2,800 splits per bucket.
+
+| min side TBF | median | mean | **p90** |
+|---|---|---|---|
+| 25+ | 6.46 | 7.65 | **15.59** |
+| 50+ | 5.20 | 6.10 | **12.41** |
+| 75+ | 4.50 | 5.41 | **11.25** |
+| 100+ | 4.05 | 4.81 | **9.98** |
+| 150+ | 3.54 | 4.33 | **9.05** |
+| 200+ | 3.38 | 4.05 | **8.37** |
+| 300+ | 3.14 | 3.67 | **7.35** |
+
+**Rule: a K-BB% gap must EXCEED the p90 for its smaller side's TBF to be
+distinguishable from ordinary within-season variation.**
+
+## Applied to the 2026 decision set
+
+| pitcher | split | pre TBF | post TBF | pre K-BB% | post K-BB% | gap | p90 | verdict |
+|---|---|---|---|---|---|---|---|---|
+| Bryce Miller | searched | 187 | 189 | 30.5 | 5.3 | **25.2** | 8.8 | **2.9x floor** |
+| Jacob Lopez | 40d IL | 257 | 162 | 3.1 | 21.6 | **18.5** | 9.1 | **2.0x floor** |
+| José Soriano | searched | 163 | 440 | 20.2 | 10.2 | 10.0 | 9.1 | 1.1x — marginal |
+| Tyler Mahle | 29d IL | 249 | 248 | 13.3 | 14.9 | 1.7 | 7.6 | within noise |
+| Shota Imanaga | searched | 235 | 357 | 19.1 | 18.2 | **0.9** | 7.6 | within noise |
+
+Imanaga's gap is one EIGHTH of the floor. Independent confirmation, by a
+completely different route than the v2 permutation test, that there is nothing
+there.
+
+## The reframe this run earns
+
+Events do NOT cause breaks. What an event supplies is a **legitimate place to
+look** — a split point that is given rather than chosen, so it pays no search
+penalty. The decision is then made entirely by MAGNITUDE against the noise floor.
+
+Practical rule, replacing "which events matter":
+1. Use an event only to pick WHERE to split (avoids the search penalty).
+2. Judge on **K-BB%**, never FP or ERA.
+3. Require **>=100 TBF on both sides**.
+4. Act only if the gap **EXCEEDS the p90 for the smaller side**.
+5. Even then, expect no forecast gain — v3 showed re-anchoring does not replicate.
+
+Steps 1-4 are a screen against fooling yourself. Step 5 is why nothing in this
+family may move a projection.
