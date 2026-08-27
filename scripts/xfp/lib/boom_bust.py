@@ -311,33 +311,55 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
 #
 # Rule 13: this is a DISPLAY calibration. It never moves rh3/rp3/rprs2, and it
 # does not change any existing boom_bust output — callers must opt in.
+#   HITTER, window in GAMES (measured on 2,469 hitter-seasons, boom = FP >= 5):
+#     L7  0.105 -> 89%   L14 0.192 -> 81%   L21 0.267 -> 73%  <- the H default
+#     L28 0.330 -> 67%   L40 0.414 -> 59%   L60 0.520 -> 48%
+#
+# NOTE THE ASYMMETRY: hitter L21 is 73% noise while SP L8 is 65% — MORE
+# observations carrying LESS signal. The mechanism is between-player spread, and
+# both windows per side agree on it: the implied true between-player SD of boom
+# rate is ~12pp for pitchers and only ~5pp for hitters. Hitters are simply more
+# alike in how often they boom, so a longer window still resolves less.
 BOOM_SHRINK_SLOPE = {3: 0.179, 5: 0.261, 8: 0.353, 12: 0.431, 20: 0.575}
+BOOM_SHRINK_SLOPE_H = {7: 0.105, 14: 0.192, 21: 0.267, 28: 0.330,
+                       40: 0.414, 60: 0.520}
 SP_BOOM_BASE = 0.305   # league SP boom rate on the same panel
+H_BOOM_BASE = 0.207    # league hitter boom rate on the same panel
 
 
-def forward_rate(observed_rate: float, window: int, base: float = SP_BOOM_BASE) -> float:
-    """Shrink an observed short-window rate toward the base rate.
+def forward_rate(observed_rate: float, window: int, side: str = "SP",
+                 base: float | None = None) -> float:
+    """Shrink an observed short-window boom/bust rate toward the base rate.
 
     ``observed_rate`` is a fraction (3/8 -> 0.375), ``window`` the number of
-    starts it came from. Interpolates the slope for an unlisted window and
-    clamps to the measured range rather than extrapolating off the end.
+    units it came from (STARTS for SP, GAMES for a hitter), ``side`` one of
+    "SP" / "H". Interpolates the slope for an unlisted window and clamps to the
+    measured range rather than extrapolating off the end.
 
     Returns the forward estimate: ``base + slope * (observed - base)``.
+
+    >>> round(forward_rate(3/8, 8, "SP"), 3)
+    0.33
+    >>> round(forward_rate(0.0, 21, "H"), 3)
+    0.152
     """
     if observed_rate is None or window is None or window <= 0:
         return float("nan")
-    ws = sorted(BOOM_SHRINK_SLOPE)
-    if window in BOOM_SHRINK_SLOPE:
-        slope = BOOM_SHRINK_SLOPE[window]
+    table = BOOM_SHRINK_SLOPE_H if side == "H" else BOOM_SHRINK_SLOPE
+    if base is None:
+        base = H_BOOM_BASE if side == "H" else SP_BOOM_BASE
+    ws = sorted(table)
+    if window in table:
+        slope = table[window]
     elif window <= ws[0]:
-        slope = BOOM_SHRINK_SLOPE[ws[0]]
+        slope = table[ws[0]]
     elif window >= ws[-1]:
-        slope = BOOM_SHRINK_SLOPE[ws[-1]]
+        slope = table[ws[-1]]
     else:
         lo = max(w for w in ws if w < window)
         hi = min(w for w in ws if w > window)
         f = (window - lo) / (hi - lo)
-        slope = BOOM_SHRINK_SLOPE[lo] + f * (BOOM_SHRINK_SLOPE[hi] - BOOM_SHRINK_SLOPE[lo])
+        slope = table[lo] + f * (table[hi] - table[lo])
     return base + slope * (observed_rate - base)
 
 SP_BOOM, SP_BUST = 17, 5     # per-start FP: ~top-quartile / replacement floor
