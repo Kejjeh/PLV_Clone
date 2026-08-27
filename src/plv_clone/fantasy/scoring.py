@@ -228,7 +228,11 @@ def pitcher_fp(
 ) -> float:
     """Total pitcher FP from counting totals.
 
-    BrownU default: K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 2*HLD.
+    BrownU default: K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 3*HLD.
+    (HLD multiplier moved 2 -> 3 in the 2026-08-12 league-setting change;
+    `data/models/league_scoring.json` hd=3.0 is the authority and this
+    docstring lagged it until 2026-08-27. Never hardcode these weights --
+    tests/test_no_hardcoded_scoring_weights.py enforces it.)
     `ip` is expected already in decimal innings (use _parse_ip on raw
     '5.2'-style MLB strings first). SV/HLD default to 0 for starters.
     """
