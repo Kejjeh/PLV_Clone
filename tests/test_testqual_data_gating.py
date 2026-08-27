@@ -171,11 +171,15 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # module-level importorskip for settle_decisions (a driver import). It guards
 # the fetch-failure vs real-zero distinction in the settlement layer, which
 # had been graded as a free win for the chosen player.
-MAX_GUARDED_FILES = 57
+# 2026-08-27, +1 file (57 -> 58): test_ip_parsers_agree skips a parser that is
+# not importable in a given checkout rather than failing it. It pins the MLB
+# partial-inning notation contract across the repo's SIXTEEN independent IP
+# parsers, two of which disagreed.
+MAX_GUARDED_FILES = 58
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 102
+MAX_GUARD_SITES = 103
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
