@@ -62,27 +62,56 @@ smaller cap is used. See `feedback_fa_pool_size_cap.md`.
 # ── Per-process TTL cache (2026-07-04 audit: 4→1 ESPN roundtrips) ────────
 #
 # Keyed by (frame_name, id(league)) so injected test doubles never share
+# — see _cache_put for why the league object is retained alongside the frame
 # entries with the real league (or with each other). Values are
 # (monotonic_timestamp, DataFrame). Callers get a defensive .copy() so
 # cached frames can't be mutated in place.
 
 CACHE_TTL_SECONDS: float = 300.0
-_TTL_CACHE: dict[tuple[str, int], tuple[float, pd.DataFrame]] = {}
+# Entries are (timestamp, frame, owner). ``owner`` is the league object the
+# key was derived from, retained ON PURPOSE — see _cache_put.
+_TTL_CACHE: dict[tuple[str, int], tuple[float, pd.DataFrame, object]] = {}
 
 
 def _cache_get(key: tuple[str, int]) -> pd.DataFrame | None:
     hit = _TTL_CACHE.get(key)
     if hit is None:
         return None
-    ts, val = hit
+    ts, val = hit[0], hit[1]
     if time.monotonic() - ts > CACHE_TTL_SECONDS:
         _TTL_CACHE.pop(key, None)
         return None
     return val.copy()
 
 
-def _cache_put(key: tuple[str, int], val: pd.DataFrame) -> None:
-    _TTL_CACHE[key] = (time.monotonic(), val.copy())
+def _cache_put(key: tuple[str, int], val: pd.DataFrame,
+               owner: object = None) -> None:
+    """Cache ``val`` under ``key``, keeping ``owner`` alive alongside it.
+
+    The keys here embed ``id(league)`` so that two different League objects
+    never share a cached frame. That works only while both objects are ALIVE:
+    CPython reuses an address as soon as the previous occupant is collected,
+    so a league that went out of scope could hand its id — and therefore its
+    cached roster — to an unrelated league created within the TTL.
+
+    Measured 2026-08-27, 400 LeagueState round-trips over distinct fake
+    leagues: 44 ids reused and **202 of 400 calls returned another league's
+    roster**. Serving a stale roster is precisely the failure don't-do #11
+    exists to prevent ("never label a player as yours without a live roster
+    call"), and it is silent.
+
+    Retaining the league for the entry's lifetime makes the address
+    un-reusable while the entry lives, so the id stays a real identity. The
+    cost is one held reference for at most CACHE_TTL_SECONDS.
+    """
+    now = time.monotonic()
+    # Opportunistic sweep. Entries were only ever evicted on ACCESS, so a key
+    # never read again lived forever; now that each one also pins a League
+    # object (with its rosters attached), that matters more than it did.
+    for stale in [k for k, v in _TTL_CACHE.items()
+                  if now - v[0] > CACHE_TTL_SECONDS]:
+        _TTL_CACHE.pop(stale, None)
+    _TTL_CACHE[key] = (now, val.copy(), owner)
 
 
 def clear_ttl_cache() -> None:
@@ -180,7 +209,8 @@ class LeagueState:
         Results are cached per-process for ``CACHE_TTL_SECONDS``; pass
         ``fresh=True`` to bypass and refresh the cache.
         """
-        key = ("my_roster", id(self._get_league()))
+        _league_for_key = self._get_league()
+        key = ("my_roster", id(_league_for_key))
         if not fresh:
             cached = _cache_get(key)
             if cached is not None:
@@ -201,7 +231,7 @@ class LeagueState:
             })
         df = pd.DataFrame(rows)
         _schema_sentinel(df)
-        _cache_put(key, df)
+        _cache_put(key, df, owner=_league_for_key)
         return df
 
     def my_roster_with_injuries(self) -> pd.DataFrame:
@@ -259,7 +289,7 @@ class LeagueState:
                 })
         df = pd.DataFrame(rows)
         _schema_sentinel(df)
-        _cache_put(key, df)
+        _cache_put(key, df, owner=league)
         return df
 
     # ── IL accounting (slot, not status) ────────────────────────────────
@@ -347,7 +377,7 @@ class LeagueState:
                     "injury_status": getattr(player, "injuryStatus", "") or "",
                 })
             raw_df = pd.DataFrame(rows)
-            _cache_put(key, raw_df)
+            _cache_put(key, raw_df, owner=league)
 
         wanted_pos = position.upper() if position else None
         fa_df = raw_df
