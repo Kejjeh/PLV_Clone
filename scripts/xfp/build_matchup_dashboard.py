@@ -225,11 +225,20 @@ IL_INJURY_STATES = IL_STATES_WITH_DTD
 IL_LINEUP_SLOTS = frozenset({'IL', 'IL10', 'IL15', 'IL60'})
 
 # Slot-aware FP projection (validated 2026-06-03; ΔMAE +19.5 FP/team-period,
-# n=80, paired t=4.91). Bench/IL/IR slots accrue ~0 actual FP in the BrownU
+# n=80, paired t=4.91). IL/IR slots accrue ~0 actual FP in the BrownU
 # active-only scoring; including them inflates team-total projection by ~20 FP
 # and biases gauges/win-prob. See
 # `data/research/validation_runs/slot_aware_fp_test_actual.md` and
 # `reference_team_variance_aggregation.md` for full evidence.
+#
+# SUPERSEDED IN PART, 2026-06-15: the sentence above originally read
+# "Bench/IL/IR", and this set originally CONTAINED the bench slots. It does
+# not any more, and the wording is corrected here because two stale
+# references to bench-as-inactive is exactly how the fix gets undone. For
+# THIS league bench is active — Josh sets his lineup daily, so every healthy
+# bench player is activated before lock (CLAUDE.md gotcha #7: never tell Josh
+# a bench player "won't score"). The 2026-06-03 measurement stands for IL/IR;
+# only the bench clause was wrong. tests/test_inactive_lineup_slots.py pins it.
 INACTIVE_LINEUP_SLOTS = frozenset({
     # BE/BENCH intentionally excluded: Josh manages lineup daily, so every
     # healthy bench player will be activated before lock. Only true IL slots
@@ -251,8 +260,15 @@ def _player_slot(player) -> str:
 def _is_active_slot(player) -> bool:
     """True if the player's lineup_slot is a SCORING (active) slot.
 
-    Active = anything NOT in {BE, IL*, IR}. Defensive: case-insensitive,
-    handles IL10/IL15/IL60 variants, BE/BENCH/BN aliases. Note: a player
+    Active = anything NOT in {IL*, IR}. **Bench counts as ACTIVE** — Josh sets
+    his lineup daily, so every healthy bench player is activated before lock
+    (gotcha #7). Until 2026-08-27 this docstring listed the bench slot among
+    the inactive ones, describing behaviour from before the 2026-06-15 fix and
+    contradicting both the constant it reads and the comment above it. A
+    docstring that argues against the code is how a fix gets quietly reverted,
+    so tests/test_inactive_lineup_slots.py now pins the prose too.
+
+    Defensive: case-insensitive, handles IL10/IL15/IL60/IR variants. Note: a player
     can be `injured == True` while still being in an active slot (Langford
     OF, Helsley BE pattern) — that's intentionally OK here. We filter by
     SLOT for the team-total projection (where the player is rostered),

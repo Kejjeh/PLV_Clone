@@ -159,7 +159,11 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # every other lib-layer test reaches that package. It gates on an import, not
 # on data, and it guards a legality bug that could silently declare an
 # oversized roster legal.
-MAX_GUARDED_FILES = 54
+# 2026-08-27, +1 file (54 -> 55): test_inactive_lineup_slots uses one
+# module-level importorskip for build_matchup_dashboard (a heavy import), and
+# it pins the canonical "bench is an active scoring slot" rule (gotcha #7),
+# which had NO test coverage at all while two comments argued against it.
+MAX_GUARDED_FILES = 55
 MAX_GUARD_SITES = 100
 
 
