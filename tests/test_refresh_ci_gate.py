@@ -10,7 +10,10 @@ The gate has to distinguish two outcomes that both look like "pytest returned
 non-zero":
 
   exit 1      tests FAILED             -> gate, do not refresh
-  exit 2-5    pytest could not RUN     -> report and continue
+  exit 2      interrupted/collection   -> SUITE_RED (archive, no publish)
+  exit 3-5    pytest could not RUN     -> SUITE_RED (archive, no publish)
+              (corrected 2026-08-27 — exit 5 is "no tests collected", which
+               is the gate not running, not a runner hiccup)
               (interrupted / internal error / usage error / no tests collected)
 
 Conflating them would let one missing wheel on the runner wedge the whole
@@ -99,18 +102,42 @@ def test_a_passing_suite_lets_the_refresh_publish(tmp_path):
     assert "SUITE_RED" not in gh, "a green suite must not withhold the publish"
 
 
-@pytest.mark.parametrize("hiccup", [3, 4, 5])
-def test_a_runner_hiccup_does_not_wedge_the_nightly(hiccup, tmp_path):
-    """pytest itself breaking (internal/usage error, empty collection) is not
-    evidence the code is broken — report and continue, publish included."""
-    code, out, gh = _exit_code_with_stub_pytest(hiccup, tmp_path)
+@pytest.mark.parametrize("unverifiable", [3, 4, 5])
+def test_a_suite_that_could_not_run_withholds_the_publish(unverifiable, tmp_path):
+    """"We could not verify the suite" gets the same handling as "it is red".
+
+    CORRECTED 2026-08-27. This previously asserted that exits 3/4/5 must NOT
+    withhold the publish, reasoning that gating on them "costs a day of
+    unrecoverable archival data". That reasoning is about the wrong lever:
+
+      * `exit 1` from this step WOULD cost the archival — the whole 2026-08-01
+        review was about that, and it is why the step exits 0 on a red suite.
+      * SUITE_RED costs NOTHING. The refresh step's own comment says
+        "SUITE_RED withholds only the xfp-model publish; every archival and
+        model step still runs and the data commit below still happens", the
+        refresh runs `--no-push`, and the commit step carries no `if:`.
+
+    So the two priorities are not in tension here, exactly as they were not
+    for exits 1 and 2: archive everything, publish nothing.
+
+    It matters most for **exit 5 = no tests were collected**. That is not a
+    runner hiccup — it is the gate not running. A renamed marker, a pytest
+    flag removed upstream, or a missing pytest-cov plugin each produce exit
+    3/4/5, and each would otherwise publish dashboards having run ZERO tests
+    — precisely what this step exists to prevent. Both are reachable: an
+    empty marker selection exits 5, and `--no-cov` without pytest-cov exits 4.
+    """
+    code, out, gh = _exit_code_with_stub_pytest(unverifiable, tmp_path)
     assert code == 0, (
-        f"pytest exit {hiccup} means it could not run, not that tests failed — "
-        "gating on it costs a day of unrecoverable archival data"
+        f"pytest exit {unverifiable} must still exit the STEP 0 — the day's "
+        "ESPN archival rolls off the API in 7-14 days and is unrecoverable"
         + chr(10) + out)
-    assert "WARN" in out.upper(), "a swallowed hiccup must still be reported"
-    assert "SUITE_RED" not in gh, (
-        "a runner hiccup must not withhold the publish")
+    assert "WARN" in out.upper(), (
+        "an unverifiable suite must be reported distinctly from a red one")
+    assert "SUITE_RED=1" in gh, (
+        f"pytest exit {unverifiable} means the suite did not run — the publish "
+        f"must be withheld until it can be verified, NOT waved through"
+        + chr(10) + out)
 
 
 def test_the_refresh_step_honors_suite_red_with_no_push():

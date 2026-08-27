@@ -175,11 +175,16 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # not importable in a given checkout rather than failing it. It pins the MLB
 # partial-inning notation contract across the repo's SIXTEEN independent IP
 # parsers, two of which disagreed.
-MAX_GUARDED_FILES = 58
+# 2026-08-27, +1 file (58 -> 59): test_refresh_gate_structure importorskips
+# pyyaml. It exists BECAUSE the sibling test_refresh_ci_gate skips all nine of
+# its tests without PowerShell — on Linux the nightly gate's exit-code
+# contract was pinned by nothing. This one checks the same contract statically
+# so it holds on every platform.
+MAX_GUARDED_FILES = 59
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 103
+MAX_GUARD_SITES = 104
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
