@@ -290,6 +290,56 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
 # Named constants so callers stop re-typing the magic numbers (audit 2026-07-03:
 # build_sp_pl_board hardcoded 17/5 inline, hitter-slate-grid doc still said the
 # pre-recalibration 20). Import these — never re-type. (recalibrated 2026-06-28.)
+
+# ── forward (shrunk) boom/bust estimates ─────────────────────────────────────
+# An observed boom rate over a short window is mostly sampling noise. Measured
+# 2026-08-27 on 1,331 SP-seasons (validate_boom_window.py): regressing the NEXT
+# 8 starts' boom rate on the window's boom rate gives a slope well under 1, and
+# 1 - slope is the fraction of any observed gap that does not survive.
+#
+#   window   slope   shrinkage   forward r
+#     L3     0.179      82%        0.253
+#     L5     0.261      74%        0.304
+#     L8     0.353      65%        0.347     <- the /boom-bust-history default
+#     L12    0.431      57%        0.371
+#     L20    0.575      42%        0.411
+#
+# Consequence for the display: the skill's own canonical contrast — a "37% boom
+# hot streak" against "0% boom cap-fodder" — is a 37.5pp gap on screen and a
+# 13.2pp gap going forward (0/8 -> 19.7%, 3/8 -> 33.0%). Raw rates invite
+# reading 0/8 as "never booms" when the forward truth is about one in five.
+#
+# Rule 13: this is a DISPLAY calibration. It never moves rh3/rp3/rprs2, and it
+# does not change any existing boom_bust output — callers must opt in.
+BOOM_SHRINK_SLOPE = {3: 0.179, 5: 0.261, 8: 0.353, 12: 0.431, 20: 0.575}
+SP_BOOM_BASE = 0.305   # league SP boom rate on the same panel
+
+
+def forward_rate(observed_rate: float, window: int, base: float = SP_BOOM_BASE) -> float:
+    """Shrink an observed short-window rate toward the base rate.
+
+    ``observed_rate`` is a fraction (3/8 -> 0.375), ``window`` the number of
+    starts it came from. Interpolates the slope for an unlisted window and
+    clamps to the measured range rather than extrapolating off the end.
+
+    Returns the forward estimate: ``base + slope * (observed - base)``.
+    """
+    if observed_rate is None or window is None or window <= 0:
+        return float("nan")
+    ws = sorted(BOOM_SHRINK_SLOPE)
+    if window in BOOM_SHRINK_SLOPE:
+        slope = BOOM_SHRINK_SLOPE[window]
+    elif window <= ws[0]:
+        slope = BOOM_SHRINK_SLOPE[ws[0]]
+    elif window >= ws[-1]:
+        slope = BOOM_SHRINK_SLOPE[ws[-1]]
+    else:
+        lo = max(w for w in ws if w < window)
+        hi = min(w for w in ws if w > window)
+        f = (window - lo) / (hi - lo)
+        slope = BOOM_SHRINK_SLOPE[lo] + f * (BOOM_SHRINK_SLOPE[hi] - BOOM_SHRINK_SLOPE[lo])
+    return base + slope * (observed_rate - base)
+
 SP_BOOM, SP_BUST = 17, 5     # per-start FP: ~top-quartile / replacement floor
 RP_BOOM, RP_BUST = 6, 0      # per-appearance FP
 H_BOOM, H_BUST = 5, 0        # per-game FP: ~top-quintile / negative day
