@@ -309,9 +309,10 @@ class LeagueState:
         ``fresh=True`` to bypass and refresh the cache.
 
         Returns:
-            DataFrame with columns ``player_name``, ``position``,
-            ``pro_team``, ``percent_owned``, ``injured``, ``injury_status``
-            (a schema superset of the legacy get_free_agents DataFrame).
+            DataFrame with columns ``player_name``, ``player_id``,
+            ``position``, ``pro_team``, ``percent_owned``, ``injured``,
+            ``injury_status`` (a schema superset of the legacy
+            get_free_agents DataFrame).
         """
         league = self._get_league()
         key = ("fa_pool_raw", id(league))
@@ -331,6 +332,11 @@ class LeagueState:
             for player in fas:
                 rows.append({
                     "player_name": player.name,
+                    # ESPN's own player id, captured so the cross-team leak
+                    # filter below can match on IDENTITY rather than on a name
+                    # string. all_teams() has always carried it; the FA side
+                    # did not, so the filter could only compare spellings.
+                    "player_id": getattr(player, "playerId", None),
                     "position": getattr(player, "position", "") or "",
                     "pro_team": getattr(player, "proTeam", ""),
                     "percent_owned": getattr(player, "percent_owned", 0.0),
@@ -350,15 +356,49 @@ class LeagueState:
         if fa_df.empty:
             return fa_df
 
-        # Cross-team verification — drop any name that's actually rostered.
+        # Cross-team verification — drop anyone who is actually rostered.
         # Without this, ESPN's FA endpoint can lag and surface "available"
-        # players that another team already grabbed.
+        # players that another team already grabbed (Connelly Early; the
+        # Julio Rodriguez leak of 2026-06-04).
+        #
+        # Matched on ESPN player_id FIRST, name second. This used to be a name
+        # compare alone, which the two endpoints can defeat by spelling one
+        # player two ways: ESPN hands back ascii "Jose Soriano" in one place
+        # and "José Soriano" in another (the same drift that made live_monitor
+        # drop him entirely on 2026-08-07). A leak filter that exists BECAUSE
+        # the upstream is unreliable should not itself depend on the upstream
+        # being consistent. Both legs run — an id may be missing on either
+        # side, and then the name leg is all there is. (2026-08-27.)
         rostered = self.all_teams(fresh=fresh)
-        if not rostered.empty and "player_name" in rostered.columns:
-            rostered_names = set(rostered["player_name"].dropna().tolist())
-            fa_df = fa_df[~fa_df["player_name"].isin(rostered_names)].reset_index(
-                drop=True
-            )
+        if not rostered.empty:
+            if "player_id" in rostered.columns and "player_id" in fa_df.columns:
+                _r_ids = [int(pid) for pid in rostered["player_id"].dropna().tolist()]
+                _f_ids = [int(pid) for pid in fa_df["player_id"].dropna().tolist()]
+                rostered_ids = set(_r_ids)
+                # Only trust ids when they actually IDENTIFY, on BOTH sides. If
+                # either frame repeats an id (a sentinel, a stub, a fixture
+                # default), an id filter stops meaning "this player" and starts
+                # meaning "this group" — and matching a shared sentinel would
+                # drop the whole FA pool, reporting "no free agents available".
+                # That silent emptying is a far worse failure than the leak
+                # this filter guards against, so duplicates on either side skip
+                # the id leg and leave the name leg to do the work.
+                _identifying = (
+                    rostered_ids
+                    and len(rostered_ids) == len(_r_ids)
+                    and len(set(_f_ids)) == len(_f_ids)
+                )
+                if _identifying:
+                    keep = ~fa_df["player_id"].apply(
+                        lambda pid: pid is not None and pid == pid
+                        and int(pid) in rostered_ids
+                    )
+                    fa_df = fa_df[keep].reset_index(drop=True)
+            if "player_name" in rostered.columns and not fa_df.empty:
+                rostered_names = set(rostered["player_name"].dropna().tolist())
+                fa_df = fa_df[
+                    ~fa_df["player_name"].isin(rostered_names)
+                ].reset_index(drop=True)
 
         return fa_df
 
