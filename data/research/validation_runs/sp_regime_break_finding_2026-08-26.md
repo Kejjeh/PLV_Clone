@@ -149,3 +149,93 @@ Imanaga's raw 2026 line shows no decline at all (K% 24.3 vs 20.6 in 2025; August
 K% 30%, his second-best month), so that drop is affirmatively wrong. Soriano's
 case survives only on evidence independent of this method (August/July K% 17-18%
 vs a 21% career norm in both 2024 and 2025).
+
+---
+
+# v2 — A PROPER STRUCTURAL BREAK TEST. RESULT: THE IDEA IS DEAD.
+
+`scripts/xfp/sp_structural_break.py`. Four changes, each targeting one v1 defect:
+
+1. **Test a stabilizing rate, not a noisy composite.** Break tested on **K%**, not
+   FP/start. FP bundles K/IP/H/ER/BB and sequencing luck (within-pitcher SD ≈ 9);
+   a shift in it is mostly BABIP.
+2. **Gate both segments at the stabilization minimum.** A split is admissible only
+   when BOTH sides carry ≥ `SP_MINS['k_pct']` = 100 TBF.
+3. **Calibrate for the search with a permutation null.** Statistic is sup|z| of a
+   two-proportion test over admissible splits. Start order is exchangeable under
+   "no break", so the null is built by shuffling — exactly calibrated to the
+   search that produced the statistic.
+4. **BH-FDR across pitcher-seasons** (q=0.10, M=1339).
+
+## Detector is verified, not assumed
+
+200 sims/scenario, p from 400 permutations:
+
+| scenario | true shift | median p | % p<.05 |
+|---|---|---|---|
+| NULL (22% flat) | +0pp | 0.531 | **4%** ← correctly calibrated |
+| 22 → 26% | +4pp | 0.410 | 12% |
+| 20 → 28% | +8pp | 0.079 | 42% |
+| **16 → 30% (Lopez-size)** | +14pp | 0.005 | **96%** |
+| 15 → 32% | +17pp | 0.002 | 98% |
+
+The detector finds a Lopez-sized break 96% of the time. A null result is a
+finding, not a failure.
+
+## A BUG THIS RUN CAUGHT — permutation resolution floor
+
+The first pass reported "0 of 1339 pass FDR" at B=400 permutations. That was an
+ARTIFACT: an empirical p from B permutations cannot go below 1/(B+1) = 0.0025,
+while BH over M=1339 needs the smallest p ≤ q/M = 7.5e-5. **No test could ever
+be rejected regardless of the data.** Re-run at B=200,000 (floor 5e-6).
+
+**Rule to carry forward: always check 1/(B+1) < q/M before believing a null from
+a permutation test.**
+
+## Real break rate
+
+| | rate |
+|---|---|
+| v1 SEARCHED (max FP split, no null) | **80.1%** |
+| v2 raw p<0.05 | 6.4% (vs 5% expected by chance) |
+| **v2 BH-FDR q=0.10** | **3 / 1339 = 0.22%** |
+
+The three: Andrew Cashner 2018, Kevin Gausman 2017, Adrian Houser 2026.
+
+Of 224 seasons containing a ≥25-day absence, **0** showed an FDR-significant K%
+break. An absence does not imply a talent change.
+
+## The decision players, tested properly (2026)
+
+| pitcher | pre K% | post K% | shift | sup_z | p | verdict |
+|---|---|---|---|---|---|---|
+| Bryce Miller | 34.3 | 15.9 | −18.4 | 4.05 | .016 | raw p<.05 |
+| **Jacob Lopez** | 15.8 | 29.9 | **+14.2** | 3.30 | **.044** | raw p<.05 |
+| José Soriano | 32.5 | 21.5 | −11.0 | 2.53 | .110 | **NOT A BREAK** |
+| Tyler Mahle | 21.1 | 27.1 | +6.0 | 1.36 | .514 | **NOT A BREAK** |
+| Noah Cameron | 31.8 | 27.6 | **−4.2** | 0.73 | .619 | **NOT A BREAK** |
+| Shota Imanaga | 28.3 | 22.5 | −5.9 | 1.55 | **.783** | **NOT A BREAK** |
+
+Cameron's shift is NEGATIVE — v1's "+4.5, your ace" had the sign backwards.
+
+## Why even the real breaks are unusable
+
+Backtest of the strictest sensible rule (event-triggered absence AND sup_z ≥ 3.0,
+no lookahead): fires on **1 / 10,274** train and **2 / 3,406** holdout decision
+points.
+
+**The structural reason:** detection requires 100 TBF *after* the break. By the
+time that accumulates, the rest-of-season window is nearly gone. Statistical
+detectability and decision usefulness are separated by roughly the length of the
+window you would need to act on. This is not a tuning problem and no threshold
+fixes it.
+
+## Final disposition
+
+`sp_regime_board.py` now sets **`adj` == rp3 always**. Breaks are ANNOTATION ONLY.
+Nothing regime-derived moves any number, in either direction.
+
+**Family CLOSED.** Both the short-window variant (`stuff_regime_delta`, REJECTED)
+and the structural-break variant (this) are dead for SP projection. Re-open only
+with a detector that needs materially less than 100 TBF post-break to reach
+power — which the stabilization curves say does not exist for K%.

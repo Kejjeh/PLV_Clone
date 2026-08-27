@@ -72,18 +72,18 @@ def main() -> int:
             if not r3:
                 continue
             base = float(r3["xfp_rp3_per_start"])
+            # v2 (2026-08-26): `adj` ALWAYS equals rp3. Breaks are ANNOTATION ONLY.
+            # A properly tested break (K% sup-z, permutation null, BH-FDR) occurs
+            # in 0.22% of pitcher-seasons, and an event-triggered + z-gated
+            # detector fires on 1/10,274 train and 2/3,406 holdout decision points
+            # — because detection needs 100 TBF post-break, which arrives too late
+            # in the season to act on. No version of this is usable as a number.
             s = scan.get(pid)
-            # ABSENCE only — SEARCHED backtested worse than doing nothing.
-            if s and s["corroborated"] == "True" and s["break_type"] == "ABSENCE":
-                n, fp = float(s["n_post"]), float(s["fp_post"])
-                pri = float(s["fp_prior"]) if s["fp_prior"] else fp
-                adj = (n * fp + W_PRIOR * pri) / (n + W_PRIOR)
-                note = f"{s['break_type'][:3]} {s['break_date'][5:]} n={int(n)}"
-            elif s and s["corroborated"] == "True":
-                adj = base
-                note = f"[{s['break_type'][:3]} unvalidated]"
+            adj = base
+            if s and s["corroborated"] == "True":
+                note = f"[{s['break_type'][:3]} {s['break_date'][5:]} annot]"
             else:
-                adj, note = base, ""
+                note = ""
             rows.append(dict(
                 pid=pid, name=p["name"], own=p["owner"], team=p["team"],
                 rp3=base, adj=adj, delta=adj - base, note=note,
