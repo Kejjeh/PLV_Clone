@@ -20,14 +20,23 @@ def _parse_ip(raw) -> float:
     MLB API returns inningsPitched as a string with .0/.1/.2 partial-inning
     notation: '5.0' = 5.000, '5.1' = 5 + 1/3, '5.2' = 5 + 2/3.
 
-    Accepts:  '5.2', '5.0', '0.0', '1.0', 5.0 (float), 0 (int), None, ''.
-    Raises:   ValueError on unparseable string with malformed decimal.
+    Accepts:  '5.2', '5.0', '0.0', '1.0', 5.2 (float), 0 (int), None, ''.
+    Raises:   ValueError on malformed partial-inning notation.
     Returns:  float innings (e.g. '5.2' -> 5.6667).
+
+    A NUMERIC input is notation too, not a decimal. It used to short-circuit
+    as ``float(raw)``, so ``'5.2'`` parsed to 5.6667 while ``5.2`` parsed to
+    5.2 — the same value, two answers, differing by 0.47 IP (1.54 FP at
+    3.3 FP/IP, against a ~12 FP start). Every other IP parser in this repo —
+    twelve of them, hand-rolled — coerces with ``str()`` first and therefore
+    reads a numeric as notation. This one was the odd one out.
+
+    Falling through to the string path also makes a genuinely ambiguous value
+    RAISE rather than resolve silently: 5.5 is not valid notation, so it is
+    rejected instead of being guessed at. (Fixed 2026-08-27.)
     """
     if raw is None or raw == '':
         return 0.0
-    if isinstance(raw, (int, float)):
-        return float(raw)
     s = str(raw).strip()
     if '.' not in s:
         return float(s)
