@@ -80,6 +80,49 @@ target the actual p80 (boom) and p20 (bust) quintiles.
 | Hitter | L21 games | **≥5 FP** | **<0 FP** | 2025: p80=5.0, p20=0.0. Median hitter game is 1 FP — the old 10/2 cuts marked the median as "bust" |
 | RP | L15 appearances | **≥6 FP** (incl. SV/HLD) | **<0 FP** | 2025: p80=6.3, p20=0.4. Old ≥5 cut tagged 1-in-3 outings as "boom" — too loose |
 
+## ⚠ SHRINK THE RATE BEFORE YOU BELIEVE IT (measured 2026-08-27)
+
+A boom rate from 8 starts has a sampling SE of ~**16 percentage points**. Most of
+an observed gap between two pitchers is the same coin landing differently.
+
+Regressing the NEXT 8 starts' boom rate on the window's boom rate, over 1,331
+SP-seasons (`scripts/xfp/validate_boom_window.py`):
+
+| window | slope | **shrinkage** | forward r |
+|---|---|---|---|
+| L3 | 0.179 | **82%** | 0.253 |
+| L5 | 0.261 | 74% | 0.304 |
+| **L8** (default) | **0.353** | **65%** | 0.347 |
+| L12 | 0.431 | 57% | 0.371 |
+| L20 | 0.575 | 42% | 0.411 |
+
+**This skill's own canonical contrast, corrected:**
+
+| | displayed | forward estimate |
+|---|---|---|
+| "0% boom cap-fodder" (0/8) | 0.0% | **19.7%** |
+| "37% boom hot streak" (3/8) | 37.5% | **33.0%** |
+| gap | 37.5pp | **13.2pp** |
+
+A 0/8 pitcher is not a pitcher who never booms — he is a pitcher who booms about
+**one start in five**. Raw rates invite exactly the wrong reading.
+
+**Always report the forward estimate next to the raw rate:**
+
+```python
+import sys; sys.path.insert(0, "scripts/xfp/lib")
+from boom_bust import forward_rate
+forward_rate(3/8, window=8)   # -> 0.330
+```
+
+**And treat the Trend arrow with suspicion.** It compares L3 / L5 / L8, which are
+82% / 74% / 65% noise respectively — largely noise against noise. Two of the
+three windows in the trend are shorter, and therefore worse, than the headline.
+
+Calibration note: `forward_rate` is a DISPLAY correction (Rule 13). It never
+moves rh3/rp3/rprs2 and changes no existing output — callers opt in.
+
+
 **Threshold history**: original v1 cuts were SP 20/5, Hitter 10/2, RP 5/0,
 calibrated by intuition. The 2026-06-06 empirical validation confirmed SP
 is correct but hitter and RP were badly miscalibrated:
