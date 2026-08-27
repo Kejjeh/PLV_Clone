@@ -100,3 +100,75 @@ on a non-Bernoulli rate.
    hitter metric.
 
 Rule 13 throughout: descriptive. Nothing here re-ranks rh3/rp3/rprs2.
+
+---
+
+# ADDENDUM (loop iteration 1) — the "K% beats rp3" reading was WRONG. It was frame.
+
+Last turn I flagged SP K% forward r = +0.540 against rp3's live r ≈ 0.40 as
+possibly "the most valuable thing in this session." It is not. Rebuilt on an
+rp3-LIKE frame (split at every start, varying rest-of-season window, no
+durability filter): 24,052 rows over 1,330 pitcher-seasons.
+
+## The gap decomposes into two frame effects, neither of them skill
+
+**H1 — target-window length dominates.** r rises monotonically with how many
+starts the target averages over:
+
+| RoS starts remaining | n | r(K%, RoS FP) |
+|---|---|---|
+| 2-3 | 1,330 | **0.363** |
+| 4-6 | 3,990 | 0.428 |
+| 7-10 | 5,300 | 0.473 |
+| 11-15 | 5,768 | 0.505 |
+| 16+ | 7,664 | **0.523** |
+
+**H2 — the durability filter is survivorship.** My matched-half design required
+≥500 TBF, which selects established starters:
+
+| season total TBF | n | r |
+|---|---|---|
+| <400 | 2,050 | **0.247** |
+| 400-600 | 7,603 | 0.450 |
+| 600-750 | 9,049 | 0.454 |
+| 750+ | 5,350 | **0.529** |
+
+**H3 — split position is NOT a driver** (0.486 → 0.450 across the season).
+
+Pooled over the rp3-like frame: **r = 0.466**, not 0.540. The matched-half-like
+subset reproduces 0.528, confirming the original number was correct *for its
+frame* and that the frame was the difference.
+
+rp3's ~0.40 is measured on a broader population still (thin seasons,
+`marcel_il` rows, short RoS windows) — exactly the cells where r collapses to
+0.247. **There is no headroom claim here.** Retracted.
+
+## And K% is not uniquely informative — it is a convenient summary
+
+Player-grouped 5-fold OOS on the same frame:
+
+| model | r | R² |
+|---|---|---|
+| K% alone | 0.4625 | 0.214 |
+| K% + FP level | 0.4904 | 0.241 |
+| all 8 game-log features | **0.5328** | 0.284 |
+| **everything EXCEPT K%** | **0.5287** | 0.280 |
+
+**Dropping K% costs +0.0041 r.** K% is the best single feature and captures 75%
+of the full model's explained variance, but it is nearly redundant with the rest.
+
+Partly mechanical and worth stating: K is a term in the SP FP formula
+(`K + IP*3.3 − H − 2ER − BB − HBP`), so K% and FP/start are algebraically linked.
+Their collinearity is expected, not a discovery.
+
+## What survives
+
+The v5/reliability headline is unchanged and was never frame-dependent: **within
+a fixed frame, K% is the best single SP predictor and beats the pitcher's own FP
+level (0.540 vs 0.463; 0.4625 vs the FP-level component here).** The claim that
+died is the cross-frame one — that a single rate outperforms the production
+model. It does not; it was measured on an easier problem.
+
+**Methodological rule to carry forward:** never compare an r across frames.
+Target-window length alone moved r by +0.16 here, which is larger than any
+feature effect measured anywhere in this session.
