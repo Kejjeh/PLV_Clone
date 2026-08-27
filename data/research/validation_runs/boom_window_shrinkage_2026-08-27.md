@@ -95,3 +95,78 @@ It does not say boom/bust history is useless. Ranking skill is real (AUC 0.60
 for boom), the L20 window retains 58% of an observed gap, and actuals remain the
 only lens that shows variance at all. It says the RAW RATE is the wrong number to
 put on screen, and that the shorter the window, the more the display overstates.
+
+
+---
+
+# HITTER SIDE — more observations, LESS signal
+
+Same estimator, hitter panel: **256,456 forecasts / 2,469 hitter-seasons**,
+boom = FP >= 5, bust = FP < 0, default window **L21 games**.
+
+## As a probability, L21 also loses to the base rate
+
+| BOOM (next game >= 5 FP), base 0.203 | AUC | Brier | vs base |
+|---|---|---|---|
+| base rate (constant) | 0.500 | 0.1618 | — |
+| **L21 window** | 0.5478 | **0.1666** | **+0.0048 WORSE** |
+| season-to-date | 0.5631 | 0.1619 | +0.0000 |
+| parametric (smooth) | 0.5632 | **0.1609** | −0.0009 |
+
+| BUST (next game < 0 FP), base 0.205 | AUC | Brier | vs base |
+|---|---|---|---|
+| **L21 window** | 0.5523 | 0.1674 | **+0.0045 WORSE** |
+| **season-to-date** | **0.5685** | **0.1627** | **−0.0002 best** |
+| parametric (smooth) | 0.5457 | 0.1670 | **+0.0041 WORSE** |
+
+**A side-specific reversal.** For SPs the smooth parametric leg beat both
+windows. For hitter BUST it LOSES to season-to-date. Hitter per-game FP is
+strongly right-skewed (skew +1.22, kurtosis 5.09 — measured in
+`distribution_shape_2026-08-27.md`), so a Gaussian misprices the left tail that
+`bust` is defined on. On the hitter bust line, prefer season-to-date.
+
+## Shrinkage — and the counterintuitive result
+
+| window | n | slope b | **shrinkage** | r |
+|---|---|---|---|---|
+| L7 | 241,642 | 0.105 | **89%** | 0.165 |
+| L14 | 224,359 | 0.192 | 81% | 0.223 |
+| **L21 (default)** | 207,076 | **0.267** | **73%** | 0.264 |
+| L28 | 189,793 | 0.330 | 67% | 0.294 |
+| L40 | 160,165 | 0.414 | 59% | 0.327 |
+| L60 | 110,936 | 0.520 | 48% | 0.364 |
+
+**Hitter L21 (73% noise) is NOISIER than SP L8 (65%)** despite resting on 21
+observations rather than 8. More data, less signal.
+
+## The mechanism, and it validates itself
+
+Shrinkage is a variance-components ratio: `b = var_true / (var_true + var_samp)`.
+Inverting it recovers the TRUE between-player SD of boom rate — and two
+independent windows per side agree, which is the internal check:
+
+| | sampling SD | **implied true between-player SD** |
+|---|---|---|
+| SP L8 | 16.1pp | **11.9pp** |
+| SP L20 | 10.2pp | **11.8pp** |
+| HITTER L21 | 8.8pp | **5.3pp** |
+| HITTER L60 | 5.2pp | **5.4pp** |
+
+**Pitchers spread ~12pp in true boom rate; hitters only ~5pp — less than half.**
+Hitters really are more alike in how often they boom, so a longer window still
+resolves less of a smaller real difference. That is why 21 games beats 8 starts
+on sample size and loses on signal.
+
+## Corrected hitter display
+
+| L21 boom | displayed | forward |
+|---|---|---|
+| 0/21 | 0.0% | **15.2%** |
+| 4/21 | 19.0% | 20.2% |
+| 10/21 | 47.6% | **27.9%** |
+
+## Shipped
+
+`forward_rate(observed_rate, window, side="SP"|"H")` now covers both sides,
+back-compatible (side defaults to "SP"). Skill carries both tables, the
+asymmetry, the parametric caveat and the Trend caution.

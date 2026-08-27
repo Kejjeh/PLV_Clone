@@ -80,47 +80,65 @@ target the actual p80 (boom) and p20 (bust) quintiles.
 | Hitter | L21 games | **≥5 FP** | **<0 FP** | 2025: p80=5.0, p20=0.0. Median hitter game is 1 FP — the old 10/2 cuts marked the median as "bust" |
 | RP | L15 appearances | **≥6 FP** (incl. SV/HLD) | **<0 FP** | 2025: p80=6.3, p20=0.4. Old ≥5 cut tagged 1-in-3 outings as "boom" — too loose |
 
-## ⚠ SHRINK THE RATE BEFORE YOU BELIEVE IT (measured 2026-08-27)
+## ⚠ SHRINK THE RATE BEFORE YOU BELIEVE IT (measured 2026-08-27, both sides)
 
-A boom rate from 8 starts has a sampling SE of ~**16 percentage points**. Most of
-an observed gap between two pitchers is the same coin landing differently.
+A boom rate from a short window is mostly sampling noise. Regressing the NEXT
+window's boom rate on the observed one (`scripts/xfp/validate_boom_window.py`):
 
-Regressing the NEXT 8 starts' boom rate on the window's boom rate, over 1,331
-SP-seasons (`scripts/xfp/validate_boom_window.py`):
+| SP window | slope | **noise** | | HITTER window | slope | **noise** |
+|---|---|---|---|---|---|---|
+| L3 | 0.179 | **82%** | | L7 | 0.105 | **89%** |
+| L5 | 0.261 | 74% | | L14 | 0.192 | 81% |
+| **L8** (default) | **0.353** | **65%** | | **L21** (default) | **0.267** | **73%** |
+| L12 | 0.431 | 57% | | L28 | 0.330 | 67% |
+| L20 | 0.575 | 42% | | L60 | 0.520 | 48% |
 
-| window | slope | **shrinkage** | forward r |
-|---|---|---|---|
-| L3 | 0.179 | **82%** | 0.253 |
-| L5 | 0.261 | 74% | 0.304 |
-| **L8** (default) | **0.353** | **65%** | 0.347 |
-| L12 | 0.431 | 57% | 0.371 |
-| L20 | 0.575 | 42% | 0.411 |
+**The asymmetry is the surprise: hitter L21 is NOISIER than SP L8** — 73% vs
+65% — despite resting on 21 observations instead of 8. More data, less signal.
 
-**This skill's own canonical contrast, corrected:**
+The mechanism is between-player spread, and two windows per side agree on it:
+the implied TRUE between-player SD of boom rate is **~12pp for pitchers** and
+only **~5pp for hitters**. Hitters are simply more alike in how often they boom,
+so even a longer window resolves less of a real difference.
 
-| | displayed | forward estimate |
+**Corrected displays:**
+
+| | displayed | forward |
 |---|---|---|
-| "0% boom cap-fodder" (0/8) | 0.0% | **19.7%** |
-| "37% boom hot streak" (3/8) | 37.5% | **33.0%** |
-| gap | 37.5pp | **13.2pp** |
+| SP "0% boom cap-fodder" (0/8) | 0.0% | **19.7%** |
+| SP "37% boom hot streak" (3/8) | 37.5% | **33.0%** |
+| Hitter 0/21 | 0.0% | **15.2%** |
+| Hitter 10/21 | 47.6% | **27.9%** |
 
-A 0/8 pitcher is not a pitcher who never booms — he is a pitcher who booms about
-**one start in five**. Raw rates invite exactly the wrong reading.
+A 0-for-the-window player is never a player who *cannot* boom. He is a roughly
+one-in-five (SP) or one-in-seven (hitter) player, and the raw display invites
+exactly the wrong inference.
 
 **Always report the forward estimate next to the raw rate:**
 
 ```python
 import sys; sys.path.insert(0, "scripts/xfp/lib")
 from boom_bust import forward_rate
-forward_rate(3/8, window=8)   # -> 0.330
+forward_rate(3/8, window=8,  side="SP")   # -> 0.330
+forward_rate(0.0, window=21, side="H")    # -> 0.152
 ```
 
-**And treat the Trend arrow with suspicion.** It compares L3 / L5 / L8, which are
-82% / 74% / 65% noise respectively — largely noise against noise. Two of the
-three windows in the trend are shorter, and therefore worse, than the headline.
+**As a PROBABILITY the window loses to the base rate.** Brier vs a constant:
+SP L8 **+0.0091** (boom) / **+0.0147** (bust); hitter L21 **+0.0048** / **+0.0045**.
+It keeps real RANKING skill (AUC 0.55-0.60) — use it to sort, never as a number.
+
+**One side-specific caveat.** For SPs a smooth parametric P(FP≥thr) beats both
+windows. For hitter BUST it does NOT (Brier +0.0041, worse than season-to-date)
+— hitter per-game FP is strongly right-skewed (skew +1.22, kurtosis 5.09) and a
+Gaussian misprices the left tail. On the hitter bust line, prefer season-to-date.
+
+**And treat the Trend arrow with suspicion.** SP compares L3/L5/L8 = 82/74/65%
+noise; hitters L7/L14/L21 = 89/81/73%. Largely noise against noise, and the
+shorter inputs are always the worse ones.
 
 Calibration note: `forward_rate` is a DISPLAY correction (Rule 13). It never
 moves rh3/rp3/rprs2 and changes no existing output — callers opt in.
+
 
 
 **Threshold history**: original v1 cuts were SP 20/5, Hitter 10/2, RP 5/0,

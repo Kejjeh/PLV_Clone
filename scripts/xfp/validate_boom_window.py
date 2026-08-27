@@ -35,11 +35,22 @@ import numpy as np
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "scripts/xfp"))
-from metric_reliability import load, PIT  # noqa: E402
+from metric_reliability import load, PIT, HIT  # noqa: E402
 
-SP_BOOM, SP_BUST = 17.0, 5.0
-SIGMA_GLOBAL = 8.73
-W = 8
+# Per-side config. Thresholds are the shipped display cutoffs from
+# lib/boom_bust (SP_BOOM/BUST, H_BOOM/BUST); windows are the /boom-bust-history
+# defaults; sigma is the panel-mean per-unit SD.
+SIDES = {
+    "SP": dict(boom=17.0, bust=5.0, window=8, sigma=8.73,
+               grid=(3, 5, 8, 12, 20), panel="PIT", unit="start"),
+    "H":  dict(boom=5.0, bust=0.0, window=21, sigma=3.30,
+               grid=(7, 14, 21, 28, 40), panel="HIT", unit="game"),
+}
+SIDE = os.environ.get("PLV_BOOM_SIDE", "SP")
+CFG = SIDES[SIDE]
+SP_BOOM, SP_BUST = CFG["boom"], CFG["bust"]
+SIGMA_GLOBAL = CFG["sigma"]
+W = CFG["window"]
 
 
 def norm_sf(x):
@@ -69,10 +80,13 @@ def brier(p, y):
 
 
 def main() -> int:
-    by = load(PIT, "pitcher")
+    is_sp = SIDE == "SP"
+    by = load(PIT if is_sp else HIT, "pitcher" if is_sp else "batter")
+    print(f"side={SIDE}  boom>={SP_BOOM}  bust<{SP_BUST}  window=L{W}  "
+          f"sigma={SIGMA_GLOBAL}\n")
     rows = []
     for (pid, yr), g in by.items():
-        st = [r for r in g if int(r["gs"] or 0) == 1]
+        st = [r for r in g if (int(r["gs"] or 0) == 1)] if is_sp else list(g)
         if len(st) < W + 2:
             continue
         fp = np.array([float(r["fp"]) for r in st])
@@ -92,36 +106,39 @@ def main() -> int:
                 nxt8_boom=boom[i:i + W].mean() if i + W <= len(fp) else np.nan,
             ))
     n = len(rows)
-    print(f"panel: {n:,} forecasts / {len({r['key'] for r in rows}):,} pitcher-seasons")
+    ent = "pitcher" if SIDE == "SP" else "hitter"
+    print(f"panel: {n:,} forecasts / {len({r['key'] for r in rows}):,} {ent}-seasons")
     base_b = np.mean([r["y_boom"] for r in rows])
     base_u = np.mean([r["y_bust"] for r in rows])
     print(f"base rates: boom {base_b:.3f}  bust {base_u:.3f}")
     print(f"SE of a boom rate from {W} starts at p={base_b:.2f}: "
           f"{math.sqrt(base_b*(1-base_b)/W):.3f}  ({100*math.sqrt(base_b*(1-base_b)/W):.0f}pp)\n")
+    U = CFG["unit"]
 
-    for lab, keys, y in (("BOOM (next start >= 17 FP)", ("l8_boom", "std_boom", "par_boom"), "y_boom"),
-                         ("BUST (next start < 5 FP)", ("l8_bust", "std_bust", "par_bust"), "y_bust")):
+    for lab, keys, y in ((f"BOOM (next {U} >= {SP_BOOM:g} FP)",
+                          ("l8_boom", "std_boom", "par_boom"), "y_boom"),
+                         (f"BUST (next {U} < {SP_BUST:g} FP)",
+                          ("l8_bust", "std_bust", "par_bust"), "y_bust")):
         yy = [r[y] for r in rows]
         print(f"=== {lab} ===")
         print(f"  {'predictor':<26}{'AUC':>8}{'Brier':>9}{'vs base':>10}")
         print(f"  {'base rate (constant)':<26}{'0.500':>8}{brier([np.mean(yy)]*n, yy):>9.4f}"
               f"{0.0:>+10.4f}")
         bb = brier([np.mean(yy)] * n, yy)
-        for k, nice in zip(keys, (f"L8 window (n={W})", "season-to-date", "PARAMETRIC (smooth)")):
+        for k, nice in zip(keys, (f"L{W} window", "season-to-date", "PARAMETRIC (smooth)")):
             p = [r[k] for r in rows]
             print(f"  {nice:<26}{auc(p, yy):>8.4f}{brier(p, yy):>9.4f}{brier(p,yy)-bb:>+10.4f}")
         print()
 
     sub = [r for r in rows if np.isfinite(r["nxt8_boom"])]
-    print(f"=== REGRESSION TO THE MEAN: what an L8 boom read is worth (n={len(sub):,}) ===")
-    print(f"  {'L8 boom (x/8)':>15}{'n':>8}{'next-8 boom%':>15}{'shrink toward base':>20}")
-    for k in range(0, 6):
+    print(f"=== REGRESSION TO THE MEAN: what an L{W} boom read is worth (n={len(sub):,}) ===")
+    print(f"  {f'L{W} boom (x/{W})':>15}{'n':>8}{f'next-{W} boom%':>15}")
+    for k in range(0, W + 1):
         s = [r for r in sub if abs(r["l8_boom"] - k / W) < 1e-9]
         if len(s) < 40:
             continue
         nxt = np.mean([r["nxt8_boom"] for r in s])
-        print(f"  {k}/8 = {100*k/W:>5.0f}%{len(s):>8}{100*nxt:>14.1f}%"
-              f"{100*(nxt-base_b)/max(k/W-base_b,1e-9)*0+100*(1-(nxt-base_b)/(k/W-base_b)) if abs(k/W-base_b)>0.05 else float('nan'):>19.0f}%")
+        print(f"  {k}/{W} = {100*k/W:>5.0f}%{len(s):>8}{100*nxt:>14.1f}%")
     return 0
 
 
