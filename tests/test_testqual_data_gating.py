@@ -163,8 +163,15 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # module-level importorskip for build_matchup_dashboard (a heavy import), and
 # it pins the canonical "bench is an active scoring slot" rule (gotcha #7),
 # which had NO test coverage at all while two comments argued against it.
-MAX_GUARDED_FILES = 55
-MAX_GUARD_SITES = 100
+# 2026-08-27, +1 file (55 -> 56): test_leverage_sp_lever_keys uses the same
+# module-level importorskip as test_leverage_engine (the engine needs the
+# dashboard import chain). It guards the two SP levers of assemble(), which
+# silently reported "benching/dropping him costs nothing" on a malformed key.
+MAX_GUARDED_FILES = 56
+# Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
+# is the first time the SITE bound has moved since it was set; it is the
+# tighter of the two and worth keeping that way.
+MAX_GUARD_SITES = 101
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
