@@ -153,7 +153,13 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 #   test_hygiene_python_floor / test_lens_health — NEW guard-bearing files,
 #     each guarding on interpreter version rather than on data.
 # Sites stayed under 100, so only the file bound moved.
-MAX_GUARDED_FILES = 53
+#
+# 2026-08-27, +1 file (53 -> 54): test_roster_rules_iteration uses a single
+# module-level importorskip for scripts.xfp.lib.roster_rules, matching how
+# every other lib-layer test reaches that package. It gates on an import, not
+# on data, and it guards a legality bug that could silently declare an
+# oversized roster legal.
+MAX_GUARDED_FILES = 54
 MAX_GUARD_SITES = 100
 
 

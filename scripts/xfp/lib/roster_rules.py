@@ -57,7 +57,18 @@ class IllegalMove(ValueError):
 
 
 def _counts(roster: Iterable[dict]) -> dict:
-    """Bucket counts over NON-IL players (IL'd players occupy no active slot)."""
+    """Bucket counts over NON-IL players (IL'd players occupy no active slot).
+
+    Materialised first because this walks ``roster`` TWICE (once for the active
+    filter, once for the total). The signature says Iterable, so a caller was
+    free to hand over a generator — and then the second walk saw an exhausted
+    iterator and reported ``total: 0``, which silently satisfies the
+    roster-size legality check (``0 > 29`` is False) and declares an oversized
+    roster legal. Every caller today passes a list, so this was latent; it is
+    also exactly the kind of silence a legality module must not have.
+    (Fixed 2026-08-27.)
+    """
+    roster = list(roster)
     act = [p for p in roster if not p.get('on_il')]
     return {
         'H': sum(1 for p in act if p['bucket'] == 'H'),
@@ -289,6 +300,11 @@ def is_legal(roster: list[dict], **kw) -> bool:
 
 __all__ = [
     'ACTIVE_HITTERS', 'ACTIVE_PITCHERS', 'BENCH', 'IL_SLOTS', 'ROSTER_TOTAL',
-    'RP_FLOOR', 'REQUIRED_SLOTS', 'IllegalMove',
+    # RP_CAP (owner correction 2026-08-03) sat beside RP_FLOOR in the module but
+    # was missing here, as were lineup_capacity_problem and same_player — the
+    # latter carries a comment calling itself a "public alias" while a
+    # star-import could not reach it. (2026-08-27.)
+    'RP_FLOOR', 'RP_CAP', 'REQUIRED_SLOTS', 'IllegalMove',
     'apply_swap', 'check_swap', 'is_legal', 'preexisting_shortfalls',
+    'lineup_capacity_problem', 'same_player',
 ]
