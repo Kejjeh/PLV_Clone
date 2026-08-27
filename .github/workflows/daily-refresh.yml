@@ -58,9 +58,13 @@ jobs:
         #   exit 1   tests FAILED             -> SUITE_RED (archive, no publish)
         #   exit 2   interrupted/COLLECTION   -> SUITE_RED (a production import
         #            error lands here - it must never wave through)
-        #   exit 3-5 pytest itself broke      -> report, continue `slow` (the real-subprocess triangulate pair, ~42% of suite
-        # wall) is deselected; --no-cov -q override pyproject's addopts on the
-        # command line so this needs no config edit.
+        #   exit 3-5 pytest could NOT RUN     -> SUITE_RED (archive, no publish)
+        #            (corrected 2026-08-27: exit 5 is "no tests collected",
+        #            which is not a hiccup - it is the gate not running)
+        #
+        # `slow` (the real-subprocess triangulate pair, ~42% of suite wall) is
+        # deselected; --no-cov -q override pyproject's addopts on the command
+        # line so this needs no config edit.
         #
         # ESCAPE HATCH: a red suite blocks the nightly by design, so if a
         # data-dependent test ever goes red BECAUSE the data is stale, the two
@@ -83,7 +87,25 @@ jobs:
             "SUITE_RED=1" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
             exit 0
           }
-          Write-Host "WARN: pytest could not run (exit $rc) - NOT gating the nightly on a runner hiccup."
+          # exit 3 internal error / 4 usage error / 5 NO TESTS COLLECTED.
+          # These used to wave the publish through as "a runner hiccup". That
+          # was wrong about the mechanism: exit 5 means the suite did not run
+          # AT ALL, and the reason given for not gating - that it "costs a day
+          # of unrecoverable archival data" - is true of `exit 1` here, NOT of
+          # SUITE_RED. SUITE_RED withholds only the publish; the refresh still
+          # runs with --no-push and the data commit below has no `if:`, so the
+          # ESPN archival is untouched either way (see the step below, which
+          # says so itself).
+          #
+          # So "we could not verify the suite" now gets the same safe handling
+          # as "the suite is red": archive everything, publish nothing. A
+          # renamed marker, a pytest flag removed upstream, or a missing
+          # pytest-cov plugin all land here - and each would otherwise publish
+          # dashboards having run zero tests, which is exactly what this step
+          # exists to prevent. Verified reachable 2026-08-27: an empty marker
+          # selection exits 5, and `--no-cov` without pytest-cov exits 4.
+          Write-Host "WARN: pytest could not run (exit $rc) - treating as RED. Archival continues; the publish is withheld until the suite can be verified."
+          "SUITE_RED=1" | Out-File $env:GITHUB_ENV -Append -Encoding utf8
           exit 0
 
       - name: Full refresh (statcast + models + dashboards + publish xfp-model)
