@@ -185,11 +185,15 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # a sibling skips entirely without PowerShell — test_refresh_workflow_gate's
 # three invariants were pinned by nothing on Linux. Two guard-bearing files
 # added this way is the cost of closing issue #81 for the two dark files.
-MAX_GUARDED_FILES = 60
+# 2026-08-27, +1 file (60 -> 61): test_dashboard_script_payloads importorskips
+# build_index_dashboard (a heavy driver import). It pins that no window.XFP_*
+# payload can close the <script> block it shares with nine others — a guard
+# that existed on one of ten payloads.
+MAX_GUARDED_FILES = 61
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 106
+MAX_GUARD_SITES = 107
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
