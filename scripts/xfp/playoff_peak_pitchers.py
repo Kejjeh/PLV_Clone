@@ -71,6 +71,12 @@ def _per_year_aggs(year: int) -> pd.DataFrame:
         k=('k','sum'), bb=('bb','sum'), hbp=('hbp','sum'), h=('h','sum'),
         runs=('runs','sum'), outs=('outs','sum'))
     per_start['ip'] = per_start['outs'] / 3.0
+    # PROXY, not canonical BrownU FP: Statcast exposes runs_on_play (R), not
+    # earned runs (ER), so this substitutes -2*R for -2*ER. Same deliberate
+    # trade-off lib/recform_hot.py documents; recorded here too because an
+    # undocumented R-for-ER read like a mistake on audit (2026-08-27). It
+    # over-penalises unearned runs, which is acceptable for RANKING peak
+    # playoff performance but must not be reported as a player's FP.
     per_start['fp'] = (per_start['k'] + per_start['ip'] * 3.3 - per_start['h']
                        - 2 * per_start['runs'] - per_start['bb'] - per_start['hbp'])
 
