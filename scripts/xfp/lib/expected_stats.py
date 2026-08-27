@@ -47,8 +47,10 @@ from plv_clone.paths import ROOT
 
 CACHE = ROOT / "data" / "research" / "xfp_cache"
 #: Season these lenses read. Named once so the personal-baseline callers and
-#: the statcast default cannot drift apart.
-CURRENT_SEASON = 2026
+#: the statcast default cannot drift apart. Aliases league_config.SEASON_YEAR
+#: rather than restating the literal — two independent "current season"
+#: constants is one too many (2026-08-27).
+from plv_clone.league_config import SEASON_YEAR as CURRENT_SEASON  # noqa: E402
 LUCK_SEASONS = CACHE / "hitter_luck_seasons.csv"
 
 #: Empirical shrink applied to a hitter's prior-seasons gap before it is used

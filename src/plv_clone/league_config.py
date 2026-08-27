@@ -32,6 +32,16 @@ from __future__ import annotations
 # League identity (audit 2026-07-19 item 7): the team name was hardcoded as
 # a string literal in ~30 files. Import from here.
 MY_TEAM_NAME = "New York Ligers"
+# THE single source of truth for "the season we are playing". Bumping this one
+# literal must be all a rollover takes.
+#
+# It was not. Declared "bump at rollover", it had exactly ONE importer
+# (run_decision_trend) while 125 sites hardcoded 2026 independently and a
+# SECOND constant (lib/expected_stats.CURRENT_SEASON) declared itself the
+# canonical one too. A 2027 rollover would have bumped this and changed
+# essentially nothing. The decision-path layer under scripts/xfp/lib now
+# imports it; tests/test_season_year_single_source.py ratchets the rest.
+# (2026-08-27.)
 SEASON_YEAR = 2026  # bump at rollover; see audit R2 for the data-driven filters
 
 LEAGUE_SIZE = 8
