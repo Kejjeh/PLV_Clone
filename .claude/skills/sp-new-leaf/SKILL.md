@@ -45,33 +45,49 @@ construction (canonical: Soriano 2026-08 — his post-ASG BB% "improvement" is
 exactly the metric the protocol forbids, while his stabilized stuff was
 eroding).
 
-### Gate 3 — mechanism attribution (owner: statcast reads + `stuff_command` lens)
+### Gate 3 — mechanism attribution (DESCRIPTIVE, not predictive — see calibration)
 At least ONE of:
 - a stabilized process metric moved beyond delta-noise (~√2× the level's
   noise): velo, whiff, SwStr, K%, GB;
-- a discrete CHOICE changed (choices stabilize immediately): pitch-mix share
-  shift ≥5pp, a new/expanded pitch ≥10% usage, arm-slot change, role change.
+- a discrete CHOICE changed: pitch-mix share shift (calibration note: ≥5pp
+  sits BELOW the 7.0pp median of ordinary between-window mix variation —
+  demand ~≥10pp or a genuinely NEW pitch ≥10% usage before calling it a
+  choice), arm-slot change, role change.
 
-**Results without mechanism → MIRAGE** (hot streak; the Soriano-June shape —
-bust-run with intact stuff is the same verdict mirrored).
-**Mechanism without results → WATCH** (the change is real but not yet cashing).
+**Results without mechanism → MIRAGE**. **Mechanism without results → WATCH.**
+Gate 3 tells you WHAT changed — it does NOT raise the probability the change
+persists (calibrated 2026-08-28: mechanism-backed clearing splits held
++0.445 of their gap forward vs +0.495 for results-only, z = −0.18 — no
+separation, and the registered thresholds fired on 91% of ALL splits).
 
-### Gate 4 — persistence (don't-do #15)
+### Gate 4 — persistence to date (don't-do #15; also descriptive)
 Split the post window into two non-overlapping halves; the mechanism's sign
-must hold in BOTH. One half → **WATCH**, not a leaf. (A single window can look
-exactly like a trend and reverse in two weeks — Trea Turner.)
+must hold in BOTH. One half → **WATCH**, not a leaf. This certifies the change
+has lasted SO FAR; per the calibration it does not license projecting it
+forward beyond the shrinkage below.
 
 ## Verdicts
 
 | verdict | meaning | action posture |
 |---|---|---|
-| **NEW LEAF** | mechanism real, stabilized, persistent, results consistent with it | re-price the player at the mechanism-supported level |
+| **NEW LEAF** | mechanism real, stabilized, persistent, results consistent with it | the change HAPPENED; forward, apply the shrinkage below — never the raw post level |
 | **PARTIAL** | mechanism real but results OVERSHOOT it | credit the mechanism level, fade the topline (state both numbers) |
 | **MIRAGE** | results moved, no stabilized mechanism | expect regression to prior level |
 | **VARIANCE** | gap inside the noise floor | no update at all |
-| **DECLINE** | negative leaf — stuff eroding (= stuff_command STUFF-DECLINE) | sell/defensible drop |
+| **DECLINE** | negative leaf — stuff eroding (= stuff_command STUFF-DECLINE) | descriptive unless the RESULTS gap also cleared Gate 1; a mechanism-only decline prices at the season blend |
 | **WATCH** | mechanism present but sample/persistence incomplete | hold judgment, re-run at a named date |
 | **INSUFFICIENT** | post window below every cutoff | wait; the data cannot answer yet |
+
+## Forward pricing — the calibrated shrinkage (2026-08-28, n=227 clearing splits 2018-2026)
+
+A Gate-1-clearing break holds, on average, **+0.46** of its FP/start gap over
+the next ≤8 starts (**+0.33** for positive breaks, **+0.60 to +0.75** for
+negative ones — declines persist more than breakouts), and having a mechanism
+does not change that number. So the forward point estimate is
+`pre + hold×(post − pre)` — which usually lands very close to the model's own
+blended projection. **The verdict tells you what happened; rp3's blend remains
+the best forward number.** A split that never cleared Gate 1 prices at the
+season blend, full stop, whatever the mechanism says.
 
 ## Canonical worked cases (2026-08-28)
 
@@ -95,7 +111,9 @@ exactly like a trend and reverse in two weeks — Trea Turner.)
 - `/sp-form --lens breakout|decline` are POOL scanners; this is a SINGLE-ARM
   adjudication with a split point.
 - Hitters route to `/breakout-sustainability` / `/slump-or-decline`.
-- Calibration status: verdict hold-rates are being measured historically
-  (`new_leaf_calibration_2026-08-28.md`, pre-registered). Until that lands,
-  the gates are measurement-math-derived, not outcome-calibrated — say so
-  when the verdict is load-bearing for a drop.
+- Calibration status: **MEASURED 2026-08-28 — DOES NOT SEPARATE**
+  (`new_leaf_calibration_2026-08-28.md`; the seventh consecutive
+  mean-reversion win). Gates 0-2 are the load-bearing screen; Gates 3-4 are
+  descriptive attribution only. Forward expectations come from the shrinkage
+  table above, never from the mechanism story. When a verdict here is
+  load-bearing for a drop, quote the shrunk forward number next to it.
