@@ -183,7 +183,7 @@
     "player_id": 518595,
     "player_name_pos": "Travis d'Arnaud",
     "primary_position": "C",
-    "all_positions_seen": "C",
+    "all_positions_seen": "C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -320,6 +320,16 @@
     "position_count": 0
   },
   {
+    "player_id": 543238,
+    "player_name_pos": "Anthony Gose",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 543243,
     "player_name_pos": "Sonny Gray",
     "primary_position": "P",
@@ -434,10 +444,10 @@
     "player_name_pos": "Bryce Harper",
     "primary_position": "1B",
     "all_positions_seen": "1B|DH|RF",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|OF|DH",
+    "fantasy_positions_display": "1B, OF, DH",
+    "is_multi_position": true,
+    "position_count": 3
   },
   {
     "player_id": 547184,
@@ -728,6 +738,16 @@
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 592288,
+    "player_name_pos": "Kent Emanuel",
+    "primary_position": "P",
+    "all_positions_seen": "P",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 592332,
@@ -1093,7 +1113,7 @@
     "player_id": 602104,
     "player_name_pos": "Ram\u00f3n Ur\u00edas",
     "primary_position": "3B",
-    "all_positions_seen": "1B|3B",
+    "all_positions_seen": "1B|2B|3B",
     "fantasy_positions": "3B",
     "fantasy_positions_display": "3B",
     "is_multi_position": false,
@@ -1172,6 +1192,16 @@
   {
     "player_id": 605218,
     "player_name_pos": "Carl Edwards Jr.",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 605242,
+    "player_name_pos": "Michael Fulmer",
     "primary_position": "P",
     "all_positions_seen": "",
     "fantasy_positions": "",
@@ -1723,7 +1753,7 @@
     "player_id": 621097,
     "player_name_pos": "Jacob Waguespack",
     "primary_position": "P",
-    "all_positions_seen": "",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -1872,7 +1902,7 @@
   {
     "player_id": 621493,
     "player_name_pos": "Taylor Ward",
-    "primary_position": "OF",
+    "primary_position": "DH",
     "all_positions_seen": "DH|LF|RF",
     "fantasy_positions": "OF|DH",
     "fantasy_positions_display": "OF, DH",
@@ -1973,7 +2003,7 @@
     "player_id": 622761,
     "player_name_pos": "Jorge Mateo",
     "primary_position": "SS",
-    "all_positions_seen": "DH|SS",
+    "all_positions_seen": "2B|DH|SS",
     "fantasy_positions": "SS",
     "fantasy_positions_display": "SS",
     "is_multi_position": false,
@@ -2094,10 +2124,10 @@
     "player_name_pos": "Pete Alonso",
     "primary_position": "1B",
     "all_positions_seen": "1B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|DH",
+    "fantasy_positions_display": "1B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 624424,
@@ -2534,10 +2564,10 @@
     "player_name_pos": "Tyler O'Neill",
     "primary_position": "OF",
     "all_positions_seen": "DH|RF",
-    "fantasy_positions": "OF",
-    "fantasy_positions_display": "OF",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "OF|DH",
+    "fantasy_positions_display": "OF, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 641941,
@@ -2643,7 +2673,7 @@
     "player_id": 642215,
     "player_name_pos": "Weston Wilson",
     "primary_position": "3B",
-    "all_positions_seen": "1B|3B|LF|RF",
+    "all_positions_seen": "1B|3B|DH|LF|RF",
     "fantasy_positions": "3B",
     "fantasy_positions_display": "3B",
     "is_multi_position": false,
@@ -2763,7 +2793,7 @@
     "player_id": 642851,
     "player_name_pos": "Austin Wynns",
     "primary_position": "C",
-    "all_positions_seen": "C",
+    "all_positions_seen": "C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -2843,7 +2873,7 @@
     "player_id": 643446,
     "player_name_pos": "Jeff McNeil",
     "primary_position": "2B",
-    "all_positions_seen": "1B|2B",
+    "all_positions_seen": "1B|2B|DH",
     "fantasy_positions": "1B|2B",
     "fantasy_positions_display": "1B, 2B",
     "is_multi_position": true,
@@ -2883,7 +2913,7 @@
     "player_id": 645277,
     "player_name_pos": "Ozzie Albies",
     "primary_position": "2B",
-    "all_positions_seen": "2B",
+    "all_positions_seen": "2B|DH",
     "fantasy_positions": "2B",
     "fantasy_positions_display": "2B",
     "is_multi_position": false,
@@ -2922,6 +2952,16 @@
   {
     "player_id": 646241,
     "player_name_pos": "Enmanuel De Jesus",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 646242,
+    "player_name_pos": "Jhonathan D\u00edaz",
     "primary_position": "P",
     "all_positions_seen": "",
     "fantasy_positions": "",
@@ -3033,7 +3073,7 @@
     "player_id": 650559,
     "player_name_pos": "Bryan De La Cruz",
     "primary_position": "OF",
-    "all_positions_seen": "RF",
+    "all_positions_seen": "LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -3108,6 +3148,16 @@
     "fantasy_positions_display": "SS",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 655889,
+    "player_name_pos": "Manuel Rodr\u00edguez",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 656212,
@@ -3362,7 +3412,7 @@
   {
     "player_id": 656716,
     "player_name_pos": "Zach McKinstry",
-    "primary_position": "2B",
+    "primary_position": "OF",
     "all_positions_seen": "2B|3B|CF|LF|RF|SS",
     "fantasy_positions": "2B|SS|OF",
     "fantasy_positions_display": "2B, SS, OF",
@@ -3503,7 +3553,7 @@
     "player_id": 657041,
     "player_name_pos": "Lane Thomas",
     "primary_position": "OF",
-    "all_positions_seen": "CF|LF|RF",
+    "all_positions_seen": "CF|DH|LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -3694,10 +3744,10 @@
     "player_name_pos": "Ronald Acu\u00f1a Jr.",
     "primary_position": "OF",
     "all_positions_seen": "DH|RF",
-    "fantasy_positions": "OF",
-    "fantasy_positions_display": "OF",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "OF|DH",
+    "fantasy_positions_display": "OF, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 660688,
@@ -3942,12 +3992,12 @@
   {
     "player_id": 663457,
     "player_name_pos": "Lars Nootbaar",
-    "primary_position": "OF",
+    "primary_position": "DH",
     "all_positions_seen": "CF|DH|LF|RF",
-    "fantasy_positions": "OF",
-    "fantasy_positions_display": "OF",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "OF|DH",
+    "fantasy_positions_display": "OF, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 663460,
@@ -3994,10 +4044,10 @@
     "player_name_pos": "Nico Hoerner",
     "primary_position": "2B",
     "all_positions_seen": "2B|SS",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "2B|SS",
+    "fantasy_positions_display": "2B, SS",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 663542,
@@ -4103,7 +4153,7 @@
     "player_id": 663604,
     "player_name_pos": "Brandon Lockridge",
     "primary_position": "OF",
-    "all_positions_seen": "CF|LF",
+    "all_positions_seen": "CF|LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -4174,6 +4224,16 @@
     "player_name_pos": "Kyle Tucker",
     "primary_position": "OF",
     "all_positions_seen": "RF",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
+    "player_id": 663662,
+    "player_name_pos": "Daz Cameron",
+    "primary_position": "OF",
+    "all_positions_seen": "LF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -4333,7 +4393,7 @@
     "player_id": 663886,
     "player_name_pos": "Tyler Stephenson",
     "primary_position": "C",
-    "all_positions_seen": "C",
+    "all_positions_seen": "C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -4474,10 +4534,10 @@
     "player_name_pos": "Brandon Lowe",
     "primary_position": "2B",
     "all_positions_seen": "2B|DH",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "2B|DH",
+    "fantasy_positions_display": "2B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 664056,
@@ -4623,7 +4683,7 @@
     "player_id": 664353,
     "player_name_pos": "Jos\u00e9 Urquidy",
     "primary_position": "P",
-    "all_positions_seen": "",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -5013,11 +5073,11 @@
     "player_id": 665953,
     "player_name_pos": "Andr\u00e9s Chaparro",
     "primary_position": "1B",
-    "all_positions_seen": "1B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
-    "is_multi_position": false,
-    "position_count": 1
+    "all_positions_seen": "1B|3B|DH",
+    "fantasy_positions": "1B|DH",
+    "fantasy_positions_display": "1B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 665966,
@@ -5274,10 +5334,10 @@
     "player_name_pos": "Christopher Morel",
     "primary_position": "1B",
     "all_positions_seen": "1B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|DH",
+    "fantasy_positions_display": "1B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 666661,
@@ -5373,7 +5433,7 @@
     "player_id": 667452,
     "player_name_pos": "Corey Julks",
     "primary_position": "OF",
-    "all_positions_seen": "RF",
+    "all_positions_seen": "DH|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -5398,6 +5458,16 @@
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 667652,
+    "player_name_pos": "Jack Ralston",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 667670,
@@ -5673,7 +5743,7 @@
     "player_id": 668952,
     "player_name_pos": "Ryan Kreidler",
     "primary_position": "SS",
-    "all_positions_seen": "3B|CF|LF|SS",
+    "all_positions_seen": "2B|3B|CF|LF|SS",
     "fantasy_positions": "SS|OF",
     "fantasy_positions_display": "SS, OF",
     "is_multi_position": true,
@@ -5784,10 +5854,10 @@
     "player_name_pos": "Kyle Stowers",
     "primary_position": "1B",
     "all_positions_seen": "1B|DH|LF|RF",
-    "fantasy_positions": "1B|OF",
-    "fantasy_positions_display": "1B, OF",
+    "fantasy_positions": "1B|OF|DH",
+    "fantasy_positions_display": "1B, OF, DH",
     "is_multi_position": true,
-    "position_count": 2
+    "position_count": 3
   },
   {
     "player_id": 669084,
@@ -6433,7 +6503,7 @@
     "player_id": 669911,
     "player_name_pos": "Michael Toglia",
     "primary_position": "1B",
-    "all_positions_seen": "1B",
+    "all_positions_seen": "1B|LF|RF",
     "fantasy_positions": "1B",
     "fantasy_positions_display": "1B",
     "is_multi_position": false,
@@ -6593,7 +6663,7 @@
     "player_id": 670231,
     "player_name_pos": "John Rave",
     "primary_position": "OF",
-    "all_positions_seen": "CF|RF",
+    "all_positions_seen": "CF|LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -6742,10 +6812,10 @@
   {
     "player_id": 671083,
     "player_name_pos": "Buddy Kennedy",
-    "primary_position": "1B",
+    "primary_position": "3B",
     "all_positions_seen": "3B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
+    "fantasy_positions": "3B",
+    "fantasy_positions_display": "3B",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -6844,10 +6914,10 @@
     "player_name_pos": "Luis Garc\u00eda Jr.",
     "primary_position": "1B",
     "all_positions_seen": "1B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|DH",
+    "fantasy_positions_display": "1B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 671286,
@@ -6903,7 +6973,7 @@
     "player_id": 671732,
     "player_name_pos": "Lawrence Butler",
     "primary_position": "OF",
-    "all_positions_seen": "CF|RF",
+    "all_positions_seen": "CF|DH|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -7053,7 +7123,7 @@
     "player_id": 672386,
     "player_name_pos": "Alejandro Kirk",
     "primary_position": "C",
-    "all_positions_seen": "C",
+    "all_positions_seen": "C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -7088,6 +7158,16 @@
     "fantasy_positions_display": "C, DH",
     "is_multi_position": true,
     "position_count": 2
+  },
+  {
+    "player_id": 672569,
+    "player_name_pos": "Gustavo Campero",
+    "primary_position": "OF",
+    "all_positions_seen": "LF",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
+    "is_multi_position": false,
+    "position_count": 1
   },
   {
     "player_id": 672580,
@@ -7200,14 +7280,24 @@
     "position_count": 1
   },
   {
+    "player_id": 672841,
+    "player_name_pos": "Carlos Vargas",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 672960,
     "player_name_pos": "Kazuma Okamoto",
     "primary_position": "3B",
     "all_positions_seen": "1B|3B|DH",
-    "fantasy_positions": "3B",
-    "fantasy_positions_display": "3B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|3B",
+    "fantasy_positions_display": "1B, 3B",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 673237,
@@ -7223,7 +7313,7 @@
     "player_id": 673357,
     "player_name_pos": "Luis Robert Jr.",
     "primary_position": "OF",
-    "all_positions_seen": "CF",
+    "all_positions_seen": "CF|DH|LF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -7764,10 +7854,10 @@
     "player_name_pos": "Jos\u00e9 Caballero",
     "primary_position": "SS",
     "all_positions_seen": "2B|3B|CF|LF|RF|SS",
-    "fantasy_positions": "3B|SS",
-    "fantasy_positions_display": "3B, SS",
+    "fantasy_positions": "2B|3B|SS",
+    "fantasy_positions_display": "2B, 3B, SS",
     "is_multi_position": true,
-    "position_count": 2
+    "position_count": 3
   },
   {
     "player_id": 676617,
@@ -7808,6 +7898,16 @@
     "fantasy_positions_display": "",
     "is_multi_position": false,
     "position_count": 0
+  },
+  {
+    "player_id": 676679,
+    "player_name_pos": "Luis V\u00e1zquez",
+    "primary_position": "SS",
+    "all_positions_seen": "",
+    "fantasy_positions": "SS",
+    "fantasy_positions_display": "SS",
+    "is_multi_position": false,
+    "position_count": 1
   },
   {
     "player_id": 676680,
@@ -8063,7 +8163,7 @@
     "player_id": 677649,
     "player_name_pos": "Ezequiel Duran",
     "primary_position": "SS",
-    "all_positions_seen": "1B|2B|3B|LF|RF|SS",
+    "all_positions_seen": "1B|2B|3B|CF|LF|RF|SS",
     "fantasy_positions": "2B|3B|SS",
     "fantasy_positions_display": "2B, 3B, SS",
     "is_multi_position": true,
@@ -8108,6 +8208,16 @@
     "fantasy_positions_display": "2B, 3B",
     "is_multi_position": true,
     "position_count": 2
+  },
+  {
+    "player_id": 677943,
+    "player_name_pos": "Will Banfield",
+    "primary_position": "C",
+    "all_positions_seen": "C",
+    "fantasy_positions": "C",
+    "fantasy_positions_display": "C",
+    "is_multi_position": false,
+    "position_count": 1
   },
   {
     "player_id": 677944,
@@ -8250,10 +8360,20 @@
     "position_count": 0
   },
   {
+    "player_id": 678061,
+    "player_name_pos": "Ray Kerr",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 678218,
     "player_name_pos": "Brandon Valenzuela",
     "primary_position": "C",
-    "all_positions_seen": "C|DH",
+    "all_positions_seen": "1B|C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -8323,7 +8443,7 @@
     "player_id": 678545,
     "player_name_pos": "Osleivis Basabe",
     "primary_position": "2B",
-    "all_positions_seen": "2B|3B",
+    "all_positions_seen": "2B|3B|DH",
     "fantasy_positions": "2B",
     "fantasy_positions_display": "2B",
     "is_multi_position": false,
@@ -8454,10 +8574,10 @@
     "player_name_pos": "Justin Foscue",
     "primary_position": "2B",
     "all_positions_seen": "1B|2B|DH",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "2B|DH",
+    "fantasy_positions_display": "2B, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 679845,
@@ -8474,6 +8594,26 @@
     "player_name_pos": "Luinder Avila",
     "primary_position": "P",
     "all_positions_seen": "P",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 679885,
+    "player_name_pos": "Justin Martinez",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 679922,
+    "player_name_pos": "Carlos Duran",
+    "primary_position": "P",
+    "all_positions_seen": "",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -8532,10 +8672,10 @@
   {
     "player_id": 680664,
     "player_name_pos": "Eduardo Valencia",
-    "primary_position": "C",
+    "primary_position": "DH",
     "all_positions_seen": "C|DH",
-    "fantasy_positions": "C",
-    "fantasy_positions_display": "C",
+    "fantasy_positions": "DH",
+    "fantasy_positions_display": "DH",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -8763,9 +8903,29 @@
     "player_id": 680869,
     "player_name_pos": "Zack Gelof",
     "primary_position": "3B",
-    "all_positions_seen": "2B|3B|CF|LF|RF",
-    "fantasy_positions": "3B",
-    "fantasy_positions_display": "3B",
+    "all_positions_seen": "2B|3B|CF|DH|LF|RF",
+    "fantasy_positions": "2B|3B",
+    "fantasy_positions_display": "2B, 3B",
+    "is_multi_position": true,
+    "position_count": 2
+  },
+  {
+    "player_id": 680899,
+    "player_name_pos": "Erik Tolman",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 680911,
+    "player_name_pos": "Owen Miller",
+    "primary_position": "2B",
+    "all_positions_seen": "",
+    "fantasy_positions": "2B",
+    "fantasy_positions_display": "2B",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -8973,7 +9133,7 @@
     "player_id": 681351,
     "player_name_pos": "Logan O'Hoppe",
     "primary_position": "C",
-    "all_positions_seen": "C",
+    "all_positions_seen": "C|DH",
     "fantasy_positions": "C",
     "fantasy_positions_display": "C",
     "is_multi_position": false,
@@ -8982,12 +9142,12 @@
   {
     "player_id": 681393,
     "player_name_pos": "Connor Norby",
-    "primary_position": "1B",
+    "primary_position": "2B",
     "all_positions_seen": "1B|2B|3B|DH",
-    "fantasy_positions": "1B|DH",
-    "fantasy_positions_display": "1B, DH",
+    "fantasy_positions": "1B|2B|DH",
+    "fantasy_positions_display": "1B, 2B, DH",
     "is_multi_position": true,
-    "position_count": 2
+    "position_count": 3
   },
   {
     "player_id": 681402,
@@ -9022,7 +9182,7 @@
   {
     "player_id": 681508,
     "player_name_pos": "Mickey Gasper",
-    "primary_position": "C",
+    "primary_position": "DH",
     "all_positions_seen": "1B|C|DH",
     "fantasy_positions": "C|DH",
     "fantasy_positions_display": "C, DH",
@@ -9042,6 +9202,16 @@
   {
     "player_id": 681520,
     "player_name_pos": "Antoine Kelly",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 681544,
+    "player_name_pos": "Wyatt Olds",
     "primary_position": "P",
     "all_positions_seen": "",
     "fantasy_positions": "",
@@ -9514,10 +9684,10 @@
     "player_name_pos": "CJ Abrams",
     "primary_position": "SS",
     "all_positions_seen": "DH|SS",
-    "fantasy_positions": "SS",
-    "fantasy_positions_display": "SS",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "SS|DH",
+    "fantasy_positions_display": "SS, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 682982,
@@ -9680,6 +9850,16 @@
     "position_count": 2
   },
   {
+    "player_id": 683090,
+    "player_name_pos": "Matthew Lugo",
+    "primary_position": "OF",
+    "all_positions_seen": "",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
     "player_id": 683146,
     "player_name_pos": "Brett Baty",
     "primary_position": "3B",
@@ -9713,7 +9893,7 @@
     "player_id": 683227,
     "player_name_pos": "Cody Freeman",
     "primary_position": "3B",
-    "all_positions_seen": "2B|LF",
+    "all_positions_seen": "2B|3B|LF",
     "fantasy_positions": "3B",
     "fantasy_positions_display": "3B",
     "is_multi_position": false,
@@ -9748,6 +9928,16 @@
     "fantasy_positions_display": "OF, DH",
     "is_multi_position": true,
     "position_count": 2
+  },
+  {
+    "player_id": 683363,
+    "player_name_pos": "Matt Wilkinson",
+    "primary_position": "P",
+    "all_positions_seen": "P",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 683409,
@@ -9834,10 +10024,10 @@
     "player_name_pos": "Christian Koss",
     "primary_position": "3B",
     "all_positions_seen": "2B|3B|SS",
-    "fantasy_positions": "3B",
-    "fantasy_positions_display": "3B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "3B|SS",
+    "fantasy_positions_display": "3B, SS",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 683769,
@@ -9983,7 +10173,7 @@
     "player_id": 686217,
     "player_name_pos": "Sal Frelick",
     "primary_position": "OF",
-    "all_positions_seen": "RF",
+    "all_positions_seen": "LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -10063,7 +10253,7 @@
     "player_id": 686555,
     "player_name_pos": "Isaac Collins",
     "primary_position": "OF",
-    "all_positions_seen": "DH|LF",
+    "all_positions_seen": "2B|DH|LF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -10310,6 +10500,16 @@
     "position_count": 0
   },
   {
+    "player_id": 687060,
+    "player_name_pos": "Blake Adams",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 687064,
     "player_name_pos": "Brandon Young",
     "primary_position": "P",
@@ -10374,10 +10574,10 @@
     "player_name_pos": "Darell Hernaiz",
     "primary_position": "SS",
     "all_positions_seen": "2B|3B|SS",
-    "fantasy_positions": "SS",
-    "fantasy_positions_display": "SS",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "3B|SS",
+    "fantasy_positions_display": "3B, SS",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 687239,
@@ -10683,7 +10883,7 @@
     "player_id": 687941,
     "player_name_pos": "Alec Gamboa",
     "primary_position": "P",
-    "all_positions_seen": "",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -10922,10 +11122,10 @@
   {
     "player_id": 690022,
     "player_name_pos": "Ryan Ritter",
-    "primary_position": "2B",
-    "all_positions_seen": "2B",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
+    "primary_position": "SS",
+    "all_positions_seen": "2B|SS",
+    "fantasy_positions": "SS",
+    "fantasy_positions_display": "SS",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -10934,6 +11134,16 @@
     "player_name_pos": "Matt Pushard",
     "primary_position": "P",
     "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 690279,
+    "player_name_pos": "Mason Adams",
+    "primary_position": "P",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -10974,10 +11184,10 @@
     "player_name_pos": "Braxton Fulford",
     "primary_position": "DH",
     "all_positions_seen": "C|DH",
-    "fantasy_positions": "DH",
-    "fantasy_positions_display": "DH",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "C|DH",
+    "fantasy_positions_display": "C, DH",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 690925,
@@ -11150,12 +11360,22 @@
     "position_count": 2
   },
   {
+    "player_id": 691182,
+    "player_name_pos": "Adael Amador",
+    "primary_position": "2B",
+    "all_positions_seen": "2B|DH",
+    "fantasy_positions": "2B",
+    "fantasy_positions_display": "2B",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
     "player_id": 691277,
     "player_name_pos": "Deyvison De Los Santos",
-    "primary_position": "1B",
+    "primary_position": "3B",
     "all_positions_seen": "1B|DH",
-    "fantasy_positions": "1B",
-    "fantasy_positions_display": "1B",
+    "fantasy_positions": "3B",
+    "fantasy_positions_display": "3B",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -11168,6 +11388,16 @@
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 691384,
+    "player_name_pos": "Luis Perales",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 691406,
@@ -11254,10 +11484,10 @@
     "player_name_pos": "Coby Mayo",
     "primary_position": "3B",
     "all_positions_seen": "1B|3B|DH",
-    "fantasy_positions": "3B|DH",
-    "fantasy_positions_display": "3B, DH",
+    "fantasy_positions": "1B|3B|DH",
+    "fantasy_positions_display": "1B, 3B, DH",
     "is_multi_position": true,
-    "position_count": 2
+    "position_count": 3
   },
   {
     "player_id": 691725,
@@ -11273,7 +11503,7 @@
     "player_id": 691728,
     "player_name_pos": "Zac Veen",
     "primary_position": "OF",
-    "all_positions_seen": "RF",
+    "all_positions_seen": "LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -11303,7 +11533,7 @@
     "player_id": 691777,
     "player_name_pos": "Max Muncy",
     "primary_position": "3B",
-    "all_positions_seen": "3B|DH",
+    "all_positions_seen": "3B|DH|LF",
     "fantasy_positions": "3B",
     "fantasy_positions_display": "3B",
     "is_multi_position": false,
@@ -11443,7 +11673,7 @@
     "player_id": 693304,
     "player_name_pos": "Nick Gonzales",
     "primary_position": "3B",
-    "all_positions_seen": "2B|3B|SS",
+    "all_positions_seen": "2B|3B|DH|SS",
     "fantasy_positions": "2B|3B",
     "fantasy_positions_display": "2B, 3B",
     "is_multi_position": true,
@@ -11603,7 +11833,7 @@
     "player_id": 694197,
     "player_name_pos": "Angel Genao",
     "primary_position": "2B",
-    "all_positions_seen": "2B|3B",
+    "all_positions_seen": "2B|3B|SS",
     "fantasy_positions": "2B",
     "fantasy_positions_display": "2B",
     "is_multi_position": false,
@@ -11622,8 +11852,8 @@
   {
     "player_id": 694208,
     "player_name_pos": "Mois\u00e9s Ballesteros",
-    "primary_position": "C",
-    "all_positions_seen": "C|DH",
+    "primary_position": "DH",
+    "all_positions_seen": "1B|C|DH",
     "fantasy_positions": "C|DH",
     "fantasy_positions_display": "C, DH",
     "is_multi_position": true,
@@ -11710,6 +11940,16 @@
     "position_count": 0
   },
   {
+    "player_id": 694357,
+    "player_name_pos": "Ricky Tiedemann",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 694360,
     "player_name_pos": "Beck Way",
     "primary_position": "P",
@@ -11762,7 +12002,7 @@
   {
     "player_id": 694374,
     "player_name_pos": "Tim Tawa",
-    "primary_position": "OF",
+    "primary_position": "1B",
     "all_positions_seen": "1B|3B|CF|DH|LF",
     "fantasy_positions": "1B|OF",
     "fantasy_positions_display": "1B, OF",
@@ -11773,7 +12013,7 @@
     "player_id": 694376,
     "player_name_pos": "Shay Whitcomb",
     "primary_position": "3B",
-    "all_positions_seen": "3B|LF|SS",
+    "all_positions_seen": "2B|3B|LF|SS",
     "fantasy_positions": "3B",
     "fantasy_positions_display": "3B",
     "is_multi_position": false,
@@ -12160,6 +12400,16 @@
     "position_count": 1
   },
   {
+    "player_id": 695491,
+    "player_name_pos": "Joshua B\u00e1ez",
+    "primary_position": "OF",
+    "all_positions_seen": "LF|RF",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
     "player_id": 695505,
     "player_name_pos": "Chase Burns",
     "primary_position": "P",
@@ -12284,10 +12534,10 @@
     "player_name_pos": "Tommy White",
     "primary_position": "3B",
     "all_positions_seen": "1B|3B",
-    "fantasy_positions": "3B",
-    "fantasy_positions_display": "3B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "1B|3B",
+    "fantasy_positions_display": "1B, 3B",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 695731,
@@ -12523,11 +12773,11 @@
     "player_id": 699393,
     "player_name_pos": "Pedro Ram\u00edrez",
     "primary_position": "2B",
-    "all_positions_seen": "2B|3B|DH",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
-    "is_multi_position": false,
-    "position_count": 1
+    "all_positions_seen": "1B|2B|3B|DH",
+    "fantasy_positions": "2B|3B",
+    "fantasy_positions_display": "2B, 3B",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 699625,
@@ -12554,10 +12804,10 @@
     "player_name_pos": "Jose Fernandez",
     "primary_position": "DH",
     "all_positions_seen": "1B|3B|DH|SS",
-    "fantasy_positions": "1B|DH",
-    "fantasy_positions_display": "1B, DH",
+    "fantasy_positions": "1B|3B|DH",
+    "fantasy_positions_display": "1B, 3B, DH",
     "is_multi_position": true,
-    "position_count": 2
+    "position_count": 3
   },
   {
     "player_id": 700241,
@@ -12663,7 +12913,7 @@
     "player_id": 700669,
     "player_name_pos": "Gordon Graceffo",
     "primary_position": "P",
-    "all_positions_seen": "",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -12963,7 +13213,7 @@
     "player_id": 702176,
     "player_name_pos": "Alan Roden",
     "primary_position": "OF",
-    "all_positions_seen": "RF",
+    "all_positions_seen": "LF|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -13212,10 +13462,10 @@
   {
     "player_id": 801126,
     "player_name_pos": "Brock Rodden",
-    "primary_position": "2B",
-    "all_positions_seen": "SS",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
+    "primary_position": "SS",
+    "all_positions_seen": "2B|SS",
+    "fantasy_positions": "SS",
+    "fantasy_positions_display": "SS",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -13253,7 +13503,7 @@
     "player_id": 801501,
     "player_name_pos": "Nate Furman",
     "primary_position": "2B",
-    "all_positions_seen": "DH",
+    "all_positions_seen": "2B|DH",
     "fantasy_positions": "2B",
     "fantasy_positions_display": "2B",
     "is_multi_position": false,
@@ -13264,10 +13514,10 @@
     "player_name_pos": "JJ Wetherholt",
     "primary_position": "2B",
     "all_positions_seen": "2B|SS",
-    "fantasy_positions": "2B",
-    "fantasy_positions_display": "2B",
-    "is_multi_position": false,
-    "position_count": 1
+    "fantasy_positions": "2B|SS",
+    "fantasy_positions_display": "2B, SS",
+    "is_multi_position": true,
+    "position_count": 2
   },
   {
     "player_id": 802408,
@@ -13293,7 +13543,7 @@
     "player_id": 803011,
     "player_name_pos": "Sam Antonacci",
     "primary_position": "OF",
-    "all_positions_seen": "2B|LF",
+    "all_positions_seen": "2B|DH|LF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -13533,7 +13783,7 @@
     "player_id": 806188,
     "player_name_pos": "Cade Gibson",
     "primary_position": "P",
-    "all_positions_seen": "",
+    "all_positions_seen": "P",
     "fantasy_positions": "",
     "fantasy_positions_display": "",
     "is_multi_position": false,
@@ -13546,6 +13796,16 @@
     "all_positions_seen": "SS",
     "fantasy_positions": "SS",
     "fantasy_positions_display": "SS",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
+    "player_id": 806367,
+    "player_name_pos": "Turner Hill",
+    "primary_position": "OF",
+    "all_positions_seen": "LF",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
     "is_multi_position": false,
     "position_count": 1
   },
@@ -13590,6 +13850,16 @@
     "position_count": 1
   },
   {
+    "player_id": 807739,
+    "player_name_pos": "Kade Anderson",
+    "primary_position": "P",
+    "all_positions_seen": "P",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
     "player_id": 807743,
     "player_name_pos": "Sean Sullivan",
     "primary_position": "P",
@@ -13618,6 +13888,16 @@
     "fantasy_positions_display": "DH",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 808825,
+    "player_name_pos": "Andrew Sears",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 808959,
@@ -13673,7 +13953,7 @@
     "player_id": 808982,
     "player_name_pos": "Jung Hoo Lee",
     "primary_position": "OF",
-    "all_positions_seen": "CF|RF",
+    "all_positions_seen": "CF|DH|RF",
     "fantasy_positions": "OF",
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
@@ -13730,6 +14010,16 @@
     "position_count": 0
   },
   {
+    "player_id": 814430,
+    "player_name_pos": "Brett Callahan",
+    "primary_position": "OF",
+    "all_positions_seen": "LF",
+    "fantasy_positions": "OF",
+    "fantasy_positions_display": "OF",
+    "is_multi_position": false,
+    "position_count": 1
+  },
+  {
     "player_id": 814439,
     "player_name_pos": "Ryan Waldschmidt",
     "primary_position": "OF",
@@ -13738,6 +14028,26 @@
     "fantasy_positions_display": "OF",
     "is_multi_position": false,
     "position_count": 1
+  },
+  {
+    "player_id": 814490,
+    "player_name_pos": "Ethan Pecko",
+    "primary_position": "P",
+    "all_positions_seen": "P",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
+  },
+  {
+    "player_id": 815081,
+    "player_name_pos": "Mark Manfredi",
+    "primary_position": "P",
+    "all_positions_seen": "",
+    "fantasy_positions": "",
+    "fantasy_positions_display": "",
+    "is_multi_position": false,
+    "position_count": 0
   },
   {
     "player_id": 815083,

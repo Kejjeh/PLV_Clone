@@ -2426,12 +2426,6 @@
    "name": "Shane Bieber",
    "pos": "P"
   },
-  "680573": {
-   "team": "Toronto Blue Jays",
-   "abbr": "TOR",
-   "name": "Simeon Woods Richardson",
-   "pos": "P"
-  },
   "681293": {
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
@@ -2732,11 +2726,11 @@
    "name": "Victor Caratini",
    "pos": "C"
   },
-  "808970": {
+  "805805": {
    "team": "Minnesota Twins",
    "abbr": "MIN",
-   "name": "Woo-Suk Go",
-   "pos": "P"
+   "name": "Walker Jenkins",
+   "pos": "CF"
   },
   "672782": {
    "team": "Minnesota Twins",
@@ -4812,7 +4806,7 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Lars Nootbaar",
-   "pos": "LF"
+   "pos": "DH"
   },
   "666971": {
    "team": "Arizona Diamondbacks",
@@ -7974,6 +7968,12 @@
    "team": "New York Mets",
    "abbr": "NYM",
    "name": "Chayce McDermott",
+   "pos": "P"
+  },
+  "606965": {
+   "team": "New York Mets",
+   "abbr": "NYM",
+   "name": "Chris Devenski",
    "pos": "P"
   },
   "681035": {

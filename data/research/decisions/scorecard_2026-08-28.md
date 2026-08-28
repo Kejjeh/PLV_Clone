@@ -1,7 +1,7 @@
 # Decision Scorecard — 2026-08-28
 
 - Settled records: **1039**
-- Pending (window not elapsed or too few events): **1047**
+- Pending (window not elapsed or too few events): **1049**
   - of which RIPE (time elapsed) but waiting on events/actuals: **253**
 
 ## Classifications

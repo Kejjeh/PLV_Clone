@@ -1,51 +1,51 @@
 batter_name,batter,pa,confidence,primary_position,fantasy_positions,fantasy_positions_display,process_plus,discipline_plus,k_avoidance_plus,power_plus,swing_pct,chase_pct,xwoba_on_contact,rolling_decision_30d,tag,season_stage
 Blaze Alexander,677942,252,Tier B,3B,2B|3B,"2B, 3B",96.8,133.5,90.2,114.4,0.56,0.323,0.439,0.09272,Discipline+ elite (top 10%),mature
-Jeff Mcneil,643446,388,Tier B,2B,1B|2B,"1B, 2B",80.2,125.7,106.7,91.3,0.575,0.315,0.319,0.11025,Discipline+ elite (top 10%),mature
-Henry Davis,680779,262,Tier B,C,C,C,70.1,125.5,95.1,87.0,0.533,0.312,0.307,0.08582,Discipline+ elite (top 10%),mature
-Corey Seager,608369,285,Tier B,SS,SS,SS,92.1,124.1,93.2,108.6,0.516,0.286,0.402,0.12703,Discipline+ elite (top 10%),mature
-Jeremiah Jackson,669236,254,Tier B,2B,2B,2B,83.1,121.6,102.7,95.8,0.583,0.362,0.345,0.08756,Discipline+ elite (top 10%),mature
-Ronald Acuña,660670,336,Tier B,OF,OF,OF,95.4,120.2,90.2,113.1,0.477,0.27,0.434,0.09301,Discipline+ elite (top 10%),mature
-Ryan Kreidler,668952,224,Tier C,SS,SS|OF,"SS, OF",78.2,120.2,99.8,92.5,0.532,0.277,0.334,0.07678,Discipline+ elite (top 10%),mature
-Ezequiel Tovar,678662,437,Tier A,SS,SS,SS,78.8,120.0,92.7,96.3,0.62,0.429,0.329,0.09221,Discipline+ elite (top 10%),mature
-Ty France,664034,371,Tier B,1B,1B,1B,87.3,119.2,94.3,103.5,0.534,0.332,0.38,0.08534,Discipline+ elite (top 10%),mature
-Freddie Freeman,518692,538,Tier A,1B,1B,1B,98.0,118.8,99.6,111.3,0.505,0.292,0.412,0.08099,Discipline+ elite (top 10%),mature
-George Springer,543807,412,Tier A,DH,DH,DH,77.3,118.0,102.2,90.6,0.475,0.255,0.323,0.09196,Discipline+ elite (top 10%),mature
-Jorbit Vivas,678391,275,Tier B,3B,2B|3B,"2B, 3B",72.0,117.9,109.3,82.4,0.501,0.277,0.281,0.07217,Discipline+ elite (top 10%),mature
-Edgar Quero,700337,214,Tier C,C,C,C,71.3,117.6,98.8,86.5,0.5,0.278,0.303,0.12006,Discipline+ elite (top 10%),mature
-Donovan Walton,622268,168,Tier C,2B,2B|3B,"2B, 3B",76.5,116.8,101.1,90.4,0.502,0.295,0.324,0.08995,Discipline+ elite (top 10%),mature
-Braden Montgomery,695731,242,Tier C,OF,OF,OF,79.1,116.7,96.5,94.9,0.5,0.293,0.347,0.07771,Discipline+ elite (top 10%),mature
-Freddy Fermin,666023,215,Tier C,C,C,C,70.4,115.9,100.8,84.7,0.521,0.318,0.293,0.09209,Discipline+ elite (top 10%),mature
-Jeremy Peña,665161,342,Tier B,SS,SS,SS,92.9,115.9,103.0,104.9,0.547,0.335,0.385,0.07458,Discipline+ elite (top 10%),mature
-Miguel Vargas,678246,547,Tier A,3B,1B|3B,"1B, 3B",97.1,115.7,101.8,109.4,0.45,0.203,0.417,0.07213,Discipline+ elite (top 10%); low chase rate,mature
-Nick Gonzales,693304,496,Tier A,3B,2B|3B,"2B, 3B",85.8,115.3,101.5,98.9,0.534,0.331,0.351,0.07384,Discipline+ elite (top 10%),mature
-Connor Norby,681393,261,Tier B,1B,1B|DH,"1B, DH",69.8,115.3,85.1,91.3,0.494,0.264,0.335,0.08335,Discipline+ elite (top 10%),mature
-Kyle Tucker,663656,500,Tier A,OF,OF,OF,82.6,114.7,98.6,97.2,0.486,0.252,0.349,0.08656,Discipline+ strong (top 25%),mature
-Jj Bleday,668709,408,Tier A,OF,OF,OF,87.0,114.7,96.4,102.4,0.463,0.241,0.384,0.08054,Discipline+ strong (top 25%),mature
-Starling Marte,516782,173,Tier C,OF,OF|DH,"OF, DH",78.1,114.5,95.7,94.3,0.531,0.331,0.348,0.097,Discipline+ strong (top 25%),mature
-Brandon Nimmo,607043,517,Tier A,OF,OF,OF,100.4,113.7,98.5,114.0,0.508,0.282,0.436,0.09045,Discipline+ strong (top 25%),mature
-Marcus Semien,543760,427,Tier A,2B,2B,2B,84.2,113.6,102.5,97.0,0.499,0.285,0.355,0.08131,Discipline+ strong (top 25%),mature
-Christian Walker,572233,508,Tier A,1B,1B,1B,81.3,112.9,96.2,97.1,0.506,0.299,0.354,0.07233,Discipline+ strong (top 25%),mature
-Ryan Vilade,668723,217,Tier C,OF,1B|OF,"1B, OF",90.4,112.6,97.3,105.2,0.501,0.299,0.381,0.0899,Discipline+ strong (top 25%),mature
-Byron Buxton,621439,390,Tier B,OF,OF|DH,"OF, DH",98.3,112.4,97.5,112.5,0.526,0.329,0.427,0.09988,Discipline+ strong (top 25%),mature
-Josh Lowe,666139,264,Tier B,OF,OF,OF,88.2,112.4,89.3,106.8,0.567,0.36,0.381,0.08881,Discipline+ strong (top 25%),mature
-Dansby Swanson,621020,466,Tier A,SS,SS,SS,78.8,112.2,97.5,94.1,0.475,0.274,0.345,0.08846,Discipline+ strong (top 25%),mature
-Heriberto Hernandez,681715,355,Tier B,OF,OF,OF,95.9,112.1,93.1,112.3,0.46,0.248,0.439,0.07677,Discipline+ strong (top 25%),mature
+Jeff Mcneil,643446,413,Tier A,2B,1B|2B,"1B, 2B",80.2,126.9,107.5,90.9,0.582,0.316,0.317,0.11211,Discipline+ elite (top 10%),mature
+Henry Davis,680779,268,Tier B,C,C,C,70.2,124.5,95.5,86.9,0.534,0.312,0.306,0.0756,Discipline+ elite (top 10%),mature
+Corey Seager,608369,316,Tier B,SS,SS,SS,94.0,124.0,94.0,110.1,0.519,0.285,0.41,0.11439,Discipline+ elite (top 10%),mature
+Jeremiah Jackson,669236,254,Tier B,2B,2B,2B,83.1,121.6,102.7,95.8,0.583,0.362,0.345,0.09059,Discipline+ elite (top 10%),mature
+Ryan Kreidler,668952,233,Tier C,SS,SS|OF,"SS, OF",77.3,121.5,99.1,92.0,0.533,0.278,0.333,0.07822,Discipline+ elite (top 10%),mature
+Ezequiel Tovar,678662,449,Tier A,SS,SS,SS,81.3,119.9,93.2,98.5,0.614,0.429,0.341,0.08405,Discipline+ elite (top 10%),mature
+Ty France,664034,397,Tier B,1B,1B,1B,86.8,119.7,95.1,102.8,0.528,0.332,0.377,0.08941,Discipline+ elite (top 10%),mature
+Ronald Acuña,660670,363,Tier B,OF,OF|DH,"OF, DH",93.2,118.5,90.4,111.0,0.478,0.271,0.421,0.08331,Discipline+ elite (top 10%),mature
+George Springer,543807,432,Tier A,DH,DH,DH,76.8,118.2,102.0,90.1,0.479,0.255,0.321,0.08235,Discipline+ elite (top 10%),mature
+Jorbit Vivas,678391,295,Tier B,3B,2B|3B,"2B, 3B",72.9,118.0,109.7,83.0,0.5,0.277,0.284,0.07934,Discipline+ elite (top 10%),mature
+Braden Montgomery,695731,268,Tier B,OF,OF,OF,81.7,117.9,96.9,97.1,0.498,0.292,0.359,0.0823,Discipline+ elite (top 10%),mature
+Connor Norby,681393,284,Tier B,2B,1B|2B|DH,"1B, 2B, DH",72.4,117.7,83.6,94.4,0.497,0.265,0.35,0.0964,Discipline+ elite (top 10%),mature
+Edgar Quero,700337,214,Tier C,C,C,C,71.3,117.6,98.8,86.5,0.5,0.278,0.303,0.10988,Discipline+ elite (top 10%),mature
+Freddie Freeman,518692,560,Tier A,1B,1B,1B,97.8,117.5,100.2,110.8,0.504,0.292,0.409,0.07159,Discipline+ elite (top 10%),mature
+Freddy Fermin,666023,227,Tier C,C,C,C,72.6,117.4,100.9,86.8,0.522,0.319,0.304,0.0937,Discipline+ elite (top 10%),mature
+Donovan Walton,622268,191,Tier C,2B,2B|3B,"2B, 3B",77.1,117.3,100.8,91.1,0.503,0.294,0.329,0.08811,Discipline+ elite (top 10%),mature
+Kyle Tucker,663656,522,Tier A,OF,OF,OF,81.3,115.1,98.9,95.9,0.486,0.252,0.343,0.08842,Discipline+ elite (top 10%),mature
+Miguel Vargas,678246,578,Tier A,3B,1B|3B,"1B, 3B",97.9,114.9,101.6,110.3,0.441,0.204,0.421,0.06983,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
+Nick Gonzales,693304,523,Tier A,3B,2B|3B,"2B, 3B",85.0,114.8,101.6,98.1,0.534,0.331,0.347,0.07478,Discipline+ strong (top 25%),mature
+Víctor Robles,645302,153,Tier C,OF,OF,OF,75.0,114.8,111.2,84.3,0.544,0.336,0.293,0.07583,Discipline+ strong (top 25%),mature
+Starling Marte,516782,173,Tier C,OF,OF|DH,"OF, DH",78.1,114.5,95.7,94.3,0.531,0.331,0.348,0.09287,Discipline+ strong (top 25%),mature
+Josh Lowe,666139,289,Tier B,OF,OF,OF,85.8,114.4,88.9,104.7,0.561,0.362,0.371,0.09008,Discipline+ strong (top 25%),mature
+Petey Halpin,690984,155,Tier C,OF,OF,OF,86.2,114.1,105.4,97.5,0.59,0.355,0.34,0.1078,Discipline+ strong (top 25%),mature
+Jj Bleday,668709,441,Tier A,OF,OF,OF,88.2,114.1,96.0,103.6,0.461,0.24,0.391,0.07984,Discipline+ strong (top 25%),mature
+Marcus Semien,543760,448,Tier A,2B,2B,2B,85.3,113.7,102.5,98.0,0.501,0.285,0.359,0.08443,Discipline+ strong (top 25%),mature
+Jeremy Peña,665161,360,Tier B,SS,SS,SS,92.8,113.1,101.8,105.4,0.548,0.337,0.388,0.06214,Discipline+ strong (top 25%),mature
+Christian Walker,572233,530,Tier A,1B,1B,1B,80.9,113.0,96.7,96.5,0.505,0.3,0.35,0.06437,Discipline+ strong (top 25%),mature
+Heriberto Hernandez,681715,381,Tier B,OF,OF,OF,96.9,112.9,93.8,112.9,0.459,0.248,0.442,0.08782,Discipline+ strong (top 25%),mature
+Brandon Nimmo,607043,550,Tier A,OF,OF,OF,98.0,112.7,98.4,111.8,0.505,0.282,0.423,0.08383,Discipline+ strong (top 25%),mature
+Agustín Ramírez,682663,184,Tier C,C,C|DH,"C, DH",72.3,112.7,93.5,89.8,0.48,0.263,0.305,0.06823,Discipline+ strong (top 25%),mature
+Dansby Swanson,621020,466,Tier A,SS,SS,SS,78.8,112.1,97.5,94.1,0.475,0.274,0.345,0.08837,Discipline+ strong (top 25%),mature
+Gleyber Torres,650402,344,Tier B,2B,2B|DH,"2B, DH",78.6,111.9,98.1,93.7,0.418,0.195,0.336,0.0851,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
+Blaze Jordan,691458,195,Tier C,3B,3B,3B,89.4,111.8,112.3,97.4,0.544,0.338,0.351,0.07779,Discipline+ strong (top 25%),mature
+Ryan Vilade,668723,225,Tier C,OF,1B|OF,"1B, OF",91.8,111.8,97.8,106.2,0.499,0.298,0.387,0.08972,Discipline+ strong (top 25%),mature
+Henry Bolte,703607,352,Tier B,OF,OF,OF,82.2,111.8,90.5,100.5,0.504,0.298,0.375,0.08797,Discipline+ strong (top 25%),mature
+Wyatt Langford,694671,362,Tier B,OF,OF,OF,84.9,111.7,101.3,98.2,0.483,0.269,0.362,0.08416,Discipline+ strong (top 25%),mature
 Ramón Laureano,657656,208,Tier C,OF,OF,OF,87.4,111.6,81.0,109.7,0.5,0.308,0.416,0.07089,Discipline+ strong (top 25%),mature
-Tyler Freeman,671289,290,Tier B,OF,OF,OF,80.2,111.5,112.8,88.5,0.506,0.301,0.309,0.10971,Discipline+ strong (top 25%),mature
-Wyatt Langford,694671,329,Tier B,OF,OF,OF,83.9,111.1,100.3,97.7,0.485,0.269,0.361,0.08408,Discipline+ strong (top 25%),mature
-Denzer Guzman,694203,193,Tier C,3B,3B,3B,79.5,110.9,99.4,93.9,0.526,0.333,0.328,0.06596,Discipline+ strong (top 25%),mature
-Gleyber Torres,650402,324,Tier B,2B,2B|DH,"2B, DH",80.8,110.8,98.5,95.6,0.412,0.196,0.348,0.08144,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
-Kevin Mcgonigle,805808,566,Tier A,SS,3B|SS,"3B, SS",85.7,110.6,106.7,96.5,0.43,0.219,0.348,0.07657,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
-Esmerlyn Valdez,699013,233,Tier C,OF,OF,OF,93.7,110.3,72.6,119.5,0.421,0.248,0.469,0.08277,Discipline+ strong (top 25%); selective swinger,mature
-Ozzie Albies,645277,552,Tier A,2B,2B,2B,76.3,110.3,106.0,87.9,0.564,0.365,0.294,0.08077,Discipline+ strong (top 25%),mature
+Brenton Doyle,686668,188,Tier C,OF,OF,OF,70.4,111.5,94.9,87.4,0.532,0.304,0.31,0.08491,Discipline+ strong (top 25%),mature
+Tyler Freeman,671289,290,Tier B,OF,OF,OF,80.2,111.5,112.8,88.5,0.506,0.301,0.309,0.1305,Discipline+ strong (top 25%),mature
+Kevin Mcgonigle,805808,591,Tier A,SS,3B|SS,"3B, SS",86.7,111.3,107.1,97.2,0.432,0.218,0.352,0.07764,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
+Byron Buxton,621439,411,Tier A,OF,OF|DH,"OF, DH",98.2,110.9,97.8,112.3,0.524,0.329,0.425,0.07993,Discipline+ strong (top 25%),mature
+Denzer Guzman,694203,216,Tier C,3B,3B,3B,78.9,110.9,98.3,93.9,0.528,0.334,0.331,0.06384,Discipline+ strong (top 25%),mature
+Ozzie Albies,645277,578,Tier A,2B,2B,2B,76.8,110.6,105.8,88.5,0.562,0.366,0.297,0.08595,Discipline+ strong (top 25%),mature
 Jake Meyers,676694,160,Tier C,OF,OF,OF,70.9,110.2,109.0,81.5,0.52,0.319,0.284,0.0749,Discipline+ strong (top 25%),mature
+Kazuma Okamoto,672960,532,Tier A,3B,1B|3B,"1B, 3B",89.5,110.0,87.7,108.7,0.479,0.272,0.41,0.08545,Discipline+ strong (top 25%),mature
+Jake Mccarthy,664983,480,Tier A,OF,OF,OF,92.3,110.0,110.7,100.8,0.577,0.359,0.358,0.08235,Discipline+ strong (top 25%),mature
 Marcelo Mayer,691785,238,Tier C,2B,2B|SS,"2B, SS",70.5,109.9,106.4,82.2,0.511,0.29,0.275,0.11391,Discipline+ strong (top 25%),mature
-Agustín Ramírez,682663,169,Tier C,C,C|DH,"C, DH",75.2,109.9,96.8,91.0,0.477,0.261,0.311,0.0487,Discipline+ strong (top 25%),mature
-Spencer Torkelson,679529,507,Tier A,1B,1B,1B,85.1,109.9,86.3,105.2,0.435,0.22,0.405,0.07217,Discipline+ strong (top 25%); selective swinger; low chase rate,mature
-Henry Bolte,703607,320,Tier B,OF,OF,OF,83.1,109.6,93.4,100.1,0.503,0.298,0.375,0.08051,Discipline+ strong (top 25%),mature
-Blaze Jordan,691458,176,Tier C,3B,3B,3B,88.4,109.5,112.4,96.4,0.537,0.337,0.348,0.08225,Discipline+ strong (top 25%),mature
-Andrew Benintendi,643217,379,Tier B,DH,DH,DH,87.8,109.5,96.6,103.0,0.522,0.339,0.378,0.06497,Discipline+ strong (top 25%),mature
-Brenton Doyle,686668,173,Tier C,OF,OF,OF,69.0,109.4,95.6,85.8,0.522,0.302,0.301,0.07825,Discipline+ strong (top 25%),mature
-Andruw Monasterio,655316,298,Tier B,SS,SS,SS,78.6,109.2,99.4,93.1,0.464,0.289,0.343,0.06933,Discipline+ strong (top 25%),mature
-Lawrence Butler,671732,395,Tier B,OF,OF,OF,85.7,109.1,92.4,102.9,0.469,0.268,0.375,0.09173,Discipline+ strong (top 25%),mature
+Esmerlyn Valdez,699013,249,Tier C,OF,OF,OF,97.0,109.7,72.7,122.5,0.417,0.246,0.486,0.08209,Discipline+ strong (top 25%); selective swinger,mature
 Brice Matthews,694728,233,Tier C,OF,2B|OF,"2B, OF",74.8,109.0,89.8,93.9,0.455,0.246,0.347,0.06264,Discipline+ strong (top 25%),mature
