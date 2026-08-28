@@ -14,35 +14,67 @@ from pathlib import Path
 from typing import Literal
 
 
-def _parse_ip(raw) -> float:
+_RAISE = object()   # sentinel: no default supplied -> malformed input raises
+
+
+def _parse_ip(raw, *, default=_RAISE) -> float:
     """MLB gameLog inningsPitched parser.
 
     MLB API returns inningsPitched as a string with .0/.1/.2 partial-inning
     notation: '5.0' = 5.000, '5.1' = 5 + 1/3, '5.2' = 5 + 2/3.
 
-    Accepts:  '5.2', '5.0', '0.0', '1.0', 5.0 (float), 0 (int), None, ''.
-    Raises:   ValueError on unparseable string with malformed decimal.
+    Accepts:  '5.2', '5.0', '0.0', '1.0', 5.2 (float), 0 (int), None, ''.
+    Raises:   ValueError on malformed partial-inning notation — UNLESS
+              ``default`` is supplied, in which case that value is returned.
+
+    The ``default`` hook exists for the fifteen hand-rolled copies this
+    replaced (issue #78). They did not all agree on failure: most swallowed
+    anything unparseable and returned 0.0, one returned NaN for pandas. Folding
+    them onto one implementation must not quietly convert those silent zeros
+    into exceptions inside a live driver, so each caller passes the default it
+    already had.
     Returns:  float innings (e.g. '5.2' -> 5.6667).
+
+    A NUMERIC input is notation too, not a decimal. It used to short-circuit
+    as ``float(raw)``, so ``'5.2'`` parsed to 5.6667 while ``5.2`` parsed to
+    5.2 — the same value, two answers, differing by 0.47 IP (1.54 FP at
+    3.3 FP/IP, against a ~12 FP start). Every other IP parser in this repo —
+    twelve of them, hand-rolled — coerces with ``str()`` first and therefore
+    reads a numeric as notation. This one was the odd one out.
+
+    Falling through to the string path also makes a genuinely ambiguous value
+    RAISE rather than resolve silently: 5.5 is not valid notation, so it is
+    rejected instead of being guessed at. (Fixed 2026-08-27.)
     """
     if raw is None or raw == '':
-        return 0.0
-    if isinstance(raw, (int, float)):
-        return float(raw)
+        return 0.0 if default is _RAISE else default
     s = str(raw).strip()
-    if '.' not in s:
-        return float(s)
-    whole, frac = s.split('.', 1)
-    whole_i = int(whole)
-    frac_i = int(frac)
-    if frac_i == 0:
-        return float(whole_i)
-    if frac_i == 1:
-        return whole_i + 1 / 3
-    if frac_i == 2:
-        return whole_i + 2 / 3
-    raise ValueError(
-        f"_parse_ip: unexpected partial-inning notation {raw!r} (frac={frac_i})"
-    )
+    try:
+        if '.' not in s:
+            return float(s)
+        whole, frac = s.split('.', 1)
+        whole_i = int(whole)
+        frac_i = int(frac)
+        if frac_i == 0:
+            return float(whole_i)
+        if frac_i == 1:
+            return whole_i + 1 / 3
+        if frac_i == 2:
+            return whole_i + 2 / 3
+        raise ValueError(
+            f"parse_ip: unexpected partial-inning notation {raw!r} "
+            f"(frac={frac_i})"
+        )
+    except (ValueError, TypeError):
+        if default is _RAISE:
+            raise
+        return default
+
+
+#: Public name for the canonical parser. Fifteen modules outside this package
+#: hand-rolled their own copy of this logic (issue #78); they import this.
+#: `_parse_ip` stays as the in-module name so existing callers keep working.
+parse_ip = _parse_ip
 
 
 @dataclass
@@ -228,7 +260,11 @@ def pitcher_fp(
 ) -> float:
     """Total pitcher FP from counting totals.
 
-    BrownU default: K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 2*HLD.
+    BrownU default: K + IP*3.3 - H - 2*ER - BB - HBP + 5*SV + 3*HLD.
+    (HLD multiplier moved 2 -> 3 in the 2026-08-12 league-setting change;
+    `data/models/league_scoring.json` hd=3.0 is the authority and this
+    docstring lagged it until 2026-08-27. Never hardcode these weights --
+    tests/test_no_hardcoded_scoring_weights.py enforces it.)
     `ip` is expected already in decimal innings (use _parse_ip on raw
     '5.2'-style MLB strings first). SV/HLD default to 0 for starters.
     """

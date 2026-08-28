@@ -165,11 +165,17 @@ def _load_existing_settlement(root: Path, rec: DecisionRecord) -> Optional[Decis
 # ---------------------------------------------------------------------------
 
 
-def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> list[dict]:
+def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> Optional[list[dict]]:
     """Pull a season gameLog from the MLB Stats API for `group` in {hitting,pitching}.
 
     Returns one dict per game with the box-score fields the BrownU scorer
-    needs. Network/JSON failure returns [] (caller treats as 'no data').
+    needs.
+
+    Returns **None** when the fetch itself failed, and a (possibly empty)
+    list when it succeeded. Those used to be the same value — [] — which
+    collapsed "the API did not answer" into "this player did not play". The
+    settlement layer then graded a decision against data it never received.
+    (Fixed 2026-08-27.)
     """
     url = (
         f"https://statsapi.mlb.com/api/v1/people/{mlbam_id}"
@@ -181,10 +187,10 @@ def _fetch_gamelog(mlbam_id: int, season: int, group: str) -> list[dict]:
             payload = json.loads(r.read())
     except Exception as exc:
         print(f"  WARN gameLog fetch failed for {mlbam_id} {group} {season}: {exc}")
-        return []
+        return None
     stats_list = payload.get("stats", []) or []
     if not stats_list:
-        return []
+        return []   # answered, and he has no games this season
     splits = stats_list[0].get("splits", []) or []
     out: list[dict] = []
     for s in splits:
@@ -293,12 +299,21 @@ def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
     Total rather than per-unit, deliberately: a decision includes the playing time
     you chose, so a player who was hurt or benched should score 0, not be dropped
     as unsettleable. See plv_clone.decisions.counterfactual for the full argument.
+
+    That is now what actually happens. This used to return None whenever `rel`
+    was empty, which is the hurt-or-benched case the docstring above says
+    should score 0 — so the code contradicted its own contract. None is
+    reserved for a FAILED LOOKUP; a successful lookup with no relevant games
+    returns a real 0.0. (Fixed 2026-08-27.)
     """
     group = "hitting" if bucket == "H" else "pitching"
     key = (int(mlbam), start.year, group)
     if key not in gamelog_cache:
         gamelog_cache[key] = _fetch_gamelog(int(mlbam), start.year, group)
-    games = _games_in_window(gamelog_cache[key], start, end)
+    log = gamelog_cache[key]
+    if log is None:
+        return None, 0          # the fetch failed — nothing to grade against
+    games = _games_in_window(log, start, end)
     if bucket == "H":
         rel = games
         total = sum(_SCORING.score_hitter_game(g) for g in rel)
@@ -312,8 +327,47 @@ def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
         total = sum(_SCORING.score_pitcher_relief(g) for g in rel)
         n = len(rel)
     if not rel:
-        return None, 0
+        # Fetched successfully; he simply did not appear in the window. That
+        # is a real zero and part of what was chosen — not missing data.
+        return 0.0, 0
     return float(total), int(n)
+
+
+def _rejected_mlbam(cf: dict):
+    """The rejected candidate's MLBAM id, resolving from the NAME when the id
+    is absent (issue #54, step 2).
+
+    A counterfactual written without `rejected_mlbam` used to skip the lookup
+    entirely, so the pair could never close — a permanently unpairable record
+    that looks identical to one still waiting for its window. Of the
+    counterfactuals on disk at 2026-08-28, 3 of 10 lacked the id while 2 of
+    those 3 carried a perfectly resolvable name.
+
+    Resolution goes through the collision-safe resolvers (don't-do #10), which
+    refuse to guess on an ambiguous name rather than silently grabbing the
+    wrong same-name player — a wrong rejected leg would grade the DECISION
+    wrong, not just report a missing number. An unresolvable name returns None
+    and the pair settles UNSETTLEABLE, which is the honest outcome.
+    """
+    rid = cf.get("rejected_mlbam")
+    if rid:
+        return rid
+    name = cf.get("rejected_name")
+    if not name:
+        return None
+    bucket = (cf.get("rejected_bucket") or "").upper()
+    try:
+        from plv_clone.utils.name_match import (
+            resolve_batter_id, resolve_pitcher_id,
+        )
+        if bucket == "H":
+            return resolve_batter_id(name)
+        if bucket in {"SP", "RP"}:
+            return resolve_pitcher_id(name, role=bucket)
+        # Unknown bucket: try the hitter table, then the pitcher tables.
+        return resolve_batter_id(name) or resolve_pitcher_id(name)
+    except Exception:
+        return None
 
 
 def _settle_counterfactual_one(rec: DecisionRecord, today: date,
@@ -343,7 +397,7 @@ def _settle_counterfactual_one(rec: DecisionRecord, today: date,
             int(rec.mlbam_id), rec.bucket, start, end, gamelog_cache)
 
     rej_total, rej_n = (None, 0)
-    rej_id = cf.get("rejected_mlbam")
+    rej_id = _rejected_mlbam(cf)
     if rej_id:
         rej_total, rej_n = _totals_in_window(
             int(rej_id), cf.get("rejected_bucket") or rec.bucket,
@@ -451,7 +505,7 @@ def _settle_one(
     cache_key = (int(rec.mlbam_id), snap.year, group)
     if cache_key not in gamelog_cache:
         gamelog_cache[cache_key] = _fetch_gamelog(int(rec.mlbam_id), snap.year, group)
-    games = gamelog_cache[cache_key]
+    games = gamelog_cache[cache_key] or []   # None (fetch failed) -> no data
 
     if rec.bucket == "H":
         actuals = _hitter_actuals(games, snap, window_end)

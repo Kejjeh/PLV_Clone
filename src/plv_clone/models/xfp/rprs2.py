@@ -110,6 +110,7 @@ FEATS_RPRS2 = BASE_FEATS + NEW_FEATS
 # ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
 # validation_runs record. Backfill completed 2026-05-23.
 from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
     _check_feats_validated(FEATS_RPRS2, target="rprs2", strict=True)
@@ -426,12 +427,11 @@ def main():
     cnt = json.loads((COUNTING_DIR / f'pitcher_counting_stats_{proj_year}.json').read_text())
     cnt_df = pd.DataFrame(cnt)
     def parse_ip(v):
-        if v is None or pd.isna(v): return np.nan
-        s = str(v)
-        if '.' in s:
-            whole, frac = s.split('.', 1)
-            return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
-        return float(v)
+        # Delegates to the ONE canonical parser (issue #78). NaN (not 0.0) on a
+        # miss — this is Series-mapped and a zero would be a real value.
+        if v is None or pd.isna(v):
+            return np.nan
+        return _canon_parse_ip(v, default=np.nan)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
     # canonical BrownU weights via scoring.pitcher_fp (audit #4 — this was one
     # of ~15 inline re-derivations). A/B-verified vs the old inline expression

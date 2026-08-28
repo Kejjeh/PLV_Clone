@@ -18,7 +18,8 @@ from plv_clone.projections import PROJECTIONS
 import requests
 import sys
 
-sys.path.insert(0, '.')
+_REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[2]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 
 from plv_clone.paths import ROOT
 from plv_clone.league_config import MY_TEAM_NAME

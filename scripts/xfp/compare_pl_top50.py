@@ -94,9 +94,12 @@ def main():
     print('-' * 100)
     for _, r in df.iterrows():
         delta_str = (f'{int(r["delta"]):+d}' if pd.notna(r["delta"]) else '—')
+        # Hoisted rather than nested inline: a nested same-quote f-string
+        # is PEP 701 (Python 3.12+) and this repo targets >=3.11.
+        ros_str = (f'{r["ros_fp"]:.1f}' if r["ros_fp"] is not None else '—')
         print(f'{r["pl_rank"]:<4} {r["name"]:<22} {r["team"]:<5} '
               f'{(str(r["model_rank"]) if r["model_rank"] is not None else "—"):<5} '
-              f'{(f"{r["ros_fp"]:.1f}" if r["ros_fp"] is not None else "—"):<8} '
+              f'{ros_str:<8} '
               f'{(r["role"] or "—"):<10} '
               f'{(str(r["sv_now"]) if r["sv_now"] is not None else "—"):<3} '
               f'{r["sig"] or "—":<5} '

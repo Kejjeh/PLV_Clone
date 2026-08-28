@@ -34,6 +34,7 @@ from typing import Optional
 import pandas as pd
 
 from plv_clone.cap_math import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP  # noqa: F401  (CONTEXT.md)
+from plv_clone.league_config import SEASON_YEAR
 from plv_clone.utils.name_match import fuzzy_match_name, merge_with_model
 
 logger = logging.getLogger(__name__)
@@ -62,27 +63,56 @@ smaller cap is used. See `feedback_fa_pool_size_cap.md`.
 # ── Per-process TTL cache (2026-07-04 audit: 4→1 ESPN roundtrips) ────────
 #
 # Keyed by (frame_name, id(league)) so injected test doubles never share
+# — see _cache_put for why the league object is retained alongside the frame
 # entries with the real league (or with each other). Values are
 # (monotonic_timestamp, DataFrame). Callers get a defensive .copy() so
 # cached frames can't be mutated in place.
 
 CACHE_TTL_SECONDS: float = 300.0
-_TTL_CACHE: dict[tuple[str, int], tuple[float, pd.DataFrame]] = {}
+# Entries are (timestamp, frame, owner). ``owner`` is the league object the
+# key was derived from, retained ON PURPOSE — see _cache_put.
+_TTL_CACHE: dict[tuple[str, int], tuple[float, pd.DataFrame, object]] = {}
 
 
 def _cache_get(key: tuple[str, int]) -> pd.DataFrame | None:
     hit = _TTL_CACHE.get(key)
     if hit is None:
         return None
-    ts, val = hit
+    ts, val = hit[0], hit[1]
     if time.monotonic() - ts > CACHE_TTL_SECONDS:
         _TTL_CACHE.pop(key, None)
         return None
     return val.copy()
 
 
-def _cache_put(key: tuple[str, int], val: pd.DataFrame) -> None:
-    _TTL_CACHE[key] = (time.monotonic(), val.copy())
+def _cache_put(key: tuple[str, int], val: pd.DataFrame,
+               owner: object = None) -> None:
+    """Cache ``val`` under ``key``, keeping ``owner`` alive alongside it.
+
+    The keys here embed ``id(league)`` so that two different League objects
+    never share a cached frame. That works only while both objects are ALIVE:
+    CPython reuses an address as soon as the previous occupant is collected,
+    so a league that went out of scope could hand its id — and therefore its
+    cached roster — to an unrelated league created within the TTL.
+
+    Measured 2026-08-27, 400 LeagueState round-trips over distinct fake
+    leagues: 44 ids reused and **202 of 400 calls returned another league's
+    roster**. Serving a stale roster is precisely the failure don't-do #11
+    exists to prevent ("never label a player as yours without a live roster
+    call"), and it is silent.
+
+    Retaining the league for the entry's lifetime makes the address
+    un-reusable while the entry lives, so the id stays a real identity. The
+    cost is one held reference for at most CACHE_TTL_SECONDS.
+    """
+    now = time.monotonic()
+    # Opportunistic sweep. Entries were only ever evicted on ACCESS, so a key
+    # never read again lived forever; now that each one also pins a League
+    # object (with its rosters attached), that matters more than it did.
+    for stale in [k for k, v in _TTL_CACHE.items()
+                  if now - v[0] > CACHE_TTL_SECONDS]:
+        _TTL_CACHE.pop(stale, None)
+    _TTL_CACHE[key] = (now, val.copy(), owner)
 
 
 def clear_ttl_cache() -> None:
@@ -180,7 +210,8 @@ class LeagueState:
         Results are cached per-process for ``CACHE_TTL_SECONDS``; pass
         ``fresh=True`` to bypass and refresh the cache.
         """
-        key = ("my_roster", id(self._get_league()))
+        _league_for_key = self._get_league()
+        key = ("my_roster", id(_league_for_key))
         if not fresh:
             cached = _cache_get(key)
             if cached is not None:
@@ -201,7 +232,7 @@ class LeagueState:
             })
         df = pd.DataFrame(rows)
         _schema_sentinel(df)
-        _cache_put(key, df)
+        _cache_put(key, df, owner=_league_for_key)
         return df
 
     def my_roster_with_injuries(self) -> pd.DataFrame:
@@ -259,7 +290,7 @@ class LeagueState:
                 })
         df = pd.DataFrame(rows)
         _schema_sentinel(df)
-        _cache_put(key, df)
+        _cache_put(key, df, owner=league)
         return df
 
     # ── IL accounting (slot, not status) ────────────────────────────────
@@ -309,9 +340,10 @@ class LeagueState:
         ``fresh=True`` to bypass and refresh the cache.
 
         Returns:
-            DataFrame with columns ``player_name``, ``position``,
-            ``pro_team``, ``percent_owned``, ``injured``, ``injury_status``
-            (a schema superset of the legacy get_free_agents DataFrame).
+            DataFrame with columns ``player_name``, ``player_id``,
+            ``position``, ``pro_team``, ``percent_owned``, ``injured``,
+            ``injury_status`` (a schema superset of the legacy
+            get_free_agents DataFrame).
         """
         league = self._get_league()
         key = ("fa_pool_raw", id(league))
@@ -331,6 +363,11 @@ class LeagueState:
             for player in fas:
                 rows.append({
                     "player_name": player.name,
+                    # ESPN's own player id, captured so the cross-team leak
+                    # filter below can match on IDENTITY rather than on a name
+                    # string. all_teams() has always carried it; the FA side
+                    # did not, so the filter could only compare spellings.
+                    "player_id": getattr(player, "playerId", None),
                     "position": getattr(player, "position", "") or "",
                     "pro_team": getattr(player, "proTeam", ""),
                     "percent_owned": getattr(player, "percent_owned", 0.0),
@@ -341,7 +378,7 @@ class LeagueState:
                     "injury_status": getattr(player, "injuryStatus", "") or "",
                 })
             raw_df = pd.DataFrame(rows)
-            _cache_put(key, raw_df)
+            _cache_put(key, raw_df, owner=league)
 
         wanted_pos = position.upper() if position else None
         fa_df = raw_df
@@ -350,15 +387,49 @@ class LeagueState:
         if fa_df.empty:
             return fa_df
 
-        # Cross-team verification — drop any name that's actually rostered.
+        # Cross-team verification — drop anyone who is actually rostered.
         # Without this, ESPN's FA endpoint can lag and surface "available"
-        # players that another team already grabbed.
+        # players that another team already grabbed (Connelly Early; the
+        # Julio Rodriguez leak of 2026-06-04).
+        #
+        # Matched on ESPN player_id FIRST, name second. This used to be a name
+        # compare alone, which the two endpoints can defeat by spelling one
+        # player two ways: ESPN hands back ascii "Jose Soriano" in one place
+        # and "José Soriano" in another (the same drift that made live_monitor
+        # drop him entirely on 2026-08-07). A leak filter that exists BECAUSE
+        # the upstream is unreliable should not itself depend on the upstream
+        # being consistent. Both legs run — an id may be missing on either
+        # side, and then the name leg is all there is. (2026-08-27.)
         rostered = self.all_teams(fresh=fresh)
-        if not rostered.empty and "player_name" in rostered.columns:
-            rostered_names = set(rostered["player_name"].dropna().tolist())
-            fa_df = fa_df[~fa_df["player_name"].isin(rostered_names)].reset_index(
-                drop=True
-            )
+        if not rostered.empty:
+            if "player_id" in rostered.columns and "player_id" in fa_df.columns:
+                _r_ids = [int(pid) for pid in rostered["player_id"].dropna().tolist()]
+                _f_ids = [int(pid) for pid in fa_df["player_id"].dropna().tolist()]
+                rostered_ids = set(_r_ids)
+                # Only trust ids when they actually IDENTIFY, on BOTH sides. If
+                # either frame repeats an id (a sentinel, a stub, a fixture
+                # default), an id filter stops meaning "this player" and starts
+                # meaning "this group" — and matching a shared sentinel would
+                # drop the whole FA pool, reporting "no free agents available".
+                # That silent emptying is a far worse failure than the leak
+                # this filter guards against, so duplicates on either side skip
+                # the id leg and leave the name leg to do the work.
+                _identifying = (
+                    rostered_ids
+                    and len(rostered_ids) == len(_r_ids)
+                    and len(set(_f_ids)) == len(_f_ids)
+                )
+                if _identifying:
+                    keep = ~fa_df["player_id"].apply(
+                        lambda pid: pid is not None and pid == pid
+                        and int(pid) in rostered_ids
+                    )
+                    fa_df = fa_df[keep].reset_index(drop=True)
+            if "player_name" in rostered.columns and not fa_df.empty:
+                rostered_names = set(rostered["player_name"].dropna().tolist())
+                fa_df = fa_df[
+                    ~fa_df["player_name"].isin(rostered_names)
+                ].reset_index(drop=True)
 
         return fa_df
 
@@ -371,7 +442,7 @@ class LeagueState:
 
     def available_fa_meaningful(
         self,
-        min_2026_pa: int = 100,
+        min_season_pa: int = 100,
         min_career_pa: int = 300,
         position: Optional[str] = None,
         *,
@@ -384,9 +455,15 @@ class LeagueState:
         skills (~6x speedup on the FA hitter pool). A player is kept if
         EITHER:
 
-          * ≥ ``min_2026_pa`` PA in the 2026 season (active this year), OR
+          * ≥ ``min_season_pa`` PA in the CURRENT season
+            (``league_config.SEASON_YEAR``), OR
           * ≥ ``min_career_pa`` total career PA across all years (an
-            established veteran whose 2026 sample is just small so far).
+            established veteran whose season sample is just small so far).
+
+        The season filter reads ``SEASON_YEAR``, not a literal: a hardcoded
+        year silently keeps NOBODY on the current-season leg after rollover
+        (issue #59), which reads as "every FA is fringe" rather than as a
+        broken filter.
 
         Players whose names can't be resolved against the hitters multiyr
         cache (after `resolve_batter_id` fallback) are DROPPED — they're
@@ -409,14 +486,14 @@ class LeagueState:
             path = multiyr_path or self._HITTERS_MULTIYR_PATH
             multiyr = pd.read_csv(path)
 
-        # Per-batter aggregates: career PA total + 2026 PA.
+        # Per-batter aggregates: career PA total + current-season PA.
         career_pa = (
             multiyr.groupby("player_name")["pa"].sum().to_dict()
             if "pa" in multiyr.columns else {}
         )
         cur_pa: dict[str, int] = {}
         if "year" in multiyr.columns and "pa" in multiyr.columns:
-            cur = multiyr[multiyr["year"] == 2026]
+            cur = multiyr[multiyr["year"] == SEASON_YEAR]
             cur_pa = cur.groupby("player_name")["pa"].sum().to_dict()
 
         kept_rows = []
@@ -427,7 +504,7 @@ class LeagueState:
             if name in career_pa or name in cur_pa:
                 c = float(career_pa.get(name, 0))
                 y = float(cur_pa.get(name, 0))
-                if y >= min_2026_pa or c >= min_career_pa:
+                if y >= min_season_pa or c >= min_career_pa:
                     kept_rows.append(row)
                 else:
                     dropped_no_pa += 1
@@ -454,9 +531,9 @@ class LeagueState:
                     continue
                 c = float(sub["pa"].sum()) if "pa" in sub.columns else 0.0
                 y = float(
-                    sub[sub.get("year", -1) == 2026]["pa"].sum()
+                    sub[sub.get("year", -1) == SEASON_YEAR]["pa"].sum()
                 ) if "pa" in sub.columns and "year" in sub.columns else 0.0
-                if y >= min_2026_pa or c >= min_career_pa:
+                if y >= min_season_pa or c >= min_career_pa:
                     kept_rows.append(row)
                 else:
                     dropped_no_pa += 1
@@ -472,7 +549,7 @@ class LeagueState:
 
     def available_fa_meaningful_sp(
         self,
-        min_2026_starts: int = 2,
+        min_season_starts: int = 2,
         min_career_starts: int = 10,
         position: str = "SP",
         *,
@@ -483,7 +560,8 @@ class LeagueState:
 
         A pitcher is kept if EITHER:
 
-          * ≥ ``min_2026_starts`` game starts in 2026, OR
+          * ≥ ``min_season_starts`` game starts in the current season
+            (``league_config.SEASON_YEAR``), OR
           * ≥ ``min_career_starts`` total career starts.
 
         Uses the SP multiyr cache (``gs`` column for starts). Names that
@@ -508,7 +586,7 @@ class LeagueState:
         )
         cur_gs: dict[str, float] = {}
         if "year" in multiyr.columns and starts_col:
-            cur = multiyr[multiyr["year"] == 2026]
+            cur = multiyr[multiyr["year"] == SEASON_YEAR]
             cur_gs = cur.groupby("player_name")[starts_col].sum().to_dict()
 
         kept_rows = []
@@ -521,7 +599,7 @@ class LeagueState:
                 continue
             c = float(career_gs.get(name, 0))
             y = float(cur_gs.get(name, 0))
-            if y >= min_2026_starts or c >= min_career_starts:
+            if y >= min_season_starts or c >= min_career_starts:
                 kept_rows.append(row)
             else:
                 dropped_no_pa += 1

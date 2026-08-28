@@ -44,8 +44,12 @@ try:
 except ImportError:
     pass
 
+from plv_clone.league_config import SEASON_YEAR
+
 LEAGUE_ID = int(os.environ.get("ESPN_LEAGUE_ID", "0"))
-YEAR      = int(os.environ.get("ESPN_YEAR", "2026"))
+# Default from league_config so a rollover is ONE bump; ESPN_YEAR still
+# overrides for a historical pull (issue #59).
+YEAR      = int(os.environ.get("ESPN_YEAR", str(SEASON_YEAR)))
 SWID      = os.environ.get("ESPN_SWID", "")
 ESPN_S2   = os.environ.get("ESPN_S2", "")
 
@@ -98,6 +102,17 @@ def _wrap_free_agents_with_snapshot(league) -> None:
     league.free_agents = cached_free_agents
 
 
+def _is_auth_error(exc_or_msg) -> bool:
+    """True when an ESPN failure is a credential problem, not a transient one.
+
+    Auth failures are the single most common ESPN error (cookies expire), and
+    they are the one class that retrying can never fix — so the retry loop
+    uses this to bail out immediately rather than burning 7s on three
+    identically-doomed requests.
+    """
+    return any(tok in str(exc_or_msg).lower() for tok in _AUTH_ERROR_HINTS)
+
+
 @lru_cache(maxsize=1)
 def _get_league():
     """Return authenticated ESPN League object (cached for process lifetime)."""
@@ -125,7 +140,9 @@ def _get_league():
             except ImportError:
                 raise
             except Exception as _le:
-                if _delay is None:
+                # An expired cookie is not transient — retrying it just delays
+                # the "refresh your cookies" message by 7 seconds.
+                if _delay is None or _is_auth_error(_le):
                     raise
                 import time as _t
                 print(f"  espn: League construction failed "
@@ -142,7 +159,7 @@ def _get_league():
     except Exception as e:
         msg = str(e).strip()
         msg_l = msg.lower()
-        if any(tok in msg_l for tok in _AUTH_ERROR_HINTS):
+        if _is_auth_error(msg_l):
             friendly = (
                 "ESPN authentication failed. Refresh the espn_s2 and SWID cookies "
                 "(ESPN_S2 / ESPN_SWID env or .env)."

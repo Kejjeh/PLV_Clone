@@ -41,6 +41,8 @@ _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.par
 # The BrownU scoring formula has ONE owner (audit 2026-07-03). Proven identical to the
 # old inline formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 
 #: Below this many events a boom/bust RATE is not a usable discriminator.
@@ -171,7 +173,7 @@ def _series_from_box(df, mlbam, bucket: str):
 # ---------------------------------------------------------------------------
 
 @functools.lru_cache(maxsize=512)
-def _gamelog(mlbam: int, group: str, season: int = 2026):
+def _gamelog(mlbam: int, group: str, season: int = SEASON_YEAR):
     """Raw per-game stat splits from the live MLB Stats API (cached)."""
     import requests
     url = (f"https://statsapi.mlb.com/api/v1/people/{mlbam}/stats"
@@ -192,14 +194,8 @@ def _ip_to_float(ip_str) -> float:
     reads ⅔ of an inning as 0.2 and undercounts IP*3.3 by up to ~1.5 FP/start —
     the boxscore accumulator converts correctly, so the live fallback must too or
     the two tiers disagree on every fractional-IP outing."""
-    try:
-        whole, frac = str(ip_str).split(".")
-        return int(whole) + int(frac) / 3
-    except Exception:
-        try:
-            return float(ip_str)
-        except Exception:
-            return 0.0
+    # Delegates to the ONE canonical parser (issue #78).
+    return _canon_parse_ip(ip_str, default=0.0)
 
 
 def _is_phantom(s, ip: float) -> bool:
@@ -245,7 +241,7 @@ def _h_fp(s) -> float | None:
                      k=int(s.get("strikeOuts", 0)))
 
 
-def _live_series(mlbam, bucket: str, season: int = 2026):
+def _live_series(mlbam, bucket: str, season: int = SEASON_YEAR):
     """Live-API per-game FP list for one player (fallback tier)."""
     group = "hitting" if bucket == "H" else "pitching"
     fpf = {"SP": _sp_fp, "RP": _rp_fp, "H": _h_fp}[bucket]
@@ -257,9 +253,9 @@ def _live_series(mlbam, bucket: str, season: int = 2026):
 # Dispatcher — parquet first, live fallback
 # ---------------------------------------------------------------------------
 
-def _fp_series(mlbam, bucket: str, season: int = 2026):
+def _fp_series(mlbam, bucket: str, season: int = SEASON_YEAR):
     """Per-game FP list: materialized boxscore slice if present, else live API.
-    season != 2026 (cross-year stash fallback) always uses the live API since the
+    season != SEASON_YEAR (cross-year stash fallback) always uses the live API since the
     boxscore store is current-season only. PLV_BOOMBUST_FORCE_LIVE=1 forces live.
 
     Each per-game FP is rounded to 1 decimal — its true grain. BrownU FP is integer
@@ -268,7 +264,7 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
     differ by float dust; rounding to the real grain makes the two tiers agree exactly
     even at boom/bust thresholds."""
     s = None
-    if season == 2026 and os.environ.get("PLV_BOOMBUST_FORCE_LIVE") != "1":
+    if season == SEASON_YEAR and os.environ.get("PLV_BOOMBUST_FORCE_LIVE") != "1":
         kind = "H" if bucket == "H" else "P"
         s = _series_from_box(_load_box(kind), mlbam, bucket)
     if not s:
@@ -290,21 +286,105 @@ def _fp_series(mlbam, bucket: str, season: int = 2026):
 # Named constants so callers stop re-typing the magic numbers (audit 2026-07-03:
 # build_sp_pl_board hardcoded 17/5 inline, hitter-slate-grid doc still said the
 # pre-recalibration 20). Import these — never re-type. (recalibrated 2026-06-28.)
+
+# ── forward (shrunk) boom/bust estimates ─────────────────────────────────────
+# An observed boom rate over a short window is mostly sampling noise. Measured
+# 2026-08-27 on 1,331 SP-seasons (validate_boom_window.py): regressing the NEXT
+# 8 starts' boom rate on the window's boom rate gives a slope well under 1, and
+# 1 - slope is the fraction of any observed gap that does not survive.
+#
+#   window   slope   shrinkage   forward r
+#     L3     0.179      82%        0.253
+#     L5     0.261      74%        0.304
+#     L8     0.353      65%        0.347     <- the /boom-bust-history default
+#     L12    0.431      57%        0.371
+#     L20    0.575      42%        0.411
+#
+# Consequence for the display: the skill's own canonical contrast — a "37% boom
+# hot streak" against "0% boom cap-fodder" — is a 37.5pp gap on screen and a
+# 13.2pp gap going forward (0/8 -> 19.7%, 3/8 -> 33.0%). Raw rates invite
+# reading 0/8 as "never booms" when the forward truth is about one in five.
+#
+# Rule 13: this is a DISPLAY calibration. It never moves rh3/rp3/rprs2, and it
+# does not change any existing boom_bust output — callers must opt in.
+#   HITTER, window in GAMES (measured on 2,469 hitter-seasons, boom = FP >= 5):
+#     L7  0.105 -> 89%   L14 0.192 -> 81%   L21 0.267 -> 73%  <- the H default
+#     L28 0.330 -> 67%   L40 0.414 -> 59%   L60 0.520 -> 48%
+#
+# NOTE THE ASYMMETRY: hitter L21 is 73% noise while SP L8 is 65% — MORE
+# observations carrying LESS signal. The mechanism is between-player spread, and
+# both windows per side agree on it: the implied true between-player SD of boom
+# rate is ~12pp for pitchers and only ~5pp for hitters. Hitters are simply more
+# alike in how often they boom, so a longer window still resolves less.
+BOOM_SHRINK_SLOPE = {3: 0.179, 5: 0.261, 8: 0.353, 12: 0.431, 20: 0.575}
+BOOM_SHRINK_SLOPE_H = {7: 0.105, 14: 0.192, 21: 0.267, 28: 0.330,
+                       40: 0.414, 60: 0.520}
+# RP measured 2026-08-27 on 54,561 relief appearances / 1,282 RP-seasons
+# (rp_event_panel_2017_2026.csv, boom >= 6 FP incl. 5*SV + 3*HLD). RPs sit
+# BETWEEN the two: an L15 relief read retains 57% of its signal, more than a
+# hitter's L21 (25%) and more than an SP's L8 (35%). Save/hold leverage is a
+# durable role property, so relievers separate more than hitters do.
+BOOM_SHRINK_SLOPE_RP = {5: 0.336, 10: 0.491, 15: 0.568, 20: 0.586, 30: 0.601}
+SP_BOOM_BASE = 0.305   # league SP boom rate on the same panel
+H_BOOM_BASE = 0.207    # league hitter boom rate on the same panel
+RP_BOOM_BASE = 0.266   # league RP boom rate on the same panel
+
+
+def forward_rate(observed_rate: float, window: int, side: str = "SP",
+                 base: float | None = None) -> float:
+    """Shrink an observed short-window boom/bust rate toward the base rate.
+
+    ``observed_rate`` is a fraction (3/8 -> 0.375), ``window`` the number of
+    units it came from (STARTS for SP, GAMES for a hitter, APPEARANCES for an
+    RP), ``side`` one of "SP" / "H" / "RP". Interpolates the slope for an
+    unlisted window and clamps to the measured range rather than extrapolating
+    off the end.
+
+    Returns the forward estimate: ``base + slope * (observed - base)``.
+
+    >>> round(forward_rate(3/8, 8, "SP"), 3)
+    0.33
+    >>> round(forward_rate(0.0, 21, "H"), 3)
+    0.152
+    >>> round(forward_rate(6/15, 15, "RP"), 3)
+    0.342
+    """
+    if observed_rate is None or window is None or window <= 0:
+        return float("nan")
+    table = {"H": BOOM_SHRINK_SLOPE_H,
+             "RP": BOOM_SHRINK_SLOPE_RP}.get(side, BOOM_SHRINK_SLOPE)
+    if base is None:
+        base = {"H": H_BOOM_BASE,
+                "RP": RP_BOOM_BASE}.get(side, SP_BOOM_BASE)
+    ws = sorted(table)
+    if window in table:
+        slope = table[window]
+    elif window <= ws[0]:
+        slope = table[ws[0]]
+    elif window >= ws[-1]:
+        slope = table[ws[-1]]
+    else:
+        lo = max(w for w in ws if w < window)
+        hi = min(w for w in ws if w > window)
+        f = (window - lo) / (hi - lo)
+        slope = table[lo] + f * (table[hi] - table[lo])
+    return base + slope * (observed_rate - base)
+
 SP_BOOM, SP_BUST = 17, 5     # per-start FP: ~top-quartile / replacement floor
 RP_BOOM, RP_BUST = 6, 0      # per-appearance FP
 H_BOOM, H_BUST = 5, 0        # per-game FP: ~top-quintile / negative day
 
 
-def sp_boom_bust(mlbam, n: int = 8, season: int = 2026) -> dict | None:
+def sp_boom_bust(mlbam, n: int = 8, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "SP", season)[-n:]
     return boom_bust_summary(fp, boom_thr=SP_BOOM, bust_thr=SP_BUST)
 
 
-def rp_boom_bust(mlbam, n: int = 15, season: int = 2026) -> dict | None:
+def rp_boom_bust(mlbam, n: int = 15, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "RP", season)[-n:]
     return boom_bust_summary(fp, boom_thr=RP_BOOM, bust_thr=RP_BUST)
 
 
-def hitter_boom_bust(mlbam, n: int = 21, season: int = 2026) -> dict | None:
+def hitter_boom_bust(mlbam, n: int = 21, season: int = SEASON_YEAR) -> dict | None:
     fp = _fp_series(mlbam, "H", season)[-n:]
     return boom_bust_summary(fp, boom_thr=H_BOOM, bust_thr=H_BUST)

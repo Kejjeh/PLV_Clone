@@ -257,7 +257,7 @@ def test_available_fa_meaningful_drops_zero_pa_callup():
     state = LeagueState(league=league)
 
     df, summary = state.available_fa_meaningful(
-        min_2026_pa=100, min_career_pa=300, multiyr=multiyr,
+        min_season_pa=100, min_career_pa=300, multiyr=multiyr,
     )
 
     assert summary["input_n"] == 2
@@ -312,7 +312,7 @@ def test_available_fa_meaningful_sp_drops_callup_starter():
     state = LeagueState(league=league)
 
     df, summary = state.available_fa_meaningful_sp(
-        min_2026_starts=2, min_career_starts=10, multiyr=multiyr,
+        min_season_starts=2, min_career_starts=10, multiyr=multiyr,
     )
 
     assert summary["kept"] == 1
@@ -372,9 +372,13 @@ def test_ttl_cache_expiry_refetches(monkeypatch):
     state = LeagueState(league=league)
     state.available_fa()
 
-    # Age every cache entry past the TTL.
-    for k, (ts, val) in list(ls._TTL_CACHE.items()):
-        ls._TTL_CACHE[k] = (ts - ls.CACHE_TTL_SECONDS - 1, val)
+    # Age every cache entry past the TTL. Entries are (ts, frame, owner) —
+    # the owner field was added 2026-08-27 so an id()-keyed entry keeps its
+    # league alive and the address cannot be recycled underneath the key.
+    # Rewritten to slice rather than unpack so a future field does not break
+    # this test again; the assertion below is unchanged.
+    for k, entry in list(ls._TTL_CACHE.items()):
+        ls._TTL_CACHE[k] = (entry[0] - ls.CACHE_TTL_SECONDS - 1, *entry[1:])
 
     state.available_fa()
     assert league.free_agents_call_count == 2

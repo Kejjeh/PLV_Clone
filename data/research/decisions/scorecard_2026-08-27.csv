@@ -9,6 +9,6 @@ classification,UNSETTLEABLE_V1_UNITS,64
 hit_rate_by_bucket,H,100/321 (31%)
 hit_rate_by_bucket,SP,15/48 (31%)
 hit_rate_by_bucket,RP,21/36 (58%)
-pending,total_pending,1041
+pending,total_pending,1014
 pending,ripe_but_pending_events,248
 summary,settled_total,1017

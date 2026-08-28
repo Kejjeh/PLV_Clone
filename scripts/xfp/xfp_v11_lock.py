@@ -240,7 +240,10 @@ def build_dashboard(proj, bundle, v85_mae, v85_r, v11_mae, v11_r):
     # Build self-contained HTML (data embedded as JSON for any future JS tools)
     proj_export = proj_d.fillna('').to_dict(orient='records')
     import json
-    proj_json = json.dumps(proj_export, default=str)
+    # Embedded into `const V11_PROJECTIONS = {proj_json};` inside a
+    # <script>, so it needs the </ guard (issue #84, 2026-08-27).
+    from lib.dashboard_chrome import script_json as _script_json
+    proj_json = _script_json(proj_export, default=str)
 
     # K-bias visualization bars (V8.5 vs V11 on top-25 high-K)
     max_abs_resid = max(abs(v85_high_k_resid), abs(v11_high_k_resid), 0.5)

@@ -4666,7 +4666,11 @@ def render_page(payload: dict, external_data_src: str | None = None) -> str:
     if external_data_src:
         data_script = f'<script src="{external_data_src}"></script>\n'
     else:
-        payload_json = json.dumps(payload, ensure_ascii=False, separators=(',', ':'))
+        # INSIDE a <script> element, so it needs the </ guard. render_data_js
+        # above emits a standalone .js file — no closing tag to hit, no guard
+        # needed. (issue #84, 2026-08-27)
+        from lib.dashboard_chrome import script_json as _script_json
+        payload_json = _script_json(payload, ensure_ascii=False)
         data_script = f'<script>window.PROFILES_DATA = {payload_json};</script>\n'
     # Meta line is rendered CLIENT-SIDE from PROFILES_DATA (item 16, 2026-07-04)
     # so the shell is BYTE-STABLE day-to-day: the daily-changing timestamp AND

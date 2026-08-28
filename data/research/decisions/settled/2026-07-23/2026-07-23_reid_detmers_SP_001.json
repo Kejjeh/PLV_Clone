@@ -29,13 +29,13 @@
   "record_schema": 2,
   "settled_at": "2026-08-27",
   "settlement": {
-    "actual_fp_per_unit": 18.74,
+    "actual_fp_per_unit": 18.740000000000002,
     "classification": "MIXED_NEUTRAL",
     "event_unit": "starts",
     "n_events": 5,
     "proj_per": 11.998735454770785,
     "proj_units_note": "native",
-    "residual": 6.741264545229214,
+    "residual": 6.7412645452292175,
     "threshold": 1.0,
     "window_days": 35
   },

@@ -745,9 +745,17 @@ def lookup_batter_id_cached(
     """Look up a batter MLBAM ID from the pre-resolved name cache.
 
     Lookup order:
-      1. Exact ``(player_name, team)`` match in the cache (if ``team`` given).
-      2. Exact ``player_name`` match if unique (one row in the cache).
+      1. Exact ``(player_name, team)`` match in the cache (if ``team`` given),
+         with ``team`` canonicalized via :func:`team_key`.
+      2. Exact ``player_name`` match **if it resolves to exactly one MLBAM id**.
       3. Fall back to ``resolve_batter_id(name, team=..., position=...)``.
+
+    Step 2's uniqueness condition is load-bearing and was previously documented
+    but not enforced: the cache legitimately holds two players under one name
+    (both Max Muncys), and the accent/suffix-normalizing fallback can fold two
+    more together ("Luis Garcia Jr." and "Luis Garcia"). Anything the cache
+    cannot answer unambiguously is handed to :func:`resolve_batter_id`, which
+    owns the KNOWN_COLLISIONS gate — this function never guesses.
 
     Args:
         name: Player name (ESPN-or-Statcast spelling).
@@ -772,18 +780,54 @@ def lookup_batter_id_cached(
             sub = df[df["_norm_name"] == target]
         if not sub.empty:
             if team is not None and "team" in sub.columns:
-                team_sub = sub[sub["team"].astype(str).str.upper() == team.upper()]
-                if not team_sub.empty:
-                    sub = team_sub
-            # Take the first resolved row.
+                # team_key, NOT a raw .upper(): ESPN spells the A's "Oak" while
+                # the canonical key is "ATH", so an upper-cased compare silently
+                # matched nothing and dropped the hint entirely — which is the
+                # Max Muncy LAD/ATH case this module exists to prevent.
+                tk = team_key(team)
+                team_sub = sub[sub["team"].map(team_key) == tk]
+                if team_sub.empty:
+                    # An explicit hint that matches no cached row is NOT a
+                    # reason to fall back to an arbitrary row. resolve_batter_id
+                    # documents the same rule ("a team hint that matches no
+                    # candidate resolves to None"); defer to it so the
+                    # KNOWN_COLLISIONS gate gets its say.
+                    return _resolve_batter_id_safely(
+                        name, team=team, position=position)
+                sub = team_sub
             resolved = sub[sub["batter_mlbam"].notna()]
             if not resolved.empty:
+                # Ambiguity guard. `sub` can hold two DIFFERENT players: a cache
+                # with both Max Muncys, or the accent/suffix-folding fallback
+                # above collapsing "Luis Garcia Jr." and "Luis Garcia" onto one
+                # normalized key. Taking .iloc[0] there is precisely the silent
+                # wrong-player bug resolve_batter_id guards against, and this
+                # fast path is the more heavily used of the two.
+                # (Fixed 2026-08-27.)
+                if resolved["batter_mlbam"].nunique() > 1:
+                    return _resolve_batter_id_safely(
+                        name, team=team, position=position)
                 try:
                     return int(resolved.iloc[0]["batter_mlbam"])
                 except (TypeError, ValueError):
                     pass
-    # Cache miss → fall through to live resolver. Don't crash if the
-    # multiyr cache isn't present in the working tree.
+    # Cache miss → fall through to live resolver.
+    return _resolve_batter_id_safely(name, team=team, position=position)
+
+
+def _resolve_batter_id_safely(
+    name: str,
+    *,
+    team: Optional[str] = None,
+    position: Optional[str] = None,
+) -> Optional[int]:
+    """``resolve_batter_id`` that tolerates an absent multiyr cache.
+
+    The live resolver carries the KNOWN_COLLISIONS gate and the ambiguity
+    guard, so the cached path defers to it whenever the cache alone cannot
+    answer safely. A missing multiyr CSV in the working tree must degrade to
+    None, never crash the caller.
+    """
     try:
         return resolve_batter_id(name, team=team, position=position)
     except FileNotFoundError:

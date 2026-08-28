@@ -1,7 +1,8 @@
 """Correction: pull real eligible_slots for the FA candidates + Steer (don't bucket
 by .position alone), and Judge/Elly IL return timeline (Judge out longest -> OF
 is the priority hole)."""
-import sys; sys.path.insert(0, '.')
+import sys; _REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[3]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 from app.espn_connector import _get_league
 try:
     from app.espn_connector import get_injury_details

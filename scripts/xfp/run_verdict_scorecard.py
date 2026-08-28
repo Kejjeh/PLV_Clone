@@ -147,17 +147,50 @@ def _hit_rate(sub: pd.DataFrame) -> float | None:
     return float(d["classification"].str.endswith("_HIT").mean())
 
 
+def _base_beat_rate(bucket_df: pd.DataFrame) -> float | None:
+    """Fraction of ALL settled records in a bucket that beat +threshold.
+
+    THE COMPARISON THAT MAKES A HIT RATE READABLE (issue #53).
+
+    A "hit" is the player beating HIS OWN projection by a threshold, not
+    beating the field — so a calibrated model scores well under 50% by
+    construction, because the threshold sits outside the median. Quoted alone,
+    the number reads as "the process is wrong two times in three"; measured
+    2026-08-27, hitter BUY beat 23.1% against an all-verdict base of 23.0%,
+    i.e. an edge of +0.1pp, which is the honest statement.
+
+    Every verdict counts here, including HOLD/CAUTION/MIXED: the question is
+    what the residual distribution does on this population, independent of
+    what we said about anyone.
+    """
+    if not len(bucket_df):
+        return None
+    thr = bucket_df["threshold"].iloc[0] if "threshold" in bucket_df else None
+    if thr is None or pd.isna(thr):
+        return None
+    return float((bucket_df["residual"] > float(thr)).mean())
+
+
 def build_ladder(df: pd.DataFrame) -> pd.DataFrame:
     rows = []
+    # Per-bucket base rate, computed ONCE over every settled record in the
+    # bucket so each verdict row can be read against it (issue #53).
+    base_by_bucket = {b: _base_beat_rate(g) for b, g in df.groupby("bucket")}
     for (bkt, v), g in df.groupby(["bucket", "verdict"]):
+        _hr = _hit_rate(g) if v in ("BUY", "FADE") else None
+        _base = base_by_bucket.get(bkt)
         rows.append(dict(
             bucket=bkt, verdict=v, n=len(g),
             n_players=g["player"].nunique(),
+            base_beat_rate=(round(_base, 3) if _base is not None else None),
+            # The actual claim: hit rate MINUS what the bucket does anyway.
+            hit_rate_edge=(round(_hr - _base, 3)
+                           if (_hr is not None and _base is not None) else None),
             mean_actual=round(float(g["actual"].mean()), 3),
             median_actual=round(float(g["actual"].median()), 3),
             mean_proj_per=round(float(g["proj_per"].mean()), 3),
             mean_residual=round(float(g["residual"].mean()), 3),
-            hit_rate=(round(_hit_rate(g), 3) if v in ("BUY", "FADE") else None),
+            hit_rate=(round(_hr, 3) if _hr is not None else None),
             unit=g["unit"].iloc[0],
         ))
     out = pd.DataFrame(rows)

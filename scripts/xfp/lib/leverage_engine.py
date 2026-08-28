@@ -809,6 +809,51 @@ def assemble(state, D, *, zero_hitters: set = frozenset(),
         raise KeyError(
             f'assemble(): {_bad_rp!r} are not draw keys in D["my_rp"] (same '
             f'mlbam-key contract as my_h).')
+    # The SAME guard for the two SP levers, which the 2026-07-29 fix skipped
+    # even though the bug it was named after is a BENCH delta reading 0.00pp.
+    # _benched() accepts (mlbam, date) or (name, date) and returns False for
+    # anything else, and drop_sp_mlbams is an `int(...) not in` filter — so a
+    # string mlbam ("201"), a bare mlbam without the date, or an unknown name
+    # all silently changed nothing and reported "benching/dropping him costs
+    # you nothing". Verified 2026-08-27; guarded here.
+    #
+    # Deliberately validates the PLAYER component only, not the date: benching
+    # a date on which he has no start is a legitimate no-op (an over-broad
+    # bench window), whereas an unrecognisable player is always a caller bug.
+    _sp_pool = list(D.get('my_sp') or []) + list(extra_my_sp or [])
+    _sp_ids = {int(d['event']['mlbam']) for d in _sp_pool
+               if d['event'].get('mlbam') is not None}
+    _sp_names = {d['event'].get('name') for d in _sp_pool}
+    _bad_bench = []
+    for k in (bench_starts or ()):
+        if not (isinstance(k, tuple) and len(k) == 2):
+            _bad_bench.append(k)
+            continue
+        who = k[0]
+        if isinstance(who, int) and not isinstance(who, bool):
+            if who not in _sp_ids:
+                _bad_bench.append(k)
+        elif isinstance(who, str):
+            if who not in _sp_names:
+                _bad_bench.append(k)
+        else:
+            _bad_bench.append(k)
+    if _bad_bench:
+        raise KeyError(
+            f'assemble(): bench_starts {_bad_bench!r} name no SP in this '
+            f'scenario. Each entry must be (int mlbam, date) or (str name, '
+            f'date) matching a start in D["my_sp"] (or extra_my_sp). A string '
+            f'mlbam or a bare id silently benches NOBODY and reports the move '
+            f'as free.')
+    _bad_drop_sp = [k for k in (drop_sp_mlbams or ())
+                    if not isinstance(k, int) or isinstance(k, bool)]
+    if _bad_drop_sp:
+        raise KeyError(
+            f'assemble(): drop_sp_mlbams {_bad_drop_sp!r} are not ints. This '
+            f'filter compares int(event mlbam), so a string id drops nobody '
+            f'and reports the drop as costing nothing. (Membership is NOT '
+            f'required: dropping an SP with no remaining starts is a real '
+            f'zero.)')
     for key, rec in D['my_h'].items():
         if key not in zeroed:
             my = my + rec['arr']

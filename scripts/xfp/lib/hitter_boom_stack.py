@@ -75,6 +75,14 @@ def _warn(section: str, exc: BaseException) -> None:
     silent excepts hide dead components for weeks). Semantics unchanged — loud only."""
     import sys
     print(f"  ⚠ [hitter_boom_stack.{section}] suppressed {type(exc).__name__}: {exc}", file=sys.stderr)
+    # Also record it where a CALLER can see it: the stderr breadcrumb
+    # is invisible to code, and a verdict built on a degraded lens
+    # stack must not look healthy (don't-do #12). Added 2026-08-27.
+    try:
+        from .lens_health import record as _record_degraded
+        _record_degraded(f"hitter_boom_stack.{section}", exc)
+    except Exception:
+        pass
 
 # Expected boom/bust by stack (from hitter validation report, 2026-06-03).
 # stack=4 is EXTRAPOLATED — no direct cell exists in the validation panel

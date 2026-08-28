@@ -37,6 +37,8 @@ import ast
 import sys as _sys
 import requests
 from functools import lru_cache
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 
 def _warn(section, exc):
@@ -70,15 +72,13 @@ _BULK_IP = 3.0              # ... and innings, both required
 
 def _ip_to_float(ip) -> float:
     """MLB's innings string ('5.1' = 5 and 1/3) -> float. Never raises."""
-    try:
-        whole, _, outs = str(ip).partition('.')
-        return int(whole or 0) + (int(outs or 0) / 3.0)
-    except Exception:
-        return 0.0
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(ip, default=0.0)
 
 
 @lru_cache(maxsize=512)
-def _recent_role_from_gamelog(mlbam_id: int, season: int = 2026) -> str | None:
+def _recent_role_from_gamelog(mlbam_id: int, season: int = SEASON_YEAR) -> str | None:
     """Role from the LAST ``_RECENT_WINDOW`` outings, or None if undecidable.
 
     The season-cumulative ratio cannot see an in-season role change: April
@@ -118,7 +118,7 @@ def _recent_role_from_gamelog(mlbam_id: int, season: int = 2026) -> str | None:
 
 
 @lru_cache(maxsize=512)
-def _role_from_mlb_stats(mlbam_id: int, season: int = 2026) -> str:
+def _role_from_mlb_stats(mlbam_id: int, season: int = SEASON_YEAR) -> str:
     """Return 'SP' or 'RP' based on actual gamesStarted this season (cached).
 
     Cumulative ratio first; where it says 'RP' but the pitcher has made at
@@ -257,7 +257,7 @@ def _decide_by_starts(player_or_row, mlbam_id, season, gs_lookup, id_resolver,
 def detect_pitcher_role(
     player_or_row,
     mlbam_id: int | None = None,
-    season: int = 2026,
+    season: int = SEASON_YEAR,
     *,
     gs_lookup=None,
     id_resolver=None,

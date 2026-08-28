@@ -1,6 +1,6 @@
 ---
 name: boom-bust-history
-description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 2*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥17 / bust <5; hitter — boom ≥5 / bust <0; RP — boom ≥6 / bust <0; recalibrated 2026-06-28 to empirical ~p78/p22 quantiles — SP boom lowered 20→17 so a top-quartile 17.7 start counts; hitter was 10/2 = a useless 3%/57%; see boom_bust_cutoff_recalibration_2026-06-28.md) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, baseline xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (baseline xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
+description: Historical actuals analysis with boom/bust/variance decomposition for any list of players (default — user's full roster including IL'd returners with cross-year fallback). Pulls last-N game logs from MLB Stats API (SP — L8 starts, hitter — L21 games, RP — L15 appearances; window configurable), computes BrownU FP per game using the canonical scoring formulas (SP/RP — `K + IP*3.3 − H − 2*ER − BB − HBP`, plus `5*SV + 3*HLD` for RP; hitter — `R + TB + RBI + BB + HBP + SB − K`), then surfaces position-aware boom%/bust% (SP — boom ≥17 / bust <5; hitter — boom ≥5 / bust <0; RP — boom ≥6 / bust <0; recalibrated 2026-06-28 to empirical ~p78/p22 quantiles — SP boom lowered 20→17 so a top-quartile 17.7 start counts; hitter was 10/2 = a useless 3%/57%; see boom_bust_cutoff_recalibration_2026-06-28.md) alongside L8/L5/L3 averages, std (variance), min/max range, and trend direction (L3 vs L5 vs L8). Auto-fallback to prior year for any player with insufficient current-year games (IL60+ stashes like Hunter Greene 2025 surface automatically). Tags ownership (MINE / opp / FA), injury status (ACT / BE / IL15 / IL60 + return date), and trend arrows. Renders a position-grouped table sorted by recent form, plus optional per-game detail blocks. Designed to surface the variance side of the projection picture that model layers (rh3/rp3/rprs2, baseline xFP, archetype) cannot — actuals show whether a SP is a 37% boom hot streak (Bradish) or 0% boom 25% bust cap-fodder (Valdez) regardless of what the model says. Use when the user asks "boom bust", "how consistent has X been", "who's been booming/busting", "show me actuals not just projections", "variance check on my roster", "last 8 starts breakdown", "is X really hot or just lucky", "rank my SPs by boom rate", "roster variance audit", or wants to verify a model's projection with hard recent-actuals evidence. Engine pattern — `name_to_mlbam` via name flip + norm + KNOWN_COLLISIONS guard, MLB Stats API gameLog per player, position bucket auto-detect from rh3/rp3/rprs2 join, boom/bust threshold lookup by bucket, cross-year fallback when current-year n < 5 (Hunter Greene case), output sorted by L5 avg desc within position group, with model-projection cross-reference column (baseline xFP / rp3 per_start / rh3 per_game) showing where actuals disagree.
 ---
 
 # boom-bust-history
@@ -79,6 +79,99 @@ target the actual p80 (boom) and p20 (bust) quintiles.
 | SP | L8 starts | **≥17 FP** | **<5 FP** | recalibrated 2026-06-28: ≥17 = top-quartile (23.5%) so a strong 17.7 FP start counts; 12-yr-confirmed ~24-26% boom. (Old ≥20 = p80/top-14%, missed it.) |
 | Hitter | L21 games | **≥5 FP** | **<0 FP** | 2025: p80=5.0, p20=0.0. Median hitter game is 1 FP — the old 10/2 cuts marked the median as "bust" |
 | RP | L15 appearances | **≥6 FP** (incl. SV/HLD) | **<0 FP** | 2025: p80=6.3, p20=0.4. Old ≥5 cut tagged 1-in-3 outings as "boom" — too loose |
+
+## ⚠ SHRINK THE RATE BEFORE YOU BELIEVE IT (measured 2026-08-27, both sides)
+
+A boom rate from a short window is mostly sampling noise. Regressing the NEXT
+window's boom rate on the observed one (`scripts/xfp/validate_boom_window.py`):
+
+| SP window | slope | **noise** | | HITTER window | slope | **noise** |
+|---|---|---|---|---|---|---|
+| L3 | 0.179 | **82%** | | L7 | 0.105 | **89%** |
+| L5 | 0.261 | 74% | | L14 | 0.192 | 81% |
+| **L8** (default) | **0.353** | **65%** | | **L21** (default) | **0.267** | **73%** |
+| L12 | 0.431 | 57% | | L28 | 0.330 | 67% |
+| L20 | 0.575 | 42% | | L60 | 0.520 | 48% |
+
+**RP side measured 2026-08-27** (54,561 relief appearances / 1,282 RP-seasons,
+`rp_event_panel_2017_2026.csv`; base boom rate **0.266**):
+
+| RP window | slope | **noise** | 95% CI (cluster bootstrap) |
+|---|---|---|---|
+| L5 | 0.336 | 66% | [+0.308, +0.366] |
+| L10 | 0.491 | 51% | [+0.451, +0.525] |
+| **L15** (default) | **0.568** | **43%** | [+0.520, +0.609] |
+| L20 | 0.586 | 41% | [+0.529, +0.637] |
+| L30 | 0.601 | 40% | [+0.510, +0.690] |
+
+**RPs are the LEAST noisy of the three.** An L15 relief read keeps 57% of its
+signal — better than an SP's L8 (35%) and more than twice a hitter's L21 (25%).
+Save/hold leverage is a durable role property, and it enters the RP FP formula
+at +5/+3, so relievers separate on boom rate far more than hitters do. The RP
+line on `/boom-bust-history` is the one window read you can lean on.
+
+**The asymmetry is the surprise: hitter L21 is NOISIER than SP L8** — 73% vs
+65% — despite resting on 21 observations instead of 8. More data, less signal.
+
+The mechanism is between-player spread, and two windows per side agree on it:
+the implied TRUE between-player SD of boom rate is **~12pp for pitchers** and
+only **~5pp for hitters**. Hitters are simply more alike in how often they boom,
+so even a longer window resolves less of a real difference.
+
+**Corrected displays:**
+
+| | displayed | forward |
+|---|---|---|
+| SP "0% boom cap-fodder" (0/8) | 0.0% | **19.7%** |
+| SP "37% boom hot streak" (3/8) | 37.5% | **33.0%** |
+| Hitter 0/21 | 0.0% | **15.2%** |
+| Hitter 10/21 | 47.6% | **27.9%** |
+| RP 0/15 | 0.0% | **11.5%** (empirical tail ~16.7% — see caveat) |
+| RP 6/15 | 40.0% | **34.2%** |
+| RP 12/15 | 80.0% | **56.9%** |
+
+A 0-for-the-window player is never a player who *cannot* boom. He is a roughly
+one-in-five (SP) or one-in-seven (hitter) player, and the raw display invites
+exactly the wrong inference.
+
+**Always report the forward estimate next to the raw rate:**
+
+```python
+import sys; sys.path.insert(0, "scripts/xfp/lib")
+from boom_bust import forward_rate
+forward_rate(3/8, window=8,  side="SP")   # -> 0.330
+forward_rate(0.0, window=21, side="H")    # -> 0.152
+forward_rate(6/15, window=15, side="RP")  # -> 0.342
+```
+
+**Tail caveat (RP).** The shrink is a straight line, so at a 0-boom window it
+under-shoots: the empirical next-15 rate for an 0/15 reliever is **~16.7%**,
+against the linear 11.5%. Boom rate is bounded at 0, so the true curve flattens
+at the low end. Read the linear value as a floor-of-the-floor, never as "this
+guy booms one time in nine."
+
+**As a PROBABILITY the window loses to the base rate.** Brier vs a constant:
+SP L8 **+0.0091** (boom) / **+0.0147** (bust); hitter L21 **+0.0048** / **+0.0045**.
+It keeps real RANKING skill (AUC 0.55-0.60) — use it to sort, never as a number.
+**RP is the exception that proves the point**: an L15 boom read BEATS the base
+rate as a probability (Brier **−0.0062**, AUC **0.644**) — the only window on
+any side that does. RP *bust* does not (Brier +0.0070); prefer season-to-date
+there, as on the hitter bust line.
+
+**One side-specific caveat.** For SPs a smooth parametric P(FP≥thr) beats both
+windows. For hitter BUST it does NOT (Brier +0.0041, worse than season-to-date)
+— hitter per-game FP is strongly right-skewed (skew +1.22, kurtosis 5.09) and a
+Gaussian misprices the left tail. On the hitter bust line, prefer season-to-date.
+
+**And treat the Trend arrow with suspicion.** SP compares L3/L5/L8 = 82/74/65%
+noise; hitters L7/L14/L21 = 89/81/73%; RPs L3/L7/L15 fare best but the two
+short legs are still ~66%+ noise. Largely noise against noise, and the
+shorter inputs are always the worse ones.
+
+Calibration note: `forward_rate` is a DISPLAY correction (Rule 13). It never
+moves rh3/rp3/rprs2 and changes no existing output — callers opt in.
+
+
 
 **Threshold history**: original v1 cuts were SP 20/5, Hitter 10/2, RP 5/0,
 calibrated by intuition. The 2026-06-06 empirical validation confirmed SP
@@ -313,7 +406,7 @@ def fp_sp_or_rp(st, is_rp=False):
     if is_rp:
         SV = int(st.get('saves',0))
         HLD = int(st.get('holds',0))
-        return base + 5*SV + 2*HLD
+        return base + 5*SV + 3*HLD
     return base
 
 def fp_hitter(st):

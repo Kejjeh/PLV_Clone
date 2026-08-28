@@ -134,11 +134,17 @@ def opp_factor_for(team_id: int, id_to_abbr: dict, strength: dict) -> float:
 # Per-pitcher game log — the production fetcher's data, cached to parquet
 # --------------------------------------------------------------------------- #
 def _fp_from_stat(stat: dict) -> float:
-    """BrownU SP FP = K + IP*3.3 - H - 2*ER - BB - HBP (scoring.pitcher_fp)."""
-    from plv_clone.fantasy.scoring import pitcher_fp
+    """BrownU SP FP = K + IP*3.3 - H - 2*ER - BB - HBP (scoring.pitcher_fp).
+
+    `inningsPitched` is MLB partial-inning NOTATION, not a decimal: "5.2" is
+    5 + 2/3, not 5.2. A bare float() read it as 5.2 and under-counted the
+    start by up to 0.47 IP = 1.54 FP. Routed through the canonical parser
+    (2026-08-27).
+    """
+    from plv_clone.fantasy.scoring import pitcher_fp, _parse_ip
     return pitcher_fp(
         k=int(stat.get("strikeOuts", 0)),
-        ip=float(stat.get("inningsPitched", "0") or 0),
+        ip=_parse_ip(stat.get("inningsPitched", "0")),
         h=int(stat.get("hits", 0)),
         er=int(stat.get("earnedRuns", 0)),
         bb=int(stat.get("baseOnBalls", 0)),

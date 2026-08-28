@@ -1466,6 +1466,12 @@ def build_advisory_payload():
     return out
 
 
+# <script>-safety lives in the shared chrome (issue #84) so every builder
+# uses ONE implementation — a local copy is how this came to cover a single
+# file's payloads while three other builders had none.
+from lib.dashboard_chrome import script_json as _script_json, script_safe as _script_safe  # noqa: E402
+
+
 def main():
     records, my_team, rp_records = build_records()
     hitter_records, hitter_payload = build_hitter_records()
@@ -1475,20 +1481,22 @@ def main():
     audit = build_team_audit()
     advisory = build_advisory_payload()
 
-    proj_json     = json.dumps(records, separators=(',', ':'))
-    meta_json     = json.dumps(meta, separators=(',', ':'))
-    my_team_json  = json.dumps(my_team, separators=(',', ':'))
-    hitters_json  = json.dumps(hitter_records, separators=(',', ':'))
-    relievers_json= json.dumps(rp_records, separators=(',', ':'))
-    h2_meta_json  = json.dumps(h2_meta, separators=(',', ':'))
-    audit_json    = json.dumps(audit, separators=(',', ':'))
-    advisory_json = json.dumps(advisory, separators=(',', ':'))
+    proj_json     = _script_json(records)
+    meta_json     = _script_json(meta)
+    my_team_json  = _script_json(my_team)
+    hitters_json  = _script_json(hitter_records)
+    relievers_json= _script_json(rp_records)
+    h2_meta_json  = _script_json(h2_meta)
+    audit_json    = _script_json(audit)
+    advisory_json = _script_json(advisory)
 
     # Weekly fp substrate for trade simulator UI
     weekly_path = ROOT / 'data' / 'outputs' / 'weekly_fp_substrate.json'
     if weekly_path.exists():
         with open(weekly_path, 'r', encoding='utf-8') as f:
-            weekly_json = f.read()
+            # Read VERBATIM from disk, so it needs the same </ guard as every
+            # other payload — arguably more, since nothing here produced it.
+            weekly_json = _script_safe(f.read())
     else:
         weekly_json = '{"weeks":{},"players":[]}'
 
@@ -1503,8 +1511,7 @@ def main():
         _dc = json.loads(decision_path.read_text(encoding='utf-8'))
         if (_dc.get('schema_version') == 1
                 and str(_dc.get('generated_at', ''))[:10] == _date.today().isoformat()):
-            # escape </ so free-text fields can't close the <script> block
-            decision_json = json.dumps(_dc, separators=(',', ':')).replace('</', '<\\/')
+            decision_json = _script_json(_dc)
         else:
             print(f"  decision console payload stale "
                   f"({str(_dc.get('generated_at', ''))[:10]}) — Decision tab shows notice")

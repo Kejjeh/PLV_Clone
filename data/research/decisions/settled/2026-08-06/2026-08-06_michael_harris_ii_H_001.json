@@ -29,13 +29,13 @@
   "record_schema": 2,
   "settled_at": "2026-08-27",
   "settlement": {
-    "actual_fp_per_unit": 0.4868421052631579,
+    "actual_fp_per_unit": 0.49333333333333335,
     "classification": "BUY_MISS",
     "event_unit": "PA",
-    "n_events": 76,
+    "n_events": 75,
     "proj_per": 0.6201628640217348,
     "proj_units_note": "native",
-    "residual": -0.1333207587585769,
+    "residual": -0.12682953068840147,
     "threshold": 0.02,
     "window_days": 21
   },

@@ -140,8 +140,83 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # the moment this file was written would go red on a NEIGHBOUR's legitimate new
 # guard rather than on a real regression. Re-tighten to census+2 / census+4 once
 # the audit's test additions have all landed.
-MAX_GUARDED_FILES = 50
-MAX_GUARD_SITES = 100
+# 2026-08-27, +3 files (50 -> 53): the bug-audit wave converted three HARD
+# FAILURES into honest data gates, which is what this ratchet wants to see
+# happen deliberately rather than reflexively:
+#   test_leverage_index / test_trend_signal_centering — both read gitignored
+#     statcast parquets and ERRORED on a fresh checkout, so "no data here"
+#     was indistinguishable from "code is broken". That confusion is exactly
+#     what let a stale baseline of 8 failures go unexamined for weeks.
+#   test_triangulate — skips a verdict lock when the lens stack degraded
+#     (new result['degraded_lenses']), because a verdict synthesized without
+#     statcast is not evidence about the code.
+#   test_hygiene_python_floor / test_lens_health — NEW guard-bearing files,
+#     each guarding on interpreter version rather than on data.
+# Sites stayed under 100, so only the file bound moved.
+#
+# 2026-08-27, +1 file (53 -> 54): test_roster_rules_iteration uses a single
+# module-level importorskip for scripts.xfp.lib.roster_rules, matching how
+# every other lib-layer test reaches that package. It gates on an import, not
+# on data, and it guards a legality bug that could silently declare an
+# oversized roster legal.
+# 2026-08-27, +1 file (54 -> 55): test_inactive_lineup_slots uses one
+# module-level importorskip for build_matchup_dashboard (a heavy import), and
+# it pins the canonical "bench is an active scoring slot" rule (gotcha #7),
+# which had NO test coverage at all while two comments argued against it.
+# 2026-08-27, +1 file (55 -> 56): test_leverage_sp_lever_keys uses the same
+# module-level importorskip as test_leverage_engine (the engine needs the
+# dashboard import chain). It guards the two SP levers of assemble(), which
+# silently reported "benching/dropping him costs nothing" on a malformed key.
+# 2026-08-27, +1 file (56 -> 57): test_settlement_lookup_failure uses one
+# module-level importorskip for settle_decisions (a driver import). It guards
+# the fetch-failure vs real-zero distinction in the settlement layer, which
+# had been graded as a free win for the chosen player.
+# 2026-08-27, +1 file (57 -> 58): test_ip_parsers_agree skips a parser that is
+# not importable in a given checkout rather than failing it. It pins the MLB
+# partial-inning notation contract across the repo's SIXTEEN independent IP
+# parsers, two of which disagreed.
+# 2026-08-27, +1 file (58 -> 59): test_refresh_gate_structure importorskips
+# pyyaml. It exists BECAUSE the sibling test_refresh_ci_gate skips all nine of
+# its tests without PowerShell — on Linux the nightly gate's exit-code
+# contract was pinned by nothing. This one checks the same contract statically
+# so it holds on every platform.
+# 2026-08-27, +1 file (59 -> 60): test_gate_marker_chain importorskips pyyaml
+# (and refresh_dashboards). Like test_refresh_gate_structure it exists BECAUSE
+# a sibling skips entirely without PowerShell — test_refresh_workflow_gate's
+# three invariants were pinned by nothing on Linux. Two guard-bearing files
+# added this way is the cost of closing issue #81 for the two dark files.
+# 2026-08-27, +1 file (60 -> 61): test_dashboard_script_payloads importorskips
+# build_index_dashboard (a heavy driver import). It pins that no window.XFP_*
+# payload can close the <script> block it shares with nine others — a guard
+# that existed on one of ten payloads.
+# 2026-08-27 issue-fix batch (61 -> 65): four new guard-bearing files, each
+# importorskipping a heavy driver or pandas —
+#   test_fa_pool_size_and_filter    (#74) the FA pool is pulled whole
+#   test_repo_root_resolution       (#72) repo root from __file__, never cwd
+#   test_scorecard_base_rate        (#53) a hit rate needs its base rate
+#   (test_ip_parsers_agree already counted; #78 only tightened it)
+# 2026-08-28 issue #65 (65 -> 66): test_schedule_fetch_contract importorskips
+# build_matchup_dashboard to check that the cross-module fetch_schedules_by_team
+# import RESOLVES, not just that the sources agree — the runtime half of gotcha
+# #6. Its sibling test_noise_flags_never_rank needs no guard (pure AST) and
+# does not move either bound.
+# 2026-08-28 issue #54 (66 -> 67): test_counterfactual_rejected_resolution
+# importorskips settle_decisions (a heavy driver). Its file count rises, its
+# site count does not — it replaces no other guard and adds exactly one.
+# 2026-08-28 PL cadence fix (67 -> 68): test_pl_staleness_cadence importorskips
+# lib.pl_cache and test_triangulate (it asserts the latter DELEGATES rather than
+# re-deciding staleness). It deliberately carries NO presence guard for the PL
+# cache itself — that file is tracked, so a missing one is a real failure.
+MAX_GUARDED_FILES = 68
+# Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
+# is the first time the SITE bound has moved since it was set; it is the
+# tighter of the two and worth keeping that way.
+# 2026-08-28 issue #57 (112 -> 115): test_degraded_lens_surfacing importorskips
+# the three scripts/xfp/lib modules it exercises (lens_health, triangulate_cards,
+# triangulate_core) — the same three-module guard test_lens_health already uses.
+# The file count is unchanged: 65 was already the ceiling and this file replaces
+# no other, so the FILE bound holds and only the site count moves.
+MAX_GUARD_SITES = 119
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

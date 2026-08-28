@@ -377,6 +377,12 @@ def from_triangulate_result(
         "live_marginal": _safe_float(result.get("live_marginal")),
         "blended_xfp": _safe_float(result.get("blended_xfp")),
         "override_tag": result.get("override_tag"),
+        # Which lenses were suppressed when this verdict was built (issue #57).
+        # A verdict logged off a degraded stack would otherwise be settled later
+        # as though it were a full-stack read, with nothing in the record to say
+        # it wasn't. Recorded rather than declined: declining loses the decision
+        # entirely, which is strictly worse than grading it with a caveat.
+        "degraded_lenses": list(result.get("degraded_lenses") or []),
     }
 
     mlbam_id = _safe_int(player.get("id") or player.get("mlbam_id"))

@@ -9,6 +9,7 @@ once. Context-only (CLAUDE.md #13) — trajectory never moves rh3/rp3.
 from __future__ import annotations
 
 import functools
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 # (domain column names, x-axis key) per bucket — match the dashboard snapshot rows
 _DOMAINS = {
@@ -47,7 +48,7 @@ def _h_snaps():
     from build_player_profiles_dashboard import build_hitter_snapshots
     from .disk_cache import disk_cached, STATCAST_2026
     return disk_cached("h_snaps_2026",
-                       lambda: [r for r in build_hitter_snapshots() if r.get("year") == 2026],
+                       lambda: [r for r in build_hitter_snapshots() if r.get("year") == SEASON_YEAR],
                        [STATCAST_2026], version=1)
 
 
@@ -56,7 +57,7 @@ def _rp_snaps():
     from build_player_profiles_dashboard import build_rp_snapshots
     from .disk_cache import disk_cached, STATCAST_2026
     return disk_cached("rp_snaps_2026",
-                       lambda: [r for r in build_rp_snapshots() if r.get("year") == 2026],
+                       lambda: [r for r in build_rp_snapshots() if r.get("year") == SEASON_YEAR],
                        [STATCAST_2026], version=1)
 
 

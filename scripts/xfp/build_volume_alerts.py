@@ -42,7 +42,8 @@ try:
 except Exception:
     pass
 
-sys.path.insert(0, '.')
+_REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[2]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 
 import pandas as pd  # noqa: E402
 

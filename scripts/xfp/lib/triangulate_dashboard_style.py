@@ -52,6 +52,9 @@ border-radius:3px;letter-spacing:.03em}
 .badge.mixed{background:rgba(138,168,196,.16);color:var(--info)}
 .badge.il{background:rgba(217,119,87,.18);color:var(--accent)}
 .verdict{font-size:16px;margin:6px 0 20px;color:var(--text)}
+/* Degraded-lens banner (issue #57) — sits above the verdict so a read
+   built on a partial stack is never displayed as a sound one. */
+.degraded{font-size:13px;margin:8px 0 0;padding:8px 10px;border-radius:6px;border:1px solid #a86b1f;background:rgba(168,107,31,.12);color:#e0a95f}
 .verdict .il{color:var(--accent)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(232px,1fr));gap:14px;margin-bottom:6px}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;padding:15px 16px}

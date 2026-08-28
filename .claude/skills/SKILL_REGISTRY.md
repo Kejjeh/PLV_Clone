@@ -84,6 +84,7 @@ resolve through it.
 | sp-stuff-board | active | Stuff+ RoS FP/start single lens (Location+ REJECTED note carried) |
 | sp-floor | active | Bust-risk P(start <5 FP); K−BB% floor; bench-priority tilt |
 | sp-rp-stuff-windows | active | SP/RP velo + whiff% + swstr% over each metric's own validated stabilization minimum (L150 pitches / L150 swings / L175 SP·L200 RP pitches) instead of a calendar window. Engine `build_sp_rp_stuff_windows.py`. Rule 13 context-only |
+| split-check | active | Is a two-half difference in a player's season real or ordinary variation? Screens the gap against the empirical within-season noise floor with the correct bar for a GIVEN (event-supplied, z>1.83) vs SEARCHED (SP z>2.58 / H z>2.79) split point. Engine `lib/split_floor.py`. Rule 13 SCREEN ONLY — clearing the floor does not imply the change persists (re-anchoring FAILED holdout, t=-2.16) |
 
 ### SP cap / week management
 | Skill | Status | Role |

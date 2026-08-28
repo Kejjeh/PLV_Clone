@@ -32,6 +32,7 @@ from .extra_lenses import (  # validated context lenses (CLAUDE.md #13, never he
 
 import os as _os
 from functools import lru_cache as _lru_cache
+from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
 
 _PITCHER_SCHEDULE_PATH = _os.path.join(
     _os.path.dirname(__file__), '..', '..', '..',
@@ -711,7 +712,7 @@ def archetype_row(player: dict) -> dict:
     rows = p[p[id_col] == player['id']].sort_values('year')
     if rows.empty:
         return {'have': False, 'reason': 'not in archetype panel (insufficient innings/PA)'}
-    cur = rows[rows['year'] == 2026]
+    cur = rows[rows['year'] == SEASON_YEAR]
     if cur.empty:
         cur = rows.iloc[[-1]]
     r = cur.iloc[0]
@@ -1133,12 +1134,23 @@ def assemble_result(*, player, bucket, pl_main, pl_main_date, pl_stream,
                     pl_stream_opp, pl_stream_date, model, arche, verdict,
                     rationale, override_tag, verdict_top, reason_tag,
                     confidence, n_aligned, n_avail, watch_list, blend,
-                    il_status=None) -> dict:
+                    il_status=None, degraded_lenses=None) -> dict:
     """Canonical triangulate result-dict schema — the ONE place the card
     contract is defined. Shared by triangulate_player() (live path) and
     run_triangulate.py's batch loop (--cards-out store), so nightly-persisted
-    FA cards can never drift from live-engine cards."""
+    FA cards can never drift from live-engine cards.
+
+    ``degraded_lenses`` defaults to the live lens_health registry, so EVERY
+    result assembled here carries it — the batch/--cards-out path included,
+    which the live-path-only attach it replaces did not (issue #57).
+    """
     b = bucket
+    if degraded_lenses is None:
+        try:
+            from .lens_health import snapshot as _lens_snapshot
+            degraded_lenses = list(_lens_snapshot())
+        except Exception:
+            degraded_lenses = []
     return {
         'player': player,
         'bucket': b,
@@ -1193,6 +1205,14 @@ def assemble_result(*, player, bucket, pl_main, pl_main_date, pl_stream,
         'snapshot_age_hours': blend.get('snapshot_age_hours'),
         # H-only position passthrough for display.
         'position_for_marginal': blend.get('position') if b == 'H' else None,
+        # Which lenses were suppressed while building this verdict. Empty on a
+        # healthy build. A caller that SHOWS a verdict must caveat it when this
+        # is non-empty (lens_health.caveat() owns the wording): the same player
+        # can synthesize to a different verdict when a lens substrate is
+        # missing — canonical: Bailey Ober read CAUTION with statcast present
+        # and MIXED without it, with nothing on the dict to say so (don't-do
+        # #12). Rule 13: recording this moves no rank. Added 2026-08-27.
+        'degraded_lenses': list(degraded_lenses or []),
     }
 
 
@@ -1206,6 +1226,13 @@ def triangulate_player(name: str, bucket: str | None = None,
 
     Returns a structured dict, or None if the player couldn't be resolved.
     """
+    # Fresh degradation registry for this build — see lib/lens_health.
+    try:
+        from .lens_health import reset as _reset_lens_health
+        _reset_lens_health()
+    except Exception:
+        pass
+
     player = resolve_player(name, bucket)
     if not player:
         return None

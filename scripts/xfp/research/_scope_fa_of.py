@@ -1,7 +1,8 @@
 """Scope 'all FA OF' to the decision-relevant set for a triangulate sweep:
 OF-eligible free agents that have a real rh3 projection (top-240) OR own>=8% OR
 are PL-ranked. Dumps name+mlbam+pos for the workflow."""
-import sys, json; sys.path.insert(0, '.')
+import sys, json; _REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[3]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 import pandas as pd
 from app.espn_connector import _get_league, get_all_teams
 from plv_clone.utils.name_match import resolve_batter_id, _normalize

@@ -81,6 +81,10 @@ def build_card_data(result: dict) -> dict:
         'n_avail': result.get('confidence_n_available'),
         'rationale': result.get('rationale'),
         'watch_list': result.get('watch_list') or [],
+        # Lens suppressions recorded while this verdict was built (issue #57).
+        # Rendered as a banner above the verdict so a degraded read is never
+        # displayed as a sound one (don't-do #12).
+        'degraded_lenses': list(result.get('degraded_lenses') or []),
         'sustainability': sus_label,
         'sustainability_detail': sus_detail,
         # --- back-compat flat keys (used by the rail/summary) ---
@@ -612,6 +616,12 @@ def _card_html(c: dict, idx: int) -> str:
         + f'<div class="kv"><span class="k">confidence</span><span class="v mono">{conf:.2f} · {_fmt(c.get("n_aligned"),0)}/{_fmt(c.get("n_avail"),0)} agree</span></div>',
         span=True)
     watch = ''.join(f'<span class="chip">{h(str(w))}</span>' for w in c['watch_list'][:10])
+    try:
+        from .lens_health import caveat as _lens_caveat
+        _cav = _lens_caveat(c.get('degraded_lenses'))
+    except Exception:
+        _cav = None
+    degraded = f'<div class="degraded">{h(_cav)}</div>' if _cav else ''
     verdict_html = h(str(c.get('verdict') or '')).replace('🏥', '<span class="il">🏥')
     if '🏥' in str(c.get('verdict') or ''):
         verdict_html = verdict_html.replace(':', ':</span>', 1)
@@ -630,6 +640,7 @@ def _card_html(c: dict, idx: int) -> str:
     <span class="team mono">{h(str(grp_lab))} · {h(str(c.get('team') or ''))}</span>
     <span class="badge {vcls}">{top}</span>{badge}{plink}
   </div>
+  {degraded}
   <div class="verdict">{verdict_html}</div>
   <div class="grid">{panels}</div>
   {advanced}

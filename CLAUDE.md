@@ -1,7 +1,14 @@
 # plv_clone — Claude Code session context
 
-Auto-loaded every session. Keep tight; ~200 lines max. Detail belongs
-in memory files (`C:\Users\Joshua\.claude\projects\c--Users-Joshua-plv-clone\memory\`).
+Auto-loaded every session, so every line is a permanent tax on every turn —
+and a gotcha list nobody finishes reading is a gotcha list that doesn't fire.
+**Keep tight; 320 lines is the hard ceiling** (`tests/test_claude_md_budget.py`).
+
+Detail belongs in **`docs/memory/`** — repo-local and reachable from any
+platform, unlike the Windows memory path this line used to name (issue #46).
+The rule is: the HEADLINE fires from here, the evidence lives one hop away.
+Adding a rule means adding one line here and the full text there — never
+growing a section inline.
 
 ## What this repo is
 
@@ -12,54 +19,31 @@ the sibling `xfp-model/` repo to GitHub Pages.
 
 ## CodeGraph (USE IT — don't re-derive with grep)
 
-`.codegraph/` is **initialized and live** here (~550 files, real-time
-file-watcher daemon). It's the pre-built semantic index; reaching for
-grep/glob/read to explore wastes the ~90% token saving. Full rules in
-the global `~/.claude/CLAUDE.md`; the load-bearing bits:
+`.codegraph/` is initialized and live (~550 files, file-watcher daemon) — the
+pre-built semantic index. Reaching for grep/glob/read to explore wastes the
+~90% token saving.
 
-- **Exploration ("how does X work", "where is Y", architecture, tracing)
-  → spawn an `Explore` agent** and paste the block below into its prompt.
-  Do NOT call `codegraph_explore`/`codegraph_context` from the main
-  session (they dump source and fill context).
-- **Targeted pre-edit lookups → main session may call the lightweight
-  tools directly:** `codegraph_search` (find a symbol), `codegraph_callers`
-  / `codegraph_callees` (trace call flow), `codegraph_impact` (blast radius
-  before editing), `codegraph_node` (one symbol's detail). Prefer
-  `codegraph_impact` over a grep sweep before changing a shared signature.
+- **Exploration** ("how does X work", architecture, tracing) → spawn an
+  `Explore` agent. Do NOT call `codegraph_explore` / `codegraph_context` from
+  the main session — they dump source and fill context.
+- **Targeted pre-edit lookups** → main session may call `codegraph_search`,
+  `codegraph_callers` / `codegraph_callees`, `codegraph_impact` (prefer this
+  over a grep sweep before changing a shared signature), `codegraph_node`.
 
-Paste verbatim into every `Explore` agent prompt:
-
-> This project has CodeGraph initialized (`.codegraph/` exists). Use
-> `codegraph_explore` as your PRIMARY tool — one call returns full source
-> for all relevant files. Follow the call budget in its tool description.
-> Do NOT re-read files it already returned; only fall back to grep/glob/read
-> for "Additional relevant files" or if it returns nothing.
-
-Index hygiene: dead/one-off trees (`scripts/xfp/archive|research|_research/`,
-`scripts/_oneoff/`) are `.gitignore`d **purely to keep them out of the index**
-(they stay tracked in git) — CodeGraph 0.9.9 honors `.gitignore` and has no
-ignore config of its own. Re-add a tree there if a future symbol search
-surfaces stale `v9/v10/v11`-style duplicates.
+Full rules, the verbatim block to paste into every `Explore` agent prompt, and
+index hygiene: **`docs/memory/codegraph.md`**.
 
 ## League rules (constants)
 
 - **Format:** 8-team H2H points
 - **Roster:** 13 active hitters + 9 active pitchers + 4 bench + 3 IL = 29
-- **SP-start cap is PERIOD-AWARE — never hardcode 10.** The cap is
-  **10 SP starts per SCORING WEEK**; starts past the cap are zeros. **No**
-  slot count limit on SPs themselves. A few periods span multiple weeks and
-  carry a bigger cap:
-  - Standard 1-week period → **10**.
-  - **2-week playoff rounds → 20** (general rule `10 × weeks`, auto-derived
-    from ESPN `matchupPeriods`).
-  - **2026 All-Star block (period 15, Jul 6–19) → 16** (explicit override —
-    a 2-calendar-week span but the ASG dead days Jul 13–15 remove game-days,
-    so it is NOT 20).
-  Always resolve the live cap via `plv_clone.cap_math.sp_cap_for_period(period,
-  weeks=weeks)` (or `scripts/xfp/lib/period_meta.resolve_period_meta(league,
-  period)`), and read the authoritative banked count from ESPN statId-33
-  (`espn_period_meta`). Add a new ASG-style exception by adding one entry to
-  `PERIOD_CAP_OVERRIDES` + `PERIOD_WINDOW_OVERRIDES`. Committed 2026-07-11.
+- **SP-start cap is PERIOD-AWARE — never hardcode 10.** 10 SP starts per
+  SCORING WEEK; starts past the cap are zeros. No slot limit on SPs themselves.
+  1-week period → 10 · 2-week playoff round → 20 (`10 × weeks`, auto-derived) ·
+  2026 ASG block (period 15) → **16** (explicit override, not 20). Always
+  resolve via `plv_clone.cap_math.sp_cap_for_period(period, weeks=weeks)` and
+  read the banked count from ESPN statId-33. Mechanics + how to add another
+  ASG-style exception: `docs/memory/league_rules.md`.
 - **RP slots:** cap is **4** active RPs, not 3. **Josh's standing rule: 4 true
   RPs is also the FLOOR — never propose an RP drop to absorb an SP return or
   free a roster spot; RP drops are only RP-for-RP upgrades (2026-07-18).**
@@ -86,14 +70,11 @@ RP FP/g         = K + IP*3.3 − H − 2*ER − BB − HBP + 5*SV + 3*HLD
 Common mistake: ranking RPs with xfp_rp3. Always use **rprs2** for RPs.
 See `memory/feedback_team_value_reads_must_be_cap_role_elig_aware.md`.
 
-**RoS TOTALS = rate × volume (validated 2026-07-09).** The rate models are
-per-PA / per-start; the volume companions (hitter +0.074 / SP +0.100 Spearman
-vs naive pace, 7/7 yrs, holdout 2/2 each) convert them to totals. xfp_board and
-the snapshot logger (`proj_volume`) already consume them (refresh steps
-4.09/4.09b). Don't hand-multiply by flat 3.5 PA/g or 1.19 starts/wk when a
-volume row exists. Full day's outcomes (incl. the rp3 IL-join regression fix,
-47 arms re-tagged marcel_il): `reference_validated_signals_registry.md`
-§2026-07-09.
+**RoS TOTALS = rate × volume** (validated 2026-07-09). The rate models are
+per-PA / per-start; the volume companions convert them to totals, and xfp_board
++ the snapshot logger already consume them. Don't hand-multiply by a flat
+3.5 PA/g or 1.19 starts/wk when a volume row exists.
+Detail: `docs/memory/validated_models.md`.
 
 ## Key file paths
 
@@ -112,464 +93,227 @@ xfp-model/docs/                        # GitHub Pages dashboards (separate repo)
 
 ## claude-mem background worker
 
-The `claude-mem` plugin requires a background worker (Bun) on port **37778**
-(set in `~/.claude-mem/settings.json`). The plugin auto-starts it with `--daemon`
-when Claude Code opens. A `UserPromptSubmit` hook in `~/.claude/settings.json`
-also checks port 37778 and restarts via `Start-Process bun --daemon` if down.
-No manual action needed — if you ever see hook errors saying "worker unreachable",
-just send any message and the hook will restart it.
-
-To start manually if needed:
-```
-bun C:/Users/Joshua/.claude/plugins/cache/thedotmack/claude-mem/13.6.1/scripts/worker-service.cjs --daemon
-```
+Needs a Bun worker on port **37778**; the plugin auto-starts it and a
+`UserPromptSubmit` hook restarts it if down. **No manual action needed** — if
+you see "worker unreachable", send any message. Manual start command:
+`docs/memory/claude_mem_worker.md`.
 
 ## Common commands
 
 ```bash
-# Daily refresh — pulls statcast, rebuilds all models, regenerates
-# dashboards, commits+pushes xfp-model. Run this once per day.
-python scripts/xfp/refresh_dashboards.py
-
-# Just refresh statcast (cheap, ~few seconds)
-python scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1
-
-# Live game monitor
-python scripts/xfp/live_monitor.py --dashboard
-
-# Roster audit (replicates /roster-audit skill)
-python scripts/xfp/run_roster_audit.py
+python scripts/xfp/refresh_dashboards.py            # daily: statcast, all models,
+                                                    # dashboards, push xfp-model
+python scripts/xfp/refresh_xfp_statcast.py --year 2026 --lag 1   # statcast only
+python scripts/xfp/live_monitor.py --dashboard      # live game monitor
+python scripts/xfp/run_roster_audit.py              # /roster-audit
 ```
 
 ## Running tests / builds (token-saving summarizer)
 
 Don't run raw `pytest` — its full dump is thousands of lines. Wrap any
-test/build command in the summarizer so you see a compact ~50-150 line
-summary (final result line + verbatim FAILURES/ERRORS), with the full log
-cached to `.cache/test-logs/<ts>.log`:
+test/build command in the summarizer for a compact ~50-150 line summary (result
+line + verbatim FAILURES/ERRORS), with the full log cached to
+`.cache/test-logs/<ts>.log`. Exit code passes through unchanged.
 
 ```bash
-# Canonical test run (config lives in pyproject.toml [tool.pytest.ini_options])
-python scripts/ci/run_summary.py -- python -m pytest
-
-# Any subset works the same way
+python scripts/ci/run_summary.py -- python -m pytest          # canonical run
 python scripts/ci/run_summary.py -- python -m pytest tests/test_scoring.py
-python scripts/ci/run_summary.py pytest -q          # convenience shorthand
-
-# Works for any build/command too (generic error+tail summary)
 python scripts/ci/run_summary.py -- python scripts/xfp/refresh_dashboards.py
+python scripts/ci/run_summary.py pytest -q                    # shorthand
 ```
 
-Exit code passes through unchanged, so failures still register. Only read
-the printed full-log path when the summary doesn't have enough detail.
+## Skills — decision-moment cheat sheet
 
-## Skills — decision-moment cheat sheet (resynced 2026-07-20)
-
-Canonical names only; ~16 aliases still resolve (old names redirect). The
-FULL enforced catalog + ownership seams live in
-`.claude/skills/SKILL_REGISTRY.md` (`tests/test_skills_registered.py` keeps
-it in sync with disk — trust it over this summary). Depth lives in each
-SKILL.md; this table routes.
+Canonical names only; ~16 aliases still resolve. The FULL enforced catalog +
+ownership seams live in `.claude/skills/SKILL_REGISTRY.md`
+(`tests/test_skills_registered.py` keeps it in sync with disk — trust it over
+any summary). The decision-moment routing table is
+**`docs/memory/skills_cheatsheet.md`**.
 
 **Guards — ALWAYS, before any claim:** `/roster-verify` (is-mine),
-`/player-id-resolve` (name collisions), `/pitcher-role` (SP/RP truth incl.
-the Jax RP-slot-lag rule).
+`/player-id-resolve` (name collisions), `/pitcher-role` (SP/RP truth).
 
-**Domain masters (2026-07-20) — one command runs a whole domain:**
-`/daily-rhythm` (whats-new → daily-edge → monday-morning, day-aware) ·
-`/moves` (gates → churn verify → cap → forced-drop) · `/player-verdict <names>`
-(triangulate → bucket-correct compare → boom-bust → ONE answer) ·
-`/all-boards` (every board, one FA pull) · `/form-check` (all form lenses,
-roster-wide, flag-routed deep-dive queue).
+**Domain masters — one command runs a whole domain:** `/daily-rhythm` ·
+`/moves` · `/player-verdict <names>` · `/all-boards` · `/form-check`.
 
-| Moment | Reach for |
-|---|---|
-| **Catch-up** ("what's new / any standouts?") | `/whats-new` (delta since last look: transactions, my lines, rank movers, injuries, PL, FA standouts) |
-| **Game-day morning** | `/daily-edge` (= roster-verify → pregame-check → streamer-precision-board); pieces: `/pregame-check`, `/streamer-precision-board` |
-| **Monday** | `/monday-morning` (verify → roster-audit → roster-health → sp-week-plan → cap-check → fa-monitor → conviction-scan; Step 3c = decision-gates check) + `/model-health` + `/verdict-scorecard` |
-| **Executing moves** | `/churn-plan` (sequenced deadlines + DID-IT-EXECUTE verify); deferred decisions → `/decision-gates` |
-| **Cap crunch / IL returns** | `/cap-check` (exact banked math) · `/sp-week-plan` · `/forced-drop-planner` · `/sp-bench-mc` |
-| **"Which of these N players?"** | `/pitcher-compare` (SP/RP, firm verdict) · `/hitter-compare` |
-| **One player, full picture** | `/triangulate` (reference 3-lens card) · `/boom-bust-history` (actuals variance) · `/fa-pickup-deep-dive` (FA verdict) |
-| **Form / sustainability** | `/sp-form --lens {breakout\|decline\|sustainability\|shadow}` · `/hitter-form --scope {roster\|fa\|league}` (+`--lens career`) · deep-dives: `/slump-or-decline`, `/breakout-sustainability` |
-| **Archetypes / process** | `/sp-archetype` · `/hitter-archetype` · `/rp-archetype` · `/savant-compare` |
-| **FA boards** | `/hitter-board --mode {slate\|level\|replace}` · `/sp-board --scope {slate\|roster}` · `/fa-pitcher-pool --role {sp\|rp}` · `/xfp-board` (cross-position merged) · single lenses `/sp-stuff-board`, `/sp-floor` |
-| **FA monitoring** | `/fa-monitor` (12 signals) → `/fa-signal-to-decision` · IL stashes `/sp-stash-finder`, `/sp-rehab-tracker` |
-| **Matchup strategy** | `/matchup-leverage` (P(win) regime) · `/opp-watch` (opponent's next move) |
-| **Roster moves, P(win)-denominated (NEW 2026-07-29)** | `run_weekly_optimizer.py` — searches legal add/drop/swap combos maximizing ΔP(win), not E[FP]. Enforces 13H/9P/4BE/3IL, the **4-RP FLOOR**, last-catcher coverage, the period-aware SP cap, and lineup capacity (13 × days-remaining). Reports `mc_se` so an edge is separable from MC noise, and says WHY a tempting move is illegal. **Run it BEFORE executing** — see the ledger note below. |
-| **Trade** | `/trade-deadline` (meta) → `/league-deep-audit`, `/trade-target-scan`, `/scouting-report` |
-| **Playoffs** | `/playoff-war-room` (meta) → `/playoff-team-build`, `/season-sim` |
-| **Roster sweeps** | `/roster-audit` (slots/cap/IL) · `/roster-health` (alerts) · `/roster-deep-audit` (agreement matrix) |
-| **External sanity** | `/pl-cross-reference` |
-| **Maintenance / model work** | `/validate-feature` (Rule 9 gate) · `/golden-run` (A/B refactor proof) · `/production-audit` (code audit) · `/model-health` (data+pipeline tripwires) · `/refresh-and-commit-and-push` · `/refresh-matchup` · `/matchup-audit` |
+**Most common moments:** catch-up `/whats-new` · game-day `/daily-edge` ·
+Monday `/monday-morning` · executing `/churn-plan` · cap crunch `/cap-check` ·
+one player `/triangulate` · FA boards `/xfp-board` · trade `/trade-deadline` ·
+playoffs `/playoff-war-room` · roster sweep `/roster-audit`.
 
-**Context lenses (Rule 13 — display only, never move rh3/rp3/rprs2; each
-separately validated, deliberately separate):** `/trending` (bat speed / FB
-velo) · `/volume-watch` (playing time) · `/rating-arc` (pillar arc) ·
-`/conviction-scan` (ours-vs-process) · `/consensus-diff` (ours-vs-market) ·
-`/decision-trend` (swing decisions) · `/second-half-splits` (career 2H).
+**Context lenses (Rule 13 — display only, never move rh3/rp3/rprs2):**
+`/trending` · `/volume-watch` · `/rating-arc` · `/conviction-scan` ·
+`/consensus-diff` · `/decision-trend` · `/second-half-splits`.
 
-Global skills also used here: `/safe-commit` (universal commit flow with
-multi-repo awareness and opt-in push), `/init`, `/security-review`,
-`/review`, `/fewer-permission-prompts`.
+Roster moves are P(win)-denominated: run `run_weekly_optimizer.py` **before**
+executing — see the P(win) section below.
 
 ## Two-repo split (intentional)
 
 - **plv_clone** (this repo) — private working repo. Code, data, models,
-  research, repo-level skills. Most work happens here.
-- **xfp-model** (sibling at `./xfp-model/`) — public deployment artifact.
-  Holds `docs/index.html`, `docs/matchup.html`, `docs/live_dashboard.html`
-  for GitHub Pages at https://kejjeh.github.io/xfp-model/. The
-  `refresh_dashboards.py` script auto-commits + pushes to it.
-
-If you commit in this repo, the safe-commit skill will auto-check the
-sibling and ask if it needs attention too.
+  research, skills. Most work happens here.
+- **xfp-model** (sibling at `./xfp-model/`) — public deployment artifact:
+  `docs/{index,matchup,live_dashboard}.html` served at
+  https://kejjeh.github.io/xfp-model/. `refresh_dashboards.py` pushes to it.
+  `/safe-commit` auto-checks the sibling when you commit here.
 
 ## Fast-path gotchas (don't re-derive these — they waste tool calls)
 
-Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
+One line each; **full text, validation numbers and canonical cases in
+`docs/memory/gotchas.md`**. Numbers are load-bearing — memos cite "gotcha #12".
 
-1. **`marcel_il` artifact (SP).** Many FA-tier + IL'd-at-split SPs (Valdez,
-   Bradish, Detmers, Eury Pérez…) carry `data_quality_tag=marcel_il` in
-   `xfp_rp3_projections.csv` — their `rp3 per_start` is a SUPPRESSED Marcel
-   prior (`gs_to=0`), NOT a real read, NOT an injury flag. **Rank these by
-   `Stuff+ proj_ros_fp` (`sp_stuff_model.py`), not rp3.** Trust rp3 only where
-   `data_quality_tag` is `data_driven_*`.
-2. **Console encoding (Windows).** Prefix python INLINE with
-   `PYTHONIOENCODING=utf-8 PYTHONUTF8=1 ` (or `python -X utf8`). cp1252 chokes
-   on σ/→/emoji. The `set VAR=…&&` form does NOT persist in the Bash tool.
-3. **`get_all_teams()` shape.** Flat pandas DataFrame of ~230 rostered players
-   (`player_name, player_id, position, pro_team, team_name, lineup_slot,
-   injured, injury_status`) — NOT team objects. Match names two-pass: full
-   normalized, then `(last, first-initial)` (never last-only) — Cam/Cameron leak.
+1. **`marcel_il` (SP).** `data_quality_tag=marcel_il` in rp3 is a SUPPRESSED
+   Marcel prior, not a read and not an injury flag — rank those by Stuff+
+   `proj_ros_fp`. Trust rp3 only where the tag is `data_driven_*`.
+2. **Console encoding (Windows).** Prefix inline python with
+   `PYTHONIOENCODING=utf-8 PYTHONUTF8=1` (or `python -X utf8`).
+3. **`get_all_teams()` is a flat DataFrame** of ~230 rostered players, not team
+   objects. Match names two-pass: full normalized, then (last, first-initial) —
+   never last-only.
 4. **Verify "dropped/added" LIVE.** `get_all_teams()` is the only truth; BrownU
-   drops sit on ~24-48h waivers (`faab=False`). Canonical: Weathers 2026-06-11
-   reported "dropped" but the live scan still showed him rostered.
-5. **Don't fan out agents for a single-player / focused question** — do it inline
-   in one script. Reserve agent fan-out for genuine broad FA-pool scans.
-6. **`sp_bench_mc.py`** imports `fetch_schedules_by_team(team_ids, start, end)`
-   (batch) from `build_matchup_dashboard`; keep in sync if that module refactors.
-7. **BE slot = active for Josh.** He manages lineup daily — every healthy bench
-   player gets activated before lock. **Only `IL`/`IR` slots and `injuryStatus`
-   in `IL_INJURY_STATES` / `DAY_TO_DAY` zero a player.** `INACTIVE_LINEUP_SLOTS`
-   in `build_matchup_dashboard.py` intentionally excludes `BE`/`BENCH`/`BN`.
-   Never tell Josh a bench player "won't score" — the slot doesn't matter, health
-   does. Canonical fix 2026-06-15.
-8. **Never bucket pitchers by ESPN `.position` tag alone.** ESPN can mislabel
-   dual-eligible pitchers (canonical: Detmers 2026 — `position='RP'` but
-   `'SP' in eligible_slots` and `gamesStarted=6`; he's rp3 #29 @ 12.19
-   fp/start, not an RP). Always use `detect_pitcher_role(player_or_row)`
-   from `scripts/xfp/lib/pitcher_role.py`, which checks `eligible_slots`
-   first and falls back to MLB Stats API `gamesStarted` for dual-eligible
-   cases. The rule: SP `eligible_slots` only → SP; RP only → RP **unless the
-   name is in rp3 (ESPN slot grants lag a mid-season RP→SP conversion —
-   canonical: Griffin Jax 2026 post-trade, RP-only slots for weeks while
-   starting for TB, so cap math ignored his starts; fixed 2026-07-19), then
-   decide on `gamesStarted` like the dual path**; both →
-   `gamesStarted / gamesPlayed >= 0.4` → SP. Applied in
-   `build_matchup_dashboard.py` and `run_roster_audit.py`; wire it anywhere
-   you filter pitchers by role. Canonical fix 2026-06-15.
-9. **Data is through YESTERDAY — two bridges erase the Statcast lag (2026-06-23).**
-   `pybaseball.statcast()` finalizes ~1-2 days late, so two bridges fill the gap and
-   both run early in `refresh_dashboards.py`: (a) **boxscore bridge** (`refresh_boxscores.py`,
-   step 1.5) → real-time per-game BrownU FP into `boxscore_{hitters,pitchers}.parquet`
-   (powers boom/bust, `/boom-bust-history`); (b) **statcast gf bridge**
-   (`build_statcast_gf_bridge.py`, step 1.05) → Savant per-game-feed pitches mapped into
-   `statcast_2026.parquet` tagged `source='gf_provisional'`, so the MODELS (rh3/rp3/rprs2,
-   archetypes, splits, expected-stats, in-season arcs) are same-day current too. The
-   canonical pull overwrites the provisional rows once a day finalizes. **After a daily
-   refresh, assume everything reflects yesterday's games** — don't caveat "models lag a day."
-10. **PL rankings publish on a known cadence — staleness is cadence-aware (2026-06-23).**
-    Top 100 SP drops **Monday**; closers/relievers **~Tuesday**; Top 150 hitters **~Wednesday**;
-    SP streamers are **rolling 2-3 day** windows. `lib/pl_cache._cache_is_stale` (+ `/triangulate
-    --check-caches`) flags a cache stale only once its NEXT edition has actually published —
-    so a Friday SP pull is "stale" by Monday, not by a flat 7-day age. Refresh in that rhythm.
-11. **Trajectory/recency-trend is NON-PREDICTIVE for SP projection — validated 2026-06-24.**
-    Don't re-attempt slope / EWMA / change-point / "recent K-BB% is falling" features for rp3
-    OR the floor model: tested leakage-safe through both models' own harnesses — **Δr ≈ 0**
-    (rp3 mean, vs the +0.005 gate) AND **ΔAUC ≈ 0** (per-start bust, bootstrap CI spans 0).
-    RoS FP and bust risk both **mean-revert**; the cumulative LEVEL already carries the decline.
-    For H2H downside, use the shipped **`floor_adj_xfp`** (rp3 mean docked/credited by sp_floor
-    bust risk) + **`floor_adj_rank`** + **`floor_flag`** (FLOOR-RISK on RISKY tier / SAFE-FLOOR on
-    SAFE tier) — decision-layer, Rule-13 context-only (registered `floor_adjusted` family).
-    Tunable knobs in `lib/extra_lenses` (FLOOR_RISK_LAMBDA=0.5). **Canonical:** Soriano's
-    *validated* bust risk is only 22% (his Ks protect the floor) → floor_adj ranks him #1 of his
-    peer set; his 63%-bust recent run is variance, not predictive decline — so "drop Soriano"
-    is selling low vs every validated lens. See `floor_adjusted_ranking_2026-06-24.md`.
-    **Companion flag (same memo):** `stuff_command_lens` classifies the TYPE of decline —
-    **STUFF-DECLINE** (SwStr/velo eroding in-season OR YoY, gated on a real prior-year sample so
-    post-TJ arms don't false-flag → structural, sell) vs **COMMAND-WATCH** (stuff intact but
-    walks up → reversible, hold-watch). Columns `stuff_cmd_tag`/`_swstr_d`/`_velo_d`/`_bb_d`/
-    `_yoy_swstr_d`, registered `stuff_command` family, context-only. Canonical split: **Framber =
-    STUFF-DECLINE** (SwStr 12.4→10.1 YoY, good drop) vs **Soriano = COMMAND-WATCH** (SwStr rising
-    YoY, hold). Watch an arm's STUFF, not its walks, to know when a wobble becomes a sell.
-12. **Hitter rolling-window predictive validity — validated 2026-06-26.** Don't re-derive which
-    window to read or re-attempt a "hot-streak momentum" term for hitter FP. On our own 2026 panel
-    (leakage-safe, non-overlapping anchors, `window_predictive_validity_2026-06-26.md`): (a) **longer
-    trailing window predicts forward FP better, monotonically** — full season-to-date is the single
-    best predictor (L7 r~0.15 → season ~0.32); (b) recent form adds **~0 beyond the FULL running
-    season level** (it DOES add vs an older baseline, but the season average already contains it →
-    **no separate momentum term**, Rule 13); (c) **of all process metrics, ONLY bat speed adds
-    forward-FP signal beyond the FP level** (incremental partial r +0.076, CI excludes 0; K%/xwOBACON/
-    HardHit%/BB% are redundant/confirmatory). **Practical:** anchor on the season level, use **L21d**
-    as the recent-form window, trust **L7 only for bat speed**, and a hot L21d rate with flat bat
-    speed = variance, not a new tier. (Caveat: established everyday regulars only.)
-    **Confirmed at 60-cell scale + empirical cutoffs (2026-07-29, `inseason_delta_grid`
-    registry entry):** every in-season DELTA of a rate metric (12 metrics × feasible lags +
-    discipline/contact composites, BH-FDR corrected) adds ~0 to rh3 beyond season-to-date
-    levels — **family CLOSED with NO re-open condition remaining**: the one named re-open
-    (in-season bat-speed deltas) was built and tested the same day —
-    `bat_speed_stabilization_and_delta_2026-07-29.md`, 0/6 cells survived BH-FDR, best cell's
-    full 22-feature Rule-9 integration **+0.0035 vs the +0.005 bar**. Window studies MUST use
-    non-overlapping windows on **BOTH** legs with ≥2L spacing (the delta_grid harness's EARLIER
-    leg was cumulative season-to-date, not a window — corrected in that memo; overlapping
-    anchors had inflated a holdout +0.090 → ~0).
-    **Bat speed itself is now MEASURED, and it is the most reliable in-window hitter metric we
-    have:** forward r ≥ 0.70 by **25-30 swings** (r=.905 @ 87, .950 @ 612; no bucket below
-    .70 anywhere) on 126,434 batter-days / 1,929 player-seasons. So: read the bat-speed LEVEL
-    off ~one week of playing time and trust it; read the YoY step; but the **in-season
-    trajectory is descriptive only and must never move a rank, add, or drop** (Rule 13).
-    Canonical trap: a board sorted by in-season bat-speed delta surfaces Bichette (+1.87 mph,
-    a slow April washing out, 25th-pctile level) as the riser and Cam Smith (flat +0.01 on a
-    98th-pctile level, +3.10 YoY) as boring — exactly backwards.
-    CAVEAT: `lib/trend_signal.py`'s 80/200 swing gates guard a YoY DELTA (~√2× a level's
-    noise), so the level curve above does NOT license relaxing them — leave them alone until a
-    delta-appropriate gate is derived.
-    **Canonical empirical sample minimums** (forward r≥0.50 — use these, never hand-picks;
-    each in the metric's OWN denominator): chase **150 OOZ pitches** · zswing **150 IZ
-    pitches** · whiff **150 swings** · swstr **150 pitches** · K% **50 PA** ·
-    hard-hit/barrel **50 BIP** · BB% **175 PA** · xwOBA/PA **225 PA** · ISO **275 AB** ·
-    HR-rate **275 PA**. Consequence: any ≤3-week
-    "walking more" / "ISO jumped" read is noise BY CONSTRUCTION (BB%/power never reach r=0.70
-    in-window); short-window reads are legit only for swing-decision metrics, K%, and
-    hard-hit/barrel at those minimums. **Pitcher-side (same method, same date,
-    `pitcher_cutoff_stabilization`): velo 150 pitches (r=.90 immediately — the king pitcher
-    metric) · whiff 150 · swstr 175-200 · K% 100 TBF SP / 125 RP · gb 50 BIP · csw 425;
-    pitcher chase, pitcher BB%, and hard-hit/barrel/HR-AGAINST NEVER stabilize in-window** —
-    mid-season "command improved" / "getting more chases" / "HR-prone lately" reads are noise
-    by construction (the HR/9 lens is legit as season-vs-career only; gotcha #11's "watch
-    STUFF, not walks" now has measurement math behind it).
-13. **Model forward-calibration is GOOD — don't "fix" the small under-projection (validated
-    2026-06-26).** True forward retrospective (real git-recovered rh3/rp3 snapshots, projected at
-    T vs actuals AFTER T; `model_forward_calibration_2026-06-26.md`): forward rank skill is modest
-    & honest (**rh3 r≈0.35, rp3 r≈0.40** over 2-3 wks — the same-period r 0.77-0.82 is INFLATED by
-    the projection containing the actuals). Forward bias is mildly positive (**rh3 +0.19 at the
-    survivorship floor → +0.56 for heavy-usage regulars**; corr(err, fwd games)=+0.31). **Do NOT
-    add an intercept / shade projections up / reduce shrinkage / widen σ from this** — the +bias is
-    conditional on "keeps playing" (unconditionally the models are centered-to-OVER, since they
-    hold priors for faders), shrinkage is validated to help, and the band check was a units bug
-    (rh3 p25/p75 are **per-PA** not per-game) / confounded (rp3). The conservatism on regulars is a
-    faint floor, **context-only (Rule 13) — never a number-mover or re-rank reason.** Snapshot
-    logger (`build_player_projection_history.py`, refresh step 4.10) re-verified live; re-run the
-    retro on logged (not git) snapshots in ~3-4 wks + do a proper single-start rp3 σ-coverage study.
-    **(Both closed: σ-coverage 2026-07-10 NO-CHANGE α=2.41; logged-snapshot retro 2026-07-19
-    CONFIRMED — registry entry same date. New watch: SP volume edge decay, next 4.13 run.)**
+   drops sit on ~24-48h waivers.
+5. **Don't fan out agents for a single-player question** — one inline script.
+   Reserve fan-out for genuine broad FA-pool scans.
+6. **`sp_bench_mc` + 4 others import `fetch_schedules_by_team(team_ids, start,
+   end)`** from `build_matchup_dashboard`. Pinned by
+   `tests/test_schedule_fetch_contract.py`.
+7. **BE slot = active for Josh.** Only `IL`/`IR` slots and `injuryStatus` in
+   `IL_INJURY_STATES`/`DAY_TO_DAY` zero a player. Never tell Josh a bench
+   player "won't score" — the slot doesn't matter, health does.
+8. **Never bucket pitchers by ESPN `.position` alone** — use
+   `detect_pitcher_role()` (`lib/pitcher_role.py`), which checks
+   `eligible_slots` first and falls back to `gamesStarted`. Includes the Jax
+   RP-slot-lag rule.
+9. **Data is through YESTERDAY.** Two bridges (boxscore + statcast gf) erase
+   the Statcast lag in `refresh_dashboards.py`. Don't caveat "models lag a day."
+10. **PL staleness is cadence-aware.** SP Monday · closers ~Tuesday · hitters
+    ~Wednesday · streamers rolling 2-3 day. A cache is stale once its NEXT
+    edition publishes, not at a flat 7 days.
+11. **Trajectory / recency-trend is NON-PREDICTIVE for SP projection**
+    (validated 2026-06-24, Δr ≈ 0 AND ΔAUC ≈ 0). For H2H downside use the
+    shipped `floor_adj_xfp` / `floor_flag`; for the TYPE of decline use
+    `stuff_cmd_tag` (STUFF-DECLINE = sell, COMMAND-WATCH = hold). Both
+    decision-layer, Rule-13 context-only.
+12. **Hitters: anchor on the season LEVEL**, use L21d as the recent-form
+    window, trust L7 only for bat speed. Every in-season DELTA of a rate metric
+    adds ~0 — family CLOSED, no re-open condition left. Bat speed is measured
+    and reliable at 25-30 swings, but its in-season TRAJECTORY must never move
+    a rank. Per-metric empirical sample minimums are in the memory file — use
+    them, never hand-picks.
+13. **Model forward-calibration is GOOD — don't "fix" the small
+    under-projection.** No intercept, no shading up, no reduced shrinkage. The
+    conservatism on regulars is context-only, never a re-rank reason.
+14. **In-season "he's a different player now" is CLOSED** — five independent
+    attempts failed; ~89% of apparent change is sampling noise. Split point
+    GIVEN by an event → judge at z > 1.83; split point you SEARCHED for → SP
+    2.58 / hitters 2.79. Events do not CAUSE breaks. Nothing regime-derived may
+    move rh3/rp3/rprs2.
+15. **Read the OUTCOME for hitters, the PROCESS for pitchers.** Hitter FP level
+    beats every rate metric; SP K% beats the pitcher's own FP level. Pitchers
+    and hitters INVERT on walks — the walk belongs to the batter.
 
-## The P(win) decision layer (built 2026-07-29) — read before roster advice
+## The P(win) decision layer — read before roster advice
 
-`P(my_total > opp_total)` is what wins BrownU, and it is NOT the same objective as
-expected FP. The whole layer lives behind ONE engine — never reimplement a piece of
-it, the four-divergent-rh3-assemblies lesson applies here too.
+`P(my_total > opp_total)` wins BrownU, and it is NOT the same objective as
+expected FP. The whole layer sits behind ONE engine — never reimplement a piece
+of it. **Full detail: `docs/memory/pwin_layer.md`.**
 
-`scripts/xfp/lib/leverage_engine.py` — MC engine + `delta_pwin(state, D, add=,
-drop=, bench=)`, which scores one roster counterfactual (H/SP/RP adds; add+drop in
-one call is a SWAP). Draws are precomputed once, so a scenario is a cheap numpy
-re-assembly — that is what makes searching thousands of permutations affordable.
-Draw dicts are keyed by **mlbam**, and `assemble()` RAISES on a non-key: passing a
-name used to match nothing and report every hitter as free to bench (0.00pp).
+- `lib/leverage_engine.py` — MC engine + `delta_pwin(state, D, add=, drop=,
+  bench=)`. Draw dicts are keyed by **mlbam**; `assemble()` RAISES on a non-key.
+- `lib/dpwin_history.py` — every evaluated candidate, chosen AND rejected. The
+  only durable record; the rejected surface is what the ledger settles against.
+- `lib/title_equity.py` — the value-of-a-win curve is far from flat (period 15 =
+  2.67pp of title probability vs period 17 = 0.88pp).
+- `lib/roster_rules.py` — legality as pure functions. **4 RPs is a FLOOR**: an
+  RP may only be dropped for an RP.
 
-`lib/dpwin_history.py` → `data/research/dpwin_history.parquet`. Every evaluated
-candidate, chosen AND rejected, per run. `matchup_leverage.json` is overwritten
-each run, so this is the only durable record — and the REJECTED surface is the
-counterfactual the ledger settles against.
-
-`lib/title_equity.py` — weights a period ΔP(win) by the value-of-a-win curve from
-`season_sim.json`. **The curve is far from flat** (period 15 = 2.67pp of title
-probability, period 17 = 0.88pp), so the same weekly edge can be worth 3× more
-depending on the week. Staleness is labelled, never laundered; unavailable returns
-None, never 0.0.
-
-`lib/roster_rules.py` — legality as pure functions. **4 RPs is a FLOOR, never a
-target** (standing rule 2026-07-18): an RP may only be dropped for an RP.
-
-**THE WORKFLOW RULE THAT MAKES THE LEDGER WORK:** run the optimizer or
-`/matchup-leverage` **BEFORE executing a move**. `reconcile_decisions.py` joins
-executed ESPN transactions back to the surface that motivated them and picks the
-best *unexecuted* same-bucket candidate as the counterfactual. A move made when no
-surface existed can NEVER be graded — the 2026-07-29 dry run found all 21 recent
-moves unattributable for exactly that reason.
-
-Then `settle_decisions.py` grades `realized(chosen) − realized(rejected)` over a
-common window (H 21d / SP+RP 35d) in **total FP, not per-unit** — playing time is
-part of what you chose, so an alternative who got hurt scores 0 and that is the
-decision paying off, not missing data. `/verdict-scorecard` §7-9 reports regret by
-bucket, cumulative FP vs the road not taken, and whether ΔP(win) has real
-resolution (gated at n≥30).
-
+**THE WORKFLOW RULE:** run the optimizer or `/matchup-leverage` **BEFORE**
+executing a move. A move made when no surface existed can never be graded.
 Rule 13 throughout: this layer never touches rh3/rp3/rprs2/baseline xFP.
 
 ## Don't do these (load-bearing feedback)
 
-1. **Don't drop a feature into rh3/rp3/rprs2 without `/validate-feature`.**
-   Rule 9: baseline must include ALL existing production features.
-   Stripped-down backtests over-claim lift (we got burned 4× on rh3 v2).
-2. **Don't count IL slots from `injured==True`.** Use `lineup_slot=='IL'`
-   to compute free IL capacity. A player can be IL'd while in their
-   starting slot (Langford OF) or on the bench (Helsley BE).
-3. **Don't use n_pos_flags or the composite "rolling trend" flag** to
-   rank or filter FAs. Validated as noise (v3, 2026-05-11).
-4. **Don't recommend players from other teams' rosters** as "best available."
-   FAs only — use `get_free_agents()` exclusively.
-5. **Don't commit `*.parquet`, `*.pkl`, or `*.bak` files** — they're
-   gitignored. The refresh script creates `.bak` backups automatically.
-6. **Don't use per-position `get_free_agents(position=X, size=300)` for
-   pool scans.** Silently drops low-owned high-FP candidates. Always
-   `league.free_agents(size=2000)` + manual position filter for any
-   "all FAs above threshold" query. See `feedback_fa_pool_size_cap.md`.
-7. **Don't conclude a player is rostered without calling `get_all_teams()`.**
-   Neither PL rank nor percent_owned is a substitute. PL ranks reflect
-   MLB performance, not 8-team roster state (Connelly Early, 2026-05-18).
-   percent_owned is national data — 60% nationally owned is routinely
-   unclaimed in 8-team (Emmett Sheehan, 2026-05-25: 60.7% owned, confirmed
-   FA). Always verify via `league.teams` roster scan before concluding
-   anyone is unavailable. See `feedback_pl_rank_not_equal_fa_available.md`.
-8. **Don't recommend dropping a hitter without checking xwOBA L21d
-   vs 2025 baseline AND xwOBACON year-over-year trajectory first.**
-   MC can show "drop" while the underlying contact quality says "bounce
-   coming." The YoY trajectory determines whether prior slump/recovery
-   patterns are valid templates: if xwOBACON is declining each year
-   (Turner pattern), recovery will hit a lower ceiling than prior
-   troughs. If xwOBACON is stable, prior recoveries predict this one.
-   See `reference_xwoba_l21d_vs_2025_diagnostic.md`.
-9. **Don't trust matchup.html SP projection blindly.** Four known bug
-   patterns can cause undercount, IL'd-projected, or mlbam-None false
-   matches. Run `/matchup-audit` after any change to
-   `scripts/xfp/build_matchup_dashboard.py`. See
-   `reference_matchup_dashboard_sp_gotchas.md`.
-10. **Don't lookup batter IDs by name alone.** Same-name MLB players
-    (canonical: Max Muncy LAD vs ATH) silently grab the wrong row in a
-    `dict[name]=batter_id` map. Always use
-    `plv_clone.utils.name_match.resolve_batter_id(name, team=..., position=...)`
-    (or `resolve_pitcher_id(name, team=..., role=...)`) which consults
-    `KNOWN_COLLISIONS` and refuses to silently guess. See
-    `feedback_player_name_collisions.md` and `/player-id-resolve`.
-    **NEVER `df[player_name.str.contains(last_name)]` for a stats/projection/draft
-    lookup** — a surname substring grabs the wrong same-name player and `.iloc[0]`
-    hides it. Canonical 2026-06-26: **Will Warren** (701542, NYY, STARTER) vs
-    **Austin Warren** (681810, NYM, RELIEVER) — a `contains('Warren')` query pulled
-    Austin's relief games into Will's profile, falsely showing Will "moved to the
-    bullpen." (Will/Austin differ on FIRST name so they normalize differently —
-    a normalized FULL-name match is safe; only same-FULL-name pairs like Muncy /
-    the Garcias need a team hint.) A workflow audit fixed every skill engine doing
-    this (`run_fa_monitor`, `build_sp_alerts`, `bench_tracker`, `week_schedule_tilt`,
-    matchup boom-scan); the rule: resolve to mlbam with team/role, else a normalized
-    FULL-name match (skip-on-ambiguous) — never last-name `contains`. The boxscore
-    store + `lib/boom_bust.py` were already mlbam-keyed (safe). Locked by
-    `tests/test_name_collision.py`.
-11. **Don't label any player as "yours" without a live roster call.**
-    On 2026-05-25, Weathers and Rasmussen were labeled "Your SP" from
-    session memory — both were on opponent rosters. Always call
-    `get_my_roster_with_injuries()` first and use `my_tag()` to annotate.
-    See `/roster-verify` skill.
-12. **Don't headline a single lens or let a verdict flip across turns.**
-    The SAME player (Steer 2026-06-09) was called "cooling" one turn and
-    "BUY/rising" the next because different runs foregrounded different
-    slivers (the `decision_type_lens_registry` "Skip" columns optimize
-    brevity over consistency). For ANY user-facing player verdict: COMPUTE
-    and SHOW the full lens stack, give an explicit **actuals vs trajectory
-    vs process** reconciliation when they diverge, and keep the headline
-    **stable + lens-order-independent**. A verdict may change only on (a)
-    new data (a refresh) or (b) a corrected error — and when it changes,
-    say WHY. Never flip silently. See `reference_lens_merge_protocol.md`
-    ("ALWAYS run + SHOW the full stack").
-13. **Don't treat the lens stack as additive point-forecast lift.** Validated
-    2026-06-11 (`lens_value_add_2026-06-11.md`, leakage-safe player-clustered
-    OOS): the multi-lens synthesis does NOT beat the base rank at
-    point-forecasting forward FP — clean ΔR² **+0.006 H (n.s.) / −0.014 SP
-    (negative)**; the +0.033 was an L7 leakage artifact. Lenses earn their keep
-    ONLY as **conviction / conflict surfacing** (agreement count sorts realized
-    direction monotonically: LOW +0.15 → MED +0.30 → HIGH +0.47 FP/g), NOT as a
-    free R² boost. **xwOBA-L21d (hitters)** and **boom-bust + sustainability
-    (SPs)** are NON-additive / mildly negative as point terms — use them for
-    CONTEXT and as Tier-B gates, NEVER to move the projection. Headline number
-    stays rh3/rp3/rprs2 / baseline xFP. See `reference_lens_merge_protocol.md`.
+One line each; **full text and canonical cases in `docs/memory/dont_do.md`**.
+Numbers are load-bearing — memos cite "don't-do #10".
+
+1. **No feature into rh3/rp3/rprs2 without `/validate-feature`.** Rule 9: the
+   baseline must include ALL existing production features.
+2. **Don't count IL slots from `injured==True`** — use `lineup_slot=='IL'`.
+3. **Don't rank or filter FAs by `n_pos_flags`** or the composite rolling-trend
+   flag. Validated as noise 2026-05-11.
+4. **Don't recommend players from other teams' rosters as "best available."**
+   FAs only — `get_free_agents()`.
+5. **Don't commit `*.parquet`, `*.pkl`, or `*.bak`** — gitignored.
+6. **Don't use per-position `get_free_agents(position=X, size=300)` for pool
+   scans** — it silently drops low-owned high-FP candidates. Always
+   `league.free_agents(size=2000)` + manual filter.
+7. **Don't conclude a player is rostered without `get_all_teams()`.** Neither
+   PL rank nor percent_owned is a substitute — 60% nationally owned is
+   routinely unclaimed in an 8-team league.
+8. **Don't recommend dropping a hitter without checking xwOBA L21d vs 2025 AND
+   xwOBACON year-over-year.** The YoY trajectory decides whether prior
+   recoveries are valid templates.
+9. **Don't trust matchup.html SP projection blindly** — four known bug
+   patterns. Run `/matchup-audit` after any `build_matchup_dashboard.py` change.
+10. **Don't look up player IDs by name alone.** Use
+    `resolve_batter_id/resolve_pitcher_id` with team/role. **NEVER**
+    `df[name.str.contains(last_name)]` — a surname substring grabs the wrong
+    same-name player and `.iloc[0]` hides it.
+11. **Don't label a player "yours" without a live roster call** —
+    `get_my_roster_with_injuries()` first, then `my_tag()`.
+12. **Don't headline a single lens or let a verdict flip across turns.** Show
+    the full lens stack with an explicit actuals-vs-trajectory-vs-process
+    reconciliation; a verdict changes only on new data or a corrected error,
+    and you say WHY.
+13. **Don't treat the lens stack as additive point-forecast lift.** Lenses earn
+    their keep as conviction / conflict surfacing only. The headline number
+    stays rh3/rp3/rprs2 / baseline xFP.
 14. **Don't headline a Stuff+ "buy-low" for a veteran without the decline
-    cross-check.** Stuff+ measures stuff LEVEL, not TRAJECTORY — a high-Stuff+ /
-    lagging-results SP can be a real decline, not a buy. Before headlining BUY,
-    cross-check (a) archetype STUFF-rating YoY slope
-    (`data/research/sp_archetype_career_panel.parquet`), (b) sustainability
-    K%/SwStr decomp (`scripts/xfp/pitcher_sustainability.py`), (c) archetype
-    trajectory + comp T+1. If ≥2 signal real decline → headline **"DECLINING —
-    back-end / defensible drop, not a buy,"** NOT the Stuff+ buy. Canonical:
-    **Framber Valdez 2026** (Stuff+ 103 looked buy-low, but STUFF 56→46 YoY,
-    K% −4.7pp / SwStr −2.4pp, TRENDING_DOWN slope −4.5, comps avg 10.7 FP/start
-    T+1 = real decline, not luck). See `/sp-stuff-board` mandatory cross-check +
-    `reference_lens_merge_protocol.md` SP conflict rule #6.
-15. **Don't execute/recommend a drop on a "declining" skill read from a SINGLE
-    window** (one bad week of xwOBACON, K%, or bat speed). Require the decline
-    to show in ≥2 non-overlapping windows (e.g. L7 AND L21, or L21 AND the
-    trailing month) before it counts as a real trend — a one-week dip can look
-    exactly like a trend and reverse completely within 2 weeks. **Canonical:
-    Trea Turner** — dropped 2026-06-19 on xwOBACON/K% "decline," but the whole
-    read traced to one bad week (6/8: bat speed 68.7mph, K% 37%) that had
-    already partially recovered by the drop date (6/15: 70.9mph) and fully
-    reversed by July (K% 19.3%, bat speed 70.2mph — his best month of the
-    season). The call matched the data in hand at the time; the fix is
-    requiring a second confirming window before the data counts as a trend,
-    not blaming the read in hindsight. Apply this before any drop recommendation
-    in `/moves`, `/roster-audit`, `/forced-drop-planner`, or `/decision-gates`.
-16. **Don't let a short-hold FA add/drop (<48h, a same-day scouting look) go
-    unchecked forever.** A player added and dropped within a day or two gets
-    zero real evaluation — if he breaks out weeks later you'll never know
-    unless something re-scans him. **Canonical: Louis Varland** — added/dropped
-    same week 2026-04-19/20 by the Ligers, claimed by an opponent 8 days later,
-    now rprs2 **#4 overall** (+136.2 replacement_delta) — a top-5 league-wide
-    reliever that got a one-day look. **Bryan Baker** is the same pattern one
-    level over: never rostered at all, now rprs2 **#5** (+114.7). Signal D
-    (Drafted-Then-Dropped Comeback) in `/fa-monitor` only checks prior-YEAR
-    draft history — it does not catch same-season short-hold churn. Signal P
-    (Short-Hold Churn Re-scan, added 2026-07-20) closes this gap: it re-checks
-    every player added-then-dropped within 48h by ANY team in the last 30 days
-    against current rp3/rh3/rprs2 rank, 3+ weeks after the churn event so real
-    signal has had time to show. Run as part of the regular `/fa-monitor` sweep.
+    cross-check.** Stuff+ measures LEVEL, not TRAJECTORY. If ≥2 of (archetype
+    YoY slope, sustainability decomp, comp T+1) signal real decline → headline
+    DECLINING, not the buy.
+15. **Don't drop on a "declining" read from a SINGLE window.** Require ≥2
+    non-overlapping windows — a one-week dip looks exactly like a trend and can
+    fully reverse.
+16. **Don't let a short-hold FA add/drop (<48h) go unchecked forever.** Signal
+    P in `/fa-monitor` re-scans churned players 3+ weeks later.
+17. **Two statistical traps — check both, every study.** (a) NEVER compare an r
+    across frames: window length and durability filters move r more than any
+    feature effect. (b) A permutation p cannot go below 1/(B+1) — assert
+    `1/(B+1) < q/M` before believing a BH-FDR result. Corollaries: always
+    report one-row-per-player-season next to any pooled result, and dispersion
+    is only valid on genuine 0/1-per-event rates.
+18. **Don't ship a guard or a fix without sweeping its sibling call sites.** The
+    dominant bug shape in this repo is a CORRECT fix applied to a strict subset
+    of the places that needed it, failing silently rather than crashing. Grep
+    for the siblings before committing, and prefer DISCOVERY over ENUMERATION
+    in guards — a guard that enumerates drifts, one that walks the package
+    covers the next case on the day it's written.
 
 ## Memory pointers (for context-dense lookups)
 
-All in `~/.claude/projects/c--Users-Joshua-plv-clone/memory/`:
+**`docs/memory/`** — repo-local, reachable from any platform. Holds the full
+text of everything CLAUDE.md summarizes: `gotchas.md`, `dont_do.md`,
+`pwin_layer.md`, `skills_cheatsheet.md`, `league_rules.md`,
+`validated_models.md`, `codegraph.md`, `recent_shipping.md`,
+`claude_mem_worker.md`. New detail belongs here, not inline above —
+`tests/test_claude_md_budget.py` holds the line ceiling.
 
-- `MEMORY.md` — index, always loaded
-- `reference_league_rules.md` — full BrownU scoring + roster spec
-- `reference_validated_signals_registry.md` — what's allowed to drive decisions
-- `reference_multitesting_protocol.md` — the 9 rules (Rule 8 framing, Rule 9 baseline)
-- `feedback_il_slot_vs_il_status.md` — slot counting gotcha
-- `feedback_validate_before_ship.md` — anti-promotion-without-validation rule
-- `feedback_save_handcuffs_needs_closer_context.md` — closer ranking nuance
+Josh's host also has `~/.claude/projects/c--Users-Joshua-plv-clone/memory/`
+(`MEMORY.md`, `reference_league_rules.md`,
+`reference_validated_signals_registry.md`,
+`reference_multitesting_protocol.md`, `feedback_*`) — indexed in
+`docs/memory/host_memory_index.md`. That is a **Windows** path and is NOT
+reachable from the Linux containers these sessions run in — cite it, don't
+try to read it.
 
-## Recent shipping (2026-06-03)
+## Recent shipping
 
-Today's batch added a tag layer on top of the existing rh3/rp3 numbers
-(headline projections unchanged). New display-only tags surfaced via
-`/triangulate`, `/stream-the-stack`, matchup.html: **tier-aware
-boom_stack** (SP 4 components incl. park_friendly, range 0-4, per-tier
-boom% lookup), **hitter boom_stack** (4 components incl. lineup_amp,
-range 0-4), **HIGH-K ARM** standalone z-score tag, **catcher framing**
-🧊 ELITE / ⚠ TAX, **anti-predictive skill_spike warning** at backend/
-sp2_sp3 tiers, **skill_spike 3g → 5g window**, **σ rescale ×2.41**
-calibrating SP p25/p75 bands, **per-batter hetero σ** for hitters,
-**week_boom rate** in `/sp-week-plan` Step 5.5. New skills:
-`/stream-the-stack`, `/boom-stack-explain`. Lessons + validation index:
-`docs/architectural_lessons_2026-06-03.md`.
+Shipping log with the 2026-06-03 tag-layer batch (boom_stack, framing, σ
+rescale, `/stream-the-stack`): **`docs/memory/recent_shipping.md`**.
 
 ## Agent skills
 
-### Issue tracker
-
-GitHub Issues in `Kejjeh/PLV_Clone` via the `gh` CLI. See `docs/agents/issue-tracker.md`.
-
-### Triage labels
-
-Canonical defaults (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
-
-### Domain docs
-
-Single-context: `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- **Issue tracker** — GitHub Issues in `Kejjeh/PLV_Clone`, `docs/agents/issue-tracker.md`
+- **Triage labels** — `docs/agents/triage-labels.md`
+- **Domain docs** — `CONTEXT.md` + `docs/adr/`, `docs/agents/domain.md`
