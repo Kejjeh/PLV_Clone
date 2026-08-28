@@ -42,6 +42,7 @@ _BOX_HITTERS = _ROOT / "data" / "research" / "xfp_cache" / "boxscore_hitters.par
 # old inline formula (parity 0.000000, test_scoring_parity.py) — this migration is a no-op.
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
 from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 
 #: Below this many events a boom/bust RATE is not a usable discriminator.
@@ -193,14 +194,8 @@ def _ip_to_float(ip_str) -> float:
     reads ⅔ of an inning as 0.2 and undercounts IP*3.3 by up to ~1.5 FP/start —
     the boxscore accumulator converts correctly, so the live fallback must too or
     the two tiers disagree on every fractional-IP outing."""
-    try:
-        whole, frac = str(ip_str).split(".")
-        return int(whole) + int(frac) / 3
-    except Exception:
-        try:
-            return float(ip_str)
-        except Exception:
-            return 0.0
+    # Delegates to the ONE canonical parser (issue #78).
+    return _canon_parse_ip(ip_str, default=0.0)
 
 
 def _is_phantom(s, ip: float) -> bool:

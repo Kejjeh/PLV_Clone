@@ -5,7 +5,7 @@ getting better or worse RIGHT NOW. Role-appropriate fast-stabilizing signal:
               since induced bat speed was rejected for pitchers)
 2026-to-date vs prior-year baseline, z-scored. Display/context only.
 """
-import sys; sys.path.insert(0, '.')
+import sys; sys.path.insert(0, str(ROOT))  # repo root, NOT cwd (issue #72)
 import numpy as np
 import pandas as pd
 from pathlib import Path

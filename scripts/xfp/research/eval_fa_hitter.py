@@ -8,7 +8,8 @@ recent-15g actuals (boom/bust BrownU FP). Display/context; rh3/Blended is headli
 import sys, json, requests
 from datetime import date, timedelta
 from pathlib import Path
-sys.path.insert(0, '.')
+_REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[3]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 import numpy as np, pandas as pd
 
 C = Path('data/research/xfp_cache')

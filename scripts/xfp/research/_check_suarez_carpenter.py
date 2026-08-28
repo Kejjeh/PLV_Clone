@@ -1,6 +1,7 @@
 """Availability + eligibility + platoon for Eugenio Suarez + Kerry Carpenter
 before slotting into the FA-OF board."""
-import sys, requests; sys.path.insert(0, '.')
+import sys, requests; _REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[3]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 from app.espn_connector import _get_league, get_all_teams
 from plv_clone.utils.name_match import resolve_batter_id, _normalize
 import pandas as pd

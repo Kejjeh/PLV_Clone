@@ -39,13 +39,23 @@ sys.path.insert(0, str(ROOT / "scripts" / "xfp"))
 #: parser only as a nested function, or that take a pandas Series rather than a
 #: scalar, are out of scope for a scalar contract test and are listed in
 #: _KNOWN_NON_SCALAR so the census below stays honest about coverage.
-_KNOWN_NON_SCALAR = {
-    "plv_clone.models.xfp.rprs2.parse_ip",          # nested, Series-mapped
-    "build_relievers_multiyr.parse_ip",             # nested
-    "monitor_drift.parse_ip",                       # nested
-    "build_milb_pitcher_counting.ip_to_float",      # nested
-    "build_rp_leverage_proxy._ip_to_float",         # takes a Series
+#: CONSOLIDATED 2026-08-27 (issue #78): every parser below now delegates to
+#: plv_clone.fantasy.scoring.parse_ip, so the four "nested, untestable" excuses
+#: are gone — the delegation is the guarantee, and the sites are listed here to
+#: keep that visible rather than assumed.
+_DELEGATED_NESTED = {
+    "plv_clone.models.xfp.rprs2.parse_ip",
+    "build_relievers_multiyr.parse_ip",
+    "monitor_drift.parse_ip",
+    "build_milb_pitcher_counting.ip_to_float",
 }
+#: The ONE parser that is legitimately its own implementation: FanGraphs/BBRef
+#: IP, Series-wise, where a non-.1/.2 fraction is a real aggregated decimal and
+#: is TRUNCATED rather than raising. See its docstring.
+_INTENTIONALLY_SEPARATE = {
+    "build_rp_leverage_proxy._ip_to_float",
+}
+_KNOWN_NON_SCALAR = _DELEGATED_NESTED | _INTENTIONALLY_SEPARATE
 
 _SCALAR_PARSERS = [
     ("plv_clone.fantasy.scoring", "_parse_ip"),
@@ -140,3 +150,55 @@ def test_the_census_is_complete():
         f"Add to _SCALAR_PARSERS, or to _KNOWN_NON_SCALAR with a reason. "
         f"Sixteen private copies of one rule is how they drift apart."
     )
+
+
+# ── consolidation (issue #78) ────────────────────────────────────────────────
+
+def test_no_module_still_hand_rolls_the_notation_arithmetic():
+    """One implementation, not sixteen.
+
+    The `/3` partial-inning arithmetic should now appear in exactly ONE place:
+    plv_clone.fantasy.scoring.parse_ip. A new copy is how PR #77's two bugs
+    happened, so a fresh one fails here rather than waiting to drift.
+    """
+    import re as _re
+
+    pat = _re.compile(r"(int\(\s*fra?c?\s*\)|int\(\s*f\s*\)|int\(\s*outs[^)]*\))\s*/\s*3"
+                      r"|1\s*/\s*3\s+if\s+frac")
+    offenders = []
+    for path in list((ROOT / "scripts" / "xfp").rglob("*.py")) + \
+            list((ROOT / "src").rglob("*.py")):
+        rel = str(path.relative_to(ROOT)).replace("\\", "/")
+        if any(sd in rel for sd in ("_oneoff", "_attic", "_research",
+                                    "research/", "archive")):
+            continue
+        if rel == "src/plv_clone/fantasy/scoring.py":
+            continue                      # the one canonical home
+        if rel == "scripts/xfp/build_rp_leverage_proxy.py":
+            continue                      # documented FG/BBRef variant
+        for lineno, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if line.strip().startswith("#"):
+                continue
+            if pat.search(line):
+                offenders.append(f"{rel}:{lineno}: {line.strip()[:70]}")
+    assert not offenders, (
+        "hand-rolled partial-inning arithmetic outside the canonical parser:\n  "
+        + "\n  ".join(offenders)
+        + "\n\nImport `from plv_clone.fantasy.scoring import parse_ip` instead. "
+          "Pass default=0.0 (or np.nan) to keep a fail-soft contract.")
+
+
+def test_the_canonical_parser_supports_both_failure_contracts():
+    """Consolidation must not convert a silent zero into an exception.
+
+    The copies did not agree on failure: most swallowed anything unparseable
+    and returned 0.0, one returned NaN for pandas. Each delegating site passes
+    the default it already had, so `default` has to work.
+    """
+    from plv_clone.fantasy.scoring import parse_ip as _p
+
+    with pytest.raises(ValueError):
+        _p("5.5")
+    assert _p("5.5", default=0.0) == 0.0
+    assert _p("junk", default=-1.0) == -1.0
+    assert _p("5.2", default=0.0) == pytest.approx(5 + 2 / 3)

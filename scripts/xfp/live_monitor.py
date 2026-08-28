@@ -33,6 +33,7 @@ import pandas as pd
 
 from plv_clone.paths import ROOT  # noqa: E402  (single source for repo paths)
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp  # noqa: E402
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 sys.path.insert(0, str(ROOT))
 sys.path.insert(0, str(ROOT / 'scripts'))
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -252,11 +253,9 @@ def get_boxscore(game_pk: int):
 
 
 def _ip_to_float(ip_str):
-    s = str(ip_str)
-    if '.' in s:
-        w, f = s.split('.')
-        return int(w) + int(f) / 3
-    return float(s)
+    # Delegates to the ONE canonical parser (issue #78). This one had NO
+    # fail-soft branch, so it keeps raising on malformed notation.
+    return _canon_parse_ip(ip_str)
 
 
 def compute_hitter_fp(stats: dict) -> float:

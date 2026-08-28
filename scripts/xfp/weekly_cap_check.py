@@ -56,6 +56,7 @@ DEFAULT_CADENCE = 5
 # as a FREE AGENT (2026-07-28). NOT join_key — that one sorts tokens and drops
 # separators, which is a different (order-independent) key.
 from plv_clone.utils.name_match import safe_name_key as _norm  # noqa: E402
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 
 def _get(url, params=None):
@@ -83,9 +84,9 @@ def _name_to_mlbam() -> dict:
 
 
 def _ip_float(s) -> float:
-    s = str(s or "0")
-    w = int(float(s))
-    return w + round((float(s) - w) * 10) / 3
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(s, default=0.0)
 
 
 def _arm_form(mlbam: int):

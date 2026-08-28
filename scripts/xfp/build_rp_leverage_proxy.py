@@ -25,7 +25,21 @@ IP_FLOOR = 20.0
 
 
 def _ip_to_float(s):
-    # FG/BBRef IP encoded as e.g. 68.1 == 68 + 1/3
+    """FG/BBRef IP -> float, Series-wise. NOT the MLB parser (issue #78).
+
+    Deliberately kept separate rather than folded onto
+    plv_clone.fantasy.scoring.parse_ip. Two real differences:
+
+      * it is VECTORISED (takes a Series), and
+      * FanGraphs/BBRef IP can be a genuine aggregated DECIMAL, not just
+        .1/.2 notation. This TRUNCATES anything that is not .1/.2 to the whole
+        inning; the canonical parser RAISES on it, because in an MLB gameLog a
+        fractional value that is not .0/.1/.2 means the input is malformed.
+
+    Both behaviours are correct for their own source. Folding them together
+    would silently change one of them, which is the opposite of what the
+    consolidation was for.
+    """
     def conv(x):
         try:
             f = float(x)

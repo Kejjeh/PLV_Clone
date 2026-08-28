@@ -5,7 +5,8 @@ Saves the FA hitter shortlist for the deep-eval workflow."""
 import json, requests
 from datetime import date
 from pathlib import Path
-import sys; sys.path.insert(0, '.')
+import sys; _REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[3]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 import pandas as pd
 from app.espn_connector import get_my_roster_with_injuries, get_all_teams, get_free_agents
 from plv_clone.utils.name_match import resolve_batter_id, _normalize

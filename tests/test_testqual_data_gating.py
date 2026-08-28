@@ -189,11 +189,17 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # build_index_dashboard (a heavy driver import). It pins that no window.XFP_*
 # payload can close the <script> block it shares with nine others — a guard
 # that existed on one of ten payloads.
-MAX_GUARDED_FILES = 61
+# 2026-08-27 issue-fix batch (61 -> 65): four new guard-bearing files, each
+# importorskipping a heavy driver or pandas —
+#   test_fa_pool_size_and_filter    (#74) the FA pool is pulled whole
+#   test_repo_root_resolution       (#72) repo root from __file__, never cwd
+#   test_scorecard_base_rate        (#53) a hit rate needs its base rate
+#   (test_ip_parsers_agree already counted; #78 only tightened it)
+MAX_GUARDED_FILES = 65
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 107
+MAX_GUARD_SITES = 112
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

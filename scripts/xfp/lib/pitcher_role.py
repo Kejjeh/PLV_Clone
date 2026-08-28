@@ -38,6 +38,7 @@ import sys as _sys
 import requests
 from functools import lru_cache
 from plv_clone.league_config import SEASON_YEAR  # single source of truth for the season
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 
 def _warn(section, exc):
@@ -71,11 +72,9 @@ _BULK_IP = 3.0              # ... and innings, both required
 
 def _ip_to_float(ip) -> float:
     """MLB's innings string ('5.1' = 5 and 1/3) -> float. Never raises."""
-    try:
-        whole, _, outs = str(ip).partition('.')
-        return int(whole or 0) + (int(outs or 0) / 3.0)
-    except Exception:
-        return 0.0
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(ip, default=0.0)
 
 
 @lru_cache(maxsize=512)

@@ -18,6 +18,7 @@ import os
 import sys
 import urllib.request
 from concurrent.futures import ThreadPoolExecutor
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 MULTIYR = os.path.join(ROOT, "data/research/xfp_cache/sp_multiyr_2015_2025.csv")
@@ -35,8 +36,9 @@ FIELDS = [
 
 def ip_to_float(s: str) -> float:
     """MLB reports IP as 5.1 / 5.2 meaning 5 1/3 / 5 2/3 innings."""
-    whole, _, frac = str(s).partition(".")
-    return int(whole) + (int(frac) / 3 if frac else 0.0)
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(s, default=0.0)
 
 
 def sp_fp(k: int, ip: float, h: int, er: int, bb: int, hbp: int) -> float:

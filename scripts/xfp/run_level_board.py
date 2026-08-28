@@ -30,7 +30,8 @@ and its gap to the model.
   python scripts/xfp/run_level_board.py --names "Luis Garcia Jr., Michael Busch"
 """
 import sys, argparse, unicodedata
-sys.path.insert(0, '.')
+_REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[2]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 import pandas as pd
 from pathlib import Path
 from plv_clone.utils.name_match import resolve_batter_id

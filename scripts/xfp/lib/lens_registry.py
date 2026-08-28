@@ -137,6 +137,27 @@ LENS_FAMILIES: dict[str, dict] = {
     },
 }
 
+# ── stuff_plus appears in TWO registries, and that is not a contradiction ────
+# (issue #67, resolved 2026-08-27.)
+#
+# `stuff_plus` is BOTH a context-only column here AND a PASS entry in the
+# validated-signals registry (production_targets=('rp3',), +0.0095 cross-year r
+# against a +0.005 bar, partial r +0.147, 4/5 years —
+# validation_runs/stuff_vs_rp3_2026-06-06.md).
+#
+# The two registries describe DIFFERENT things that share a name:
+#   * validated_signals records that the FEATURE cleared the Rule 9 gate for
+#     rp3. That is a historical fact about a validation run, and deleting it to
+#     force the registries disjoint would erase a real result.
+#   * this registry records that the COLUMN the lens serializers emit is
+#     display-only.
+#
+# stuff_plus passed the gate and was NEVER SHIPPED — it is not in RP3_FEATS.
+# Adding it there is a legitimate future decision, but it must come OUT of this
+# registry in the same commit, or Rule 13 will (correctly) block it. That
+# three-way invariant is asserted in tests/test_lens_context_only.py rather than
+# left to be rediscovered.
+
 # Every context-only column the serializers may emit.
 CONTEXT_ONLY_COLUMNS: frozenset[str] = frozenset(
     c for fam in LENS_FAMILIES.values() if fam.get("context_only")
