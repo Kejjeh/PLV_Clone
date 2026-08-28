@@ -199,7 +199,12 @@ MAX_GUARDED_FILES = 65
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
-MAX_GUARD_SITES = 112
+# 2026-08-28 issue #57 (112 -> 115): test_degraded_lens_surfacing importorskips
+# the three scripts/xfp/lib modules it exercises (lens_health, triangulate_cards,
+# triangulate_core) — the same three-module guard test_lens_health already uses.
+# The file count is unchanged: 65 was already the ceiling and this file replaces
+# no other, so the FILE bound holds and only the site count moves.
+MAX_GUARD_SITES = 115
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

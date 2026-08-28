@@ -54,3 +54,40 @@ def reset() -> None:
     """Clear the registry (call at the start of a build)."""
     with _LOCK:
         _DEGRADED.clear()
+
+
+def sections(degraded) -> tuple[str, ...]:
+    """The short section names out of ``record()``'s ``section: Type: msg`` lines.
+
+    De-duplicated, first-seen order. Two failures inside ``extra_lenses`` are
+    one degraded lens as far as a reader is concerned.
+    """
+    out: list[str] = []
+    for entry in degraded or ():
+        name = str(entry).split(':', 1)[0].strip()
+        if name and name not in out:
+            out.append(name)
+    return tuple(out)
+
+
+def caveat(degraded, *, max_named: int = 4) -> str | None:
+    """One line to print above a verdict built on a degraded lens stack, or
+    ``None`` when the build was healthy.
+
+    The single owner of this wording (issue #57). Every surface that displays a
+    verdict — the CLI card, the dashboard card, a skill's headline — renders
+    THIS string, so a reader sees the same caveat everywhere and a wording
+    change lands in one place rather than in a subset of call sites.
+    """
+    names = sections(degraded)
+    if not names:
+        return None
+    shown = ', '.join(names[:max_named])
+    if len(names) > max_named:
+        shown += f', +{len(names) - max_named} more'
+    n = len(names)
+    return (
+        f"⚠ Verdict built on a degraded lens stack "
+        f"({n} lens{'es' if n != 1 else ''} unavailable: {shown}). "
+        f"Refresh the missing substrate before treating this as a full-stack read."
+    )

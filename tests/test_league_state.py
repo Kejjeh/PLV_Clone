@@ -257,7 +257,7 @@ def test_available_fa_meaningful_drops_zero_pa_callup():
     state = LeagueState(league=league)
 
     df, summary = state.available_fa_meaningful(
-        min_2026_pa=100, min_career_pa=300, multiyr=multiyr,
+        min_season_pa=100, min_career_pa=300, multiyr=multiyr,
     )
 
     assert summary["input_n"] == 2
@@ -312,7 +312,7 @@ def test_available_fa_meaningful_sp_drops_callup_starter():
     state = LeagueState(league=league)
 
     df, summary = state.available_fa_meaningful_sp(
-        min_2026_starts=2, min_career_starts=10, multiyr=multiyr,
+        min_season_starts=2, min_career_starts=10, multiyr=multiyr,
     )
 
     assert summary["kept"] == 1

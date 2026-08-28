@@ -44,12 +44,32 @@ from scripts.xfp.lib.snapshots import (
 
 # ---------- presentation layer (stays in the CLI) ----------
 
+def _lens_snapshot_safe():
+    """Live lens_health snapshot, or () if the registry is unavailable."""
+    try:
+        from scripts.xfp.lib.lens_health import snapshot
+        return snapshot()
+    except Exception:
+        return ()
+
+
 def format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale,
                 confidence=None, n_aligned=None, n_available=None, watch_list=None, verdict_top=None, reason_tag=None,
-                actuals=None):
+                actuals=None, degraded_lenses=None):
     lines = []
     bucket = player['bucket']
     lines.append(f"\n## {player['display_name']} ({bucket}) — {verdict}\n")
+    # Degraded-stack caveat sits directly under the headline, before the
+    # rationale — a reader must not get to the verdict's reasoning without
+    # knowing part of the stack was missing (issue #57). lens_health.caveat()
+    # owns the wording so every surface says the same thing.
+    try:
+        from scripts.xfp.lib.lens_health import caveat as _lens_caveat
+        _cav = _lens_caveat(degraded_lenses)
+    except Exception:
+        _cav = None
+    if _cav:
+        lines.append(f"**{_cav}**\n")
     lines.append(f"*{rationale}*\n")
     if confidence is not None and n_aligned is not None and n_available is not None:
         lines.append(f"**Confidence:** {confidence:.2f} ({n_aligned} of {n_available} signals agree) | verdict_top={verdict_top} | reason_tag={reason_tag}\n")
@@ -1271,7 +1291,7 @@ def main():
             print(format_card(player, pl_main, pl_main_date, pl_stream, pl_stream_date, model, arche, verdict, rationale,
                               confidence=confidence, n_aligned=n_aligned, n_available=n_avail,
                               watch_list=watch_list, verdict_top=verdict_top, reason_tag=reason_tag,
-                              actuals=actuals))
+                              actuals=actuals, degraded_lenses=_lens_snapshot_safe()))
 
     if args.csv_out:
         df_out = pd.DataFrame(csv_rows)
