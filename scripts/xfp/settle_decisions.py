@@ -333,6 +333,43 @@ def _totals_in_window(mlbam: int, bucket: str, start: date, end: date,
     return float(total), int(n)
 
 
+def _rejected_mlbam(cf: dict):
+    """The rejected candidate's MLBAM id, resolving from the NAME when the id
+    is absent (issue #54, step 2).
+
+    A counterfactual written without `rejected_mlbam` used to skip the lookup
+    entirely, so the pair could never close — a permanently unpairable record
+    that looks identical to one still waiting for its window. Of the
+    counterfactuals on disk at 2026-08-28, 3 of 10 lacked the id while 2 of
+    those 3 carried a perfectly resolvable name.
+
+    Resolution goes through the collision-safe resolvers (don't-do #10), which
+    refuse to guess on an ambiguous name rather than silently grabbing the
+    wrong same-name player — a wrong rejected leg would grade the DECISION
+    wrong, not just report a missing number. An unresolvable name returns None
+    and the pair settles UNSETTLEABLE, which is the honest outcome.
+    """
+    rid = cf.get("rejected_mlbam")
+    if rid:
+        return rid
+    name = cf.get("rejected_name")
+    if not name:
+        return None
+    bucket = (cf.get("rejected_bucket") or "").upper()
+    try:
+        from plv_clone.utils.name_match import (
+            resolve_batter_id, resolve_pitcher_id,
+        )
+        if bucket == "H":
+            return resolve_batter_id(name)
+        if bucket in {"SP", "RP"}:
+            return resolve_pitcher_id(name, role=bucket)
+        # Unknown bucket: try the hitter table, then the pitcher tables.
+        return resolve_batter_id(name) or resolve_pitcher_id(name)
+    except Exception:
+        return None
+
+
 def _settle_counterfactual_one(rec: DecisionRecord, today: date,
                                gamelog_cache: dict) -> DecisionRecord:
     """Paired settlement for a v3 executed record. No-op for anything else.
@@ -360,7 +397,7 @@ def _settle_counterfactual_one(rec: DecisionRecord, today: date,
             int(rec.mlbam_id), rec.bucket, start, end, gamelog_cache)
 
     rej_total, rej_n = (None, 0)
-    rej_id = cf.get("rejected_mlbam")
+    rej_id = _rejected_mlbam(cf)
     if rej_id:
         rej_total, rej_n = _totals_in_window(
             int(rej_id), cf.get("rejected_bucket") or rec.bucket,
