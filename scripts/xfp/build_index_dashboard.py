@@ -1466,30 +1466,10 @@ def build_advisory_payload():
     return out
 
 
-def _script_safe(payload: str) -> str:
-    """Make a JSON string safe to embed inside a <script> block.
-
-    Every window.XFP_* payload is written into ONE <script> element. A free-text
-    field containing "</script>" closes that element early, so every assignment
-    AFTER it never runs and the React app reads undefined — the page renders
-    blank or half-built, with nothing in the build log to say why.
-
-    Escaping "</" as "<\\/" prevents it and is lossless: "\\/" is a valid JSON
-    escape for "/", so JSON.parse and a JS literal both recover the original
-    text exactly.
-
-    This guard existed on ONE of the ten payloads (decision_json), with a
-    comment explaining precisely this risk. The other nine — including
-    weekly_json, which is read verbatim off disk — did not have it
-    (2026-08-27). Route every payload through here rather than repeating the
-    replace, which is how it came to cover one site in the first place.
-    """
-    return payload.replace('</', '<\\/')
-
-
-def _script_json(obj) -> str:
-    """json.dumps + _script_safe — the only way payloads should be serialized."""
-    return _script_safe(json.dumps(obj, separators=(',', ':')))
+# <script>-safety lives in the shared chrome (issue #84) so every builder
+# uses ONE implementation — a local copy is how this came to cover a single
+# file's payloads while three other builders had none.
+from lib.dashboard_chrome import script_json as _script_json, script_safe as _script_safe  # noqa: E402
 
 
 def main():

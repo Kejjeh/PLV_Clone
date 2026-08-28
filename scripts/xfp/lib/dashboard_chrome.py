@@ -245,3 +245,35 @@ def column_toggle_js(page_key: str) -> str:
         "if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}\n"
         "})();</script>"
     )
+
+
+# ── <script>-safe payload embedding ──────────────────────────────────────────
+# Lives here, in the chrome every page already imports, because the alternative
+# is what actually happened: the guard was written once inline in
+# build_index_dashboard and covered ONE of that file's ten payloads (PR #83),
+# while three other builders had no guard at all (issue #84). One home, one
+# implementation.
+
+def script_safe(payload: str) -> str:
+    """Make a JSON string safe to embed inside a <script> element.
+
+    A free-text field containing "</script>" CLOSES the element early. Every
+    statement after it — including the rest of the payloads — is then never
+    executed, so the page reads undefined and renders blank or half-built,
+    with nothing in the build log to say why.
+
+    Escaping "</" as "<\\/" prevents it and is lossless: "\\/" is a valid JSON
+    escape for "/", so JSON.parse and a JS literal both recover the original
+    text exactly.
+
+    Use on a payload that goes INSIDE a <script> tag. A standalone .js file
+    (e.g. render_data_js) has no closing tag to hit and does not need it.
+    """
+    return payload.replace('</', '<\\/')
+
+
+def script_json(obj, **dumps_kwargs) -> str:
+    """json.dumps + script_safe — how a payload inside <script> is serialized."""
+    import json
+    dumps_kwargs.setdefault('separators', (',', ':'))
+    return script_safe(json.dumps(obj, **dumps_kwargs))

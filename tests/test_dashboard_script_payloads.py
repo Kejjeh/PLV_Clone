@@ -72,29 +72,73 @@ def test_a_hostile_payload_no_longer_closes_the_block_early():
         "the script element closes before the later payloads are assigned")
 
 
-def test_every_payload_variable_is_built_through_the_helper():
-    """The point of the helper is that no site can quietly skip it."""
-    tree = ast.parse(BUILDER.read_text(encoding="utf-8"))
-    # every `*_json = <call>` assignment inside main()
-    offenders = []
+def _builders() -> list[Path]:
+    """Every module that writes a <script> element AND serializes JSON."""
+    out = []
+    for path in sorted((ROOT / "scripts" / "xfp").rglob("*.py")):
+        if any(sd in str(path) for sd in
+               ("_oneoff", "_attic", "_research", "/research/", "archive")):
+            continue
+        src = path.read_text(encoding="utf-8")
+        if "<script" in src and "json.dumps" in src:
+            out.append(path)
+    return out
+
+
+BUILDERS = _builders()
+
+
+def test_the_builder_census_is_not_empty():
+    """If discovery breaks, every assertion below passes vacuously."""
+    assert len(BUILDERS) >= 3, (
+        f"only {len(BUILDERS)} HTML builders discovered — expected 4-5. "
+        f"The walk has probably stopped matching.")
+
+
+@pytest.mark.parametrize("path", BUILDERS, ids=[p.name for p in BUILDERS])
+def test_no_builder_embeds_unguarded_json_in_a_script(path):
+    """A bare json.dumps interpolated into a <script> can close it early.
+
+    Generalised from build_index_dashboard to EVERY builder (issue #84):
+    scoping the check to one file is the same mistake as scoping the guard to
+    one payload. A json.dumps whose result is written to a .json/.js FILE is
+    fine — there is no closing tag to hit — so only interpolation into a
+    <script> context is flagged.
+    """
+    src = path.read_text(encoding="utf-8")
+    tree = ast.parse(src, filename=str(path))
+
+    # names bound to a bare json.dumps(...) result
+    bare: dict[str, int] = {}
     for node in ast.walk(tree):
         if not isinstance(node, ast.Assign) or len(node.targets) != 1:
             continue
         tgt = node.targets[0]
-        if not isinstance(tgt, ast.Name) or not tgt.id.endswith("_json"):
+        if not isinstance(tgt, ast.Name):
             continue
-        src = ast.unparse(node.value)
-        if src.startswith(("'", '"')):
-            continue                       # a literal default, nothing to escape
-        if "_script_json" in src or "_script_safe" in src:
+        call = ast.unparse(node.value)
+        if "json.dumps" not in call:
             continue
-        offenders.append(f"line {node.lineno}: {tgt.id} = {src[:70]}")
+        if "script_json" in call or "script_safe" in call or "replace(" in call:
+            continue
+        bare[tgt.id] = node.lineno
+
+    # ...that are then interpolated near a <script> tag
+    offenders = []
+    for name, lineno in bare.items():
+        for m in re.finditer(r"<script[^>]*>[^\n]*\{" + re.escape(name) + r"\}", src):
+            offenders.append(f"{path.name}:{lineno} {name} -> {m.group(0)[:70]}")
+        # f-string on a later line: same variable inside a script-tag line
+        for i, line in enumerate(src.splitlines(), 1):
+            if "<script" in line and "{" + name + "}" in line:
+                offenders.append(f"{path.name}:{i} {name} in {line.strip()[:70]}")
+
     assert not offenders, (
-        "payload(s) built without the <script>-safety helper:\n  "
-        + "\n  ".join(offenders)
-        + "\n\nUse _script_json(obj) / _script_safe(raw). A bare json.dumps "
-          "lets a free-text field close the <script> block and silently kill "
-          "every payload after it.")
+        "JSON embedded into a <script> without the </ guard:\n  "
+        + "\n  ".join(sorted(set(offenders)))
+        + "\n\nUse lib.dashboard_chrome.script_json / script_safe. A free-text "
+          "field containing '</script>' closes the element and silently kills "
+          "every statement after it.")
 
 
 def test_all_payload_placeholders_share_one_script_block():
