@@ -24,7 +24,11 @@ from datetime import date, datetime, timedelta, timezone
 import pytest
 
 pl_cache = pytest.importorskip("scripts.xfp.lib.pl_cache")
-tri_test = pytest.importorskip("tests.test_triangulate")
+# Plain module name, not "tests.test_triangulate": tests/ has no __init__.py, so
+# under pytest's prepend import mode the sibling imports as a top-level module.
+# The dotted form made importorskip skip this ENTIRE file unconditionally — a
+# guard module that never ran (caught 2026-08-28; the don't-do #18 silent shape).
+tri_test = pytest.importorskip("test_triangulate")
 
 ET = timezone(timedelta(hours=-4))
 
@@ -143,3 +147,84 @@ def test_the_helper_returns_a_reason_not_just_a_boolean():
 def test_an_unreadable_cache_yields_none_so_the_lock_stays_engaged():
     """None must mean "don't relax", never "assume fresh" or "assume stale"."""
     assert tri_test._pl_cache_staleness("NOT_A_BUCKET") is None
+
+
+# ── the week path: content-based staleness (2026-08-28 handoff item 3) ────────
+# The 2026-08-18 failure documented in build_pl_cache: two different hitter
+# editions carried an identical `fetched` stamp, so the calendar path called a
+# week-behind cache fresh. The payload records the resolved edition `week`;
+# passing it lets _cache_is_stale judge on CONTENT. Contract: the week path may
+# only TIGHTEN the verdict — it can flag a current-looking stamp whose content
+# is old, and must never rescue a calendar-stale cache.
+
+def test_week_path_catches_a_laundered_stamp():
+    """Stamp = the latest published Wednesday (calendar says fresh), but the
+    recorded week is 2 behind PL's current numbering — beyond the normal
+    1-week hitter lag, so the content is at least one edition old."""
+    now = datetime(2026, 8, 27, 10, 0, tzinfo=ET)
+    latest_wed = date(2026, 8, 26)
+    cur_week = pl_cache.sp_week_of(pl_cache._latest_published_edition(now, 0))
+
+    calendar_only = pl_cache._cache_is_stale("pl_hitters_top150.json", latest_wed, now)
+    assert calendar_only[0] is False, "precondition: the stamp alone reads fresh"
+
+    stale, why = pl_cache._cache_is_stale(
+        "pl_hitters_top150.json", latest_wed, now, week=cur_week - 2)
+    assert stale is True, why
+    assert f"week {cur_week - 2}" in why and f"week {cur_week}" in why
+
+
+def test_week_path_tolerates_the_normal_hitter_lag():
+    """Hitter editions routinely carry the SP week number minus one; that lag
+    alone must not read as stale when the stamp is current."""
+    now = datetime(2026, 8, 27, 10, 0, tzinfo=ET)
+    cur_week = pl_cache.sp_week_of(pl_cache._latest_published_edition(now, 0))
+    stale, why = pl_cache._cache_is_stale(
+        "pl_hitters_top150.json", date(2026, 8, 26), now, week=cur_week - 1)
+    assert stale is False, why
+
+
+def test_week_path_never_rescues_a_calendar_stale_cache():
+    """A current week number cannot make an old stamp fresh — the week path
+    tightens, it does not relax."""
+    now = datetime(2026, 8, 27, 10, 0, tzinfo=ET)
+    cur_week = pl_cache.sp_week_of(pl_cache._latest_published_edition(now, 0))
+    stale, why = pl_cache._cache_is_stale(
+        "pl_hitters_top150.json", date(2026, 8, 12), now, week=cur_week)
+    assert stale is True, why
+
+
+def test_omitting_week_is_byte_identical_to_the_old_calendar_path():
+    """No existing caller moves: week=None must reproduce the pre-change
+    verdict and reason for every cache file and both directions."""
+    for now, fetched in [
+        (datetime(2026, 8, 27, 10, 0, tzinfo=ET), date(2026, 8, 20)),
+        (datetime(2026, 8, 31, 10, 0, tzinfo=ET), date(2026, 8, 24)),
+    ]:
+        for fname in pl_cache.PL_CACHE_FILES.values():
+            assert (pl_cache._cache_is_stale(fname, fetched, now)
+                    == pl_cache._cache_is_stale(fname, fetched, now, week=None))
+
+
+def test_the_week_anchor_has_one_owner():
+    """build_pl_cache and backfill_pl_cache both derive week numbers; both must
+    delegate to lib.pl_cache's anchor rather than re-declaring it (don't-do
+    #18 — the duplicate anchors are how the two scripts drift apart)."""
+    import ast
+    import inspect
+
+    import scripts.xfp.backfill_pl_cache as backfill
+    import scripts.xfp.build_pl_cache as build
+
+    assert build._sp_week(pl_cache.PL_WEEK_ANCHOR_MONDAY) == pl_cache.PL_WEEK_ANCHOR_NUM
+    assert backfill._monday_for_week(pl_cache.PL_WEEK_ANCHOR_NUM) == pl_cache.PL_WEEK_ANCHOR_MONDAY
+    for mod in (build, backfill):
+        tree = ast.parse(inspect.getsource(mod))
+        assigned = {
+            t.id
+            for n in ast.walk(tree) if isinstance(n, ast.Assign)
+            for t in n.targets if isinstance(t, ast.Name)
+        }
+        dupes = assigned & {"_WEEK_ANCHOR_MONDAY", "_WEEK_ANCHOR_NUM",
+                            "_ANCHOR_MON", "_ANCHOR_WK"}
+        assert not dupes, f"{mod.__name__} re-declares the week anchor: {dupes}"

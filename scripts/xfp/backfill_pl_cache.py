@@ -28,14 +28,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from build_pl_cache import (  # noqa: E402
     UA, YEAR, _sp_url, _sp_week, parse_injured_table, parse_rank_table,
 )
-from lib.pl_cache import PL_CACHE_DIR  # noqa: E402
+from lib.pl_cache import (  # noqa: E402
+    PL_CACHE_DIR, PL_WEEK_ANCHOR_MONDAY, PL_WEEK_ANCHOR_NUM,
+)
 
-_ANCHOR_MON, _ANCHOR_WK = date(2026, 6, 22), 14
 MIN_SP, MIN_H = 90, 140
 
 
 def _monday_for_week(week: int) -> date:
-    return _ANCHOR_MON + timedelta(days=7 * (week - _ANCHOR_WK))
+    # single anchor owner: lib.pl_cache (don't-do #18)
+    return PL_WEEK_ANCHOR_MONDAY + timedelta(days=7 * (week - PL_WEEK_ANCHOR_NUM))
 
 
 def _fetch(url: str) -> str | None:

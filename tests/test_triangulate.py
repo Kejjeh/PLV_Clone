@@ -234,11 +234,13 @@ def _pl_cache_staleness(bucket: str):
         from plv_clone.paths import RESEARCH
         path = RESEARCH / 'pl_cache' / _PL_CACHE_FILES[bucket]
         with open(path, encoding='utf-8') as fh:
-            fetched = json.load(fh).get('fetched')
+            payload = json.load(fh)
+        fetched = payload.get('fetched')
         if not fetched:
             return None
         return _pl_cache_is_stale(
-            _PL_CACHE_FILES[bucket], _date.fromisoformat(fetched))
+            _PL_CACHE_FILES[bucket], _date.fromisoformat(fetched),
+            week=payload.get('week'))
     except Exception:
         return None
 

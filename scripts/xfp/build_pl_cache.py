@@ -20,30 +20,27 @@ import sys
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-import subprocess
-
 import requests  # noqa: F401  (kept: other callers import UA/this module)
 
 _ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.pl_cache import (  # noqa: E402
-    PL_CACHE_DIR, _cache_is_stale, _latest_published_edition, _now_et,
+    PL_CACHE_DIR, _cache_is_stale, _latest_published_edition, _now_et, sp_week_of,
 )
+from lib.pl_fetch import CURL_UA as _CURL_UA, fetch_pl  # noqa: E402,F401
 
 YEAR = 2026
-# Anchor: SP "Week 14" == Monday 2026-06-22 (from the live article URL).
-_WEEK_ANCHOR_MONDAY = date(2026, 6, 22)
-_WEEK_ANCHOR_NUM = 14
 UA = {"User-Agent": "Mozilla/5.0 (compatible; plv-clone-pl-cache/1.0)"}
-_CURL_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-            "(KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36")
 
 # (cache file, min valid count, universe label)
-_VALID_MIN = {"pl_sps_top100.json": 90, "pl_hitters_top150.json": 140, "pl_closers.json": 90}
+# Streamer floor is 40: one edition carries two FREE day-tables of ~25-45 rows
+# each (day 3 is PL-Pro gated), so a healthy pull lands ~60-90 flat rows.
+_VALID_MIN = {"pl_sps_top100.json": 90, "pl_hitters_top150.json": 140,
+              "pl_closers.json": 90, "pl_sp_streamers_latest.json": 40}
 
 
 def _sp_week(monday: date) -> int:
-    return _WEEK_ANCHOR_NUM + (monday - _WEEK_ANCHOR_MONDAY).days // 7
+    return sp_week_of(monday)  # single owner: lib.pl_cache (don't-do #18)
 
 
 def _md(d: date) -> str:
@@ -279,27 +276,9 @@ def _write_cache(fname: str, url: str, ranks: dict, edition: date, extra: dict |
 
 
 def _fetch(url: str):
-    """Fetch a PL article.
-
-    PL sits behind a bot filter that 403s python-requests on EVERY URL (the
-    homepage included) regardless of User-Agent -- it fingerprints the TLS
-    handshake, not the header. curl's handshake passes, so we shell out to it.
-    Verified 2026-08-18: requests -> 403 site-wide, curl -> 200 with the full
-    100-row rank table intact, so the parsers below are unchanged.
-    """
-    try:
-        r = subprocess.run(
-            ["curl", "-sS", "-L", "--compressed", "--max-time", "25",
-             "-A", _CURL_UA, "-w", "\n%{http_code}", url],
-            capture_output=True, text=True, encoding="utf-8", errors="replace",
-            timeout=40,
-        )
-        if r.returncode != 0:
-            return None
-        body, _, code = r.stdout.rpartition("\n")
-        return body if code.strip() == "200" else None
-    except Exception:
-        return None
+    """Fetch a PL article — delegates to lib.pl_fetch, the curl workaround's
+    single owner (PL's bot filter 403s python-requests on its TLS handshake)."""
+    return fetch_pl(url)
 
 
 def refresh(force=False):
@@ -373,6 +352,65 @@ def refresh(force=False):
             print("  hitters: no week-number URL returned a full list (best-effort)", file=sys.stderr)
     else:
         print("  hitters current — skip")
+    # SP streamers — rolling 2-3 day editions (two free day-tables; day 3 gated)
+    if force or _stale("pl_sp_streamers_latest.json", cur, now):
+        refresh_streamers(now)
+    else:
+        print("  streamers current — skip")
+
+
+def refresh_streamers(now):
+    """Pull the newest SP-streamer edition into pl_sp_streamers_latest.json.
+
+    Until 2026-08-28 this cache had NO auto-refresher — build_pl_cache covered
+    the three weekly lists while the rolling streamer file was refreshed by
+    hand, which is exactly how it sat 10 days stale at the 08-28 handoff.
+
+    An edition's URL is dated by its first covered day, so the edition covering
+    today is dated today, yesterday, or the day before. Probe newest-first and
+    keep the newest FREE day-table at or before today (day 3 is paywalled and
+    absent from the DOM, so a today-2 edition contributes yesterday's table —
+    still 8 days fresher than the stale cache this replaces). Flat `ranks`
+    mirror the hand-built schema: {name: {rank, tier, opp, date}}, stamped
+    `fetched` = the edition's first day so rolling staleness keeps accruing
+    from CONTENT age, never the pull date.
+    """
+    from backfill_pl_streamers import edition_url, parse_rank_tables
+
+    today = now.date()
+    for back in range(3):
+        ed = today - timedelta(days=back)
+        url = edition_url(ed)
+        html = _fetch(url)
+        if not html:
+            continue
+        tables = parse_rank_tables(html)
+        if not tables:
+            continue
+        by_day, flat, primary = {}, {}, None
+        for i, rows in enumerate(tables[:2]):  # free tables only
+            day = ed + timedelta(days=i)
+            if day > today:
+                continue
+            by_day[day.isoformat()] = {
+                r["name"]: {"rank": r["rank"], "tier": r["tier"], "opp": r["opp"]}
+                for r in rows}
+            primary = day  # tables run oldest->newest; last kept wins
+        if primary is None:
+            continue
+        for day_iso in sorted(by_day):
+            md_tag = f"{int(day_iso[5:7])}/{int(day_iso[8:10])}"
+            for name, info in by_day[day_iso].items():
+                flat[name] = {**info, "date": md_tag}
+        if _write_cache(
+                "pl_sp_streamers_latest.json", url, flat, ed,
+                extra={"covers_dates": sorted(by_day),
+                       "primary_date": primary.isoformat(),
+                       "ranks_by_day": by_day,
+                       "note": "auto-pulled; free day-tables only (day 3 is PL-Pro gated)"}):
+            return
+    print("  streamers: no edition URL in the last 3 days returned a rank table",
+          file=sys.stderr)
 
 
 def _load_cache_raw(fname):
@@ -400,7 +438,11 @@ def _cache_fetched(fname):
 
 def _stale(fname, cur, now):
     f = cur.get(fname)
-    return True if f is None else _cache_is_stale(fname, f, now)[0]
+    if f is None:
+        return True
+    raw = _load_cache_raw(fname)
+    return _cache_is_stale(fname, f, now,
+                           week=(raw.get("week") if raw else None))[0]
 
 
 if __name__ == "__main__":

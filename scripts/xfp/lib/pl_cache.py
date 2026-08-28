@@ -31,6 +31,19 @@ PL_PUBLISH_CADENCE = {
 }
 PL_PUBLISH_HOUR_ET = 19  # articles land ~6-7 PM ET; treat as out at 7 PM
 
+# ── PL edition-week numbering (SINGLE owner — build/backfill import from here) ──
+# Anchor: SP "Week 14" == Monday 2026-06-22 (from the live article URL).
+PL_WEEK_ANCHOR_MONDAY = date(2026, 6, 22)
+PL_WEEK_ANCHOR_NUM = 14
+# Hitter editions carry the SP week number or lag it by one; a bigger gap means
+# the payload is at least a whole edition behind whatever the stamp claims.
+PL_WEEK_LAG_OK = 1
+
+
+def sp_week_of(monday: date) -> int:
+    """PL's edition-week number for the SP list published on `monday`."""
+    return PL_WEEK_ANCHOR_NUM + (monday - PL_WEEK_ANCHOR_MONDAY).days // 7
+
 
 def _now_et() -> datetime:
     return datetime.now(_ET) if _ET else datetime.now()
@@ -46,10 +59,27 @@ def _latest_published_edition(now_et: datetime, weekday: int) -> date:
     return cand
 
 
-def _cache_is_stale(fname: str, fetched: date, now_et: datetime | None = None) -> tuple[bool, str]:
-    """Cadence- and ET-time-aware staleness. Returns (is_stale, human_reason)."""
+def _cache_is_stale(fname: str, fetched: date, now_et: datetime | None = None,
+                    week: int | None = None) -> tuple[bool, str]:
+    """Cadence- and ET-time-aware staleness. Returns (is_stale, human_reason).
+
+    `week` is the payload's recorded edition-week number, when it carries one
+    (the hitter cache does). The week path only ever TIGHTENS the verdict: it
+    catches content sitting an edition behind while the `fetched` stamp looks
+    current (the 2026-08-18 laundered-stamp failure documented in
+    build_pl_cache — two different editions carrying an identical stamp), but
+    it never calls a calendar-stale cache fresh. Callers without the payload
+    in hand omit it and get the calendar path unchanged.
+    """
     now_et = now_et or _now_et()
     mode, val = PL_PUBLISH_CADENCE.get(fname, ('rolling', 7))
+    if mode == 'weekly' and week is not None:
+        cur = sp_week_of(_latest_published_edition(now_et, 0))
+        if week < cur - PL_WEEK_LAG_OK:
+            return True, (
+                f"content is edition week {week} while PL's numbering is at week {cur} "
+                f"— beyond the normal {PL_WEEK_LAG_OK}-week lag; stale regardless of "
+                f"the {fetched} stamp")
     if mode == 'rolling':
         age = (now_et.date() - fetched).days
         return age > val, f"{age}d old (rolling, refresh every {val}d)"
@@ -144,7 +174,7 @@ def _warn_stale_caches():
             fdate = datetime.strptime(fetched[:10], '%Y-%m-%d').date()
         except ValueError:
             continue
-        stale, reason = _cache_is_stale(fname, fdate)
+        stale, reason = _cache_is_stale(fname, fdate, week=cache.get('week'))
         if stale:
             print(f"WARN {fname} is STALE — {reason}", file=sys.stderr)
 
@@ -191,7 +221,7 @@ def print_refresh_instructions() -> None:
         except ValueError:
             print(f"BAD-DATE: {fname} (fetched={fetched})\n")
             continue
-        stale, reason = _cache_is_stale(fname, fdate)
+        stale, reason = _cache_is_stale(fname, fdate, week=cache.get('week'))
         if stale:
             any_stale = True
             print(f"STALE: {fname} — {reason}. To refresh:")

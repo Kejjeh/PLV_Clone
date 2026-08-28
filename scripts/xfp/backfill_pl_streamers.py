@@ -22,15 +22,17 @@ import time
 from datetime import date, timedelta
 from pathlib import Path
 
-import requests
-
 ROOT = next(p for p in Path(__file__).resolve().parents
             if (p / "pyproject.toml").is_file())
 OUTDIR = ROOT / "data" / "research" / "pl_cache" / "streamer_backfill"
 OUTDIR.mkdir(parents=True, exist_ok=True)
 
-UA = {"User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                     "(KHTML, like Gecko) Chrome/120 Safari/537.36")}
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.pl_fetch import CURL_UA, fetch_pl  # noqa: E402
+
+# Kept for importers that still read `UA` (the header never was the problem —
+# PL's filter fingerprints the TLS handshake, hence curl via lib.pl_fetch).
+UA = {"User-Agent": CURL_UA}
 DELAY = 1.5          # be a polite guest; ~70 requests over the season
 TIMEOUT = 25
 
@@ -118,13 +120,9 @@ def parse_rank_tables(page: str) -> list[list[dict]]:
 
 
 def fetch(url: str):
-    try:
-        r = requests.get(url, headers=UA, timeout=TIMEOUT)
-    except Exception as e:
-        return None, f"error {e}"
-    if r.status_code != 200:
-        return None, f"http {r.status_code}"
-    return r.text, "ok"
+    # curl, not requests: PL 403s python-requests site-wide (lib.pl_fetch).
+    page = fetch_pl(url, max_time=TIMEOUT)
+    return (page, "ok") if page is not None else (None, "fetch failed (non-200/timeout)")
 
 
 def main(start: date, end: date):
