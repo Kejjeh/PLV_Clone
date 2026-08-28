@@ -1,91 +1,7 @@
 {
-  "fetched": "2026-08-27",
-  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-8-27-8-28-8-29/",
+  "fetched": "2026-08-28",
+  "source_url": "https://pitcherlist.com/starting-pitcher-streamer-ranks-fantasy-baseball-8-28-8-29-8-30/",
   "ranks": {
-    "Jacob Misiorowski": {
-      "rank": 1,
-      "tier": "Auto-Start",
-      "opp": "@ NYM",
-      "date": "8/27"
-    },
-    "Chris Sale": {
-      "rank": 2,
-      "tier": "Auto-Start",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Gerrit Cole": {
-      "rank": 3,
-      "tier": "Auto-Start",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Yoshinobu Yamamoto": {
-      "rank": 4,
-      "tier": "Auto-Start",
-      "opp": "@ ATL",
-      "date": "8/27"
-    },
-    "Trevor Rogers": {
-      "rank": 5,
-      "tier": "Auto-Start",
-      "opp": "@ STL",
-      "date": "8/27"
-    },
-    "Noah Cameron": {
-      "rank": 6,
-      "tier": "Probably Start",
-      "opp": "@ TOR",
-      "date": "8/27"
-    },
-    "Sean Manaea": {
-      "rank": 7,
-      "tier": "Probably Start",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Landen Roupp": {
-      "rank": 8,
-      "tier": "Questionable",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Hayden Wesneski": {
-      "rank": 9,
-      "tier": "Questionable",
-      "opp": "@ NYY",
-      "date": "8/27"
-    },
-    "Jake Irvin": {
-      "rank": 10,
-      "tier": "Do Not Start",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Jose Cabrera": {
-      "rank": 11,
-      "tier": "Do Not Start",
-      "opp": "@ SFG",
-      "date": "8/27"
-    },
-    "Spencer Arrighetti": {
-      "rank": 12,
-      "tier": "Do Not Start",
-      "opp": null,
-      "date": "8/27"
-    },
-    "Gabriel Hughes": {
-      "rank": 13,
-      "tier": "Do Not Start",
-      "opp": "@ WSH",
-      "date": "8/27"
-    },
-    "Cooper Hjerpe": {
-      "rank": 14,
-      "tier": "Do Not Start",
-      "opp": null,
-      "date": "8/27"
-    },
     "Tarik Skubal": {
       "rank": 1,
       "tier": "Auto-Start",
@@ -265,86 +181,218 @@
       "tier": "Do Not Start",
       "opp": null,
       "date": "8/28"
+    },
+    "Blake Snell": {
+      "rank": 1,
+      "tier": "Auto-Start",
+      "opp": "@ DET",
+      "date": "8/29"
+    },
+    "Cade Cavalli": {
+      "rank": 2,
+      "tier": "Auto-Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Sandy Alcantara": {
+      "rank": 3,
+      "tier": "Auto-Start",
+      "opp": "@ WSH",
+      "date": "8/29"
+    },
+    "Nolan McLean": {
+      "rank": 4,
+      "tier": "Auto-Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Cristopher Sánchez": {
+      "rank": 5,
+      "tier": "Auto-Start",
+      "opp": "@ LAA",
+      "date": "8/29"
+    },
+    "Carlos Rodón": {
+      "rank": 6,
+      "tier": "Auto-Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Kevin Gausman": {
+      "rank": 7,
+      "tier": "Probably Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Foster Griffin": {
+      "rank": 8,
+      "tier": "Probably Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Kade Anderson": {
+      "rank": 9,
+      "tier": "Probably Start",
+      "opp": "@ TOR",
+      "date": "8/29"
+    },
+    "Max Fried": {
+      "rank": 10,
+      "tier": "Questionable",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Cal Quantrill": {
+      "rank": 11,
+      "tier": "Questionable",
+      "opp": "@ MIL",
+      "date": "8/29"
+    },
+    "José Soriano": {
+      "rank": 12,
+      "tier": "Questionable",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Nick Martinez": {
+      "rank": 13,
+      "tier": "Questionable",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Cristian Javier": {
+      "rank": 14,
+      "tier": "Questionable",
+      "opp": "@ NYM",
+      "date": "8/29"
+    },
+    "Brayan Bello": {
+      "rank": 15,
+      "tier": "Questionable",
+      "opp": "@ NYY",
+      "date": "8/29"
+    },
+    "Shane Drohan": {
+      "rank": 16,
+      "tier": "Questionable",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Shane Baz": {
+      "rank": 17,
+      "tier": "Questionable",
+      "opp": "@ ATH",
+      "date": "8/29"
+    },
+    "Jake Bennett": {
+      "rank": 18,
+      "tier": "Questionable",
+      "opp": "@ NYY",
+      "date": "8/29"
+    },
+    "Martín Pérez": {
+      "rank": 19,
+      "tier": "Questionable",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Andrew Abbott": {
+      "rank": 20,
+      "tier": "Do Not Start",
+      "opp": "@ CHC",
+      "date": "8/29"
+    },
+    "Merrill Kelly": {
+      "rank": 21,
+      "tier": "Do Not Start",
+      "opp": "@ SFG",
+      "date": "8/29"
+    },
+    "Kyle Leahy": {
+      "rank": 22,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Walker Buehler": {
+      "rank": 23,
+      "tier": "Do Not Start",
+      "opp": "@ TBR",
+      "date": "8/29"
+    },
+    "Ryan Johnson": {
+      "rank": 24,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Jack Perkins": {
+      "rank": 25,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Anthony Molina": {
+      "rank": 26,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Mitch Bratt": {
+      "rank": 27,
+      "tier": "Do Not Start",
+      "opp": "@ SFG",
+      "date": "8/29"
+    },
+    "Keider Montero": {
+      "rank": 28,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Erick Fedde": {
+      "rank": 29,
+      "tier": "Do Not Start",
+      "opp": "@ MIN",
+      "date": "8/29"
+    },
+    "Bailey Ober": {
+      "rank": 30,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Matt Wilkinson": {
+      "rank": 31,
+      "tier": "Do Not Start",
+      "opp": null,
+      "date": "8/29"
+    },
+    "Daniel Lynch IV": {
+      "rank": 32,
+      "tier": "Do Not Start",
+      "opp": "@ CLE",
+      "date": "8/29"
+    },
+    "Carmen Mlodzinski": {
+      "rank": 33,
+      "tier": "Do Not Start",
+      "opp": "@ STL",
+      "date": "8/29"
+    },
+    "Ryan Feltner": {
+      "rank": 34,
+      "tier": "Do Not Start",
+      "opp": "@ ATL",
+      "date": "8/29"
     }
   },
   "covers_dates": [
-    "2026-08-27",
-    "2026-08-28"
+    "2026-08-28",
+    "2026-08-29"
   ],
-  "primary_date": "2026-08-28",
+  "primary_date": "2026-08-29",
   "ranks_by_day": {
-    "2026-08-27": {
-      "Jacob Misiorowski": {
-        "rank": 1,
-        "tier": "Auto-Start",
-        "opp": "@ NYM"
-      },
-      "Chris Sale": {
-        "rank": 2,
-        "tier": "Auto-Start",
-        "opp": null
-      },
-      "Gerrit Cole": {
-        "rank": 3,
-        "tier": "Auto-Start",
-        "opp": null
-      },
-      "Yoshinobu Yamamoto": {
-        "rank": 4,
-        "tier": "Auto-Start",
-        "opp": "@ ATL"
-      },
-      "Trevor Rogers": {
-        "rank": 5,
-        "tier": "Auto-Start",
-        "opp": "@ STL"
-      },
-      "Noah Cameron": {
-        "rank": 6,
-        "tier": "Probably Start",
-        "opp": "@ TOR"
-      },
-      "Sean Manaea": {
-        "rank": 7,
-        "tier": "Probably Start",
-        "opp": null
-      },
-      "Landen Roupp": {
-        "rank": 8,
-        "tier": "Questionable",
-        "opp": null
-      },
-      "Hayden Wesneski": {
-        "rank": 9,
-        "tier": "Questionable",
-        "opp": "@ NYY"
-      },
-      "Jake Irvin": {
-        "rank": 10,
-        "tier": "Do Not Start",
-        "opp": null
-      },
-      "Jose Cabrera": {
-        "rank": 11,
-        "tier": "Do Not Start",
-        "opp": "@ SFG"
-      },
-      "Spencer Arrighetti": {
-        "rank": 12,
-        "tier": "Do Not Start",
-        "opp": null
-      },
-      "Gabriel Hughes": {
-        "rank": 13,
-        "tier": "Do Not Start",
-        "opp": "@ WSH"
-      },
-      "Cooper Hjerpe": {
-        "rank": 14,
-        "tier": "Do Not Start",
-        "opp": null
-      }
-    },
     "2026-08-28": {
       "Tarik Skubal": {
         "rank": 1,
@@ -495,6 +543,178 @@
         "rank": 30,
         "tier": "Do Not Start",
         "opp": null
+      }
+    },
+    "2026-08-29": {
+      "Blake Snell": {
+        "rank": 1,
+        "tier": "Auto-Start",
+        "opp": "@ DET"
+      },
+      "Cade Cavalli": {
+        "rank": 2,
+        "tier": "Auto-Start",
+        "opp": null
+      },
+      "Sandy Alcantara": {
+        "rank": 3,
+        "tier": "Auto-Start",
+        "opp": "@ WSH"
+      },
+      "Nolan McLean": {
+        "rank": 4,
+        "tier": "Auto-Start",
+        "opp": null
+      },
+      "Cristopher Sánchez": {
+        "rank": 5,
+        "tier": "Auto-Start",
+        "opp": "@ LAA"
+      },
+      "Carlos Rodón": {
+        "rank": 6,
+        "tier": "Auto-Start",
+        "opp": null
+      },
+      "Kevin Gausman": {
+        "rank": 7,
+        "tier": "Probably Start",
+        "opp": null
+      },
+      "Foster Griffin": {
+        "rank": 8,
+        "tier": "Probably Start",
+        "opp": null
+      },
+      "Kade Anderson": {
+        "rank": 9,
+        "tier": "Probably Start",
+        "opp": "@ TOR"
+      },
+      "Max Fried": {
+        "rank": 10,
+        "tier": "Questionable",
+        "opp": null
+      },
+      "Cal Quantrill": {
+        "rank": 11,
+        "tier": "Questionable",
+        "opp": "@ MIL"
+      },
+      "José Soriano": {
+        "rank": 12,
+        "tier": "Questionable",
+        "opp": null
+      },
+      "Nick Martinez": {
+        "rank": 13,
+        "tier": "Questionable",
+        "opp": null
+      },
+      "Cristian Javier": {
+        "rank": 14,
+        "tier": "Questionable",
+        "opp": "@ NYM"
+      },
+      "Brayan Bello": {
+        "rank": 15,
+        "tier": "Questionable",
+        "opp": "@ NYY"
+      },
+      "Shane Drohan": {
+        "rank": 16,
+        "tier": "Questionable",
+        "opp": null
+      },
+      "Shane Baz": {
+        "rank": 17,
+        "tier": "Questionable",
+        "opp": "@ ATH"
+      },
+      "Jake Bennett": {
+        "rank": 18,
+        "tier": "Questionable",
+        "opp": "@ NYY"
+      },
+      "Martín Pérez": {
+        "rank": 19,
+        "tier": "Questionable",
+        "opp": null
+      },
+      "Andrew Abbott": {
+        "rank": 20,
+        "tier": "Do Not Start",
+        "opp": "@ CHC"
+      },
+      "Merrill Kelly": {
+        "rank": 21,
+        "tier": "Do Not Start",
+        "opp": "@ SFG"
+      },
+      "Kyle Leahy": {
+        "rank": 22,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Walker Buehler": {
+        "rank": 23,
+        "tier": "Do Not Start",
+        "opp": "@ TBR"
+      },
+      "Ryan Johnson": {
+        "rank": 24,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Jack Perkins": {
+        "rank": 25,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Anthony Molina": {
+        "rank": 26,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Mitch Bratt": {
+        "rank": 27,
+        "tier": "Do Not Start",
+        "opp": "@ SFG"
+      },
+      "Keider Montero": {
+        "rank": 28,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Erick Fedde": {
+        "rank": 29,
+        "tier": "Do Not Start",
+        "opp": "@ MIN"
+      },
+      "Bailey Ober": {
+        "rank": 30,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Matt Wilkinson": {
+        "rank": 31,
+        "tier": "Do Not Start",
+        "opp": null
+      },
+      "Daniel Lynch IV": {
+        "rank": 32,
+        "tier": "Do Not Start",
+        "opp": "@ CLE"
+      },
+      "Carmen Mlodzinski": {
+        "rank": 33,
+        "tier": "Do Not Start",
+        "opp": "@ STL"
+      },
+      "Ryan Feltner": {
+        "rank": 34,
+        "tier": "Do Not Start",
+        "opp": "@ ATL"
       }
     }
   },

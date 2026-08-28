@@ -378,7 +378,11 @@ def refresh_streamers(now):
     from backfill_pl_streamers import edition_url, parse_rank_tables
 
     today = now.date()
-    for back in range(3):
+    # Probe TOMORROW first: PL posts an edition the evening before its first
+    # covered day, so the newest edition is often forward-dated (caught
+    # 2026-08-28 — the 8/29-8/31 edition dropped on the 28th and a
+    # backward-only probe kept re-serving the 8/27 one).
+    for back in range(-1, 3):
         ed = today - timedelta(days=back)
         url = edition_url(ed)
         html = _fetch(url)
@@ -390,12 +394,12 @@ def refresh_streamers(now):
         by_day, flat, primary = {}, {}, None
         for i, rows in enumerate(tables[:2]):  # free tables only
             day = ed + timedelta(days=i)
-            if day > today:
-                continue
+            # future days are KEPT — a forward-dated edition is the point of
+            # the tomorrow-probe; benching decisions need tomorrow's slate.
             by_day[day.isoformat()] = {
                 r["name"]: {"rank": r["rank"], "tier": r["tier"], "opp": r["opp"]}
                 for r in rows}
-            primary = day  # tables run oldest->newest; last kept wins
+            primary = day  # tables run oldest->newest; last wins
         if primary is None:
             continue
         for day_iso in sorted(by_day):
