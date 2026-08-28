@@ -85,6 +85,7 @@ resolve through it.
 | sp-floor | active | Bust-risk P(start <5 FP); K−BB% floor; bench-priority tilt |
 | sp-rp-stuff-windows | active | SP/RP velo + whiff% + swstr% over each metric's own validated stabilization minimum (L150 pitches / L150 swings / L175 SP·L200 RP pitches) instead of a calendar window. Engine `build_sp_rp_stuff_windows.py`. Rule 13 context-only |
 | split-check | active | Is a two-half difference in a player's season real or ordinary variation? Screens the gap against the empirical within-season noise floor with the correct bar for a GIVEN (event-supplied, z>1.83) vs SEARCHED (SP z>2.58 / H z>2.79) split point. Engine `lib/split_floor.py`. Rule 13 SCREEN ONLY — clearing the floor does not imply the change persists (re-anchoring FAILED holdout, t=-2.16) |
+| sp-new-leaf | active | Single-SP adjudication of a claimed mid-season change of level, positive or negative — ONE verdict (NEW LEAF / PARTIAL / MIRAGE / VARIANCE / DECLINE / WATCH / INSUFFICIENT) via five gates: split framing (Rule 8) → split-check noise screen → stabilization-cutoff sample gates → mechanism attribution over fast-stabilizing metrics + mix choices (BB%/chase/HR-against inadmissible by construction) → two-window persistence (#15). COMPOSITION over the existing owners, not a sixth process-direction engine (§seam). Canonicals 2026-08-28: Lopez NEW LEAF · Cameron PARTIAL · Soriano DECLINE. Calibration pre-registered `new_leaf_calibration_2026-08-28.md`. Rule 13 decision-layer only |
 
 ### SP cap / week management
 | Skill | Status | Role |
