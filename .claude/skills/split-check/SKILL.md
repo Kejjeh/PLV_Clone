@@ -50,10 +50,16 @@ at their best split by construction** — the hitter max-split MEDIAN is exactly
 
 ```python
 import sys; sys.path.insert(0, "scripts/xfp/lib")
-from split_floor import split_floor, floor_for
+from split_floor import split_floor, floor_for, split_floor_fp
 
 r = split_floor(k1, bb1, n1, k2, bb2, n2, metric="k_minus_bb")
 # -> gap, se, z, threshold, verdict
+
+# FP/start gaps (SP): the calibrated owner — NEVER a naive Welch z. The
+# empirical over-dispersion is x1.18 and grows with window size; judge z at
+# Z_GIVEN (event split) or Z_SEARCHED_FP = 2.92 (you went looking).
+# Calibration: fp_split_floor_calibration_2026-08-28.md.
+r = split_floor_fp(pre_fp_per_start_list, post_fp_per_start_list)
 ```
 
 6. **Report** the gap, the z, WHICH bar applies and why, and the verdict. Then say

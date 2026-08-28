@@ -9,14 +9,16 @@ Answers ONE question with ONE stable verdict: **did this pitcher's underlying
 level actually change, and if so by how much?** Built 2026-08-28 after the
 OPTION matched-control study closed the regime-break family for the sixth time
 (`option_absence_matched_control_2026-08-28.md`) while the SAME night's Jacob
-Lopez read showed what DOES work: results-level breaks carry ~zero signal, but
-stabilized process-metric levels carry real signal the moment their sample
-clears the empirical cutoffs.
+Lopez read showed what stabilized process metrics can MEASURE: a whiff rate
+that doubled over 711 pitches is a real, current fact in a way a bare results
+break never is. (Same-night calibration then showed measurement is ALL it is —
+the mechanism does not predict persistence; see the shrinkage section.)
 
 **The core inversion this protocol enforces:** never reason from results back
-to skill. Reason from mechanism forward to the results it supports. A 19.5pp
-K-BB% break has a 19.2pp matched control; a whiff rate that doubled over 711
-pitches has no such twin.
+to skill. Attribute what changed through the stabilized metrics; price what
+comes next through the calibrated shrinkage. A 19.5pp K-BB% break has a
+19.2pp matched control; a doubled whiff rate has no such twin — but neither
+one holds forward better than the other.
 
 Rule 13 throughout: the verdict NEVER moves rp3/rprs2 or any rank. It is a
 decision-layer read for add/drop/hold calls.
@@ -30,9 +32,11 @@ different lately") → bar **z > 2.58** and say so out loud. Getting this wrong
 is how 39% of pitcher-seasons clear a threshold by construction.
 
 ### Gate 1 — results screen (owner: /split-check, `lib/split_floor.py`)
-Does the results gap (FP/start or K-BB%) clear the within-season noise floor
-at the Gate-0 bar? **No → VARIANCE. Stop.** ~89% of apparent in-season change
-is sampling noise; most claims die here and should.
+Does the results gap clear the within-season noise floor at the Gate-0 bar?
+K-BB% via `split_floor`; FP/start via `split_floor_fp` (calibrated
+2026-08-28 — a naive Welch z on FP is too lenient by ×1.18 and worse for
+big windows; FP searched bar is 2.92). **No → VARIANCE. Stop.** ~89% of
+apparent in-season change is sampling noise; most claims die here and should.
 
 ### Gate 2 — sample gates on the POST window (owner: `pitcher_cutoff_stabilization`, 2026-07-29)
 Every metric you cite must clear its own cutoff in its own denominator:
@@ -70,8 +74,8 @@ forward beyond the shrinkage below.
 
 | verdict | meaning | action posture |
 |---|---|---|
-| **NEW LEAF** | mechanism real, stabilized, persistent, results consistent with it | the change HAPPENED; forward, apply the shrinkage below — never the raw post level |
-| **PARTIAL** | mechanism real but results OVERSHOOT it | credit the mechanism level, fade the topline (state both numbers) |
+| **NEW LEAF** | mechanism real, stabilized, persistent, results consistent with it | the change HAPPENED; forward, apply the shrinkage below — never the raw post level. Caveat on every use: mechanism-backed hold-rate is NOT distinguishable from results-only (+0.445 vs +0.495), and ~54% of any clearing break mean-reverts over the next ≤8 starts |
+| **PARTIAL** | mechanism real but results OVERSHOOT it | state both numbers (mechanism level vs topline), then price via the shrinkage below — the mechanism does not earn a better hold-rate than a bare results break |
 | **MIRAGE** | results moved, no stabilized mechanism | expect regression to prior level |
 | **VARIANCE** | gap inside the noise floor | no update at all |
 | **DECLINE** | negative leaf — stuff eroding (= stuff_command STUFF-DECLINE) | descriptive unless the RESULTS gap also cleared Gate 1; a mechanism-only decline prices at the season blend |
@@ -81,9 +85,10 @@ forward beyond the shrinkage below.
 ## Forward pricing — the calibrated shrinkage (2026-08-28, n=227 clearing splits 2018-2026)
 
 A Gate-1-clearing break holds, on average, **+0.46** of its FP/start gap over
-the next ≤8 starts (**+0.33** for positive breaks, **+0.60 to +0.75** for
-negative ones — declines persist more than breakouts), and having a mechanism
-does not change that number. So the forward point estimate is
+the next ≤8 starts — i.e. **~54% of any clearing break mean-reverts** —
+(**+0.33** for positive breaks, **+0.60 to +0.75** for negative ones —
+declines persist more than breakouts), and having a mechanism does not change
+that number. So the forward point estimate is
 `pre + hold×(post − pre)` — which usually lands very close to the model's own
 blended projection. **The verdict tells you what happened; rp3's blend remains
 the best forward number.** A split that never cleared Gate 1 prices at the
@@ -94,7 +99,9 @@ season blend, full stop, whatever the mechanism says.
 - **Jacob Lopez, split = recall 7/05 (GIVEN):** velo flat 90.4→90.3, whiff
   17.8→**29.2** (240+ swings), SwStr 7.8→**14.1** (711 pitches), K% 29.6
   (~165 TBF), ascending L8. **NEW LEAF** — a shape/mix leaf, not a velo leaf.
-  The rp3 rank (172) stays put; the decision layer re-prices him (~14/start).
+  The rp3 rank (172) stays put; forward, the shrinkage prices him ~9-9.5
+  (pre 3.1 + ~0.33-0.46 × the gap) — close to rp3's own blend, NOT the raw
+  15.9 post level the mechanism story once implied.
 - **Noah Cameron, split = ASG (GIVEN):** whiff 22.3→26.5 ✓, SwStr 10.5→12.8 ✓,
   velo +0.4 ✓, FF share 27.8→18.1 with a new 17.1% SL ✓ — but K% FELL
   21.5→17.8 while FP/start jumped 9.15→16.71. **PARTIAL** — mechanism supports
@@ -113,7 +120,15 @@ season blend, full stop, whatever the mechanism says.
 - Hitters route to `/breakout-sustainability` / `/slump-or-decline`.
 - Calibration status: **MEASURED 2026-08-28 — DOES NOT SEPARATE**
   (`new_leaf_calibration_2026-08-28.md`; the seventh consecutive
-  mean-reversion win). Gates 0-2 are the load-bearing screen; Gates 3-4 are
-  descriptive attribution only. Forward expectations come from the shrinkage
-  table above, never from the mechanism story. When a verdict here is
-  load-bearing for a drop, quote the shrunk forward number next to it.
+  mean-reversion win). Mechanism-backed clearing splits held **+0.445** of
+  their gap forward (n=206 pitcher-seasons) vs **+0.495** for results-only
+  (n=9): one-sided Welch **z = −0.18**, permutation p = 0.58, against the
+  registered bar z > 1.83 — the point estimate sits on the WRONG side. The
+  registered mechanism thresholds also proved nearly vacuous: they fire on
+  ~91% of ALL admissible splits (mix ≥ 5pp alone on 73%, against a 7.0pp
+  MEDIAN ordinary between-window mix shift), which is what left the
+  results-only arm at n=9. Consequence applied: Gates 0-2 are the
+  load-bearing screen; Gates 3-4 are descriptive attribution only. Forward
+  expectations come from the shrinkage table above, never from the mechanism
+  story. When a verdict here is load-bearing for a drop, quote the shrunk
+  forward number next to it.

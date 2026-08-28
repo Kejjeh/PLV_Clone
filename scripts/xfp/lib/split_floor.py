@@ -144,3 +144,72 @@ def floor_for(n1: float, n2: float, p_k: float, p_bb: float,
     else:
         bar = Z_GIVEN
     return bar * math.sqrt(v * (1.0 / n1 + 1.0 / n2))
+
+
+# ── FP/start splits (calibrated 2026-08-28) ──────────────────────────────────
+# The decision layer increasingly screens RESULTS gaps in FP-per-start terms
+# (forward distribution cards, the new-leaf boards, the calibration study's
+# Gate 1), and until 2026-08-28 every such screen improvised a NAIVE Welch z —
+# with no dispersion calibration at all. Measured on the same panel discipline
+# as the K-BB floor (1,175 pitcher-seasons 2018-2026, >=12 GS; every split
+# with >=4 starts per side = 21,242 splits; iid null = per-season start-order
+# shuffle with identical split geometry, seed 20260828):
+#
+#     var(z_obs) / var(z_shuffle) = 1.180 overall — and it GROWS with window
+#     size (min-side 4-5: 1.121 · 6-9: 1.165 · 10+: 1.259), i.e. real
+#     within-season temporal structure accumulates; a naive Welch z is too
+#     lenient exactly when the windows look most trustworthy.
+#
+# Searched-split honesty, FP edition: the per-season MAX naive z has
+# p50 = 1.86 — the median season's best split "clears" the given bar by
+# construction — and p90 = 3.17 naive (~2.92 after dispersion), hence
+# Z_SEARCHED_FP below. Full memo: fp_split_floor_calibration_2026-08-28.md.
+DISPERSION_FP_SP = {(4, 5): 1.121, (6, 9): 1.165, (10, None): 1.259}
+DISPERSION_FP_SP_OVERALL = 1.180
+Z_SEARCHED_FP = 2.92
+
+
+def _fp_dispersion(min_side: int) -> float:
+    for (lo, hi), ratio in DISPERSION_FP_SP.items():
+        if min_side >= lo and (hi is None or min_side <= hi):
+            return ratio
+    return DISPERSION_FP_SP_OVERALL
+
+
+def split_floor_fp(pre_fps, post_fps) -> dict:
+    """Is an FP-per-start gap between two windows outside ordinary variation?
+
+    Same contract as :func:`split_floor` — (gap, se, z, threshold, verdict,
+    n_small) — but on per-start FP arrays, with the Welch SE inflated by the
+    empirically measured within-season over-dispersion for the window size.
+    Judge the returned z at Z_GIVEN for an event-supplied split and at
+    Z_SEARCHED_FP for a split you went looking for.
+
+    Both sides need >=4 starts (below the calibration's own admissibility);
+    fewer returns verdict UNMEASURABLE rather than a falsely precise z.
+    """
+    import numpy as _np
+
+    a = _np.asarray(pre_fps, dtype=float)
+    b = _np.asarray(post_fps, dtype=float)
+    n1, n2 = len(a), len(b)
+    if min(n1, n2) < 4:
+        return dict(metric="fp_per_start", gap=float("nan"), se=float("nan"),
+                    z=float("nan"), threshold=float("nan"),
+                    verdict="UNMEASURABLE", n_small=min(n1, n2))
+    naive_se = math.sqrt(a.var(ddof=1) / n1 + b.var(ddof=1) / n2)
+    se = naive_se * math.sqrt(_fp_dispersion(min(n1, n2)))
+    gap = abs(float(b.mean()) - float(a.mean()))
+    z = gap / se if se > 0 else float("nan")
+    if z != z:
+        verdict = "UNMEASURABLE"
+    elif z > Z_P99:
+        verdict = "FAR OUTSIDE (top 1%)"
+    elif z > Z_P90:
+        verdict = "EXCEEDS FLOOR (top 10%)"
+    elif z > Z_P50:
+        verdict = "within noise (above median)"
+    else:
+        verdict = "WITHIN NOISE"
+    return dict(metric="fp_per_start", gap=gap, se=se, z=z,
+                threshold=Z_GIVEN * se, verdict=verdict, n_small=min(n1, n2))
