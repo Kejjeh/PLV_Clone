@@ -35,8 +35,13 @@ _CWD_INSERT = re.compile(
 
 
 def _driver_files() -> list[Path]:
+    # Underscore-prefixed files are ad-hoc scratch drivers (same convention as
+    # test_failsoft_imports_resolve) — locally they're gitignored and untracked,
+    # so flagging them fails developers' machines on files CI can never see
+    # (2026-08-28: five local `scripts/_*.py` scratch runs did exactly that).
     return [p for p in sorted((ROOT / "scripts").rglob("*.py"))
-            if not any(sd in str(p) for sd in SKIP)]
+            if not any(sd in str(p) for sd in SKIP)
+            and not p.name.startswith("_")]
 
 
 def test_no_driver_resolves_the_repo_root_from_the_cwd():

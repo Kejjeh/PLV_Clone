@@ -18,7 +18,7 @@ from datetime import datetime, timezone
 import pandas as pd
 
 # Force UTF-8 for stdout on Windows so arrows / accents don't crash
-if sys.platform == 'win32':
+if sys.platform == 'win32' and sys.stdout is sys.__stdout__:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 # Make `scripts.xfp.lib.*` importable when this file is run as a script

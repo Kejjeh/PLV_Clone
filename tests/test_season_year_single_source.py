@@ -263,6 +263,17 @@ def test_espn_year_default_follows_season_year() -> None:
 
     original = lc.SEASON_YEAR
     saved = os.environ.pop("ESPN_YEAR", None)
+    # espn.py re-runs its best-effort load_dotenv on every reload, and a local
+    # `.env` legitimately defines ESPN_YEAR — so popping the var alone is not
+    # enough: the reload puts it straight back and the DEFAULT path never runs
+    # (caught 2026-08-28 on the first machine with a real .env; the container
+    # this test was written in had none). Neutralize dotenv for the reload.
+    try:
+        import dotenv
+        orig_load = dotenv.load_dotenv
+        dotenv.load_dotenv = lambda *a, **k: False
+    except ImportError:
+        dotenv, orig_load = None, None
     try:
         lc.SEASON_YEAR = original + 1
         espn = importlib.reload(importlib.import_module("plv_clone.espn"))
@@ -273,6 +284,8 @@ def test_espn_year_default_follows_season_year() -> None:
         espn = importlib.reload(importlib.import_module("plv_clone.espn"))
         assert espn.YEAR == 2019, "ESPN_YEAR must still override for a historical pull"
     finally:
+        if dotenv is not None:
+            dotenv.load_dotenv = orig_load
         os.environ.pop("ESPN_YEAR", None)
         if saved is not None:
             os.environ["ESPN_YEAR"] = saved

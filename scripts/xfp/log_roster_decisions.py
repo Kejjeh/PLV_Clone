@@ -20,7 +20,7 @@ import os
 import sys
 from pathlib import Path
 
-if sys.platform == 'win32':
+if sys.platform == 'win32' and sys.stdout is sys.__stdout__:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 _REPO_ROOT = Path(__file__).resolve().parents[2]

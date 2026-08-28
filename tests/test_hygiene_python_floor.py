@@ -27,9 +27,17 @@ import pytest
 ROOT = Path(__file__).resolve().parent.parent
 
 # `f'...{x["k"]}...'` is fine (different quotes). `f"...{x["k"]}..."` is PEP 701.
-# Match an f-string opener and, before its closing quote, a `[` + same-quote.
+# Match an f-string opener, then a replacement field `{...` whose expression
+# reaches a `[` + same-quote — the nested-subscript shape PEP 701 legalized.
+# Two guards, both from false positives found 2026-08-28 on Python 3.13 (the
+# container ran 3.11 where this test skips, so the regex had never executed):
+#   * the lookbehind: an identifier's trailing f (`stuff":r["`), a format spec
+#     (`:.0f}`), and `df['` all read as f-string openers without it;
+#   * the `\{` requirement: a literal `[` at the end of the string body
+#     (`f"const {tbl} = ["`) is the string's own closing quote after `[`,
+#     not a nested quote.
 _PEP701 = re.compile(
-    r"""f(?P<q>["'])(?:[^"'\\\n]|\\.)*?\[\s*(?P=q)""",
+    r"""(?<![\w"'])f(?P<q>["'])(?:[^"'\\\n]|\\.)*?\{[^"'{}\n]*\[\s*(?P=q)""",
 )
 
 

@@ -1,6 +1,6 @@
 """Compute per-team aggregate scores from triangulate results and rank the league."""
 import pandas as pd, sys, io
-if sys.platform == 'win32':
+if sys.platform == 'win32' and sys.stdout is sys.__stdout__:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 df = pd.read_csv('data/research/triangulate_universe/all_teams_results.csv')

@@ -98,15 +98,27 @@ json.dump(out, sys.stdout)
 
 
 def _probe_as_a_driver_would() -> dict[str, str]:
-    """Resolve each site in a subprocess whose sys.path[0] is scripts/xfp."""
+    """Resolve each site in a subprocess whose sys.path[0] is scripts/xfp.
+
+    The isolation that matters is the IMPORT path — cwd + PYTHONPATH — not the
+    whole environment. The first draft hand-built a minimal Linux-shaped env
+    (PATH=/usr/bin, no SYSTEMROOT); on Windows that breaks `import socket`
+    deep inside stdlib chains and every probe died with an unrelated
+    `NameError: base_events` from asyncio's __init__ (2026-08-28). Inherit the
+    real env and pin only PYTHONPATH.
+    """
     if not SITES:
         return {}
+    import os
+
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(ROOT / "src")
+    env["PYTHONIOENCODING"] = "utf-8"
     proc = subprocess.run(
         [sys.executable, "-c", _PROBE],
         input=json.dumps([[m, s] for _f, _l, m, s in SITES]),
         capture_output=True, text=True, cwd=str(DRIVERS),
-        env={"PYTHONPATH": str(ROOT / "src"), "PATH": "/usr/bin:/bin:/usr/local/bin",
-             "HOME": str(Path.home()), "PYTHONIOENCODING": "utf-8"},
+        env=env,
         timeout=300,
     )
     if proc.returncode != 0:

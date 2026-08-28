@@ -129,18 +129,25 @@ def test_the_census_is_complete():
     found = set()
     for path in list((ROOT / "scripts" / "xfp").rglob("*.py")) + \
             list((ROOT / "src").rglob("*.py")):
-        if any(p in str(path) for p in ("_oneoff", "_attic", "_research",
+        # Work on the ROOT-relative POSIX path: the absolute str() breaks two
+        # ways outside the container this was written in (2026-08-28) — the
+        # repo DIRECTORY is itself named plv_clone, so parts.index() anchored
+        # the module name at the repo root instead of src/plv_clone; and on
+        # Windows the "/research/" substring never matches a backslashed path.
+        rel = path.relative_to(ROOT)
+        rel_posix = rel.as_posix()
+        if any(p in rel_posix for p in ("_oneoff", "_attic", "_research",
                                         "/research/", "archive")):
             continue
         for line in path.read_text(encoding="utf-8").splitlines():
             m = pat.match(line)
             if m:
                 stem = path.stem
-                if path.parts[-2] == "lib":
+                if rel.parts[-2] == "lib":
                     stem = f"lib.{stem}"
-                elif "plv_clone" in path.parts:
-                    idx = path.parts.index("plv_clone")
-                    stem = ".".join(path.parts[idx:]).removesuffix(".py")
+                elif "plv_clone" in rel.parts:
+                    idx = rel.parts.index("plv_clone")
+                    stem = ".".join(rel.parts[idx:]).removesuffix(".py")
                 found.add(f"{stem}.{m.group(1)}")
 
     covered = {f"{m}.{a}" for m, a in _SCALAR_PARSERS} | _KNOWN_NON_SCALAR

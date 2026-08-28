@@ -4,7 +4,7 @@ import sys, io, urllib.request
 import pandas as pd
 from datetime import date
 
-if sys.platform == 'win32':
+if sys.platform == 'win32' and sys.stdout is sys.__stdout__:
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
 PLAYERS = [
