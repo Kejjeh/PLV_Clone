@@ -94,14 +94,44 @@ blended projection. **The verdict tells you what happened; rp3's blend remains
 the best forward number.** A split that never cleared Gate 1 prices at the
 season blend, full stop, whatever the mechanism says.
 
+### The held-window update (Gate 5, sequential — the one refinement that cleared a bar)
+
+Measured 2026-08-28 on the 36 cleared POSITIVE breaks with two disjoint
+forward windows (4+4 starts): a break that HELD its first forward window
+(≥0.5 of the gap) kept holding in the second — mean **+0.87**, P(≥0.5) =
+**73%** — vs **+0.25** / 38% for first-window misses. Welch t = +2.31,
+one-sided p = 0.014, clears the given bar. Survivorship disclosed: 79 breaks
+lacked 8 forward starts (their partial hold +0.29, population-typical — the
+exclusion hides no pile of successes). POS breaks only; no NEG conditional
+measured.
+
+**Rule:** after a cleared positive break, once a DISJOINT post-classification
+window of ~4 starts holds ≥0.5 of the gap, upgrade the forward hold from
++0.33 to **+0.87 (with a 27% full-revert branch)**. Until such a window
+exists, the pooled shrinkage stands. This is sequential evidence doing the
+work the mechanism story cannot: two null results say mechanism SIZE predicts
+nothing (continuous dose-response rho = −0.07 across 121 cleared POS breaks;
+the +8pp whiff-class tail hold of +0.52-0.60 at n≤13 is anecdote-tier), while
+the break simply CONTINUING is the strongest forward signal we have measured.
+
+Process texture (descriptive): in the extreme whiff-jump class, the whiff
+LEVEL partially reverts in the forward window (~-30% of the spike, 11 of 12
+cases) yet retains most of its gain over the pre baseline — the league
+adjusts partially; the skill mostly stays.
+
 ## Canonical worked cases (2026-08-28)
 
 - **Jacob Lopez, split = recall 7/05 (GIVEN):** velo flat 90.4→90.3, whiff
   17.8→**29.2** (240+ swings), SwStr 7.8→**14.1** (711 pitches), K% 29.6
-  (~165 TBF), ascending L8. **NEW LEAF** — a shape/mix leaf, not a velo leaf.
-  The rp3 rank (172) stays put; forward, the shrinkage prices him ~9-9.5
-  (pre 3.1 + ~0.33-0.46 × the gap) — close to rp3's own blend, NOT the raw
-  15.9 post level the mechanism story once implied.
+  (~165 TBF), ascending L8. **NEW LEAF** — a shape/mix leaf, not a velo leaf
+  (and NOT a new pitch: the slider predates the option with identical shape;
+  the whole arsenal simply whiffs ~2x on unchanged movement, vs a neutral
+  4.53 R/G opponent slate). The rp3 rank (172) stays put. Forward: his break
+  is the largest stabilized whiff jump in the 2018-2026 panel AND it already
+  held a disjoint forward window at 1.63 → the Gate-5 held-window update
+  applies: price ≈ pre + 0.87×gap ≈ **11-13** with a ~27% full-revert branch
+  (not the raw 15.9 post level, and not the naive pooled ~8 either). Full
+  audit: `lopez_special_case_2026-08-28.md`.
 - **Noah Cameron, split = ASG (GIVEN):** whiff 22.3→26.5 ✓, SwStr 10.5→12.8 ✓,
   velo +0.4 ✓, FF share 27.8→18.1 with a new 17.1% SL ✓ — but K% FELL
   21.5→17.8 while FP/start jumped 9.15→16.71. **PARTIAL** — mechanism supports
