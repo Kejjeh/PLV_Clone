@@ -139,6 +139,13 @@ def load_hitter_board():
     d['gap'] = d['proj_ros_pa_per_teamgame'] - d['naive_pace']
     d['impact'] = d['gap'] * d['rate']            # FP per team-game
     d['proj_vol'] = d['proj_ros_pa_per_teamgame']
+    # Role vs availability (lib.volume_semantics, the one owner): a FADER gap
+    # on an intact everyday role is an injury-risk discount, not a lineup
+    # signal — display must not conflate them (Muncy canonical, 2026-08-29).
+    from lib.volume_semantics import decompose_hitter_volume
+    dec = d.apply(decompose_hitter_volume, axis=1, result_type='expand')
+    d['in_role_vol'] = dec['in_role']
+    d['fade_kind'] = dec['fade_kind']
     d['recent_vol'] = d['pa_last21'] / 21.0 * (162 / 162)  # PA per team-game proxy (L21 cal. days)
     d['player_type'] = 'H'
     fl = np.where(d['is_on_il_at_split'] > 0, 'IL@split', '')
@@ -168,6 +175,8 @@ def load_sp_board():
     d['rate'] = d['rate'].fillna(med)
     d['position'] = 'SP'
     d['gap'] = d['proj_ros_gs_per_teamgame'] - d['naive_pace']
+    d['in_role_vol'] = np.nan   # SP availability decomposition: follow-up
+    d['fade_kind'] = ''
     d['impact'] = d['gap'] * d['rate']            # FP per team-game
     d['proj_vol'] = d['proj_ros_gs_per_teamgame']
     d['recent_vol'] = d['gs_last21'] / 21.0
@@ -283,7 +292,11 @@ def name_cards(dh, dsp, names):
         for _, r in rows.iterrows():
             unit = r['unit']
             direction = 'RISER' if r['gap'] > 0 else ('FADER' if r['gap'] < 0 else 'FLAT')
+            if direction == 'FADER' and r.get('fade_kind'):
+                direction = f"FADER ({r['fade_kind']})"  # ROLE = lineup signal; AVAILABILITY = injury discount, role intact
             print(f"\n{display_name(r['player_name'])} ({r['team']}, {r['position']}) — {r['own']} — {direction}")
+            if r.get('fade_kind') == 'AVAILABILITY':
+                print(f"  in-role volume  : {r['in_role_vol']:.3f} {r['unit']} when active — use THIS for daily start/sit; proj prices missed-time risk")
             print(f"  proj RoS volume : {r['proj_vol']:.3f} {unit}   naive pace: {r['naive_pace']:.3f}   "
                   f"gap: {r['gap']:+.3f}  (volume pct {r['volume_percentile']:.0f})")
             print(f"  recent (L21d)   : {r['recent_vol']:.3f} {unit}")
@@ -320,11 +333,15 @@ def main():
     volume_delta_section()
 
     cols = ['player_type', 'mlbam_id', 'player_name', 'team', 'position', 'own',
-            'proj_vol', 'naive_pace', 'gap', 'volume_percentile', 'recent_raw',
-            'rate', 'rate_source', 'impact', 'flags', 'unit']
+            'proj_vol', 'in_role_vol', 'naive_pace', 'gap', 'volume_percentile',
+            'recent_raw', 'rate', 'rate_source', 'impact', 'flags', 'fade_kind', 'unit']
     out = pd.concat([dh[cols], dsp[cols]], ignore_index=True)
     out['player_name'] = out['player_name'].map(display_name)
     out['direction'] = np.where(out['gap'] > 0, 'RISER', np.where(out['gap'] < 0, 'FADER', 'FLAT'))
+    # A FADER whose role is intact is an injury-risk discount, not a lineup
+    # signal — say which (lib.volume_semantics; Muncy canonical 2026-08-29).
+    avail = (out['direction'] == 'FADER') & (out['fade_kind'] == 'AVAILABILITY')
+    out.loc[avail, 'direction'] = 'FADER-AVAIL'
     out = out.reindex(out['impact'].abs().sort_values(ascending=False).index)
     out.to_csv(OUT_CSV, index=False)
     print(f'\nwrote {OUT_CSV} ({len(out)} rows)')

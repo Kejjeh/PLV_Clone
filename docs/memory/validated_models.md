@@ -12,3 +12,16 @@ volume row exists. Full day's outcomes (incl. the rp3 IL-join regression fix,
 47 arms re-tagged marcel_il): `reference_validated_signals_registry.md`
 §2026-07-09.
 
+
+## Volume projections are health-discounted (2026-08-29)
+
+`proj_ros_pa_per_teamgame` ≈ in-role usage × expected availability. It is the
+right number for RoS TOTALS and swap math, and the WRONG number for daily
+start/sit — on a day a player is in the lineup, use his in-role usage.
+Canonical: LAD Muncy, proj 2.72 vs 3.68 in-role (92% started, no platoon,
+steady 3.7-4.2 PA/g all season) — the 0.74 factor prices his 2024-25 missed
+time (73/100 games played), not a role loss. `lib/volume_semantics.py` is the
+one owner of the decomposition and classifies every FADER gap as ROLE
+(lineup signal, e.g. Tristan Peters) or AVAILABILITY (injury discount, role
+intact); /volume-watch displays the kind. Guarded by
+tests/test_volume_semantics.py. SP-side decomposition is a follow-up.
