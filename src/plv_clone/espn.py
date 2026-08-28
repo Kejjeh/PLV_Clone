@@ -44,8 +44,12 @@ try:
 except ImportError:
     pass
 
+from plv_clone.league_config import SEASON_YEAR
+
 LEAGUE_ID = int(os.environ.get("ESPN_LEAGUE_ID", "0"))
-YEAR      = int(os.environ.get("ESPN_YEAR", "2026"))
+# Default from league_config so a rollover is ONE bump; ESPN_YEAR still
+# overrides for a historical pull (issue #59).
+YEAR      = int(os.environ.get("ESPN_YEAR", str(SEASON_YEAR)))
 SWID      = os.environ.get("ESPN_SWID", "")
 ESPN_S2   = os.environ.get("ESPN_S2", "")
 

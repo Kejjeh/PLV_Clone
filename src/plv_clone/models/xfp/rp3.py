@@ -27,6 +27,7 @@ import joblib
 
 from plv_clone.models.xfp import engine as _engine
 from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
+from plv_clone.league_config import SEASON_YEAR
 from plv_clone.league_config import SP_REPLACEMENT_RANK as REPLACEMENT_SP_RANK
 
 warnings.filterwarnings('ignore')
@@ -463,7 +464,7 @@ def main():
         prior_only['fp_per_start_last21'] = prior_only['prior_fp_per_start']
         prior_only['is_on_il_at_split'] = 1
         prior_only['split_day'] = latest_split
-        prior_only['year'] = 2026
+        prior_only['year'] = SEASON_YEAR
         prior_only['prior_source'] = 'marcel_il'
         # Align columns with valid by filling missing with 0 (numeric defaults)
         for c in valid.columns:

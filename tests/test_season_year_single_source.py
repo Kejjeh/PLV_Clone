@@ -139,3 +139,142 @@ def test_bumping_season_year_moves_the_decision_path() -> None:
         "these season defaults did NOT follow the SEASON_YEAR bump:\n  "
         + "\n  ".join(stuck)
     )
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Issue #59 — the ratchet follows the work into src/plv_clone.
+#
+# PR #58 held scripts/xfp/lib at zero season DEFAULTS. The package carried a
+# second, different shape of the same bug: a current-season FILTER written as a
+# literal comparison — `multiyr[multiyr["year"] == 2026]` in league_state at
+# three sites, plus `prior_only['year'] = 2026` in rp3. Those fail worse than a
+# stale default: after rollover the filter matches NOTHING, so every FA reads as
+# a zero-PA fringe callup and the pool silently empties. Nobody sees a year.
+#
+# So this covers both shapes across src/plv_clone. Bare year literals elsewhere
+# (cache filenames like hitters_multiyr_2015_2026.csv, column names like
+# fp_actual_2026 that are downstream schema, era boundaries, dated study
+# cutoffs) are legitimate history and stay unpoliced — the check is scoped to
+# a `year` KEY being compared or assigned, which is unambiguously
+# "which season is this".
+SRC = ROOT / "src" / "plv_clone"
+
+#: Subscript/attribute keys that mean "the season column".
+_YEAR_KEYS = {"year", "season", "game_year"}
+
+
+def _is_year_literal(node) -> bool:
+    return (isinstance(node, ast.Constant)
+            and isinstance(node.value, int)
+            and not isinstance(node.value, bool)
+            and 2000 < node.value < 2100)
+
+
+def _names_the_year_column(node) -> bool:
+    """True for `df["year"]`, `row.year`, `sub.get("year", -1)`."""
+    if isinstance(node, ast.Subscript) and _is_year_literal_key(node.slice):
+        return True
+    if isinstance(node, ast.Attribute) and node.attr in _YEAR_KEYS:
+        return True
+    if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "get" and node.args
+            and _is_year_literal_key(node.args[0])):
+        return True
+    return False
+
+
+def _is_year_literal_key(node) -> bool:
+    return (isinstance(node, ast.Constant) and isinstance(node.value, str)
+            and node.value in _YEAR_KEYS)
+
+
+def _year_column_literals() -> list[str]:
+    offenders = []
+    for path in sorted(SRC.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            # df[df["year"] == 2026]
+            if isinstance(node, ast.Compare) and _names_the_year_column(node.left):
+                for op, cmp in zip(node.ops, node.comparators):
+                    # `!=` is an EXCLUSION, not a current-season filter — the
+                    # only one in the package is `year != 2020`, the COVID
+                    # season dropped from every training frame. That is
+                    # legitimate history and must never follow a rollover.
+                    if isinstance(op, ast.Eq) and _is_year_literal(cmp):
+                        offenders.append(
+                            f"{path.relative_to(ROOT)}:{node.lineno} "
+                            f"year column compared to {cmp.value}")
+            # df["year"] = 2026
+            if isinstance(node, ast.Assign) and _is_year_literal(node.value):
+                for tgt in node.targets:
+                    if _names_the_year_column(tgt):
+                        offenders.append(
+                            f"{path.relative_to(ROOT)}:{node.lineno} "
+                            f"year column assigned {node.value.value}")
+    return offenders
+
+
+def test_no_current_season_filter_in_src_uses_a_year_literal() -> None:
+    offenders = _year_column_literals()
+    assert not offenders, (
+        "a 'which season' filter in src/plv_clone is pinned to a year literal. "
+        "After rollover it matches nothing and the caller sees an empty result, "
+        "not an error. Import `league_config.SEASON_YEAR`:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+def _src_season_defaults() -> list[str]:
+    """The scripts/xfp/lib default check, applied to the package."""
+    offenders = []
+    for path in sorted(SRC.rglob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            args = node.args
+            pairs = list(zip(args.args[-len(args.defaults):], args.defaults)) \
+                if args.defaults else []
+            pairs += list(zip(args.kwonlyargs, args.kw_defaults))
+            for arg, default in pairs:
+                if arg.arg in _SEASON_PARAMS and _is_year_literal(default):
+                    offenders.append(
+                        f"{path.relative_to(ROOT)}:{node.lineno} "
+                        f"{node.name}({arg.arg}={default.value})")
+    return offenders
+
+
+def test_no_src_function_defaults_a_hardcoded_season() -> None:
+    offenders = _src_season_defaults()
+    assert not offenders, (
+        "season parameter(s) defaulted to a year literal in src/plv_clone — "
+        "use `from plv_clone.league_config import SEASON_YEAR`:\n  "
+        + "\n  ".join(offenders)
+    )
+
+
+def test_espn_year_default_follows_season_year() -> None:
+    """ESPN_YEAR stays env-overridable for a historical pull, but its DEFAULT
+    must be the one bumpable literal rather than a second one (issue #59)."""
+    import importlib
+    import os
+
+    import plv_clone.league_config as lc
+
+    original = lc.SEASON_YEAR
+    saved = os.environ.pop("ESPN_YEAR", None)
+    try:
+        lc.SEASON_YEAR = original + 1
+        espn = importlib.reload(importlib.import_module("plv_clone.espn"))
+        assert espn.YEAR == original + 1, (
+            f"espn.YEAR={espn.YEAR} did not follow the SEASON_YEAR bump"
+        )
+        os.environ["ESPN_YEAR"] = "2019"
+        espn = importlib.reload(importlib.import_module("plv_clone.espn"))
+        assert espn.YEAR == 2019, "ESPN_YEAR must still override for a historical pull"
+    finally:
+        os.environ.pop("ESPN_YEAR", None)
+        if saved is not None:
+            os.environ["ESPN_YEAR"] = saved
+        lc.SEASON_YEAR = original
+        importlib.reload(importlib.import_module("plv_clone.espn"))

@@ -176,6 +176,41 @@ class SPStart:
     opponent_team: str
     projected_fp: float
     counts_toward_cap: bool
+    #: False when no rate could be found for this pitcher, so projected_fp is a
+    #: FILLER zero rather than a real projection. Distinguishing the two is the
+    #: whole point (issue #61): cap_excess_starts ranks by projected_fp, so an
+    #: unresolved start sorts LAST and gets reported as one to bench — a silent
+    #: wrong answer pointing in the worst direction. Callers that surface a
+    #: bench recommendation must check this; see unresolved_starts().
+    rate_resolved: bool = True
+
+
+def _lookup_rate(rp3: dict, p: "RosterPitcher", *, resolved: bool = False):
+    """Resolve a pitcher's rate from ``rp3``: MLBAM first, name second.
+
+    ``rp3`` is a caller-built dict. It has historically been keyed by NAME,
+    which is what CLAUDE.md don't-do #10 warns about — RosterPitcher already
+    carries mlbam_id and the lookup ignored it. Both key forms are accepted so
+    existing callers keep working while an mlbam-keyed dict becomes possible.
+
+    A miss returns 0.0, unchanged — but ``resolved`` lets the caller record
+    that it WAS a miss, so a filler zero is no longer indistinguishable from a
+    pitcher genuinely projected at zero (issue #61).
+    """
+    for key in (p.mlbam_id, p.name):
+        if key is not None and key in rp3:
+            return True if resolved else float(rp3[key])
+    return False if resolved else 0.0
+
+
+def unresolved_starts(starts: list["SPStart"]) -> list["SPStart"]:
+    """The starts whose projected_fp is a filler zero, not a real projection.
+
+    Surface these before acting on any bench recommendation: cap_excess_starts
+    sorts by projected_fp, so an unresolved start is always among the first
+    benched (issue #61).
+    """
+    return [s for s in starts if not s.rate_resolved]
 
 
 def weekly_sp_projection(
@@ -205,7 +240,8 @@ def weekly_sp_projection(
             mlbam_id=mlbam,
             start_date=day,
             opponent_team=opp,
-            projected_fp=rp3.get(p.name, 0.0),
+            projected_fp=_lookup_rate(rp3, p),
+            rate_resolved=_lookup_rate(rp3, p, resolved=True),
             counts_toward_cap=i < cap,
         )
         for i, (p, mlbam, day, opp) in enumerate(matches)
@@ -226,6 +262,11 @@ def cap_excess_starts(fps: list[float], cap: int = SP_CAP) -> set[int]:
     Returns the INDICES (into ``fps``) of the starts beyond the top ``cap`` by
     FP. Ties keep input order (stable). Empty set when at/under the cap.
     """
+    # NOTE (issue #61): this ranks by projected_fp alone. A start whose rate
+    # failed to resolve carries a FILLER 0.0 and therefore sorts last, so it is
+    # always among the first benched. weekly_sp_projection now flags those via
+    # SPStart.rate_resolved — check unresolved_starts() before presenting a
+    # bench recommendation built on this.
     if len(fps) <= cap:
         return set()
     ranked = sorted(range(len(fps)), key=lambda i: -fps[i])  # stable: ties keep order

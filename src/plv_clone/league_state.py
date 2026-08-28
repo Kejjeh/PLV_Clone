@@ -34,6 +34,7 @@ from typing import Optional
 import pandas as pd
 
 from plv_clone.cap_math import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP  # noqa: F401  (CONTEXT.md)
+from plv_clone.league_config import SEASON_YEAR
 from plv_clone.utils.name_match import fuzzy_match_name, merge_with_model
 
 logger = logging.getLogger(__name__)
@@ -441,7 +442,7 @@ class LeagueState:
 
     def available_fa_meaningful(
         self,
-        min_2026_pa: int = 100,
+        min_season_pa: int = 100,
         min_career_pa: int = 300,
         position: Optional[str] = None,
         *,
@@ -454,9 +455,15 @@ class LeagueState:
         skills (~6x speedup on the FA hitter pool). A player is kept if
         EITHER:
 
-          * ≥ ``min_2026_pa`` PA in the 2026 season (active this year), OR
+          * ≥ ``min_season_pa`` PA in the CURRENT season
+            (``league_config.SEASON_YEAR``), OR
           * ≥ ``min_career_pa`` total career PA across all years (an
-            established veteran whose 2026 sample is just small so far).
+            established veteran whose season sample is just small so far).
+
+        The season filter reads ``SEASON_YEAR``, not a literal: a hardcoded
+        year silently keeps NOBODY on the current-season leg after rollover
+        (issue #59), which reads as "every FA is fringe" rather than as a
+        broken filter.
 
         Players whose names can't be resolved against the hitters multiyr
         cache (after `resolve_batter_id` fallback) are DROPPED — they're
@@ -479,14 +486,14 @@ class LeagueState:
             path = multiyr_path or self._HITTERS_MULTIYR_PATH
             multiyr = pd.read_csv(path)
 
-        # Per-batter aggregates: career PA total + 2026 PA.
+        # Per-batter aggregates: career PA total + current-season PA.
         career_pa = (
             multiyr.groupby("player_name")["pa"].sum().to_dict()
             if "pa" in multiyr.columns else {}
         )
         cur_pa: dict[str, int] = {}
         if "year" in multiyr.columns and "pa" in multiyr.columns:
-            cur = multiyr[multiyr["year"] == 2026]
+            cur = multiyr[multiyr["year"] == SEASON_YEAR]
             cur_pa = cur.groupby("player_name")["pa"].sum().to_dict()
 
         kept_rows = []
@@ -497,7 +504,7 @@ class LeagueState:
             if name in career_pa or name in cur_pa:
                 c = float(career_pa.get(name, 0))
                 y = float(cur_pa.get(name, 0))
-                if y >= min_2026_pa or c >= min_career_pa:
+                if y >= min_season_pa or c >= min_career_pa:
                     kept_rows.append(row)
                 else:
                     dropped_no_pa += 1
@@ -524,9 +531,9 @@ class LeagueState:
                     continue
                 c = float(sub["pa"].sum()) if "pa" in sub.columns else 0.0
                 y = float(
-                    sub[sub.get("year", -1) == 2026]["pa"].sum()
+                    sub[sub.get("year", -1) == SEASON_YEAR]["pa"].sum()
                 ) if "pa" in sub.columns and "year" in sub.columns else 0.0
-                if y >= min_2026_pa or c >= min_career_pa:
+                if y >= min_season_pa or c >= min_career_pa:
                     kept_rows.append(row)
                 else:
                     dropped_no_pa += 1
@@ -542,7 +549,7 @@ class LeagueState:
 
     def available_fa_meaningful_sp(
         self,
-        min_2026_starts: int = 2,
+        min_season_starts: int = 2,
         min_career_starts: int = 10,
         position: str = "SP",
         *,
@@ -553,7 +560,8 @@ class LeagueState:
 
         A pitcher is kept if EITHER:
 
-          * ≥ ``min_2026_starts`` game starts in 2026, OR
+          * ≥ ``min_season_starts`` game starts in the current season
+            (``league_config.SEASON_YEAR``), OR
           * ≥ ``min_career_starts`` total career starts.
 
         Uses the SP multiyr cache (``gs`` column for starts). Names that
@@ -578,7 +586,7 @@ class LeagueState:
         )
         cur_gs: dict[str, float] = {}
         if "year" in multiyr.columns and starts_col:
-            cur = multiyr[multiyr["year"] == 2026]
+            cur = multiyr[multiyr["year"] == SEASON_YEAR]
             cur_gs = cur.groupby("player_name")[starts_col].sum().to_dict()
 
         kept_rows = []
@@ -591,7 +599,7 @@ class LeagueState:
                 continue
             c = float(career_gs.get(name, 0))
             y = float(cur_gs.get(name, 0))
-            if y >= min_2026_starts or c >= min_career_starts:
+            if y >= min_season_starts or c >= min_career_starts:
                 kept_rows.append(row)
             else:
                 dropped_no_pa += 1

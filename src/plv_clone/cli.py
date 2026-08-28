@@ -22,6 +22,7 @@ from typing import Optional
 import typer
 
 from plv_clone.utils.logging import configure_logging, get_logger
+from plv_clone.league_config import SEASON_YEAR
 
 app = typer.Typer(
     name="plv",
@@ -526,7 +527,7 @@ def update(
 
 @app.command(name="generate-report")
 def generate_report_cmd(
-    year: int = typer.Option(2026, "--year", help="Season year"),
+    year: int = typer.Option(SEASON_YEAR, "--year", help="Season year"),
 ) -> None:
     """Generate the standalone HTML process report for YEAR.
 

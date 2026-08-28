@@ -9,6 +9,32 @@ Codifies the 2026-07-18 Bradish-vs-Rogers-vs-Sheehan session: N pitchers, one
 table each, one comparative verdict. PROSE over existing owners — build no
 new joins.
 
+## Degraded lens stack — MANDATORY caveat (issue #57)
+
+`triangulate_player()` (and every result assembled by
+`triangulate_core.assemble_result`) carries **`result['degraded_lenses']`** — the
+lenses that were suppressed while the verdict was built. It is empty on a
+healthy build.
+
+**If it is non-empty, print the caveat above the verdict.** Do not synthesize a
+headline off a partial stack without saying it was partial: the same player can
+consolidate to a *different* verdict when a substrate is missing (canonical:
+Bailey Ober reads CAUTION with `statcast_2026.parquet` present and MIXED
+without it). That is exactly the silent verdict change don't-do #12 forbids.
+
+Use the shared wording — never hand-roll it:
+
+```python
+from scripts.xfp.lib.lens_health import caveat
+note = caveat(result.get('degraded_lenses'))   # None when healthy
+if note:
+    print(note)
+```
+
+The CLI card (`run_triangulate.format_card`) and the dashboard card
+(`triangulate_cards._card_html`) already render it; when you assemble a verdict
+yourself, you own the caveat.
+
 ## Delta vs /triangulate (read this first)
 
 /triangulate answers "what is this player" (3-lens card, verdict,
