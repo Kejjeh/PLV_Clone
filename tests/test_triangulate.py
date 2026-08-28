@@ -241,7 +241,16 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     # fresh-cache UR still enforces. Resolution + bucket above are always locked.
     # Injured players (il set) are PL-independent — the IL caveat dominates — so
     # they skip the freshness relaxation and stay locked.
-    if il is None:
+    #
+    # ONLY when there is a PL-dependent assertion left to relax (2026-08-28).
+    # The relaxation used to fire on age + UR alone, which halted the whole
+    # test — including the override_tag lock below, which does NOT depend on
+    # the PL cache (apply_overrides never sees pl_main). Casey Schmitt is a
+    # bucket-only row: verdict_sub and verdict_top are both None, so an xfail
+    # there relaxed nothing and cost the one lock he still carried. The
+    # degraded-lens check immediately below already gates on exactly this
+    # condition; this now matches it.
+    if il is None and (verdict_sub is not None or verdict_top is not None):
         _age = _pl_cache_age_days(bucket)
         if (_age is not None and _age > _PL_STALE_DAYS.get(bucket, 7)
                 and result.get("pl_main") in ("UR", "—")):
