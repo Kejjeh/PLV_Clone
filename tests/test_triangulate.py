@@ -200,23 +200,45 @@ def _warm_cache():
 # pipeline refreshes, so no hand-maintained list goes stale.
 from scripts.xfp.lib.injury_status import il_status_for as _il_status_for
 
-# PL-cache staleness windows (days) — mirror pl_cache._warn_stale_caches.
-_PL_STALE_DAYS = {'H': 7, 'SP': 7, 'RP': 7}
+# PL-cache staleness is CADENCE-AWARE, and lib.pl_cache._cache_is_stale is the
+# one owner of that rule — this test DELEGATES rather than re-deciding.
+#
+# It used to carry `_PL_STALE_DAYS = {'H': 7, 'SP': 7, 'RP': 7}`, a flat
+# day-count that is exactly what CLAUDE.md gotcha #10 warns against: a cache is
+# stale once its NEXT edition publishes, not at a flat 7 days. Two independent
+# staleness rules for the same four files is the don't-do #18 shape — a correct
+# rule living in one place and a cruder copy in its sibling — and the copy was
+# wrong in the dangerous direction. The editions land on different weekdays (SP
+# Monday, closers Tuesday, hitters Wednesday, streamers rolling every ~2 days),
+# so a flat 7 misjudges by up to two days depending on which day CI runs, and it
+# reports a cache as FRESH while a newer edition is already out. A false-fresh
+# keeps the verdict lock engaged against data that has moved, which red-CIs on
+# operational drift — the exact failure this relaxation exists to prevent.
+from datetime import date as _date  # noqa: E402
+from scripts.xfp.lib.pl_cache import (  # noqa: E402
+    PL_CACHE_FILES as _PL_CACHE_FILES,
+    _cache_is_stale as _pl_cache_is_stale,
+)
 
 
-def _pl_cache_age_days(bucket: str):
-    """Days since the PL Top-N cache for this bucket was fetched, or None."""
+def _pl_cache_staleness(bucket: str):
+    """(is_stale, human_reason) for this bucket's PL cache, or None if unknown.
+
+    Cadence-aware via lib.pl_cache._cache_is_stale — "has the NEXT edition
+    published yet", not "is it more than 7 days old" (gotcha #10). None when
+    the cache is absent or carries no `fetched` stamp; the caller then leaves
+    the lock fully engaged rather than relaxing on an unknown.
+    """
     import json
-    import datetime
-    from scripts.xfp.lib.pl_cache import PL_CACHE_FILES
     try:
         from plv_clone.paths import RESEARCH
-        path = RESEARCH / 'pl_cache' / PL_CACHE_FILES[bucket]
+        path = RESEARCH / 'pl_cache' / _PL_CACHE_FILES[bucket]
         with open(path, encoding='utf-8') as fh:
             fetched = json.load(fh).get('fetched')
         if not fetched:
             return None
-        return (datetime.date.today() - datetime.date.fromisoformat(fetched)).days
+        return _pl_cache_is_stale(
+            _PL_CACHE_FILES[bucket], _date.fromisoformat(fetched))
     except Exception:
         return None
 
@@ -251,12 +273,12 @@ def test_canonical_player(name, verdict_sub, bucket, verdict_top, override_tag, 
     # degraded-lens check immediately below already gates on exactly this
     # condition; this now matches it.
     if il is None and (verdict_sub is not None or verdict_top is not None):
-        _age = _pl_cache_age_days(bucket)
-        if (_age is not None and _age > _PL_STALE_DAYS.get(bucket, 7)
+        _stale = _pl_cache_staleness(bucket)
+        if (_stale is not None and _stale[0]
                 and result.get("pl_main") in ("UR", "—")):
             pytest.xfail(
-                f"{name}: PL {bucket} cache {_age}d stale -> pl_main={result.get('pl_main')!r}; "
-                f"refresh PL Top 150 to re-enforce the verdict lock.")
+                f"{name}: PL {bucket} cache stale -> pl_main={result.get('pl_main')!r} "
+                f"({_stale[1]}); refresh the PL cache to re-enforce the verdict lock.")
     # A verdict synthesized on a DEGRADED lens stack is not evidence about the
     # code. The relaxation above covers a stale PL cache; this covers a missing
     # lens substrate (gitignored statcast parquets on a fresh checkout), which

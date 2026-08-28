@@ -203,7 +203,11 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # 2026-08-28 issue #54 (66 -> 67): test_counterfactual_rejected_resolution
 # importorskips settle_decisions (a heavy driver). Its file count rises, its
 # site count does not — it replaces no other guard and adds exactly one.
-MAX_GUARDED_FILES = 67
+# 2026-08-28 PL cadence fix (67 -> 68): test_pl_staleness_cadence importorskips
+# lib.pl_cache and test_triangulate (it asserts the latter DELEGATES rather than
+# re-deciding staleness). It deliberately carries NO presence guard for the PL
+# cache itself — that file is tracked, so a missing one is a real failure.
+MAX_GUARDED_FILES = 68
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
@@ -212,7 +216,7 @@ MAX_GUARDED_FILES = 67
 # triangulate_core) — the same three-module guard test_lens_health already uses.
 # The file count is unchanged: 65 was already the ceiling and this file replaces
 # no other, so the FILE bound holds and only the site count moves.
-MAX_GUARD_SITES = 117
+MAX_GUARD_SITES = 119
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
