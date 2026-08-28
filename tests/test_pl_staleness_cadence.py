@@ -15,6 +15,14 @@ A false-fresh keeps the verdict lock engaged against data that has moved,
 red-CIing on operational drift, which is the exact failure the relaxation
 exists to prevent. `test_the_flat_rule_would_have_called_a_stale_cache_fresh`
 below is a concrete instance.
+
+SCOPE — this file does NOT re-test the cadence rule itself. `tests/
+test_pl_cadence.py` already owns that (publish-hour boundary, the rolling
+streamer window, every cache having a declared cadence, fresh-after-pull), and
+adding a second copy here would BE the don't-do #18 shape this file exists to
+police. What lives here is only what that file cannot cover: that
+test_triangulate DELEGATES rather than re-deciding, the specific divergence the
+flat rule got wrong, and the contract of the helper test_triangulate calls.
 """
 from __future__ import annotations
 
@@ -66,17 +74,6 @@ def test_the_triangulate_test_delegates_rather_than_re_deciding():
     )
 
 
-def test_the_canonical_rule_covers_every_pl_cache_file():
-    """The flat copy knew only H/SP/RP and defaulted everything else to 7 days —
-    so the streamer cache, which refreshes every ~2 days, was judged on a window
-    3.5x too wide."""
-    for fname in pl_cache.PL_CACHE_FILES.values():
-        assert fname in pl_cache.PL_PUBLISH_CADENCE, (
-            f"{fname} has no declared publish cadence, so staleness for it "
-            f"falls back to a flat default — the thing gotcha #10 forbids"
-        )
-    assert pl_cache.PL_PUBLISH_CADENCE["pl_sp_streamers_latest.json"] == ("rolling", 2)
-
 
 def test_the_cadences_really_do_differ_by_weekday():
     """If they were all the same weekday a flat rule would be harmless. They
@@ -103,27 +100,6 @@ def test_the_flat_rule_would_have_called_a_stale_cache_fresh():
     assert "2026-08-26" in why
 
 
-def test_a_cache_is_not_stale_merely_for_being_over_a_week_old():
-    """The other direction, and the one gotcha #10 states outright: age alone
-    does not make a cache stale. Stamped Mon 2026-08-24, checked Mon 08-31 at
-    10am — 7 days old, and that morning's edition has not published (PL lands
-    ~7pm ET), so the cached one is still the latest live edition."""
-    stale, why = pl_cache._cache_is_stale(
-        "pl_sps_top100.json", date(2026, 8, 24),
-        datetime(2026, 8, 31, 10, 0, tzinfo=ET))
-    assert stale is False, why
-    assert "current" in why
-
-
-def test_the_publish_hour_is_respected_not_just_the_date():
-    """Same calendar day, before vs after the ~7pm ET drop."""
-    fetched = date(2026, 8, 24)
-    before = pl_cache._cache_is_stale(
-        "pl_sps_top100.json", fetched, datetime(2026, 8, 31, 18, 0, tzinfo=ET))
-    after = pl_cache._cache_is_stale(
-        "pl_sps_top100.json", fetched, datetime(2026, 8, 31, 20, 0, tzinfo=ET))
-    assert before[0] is False, before[1]
-    assert after[0] is True, after[1]
 
 
 # ── the helper the test actually calls ───────────────────────────────────────
