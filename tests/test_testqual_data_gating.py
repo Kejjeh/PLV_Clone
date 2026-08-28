@@ -195,7 +195,15 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 #   test_repo_root_resolution       (#72) repo root from __file__, never cwd
 #   test_scorecard_base_rate        (#53) a hit rate needs its base rate
 #   (test_ip_parsers_agree already counted; #78 only tightened it)
-MAX_GUARDED_FILES = 65
+# 2026-08-28 issue #65 (65 -> 66): test_schedule_fetch_contract importorskips
+# build_matchup_dashboard to check that the cross-module fetch_schedules_by_team
+# import RESOLVES, not just that the sources agree — the runtime half of gotcha
+# #6. Its sibling test_noise_flags_never_rank needs no guard (pure AST) and
+# does not move either bound.
+# 2026-08-28 issue #54 (66 -> 67): test_counterfactual_rejected_resolution
+# importorskips settle_decisions (a heavy driver). Its file count rises, its
+# site count does not — it replaces no other guard and adds exactly one.
+MAX_GUARDED_FILES = 67
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
@@ -204,7 +212,7 @@ MAX_GUARDED_FILES = 65
 # triangulate_core) — the same three-module guard test_lens_health already uses.
 # The file count is unchanged: 65 was already the ceiling and this file replaces
 # no other, so the FILE bound holds and only the site count moves.
-MAX_GUARD_SITES = 115
+MAX_GUARD_SITES = 117
 
 
 def _guard_census() -> tuple[int, int, list[str]]:
