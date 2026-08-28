@@ -48,7 +48,10 @@ projection — a wide gap vs rp3 is the two answering different questions, see /
 recent-form L1/L3/L5/L8/season FP-per-start; the **HR/9 structural
 lens** (2026 vs career); the reliable-boomer lens (boom%/bust%/net); K% and **K/st (src)**
 = K-FED/IP-FED (item 4, `k_share=K/(K+3.3·IP)`); velo/decline flags; and the full Pitcher
-List stack distilled into **Nick Pollack's chronological sentiment** per pitcher. Emits
+List stack distilled into **Nick Pollack's chronological sentiment** per pitcher — built from
+each pitcher's **last 2-3 SP Roundup recaps** (a trend, not the single latest edition; see
+`/sp-pl-board` step 4 for the boxscore-driven fetch method and the curl-not-WebFetch gotcha).
+Emits
 the combined-column markdown board (`sp_pl_board_<date>.md`) + the 21-col CSV.
 
 **Both lenses PRESERVED in the merge:** Nick-sentiment column (roster scope) and the

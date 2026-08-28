@@ -61,25 +61,58 @@ WebFetch the latest "Top 100 Starting Pitchers" article, or accept the user's sc
 **CAVEAT:** the source Team column is frequently scrambled (Rodón→SEA, Cole→CHC, Webb→SFG) —
 **ranks + names + tiers only; ignore Team and the matchup columns.** Write `{"ranks": {...}}`.
 
-### 4. Fetch the PL blurbs (3 series) and build the per-pitcher chronological timeline
-Fan out a Workflow over the recent articles (one agent per article, schema-structured), for:
-- **The List** blurbs (per-rank prose) — `pitcherlist.com/top-100-...`
-- **SP Streamer** previews — `.../starting-pitcher-streamer-ranks-...` (Nick Pollack)
-- **SP Roundup** recaps — `.../sp-roundup-M-D-26/` (Nick Pollack; **Jake Crumpler** on some days)
-Then a compile agent rolls them up per pitcher. **DATING IS LOAD-BEARING:** a **Roundup** is a
-recap of a **COMPLETED** start (date = the start played `[R]`); a **Streamer/List** entry rates
-an **UPCOMING** start (date = the start to come `[S]`). Tag and date every quote to the start it
-addresses. (Reference build: `scripts/_oneoff/build_pl_timeline.py` →
-`data/research/triangulate_universe/pl_timeline_<date>.md`.)
+### 4. Fetch each target pitcher's LAST 2-3 SP Roundup recaps (never just the newest edition)
+A single most-recent Roundup only covers whoever started that one day (~30 of the ~50 board
+names) and gives ONE data point, not a trend. **Required minimum: pull each of the ~50 board
+pitchers' last 2-3 recaps** so `nick_sentiment` reflects a trajectory, not a snapshot.
+
+**Step A — get each pitcher's actual last-3 start dates from OUR data, don't guess a date
+range.** Query `data/research/xfp_cache/boxscore_pitchers.parquet` (`gs==1`, filtered by
+`safe_name_key`), take the last 3 `game_date`s per board pitcher. A Roundup's edition date
+equals the game date it recaps (`sp-roundup-8-22-26` recaps 8/22 starts), so this tells you
+exactly which editions to fetch — usually ~20 unique dates covers 3 starts for all ~50 names
+(5-day rotation × 3 ≈ 15 days, plus slop). Pitchers absent from the boxscore entirely (long-term
+IL, not yet debuted) get flagged, not chased.
+
+**Step B — fetch each needed edition `pitcherlist.com/sp-roundup-M-D-26/`.**
+⚠ **WebFetch 403s on pitcherlist.com** (bot-detection on its fingerprint) — fetch with `curl`
+via Bash instead, using a real browser UA (see `UA` in `backfill_pl_streamers.py`); `requests`
+in Python also 403s here even with the same UA header (TLS-fingerprint issue), so this must be
+`curl`, not a Python HTTP client. One `curl` call per edition into a scratch file; ~20 calls at
+Josh's home directory scratchpad, politely paced.
+
+**Step C — parse per-pitcher blurbs.** Roundup entries are
+`<h[2-4]>...<a class="player-tag">Name</a>...</h[2-4]>` followed by the recap prose up to the
+next heading — regex `r'<h[234][^>]*>.*?<a class="player-tag"[^>]*>(.*?)</a>.*?</h[234]>(.*?)(?=<h[234]|\Z)'`
+(same `player-tag` anchor pattern `backfill_pl_streamers.py` uses for the Streamer tables, just
+matched against headings instead of `<table>` rows). Build `corpus[date][normalized_name] =
+blurb_text`; from that, take each target pitcher's last-3 dated hits (dates come from the
+edition, not from parsing text).
+
+For the **SP Streamer** forward-look (rolling 2-3 day tiers, `.../starting-pitcher-streamer-
+ranks-...`) and **The List** rank prose (`pitcherlist.com/top-100-...`), the single latest
+edition is fine — those are forward-looking previews, not a trend to build up. Same curl-not-
+WebFetch caveat applies to both.
+
+**DATING IS LOAD-BEARING:** a **Roundup** is a recap of a **COMPLETED** start (date = the start
+played `[R]`); a **Streamer/List** entry rates an **UPCOMING** start (date = the start to come
+`[S]`). Tag and date every quote to the start it addresses.
 > **Author note:** SP Roundup + SP Streamer are **Nick Pollack** (Jake Crumpler some Roundups).
 > Nate **Schwartz** writes the separate **"Going Deep"** deep-dives + the *Approach Angle* pod —
 > different series; if the user wants "Nate," that's Going Deep, not the roundup.
 
-### 5. Distill Nick's sentiment per pitcher → `nick_sentiment_<date>.json`
-For each pitcher, read the timeline **oldest→newest** and write ONE latest-weighted sentiment
-string: a 🟢/🟡/🔴 tone + a trend arrow (↑↑/↑/→/~/↓/↓↓) + the why in ≤12 words, quoting Nick's
-signature phrase where vivid ("WE ARE SO BACK", "It's time to let go", "GET AMPED"). The arrow
-is the CHRONOLOGICAL read (did his stance rise/fall across the window), not a single quote.
+### 5. Distill Nick's TREND sentiment per pitcher → `nick_sentiment_<date>.json`
+For each pitcher, read their last-3 dated Roundup blurbs **oldest→newest** (not just the newest
+one) and write ONE latest-weighted sentiment string covering the whole window: a 🟢/🟡/🔴 tone +
+a trend arrow (↑↑/↑/→/~/↓/↓↓) + the why in a sentence, quoting Nick's signature phrase where
+vivid ("WE ARE SO BACK", "It's time to let go", "GET AMPED", "I'm sort of done with X"). The
+arrow is the CHRONOLOGICAL read across all available starts in the window (did his stance
+rise/fall/hold), not a single quote — e.g. a dominant start 8/10 followed by two shaky ones
+reads `↓`, not `→`. Note explicitly when a window's last entry is a status change (injury,
+role change, promotion) that supersedes the trend — that's the headline, not a data point in
+an average. Keys **must** be `safe_name_key`-normalized (`plv_clone.utils.name_match`) —
+`build_sp_pl_board.py` looks sentiment up by normalized key and silently renders `—` on a
+mismatch, so an unnormalized-key file looks like "no sentiment found" instead of erroring.
 
 ### 6. Assemble the board
 ```
