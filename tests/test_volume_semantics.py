@@ -55,6 +55,92 @@ def test_no_fader_gap_no_kind():
     assert d["fade_kind"] == ""
 
 
+def _box(starts_by_pid, n_games=36, team_id=1):
+    """Synthetic boxscore frame: one team, n_games, starts at given indices."""
+    rows = []
+    for i in range(n_games):
+        rows.append(dict(game_pk=1000 + i, game_date=pd.Timestamp('2026-04-01') + pd.Timedelta(days=i),
+                         mlbam_id=999, team_id=team_id, gs=0))
+        for pid, idxs in starts_by_pid.items():
+            if i in idxs:
+                rows.append(dict(game_pk=1000 + i, game_date=pd.Timestamp('2026-04-01') + pd.Timedelta(days=i),
+                                 mlbam_id=pid, team_id=team_id, gs=1))
+    return pd.DataFrame(rows)
+
+
+def _sp_row(**kw):
+    base = dict(proj_ros_gs_per_teamgame=0.16, naive_pace=0.19, is_on_il_at_split=0)
+    base.update(kw)
+    return base
+
+
+def test_sp_turn_map_counts_team_games_and_excludes_absences():
+    """The turn is measured in TEAM GAMES; an IL-sized gap is an absence, not
+    a turn, so it must not inflate the median."""
+    tm = vs.sp_turn_map(_box({1: [0, 5, 10, 30, 35],      # 5,5 then a 20-game absence
+                              2: [0, 6, 12, 18, 24]}))    # honest six-man turn
+    assert tm.loc[1, 'median_turn'] == 5.0
+    assert tm.loc[1, 'n_turns'] == 3          # 5, 5, 5 — the 20 is dropped
+    assert tm.loc[1, 'absence_games'] == 20
+    assert tm.loc[2, 'median_turn'] == 6.0
+
+
+def test_sp_six_man_turn_reads_role():
+    """A stretched turn IS the role — six-man/piggyback is not a health fade."""
+    tm = vs.sp_turn_map(_box({2: [0, 6, 12, 18, 24]}))
+    d = vs.decompose_sp_volume(_sp_row(), tm.loc[2])
+    assert d['fade_kind'] == 'ROLE'
+    assert d['in_role'] == pytest.approx(1 / 6, abs=1e-4)
+
+
+def test_sp_full_turn_below_pace_reads_availability():
+    tm = vs.sp_turn_map(_box({1: [0, 5, 10, 15, 20, 25, 30, 35]}))
+    d = vs.decompose_sp_volume(_sp_row(), tm.loc[1])
+    assert d['fade_kind'] == 'AVAILABILITY'
+    assert d['in_role'] == pytest.approx(0.20, abs=1e-4)
+    assert d['availability'] < 1.0
+
+
+def test_sp_full_turn_but_no_longer_starting_reads_role():
+    """Full turn historically, healthy, but hasn't taken a turn in weeks —
+    that is a rotation removal, not an availability discount."""
+    tm = vs.sp_turn_map(_box({1: [0, 5, 10, 15]}, n_games=36))
+    d = vs.decompose_sp_volume(_sp_row(is_on_il_at_split=0), tm.loc[1])
+    assert tm.loc[1, 'games_since_last_start'] > vs.SP_ABSENCE_GAP
+    assert d['fade_kind'] == 'ROLE'
+    # ...but the same shape WITH an IL flag is availability, not a demotion
+    assert vs.decompose_sp_volume(_sp_row(is_on_il_at_split=1),
+                                  tm.loc[1])['fade_kind'] == 'AVAILABILITY'
+
+
+def test_sp_thin_sample_is_unclear_not_guessed():
+    tm = vs.sp_turn_map(_box({1: [0, 5]}))
+    d = vs.decompose_sp_volume(_sp_row(), tm.loc[1])
+    assert d['fade_kind'] == 'UNCLEAR'
+    assert d['median_turn'] != d['median_turn']       # NaN — not asserted
+
+
+def test_sp_no_turn_data_falls_back_to_pace():
+    d = vs.decompose_sp_volume(_sp_row(), None)
+    assert d['fade_kind'] == 'UNCLEAR'
+    assert d['in_role'] == pytest.approx(0.19)
+
+
+def test_live_glasnow_six_man_canonical():
+    """2026-08-29 canonical: LAD runs a six-man, so Glasnow's in-role start
+    rate is ~1.0/wk, NOT the 1.19 league default. Skips if he leaves the
+    sample or the boxscore cache is absent."""
+    try:
+        box = pd.read_parquet('data/research/xfp_cache/boxscore_pitchers.parquet')
+    except Exception:
+        pytest.skip('boxscore cache unavailable')
+    tm = vs.sp_turn_map(box)
+    if 607192 not in tm.index:
+        pytest.skip('Glasnow not in boxscore sample')
+    assert tm.loc[607192, 'median_turn'] >= 6.0
+    assert tm.loc[607192, 'absence_games'] > 50      # the long IL absence
+
+
 def test_live_muncy_canonical():
     """The 2026-08-29 canonical, pinned against the live CSV (skips if the
     row disappears; re-point the canonical if LAD-Muncy leaves the sample)."""

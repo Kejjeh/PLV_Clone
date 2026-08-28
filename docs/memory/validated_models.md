@@ -24,4 +24,23 @@ time (73/100 games played), not a role loss. `lib/volume_semantics.py` is the
 one owner of the decomposition and classifies every FADER gap as ROLE
 (lineup signal, e.g. Tristan Peters) or AVAILABILITY (injury discount, role
 intact); /volume-watch displays the kind. Guarded by
-tests/test_volume_semantics.py. SP-side decomposition is a follow-up.
+tests/test_volume_semantics.py.
+
+**SP side (2026-08-29, same day).** `proj_ros_gs_per_teamgame` carries the
+identical discount, and the role mechanism is the ROTATION TURN.
+`sp_turn_map()` measures each starter's turn in TEAM GAMES (derived from the
+boxscore frame's own distinct team_id×game_pk pairs — immune to off-days and
+the ASG break, unlike calendar-day gaps); gaps > `SP_ABSENCE_GAP`=9 are
+absences, excluded from the median and charged to availability. Then a fader
+is ROLE if the turn itself is stretched (> 5.5 team games: six-man,
+piggyback, innings limit) or the arm is healthy but no longer taking a turn;
+AVAILABILITY if the turn is full; UNCLEAR below 3 measured turns (never
+guessed).
+
+Canonical: **Glasnow's turn is 6.0 team games — 1.02 starts/wk when active,
+not the 1.19 league default** (LAD six-man), while his 95-team-game gap is an
+absence, not evidence of a slow turn. Consequence: `1.19 starts/wk` is a
+LEAGUE average and must not be applied to a six-man arm in cap or playoff
+start-count math — use `in_role_vol × 6.10`. Fried, Cameron, Imanaga,
+Messick, Rasmussen all measure a full 5.0 turn, so their sub-pace projections
+are pure missed-time discounts.

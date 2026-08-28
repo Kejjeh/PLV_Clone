@@ -146,6 +146,7 @@ def load_hitter_board():
     dec = d.apply(decompose_hitter_volume, axis=1, result_type='expand')
     d['in_role_vol'] = dec['in_role']
     d['fade_kind'] = dec['fade_kind']
+    d['median_turn'] = np.nan                      # SP-only concept
     d['recent_vol'] = d['pa_last21'] / 21.0 * (162 / 162)  # PA per team-game proxy (L21 cal. days)
     d['player_type'] = 'H'
     fl = np.where(d['is_on_il_at_split'] > 0, 'IL@split', '')
@@ -175,8 +176,24 @@ def load_sp_board():
     d['rate'] = d['rate'].fillna(med)
     d['position'] = 'SP'
     d['gap'] = d['proj_ros_gs_per_teamgame'] - d['naive_pace']
-    d['in_role_vol'] = np.nan   # SP availability decomposition: follow-up
-    d['fade_kind'] = ''
+    # Role vs availability, SP side: a stretched TURN (six-man, piggyback,
+    # innings limit) is a role signal; a full-turn arm projected below pace is
+    # carrying a missed-time discount. Turn measured in team games from
+    # boxscores (Glasnow canonical: LAD six-man, turn 6.0, not a health fade).
+    from lib.volume_semantics import decompose_sp_volume, sp_turn_map
+    try:
+        turns = sp_turn_map(pd.read_parquet(
+            'data/research/xfp_cache/boxscore_pitchers.parquet'))
+    except Exception as e:                       # board must still render
+        print(f'  [warn] SP turn map unavailable ({e}); in-role volume suppressed')
+        turns = pd.DataFrame(columns=['median_turn', 'n_turns',
+                                      'games_since_last_start', 'absence_games'])
+    dec = d.apply(lambda r: decompose_sp_volume(
+        r, turns.loc[int(r['mlbam_id'])] if int(r['mlbam_id']) in turns.index else None),
+        axis=1, result_type='expand')
+    d['in_role_vol'] = dec['in_role']
+    d['fade_kind'] = dec['fade_kind']
+    d['median_turn'] = dec['median_turn']
     d['impact'] = d['gap'] * d['rate']            # FP per team-game
     d['proj_vol'] = d['proj_ros_gs_per_teamgame']
     d['recent_vol'] = d['gs_last21'] / 21.0
@@ -296,7 +313,14 @@ def name_cards(dh, dsp, names):
                 direction = f"FADER ({r['fade_kind']})"  # ROLE = lineup signal; AVAILABILITY = injury discount, role intact
             print(f"\n{display_name(r['player_name'])} ({r['team']}, {r['position']}) — {r['own']} — {direction}")
             if r.get('fade_kind') == 'AVAILABILITY':
-                print(f"  in-role volume  : {r['in_role_vol']:.3f} {r['unit']} when active — use THIS for daily start/sit; proj prices missed-time risk")
+                use = ('daily start/sit' if r['player_type'] == 'H'
+                       else 'weekly start counts + SP-cap math')
+                print(f"  in-role volume  : {r['in_role_vol']:.3f} {r['unit']} when active — "
+                      f"use THIS for {use}; proj prices missed-time risk")
+            if r['player_type'] == 'SP' and pd.notna(r.get('median_turn')):
+                # the turn is the role itself: 5.0 = full turn, 6.0 = six-man/skipped
+                print(f"  rotation turn   : every {r['median_turn']:.1f} team games "
+                      f"({7 * r['in_role_vol'] * (162 / 186):.2f} starts/wk when active)")
             print(f"  proj RoS volume : {r['proj_vol']:.3f} {unit}   naive pace: {r['naive_pace']:.3f}   "
                   f"gap: {r['gap']:+.3f}  (volume pct {r['volume_percentile']:.0f})")
             print(f"  recent (L21d)   : {r['recent_vol']:.3f} {unit}")
@@ -333,8 +357,9 @@ def main():
     volume_delta_section()
 
     cols = ['player_type', 'mlbam_id', 'player_name', 'team', 'position', 'own',
-            'proj_vol', 'in_role_vol', 'naive_pace', 'gap', 'volume_percentile',
-            'recent_raw', 'rate', 'rate_source', 'impact', 'flags', 'fade_kind', 'unit']
+            'proj_vol', 'in_role_vol', 'median_turn', 'naive_pace', 'gap',
+            'volume_percentile', 'recent_raw', 'rate', 'rate_source', 'impact',
+            'flags', 'fade_kind', 'unit']
     out = pd.concat([dh[cols], dsp[cols]], ignore_index=True)
     out['player_name'] = out['player_name'].map(display_name)
     out['direction'] = np.where(out['gap'] > 0, 'RISER', np.where(out['gap'] < 0, 'FADER', 'FLAT'))
