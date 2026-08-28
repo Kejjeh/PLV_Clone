@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-27",
+  "generated": "2026-08-28",
   "upgrade_floor_fpp": -0.0828,
   "hit_upgrade_floor_xwoba": 0.319,
   "alert_count": 5,
@@ -48,7 +48,7 @@
       "l4": "1/4",
       "whiff_pct": 27.3,
       "xwoba_con": 0.293,
-      "rp3_rank": 107
+      "rp3_rank": 104
     },
     {
       "name": "Chase Dollander",
@@ -78,7 +78,7 @@
       "l4": "2/4",
       "whiff_pct": 17.6,
       "xwoba_con": 0.318,
-      "rp3_rank": 185
+      "rp3_rank": 184
     }
   ],
   "hitter_alerts": [],

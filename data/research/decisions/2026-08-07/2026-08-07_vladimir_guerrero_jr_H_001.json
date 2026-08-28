@@ -27,8 +27,18 @@
   "prediction_settlement": null,
   "reason_tag": "no_convergence",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-28",
+  "settlement": {
+    "actual_fp_per_unit": 0.37254901960784315,
+    "classification": "MIXED_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 51,
+    "proj_per": 0.5827446799353181,
+    "proj_units_note": "native",
+    "residual": -0.21019566032747494,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-07",
   "verdict_top": "MIXED"
 }

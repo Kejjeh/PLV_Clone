@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-27",
+ "as_of": "2026-08-28",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1135,12 +1135,6 @@
    "abbr": "SF",
    "name": "Bryce Eldridge",
    "pos": "DH"
-  },
-  "671083": {
-   "team": "San Francisco Giants",
-   "abbr": "SF",
-   "name": "Buddy Kennedy",
-   "pos": "3B"
   },
   "693313": {
    "team": "San Francisco Giants",
@@ -2382,6 +2376,12 @@
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
    "name": "Max Scherzer",
+   "pos": "P"
+  },
+  "547179": {
+   "team": "Toronto Blue Jays",
+   "abbr": "TOR",
+   "name": "Michael Lorenzen",
    "pos": "P"
   },
   "664702": {

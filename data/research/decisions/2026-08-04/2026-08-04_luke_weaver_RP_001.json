@@ -16,7 +16,7 @@
   },
   "counterfactual_settlement": null,
   "decision_id": "2026-08-04_luke_weaver_RP_001",
-  "executed_at": "2026-08-04T22:01:44",
+  "executed_at": "2026-08-04T18:01:44",
   "inputs": {
     "bucket_source": "dpwin_row",
     "dropped_name": "Tanner Scott",

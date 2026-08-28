@@ -16,7 +16,7 @@
   },
   "counterfactual_settlement": null,
   "decision_id": "2026-08-15_joshua_baez_H_001",
-  "executed_at": "2026-08-15T20:16:35",
+  "executed_at": "2026-08-15T16:16:35",
   "inputs": {
     "bucket_source": "resolver",
     "dropped_name": "Ezequiel Duran",

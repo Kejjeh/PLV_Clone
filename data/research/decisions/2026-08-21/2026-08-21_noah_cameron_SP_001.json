@@ -16,7 +16,7 @@
   },
   "counterfactual_settlement": null,
   "decision_id": "2026-08-21_noah_cameron_SP_001",
-  "executed_at": "2026-08-21T19:13:42",
+  "executed_at": "2026-08-21T15:13:42",
   "inputs": {
     "bucket_source": "dpwin_row",
     "dropped_name": "Nick Pivetta",

@@ -4,8 +4,8 @@ Jeff Hoffman,Minnesota Twins,CLOSER,ROLE_LOST,1 save(s) went to a teammate over 
 Tanner Scott,Los Angeles Dodgers,SETUP,HOLDS_ROLE,recorded 1 save(s) of 2 chance(s),1,0,2,3,True
 Gregory Soto,Pittsburgh Pirates,SETUP,ROLE_LOST,2 save(s) went to a teammate over 2 chance(s) and he took none,0,2,2,3,False
 Emilio Pagán,Cincinnati Reds,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,0,1,2,False
-Jacob Latz,Texas Rangers,CLOSER,HOLDS_ROLE,recorded 2 save(s) of 3 chance(s),2,0,3,3,False
-David Bednar,New York Yankees,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,1,1,1,False
-Louis Varland,Toronto Blue Jays,CLOSER,HOLDS_ROLE,recorded 2 save(s) of 2 chance(s),2,0,2,3,False
+Jacob Latz,Texas Rangers,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 2 chance(s),1,0,2,2,False
+David Bednar,New York Yankees,CLOSER,HOLDS_ROLE,recorded 1 save(s) of 1 chance(s),1,0,1,1,False
+Louis Varland,Toronto Blue Jays,CLOSER,HOLDS_ROLE,recorded 2 save(s) of 2 chance(s),2,0,2,2,False
 Jhoan Duran,Philadelphia Phillies,CLOSER,NO_CHANCES,2 chance(s) existed but produced no save (blown/extra-inning) — inconclusive,0,0,2,2,False
 Edwin Díaz,Los Angeles Dodgers,CLOSER,JUST_ARRIVED,no appearances yet for this club (traded/recalled) - role status UNKNOWN,0,1,2,0,False
