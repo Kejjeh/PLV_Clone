@@ -1,0 +1,86 @@
+name,team,inj,pl_rank,pl_inj_tier,pl_stream,rp3_rank,rp3_ps,tag,gs_pre,gs_post,pre_fp,post_fp,l8,z_kbb,mech,persist,verdict,price,own
+Brandon Woodruff,Mil,SIXTY_DAY_DL,,21-30,,32.0,12.9,data_driven_full,9.0,0.0,14.18,,14.14,,,,INSUFFICIENT,12.9,41.0
+Spencer Schwellenbach,Atl,SIXTY_DAY_DL,,11-20,,35.0,12.75,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,12.75,9.1
+Jacob Lopez,Oak,ACTIVE,38.0,,#8 Probably Start,172.0,9.38,data_driven_full,11.0,7.0,3.09,15.94,14.76,3.32,"whiff+11.4,swstr+6.2,SL+8pp,SI-6pp,K%+14.4",True,NEW LEAF,12.66,15.1
+Nick Pivetta,SD,SIXTY_DAY_DL,,21-30,,38.0,12.58,data_driven_thin,4.0,0.0,10.7,,10.7,,,,INSUFFICIENT,12.58,49.9
+Hunter Greene,Cin,SIXTY_DAY_DL,,11-20,,41.0,12.47,data_driven_thin,2.0,3.0,11.05,7.4,8.86,,,,INSUFFICIENT,12.47,24.8
+Corbin Burnes,Ari,SIXTY_DAY_DL,,21-30,,51.0,12.06,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,12.06,6.2
+Ryan Weathers,NYY,FIFTEEN_DAY_DL,,41-50,,110.0,10.24,data_driven_full,18.0,7.0,12.18,13.7,13.94,1.4,"SI+10pp,CH+6pp,FF-18pp,K%-6.7",False,DECLINE,11.97,29.7
+Walbert Urena,LAA,ACTIVE,40.0,,,54.0,11.91,data_driven_full,15.0,7.0,12.06,11.64,11.46,0.18,velo+1.5,False,WATCH,11.91,19.1
+Cole Ragans,KC,SIXTY_DAY_DL,,1-10,,58.0,11.78,data_driven_thin,8.0,0.0,9.2,,9.2,,,,INSUFFICIENT,11.78,45.1
+Griffin Jax,TB,FIFTEEN_DAY_DL,61.0,,,65.0,11.46,data_driven_full,14.0,4.0,11.02,13.62,13.97,1.45,—,False,VARIANCE,11.46,39.7
+Roki Sasaki,LAD,FIFTEEN_DAY_DL,74.0,,,66.0,11.41,data_driven_full,16.0,7.0,8.52,12.64,12.79,0.02,"velo+0.9,whiff+5.6,swstr+2.5",True,WATCH,11.41,28.2
+Carlos Rodon,NYY,ACTIVE,34.0,,,68.0,11.37,data_driven_full,9.0,2.0,12.43,10.2,13.05,,,,INSUFFICIENT,11.37,58.1
+Spencer Strider,Atl,SIXTY_DAY_DL,,61-70,,69.0,11.34,data_driven_full,8.0,0.0,9.34,,9.34,,,,INSUFFICIENT,11.34,41.3
+Justin Steele,ChC,SIXTY_DAY_DL,,21-30,,70.0,11.34,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,11.34,2.6
+Joey Cantillo,Cle,ACTIVE,54.0,,,73.0,11.23,data_driven_full,20.0,8.0,10.77,8.32,8.32,0.18,"SL-6pp,FC+8pp,CU+17pp,CH-8pp,FF-11pp",False,VARIANCE,11.23,26.2
+Luis Castillo,ChW,ACTIVE,,,#23 Do Not Start,75.0,11.18,data_driven_full,15.0,6.0,8.66,6.18,6.67,0.56,"whiff+7.1,swstr+2.9,SL-9pp,SI+9pp,CH+7pp,FF-7pp",True,WATCH,11.18,47.1
+Tyler Mahle,Atl,ACTIVE,57.0,,,76.0,11.09,data_driven_full,15.0,7.0,8.29,14.73,15.02,1.19,"velo+1.0,whiff+4.1,FS+7pp,SL-9pp",True,WATCH,11.09,17.8
+Shane Drohan,Mil,ACTIVE,84.0,,,79.0,11.03,data_driven_full,9.0,6.0,9.96,9.0,10.09,0.35,FF-6pp,True,VARIANCE,11.03,7.5
+Jack Flaherty,Det,FIFTEEN_DAY_DL,,71-80,,81.0,10.99,data_driven_full,18.0,1.0,9.15,5.2,13.1,,,,INSUFFICIENT,10.99,29.9
+Drew Anderson,Det,ACTIVE,,,#30 Do Not Start,84.0,10.88,data_driven_thin,2.0,4.0,13.1,8.82,10.25,,,,INSUFFICIENT,10.88,0.8
+Joe Musgrove,SD,SIXTY_DAY_DL,,61-70,,86.0,10.8,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,10.8,9.5
+Christian Scott,NYM,ACTIVE,59.0,,#14 Probably Start,87.0,10.78,data_driven_full,12.0,7.0,10.85,10.66,11.51,0.75,"CU+8pp,FF-6pp",True,VARIANCE,10.78,11.4
+Matthew Boyd,ChC,ACTIVE,72.0,,,164.0,9.52,data_driven_full,9.0,8.0,9.98,11.91,11.91,2.36,"whiff-11.7,swstr-6.0,CU+8pp,K%-10.2",True,DECLINE,10.71,53.0
+Jake Bennett,Bos,ACTIVE,92.0,,,92.0,10.66,data_driven_full,8.0,7.0,14.79,10.43,11.89,0.27,"ST+5pp,SI-7pp",True,VARIANCE,10.66,23.9
+Emerson Hancock,Sea,ACTIVE,49.0,,#10 Probably Start,93.0,10.61,data_driven_full,18.0,6.0,13.77,10.38,11.61,0.34,"ST-8pp,CU+8pp",False,VARIANCE,10.61,66.1
+Bubba Chandler,Pit,ACTIVE,81.0,,,95.0,10.58,data_driven_full,18.0,7.0,7.59,12.0,11.67,1.18,"SL+10pp,ST-6pp,CH-6pp",True,VARIANCE,10.58,21.2
+Kris Bubic,LAD,SIXTY_DAY_DL,,41-50,,96.0,10.54,data_driven_full,9.0,0.0,12.01,,11.41,,,,INSUFFICIENT,10.54,21.8
+Connor Prielipp,Min,ACTIVE,77.0,,,103.0,10.37,data_driven_full,13.0,6.0,9.31,7.78,9.38,0.22,"whiff+6.0,swstr+2.7,SI+12pp,FF-7pp",True,WATCH,10.37,1.9
+Dustin May,Mil,DAY_TO_DAY,39.0,,,106.0,10.33,data_driven_full,18.0,7.0,9.94,7.63,7.45,0.87,—,True,VARIANCE,10.33,15.8
+Hunter Dobbins,StL,FIFTEEN_DAY_DL,,91-100,,244.0,8.39,data_driven_full,3.0,5.0,6.37,11.98,9.88,0.28,"velo-1.6,SL-5pp,CU+5pp",False,DECLINE,10.19,1.0
+Sean Manaea,NYM,ACTIVE,60.0,,#7 Probably Start,115.0,10.17,data_driven_full,6.0,8.0,9.77,10.79,10.79,0.32,"velo+1.5,FF+10pp",True,WATCH,10.17,11.6
+Andrew Alvarez,Wsh,ACTIVE,100.0,,,187.0,9.18,data_driven_full,6.0,6.0,8.0,11.07,9.3,0.3,"SL-7pp,K%-4.3",False,DECLINE,10.13,2.9
+Edward Cabrera,ChC,FIFTEEN_DAY_DL,,61-70,,122.0,10.06,data_driven_full,14.0,1.0,8.55,-8.9,2.67,,,,INSUFFICIENT,10.06,18.8
+Mick Abel,Min,SIXTY_DAY_DL,,51-60,,123.0,10.05,data_driven_thin,3.0,0.0,14.7,,14.7,,,,INSUFFICIENT,10.05,1.4
+Cade Horton,ChC,SIXTY_DAY_DL,,41-50,,127.0,9.96,data_driven_thin,2.0,0.0,9.1,,9.1,,,,INSUFFICIENT,9.96,6.9
+Ryan Pepiot,TB,SIXTY_DAY_DL,,21-30,,134.0,9.85,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,9.85,30.4
+Connelly Early,Wsh,SIXTY_DAY_DL,,41-50,,142.0,9.72,data_driven_full,17.0,0.0,11.85,,11.9,,,,INSUFFICIENT,9.72,16.3
+Keider Montero,Det,ACTIVE,95.0,,,146.0,9.7,data_driven_full,15.0,6.0,12.53,10.98,12.51,0.48,"SL+5pp,FF-6pp",False,VARIANCE,9.7,16.2
+Will Warren,NYY,ACTIVE,70.0,,,147.0,9.69,data_driven_full,19.0,6.0,10.29,6.73,5.64,0.12,"CU+5pp,CH+6pp,FF-10pp",True,VARIANCE,9.69,36.4
+Reynaldo Lopez,Atl,FIFTEEN_DAY_DL,,91-100,,148.0,9.68,data_driven_full,9.0,2.0,9.32,8.5,7.03,,,,INSUFFICIENT,9.68,4.7
+Ryne Nelson,Ari,SIXTY_DAY_DL,,61-70,,149.0,9.65,data_driven_full,15.0,0.0,9.13,,12.07,,,,INSUFFICIENT,9.65,3.4
+David Peterson,ChC,ACTIVE,91.0,,#20 Questionable,151.0,9.65,data_driven_full,11.0,6.0,2.59,14.23,9.88,1.37,CU-5pp,False,VARIANCE,9.65,8.1
+Grant Holmes,Atl,ACTIVE,,,#22 Do Not Start,133.0,9.86,data_driven_full,17.0,7.0,9.41,9.41,10.3,0.66,"FC+7pp,FF-14pp,K%-4.5",True,DECLINE,9.64,15.6
+Blade Tidwell,SF,ACTIVE,,,#24 Do Not Start,152.0,9.63,data_driven_thin,0.0,4.0,,10.3,10.3,,,,INSUFFICIENT,9.63,1.3
+Clarke Schmidt,NYY,SIXTY_DAY_DL,,51-60,,153.0,9.63,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,9.63,0.5
+Robbie Ray,SD,ACTIVE,47.0,,,154.0,9.63,data_driven_full,18.0,7.0,11.23,10.99,10.67,0.25,"SL-9pp,SI+8pp,KC+6pp,CH+8pp,FF-13pp",True,VARIANCE,9.63,69.9
+Kutter Crawford,Bos,SIXTY_DAY_DL,,81-90,,156.0,9.62,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,9.62,0.1
+Zach Eflin,Bal,SIXTY_DAY_DL,,61-70,,161.0,9.56,marcel_il,1.0,0.0,11.1,,11.1,,,,INSUFFICIENT,9.56,0.3
+Dean Kremer,Min,ACTIVE,94.0,,#16 Questionable,97.0,10.53,data_driven_full,4.0,7.0,13.65,8.57,8.19,1.48,"whiff-4.6,FS-12pp,FC+12pp,K%-5.6",True,DECLINE,9.55,4.2
+Michael Soroka,Ari,FIFTEEN_DAY_DL,,61-70,,165.0,9.48,data_driven_full,15.0,3.0,13.31,5.67,11.39,1.48,—,,VARIANCE,9.48,38.5
+Quinn Priester,Mil,SIXTY_DAY_DL,,61-70,,167.0,9.46,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,9.46,1.0
+Landen Roupp,SF,ACTIVE,79.0,,#8 Questionable,132.0,9.89,data_driven_full,18.0,8.0,11.23,8.98,8.98,2.43,"whiff-4.8,SI-7pp,K%-9.1",True,DECLINE,9.43,23.1
+George Klassen,LAA,ACTIVE,64.0,,,169.0,9.42,data_driven_thin,2.0,4.0,-3.8,13.43,7.68,,,,INSUFFICIENT,9.42,5.8
+Zebby Matthews,Min,ACTIVE,89.0,,,170.0,9.4,data_driven_full,11.0,7.0,11.19,7.86,7.35,0.11,—,True,VARIANCE,9.4,7.3
+Anthony Kay,ChW,ACTIVE,87.0,,,173.0,9.37,data_driven_full,17.0,8.0,7.86,10.22,10.22,0.68,swstr+2.6,True,WATCH,9.37,6.8
+Chase Dollander,Col,SIXTY_DAY_DL,,71-80,,175.0,9.33,data_driven_thin,3.0,0.0,8.7,,8.7,,,,INSUFFICIENT,9.33,2.4
+Andrew Painter,Phi,ACTIVE,43.0,,#7 Probably Start,177.0,9.33,data_driven_full,12.0,5.0,3.04,12.64,5.9,0.97,"whiff+5.5,swstr+2.7,SL-7pp,FS-14pp,ST+14pp,SI-6pp,CU-7pp,CH+22pp,K%+6.9",True,WATCH,9.33,13.1
+Cody Bradford,Tex,ACTIVE,93.0,,#17 Questionable,178.0,9.32,data_driven_thin,0.0,4.0,,9.3,9.3,,,,INSUFFICIENT,9.32,2.2
+Brayan Bello,Bos,ACTIVE,68.0,,,182.0,9.24,data_driven_full,8.0,0.0,-2.79,,-2.79,,,,INSUFFICIENT,9.24,5.0
+Kumar Rocker,Tex,ACTIVE,99.0,,,199.0,9.03,data_driven_full,16.0,7.0,7.51,9.57,8.34,0.52,FF+6pp,False,VARIANCE,9.03,4.5
+Quinn Mathews,StL,ACTIVE,85.0,,#15 Probably Start,203.0,8.91,data_driven_thin,0.0,3.0,,4.73,4.73,,,,INSUFFICIENT,8.91,1.6
+Kyle Bradish,Bal,ACTIVE,51.0,,,63.0,11.55,data_driven_full,19.0,7.0,12.01,6.24,8.09,0.58,"SL-6pp,SI+7pp,K%-6.2",True,DECLINE,8.9,64.9
+Hayden Wesneski,Hou,ACTIVE,96.0,,#9 Questionable,210.0,8.83,data_driven_thin,0.0,6.0,,11.3,11.3,,,,INSUFFICIENT,8.83,6.7
+Patrick Sandoval,Bos,ACTIVE,,,#28 Do Not Start,211.0,8.82,data_driven_full,1.0,7.0,11.3,7.09,7.61,,,,INSUFFICIENT,8.82,2.2
+Stephen Kolek,KC,SIXTY_DAY_DL,,91-100,,212.0,8.82,data_driven_full,10.0,0.0,8.92,,9.12,,,,INSUFFICIENT,8.82,1.9
+Adrian Houser,SF,FIFTEEN_DAY_DL,90.0,,,220.0,8.71,data_driven_full,14.0,2.0,5.27,14.15,7.31,,,,INSUFFICIENT,8.71,1.1
+Spencer Arrighetti,Tor,ACTIVE,,,#12 Do Not Start,222.0,8.68,data_driven_full,15.0,3.0,9.97,3.33,3.06,,,,INSUFFICIENT,8.68,13.9
+Bryce Miller,Sea,ACTIVE,80.0,,,40.0,12.48,data_driven_full,9.0,7.0,18.64,4.84,4.05,3.43,"velo-0.8,whiff-5.3,swstr-4.0,SL-8pp,SI+6pp,FF-7pp,K%-13.8",True,DECLINE,8.66,36.2
+Jake Irvin,Wsh,ACTIVE,,,#10 Do Not Start,193.0,9.11,data_driven_full,11.0,6.0,8.41,5.67,8.09,1.74,"velo+0.7,SI-14pp,CU-6pp,CH+11pp,K%-7.9",True,MIXED,8.59,1.5
+Cal Quantrill,Tex,ACTIVE,83.0,,,230.0,8.56,data_driven_full,4.0,6.0,10.03,14.33,13.54,1.34,"FS+11pp,FC-9pp,SI-7pp,FF+7pp,K%+9.2",False,WATCH,8.56,17.0
+Gabriel Hughes,Col,ACTIVE,,,#13 Do Not Start,245.0,8.39,data_driven_full,1.0,8.0,14.8,3.95,3.95,,,,INSUFFICIENT,8.39,0.4
+Brandon Young,Bal,ACTIVE,,,#25 Do Not Start,248.0,8.36,data_driven_full,15.0,7.0,11.09,10.53,10.85,0.15,—,False,VARIANCE,8.36,16.6
+Jackson Kent,Wsh,ACTIVE,,,#21 Do Not Start,251.0,8.34,data_driven_thin,0.0,3.0,,2.23,2.23,,,,INSUFFICIENT,8.34,0.3
+Jose Cabrera,Ari,ACTIVE,,,#11 Do Not Start,257.0,8.24,data_driven_thin,4.0,1.0,4.83,9.3,5.72,,,,INSUFFICIENT,8.24,0.2
+Jackson Jobe,Det,ACTIVE,62.0,,,266.0,8.13,data_driven_thin,0.0,4.0,,7.62,7.62,,,,INSUFFICIENT,8.13,9.1
+Cristian Javier,Hou,ACTIVE,86.0,,,192.0,9.12,data_driven_full,4.0,4.0,-3.57,6.92,1.67,2.51,"swstr+2.6,FC+6pp",True,NEW LEAF,8.02,2.1
+Martin Perez,Atl,ACTIVE,97.0,,,273.0,8.02,data_driven_full,14.0,7.0,9.61,10.89,9.44,0.26,SI+8pp,True,VARIANCE,8.02,9.3
+Rhett Lowder,Cin,ACTIVE,,,#26 Do Not Start,267.0,8.09,data_driven_full,13.0,7.0,6.83,7.17,6.2,0.15,"velo+0.8,whiff-5.1,CU+7pp,FF-6pp,K%-4.8",False,MIXED,7.95,2.9
+Tylor Megill,NYM,SIXTY_DAY_DL,,81-90,,292.0,7.74,marcel_il,0.0,0.0,,,,,,,INSUFFICIENT,7.74,0.0
+Kohl Drake,Ari,ACTIVE,,,#27 Do Not Start,327.0,6.97,data_driven_thin,0.0,4.0,,4.75,4.75,,,,INSUFFICIENT,6.97,0.2
+Tomoyuki Sugano,Col,ACTIVE,,,#29 Do Not Start,351.0,6.34,data_driven_full,16.0,7.0,7.71,7.6,6.09,1.07,FF-6pp,False,VARIANCE,6.34,3.5
+Zac Thornton,NYM,ACTIVE,98.0,,,,,,,,,,,,,,UNRESOLVED,,10.3
+Cody Ponce,Tor,SIXTY_DAY_DL,,61-70,,,,,,,,,,,,,UNRESOLVED,,1.6
+Robby Snelling,Mia,SIXTY_DAY_DL,,51-60,,,,,,,,,,,,,UNRESOLVED,,0.7
+Cooper Hjerpe,StL,ACTIVE,,,#14 Do Not Start,,,,,,,,,,,,UNRESOLVED,,0.1
