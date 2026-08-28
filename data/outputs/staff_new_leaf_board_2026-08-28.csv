@@ -1,15 +1,15 @@
-name,role,model,g_pre,g_post,pre_fp,post_fp,l8,z,mech,persist,verdict
-Max Fried,SP,rp3 #31 @ 13.0,10,5,14.55,15.28,11.34,1.39,"velo+0.8,CH-5pp,FF+6pp",True,WATCH
-Tyler Glasnow,SP,rp3 #16 @ 14.4,7,1,17.56,11.5,16.8,,TBF 152/21,,INSUFFICIENT
-Jose Soriano,SP,rp3 #50 @ 12.1,20,6,12.32,11.5,10.91,0.34,"velo-0.8,whiff-5.2,SI+8pp,K%-4.6",True,DECLINE
-Parker Messick,SP,rp3 #34 @ 12.8,19,7,15.29,18.84,18.21,1.76,"velo+1.1,SI-6pp,CU-7pp,FF+20pp,FC-6pp",False,WATCH
-Reid Detmers,SP,rp3 #28 @ 13.1,19,7,13.03,19.16,16.91,1.2,K%+4.3,True,WATCH
-Shota Imanaga,SP,rp3 #36 @ 12.7,19,7,12.49,13.6,13.34,0.68,velo-0.8,True,DECLINE
-Eury Perez,SP,rp3 #26 @ 13.2,16,7,12.61,16.66,16.05,0.57,"SI+21pp,FF-18pp",False,VARIANCE
-Logan Henderson,SP,rp3 #42 @ 12.4,6,7,13.08,18.04,17.11,0.05,"FF+6pp,FC-5pp",True,VARIANCE
-Drew Rasmussen,SP,rp3 #22 @ 13.7,18,7,14.16,17.47,14.13,0.54,"FF+7pp,FC-8pp",False,VARIANCE
-Noah Cameron,SP,rp3 #77 @ 11.1,18,7,9.15,16.71,16.51,0.74,"whiff+4.2,FF-10pp,SL+7pp",True,WATCH
-Jhoan Duran,RP,rprs2 —,34,16,6.96,3.53,4.8,1.26,"swstr-4.8,SI-14pp,FS+17pp",,DECLINE
-Jacob Latz,RP,rprs2 —,34,12,6.71,7.11,7.88,0.13,SL-5pp,,VARIANCE
-Emilio Pagan,RP,rprs2 —,17,15,3.41,6.5,6.43,1.81,"swstr+3.3,FF+5pp",,WATCH
-Tanner Scott,RP,rprs2 —,41,17,5.06,4.92,4.78,2.38,—,,MIRAGE
+name,role,model,g_pre,g_post,pre_fp,post_fp,l8,z_kbb,z_fp,mech,persist,verdict
+Max Fried,SP,rp3 #31 @ 13.0,10,5,14.55,15.28,11.34,1.39,0.13,"velo+0.8,FF+6pp,CH-5pp",True,WATCH
+Tyler Glasnow,SP,rp3 #16 @ 14.4,7,1,17.56,11.5,16.8,,,TBF 152/21,,INSUFFICIENT
+Jose Soriano,SP,rp3 #50 @ 12.1,20,6,12.32,11.5,10.91,0.34,0.2,"velo-0.8,whiff-5.2,SI+8pp,K%-4.6",True,DECLINE
+Parker Messick,SP,rp3 #34 @ 12.8,19,7,15.29,18.84,18.21,1.76,1.44,"velo+1.1,FF+20pp,FC-6pp,CU-7pp,SI-6pp",False,WATCH
+Reid Detmers,SP,rp3 #28 @ 13.1,19,7,13.03,19.16,16.91,1.2,1.4,K%+4.3,True,WATCH
+Shota Imanaga,SP,rp3 #36 @ 12.7,19,7,12.49,13.6,13.34,0.68,0.28,velo-0.8,True,DECLINE
+Eury Perez,SP,rp3 #26 @ 13.2,16,7,12.61,16.66,16.05,0.57,1.13,"FF-18pp,SI+21pp",False,VARIANCE
+Logan Henderson,SP,rp3 #42 @ 12.4,6,7,13.08,18.04,17.11,0.05,1.52,"FF+6pp,FC-5pp",True,VARIANCE
+Drew Rasmussen,SP,rp3 #22 @ 13.7,18,7,14.16,17.47,14.13,0.54,0.66,"FF+7pp,FC-8pp",False,VARIANCE
+Noah Cameron,SP,rp3 #77 @ 11.1,18,7,9.15,16.71,16.51,0.74,1.1,"whiff+4.2,FF-10pp,SL+7pp",True,WATCH
+Jhoan Duran,RP,rprs2 —,34,16,6.96,3.53,4.8,1.26,,"swstr-4.8,FS+17pp,SI-14pp",,DECLINE
+Jacob Latz,RP,rprs2 —,34,12,6.71,7.11,7.88,0.13,,SL-5pp,,VARIANCE
+Emilio Pagan,RP,rprs2 —,17,15,3.41,6.5,6.43,1.81,,"swstr+3.3,FF+5pp",,WATCH
+Tanner Scott,RP,rprs2 —,41,17,5.06,4.92,4.78,2.38,,—,,MIRAGE
