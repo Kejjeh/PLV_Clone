@@ -12,8 +12,8 @@ headline stayed in CLAUDE.md, so each rule still fires from the auto-loaded
 file and the evidence is one hop away.
 
 WHY THE CEILING IS 320 AND NOT 200
-200 was aspirational and never met. The file must carry 15 numbered gotchas and
-18 numbered don't-dos — 33 rules that each have to fire on their own — plus the
+200 was aspirational and never met. The file must carry 16 numbered gotchas and
+18 numbered don't-dos — 34 rules that each have to fire on their own — plus the
 league constants, the scoring formulas and the model table. Compressed to one
 line per rule that is ~110 lines before anything else. A ceiling the file
 cannot meet is a ceiling that gets ignored, which is how it reached 635. 320 is
@@ -100,7 +100,7 @@ def test_no_numbered_rule_was_lost_in_the_extraction():
         return sorted({int(m) for m in re.findall(r"^(\d+)\. ", block, flags=re.M)})
 
     for heading, memory_file, expected_n in (
-        ("## Fast-path gotchas", "gotchas.md", 15),
+        ("## Fast-path gotchas", "gotchas.md", 16),
         ("## Don't do these", "dont_do.md", 18),
     ):
         start = text.index(heading)

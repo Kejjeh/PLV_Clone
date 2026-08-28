@@ -211,6 +211,7 @@ One line each; **full text, validation numbers and canonical cases in
 15. **Read the OUTCOME for hitters, the PROCESS for pitchers.** Hitter FP level
     beats every rate metric; SP K% beats the pitcher's own FP level. Pitchers
     and hitters INVERT on walks — the walk belongs to the batter.
+16. **TBD probable ≠ no start.** Read the rotation ORDER; median turn is stale.
 
 ## The P(win) decision layer — read before roster advice
 

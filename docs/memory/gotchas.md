@@ -189,3 +189,50 @@ Recurring rediscoveries that cost agents 3-5 tool calls each. Start here:
       `stabilization.NEVER_STABILIZES` listing pitcher `bb_pct`.
     Memo: `data/research/validation_runs/metric_reliability_2026-08-27.md`.
 
+
+16. **A TBD probable is not a no-start — read the rotation ORDER
+    (2026-08-28).**
+
+**Cost a wrong recommendation on 2026-08-28.** Josh's ESPN app showed a PP
+(probable-pitcher) badge on Tyler Glasnow for 8/30. The MLB Stats API
+`schedule` endpoint hydrated with `probablePitcher` returned NO Glasnow for
+8/29-8/31, and I read that absence as evidence he wasn't pitching. He was.
+LAD's 8/30 slot was simply listed **TBD** — unannounced, not empty. ESPN's PP
+badge projects the next turn into unannounced slots; the MLB feed only
+publishes what the club has announced (typically 1-2 days out). Neither is
+lying, and ABSENCE FROM THE FEED IS NOT ABSENCE OF A START.
+
+**The reliable read is the rotation ORDER**, which is directly observable by
+listing the team's game-by-game announced starters:
+
+    8/25 Glasnow -> 8/26 Sasaki -> 8/27 Yamamoto -> 8/28 Skubal
+      -> 8/29 Snell -> 8/30 TBD     (five-man cycle; T+5 returns to Glasnow)
+
+A named cycle that returns to your arm at T+N is far stronger evidence than a
+TBD slot is evidence against.
+
+**Second trap in the same miss:** I also leaned on the measured season-median
+turn (Glasnow 6.0 team games, from `lib/volume_semantics.sp_turn_map`) to
+argue his next start fell outside the period. That median was STALE — it came
+from an earlier six-man stretch, and LAD had since tightened to five. The turn
+measure is for pricing in-role volume (gotcha: it is the right tool for
+"how many starts per week when active"), NOT for predicting a specific date.
+For a specific date, read the order.
+
+**Consequence, and why it matters beyond one start.** The leverage engine
+assigns no event to an unannounced start, so an arm mid-cycle looks like he
+has ZERO starts left. That silently corrupts two things at once:
+  * the SP-cap count — Josh looked like 9/10 with a spare slot when he was
+    actually 10/10, exactly full; and
+  * the optimizer's drop side — `ADD x / DROP Tyler Glasnow` scored +8.8pp
+    purely because the engine credited Glasnow with nothing to lose.
+The recommendation that fell out (ADD José Soriano, +5.28pp) evaporated to
+**+0.47pp** once Glasnow's start was included, because the chronological cap
+just zeroes an 8/30 start to pay for the 8/29 one. Glasnow's start alone was
+worth **+9.5pp** (P(win) 69.2% -> 78.7%).
+
+**Rule:** before claiming a rostered SP has no start left in a period —
+especially before letting that claim justify a drop or a cap-slot add — list
+the team's announced starters in order and check whether the cycle returns to
+him inside the window. Treat a TBD slot in his turn as HIS until announced
+otherwise.
