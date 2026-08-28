@@ -21,6 +21,7 @@ PROJ = pd.read_csv(ROOT / 'data/outputs/xfp_rprs1_projections.csv')
 PROJ['ros_rank'] = PROJ['xfp_ros'].rank(ascending=False, method='min')
 
 from plv_clone.utils.name_match import safe_name_key as norm  # noqa: E402  OWNER — never re-derive
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 LOOKUP = {norm(r['name_api']): r for _, r in PROJ.iterrows()}
 
 PL_TOP50 = [
@@ -47,12 +48,12 @@ PL_TOP50 = [
 cnt = json.loads((ROOT / 'data/research/xfp_cache/pitcher_counting_stats_2026.json').read_text())
 cnt_df = pd.DataFrame(cnt)
 def parse_ip(v):
-    if v is None or pd.isna(v): return np.nan
-    s = str(v)
-    if '.' in s:
-        whole, frac = s.split('.', 1)
-        return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
-    return float(v)
+    # Delegates to the ONE canonical parser (issue #78).
+    # NaN (not 0.0) on a miss — this feeds pandas and a zero would be a real
+    # value in a correlation.
+    if v is None or pd.isna(v):
+        return np.nan
+    return _canon_parse_ip(v, default=np.nan)
 cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
 cnt_df['sv_pct'] = cnt_df['saves'] / cnt_df['gamesPitched'].replace(0, np.nan)
 cnt_df['gf_pct'] = cnt_df['gamesFinished'] / cnt_df['gamesPitched'].replace(0, np.nan)

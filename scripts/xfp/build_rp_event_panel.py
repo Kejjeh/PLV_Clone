@@ -26,6 +26,7 @@ from concurrent.futures import ThreadPoolExecutor
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.insert(0, os.path.join(ROOT, "src"))
 from plv_clone.fantasy.scoring import pitcher_fp  # noqa: E402
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 RPRS2 = os.path.join(ROOT, "data/outputs/xfp_rprs2_projections.csv")
 OUT = os.path.join(ROOT, "data/research/xfp_cache/rp_event_panel_2017_2026.csv")
 
@@ -37,8 +38,9 @@ FIELDS = ["pitcher", "year", "game_date", "gs", "ip", "k", "bb", "h", "er",
 
 
 def ip_to_float(s):
-    w, _, f = str(s).partition(".")
-    return int(w) + (int(f) / 3 if f else 0.0)
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(s, default=0.0)
 
 
 def fetch(pid_year):

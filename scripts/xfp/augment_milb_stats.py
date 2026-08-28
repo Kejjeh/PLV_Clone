@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import requests
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -78,19 +79,11 @@ def fetch_year_level(year: int, sport_id: int, page_size: int = 1000) -> list[di
 
 
 def ip_to_float(s) -> float:
-    s = str(s) if s is not None else ''
-    if not s or s == 'nan':
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    if s is None or str(s) in ('', 'nan'):
         return 0.0
-    try:
-        whole, _, frac = s.partition('.')
-        whole_i = int(whole or 0)
-        if frac == '1':
-            return whole_i + 1/3
-        if frac == '2':
-            return whole_i + 2/3
-        return float(s)
-    except Exception:
-        return 0.0
+    return _canon_parse_ip(s, default=0.0)
 
 
 def main():

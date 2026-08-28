@@ -22,6 +22,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.fantasy.scoring import pitcher_fp
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -160,12 +161,11 @@ def check_rprs2(report_lines):
     cnt = json.loads(cnt_path.read_text())
     cnt_df = pd.DataFrame(cnt)
     def parse_ip(v):
-        if v is None or pd.isna(v): return np.nan
-        s = str(v)
-        if '.' in s:
-            whole, frac = s.split('.', 1)
-            return float(whole) + (1/3 if frac.startswith('1') else 2/3 if frac.startswith('2') else 0)
-        return float(v)
+        # Delegates to the ONE canonical parser (issue #78). NaN (not 0.0) on a
+        # miss — this is Series-mapped and a zero would be a real value.
+        if v is None or pd.isna(v):
+            return np.nan
+        return _canon_parse_ip(v, default=np.nan)
     cnt_df['ip'] = cnt_df['inningsPitched'].map(parse_ip)
     cnt_df['fp_actual'] = pitcher_fp(
         k=cnt_df['strikeOuts'], ip=cnt_df['ip'], h=cnt_df['hits'],

@@ -31,6 +31,7 @@ import pandas as pd
 import requests
 
 from plv_clone.fantasy.scoring import pitcher_fp, hitter_fp
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -57,15 +58,10 @@ def _get(path: str, params: dict | None = None, retries: int = 3) -> dict:
 
 
 def _ip_to_float(ip_str: str) -> float:
-    """'6.2' → 6.667 (MLB 'outs' notation: .1 = 1/3 IP)."""
-    try:
-        whole, frac = str(ip_str).split('.')
-        return int(whole) + int(frac) / 3
-    except Exception:
-        try:
-            return float(ip_str)
-        except Exception:
-            return 0.0
+    """'6.2' -> 6.667 (MLB 'outs' notation: .1 = 1/3 IP)."""
+    # Delegates to the ONE canonical parser (issue #78). Fifteen private
+    # copies of this logic is how two of them drifted (PR #77).
+    return _canon_parse_ip(ip_str, default=0.0)
 
 
 def game_pks_for_date(game_date: date) -> list[int]:

@@ -240,42 +240,51 @@ def get_all_teams() -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+#: The FULL pool. Never a per-position pull, never a smaller cap — see
+#: get_free_agents and feedback_fa_pool_size_cap.md.
+FA_POOL_SIZE = 2000
+
+
 def get_free_agents(
     position: Optional[str] = None,
-    size: int = 200,
+    size: int = FA_POOL_SIZE,
 ) -> pd.DataFrame:
     """
     Return DataFrame of free agents available in your league.
 
     Args:
         position: ESPN position string, e.g. "SP", "RP", "C", "1B", "OF".
-                  None = all positions.
-        size: max number of free agents to return.
+                  None = all positions. Applied as a MANUAL post-filter over
+                  the full pool — never pushed to ESPN as a position_id.
+        size: pool depth to request. Defaults to the full 2000.
 
     Columns: player_name, position, pro_team, percent_owned
+
+    TWO CORRECTIONS, 2026-08-27 (issue #74, don't-do #6):
+
+    * This used to pass ``position_id`` to ESPN, which silently drops
+      low-owned high-FP candidates — the exact pattern
+      feedback_fa_pool_size_cap.md forbids. The manual filter below already
+      existed as the fallback for older espn-api versions; it is now the only
+      path, so the correct behaviour is no longer conditional on the library.
+    * The default was ``size=200``. Any caller that omitted it got a 200-deep
+      pool. LeagueState.available_fa bakes 2000 for precisely this reason.
+
+    NOTE: unlike ``LeagueState.available_fa`` this does NOT cross-reference
+    team rosters, so it can return a player another team already holds (the
+    Connelly Early case). Prefer ``available_fa`` for anything that decides a
+    pickup; this remains for the app/ dashboard's simpler read.
     """
     league = _get_league()
 
-    # ESPN position IDs for baseball
-    _pos_map = {
-        "C": 0, "1B": 2, "2B": 4, "3B": 5, "SS": 6,
-        "OF": 7, "DH": 17, "SP": 14, "RP": 15, "P": 13,
-    }
-
-    kwargs: dict = {"size": size}
-    if position and position.upper() in _pos_map:
-        kwargs["position_id"] = _pos_map[position.upper()]
-
-    try:
-        fas = league.free_agents(**kwargs)
-    except TypeError:
-        # Older espn-api versions don't support position_id
-        fas = league.free_agents(size=size)
+    # ALWAYS the full pool + a manual filter. Position is never pushed to the
+    # ESPN endpoint (see the docstring).
+    fas = league.free_agents(size=size)
 
     rows = []
     for player in fas:
         pos = getattr(player, "position", "")
-        # Filter manually if position_id not supported
+        # The position filter — now the ONLY path, not a legacy fallback.
         if position and pos != position.upper():
             continue
         rows.append({

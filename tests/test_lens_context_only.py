@@ -133,3 +133,53 @@ def test_registry_columns_are_disjoint_across_families():
             assert c not in seen, f"column {c!r} shared by {seen[c]} and {fam}"
             seen[c] = fam
     assert CONTEXT_ONLY_COLUMNS  # non-empty
+
+
+# ── the lens / validated-signal overlap (issue #67) ──────────────────────────
+
+def test_a_column_in_both_registries_is_never_a_shipped_feature():
+    """`stuff_plus` is a context-only column AND a PASS validated signal.
+
+    That is not a contradiction — the registries describe different things
+    that share a name. validated_signals records that the FEATURE cleared the
+    Rule 9 gate for rp3 (+0.0095 vs a +0.005 bar); this lens registry records
+    that the COLUMN the serializers emit is display-only. Forcing them
+    disjoint would mean deleting a true validation record.
+
+    The invariant that actually matters is the third leg: a column carrying
+    BOTH labels must not be in any model's feature list. It passed the gate
+    and was never shipped; shipping it is a legitimate future decision, but it
+    has to leave the lens registry in the same commit.
+
+    Direction 1 above already covers this for the models it discovers — this
+    names the overlap explicitly so the next reader does not have to work out
+    whether it is a bug. (Added 2026-08-27, issue #67.)
+    """
+    from plv_clone.models.xfp.validated_signals import load_registry
+
+    both = CONTEXT_ONLY_COLUMNS & set(load_registry())
+    for column in sorted(both):
+        leaked = [m for m, feats in ALL_MODEL_FEATS.items() if column in feats]
+        assert not leaked, (
+            f"{column!r} is registered BOTH as a context-only lens column and "
+            f"as a validated signal, and it is now a feature of {leaked}. "
+            f"Pick one: ship it (remove it from LENS_FAMILIES) or keep it as a "
+            f"lens (remove it from the feature list). It cannot be both.")
+
+
+def test_the_overlap_is_documented_where_it_would_be_found():
+    """A reader hitting the overlap must find the explanation next to it."""
+    src = (ROOT / "scripts" / "xfp" / "lib" / "lens_registry.py").read_text(
+        encoding="utf-8") if 'ROOT' in dir() else None
+    if src is None:
+        from pathlib import Path as _P
+        src = (_P(__file__).resolve().parent.parent / "scripts" / "xfp" / "lib"
+               / "lens_registry.py").read_text(encoding="utf-8")
+    from plv_clone.models.xfp.validated_signals import load_registry
+    both = CONTEXT_ONLY_COLUMNS & set(load_registry())
+    if not both:
+        pytest.skip("no overlap to document")
+    assert "issue #67" in src, (
+        "lens_registry no longer explains why a column can appear in both "
+        "registries; that explanation is what stops the next audit filing it "
+        "as a bug again")

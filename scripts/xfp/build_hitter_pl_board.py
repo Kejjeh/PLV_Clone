@@ -32,7 +32,8 @@ Usage:
       --old-pl-json data/research/pl_cache/pl_hitters_top150_2026-07-15.json
 """
 import sys, os, json, argparse, unicodedata
-sys.path.insert(0, '.')
+_REPO_ROOT = __import__('pathlib').Path(__file__).resolve().parents[2]  # repo root, NOT cwd (issue #72)
+sys.path.insert(0, str(_REPO_ROOT))
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 import numpy as np

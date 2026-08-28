@@ -19,6 +19,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import requests
+from plv_clone.fantasy.scoring import parse_ip as _canon_parse_ip  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
@@ -96,8 +97,14 @@ def derive_rates(df: pd.DataFrame) -> pd.DataFrame:
     ip_str = df['inningsPitched'].astype(str)
 
     def ip_to_float(s: str) -> float:
-        if not s or s == 'nan':
+
+        # Delegates to the ONE canonical parser (issue #78).
+
+        if not s or str(s) == 'nan':
+
             return 0.0
+
+        return _canon_parse_ip(s, default=0.0)
         try:
             whole, _, frac = s.partition('.')
             whole_i = int(whole or 0)
