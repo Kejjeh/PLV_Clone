@@ -73,6 +73,7 @@ from build_matchup_dashboard import (  # noqa: E402
     fetch_schedules_by_team,
     build_sp_starts_by_pitcher,
     project_player,
+    fetch_completed_games,
     player_mlbam_lookup,
     _resolve_mlbam_via_api,
     _resolve_pitcher_mlbam,
@@ -388,7 +389,8 @@ def build_state(verbose=True, banked_override: int | None = None):
                 continue
             proj = project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                   rh3_map, rp3_map, rp3_by_mlbam, rprs2_map,
-                                  ts_map, today, week_end)
+                                  ts_map, today, week_end,
+                                  completed_games=completed_games)
             mlbam = resolve_player_mlbam(p)
             pos = (p.position or '?')
             is_sp_proj = any(b.get('type') == 'start' for b in proj.get('breakdown', []))
@@ -447,6 +449,10 @@ def build_state(verbose=True, banked_override: int | None = None):
         sp_events.sort(key=lambda e: (e['date'] or '9999', e['name']))
         return hitters, rps, sp_events
 
+    # Games already FINAL today are in the live WTD score; projecting them
+    # again double-counts (2026-08-29). Fetched once, threaded into every
+    # project_player call on both sides.
+    completed_games = fetch_completed_games(today.isoformat(), week_end.isoformat())
     my_h, my_rp, my_sp = _classify(mu['my_lineup'], 'mine')
     opp_h, opp_rp, opp_sp = _classify(mu['opp_lineup'], 'opp')
 
@@ -513,6 +519,7 @@ def build_state(verbose=True, banked_override: int | None = None):
         # (fixed 2026-08-28) now correctly counts more games.
         'games_per_day': _games_per_day(schedules_by_team, today, week_end),
         'schedules_by_team': schedules_by_team, 'mlb_sched_all': mlb_sched_all,
+        'completed_games': completed_games,
         'my_hitters': my_h, 'my_rps': my_rp, 'my_sp_events': my_sp,
         'opp_hitters': opp_h, 'opp_rps': opp_rp, 'opp_sp_events': opp_sp,
         'banked_mine': banked_mine, 'banked_opp': banked_opp,

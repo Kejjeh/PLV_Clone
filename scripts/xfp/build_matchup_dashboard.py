@@ -1049,6 +1049,73 @@ def fetch_schedules_by_team(team_ids, start_date, end_date):
     return by_team
 
 
+#: MLB StatsAPI detailedState values meaning "this game is over, its fantasy
+#: points are already banked in the live ESPN score".
+COMPLETED_GAME_STATES = {'Final', 'Game Over', 'Completed Early'}
+
+
+def fetch_completed_games(start_date, end_date):
+    """{(mlb_team_id, 'YYYY-MM-DD', ordinal): True} for games already FINAL.
+
+    Why this exists (2026-08-29): `project_player` projects every game from
+    TODAY through week_end, but ESPN's live score ALREADY contains whatever
+    today's finished games produced. Projecting them again counts them twice —
+    the roster's realized points land in the WTD score AND in the "remaining"
+    projection. On period 21 this inflated P(win) by re-projecting four
+    completed Saturday games.
+
+    Only FINAL games are reported, never merely-started ones. An in-progress
+    game is deliberately left projectable because (a) only part of it is in the
+    live score and (b) the SP-cap arithmetic depends on an in-flight start
+    staying in `my_sp_events` until ESPN's statId-33 absorbs it on finalize
+    (see the banked-staleness note in leverage_engine.build_state).
+
+    `ordinal` is the game's index within that team's day, ordered by first
+    pitch — the only way to tell the halves of a split doubleheader apart when
+    one is final and the other has not started. It is computed the same way on
+    the schedule side, so the two line up.
+    """
+    url = (f'https://statsapi.mlb.com/api/v1/schedule?sportId=1'
+           f'&startDate={start_date}&endDate={end_date}')
+    try:
+        data = _fetch_json(url)
+    except Exception as e:
+        _warn_except('mlb_completed_games', e)
+        return {}
+    per_team_day = {}
+    for d_block in data.get('dates', []):
+        for g in d_block.get('games', []):
+            state = (g.get('status', {}) or {}).get('detailedState', '')
+            for side in ('home', 'away'):
+                tid = g['teams'][side]['team']['id']
+                per_team_day.setdefault((tid, d_block['date']), []).append(
+                    (g.get('gameDate') or '', state))
+    out = {}
+    for (tid, day), entries in per_team_day.items():
+        for i, (_ts, state) in enumerate(sorted(entries)):
+            if state in COMPLETED_GAME_STATES:
+                out[(tid, day, i)] = True
+    return out
+
+
+def drop_completed(games, mlb_id, completed):
+    """Games minus the ones already FINAL (see fetch_completed_games).
+
+    `games` must be one team's list in schedule order; the ordinal is recomputed
+    per date exactly as fetch_completed_games does.
+    """
+    if not completed:
+        return games
+    out, seen = [], {}
+    for g in games:
+        i = seen.get(g['date'], 0)
+        seen[g['date']] = i + 1
+        if completed.get((mlb_id, g['date'], i)):
+            continue
+        out.append(g)
+    return out
+
+
 def player_mlbam_lookup(name, cache={}):
     if not cache:
         for csv, col in [(CACHE / 'hitters_multiyr_2015_2026.csv', 'batter'),
@@ -1246,7 +1313,7 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end,
 
 def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
                      rp3_map, rp3_by_mlbam, rprs2_map, ts_map, today, week_end,
-                     adj=None):
+                     adj=None, completed_games=None):
     """Schedule + opp + role aware projection. Returns dict with fp, units,
        per-game/start breakdown, sigma_total, and any badges.
 
@@ -1268,6 +1335,10 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
     # WTD score from ESPN reflects only what's been scored at build time, so
     # today's confirmed starts must contribute to the rest-of-week projection.
     rem = [g for g in games if today_s <= g['date'] <= week_end_s]
+    # ...minus games already FINAL: their points are in the live ESPN score, so
+    # projecting them again double-counts (2026-08-29). Pass completed_games
+    # from fetch_completed_games(); omitting it keeps the old, inflated behavior.
+    rem = drop_completed(rem, mlb_id, completed_games)
 
     # MA6 — IL-window pro-rate. #10: prefer upstream-cached _IL_RETURNS map
     # (built from get_injury_details()) since `player.returnDate` is usually None.
@@ -3414,13 +3485,21 @@ def main():
 
     # Project each player
     print('  projecting (schedule + opp-SP + role + cap aware)...')
+    # Games already FINAL are in the live ESPN score; projecting them again
+    # double-counts them (2026-08-29).
+    completed_games = fetch_completed_games(today.isoformat(), week_end.isoformat())
+    if completed_games:
+        print(f'  {len(completed_games)} game(s) already final in-window — '
+              f'excluded from remaining projection')
     my_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                          rh3_map, rp3_map, rp3_by_mlbam,
-                                         rprs2_map, ts_map, today, week_end, adj=adj)
+                                         rprs2_map, ts_map, today, week_end, adj=adj,
+                                         completed_games=completed_games)
                for p in mu['my_lineup']}
     opp_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                           rh3_map, rp3_map, rp3_by_mlbam,
-                                          rprs2_map, ts_map, today, week_end, adj=adj)
+                                          rprs2_map, ts_map, today, week_end, adj=adj,
+                                          completed_games=completed_games)
                 for p in mu['opp_lineup']}
 
     # Apply SP cap (period-aware: 10/week, 16 for the ASG period, 20 for a
@@ -3530,11 +3609,13 @@ def main():
         # Reproject under shadow state
         my_proj_s = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                               rh3_map, rp3_map, rp3_by_mlbam,
-                                              rprs2_map, ts_map, today, week_end, adj=shadow_adj)
+                                              rprs2_map, ts_map, today, week_end, adj=shadow_adj,
+                                              completed_games=completed_games)
                      for p in mu['my_lineup']}
         opp_proj_s = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                                 rh3_map, rp3_map, rp3_by_mlbam,
-                                                rprs2_map, ts_map, today, week_end, adj=shadow_adj)
+                                                rprs2_map, ts_map, today, week_end, adj=shadow_adj,
+                                                completed_games=completed_games)
                       for p in mu['opp_lineup']}
         apply_sp_cap(my_proj_s, cap=sp_cap); apply_sp_cap(opp_proj_s, cap=sp_cap)
         # Slot-aware filter for shadow log (mirrors live aggregation 2026-06-03)

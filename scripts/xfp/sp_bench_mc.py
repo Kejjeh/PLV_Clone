@@ -44,6 +44,7 @@ from build_matchup_dashboard import (
     _norm,
     _fetch_json,
     project_player,
+    fetch_completed_games,
     apply_sp_cap,
     MAX_SP_STARTS_PER_WEEK,
     ESPN_TO_MLB_TEAM,
@@ -572,13 +573,16 @@ def main():
     print('  projecting all players via dashboard logic...')
     ts_map_for_proj = {t: {'bat_index': d['bat_index'], 'pit_index': 1.0}
                         for t, d in ts_map.items()}
+    completed_games = fetch_completed_games(today.isoformat(), week_end.isoformat())
     my_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                          rh3_map, rp3_map, rp3_by_mlbam, rprs2_map,
-                                         ts_map_for_proj, today, week_end)
+                                         ts_map_for_proj, today, week_end,
+                                         completed_games=completed_games)
                for p in mu['my_lineup']}
     opp_proj = {p.name: project_player(p, schedules_by_team, sp_starts_by_pitcher,
                                           rh3_map, rp3_map, rp3_by_mlbam, rprs2_map,
-                                          ts_map_for_proj, today, week_end)
+                                          ts_map_for_proj, today, week_end,
+                                          completed_games=completed_games)
                 for p in mu['opp_lineup']}
 
     # Remaining SP starts (mine + opp) — these are what the cap operates on

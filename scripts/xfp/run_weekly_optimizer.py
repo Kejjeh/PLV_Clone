@@ -225,7 +225,8 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
                                   starts_map,
                                   maps['rh3'], maps['rp3'], maps['rp3_by_mlbam'],
                                   maps['rprs2'], maps['ts'],
-                                  state['today'], state['week_end'])
+                                  state['today'], state['week_end'],
+                                  completed_games=state.get('completed_games'))
         except Exception as exc:
             # issue #39: a silent per-row drop can empty a whole bucket and
             # report "no pitching upgrade exists" — collect and gate below.
