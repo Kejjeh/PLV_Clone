@@ -105,6 +105,13 @@ from plv_clone.utils.name_match import safe_name_key as _ckey  # noqa: E402
 
 HIT_POS = {'C', '1B', '2B', '3B', 'SS', 'OF', 'LF', 'CF', 'RF', 'DH'}
 
+# FA pitchers granted rotation-gap PREDICTION in build_candidates (top-N by rp3
+# per-start rate). Confirmed probables are free for the whole pool; prediction
+# is per-pitcher HTTP, so this bounds optimizer wall-clock at ~40 extra calls
+# instead of ~2000 (the 2026-08-29 hang). 40 comfortably covers every arm that
+# could crack a top-8 candidate pool.
+FA_PREDICT_TOP_N = 40
+
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Candidate pool
@@ -184,10 +191,26 @@ def build_candidates(state, top_n: int = 8, verbose: bool = True,
 
     starts_map = dict(state['sp_starts_by_pitcher'])
     if fa_pitcher_ids:
+        # Rotation-gap prediction costs 1-2 sequential HTTP calls PER pitcher,
+        # and this set is the whole FA pitcher pool (~1000 ids) — unbounded it
+        # is a ~30-minute silent stall (the 2026-08-29 daily-briefing hang).
+        # Confirmed probables stay free for EVERYONE (one schedule call);
+        # prediction is granted only to the FA arms rp3 rates as plausible
+        # streamers, plus any --include name (forced candidates must project).
+        rp3_by_mlbam = state['proj_maps'].get('rp3_by_mlbam') or {}
+        ranked = sorted(
+            (pid for pid in fa_pitcher_ids if pid in rp3_by_mlbam),
+            key=lambda pid: -(rp3_by_mlbam[pid].get('per_start') or 0))
+        predict_ids = set(ranked[:FA_PREDICT_TOP_N])
+        if _inc_keys:
+            predict_ids |= {int(m) for p, b, *_ in pool
+                            if b in ('SP', 'RP') and _ckey(p.name) in _inc_keys
+                            and (m := resolve_player_mlbam(p))}
         try:
             starts_map.update(build_sp_starts_by_pitcher(
                 fa_pitcher_ids, state['schedules_by_team'],
-                state['today'], state['week_end']))
+                state['today'], state['week_end'],
+                predict_ids=predict_ids))
         except Exception as exc:
             print(f'  WARN FA SP start-map build failed ({exc}) — '
                   f'FA SP adds will project 0 starts')
@@ -755,12 +778,26 @@ def assemble_plan(res: dict, base_p: float) -> dict:
 
 
 def build_payload(*, plan, res, base_p, regime, period, sims, seed,
-                  cap_remaining, wv) -> dict:
+                  cap_remaining, wv, generated_at=None, week_start=None,
+                  week_end=None, banked=None, sp_cap=None,
+                  banked_provisional=None) -> dict:
     """The weekly_optimizer.json payload — extracted from main() so its shape
-    (which the Monday brief consumes) is testable without ESPN."""
+    (which the Monday brief consumes) is testable without ESPN.
+
+    The freshness block (generated_at/week window/banked/sp_cap) exists because
+    consumers used to have only the file mtime to judge staleness: the
+    2026-08-29 daily briefing found a 2am payload whose cap_remaining no longer
+    matched the live banked count and had to infer that from timestamps. Now a
+    consumer checks period + banked-vs-live directly and re-runs when they
+    disagree."""
     return {
         'base_pwin': round(base_p, 6), 'regime': regime, 'period': period,
         'sims': sims, 'seed': seed,
+        'generated_at': generated_at,
+        'week_start': str(week_start) if week_start else None,
+        'week_end': str(week_end) if week_end else None,
+        'banked': banked, 'sp_cap': sp_cap,
+        'banked_provisional': banked_provisional,
         'cap_remaining': cap_remaining,
         # plan[] semantics (fix 2026-07-30): `dpwin` is each move's MARGINAL
         # gain given the moves before it — the marginals sum to
@@ -809,6 +846,13 @@ def build_payload(*, plan, res, base_p, regime, period, sims, seed,
 # ─────────────────────────────────────────────────────────────────────────────
 
 def main() -> int:
+    # Line-buffer stdout: agents/cron run this piped, where full buffering sat
+    # on every progress line for 25+ minutes during the 2026-08-29 stall and
+    # made a slow network loop indistinguishable from a hang.
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except Exception:
+        pass
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--sims', type=int, default=10000)
     ap.add_argument('--seed', type=int, default=7)
@@ -951,7 +995,13 @@ def main() -> int:
     payload = build_payload(plan=plan, res=res, base_p=base_p, regime=regime,
                             period=state['period'], sims=args.sims,
                             seed=args.seed,
-                            cap_remaining=state['cap_remaining_mine'], wv=wv)
+                            cap_remaining=state['cap_remaining_mine'], wv=wv,
+                            generated_at=datetime.now().isoformat(timespec='seconds'),
+                            week_start=state['week_start'],
+                            week_end=state['week_end'],
+                            banked=state['banked_mine'],
+                            sp_cap=state['sp_cap'],
+                            banked_provisional=state.get('banked_provisional'))
 
     if not args.no_log and res['rounds']:
         try:

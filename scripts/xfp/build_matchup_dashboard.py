@@ -1128,9 +1128,15 @@ def _resolve_pitcher_mlbam(name, *, team=None, role=None):
             or _resolve_mlbam_via_api(name))
 
 
-def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
+def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end,
+                               predict_ids=None):
     """Adapter — call `fetch_week_probables` once and reshape the result into
     `{mlbam: [game_dict]}` matching the original SP-start payload shape.
+
+    ``predict_ids`` (None = everyone) bounds who gets rotation-gap PREDICTION —
+    confirmed probables are one schedule call for any pool size, but prediction
+    is 1-2 HTTP calls per pitcher. Pass it whenever ``pitcher_ids`` is a large
+    speculative pool (the FA scan) rather than a roster.
 
     Each game_dict carries the same keys the dashboard's downstream rendering
     consumes: `date`, `opp_team`, `is_home`, `my_probable_id`,
@@ -1150,7 +1156,7 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
     try:
         wp = fetch_week_probables(
             week_start=week_start, week_end=week_end,
-            pitcher_ids=pid_set,
+            pitcher_ids=pid_set, predict_ids=predict_ids,
         )
     except Exception as e:
         _warn_except('week_probables', e)

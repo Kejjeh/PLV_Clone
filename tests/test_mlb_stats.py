@@ -435,3 +435,63 @@ def test_rotation_gap_ignores_il_and_all_star_break_intervals():
     )
     # gap 6 from the 7/28 confirmed anchor -> 8/3, outside the window -> no start.
     assert out == [], f"expected no in-window prediction, got {out}"
+
+
+# ── predict_ids: bounding the per-pitcher HTTP fan-out (2026-08-29 hang) ─────
+
+def test_fetch_week_probables_predict_ids_skips_per_pitcher_calls():
+    """predict_ids bounds rotation-gap prediction to a subset: pitchers outside
+    it must trigger NO /people or gameLog calls (the harness raises on any
+    unrouted URL), while their MLB-confirmed probables still come through from
+    the single schedule call. This is the seam that turned the optimizer's FA
+    scan from ~2000 sequential HTTP calls into ~1."""
+    week_start = date(2026, 5, 22)
+    week_end = date(2026, 5, 25)
+    schedule_payload = {"dates": [{"date": "2026-05-24", "games": [
+        {
+            "gameDate": "2026-05-24T19:00:00Z",
+            "teams": {
+                "home": {"team": {"id": 139, "abbreviation": "TB"},
+                         "probablePitcher": {"id": 111111}},
+                "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+            },
+        },
+    ]}]}
+
+    # 111111 is confirmed via the schedule; 222222 has no confirmed start and
+    # is NOT in predict_ids — any /people/222222 or gameLog fetch would hit the
+    # harness's unexpected-URL assertion. Only the confirmed pitcher's gamelog
+    # is routed (it IS in predict_ids, and prediction may extend his week).
+    result = fetch_week_probables(
+        week_start=week_start, week_end=week_end,
+        pitcher_ids=[111111, 222222],
+        predict_ids=[111111],
+        http_get=_make_http_get({
+            "schedule?sportId=1": schedule_payload,
+            "people/111111/stats": {"stats": [{"splits": []}]},
+        }),
+    )
+
+    assert result.starts == {(111111, date(2026, 5, 24)): "BAL"}
+    assert (111111, date(2026, 5, 24)) in result.confirmed_keys
+
+
+def test_fetch_week_probables_predict_ids_empty_is_confirmed_only():
+    """predict_ids=[] -> zero per-pitcher calls for the whole pool; confirmed
+    probables from the one schedule call are still returned."""
+    schedule_payload = {"dates": [{"date": "2026-05-24", "games": [
+        {
+            "gameDate": "2026-05-24T19:00:00Z",
+            "teams": {
+                "home": {"team": {"id": 139, "abbreviation": "TB"},
+                         "probablePitcher": {"id": 111111}},
+                "away": {"team": {"id": 110, "abbreviation": "BAL"}},
+            },
+        },
+    ]}]}
+    result = fetch_week_probables(
+        week_start=date(2026, 5, 22), week_end=date(2026, 5, 25),
+        pitcher_ids=[111111, 222222], predict_ids=[],
+        http_get=_make_http_get({"schedule?sportId=1": schedule_payload}),
+    )
+    assert result.starts == {(111111, date(2026, 5, 24)): "BAL"}

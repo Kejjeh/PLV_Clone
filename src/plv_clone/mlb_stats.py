@@ -331,6 +331,7 @@ def fetch_week_probables(
     week_start: date,
     week_end: date,
     pitcher_ids: Iterable[int],
+    predict_ids: Iterable[int] | None = None,
     http_get: Callable[..., Any] = _default_http_get,
 ) -> WeekProbables:
     """Confirmed probables + rotation-gap predictions, restricted to ``pitcher_ids``.
@@ -338,8 +339,19 @@ def fetch_week_probables(
     Bug B's fix: a pitcher with no confirmed late-week probable still gets a
     prediction folded in via :func:`predict_rotation_starts` so downstream
     cap math doesn't undercount.
+
+    ``predict_ids`` bounds WHO gets rotation-gap prediction. Confirmed probables
+    cost ONE schedule call regardless of pool size, but prediction costs 1-2
+    sequential HTTP calls PER pitcher (/people team-resolution fallback + a
+    season gameLog). Passing the full 2000-player FA pool here (~1000 pitcher
+    ids) is a ~30-minute silent stall — the 2026-08-29 daily-briefing optimizer
+    hang. None (the default) predicts for everyone, which is correct for the
+    small rostered sets every dashboard/engine call site passes; a caller with
+    a large speculative pool must bound it.
     """
     pitcher_set = {int(p) for p in pitcher_ids}
+    predict_set = (pitcher_set if predict_ids is None
+                   else pitcher_set & {int(p) for p in predict_ids})
     sched_url = (
         f"{_STATSAPI}/schedule?sportId=1"
         f"&startDate={week_start.isoformat()}&endDate={week_end.isoformat()}"
@@ -399,7 +411,8 @@ def fetch_week_probables(
     # Fallback: pitchers with no confirmed in-window start aren't resolved by
     # the schedule walk above (McClanahan case — Sunday probable not yet
     # posted). Hit /people/{id}?hydrate=currentTeam to pull their team_id.
-    for pid in pitcher_set - pid_team_id.keys():
+    # Only prediction needs a team schedule, so only predict_set pays the call.
+    for pid in predict_set - pid_team_id.keys():
         try:
             person = http_get(
                 f"{_STATSAPI}/people/{pid}?hydrate=currentTeam"
@@ -438,7 +451,7 @@ def fetch_week_probables(
     # pure and per-pitcher, so nothing inside it can see that another pitcher
     # was already predicted into the same game (#10).
     pred_rows: list[dict] = []
-    for pid in pitcher_set:
+    for pid in predict_set:
         log_url = (
             f"{_STATSAPI}/people/{pid}/stats?stats=gameLog&group=pitching"
             f"&season={week_start.year}"
