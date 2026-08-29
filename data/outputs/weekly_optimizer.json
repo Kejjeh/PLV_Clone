@@ -1,34 +1,34 @@
 {
-  "base_pwin": 0.693333,
+  "base_pwin": 0.9106,
   "regime": "LEADING",
   "period": 21,
-  "sims": 3000,
+  "sims": 10000,
   "seed": 7,
-  "cap_remaining": 7,
-  "plan_source": "pair_check",
-  "plan_total_dpwin": 0.01,
-  "plan_pwin_final": 0.703333,
+  "cap_remaining": 4,
+  "plan_source": "greedy",
+  "plan_total_dpwin": 0.05470000000000008,
+  "plan_pwin_final": 0.9653,
   "plan": [
     {
-      "add": "Luke Weaver",
-      "add_bucket": "RP",
-      "drop": "Tanner Scott",
-      "drop_bucket": "RP",
-      "dpwin": 0.008999666666666628,
-      "mc_se": 0.008348,
-      "pwin_after": 0.702333,
-      "dpwin_from_base": 0.008999666666666628,
+      "add": "Shane Drohan",
+      "add_bucket": "SP",
+      "drop": "Tyler Glasnow",
+      "drop_bucket": "SP",
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219,
+      "pwin_after": 0.9495,
+      "dpwin_from_base": 0.0389,
       "dtitle_equity_pp": null
     },
     {
-      "add": "Kenley Jansen",
-      "add_bucket": "RP",
-      "drop": "Jacob Latz",
-      "drop_bucket": "RP",
-      "dpwin": 0.0010003333333333721,
-      "mc_se": 0.00834,
-      "pwin_after": 0.703333,
-      "dpwin_from_base": 0.01,
+      "add": "Jarren Duran",
+      "add_bucket": "H",
+      "drop": "Reid Detmers",
+      "drop_bucket": "SP",
+      "dpwin": 0.015800000000000036,
+      "mc_se": 0.00183,
+      "pwin_after": 0.9653,
+      "dpwin_from_base": 0.0547,
       "dtitle_equity_pp": null
     }
   ],
@@ -43,123 +43,124 @@
   },
   "top_single_moves": [
     {
-      "add": "Luke Weaver",
-      "drop": "Tanner Scott",
-      "dpwin": 0.008999666666666628,
-      "mc_se": 0.008348
+      "add": "Jose Soriano",
+      "drop": "Tyler Glasnow",
+      "dpwin": 0.040200000000000014,
+      "mc_se": 0.002163
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Jacob Latz",
-      "dpwin": 0.008333666666666684,
-      "mc_se": 0.008353
+      "add": "Jose Soriano",
+      "drop": "Reid Detmers",
+      "dpwin": 0.040200000000000014,
+      "mc_se": 0.002163
     },
     {
-      "add": "Luke Weaver",
-      "drop": "Jacob Latz",
-      "dpwin": 0.006333666666666682,
-      "mc_se": 0.008369
+      "add": "Jose Soriano",
+      "drop": "Eury Perez",
+      "dpwin": 0.040200000000000014,
+      "mc_se": 0.002163
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Tanner Scott",
-      "dpwin": 0.00433366666666668,
-      "mc_se": 0.008385
+      "add": "Jose Soriano",
+      "drop": "Logan Henderson",
+      "dpwin": 0.040200000000000014,
+      "mc_se": 0.002163
     },
     {
-      "add": "Nate Lavender",
-      "drop": "Jacob Latz",
-      "dpwin": 0.001999666666666622,
-      "mc_se": 0.008403
-    },
-    {
-      "add": "Adrian Morejon",
-      "drop": "Jacob Latz",
-      "dpwin": 0.00033366666666667655,
-      "mc_se": 0.008416
-    },
-    {
-      "add": null,
+      "add": "Jose Soriano",
       "drop": "Noah Cameron",
-      "dpwin": -3.33333333379926e-07,
-      "mc_se": 0.008419
+      "dpwin": 0.040200000000000014,
+      "mc_se": 0.002163
     },
     {
-      "add": "Tyler Mahle",
+      "add": "Carlos Rodon",
+      "drop": "Tyler Glasnow",
+      "dpwin": 0.039000000000000035,
+      "mc_se": 0.002188
+    },
+    {
+      "add": "Carlos Rodon",
+      "drop": "Reid Detmers",
+      "dpwin": 0.039000000000000035,
+      "mc_se": 0.002188
+    },
+    {
+      "add": "Carlos Rodon",
+      "drop": "Eury Perez",
+      "dpwin": 0.039000000000000035,
+      "mc_se": 0.002188
+    },
+    {
+      "add": "Carlos Rodon",
+      "drop": "Logan Henderson",
+      "dpwin": 0.039000000000000035,
+      "mc_se": 0.002188
+    },
+    {
+      "add": "Carlos Rodon",
       "drop": "Noah Cameron",
-      "dpwin": -3.33333333379926e-07,
-      "mc_se": 0.008419
+      "dpwin": 0.039000000000000035,
+      "mc_se": 0.002188
     },
     {
-      "add": "Nate Lavender",
-      "drop": "Tanner Scott",
-      "dpwin": -0.0020003333333333817,
-      "mc_se": 0.008434
+      "add": "Shane Drohan",
+      "drop": "Tyler Glasnow",
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219
     },
     {
-      "add": "Adrian Morejon",
-      "drop": "Tanner Scott",
-      "dpwin": -0.0020003333333333817,
-      "mc_se": 0.008434
-    },
-    {
-      "add": "Luke Weaver",
-      "drop": "Jhoan Duran",
-      "dpwin": -0.0040003333333333835,
-      "mc_se": 0.008449
+      "add": "Shane Drohan",
+      "drop": "Reid Detmers",
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219
     },
     {
       "add": "Shane Drohan",
       "drop": "Eury Perez",
-      "dpwin": -0.005666333333333329,
-      "mc_se": 0.008461
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219
     },
     {
-      "add": "Daniel Palencia",
-      "drop": "Jacob Latz",
-      "dpwin": -0.005666333333333329,
-      "mc_se": 0.008461
+      "add": "Shane Drohan",
+      "drop": "Logan Henderson",
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219
     },
     {
-      "add": "Kenley Jansen",
-      "drop": "Jhoan Duran",
-      "dpwin": -0.006000333333333385,
-      "mc_se": 0.008464
-    },
-    {
-      "add": "Tyler Mahle",
-      "drop": "Reid Detmers",
-      "dpwin": -0.006333333333333302,
-      "mc_se": 0.008466
+      "add": "Shane Drohan",
+      "drop": "Noah Cameron",
+      "dpwin": 0.038900000000000046,
+      "mc_se": 0.00219
     }
   ],
   "pair_check": {
     "n_combos": 45,
-    "adopted": true,
+    "adopted": false,
     "best": {
       "moves": [
         {
-          "add": "Luke Weaver",
-          "add_bucket": "RP",
-          "drop": "Tanner Scott",
-          "drop_bucket": "RP",
-          "dpwin_solo": 0.008999666666666628,
-          "mc_se": 0.008348
+          "add": "Jose Soriano",
+          "add_bucket": "SP",
+          "drop": "Tyler Glasnow",
+          "drop_bucket": "SP",
+          "dpwin_solo": 0.040200000000000014,
+          "mc_se": 0.002163
         },
         {
-          "add": "Kenley Jansen",
-          "add_bucket": "RP",
-          "drop": "Jacob Latz",
-          "drop_bucket": "RP",
-          "dpwin_solo": 0.008333666666666684,
-          "mc_se": 0.008353
+          "add": "Mickey Gasper",
+          "add_bucket": "H",
+          "drop": "Reid Detmers",
+          "drop_bucket": "SP",
+          "dpwin_solo": 0.028100000000000014,
+          "mc_se": 0.002399
         }
       ],
-      "dpwin": 0.01,
-      "pwin": 0.703333,
-      "mc_se": 0.00834,
-      "sum_solo": 0.01733333333333331,
-      "interaction": -0.0073333333333333115
+      "dpwin": 0.0547,
+      "pwin": 0.9653,
+      "mc_se": 0.00183,
+      "sum_solo": 0.06830000000000003,
+      "interaction": -0.013600000000000029
     }
-  }
+  },
+  "dpwin_run_id": "2026-08-29T072410_7"
 }
