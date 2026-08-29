@@ -116,6 +116,7 @@ RP3_FEATS = [
 
 # ADR-0003 phase-5 hard assert: every FEATS entry must have a PASS
 # validation_runs record. Backfill completed 2026-05-23.
+from plv_clone.models.xfp.engine import quantile_band
 from plv_clone.models.xfp.validated_signals import check_feats_validated as _check_feats_validated
 with warnings.catch_warnings():
     warnings.simplefilter("default", UserWarning)
@@ -501,8 +502,13 @@ def main():
     alpha = float(calib.get('alpha_global', 1.0))
     valid['xfp_rp3_sigma'] = np.array(sigmas) * alpha
     valid['sigma_calibration_method'] = calib.get('method', 'uncalibrated_v0')
-    valid['xfp_rp3_p25'] = (valid['xfp_rp3_per_start'] - Z25 * valid['xfp_rp3_sigma']).clip(lower=0)
-    valid['xfp_rp3_p75'] = valid['xfp_rp3_per_start'] + Z25 * valid['xfp_rp3_sigma']
+    # Symmetric, unclipped (2026-08-29). The old `.clip(lower=0)` on p25 alone
+    # pinned 47/372 shipped rows at zero, narrowing the band on one side only —
+    # so (p75-p25)/1.35 understated sigma and the floor layer understated a
+    # blow-up. A start CAN score negative FP. See engine.quantile_band.
+    valid['xfp_rp3_p25'], valid['xfp_rp3_p75'] = quantile_band(
+        valid['xfp_rp3_per_start'].to_numpy(), valid['xfp_rp3_sigma'].to_numpy(),
+        z=Z25, round_to=None)      # rp3 has always published full precision
     print(f'  sigma calibration: method={calib.get("method")} alpha={alpha:.3f} '
           f'(mean sigma raw={float(np.mean(sigmas)):.3f} -> calibrated={float(np.mean(sigmas))*alpha:.3f})')
 
@@ -516,10 +522,16 @@ def main():
     # from the raw (pre-recalibration) LOO-residual sigma for the add/drop
     # computation only. This restores a live add/hold/drop distribution without
     # touching the headline projection, the displayed CI, or any model fit.
-    valid['xfp_rp3_decision_p25'] = (
-        valid['xfp_rp3_per_start'] - Z25 * valid['xfp_rp3_sigma_raw']).clip(lower=0)
-    valid['xfp_rp3_decision_p75'] = (
-        valid['xfp_rp3_per_start'] + Z25 * valid['xfp_rp3_sigma_raw'])
+    valid['xfp_rp3_decision_p25'], valid['xfp_rp3_decision_p75'] = quantile_band(
+        valid['xfp_rp3_per_start'].to_numpy(),
+        valid['xfp_rp3_sigma_raw'].to_numpy(), z=Z25, round_to=None)
+
+    # Both bands monotone by construction — assert it so a future one-sided
+    # clip crashes here instead of shipping a corrupt distribution.
+    for _lo, _mid, _hi in (('xfp_rp3_p25', 'xfp_rp3_per_start', 'xfp_rp3_p75'),
+                           ('xfp_rp3_decision_p25', 'xfp_rp3_per_start',
+                            'xfp_rp3_decision_p75')):
+        assert ((valid[_lo] <= valid[_mid]) & (valid[_mid] <= valid[_hi])).all(),             f'rp3 band inversion in {_lo}/{_hi} — see engine.quantile_band'
 
     # Recency form gap
     valid['recency_form_gap'] = (valid['fp_per_start_last21'] -

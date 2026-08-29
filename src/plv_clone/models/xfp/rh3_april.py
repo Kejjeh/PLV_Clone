@@ -43,6 +43,7 @@ import pandas as pd
 import joblib
 
 from plv_clone.models.xfp import engine as _engine
+from plv_clone.models.xfp.engine import quantile_band  # noqa: F401
 from plv_clone.models.xfp.engine import lookup_sigma  # re-export
 from plv_clone.league_config import HITTER_REPLACEMENT_RANK as REPLACEMENT_RANK
 
@@ -415,12 +416,13 @@ def main():
             sigmas.append(lookup_sigma(ci_table, overall_sigma, latest_split,
                                        row['xfp_rh3_april_per_pa'], pred_buckets))
         valid['xfp_rh3_april_sigma'] = sigmas
-        valid['xfp_rh3_april_p25'] = (
-            valid['xfp_rh3_april_per_pa'] - Z25 * valid['xfp_rh3_april_sigma']
-        ).clip(lower=0)
-        valid['xfp_rh3_april_p75'] = (
-            valid['xfp_rh3_april_per_pa'] + Z25 * valid['xfp_rh3_april_sigma']
-        )
+        # Symmetric, unclipped -- the fourth site of the one-sided clip,
+        # found by the AST guard in tests/test_xfp_band_monotonicity.py the
+        # same day the other three were fixed. Latent here (a per-PA hitter
+        # projection sits far above z*sigma), removed before it can bite.
+        valid['xfp_rh3_april_p25'], valid['xfp_rh3_april_p75'] = quantile_band(
+            valid['xfp_rh3_april_per_pa'].to_numpy(),
+            valid['xfp_rh3_april_sigma'].to_numpy(), z=Z25, round_to=None)
         valid['xfp_rh3_april_per_game'] = (
             valid['xfp_rh3_april_per_pa'] * PA_PER_GAME_LEAGUE
         ).round(2)

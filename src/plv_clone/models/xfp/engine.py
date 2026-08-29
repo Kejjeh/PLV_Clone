@@ -261,3 +261,44 @@ def train_final_ridge(df, feats, *, target, train_years, filter_fn, cv=10):
                      ('r', RidgeCV(alphas=np.logspace(-1, 5, 80), cv=cv))])
     pipe.fit(train[feats].values, train[target].values)
     return pipe, len(train)
+
+
+#: 0.6745 = the standard-normal z for the 25th/75th percentile.
+Z25 = 0.6745
+
+
+def quantile_band(mean, sigma, z=Z25, round_to=1):
+    """p25/p75 as mean +/- z*sigma. The ONE owner of every xfp band.
+
+    Symmetric about the mean, so the band cannot invert for any input --
+    monotone BY CONSTRUCTION rather than by a downstream repair.
+
+    NEVER clip a bound here. Clipping one side only is the bug this function
+    exists to prevent: `p25.clip(lower=0)` shoves the lower bound up while p75
+    stays put, which (a) INVERTS the band outright once mean < -z*sigma, and
+    (b) short of that, still narrows it asymmetrically, so the IQR->sigma
+    identity every consumer uses -- (p75-p25)/1.35 -- silently understates
+    sigma and the floor/bust layer understates real downside.
+
+    A negative lower bound is a true statement. A replacement-level reliever
+    projects below zero outright, and a starter can post negative FP in a
+    blow-up (K + IP*3.3 - H - 2*ER - BB - HBP). Flooring that away does not
+    make the downside go away, it just hides it.
+
+    History -- the same one-sided clip, found three times:
+      * rprs2 RoS band       (issue #29, fixed 2026-06)
+      * rprs2 full-year band (fixed 2026-08-29, 29/397 rows INVERTED)
+      * rp3 display+decision (fixed 2026-08-29, 47/372 rows pinned at zero;
+        asymmetric rather than inverted)
+    Three sites, one cause, fixed one at a time over three months -- the
+    don't-do #18 shape. Hence a single shared owner instead of a fourth copy.
+
+    ``round_to`` preserves each caller's existing precision: rprs2 has always
+    published 1-decimal bands, rp3 full float. Pass None for no rounding, so
+    adopting this owner changes ONLY the clip and never the digits.
+    """
+    import numpy as _np
+    lo, hi = mean - z * sigma, mean + z * sigma
+    if round_to is None:
+        return lo, hi
+    return _np.round(lo, round_to), _np.round(hi, round_to)

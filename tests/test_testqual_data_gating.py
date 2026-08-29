@@ -218,7 +218,11 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 #   test_roster_rules_iteration       roster_rules (DH lineup-slot capacity)
 # Site count 119 -> 125: the same three files plus the extra pandas/CSV guards
 # test_volume_semantics needs for its live canonical rows.
-MAX_GUARDED_FILES = 71
+# 2026-08-29 band-monotonicity fix (71 -> 72): test_xfp_band_monotonicity
+# importorskips plv_clone.models.xfp.engine to reach the shared quantile_band
+# owner. Site count 125 -> 128: that one import guard plus the two shipped-CSV
+# presence skips its parametrized cases need (rp3 / rprs2 / rh3 outputs).
+MAX_GUARDED_FILES = 72
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
@@ -227,7 +231,7 @@ MAX_GUARDED_FILES = 71
 # triangulate_core) — the same three-module guard test_lens_health already uses.
 # The file count is unchanged: 65 was already the ceiling and this file replaces
 # no other, so the FILE bound holds and only the site count moves.
-MAX_GUARD_SITES = 125
+MAX_GUARD_SITES = 128
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

@@ -428,7 +428,11 @@ def main():
     valid['xfp_rh3_sigma_hetero'] = valid['xfp_rh3_sigma_raw'] * valid['batter_sigma_factor']
     # Headline sigma column (back-compat) now reflects hetero band
     valid['xfp_rh3_sigma'] = valid['xfp_rh3_sigma_hetero']
-    valid['xfp_rh3_p25'] = (valid['xfp_rh3_per_pa'] - Z25 * valid['xfp_rh3_sigma']).clip(lower=0)
+    # Unclipped for the same reason as rp3/rprs2 (engine.quantile_band). This
+    # is a NO-OP on current data — 0/510 shipped rows ever hit the floor, since
+    # a per-PA hitter projection sits far above z*sigma — but the trap is
+    # removed before a low-PA row ever reaches it.
+    valid['xfp_rh3_p25'] = valid['xfp_rh3_per_pa'] - Z25 * valid['xfp_rh3_sigma']
     valid['xfp_rh3_p75'] = valid['xfp_rh3_per_pa'] + Z25 * valid['xfp_rh3_sigma']
 
     # Recency vs prior signal — gap between in-season & long-run

@@ -345,7 +345,8 @@ def run_hitters(rolling, multiyr) -> pd.DataFrame:
         sub["proj"] = pipe.predict(sub[feats].values)
         sig = lookup_sigma_vec(ci_table, overall_sigma, int(split), sub["proj"].values, pred_buckets)
         sub["sigma"] = sig  # global sigma (hetero factor ~1.0 mean; omitted for OOS panel)
-        sub["p25"] = (sub["proj"] - Z25 * sub["sigma"]).clip(lower=0)
+        # symmetric, unclipped — mirrors production (engine.quantile_band)
+        sub["p25"] = sub["proj"] - Z25 * sub["sigma"]
         sub["p75"] = sub["proj"] + Z25 * sub["sigma"]
         # position
         if mh is not None:
@@ -393,12 +394,12 @@ def run_pitchers(rolling) -> pd.DataFrame:
         sub["proj"] = pipe.predict(sub[feats].values)
         sig = lookup_sigma_vec(ci_table, overall_sigma, int(split), sub["proj"].values, pred_buckets)
         sub["sigma"] = sig * alpha
-        sub["xfp_rp3_p25"] = (sub["proj"] - Z25 * sub["sigma"]).clip(lower=0)
+        sub["xfp_rp3_p25"] = sub["proj"] - Z25 * sub["sigma"]
         sub["xfp_rp3_p75"] = sub["proj"] + Z25 * sub["sigma"]
         # Decision band: narrow RAW-sigma band (no x2.41), matching rp3.py bugfix
         # 13bb4a1 so the backtest tests the FIXED add/drop signal, not the inert
         # wide display band. _signal() reads xfp_rp3_decision_p25/p75 first.
-        sub["xfp_rp3_decision_p25"] = (sub["proj"] - Z25 * sig).clip(lower=0)
+        sub["xfp_rp3_decision_p25"] = sub["proj"] - Z25 * sig
         sub["xfp_rp3_decision_p75"] = sub["proj"] + Z25 * sig
         # replacement (global SP-45) per split
         srt = sub.sort_values("proj", ascending=False)

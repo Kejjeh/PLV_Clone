@@ -64,6 +64,7 @@ import joblib
 
 from plv_clone.models.xfp import engine as _engine
 from plv_clone.models.xfp.engine import lookup_sigma, lookup_sigma_vec  # re-export
+from plv_clone.models.xfp.engine import quantile_band  # noqa: F401  the ONE band owner
 from plv_clone.league_config import RP_REPLACEMENT_RANK as REPLACEMENT_RANK_RP
 
 warnings.filterwarnings('ignore')
@@ -251,33 +252,6 @@ def train_final(df, feats):
     return _engine.train_final_ridge(
         df, feats, target=TARGET, train_years=TRAIN_YEARS,
         filter_fn=lambda d: d['g_to'] >= EVAL_G_MIN)
-
-
-def quantile_band(mean, sigma, z=0.6745):
-    """p25/p75 as mean +/- z*sigma. The ONE owner of every rprs2 band.
-
-    Symmetric around the mean, so the band cannot invert for any input —
-    monotone BY CONSTRUCTION rather than by a downstream repair.
-
-    Never clip a bound here. Clipping one side only is what broke both bands
-    in turn: `p25.clip(lower=0)` shoves the lower bound up to 0 while p75
-    stays where it is, so any reliever projected BELOW zero (mean < -z*sigma)
-    ends up with p25 > p75. A negative projection is a real statement about a
-    replacement-level arm, not an error to floor away — and flooring only one
-    quantile turns it into a corrupt distribution that reads as truthy sigma
-    downstream.
-
-    History: issue #29 fixed exactly this for the RoS band, which previously
-    differenced independently-clipped full-year quantiles. The FULL-YEAR band
-    kept its clip and was left to rot for another two months, reaching 29/397
-    inverted rows by 2026-08-29 as more relievers drifted below replacement
-    (don't-do #18: a correct fix applied to a strict subset of the sites that
-    needed it, failing silently rather than crashing).
-    """
-    import numpy as _np
-    p25 = _np.round(mean - z * sigma, 1)
-    p75 = _np.round(mean + z * sigma, 1)
-    return p25, p75
 
 
 def ros_band(mean, sigma, z=0.6745):
