@@ -522,6 +522,18 @@ def simulate(state, strength, n_sims, seed, josh_mu_delta=0.0,
     champion = np.empty(n_sims, dtype=int)
     josh_seed = np.zeros(n_sims, dtype=int)     # 0 = missed playoffs
 
+    # Per-round (participated, won) flags for Josh, keyed by the round's real
+    # period number. This is what lets the value-of-win curve keep going once
+    # cur > reg_end: the regular-season curve is empty by construction then
+    # (found 2026-08-29, period 21 = playoff R1 -> title_equity 'unavailable'
+    # in the daily briefing, precisely the week leverage peaks), and
+    # title_equity refuses to extrapolate regular-season rows across the
+    # playoff regime boundary — so the playoff rows must be computed HERE,
+    # natively, from the bracket itself.
+    po_periods = [r[0] for r in rounds[:3]]
+    josh_po_in = {p: np.zeros(n_sims, dtype=bool) for p in po_periods}
+    josh_po_win = {p: np.zeros(n_sims, dtype=bool) for p in po_periods}
+
     for i in range(n_sims):
         win_d = {t: int(wins[t][i]) for t in names}
         pf_d = {t: float(pf[t][i]) for t in names}
@@ -553,6 +565,19 @@ def simulate(state, strength, n_sims, seed, josh_mu_delta=0.0,
         title_ct[champ] += 1
         champion[i] = idx[champ]
 
+        if josh in seeded:
+            # R1: seeds 3-6 play, 1-2 have byes (a bye week is NOT a win — the
+            # sim is excluded from that period's conditioning, not counted).
+            if josh in (seeded[2], seeded[3], seeded[4], seeded[5]):
+                josh_po_in[po_periods[0]][i] = True
+                josh_po_win[po_periods[0]][i] = josh in (r1a, r1b)
+            if len(po_periods) > 1 and josh in (seeded[0], seeded[1], r1a, r1b):
+                josh_po_in[po_periods[1]][i] = True
+                josh_po_win[po_periods[1]][i] = josh in (s1, s2)
+            if len(po_periods) > 2 and josh in (s1, s2):
+                josh_po_in[po_periods[2]][i] = True
+                josh_po_win[po_periods[2]][i] = champ == josh
+
     return {
         'n_sims': n_sims,
         'playoff_p': {t: playoff_ct[t] / n_sims for t in names},
@@ -561,6 +586,8 @@ def simulate(state, strength, n_sims, seed, josh_mu_delta=0.0,
         'seed_dist': {t: (seed_ct[t] / n_sims).tolist() for t in names},
         'champion': champion, 'idx': idx,
         'josh_win_by_period': josh_win_by_period,
+        'josh_po_rounds': {p: (josh_po_in[p], josh_po_win[p])
+                           for p in po_periods},
         'josh_seed': josh_seed,
         'exp_wins': {t: float(wins[t].mean()) for t in names},
     }
@@ -591,6 +618,24 @@ def josh_sensitivities(state, strength, base, n_sims, seed):
                           'p_title_if_lose': round(pt_l, 4),
                           'dtitle_pp': round((pt_w - pt_l) * 100, 2),
                           'dplayoffs_pp': round((pp_w - pp_l) * 100, 2)})
+
+    # Playoff-round rows, conditioned on the sims where Josh actually PLAYED
+    # the round (a bye or an earlier elimination is neither a win nor a loss).
+    # These are bracket-native — the exact quantity title_equity refuses to
+    # extrapolate from regular-season rows. dplayoffs_pp is 0 by definition
+    # (everyone in a round already made the playoffs).
+    for p, (m, w) in sorted((base.get('josh_po_rounds') or {}).items()):
+        won, lost = m & w, m & ~w
+        if won.sum() < 50 or lost.sum() < 50:
+            continue
+        pt_w = float(title_flag[won].mean())
+        pt_l = float(title_flag[lost].mean())
+        win_curve.append({'period': int(p), 'playoff_round': True,
+                          'p_win_week': round(float(w[m].mean()), 3),
+                          'p_title_if_win': round(pt_w, 4),
+                          'p_title_if_lose': round(pt_l, 4),
+                          'dtitle_pp': round((pt_w - pt_l) * 100, 2),
+                          'dplayoffs_pp': 0.0})
 
     # (b) aggressiveness dials — full re-sims on the same seed (common random
     # numbers keep MC noise on the DIFFERENCE small)
@@ -626,10 +671,29 @@ def strategy_directive(state, base, win_curve, sens):
     lines.append(f"Playoff odds {pp*100:.0f}%, title odds {pt*100:.1f}%, "
                  f"modal seed {modal_seed} "
                  f"(P(miss) {seed_dist[0]*100:.0f}%).")
+    in_playoffs = state['cur'] > state['reg_end']
+    if in_playoffs and cur_row is not None:
+        # Playoff mode: the tiers below are seeding-race logic and every one of
+        # them misfires here ("hoard FAAB for the playoff weeks" DURING a
+        # playoff week, 2026-08-29). One directive dominates all of them.
+        rnd = next((i + 1 for i, r in enumerate(state['playoff_rounds'])
+                    if r[0] == state['cur']), '?')
+        lines.append(f"PLAYOFF ROUND {rnd} of "
+                     f"{len(state['playoff_rounds'])} (period {state['cur']}): "
+                     f"winning THIS "
+                     f"round is worth {d_now:+.1f}pp of title probability — "
+                     f"the highest-leverage week of the season. Spend "
+                     f"streams/FAAB NOW; there is nothing left to hoard for.")
+        return lines
     if d_now is not None and d_late is not None:
-        lines.append(f"A win THIS period is worth {d_now:+.1f}pp title equity "
-                     f"(vs {d_late:+.1f}pp avg for periods "
-                     f"{state['reg_end']-1}-{state['reg_end']}).")
+        # regular-season rows only — playoff rows sit across a regime boundary
+        # and would silently inflate this comparison average
+        late_reg = [r for r in late_rows if not r.get('playoff_round')]
+        if late_reg:
+            d_late = float(np.mean([r['dtitle_pp'] for r in late_reg]))
+            lines.append(f"A win THIS period is worth {d_now:+.1f}pp title "
+                         f"equity (vs {d_late:+.1f}pp avg for periods "
+                         f"{state['reg_end']-1}-{state['reg_end']}).")
     if pp >= 0.95:
         lines.append("SAFE: playoff spot near-locked — bank floor, hoard "
                      "FAAB/streams for the playoff weeks; a marginal regular-"
@@ -701,6 +765,11 @@ def consistency_checks(state, base):
     josh = state['josh']
     cur_w = base['josh_win_by_period'].get(state['cur'])
     p_cur = float(cur_w.mean()) if cur_w is not None else None
+    if p_cur is None:
+        # playoff round: condition on the sims where Josh played the round
+        po = (base.get('josh_po_rounds') or {}).get(state['cur'])
+        if po is not None and po[0].any():
+            p_cur = float(po[1][po[0]].mean())
     checks['p_win_current_period'] = round(p_cur, 4) if p_cur is not None else None
     try:
         ml = json.loads((OUT / 'matchup_leverage.json').read_text(encoding='utf-8'))
