@@ -439,7 +439,11 @@ def run_relievers(rolling) -> pd.DataFrame:
         sub["proj_full"] = pipe.predict(sub[feats].values).round(1)
         sig = lookup_sigma_vec(ci_table, overall_sigma, int(split), sub["proj_full"].values, pred_buckets)
         sub["xfp_sigma"] = sig
-        sub["xfp_p25"] = (sub["proj_full"] - Z25 * sub["xfp_sigma"]).clip(lower=0)
+        # Mirror production exactly: symmetric band, NO one-sided clip. The
+        # clip here inverted the band for below-zero projections the same way
+        # the pipeline's did (fixed 2026-08-29) — a backtest that models a
+        # band production no longer emits is measuring the wrong thing.
+        sub["xfp_p25"] = sub["proj_full"] - Z25 * sub["xfp_sigma"]
         sub["xfp_p75"] = sub["proj_full"] + Z25 * sub["xfp_sigma"]
         # replacement (RP-30) per split, full-year basis (matches pipeline)
         srt = sub.sort_values("proj_full", ascending=False)

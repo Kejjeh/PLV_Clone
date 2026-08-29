@@ -253,18 +253,36 @@ def train_final(df, feats):
         filter_fn=lambda d: d['g_to'] >= EVAL_G_MIN)
 
 
-def ros_band(mean, sigma, z=0.6745):
-    """RoS p25/p75 as mean +/- z*sigma (issue #29).
+def quantile_band(mean, sigma, z=0.6745):
+    """p25/p75 as mean +/- z*sigma. The ONE owner of every rprs2 band.
 
-    Derived directly from the RoS mean so the band can never invert. The old
-    path differenced independently-clipped full-year quantiles, which forced
-    p25 to 0 while mean/p75 went negative for over-banked relievers.
-    Algebraically identical to the old values wherever no clip engaged.
+    Symmetric around the mean, so the band cannot invert for any input —
+    monotone BY CONSTRUCTION rather than by a downstream repair.
+
+    Never clip a bound here. Clipping one side only is what broke both bands
+    in turn: `p25.clip(lower=0)` shoves the lower bound up to 0 while p75
+    stays where it is, so any reliever projected BELOW zero (mean < -z*sigma)
+    ends up with p25 > p75. A negative projection is a real statement about a
+    replacement-level arm, not an error to floor away — and flooring only one
+    quantile turns it into a corrupt distribution that reads as truthy sigma
+    downstream.
+
+    History: issue #29 fixed exactly this for the RoS band, which previously
+    differenced independently-clipped full-year quantiles. The FULL-YEAR band
+    kept its clip and was left to rot for another two months, reaching 29/397
+    inverted rows by 2026-08-29 as more relievers drifted below replacement
+    (don't-do #18: a correct fix applied to a strict subset of the sites that
+    needed it, failing silently rather than crashing).
     """
     import numpy as _np
     p25 = _np.round(mean - z * sigma, 1)
     p75 = _np.round(mean + z * sigma, 1)
     return p25, p75
+
+
+def ros_band(mean, sigma, z=0.6745):
+    """RoS p25/p75 (issue #29). Thin alias — see :func:`quantile_band`."""
+    return quantile_band(mean, sigma, z=z)
 
 
 def assign_ranking_columns(valid: pd.DataFrame, replacement_rank: int) -> pd.DataFrame:
@@ -418,8 +436,13 @@ def main():
     valid['xfp_sigma'] = lookup_sigma_vec(
         ci_table, overall_sigma, latest_split,
         valid['xfp_full_year'].to_numpy(), pred_buckets)
-    valid['xfp_p25'] = (valid['xfp_full_year'] - Z25 * valid['xfp_sigma']).clip(lower=0)
-    valid['xfp_p75'] = valid['xfp_full_year'] + Z25 * valid['xfp_sigma']
+    # Full-year band through the same owner as the RoS band. The old
+    # `.clip(lower=0)` on p25 ALONE inverted the band for every reliever
+    # projected below zero (29/397 rows by 2026-08-29). See quantile_band.
+    valid['xfp_p25'], valid['xfp_p75'] = quantile_band(
+        valid['xfp_full_year'].to_numpy(), valid['xfp_sigma'].to_numpy(), z=Z25)
+    assert ((valid['xfp_p25'] <= valid['xfp_full_year'])
+            & (valid['xfp_full_year'] <= valid['xfp_p75'])).all(),         'rprs2 full-year band inversion — see quantile_band'
 
     # counting-stats path follows the projection year (audit R2). NOTE: the
     # fp_actual_2026 / sv_2026 / hld_2026 COLUMN names are downstream schema
@@ -464,7 +487,7 @@ def main():
     # backtest-comparison artifact (its ranking lens compares full-season proj
     # vs partial actual on purpose); production is correct. See module docstring.
     valid['xfp_ros'] = (valid['xfp_full_year'] - valid['fp_actual_2026']).round(1)
-    valid['xfp_ros_p25'], valid['xfp_ros_p75'] = ros_band(
+    valid['xfp_ros_p25'], valid['xfp_ros_p75'] = quantile_band(
         valid['xfp_ros'].to_numpy(), valid['xfp_sigma'].to_numpy())
     assert ((valid['xfp_ros_p25'] <= valid['xfp_ros'])
             & (valid['xfp_ros'] <= valid['xfp_ros_p75'])).all(),         'rprs2 RoS band inversion — see issue #29'

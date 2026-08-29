@@ -162,19 +162,38 @@ def test_the_band_sigma_really_is_season_total_scale():
         f"(~42) vs a ~2.5 per-appearance fallback")
 
 
-def test_negative_band_sigma_rows_exist_and_are_why_the_derivation_needs_a_guard():
-    """5 of 347 shipped rows have p75 < p25, so an unguarded derivation yields a
-    NEGATIVE sigma — truthy, survives an `or` fallback, then gets clamped to a
-    degenerate point mass sold as a distribution. (Guarded since 2026-07-30;
-    this test pins the fixture that makes the guard non-vacuous.)"""
+def test_band_derived_sigma_is_never_negative_at_the_source():
+    """SUPERSEDES the old fixture test, which asserted corrupt rows EXIST.
+
+    That test pinned 5-of-347 shipped rows with p75 < p25 as the fixture making
+    the downstream guard non-vacuous. It was a ratchet on a pathology nobody
+    had fixed at the source, and it fired on 2026-08-29 when the count reached
+    29/397 (7.3%) — past its own 5% bound. The count had been climbing all
+    season (11/389 on 08-20) because the cause was `xfp_p25.clip(lower=0)` in
+    the rprs2 pipeline: flooring the LOWER bound alone shoves p25 above p75 for
+    any reliever projected below zero, and more relievers drift below
+    replacement as the season runs.
+
+    Fixed at the source 2026-08-29 — both bands now come from
+    `rprs2.quantile_band`, symmetric about the mean and monotone by
+    construction (see tests/test_rprs2_bands.py). So the invariant flips: there
+    must be NO corrupt rows, and a negative band-derived sigma is a real
+    failure rather than an expected fixture.
+
+    The downstream guard in build_matchup_dashboard STAYS regardless — it is
+    defense in depth for any future source, and the test below still pins it.
+    """
     p = ROOT / "data" / "outputs" / "xfp_rprs2_projections.csv"
     if not p.exists():
         pytest.skip("rprs2 projections unavailable")
     d = pd.read_csv(p)
-    s = ((d["xfp_p75"] - d["xfp_p25"]) / 1.35).dropna()
-    n_neg = int((s < 0).sum())
-    assert n_neg > 0, "fixture assumption changed — re-check the I4 finding"
-    assert n_neg < len(s) * 0.05
+    sig = ((d["xfp_p75"] - d["xfp_p25"]) / 1.35).dropna()
+    bad = d.loc[sig.index[sig <= 0], ["name_api", "xfp_full_year",
+                                      "xfp_p25", "xfp_p75"]]
+    assert bad.empty, (
+        f"{len(bad)} rprs2 row(s) still yield a non-positive band sigma — the "
+        f"one-sided clip is back somewhere: "
+        + bad.head(10).to_string())
 
 
 def test_rprs2_band_sigma_derivation_is_guarded():
