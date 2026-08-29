@@ -275,6 +275,26 @@ def banked_sp_starts_from_box(sp_mlbams: set[int], week_start: date, today: date
     return int(((dates >= week_start.isoformat()) & (dates < today.isoformat())).sum())
 
 
+def _games_per_day(schedules_by_team, today, week_end) -> dict[str, int]:
+    """{iso_date: max games any single team plays that day} over [today, week_end].
+
+    Per-TEAM max, not a league total: the constraint being sized is one of
+    Josh's lineup slots, and the hitter in it plays his own team's schedule. A
+    date where any team has a split doubleheader yields 2.
+    """
+    lo, hi = today.isoformat(), week_end.isoformat()
+    out: dict[str, int] = {}
+    for games in schedules_by_team.values():
+        per_team: dict[str, int] = {}
+        for g in games:
+            d = g.get('date')
+            if d and lo <= d <= hi:
+                per_team[d] = per_team.get(d, 0) + 1
+        for d, n in per_team.items():
+            out[d] = max(out.get(d, 0), n)
+    return out
+
+
 def build_state(verbose=True, banked_override: int | None = None):
     """Pull live matchup + schedules + projections; classify every active-slot
     player into H/SP/RP with remaining units and model mean/sigma."""
@@ -486,6 +506,12 @@ def build_state(verbose=True, banked_override: int | None = None):
         'period': period, 'sp_cap': sp_cap, 'period_weeks': weeks,
         'period_covered': is_period_covered(period),
         'days_remaining': (week_end - today).days + 1,
+        # {iso_date: most games any ONE team plays that day} over the remaining
+        # window. 1 normally, 2 on a split-DH date. The lineup-capacity guard
+        # needs it because a hitter in ONE slot on a DH day is credited with TWO
+        # games — counting days understates capacity exactly where `n_games`
+        # (fixed 2026-08-28) now correctly counts more games.
+        'games_per_day': _games_per_day(schedules_by_team, today, week_end),
         'schedules_by_team': schedules_by_team, 'mlb_sched_all': mlb_sched_all,
         'my_hitters': my_h, 'my_rps': my_rp, 'my_sp_events': my_sp,
         'opp_hitters': opp_h, 'opp_rps': opp_rp, 'opp_sp_events': opp_sp,

@@ -98,7 +98,7 @@ def test_all_exports_are_importable():
     public = {
         n for n in vars(mod)
         if not n.startswith("_")
-        and n not in ("annotations", "Iterable", "Optional")
+        and n not in ("annotations", "Iterable", "Mapping", "Optional")
     }
     unexported = sorted(public - set(mod.__all__))
     assert not unexported, (

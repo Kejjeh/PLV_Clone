@@ -895,6 +895,10 @@ def fetch_espn_week_schedule(league, week_start, week_end):
 
     Returns: {mlb_team_id: [game_dict, …]} — same shape as the old
     fetch_schedules_by_team so all downstream code is unchanged.
+
+    ONE ENTRY PER GAME, NOT PER DATE. A split doubleheader contributes two
+    entries sharing a `date`; consumers that want a game count must count list
+    entries, never distinct dates.
     """
     try:
         raw = league.espn_request.get_pro_schedule()
@@ -942,6 +946,9 @@ def fetch_espn_week_schedule(league, week_start, week_end):
                     'date': cal.isoformat(),
                     'is_home': is_home,
                     'opp_team': opp_abbr,
+                    # Split-DH identity — popped after dedup below.
+                    '_game_id': g.get('id') or ('ts', g['date']),
+                    '_ts': g['date'],
                     # Probable pitcher fields filled in later by fetch_week_probables
                     'my_probable_id': None,
                     'my_probable_name': None,
@@ -949,14 +956,34 @@ def fetch_espn_week_schedule(league, week_start, week_end):
                     'opp_probable_name': None,
                 })
         if games:
-            # Sort chronologically; deduplicate (ESPN may list doubleheaders twice)
+            # Sort chronologically, then deduplicate on ESPN's GAME id.
+            #
+            # The old key was (date, opp_team), which collapsed a split
+            # doubleheader into one game: two ESPN entries share a date and an
+            # opponent but are genuinely two games (2026-08-29 NYY hosted ids
+            # 401874913 and 401816717 vs the same club). Every consumer counts
+            # entries in this list — the hitter `rem` window in project_player,
+            # the RP `n_rem` in leverage_engine, decision_console's week games —
+            # so the collapse silently docked one game per DH from each of that
+            # team's hitters. Found 2026-08-28 (period 21): Garcia Jr./Grisham
+            # showed 3 games against an actual 4, Carroll 2 against 3.
+            #
+            # ESPN's `id` is per-game and is the only field that separates the
+            # two halves of a DH, so it is the correct identity. Dedup is still
+            # required: proGamesByScoringPeriod can list the same game under
+            # more than one scoring period. Entries missing an `id` fall back to
+            # the raw millisecond timestamp, which also differs across a split
+            # DH (the two first pitches are hours apart).
             seen = set()
             uniq = []
-            for g in sorted(games, key=lambda x: x['date']):
-                key = (g['date'], g['opp_team'])
+            for g in sorted(games, key=lambda x: (x['date'], x['_ts'])):
+                key = g['_game_id']
                 if key not in seen:
                     seen.add(key)
                     uniq.append(g)
+            for g in uniq:            # scratch identity keys stay internal
+                g.pop('_game_id', None)
+                g.pop('_ts', None)
             by_mlb[mlb_id] = uniq
 
     return by_mlb
@@ -1133,6 +1160,12 @@ def build_sp_starts_by_pitcher(pitcher_ids, schedules_by_team, today, week_end):
     # team_id is recoverable from any confirmed game in the schedule (or — for
     # pitchers with no confirmed in-window — from the start dates themselves,
     # which fetch_week_probables resolved via the /people endpoint fallback).
+    # DH note: a split doubleheader puts two games on one date, so this map is
+    # lossy by construction — it keeps the LAST entry for the date. That is safe
+    # HERE and only here: `wp.starts` is keyed (pitcher, date), so a pitcher has
+    # at most one start per date regardless of DH, and the only fields read off
+    # `game_meta` (is_home, opp_team) are identical across both halves of a DH.
+    # Never reuse this map to COUNT a team's games — count schedules_by_team.
     team_by_date_lookup = {}  # team_id -> {date_str: game_dict}
     for tid, games in schedules_by_team.items():
         team_by_date_lookup[tid] = {g['date']: g for g in games}

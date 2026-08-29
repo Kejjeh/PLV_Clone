@@ -483,7 +483,8 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
                   and not any(RR.same_player(p, x) for x in exclude_drops)]
     _legal_kw = dict(cap_remaining=state['cap_remaining_mine'],
                      hitter_games=hgames,
-                     days_remaining=state.get('days_remaining'))
+                     days_remaining=state.get('days_remaining'),
+                     games_per_day=state.get('games_per_day'))
 
     # pure adds are impossible at a full roster, so an add is always paired with
     # a drop; a pure drop is scored too (it is occasionally the right move)
@@ -628,7 +629,8 @@ def optimize(state, D, base_p, regime, cands, *, max_moves=2, verbose=True,
         roster0 = [dict(p) for p in state['my_roster']]
         _pair_legal_kw = dict(cap_remaining=state['cap_remaining_mine'],
                               hitter_games=hgames,
-                              days_remaining=state.get('days_remaining'))
+                              days_remaining=state.get('days_remaining'),
+                              games_per_day=state.get('games_per_day'))
         # best rows per DISTINCT add (top few drop-variants each): one strong
         # candidate's many drop-variants can flood a plain top-N row window,
         # leaving the sweep zero usable pairs (every combination same-add-

@@ -30,7 +30,7 @@ that is a standing owner rule and is marked as such.
 """
 from __future__ import annotations
 
-from typing import Iterable, Optional
+from typing import Iterable, Mapping, Optional
 
 # League roster spec (reference_league_rules.md)
 ACTIVE_HITTERS = 13
@@ -122,8 +122,31 @@ def _same_player(a: dict, b: dict) -> bool:
 same_player = _same_player
 
 
+def lineup_slot_days(games_per_day: Optional[Mapping[str, int]] = None,
+                     days_remaining: Optional[int] = None) -> int:
+    """Games one lineup slot can yield over the remaining window.
+
+    A lineup SLOT is per day, but a slot's OUTPUT is games, and on a split
+    doubleheader the hitter occupying one slot plays TWO. Counting days
+    therefore understates capacity on any window containing a DH — the mirror
+    of the undercount that the same date-vs-game confusion caused on the
+    demand side (`n_games`), which is why both must be fixed together: raising
+    demand alone would make the guard reject legal adds.
+
+    ``games_per_day`` maps an ISO date to the most games any single team plays
+    that day (1 normally, 2 on a date where some team has a split DH). Falls
+    back to ``days_remaining`` (1 game/day) when no schedule is supplied, which
+    reproduces the pre-DH behavior exactly.
+    """
+    if games_per_day:
+        return sum(max(int(v), 1) for v in games_per_day.values())
+    return int(days_remaining or 0)
+
+
 def lineup_capacity_problem(*, n_hitters_after: int, hitter_games_after: float,
-                            days_remaining: int) -> Optional[str]:
+                            days_remaining: int,
+                            games_per_day: Optional[Mapping[str, int]] = None
+                            ) -> Optional[str]:
     """Flag an add whose games CANNOT actually be played.
 
     This guards a real limitation of the Monte-Carlo engine. ``_classify`` counts
@@ -132,7 +155,10 @@ def lineup_capacity_problem(*, n_hitters_after: int, hitter_games_after: float,
     is a good approximation while total desired hitter-games fit inside the
     available lineup slots. It stops being one the moment they don't:
 
-        available hitter-game slots = ACTIVE_HITTERS x days_remaining
+        available hitter-game slots = ACTIVE_HITTERS x slot_days
+
+    where ``slot_days`` is days_remaining in a normal week but counts a split-DH
+    date twice (see `lineup_slot_days`) — one slot, two games.
 
     Carrying a 14th hitter is perfectly legal — that is what the bench is for —
     but he cannot play every day, and the engine has no notion of a daily lineup,
@@ -144,14 +170,16 @@ def lineup_capacity_problem(*, n_hitters_after: int, hitter_games_after: float,
 
     Returns a reason string when the add over-subscribes the lineup, else None.
     """
-    if days_remaining is None or days_remaining <= 0:
+    slot_days = lineup_slot_days(games_per_day, days_remaining)
+    if slot_days <= 0:
         return None
-    slots = ACTIVE_HITTERS * int(days_remaining)
+    slots = ACTIVE_HITTERS * slot_days
     if hitter_games_after <= slots:
         return None
     over = hitter_games_after - slots
+    unit = f"{days_remaining}d" if not games_per_day else f"{slot_days} slot-days"
     return (f"{n_hitters_after} hitters want {hitter_games_after:.0f} games but only "
-            f"{slots} lineup slots exist ({ACTIVE_HITTERS} x {days_remaining}d) — "
+            f"{slots} lineup slots exist ({ACTIVE_HITTERS} x {unit}) — "
             f"{over:.0f} games could not be played, and the engine would credit "
             f"them anyway")
 
@@ -160,7 +188,8 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
                drop: Optional[dict] = None,
                cap_remaining: Optional[int] = None,
                hitter_games: Optional[dict] = None,
-               days_remaining: Optional[int] = None) -> list[str]:
+               days_remaining: Optional[int] = None,
+               games_per_day: Optional[Mapping[str, int]] = None) -> list[str]:
     """Return a list of rule violations (empty list == legal).
 
     Returning reasons rather than a bare bool is deliberate: the optimizer
@@ -249,7 +278,7 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
 
     # lineup capacity: would the added hitter's games actually be playable?
     if (add is not None and add.get('bucket') == 'H'
-            and hitter_games is not None and days_remaining):
+            and hitter_games is not None and (days_remaining or games_per_day)):
         games = 0.0
         for p in after:
             if p.get('bucket') != 'H' or p.get('on_il'):
@@ -258,10 +287,12 @@ def check_swap(roster: list[dict], *, add: Optional[dict] = None,
             g = hitter_games.get(key)
             if g is None:
                 g = hitter_games.get(p.get('name'))
-            games += float(g if g is not None else days_remaining)
+            games += float(g if g is not None
+                           else lineup_slot_days(games_per_day, days_remaining))
         why = lineup_capacity_problem(
             n_hitters_after=after_c['H'], hitter_games_after=games,
-            days_remaining=int(days_remaining))
+            days_remaining=int(days_remaining or 0),
+            games_per_day=games_per_day)
         if why:
             problems.append(why)
 
@@ -306,5 +337,5 @@ __all__ = [
     # star-import could not reach it. (2026-08-27.)
     'RP_FLOOR', 'RP_CAP', 'REQUIRED_SLOTS', 'IllegalMove',
     'apply_swap', 'check_swap', 'is_legal', 'preexisting_shortfalls',
-    'lineup_capacity_problem', 'same_player',
+    'lineup_capacity_problem', 'lineup_slot_days', 'same_player',
 ]
