@@ -317,6 +317,12 @@ def select_pool(cands: list[dict], *, top_n: int, realized_n: int,
     for c in cands:
         if _ckey(c['name']) in inc:
             _take(c, forced=True)
+    # issue #61 sweep verdict (2026-08-28): this fp sort ranks whole-player
+    # WEEKLY TOTALS for pool preselection — it is not a bench-ranking of SP
+    # starts (the cap inside the engine is chronological and moves are scored
+    # by dpwin), so the unresolved-rate week-median imputation does not apply
+    # here. An SP absent from rp3 enters via project_player's
+    # FALLBACK_SP_PER_START and can always be forced in with --include.
     for b in ('H', 'SP', 'RP'):
         sub = [c for c in cands if c['bucket'] == b]
         for c in sorted(sub, key=lambda x: -float(x.get('fp') or 0))[:top_n]:

@@ -36,7 +36,8 @@ from plv_clone.paths import ROOT  # single source for the repo root (was a hardc
 OUT = ROOT / 'data' / 'outputs'
 CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 
-from plv_clone.cap_math import SP_CAP, cap_excess_starts  # single source for the SP-cap rule
+from plv_clone.cap_math import (  # single source for the SP-cap rule
+    SP_CAP, UNRESOLVED_IMPUTE_NOTE, cap_excess_starts, impute_unresolved_fps)
 # Default cap = a standard single week (10). main() resolves the CURRENT period's
 # cap live (16 in the ASG block / 20 in a 2-week playoff round) and passes it to
 # cap_excess_starts; this constant is only the fail-soft fallback when the live
@@ -170,9 +171,25 @@ def main():
             })
         starts = pd.DataFrame(rows)
 
-    # Ensure numeric, fall back to base fp if sched-adj missing, or league average (~10) if all missing
+    # Ensure numeric, fall back to base fp if sched-adj missing
     starts['xfp_per_start_sched'] = starts['xfp_per_start_sched'].fillna(starts['xfp_per_start'])
-    starts['xfp_per_start_sched'] = starts['xfp_per_start_sched'].fillna(10.0)
+    # issue #61 (decided 2026-08-28): a start whose rp3 rate failed to resolve
+    # must NOT carry a filler (the old flat 10.0) into bench-ranking — that
+    # auto-decides the unknown (the Eury Pérez name-match miss read an elite
+    # arm as the week's worst start). Impute at the MEDIAN of the week's
+    # RESOLVED starts (neutral) and surface it loudly in every output row.
+    _unres = starts['xfp_per_start_sched'].isna()
+    starts['rate_unresolved'] = _unres
+    if _unres.any():
+        imputed, med = impute_unresolved_fps(
+            starts['xfp_per_start_sched'].fillna(0.0).tolist(),
+            (~_unres).tolist())
+        if med is None:      # EVERY start unresolved — no median to anchor on;
+            med = 10.0       # league-average fallback, still surfaced below
+            imputed = [med] * len(starts)
+        starts['xfp_per_start_sched'] = imputed
+        for _nm in starts.loc[_unres, 'pitcher']:
+            print(f'  !! {_nm}: {UNRESOLVED_IMPUTE_NOTE} ({med:.1f} fp)')
     starts['xfp_per_start'] = starts['xfp_per_start'].fillna(starts['xfp_per_start_sched'])
 
     # Rank globally by xfp_per_start_sched, descending (display column).
@@ -184,6 +201,10 @@ def main():
     _excess = cap_excess_starts(starts['xfp_per_start_sched'].tolist(), week_cap)
     starts['count_toward_cap'] = [i not in _excess for i in range(len(starts))]
     starts['decision'] = starts['count_toward_cap'].map(lambda x: 'START' if x else 'BENCH (cap)')
+    # Loud in every output row (print / CSV / JSON / dashboard), separate from
+    # `decision` so START/BENCH stays machine-readable.
+    starts['rate_note'] = starts['rate_unresolved'].map(
+        lambda x: f'⚠ {UNRESOLVED_IMPUTE_NOTE}' if x else '')
 
     total = len(starts)
     capped = starts['count_toward_cap'].sum()
@@ -204,7 +225,8 @@ def main():
 
     print(f'\n=== Per-start ranking ===')
     cols = ['date', 'pitcher', 'team_abbr', 'opp_team_abbr', 'is_home',
-            'xfp_per_start', 'xfp_per_start_sched', 'rank', 'decision']
+            'xfp_per_start', 'xfp_per_start_sched', 'rank', 'decision',
+            'rate_note']
     print(starts[cols].to_string(index=False))
 
     starts.to_csv(OUT / 'lineup_optimizer_weekly.csv', index=False)
@@ -217,6 +239,10 @@ def main():
         'counting_starts': int(capped),
         'expected_counting_fp': round(float(sum_count), 1),
         'bench_loss_if_unoptimized': round(float(benched_total), 1),
+        # issue #61: pitchers whose bench-ranking fp is an imputed week median,
+        # not a resolved rp3 rate — treat their START/BENCH rows with caution.
+        'unresolved_rates': sorted(
+            starts.loc[starts['rate_unresolved'], 'pitcher'].unique().tolist()),
         'starts': starts[cols].to_dict(orient='records'),
     }
     with open(OUT / 'lineup_optimizer.json', 'w', encoding='utf-8') as f:

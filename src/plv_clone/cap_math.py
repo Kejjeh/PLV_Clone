@@ -7,6 +7,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import date
+from statistics import median as _median
 
 SP_CAP = 10
 RP_SLOT_CAP = 4
@@ -208,9 +209,52 @@ def unresolved_starts(starts: list["SPStart"]) -> list["SPStart"]:
 
     Surface these before acting on any bench recommendation: cap_excess_starts
     sorts by projected_fp, so an unresolved start is always among the first
-    benched (issue #61).
+    benched (issue #61). Rank via :func:`impute_unresolved_fps`, never the raw
+    filler.
     """
     return [s for s in starts if not s.rate_resolved]
+
+
+#: The exact phrase every consumer prints/renders next to an imputed start.
+#: One constant so the surfacing is grep-able across console, CSV, JSON, HTML.
+UNRESOLVED_IMPUTE_NOTE = "UNRESOLVED — imputed at week median"
+
+
+def impute_unresolved_fps(
+    fps: list[float], resolved: list[bool]
+) -> tuple[list[float], float | None]:
+    """Bench-ranking imputation for unresolved rates (issue #61, decided 2026-08-28).
+
+    A start whose rate failed to resolve carries a FILLER projected_fp (0.0 in
+    :func:`weekly_sp_projection`, a consumer's own conservative fallback
+    elsewhere). Feeding that filler to :func:`cap_excess_starts` auto-benches
+    the UNKNOWN — the canonical bad case is Eury Pérez, whose name-match miss
+    made an elite arm read as the week's worst start. The decided placement is
+    NEUTRAL: rank an unresolved start at the MEDIAN of the same week's
+    RESOLVED starts — never benched purely for being unknown, never
+    auto-started either — and surface it loudly (``UNRESOLVED_IMPUTE_NOTE``)
+    in the consumer's output.
+
+    Returns ``(ranking_fps, imputed_at)``: a copy of ``fps`` with each
+    unresolved entry replaced by the median of the resolved entries, plus the
+    median used. ``imputed_at`` is ``None`` when nothing was imputed — either
+    every start resolved, or NO start resolved and there is no median to
+    anchor on (fps come back unchanged; the caller falls back on its own,
+    still loudly).
+
+    This is the input-building step for :func:`cap_excess_starts`, which stays
+    pure and ranks exactly what it is given.
+    """
+    if len(fps) != len(resolved):
+        raise ValueError(
+            f"fps ({len(fps)}) and resolved ({len(resolved)}) must be parallel lists"
+        )
+    fps = [float(f) for f in fps]
+    resolved_fps = [f for f, ok in zip(fps, resolved) if ok]
+    if len(resolved_fps) == len(fps) or not resolved_fps:
+        return fps, None
+    med = float(_median(resolved_fps))
+    return [f if ok else med for f, ok in zip(fps, resolved)], med
 
 
 def weekly_sp_projection(
@@ -262,11 +306,13 @@ def cap_excess_starts(fps: list[float], cap: int = SP_CAP) -> set[int]:
     Returns the INDICES (into ``fps``) of the starts beyond the top ``cap`` by
     FP. Ties keep input order (stable). Empty set when at/under the cap.
     """
-    # NOTE (issue #61): this ranks by projected_fp alone. A start whose rate
-    # failed to resolve carries a FILLER 0.0 and therefore sorts last, so it is
-    # always among the first benched. weekly_sp_projection now flags those via
-    # SPStart.rate_resolved — check unresolved_starts() before presenting a
-    # bench recommendation built on this.
+    # NOTE (issue #61, decided 2026-08-28): this stays PURE — it ranks exactly
+    # what it is given. A start whose rate failed to resolve carries a FILLER
+    # value that would sort last and be auto-benched (the Eury Pérez case), so
+    # a consumer must never feed the raw filler here: build the ranking list
+    # via impute_unresolved_fps() (unresolved -> week median of resolved
+    # starts, surfaced loudly with UNRESOLVED_IMPUTE_NOTE) first.
+    # tests/test_cap_math_rate_resolution.py walks every call site to hold this.
     if len(fps) <= cap:
         return set()
     ranked = sorted(range(len(fps)), key=lambda i: -fps[i])  # stable: ties keep order

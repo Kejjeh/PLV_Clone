@@ -207,7 +207,11 @@ _GUARD_RE = re.compile(r"pytest\.skip\(|pytest\.importorskip\(|@pytest\.mark\.sk
 # lib.pl_cache and test_triangulate (it asserts the latter DELEGATES rather than
 # re-deciding staleness). It deliberately carries NO presence guard for the PL
 # cache itself — that file is tracked, so a missing one is a real failure.
-MAX_GUARDED_FILES = 68
+# 2026-08-28 issue #61 second half (68 -> 69): test_cap_math_rate_resolution
+# importorskips scripts.xfp.build_matchup_dashboard for the apply_sp_cap
+# consumer test — the same heavy-driver guard test_schedule_fetch_contract
+# already uses on that module. One file, one site.
+MAX_GUARDED_FILES = 69
 # Sites 100 -> 101 for the same file's single importorskip (2026-08-27). This
 # is the first time the SITE bound has moved since it was set; it is the
 # tighter of the two and worth keeping that way.
@@ -216,7 +220,9 @@ MAX_GUARDED_FILES = 68
 # triangulate_core) — the same three-module guard test_lens_health already uses.
 # The file count is unchanged: 65 was already the ceiling and this file replaces
 # no other, so the FILE bound holds and only the site count moves.
-MAX_GUARD_SITES = 119
+# 2026-08-28 issue #61 second half (119 -> 120): the single importorskip in
+# test_cap_math_rate_resolution (see the file-bound note above).
+MAX_GUARD_SITES = 120
 
 
 def _guard_census() -> tuple[int, int, list[str]]:

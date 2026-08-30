@@ -338,6 +338,7 @@ SEASON_END = date(2026, 9, 28)
 # CURRENT matchup period is resolved period-aware via the shared period_meta
 # resolver (ASG period 15 → 16, 2-week playoff round → 20) — see main().
 from plv_clone.cap_math import SP_CAP as MAX_SP_STARTS_PER_WEEK  # noqa: E402
+from plv_clone.cap_math import UNRESOLVED_IMPUTE_NOTE  # noqa: E402  (issue #61 surfacing)
 from scripts.xfp.lib.period_meta import (  # noqa: E402
     resolve_period_meta, espn_period_meta,
 )
@@ -1309,7 +1310,8 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         # Messick/Sasaki 2026): count the start with a conservative per-start so
         # the cap math + team projection don't silently drop it.
         per_start_base = rp_info.get('per_start') or FALLBACK_SP_PER_START
-        if not rp_info.get('per_start'):
+        rate_unresolved = not rp_info.get('per_start')
+        if rate_unresolved:
             out['badges'].append('≈ est')
         if len(starts) >= 2:
             out['badges'].append('🔥 2-START')
@@ -1340,6 +1342,13 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         out['units'] = res.units
         out['sigma2'] = res.sigma2
         out['breakdown'] = res.breakdown
+        if rate_unresolved:
+            # issue #61 (decided 2026-08-28): the FALLBACK per-start is a
+            # conservative filler, not a projection. Tag each start so
+            # apply_sp_cap ranks it at the week median (a name-match miss like
+            # Eury Pérez must not be auto-benched for being unknown).
+            for b in res.breakdown:
+                b['rate_unresolved'] = True
         return out
 
     elif pos in ('SP', 'RP', 'P'):
@@ -1450,14 +1459,29 @@ def apply_sp_cap(team_projections, cap=MAX_SP_STARTS_PER_WEEK):
     """Cap SP starts at `cap` per team — zero the lowest-FP starts beyond the
     cap (the bench-your-worst planning rule). The ranking rule itself lives in
     cap_math.cap_excess_starts; this only applies it to the matchup's breakdown
-    structure."""
-    from plv_clone.cap_math import cap_excess_starts
+    structure.
+
+    A start tagged ``rate_unresolved`` (rp3 rate never resolved; its fp is the
+    conservative FALLBACK filler) is RANKED at the week median of resolved
+    starts — neutral, per the issue #61 decision (2026-08-28) — while its
+    projected mean stays the fallback. Otherwise a name-match miss auto-benches
+    an unknown arm (Eury Pérez read as the week's worst start)."""
+    from plv_clone.cap_math import (UNRESOLVED_IMPUTE_NOTE, cap_excess_starts,
+                                    impute_unresolved_fps)
     sp_starts = []
     for name, proj in team_projections.items():
         for i, b in enumerate(proj.get('breakdown', [])):
             if b.get('type') == 'start':
-                sp_starts.append({'name': name, 'idx': i, 'fp': b['fp']})
-    excess = cap_excess_starts([s['fp'] for s in sp_starts], cap)
+                sp_starts.append({'name': name, 'idx': i, 'fp': b['fp'],
+                                  'resolved': not b.get('rate_unresolved')})
+    rank_fps, imputed_at = impute_unresolved_fps(
+        [s['fp'] for s in sp_starts], [s['resolved'] for s in sp_starts])
+    for s in sp_starts:
+        if not s['resolved']:
+            at = (f'ranked at {imputed_at:.1f} FP' if imputed_at is not None
+                  else 'no resolved start to anchor a median — ranked at its fallback fp')
+            print(f'  !! SP cap ranking: {s["name"]} {UNRESOLVED_IMPUTE_NOTE} ({at})')
+    excess = cap_excess_starts(rank_fps, cap)
     if not excess:
         return 0
     # sigma2 is combined variance across ALL of a pitcher's starts this week
@@ -3195,12 +3219,21 @@ def render_team_table(label, lineup, wtd_score, projections, capped_fp=0,
             for b in r['breakdown']:
                 if b.get('type') == 'start':
                     cap_marker = ' <span class="capped">⚠ CAPPED</span>' if b.get('fp_capped') else ''
+                    # issue #61: rate never resolved — the fp shown is the
+                    # conservative fallback and the cap RANKED it at the week
+                    # median. Loud on purpose.
+                    unres_marker = (f' <span class="capped" title="rp3 rate did not '
+                                    f'resolve for this pitcher; the SP cap ranked this '
+                                    f'start at the week median of resolved starts '
+                                    f'(issue #61)">⚠ {UNRESOLVED_IMPUTE_NOTE}</span>'
+                                    if b.get('rate_unresolved') else '')
                     # Confirmed probable (✓) vs rotation-gap prediction (~)
                     conf_marker = ('✓' if b.get('confirmed', True) else
                                    '<span class="muted" title="rotation-gap prediction — not yet confirmed probable">~</span>')
                     txt = (f'{conf_marker} {b["date"][5:]} vs {b["opp"]} '
                            f'(opp bat {b["opp_idx"]:.2f}, ×{b["factor"]:.2f}, '
-                           f'<b>{b.get("fp_original", b["fp"]):.1f} FP</b>){cap_marker}')
+                           f'<b>{b.get("fp_original", b["fp"]):.1f} FP</b>)'
+                           f'{cap_marker}{unres_marker}')
                     out.append(f'<tr class="breakdown"><td colspan="7">→ {txt}</td></tr>')
                 elif b.get('type') == 'game':
                     opp_sp_s = ''

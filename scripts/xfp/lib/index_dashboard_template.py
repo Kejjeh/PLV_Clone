@@ -3165,6 +3165,8 @@ function AdvisoryTab({ advisory, myTeam, colors }) {
             { key:'rank', label:'Rank', align:'center' },
             { key:'decision', label:'Action', align:'center',
               color: v => v === 'START' ? '#33aa44' : '#cc5544' },
+            { key:'rate_note', label:'Rate', color: v => v ? '#cc5544' : colors.text,
+              render: r => r.rate_note || '' },
           ]} />
         </div>
       ) : <div style={subH}>(run scripts/xfp/lineup_optimizer.py to populate)</div>}
