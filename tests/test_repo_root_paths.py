@@ -47,10 +47,18 @@ ASSIGN_RE = re.compile(
 
 
 def _python_files() -> list[Path]:
+    # Match SKIP_DIRS against parts RELATIVE to REPO_ROOT, never the absolute
+    # path: a checkout that itself lives under an agent worktree
+    # (…\.claude\worktrees\<name>\…) has ".claude" in every file's absolute
+    # parts, which blanked the whole scan and tripped the anti-vacuity assert
+    # (found 2026-08-28). Relative parts keep the 2026-08-01 intent — don't
+    # descend into worktrees nested INSIDE the scanned repo — without going
+    # blind when the repo IS one.
     return [
         f
         for f in REPO_ROOT.rglob("*.py")
-        if not (SKIP_DIRS & set(f.parts)) and f != Path(__file__)
+        if not (SKIP_DIRS & set(f.relative_to(REPO_ROOT).parts))
+        and f != Path(__file__)
     ]
 
 
@@ -152,7 +160,11 @@ def _scanned_modules(root: Path | None = None) -> list[Path]:
     out = []
     for tree in SCANNED_TREES:
         for f in (root / tree).rglob("*.py"):
-            if EXCLUDED_SUBTREES & set(f.parts) or SKIP_DIRS & set(f.parts):
+            # relative parts, same reasoning as _python_files(): an absolute
+            # intersection blanks the scan when the checkout sits under
+            # .claude\worktrees (or any path containing a skip/excluded name)
+            rel_parts = set(f.relative_to(root).parts)
+            if EXCLUDED_SUBTREES & rel_parts or SKIP_DIRS & rel_parts:
                 continue
             out.append(f)
     return sorted(out)
