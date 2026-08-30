@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-29",
+ "as_of": "2026-08-30",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1340,6 +1340,12 @@
    "name": "Sam Hentges",
    "pos": "P"
   },
+  "675920": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Seth Lonsway",
+   "pos": "P"
+  },
   "694376": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1388,6 +1394,12 @@
    "name": "Willy Adames",
    "pos": "SS"
   },
+  "805074": {
+   "team": "San Francisco Giants",
+   "abbr": "SF",
+   "name": "Yunior Marte",
+   "pos": "P"
+  },
   "681439": {
    "team": "San Francisco Giants",
    "abbr": "SF",
@@ -1428,12 +1440,6 @@
    "team": "St. Louis Cardinals",
    "abbr": "STL",
    "name": "Cade Winquest",
-   "pos": "P"
-  },
-  "657571": {
-   "team": "St. Louis Cardinals",
-   "abbr": "STL",
-   "name": "Caleb Ferguson",
    "pos": "P"
   },
   "693409": {
@@ -2274,7 +2280,7 @@
    "team": "Toronto Blue Jays",
    "abbr": "TOR",
    "name": "Daz Cameron",
-   "pos": "RF"
+   "pos": "LF"
   },
   "656302": {
    "team": "Toronto Blue Jays",
@@ -3980,12 +3986,6 @@
    "name": "José Caballero",
    "pos": "SS"
   },
-  "623437": {
-   "team": "New York Yankees",
-   "abbr": "NYY",
-   "name": "Justin Topa",
-   "pos": "P"
-  },
   "665645": {
    "team": "New York Yankees",
    "abbr": "NYY",
@@ -4556,12 +4556,6 @@
    "name": "Sebastián Rivero",
    "pos": "C"
   },
-  "641312": {
-   "team": "Los Angeles Angels",
-   "abbr": "LAA",
-   "name": "Shaun Anderson",
-   "pos": "P"
-  },
   "642048": {
    "team": "Los Angeles Angels",
    "abbr": "LAA",
@@ -4680,6 +4674,12 @@
    "team": "Arizona Diamondbacks",
    "abbr": "AZ",
    "name": "Dennis Santana",
+   "pos": "P"
+  },
+  "571882": {
+   "team": "Arizona Diamondbacks",
+   "abbr": "AZ",
+   "name": "Derek Law",
    "pos": "P"
   },
   "686753": {
@@ -5562,12 +5562,6 @@
    "team": "Chicago Cubs",
    "abbr": "CHC",
    "name": "Gavin Hollowell",
-   "pos": "P"
-  },
-  "571948": {
-   "team": "Chicago Cubs",
-   "abbr": "CHC",
-   "name": "Hoby Milner",
    "pos": "P"
   },
   "640451": {

@@ -27,8 +27,18 @@
   "prediction_settlement": null,
   "reason_tag": "strong_hold",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-08-30",
+  "settlement": {
+    "actual_fp_per_unit": 0.5348837209302325,
+    "classification": "BUY_MISS",
+    "event_unit": "PA",
+    "n_events": 86,
+    "proj_per": 0.6053989176355534,
+    "proj_units_note": "native",
+    "residual": -0.07051519670532091,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-09",
   "verdict_top": "BUY"
 }

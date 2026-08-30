@@ -1,41 +1,41 @@
 {
-  "base_pwin": 0.8103,
+  "base_pwin": 0.6261,
   "regime": "LEADING",
   "period": 21,
   "sims": 10000,
   "seed": 7,
-  "generated_at": "2026-08-29T17:27:37",
+  "generated_at": "2026-08-30T07:17:37",
   "week_start": "2026-08-24",
   "week_end": "2026-08-30",
   "banked": 6,
   "sp_cap": 10,
   "banked_provisional": false,
   "cap_remaining": 4,
-  "plan_source": "greedy",
-  "plan_total_dpwin": 0.06569999999999998,
-  "plan_pwin_final": 0.876,
+  "plan_source": "pair_check",
+  "plan_total_dpwin": 0.0096,
+  "plan_pwin_final": 0.6357,
   "plan": [
     {
-      "add": "Javier Sanoja",
-      "add_bucket": "H",
-      "drop": "Reid Detmers",
-      "drop_bucket": "SP",
-      "dpwin": 0.03379999999999994,
-      "mc_se": 0.003628,
-      "pwin_after": 0.8441,
-      "dpwin_from_base": 0.0338,
-      "dtitle_equity_pp": 1.0698
+      "add": "Luke Weaver",
+      "add_bucket": "RP",
+      "drop": "Jacob Latz",
+      "drop_bucket": "RP",
+      "dpwin": 0.009600000000000053,
+      "mc_se": 0.004812,
+      "pwin_after": 0.6357,
+      "dpwin_from_base": 0.009600000000000053,
+      "dtitle_equity_pp": 0.3038
     },
     {
-      "add": "Alec Bohm",
-      "add_bucket": "H",
-      "drop": "Eury Perez",
-      "drop_bucket": "SP",
-      "dpwin": 0.03190000000000004,
-      "mc_se": 0.003296,
-      "pwin_after": 0.876,
-      "dpwin_from_base": 0.0657,
-      "dtitle_equity_pp": 1.0096
+      "add": "Yusei Kikuchi",
+      "add_bucket": "SP",
+      "drop": "Corbin Carroll",
+      "drop_bucket": "H",
+      "dpwin": -5.377642775528102e-17,
+      "mc_se": 0.004812,
+      "pwin_after": 0.6357,
+      "dpwin_from_base": 0.0096,
+      "dtitle_equity_pp": -0.0
     }
   ],
   "title_equity": {
@@ -49,124 +49,124 @@
   },
   "top_single_moves": [
     {
-      "add": "Alec Bohm",
+      "add": "Luke Weaver",
+      "drop": "Jacob Latz",
+      "dpwin": 0.009600000000000053,
+      "mc_se": 0.004812
+    },
+    {
+      "add": "Adrian Morejon",
+      "drop": "Jacob Latz",
+      "dpwin": 0.0038000000000000256,
+      "mc_se": 0.004828
+    },
+    {
+      "add": "Bryan Abreu",
+      "drop": "Jacob Latz",
+      "dpwin": 0.0019000000000000128,
+      "mc_se": 0.004833
+    },
+    {
+      "add": "Daniel Palencia",
+      "drop": "Jacob Latz",
+      "dpwin": 0.000500000000000056,
+      "mc_se": 0.004837
+    },
+    {
+      "add": "Luke Weaver",
+      "drop": "Tanner Scott",
+      "dpwin": 0.00039999999999995595,
+      "mc_se": 0.004837
+    },
+    {
+      "add": "Hunter Gaddis",
+      "drop": "Jacob Latz",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.004838
+    },
+    {
+      "add": "Nate Lavender",
+      "drop": "Jacob Latz",
+      "dpwin": 9.999999999998899e-05,
+      "mc_se": 0.004838
+    },
+    {
+      "add": null,
+      "drop": "Corbin Carroll",
+      "dpwin": 0.0,
+      "mc_se": 0.004838
+    },
+    {
+      "add": null,
       "drop": "Reid Detmers",
-      "dpwin": 0.03610000000000002,
-      "mc_se": 0.003606
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     },
     {
-      "add": "Alec Bohm",
+      "add": null,
       "drop": "Eury Perez",
-      "dpwin": 0.03610000000000002,
-      "mc_se": 0.003606
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     },
     {
-      "add": "Alec Bohm",
+      "add": null,
       "drop": "Logan Henderson",
-      "dpwin": 0.03610000000000002,
-      "mc_se": 0.003606
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     },
     {
-      "add": "Alec Bohm",
+      "add": null,
       "drop": "Noah Cameron",
-      "dpwin": 0.03610000000000002,
-      "mc_se": 0.003606
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     },
     {
-      "add": "Vinnie Pasquantino",
+      "add": "Yusei Kikuchi",
+      "drop": "Corbin Carroll",
+      "dpwin": 0.0,
+      "mc_se": 0.004838
+    },
+    {
+      "add": "Yusei Kikuchi",
       "drop": "Reid Detmers",
-      "dpwin": 0.034499999999999975,
-      "mc_se": 0.003621
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     },
     {
-      "add": "Vinnie Pasquantino",
+      "add": "Yusei Kikuchi",
       "drop": "Eury Perez",
-      "dpwin": 0.034499999999999975,
-      "mc_se": 0.003621
-    },
-    {
-      "add": "Vinnie Pasquantino",
-      "drop": "Logan Henderson",
-      "dpwin": 0.034499999999999975,
-      "mc_se": 0.003621
-    },
-    {
-      "add": "Vinnie Pasquantino",
-      "drop": "Noah Cameron",
-      "dpwin": 0.034499999999999975,
-      "mc_se": 0.003621
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Reid Detmers",
-      "dpwin": 0.03379999999999994,
-      "mc_se": 0.003628
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Eury Perez",
-      "dpwin": 0.03379999999999994,
-      "mc_se": 0.003628
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Logan Henderson",
-      "dpwin": 0.03379999999999994,
-      "mc_se": 0.003628
-    },
-    {
-      "add": "Javier Sanoja",
-      "drop": "Noah Cameron",
-      "dpwin": 0.03379999999999994,
-      "mc_se": 0.003628
-    },
-    {
-      "add": "Mickey Gasper",
-      "drop": "Reid Detmers",
-      "dpwin": 0.03149999999999997,
-      "mc_se": 0.003649
-    },
-    {
-      "add": "Mickey Gasper",
-      "drop": "Eury Perez",
-      "dpwin": 0.03149999999999997,
-      "mc_se": 0.003649
-    },
-    {
-      "add": "Mickey Gasper",
-      "drop": "Logan Henderson",
-      "dpwin": 0.03149999999999997,
-      "mc_se": 0.003649
+      "dpwin": 0.0,
+      "mc_se": 0.004838
     }
   ],
   "pair_check": {
     "n_combos": 45,
-    "adopted": false,
+    "adopted": true,
     "best": {
       "moves": [
         {
-          "add": "Alec Bohm",
-          "add_bucket": "H",
-          "drop": "Reid Detmers",
-          "drop_bucket": "SP",
-          "dpwin_solo": 0.03610000000000002,
-          "mc_se": 0.003606
+          "add": "Luke Weaver",
+          "add_bucket": "RP",
+          "drop": "Jacob Latz",
+          "drop_bucket": "RP",
+          "dpwin_solo": 0.009600000000000053,
+          "mc_se": 0.004812
         },
         {
-          "add": "Javier Sanoja",
-          "add_bucket": "H",
-          "drop": "Eury Perez",
-          "drop_bucket": "SP",
-          "dpwin_solo": 0.03379999999999994,
-          "mc_se": 0.003628
+          "add": "Yusei Kikuchi",
+          "add_bucket": "SP",
+          "drop": "Corbin Carroll",
+          "drop_bucket": "H",
+          "dpwin_solo": 0.0,
+          "mc_se": 0.004838
         }
       ],
-      "dpwin": 0.0657,
-      "pwin": 0.876,
-      "mc_se": 0.003296,
-      "sum_solo": 0.06989999999999996,
-      "interaction": -0.004199999999999968
+      "dpwin": 0.0096,
+      "pwin": 0.6357,
+      "mc_se": 0.004812,
+      "sum_solo": 0.009600000000000053,
+      "interaction": -5.377642775528102e-17
     }
   },
-  "dpwin_run_id": "2026-08-29T172737_7"
+  "dpwin_run_id": "2026-08-30T071737_7"
 }
