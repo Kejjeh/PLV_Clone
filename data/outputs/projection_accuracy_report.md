@@ -1,8 +1,8 @@
 # Projection Accuracy Report
 
-**Generated:** 2026-08-30  
+**Generated:** 2026-08-31  
 **Source:** `data/outputs/predictions_history.csv`  
-**Backfilled rows:** 526  
+**Backfilled rows:** 542  
 **Minimum N per bucket to trust:** 5
 
 ## 1. Periods covered
@@ -28,7 +28,7 @@
 | 18 | 21 | 540.4 | 408.2 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 19 | 25 | 553.3 | 540.0 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
 | 20 | 25 | 418.0 | 518.0 | MA_v1, backfill_2024_bayes_shrink, backfill_2025_bayes_shrink, baseline |
-| 21 | 4 | 395.0 | 317.0 | backfill_2024_bayes_shrink |
+| 21 | 20 | 395.0 | 317.0 | MA_v1, backfill_2024_bayes_shrink, baseline |
 | 22 | 4 | 290.6 | 379.3 | backfill_2024_bayes_shrink |
 
 ## 2. Error metrics — all snapshots
@@ -37,10 +37,10 @@ Error = projected − actual. Bias > 0 means model over-projects.
 
 | Model | n | my MAE | my RMSE | my bias | opp MAE | opp RMSE | opp bias |
 |---|---|---|---|---|---|---|---|
-| `MA_v1` | 180 | 58.1 | 80.8 | +29.0 | 62.9 | 82.9 | +27.8 |
+| `MA_v1` | 188 | 57.6 | 79.7 | +29.7 | 62.4 | 81.9 | +24.5 |
 | `backfill_2024_bayes_shrink` | 84 | 74.4 | 133.3 | -43.5 | 72.4 | 135.2 | -53.2 |
 | `backfill_2025_bayes_shrink` | 57 | 70.9 | 104.2 | -30.9 | 74.0 | 104.2 | -45.2 |
-| `baseline` | 180 | 44.4 | 73.0 | +4.1 | 53.0 | 76.4 | +0.8 |
+| `baseline` | 188 | 43.4 | 71.6 | +4.5 | 54.4 | 76.9 | -2.8 |
 | `baseline_pre_versioning` | 25 | 37.1 | 44.3 | -33.0 | 39.2 | 44.6 | +12.4 |
 
 ## 3. Error metrics — latest snapshot per (period, model)
@@ -115,21 +115,23 @@ This is the "what the dashboard showed at end of week" view.
 | 20 | `backfill_2024_bayes_shrink` | 361.5 | 309.6 | +51.9 | 358.0 | 359.0 | -1.0 |
 | 20 | `backfill_2025_bayes_shrink` | 503.3 | 488.2 | +15.1 | 527.3 | 632.1 | -104.8 |
 | 20 | `baseline` | 416.7 | 384.7 | +32.0 | 286.4 | 272.7 | +13.7 |
+| 21 | `MA_v1` | 383.4 | 362.6 | +20.8 | 371.9 | 420.5 | -48.6 |
 | 21 | `backfill_2024_bayes_shrink` | 344.3 | 362.4 | -18.1 | 357.9 | 385.6 | -27.7 |
+| 21 | `baseline` | 378.0 | 362.6 | +15.4 | 361.2 | 420.5 | -59.3 |
 | 22 | `backfill_2024_bayes_shrink` | 359.0 | 379.2 | -20.2 | 322.9 | 400.3 | -77.4 |
 
 ## 4. Win-probability calibration
 
 Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈ actual win rate. Buckets with N < 5 are flagged INSUFFICIENT.
 
-### `MA_v1` (n=180)
+### `MA_v1` (n=188)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
 | 0.00-0.25 | 75 | 0.070 | 0.040 | 0.030 | OK |
 | 0.25-0.50 | 32 | 0.342 | 0.219 | 0.124 | OK |
-| 0.50-0.75 | 30 | 0.612 | 0.600 | 0.012 | OK |
-| 0.75-1.00 | 43 | 0.894 | 1.000 | 0.106 | OK |
+| 0.50-0.75 | 34 | 0.615 | 0.529 | 0.086 | OK |
+| 0.75-1.00 | 47 | 0.895 | 0.915 | 0.020 | OK |
 
 ### `backfill_2024_bayes_shrink` (n=84)
 
@@ -149,14 +151,14 @@ Buckets on raw `win_probability`. A well-calibrated model has mean predicted ≈
 | 0.50-0.75 | 26 | 0.589 | 0.500 | 0.089 | OK |
 | 0.75-1.00 | 2 | 0.760 | 1.000 | 0.240 | INSUFFICIENT |
 
-### `baseline` (n=180)
+### `baseline` (n=188)
 
 | Bucket | n | mean predicted | actual win rate | abs gap | status |
 |---|---|---|---|---|---|
 | 0.00-0.25 | 76 | 0.084 | 0.039 | 0.045 | OK |
 | 0.25-0.50 | 28 | 0.364 | 0.143 | 0.222 | OK |
-| 0.50-0.75 | 36 | 0.621 | 0.667 | 0.046 | OK |
-| 0.75-1.00 | 40 | 0.888 | 1.000 | 0.112 | OK |
+| 0.50-0.75 | 40 | 0.627 | 0.600 | 0.027 | OK |
+| 0.75-1.00 | 44 | 0.891 | 0.909 | 0.018 | OK |
 
 ### `baseline_pre_versioning` (n=25)
 

@@ -1,7 +1,7 @@
 {
-  "generated": "2026-08-30",
+  "generated": "2026-08-31",
   "upgrade_floor_fpp": -0.0414,
-  "hit_upgrade_floor_xwoba": 0.328,
+  "hit_upgrade_floor_xwoba": 0.327,
   "alert_count": 1,
   "hitter_alert_count": 0,
   "alerts": [
@@ -18,7 +18,7 @@
       "l4": "3/4",
       "whiff_pct": 22.9,
       "xwoba_con": 0.333,
-      "rp3_rank": 21
+      "rp3_rank": 31
     }
   ],
   "hitter_alerts": [],
