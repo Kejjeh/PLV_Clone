@@ -1,0 +1,43 @@
+# Context-exclusion policy for coding agents.
+# Claude Code enforces the Read/Grep side of this via permissions.deny in
+# .claude/settings.json (local, gitignored); this file is the committed,
+# tool-agnostic statement of the same policy. If your tool honors
+# .claudeignore natively, these patterns apply directly.
+#
+# Rule of thumb: NEVER pull bulk data into agent context. Inspect data with
+# `python -c "import pandas as pd; print(pd.read_csv(p, nrows=5))"` instead.
+
+# Bulk data (4.6 GB total)
+data/raw/
+data/processed/
+data/research/xfp_cache/
+data/research/espn_snapshot/
+data/research/fa_snapshots/
+*.parquet
+*.pkl
+*.bak
+
+# Nested public deploy repo (522 MB; edit via refresh pipeline, not by hand)
+xfp-model/
+
+# Generated HTML dashboards (regenerate, don't read whole)
+data/outputs/*.html
+data/outputs/*.js
+
+# Untracked one-off scratch files in the repo root
+scratchpad_*
+scratch_*
+
+# Notebooks (outputs embedded), logs, caches
+notebooks/
+logs/
+.cache/
+.codegraph/
+
+# Dead trees (kept for history; see pyproject coverage omit list)
+scripts/_attic/
+scripts/_oneoff/
+scripts/xfp/archive/
+scripts/xfp/research/
+scripts/xfp/_research/
+scripts/xfp/_attic/
