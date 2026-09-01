@@ -1,5 +1,10 @@
 # Agent Instructions for plv_clone
 
+> **Primary operating guide is `CLAUDE.md`** (commands, gotchas, routing).
+> This file adds review discipline and the high-impact-file list for the
+> legacy PLV/Process+ layer (dormant — ADR-0009). Where they differ,
+> CLAUDE.md wins.
+
 ## Role: Skeptical Reviewer First, Implementer Second
 
 Review before editing whenever a request is:
@@ -100,8 +105,11 @@ Before approving or implementing a change, verify:
 State the exact verification commands to run. Prefer commands already in the project:
 
 ```bash
-# Run the full test suite
-python -m pytest
+# Fast sanity subset (run after any change)
+python scripts/ci/smoke.py
+
+# Run the full test suite (always via the summarizer — raw pytest floods context)
+python scripts/ci/run_summary.py -- python -m pytest
 
 # Validate pipeline outputs
 python scripts/validate_outputs.py

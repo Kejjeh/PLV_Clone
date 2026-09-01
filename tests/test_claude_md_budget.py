@@ -33,7 +33,10 @@ MEMORY = ROOT / "docs" / "memory"
 
 #: Hard ceiling. Lower it when the file shrinks; raising it needs a reason in
 #: the same commit, and "I added a rule inline" is not one.
-MAX_LINES = 320
+#: 2026-09-01 handoff pass: file compressed 320 → 146 (each of the 34 numbered
+#: rules is now a true single line; league/model/skill detail moved to
+#: docs/memory/ and docs/ARCHITECTURE.md). Ratchet lowered per the rule above.
+MAX_LINES = 155
 
 
 def _text() -> str:

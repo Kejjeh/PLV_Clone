@@ -1,5 +1,15 @@
 # PLV Clone
 
+> **Repo status (2026-09):** this repo now hosts TWO subsystems. The PLV /
+> Process+ clone documented below is **dormant** (frozen since 2026-04; see
+> `docs/adr/0009-plv-legacy-subsystem-dormant-retained.md`). The active
+> system is the **fantasy xFP layer** (`scripts/xfp/` + `src/plv_clone/`):
+> projection models, dashboards, and decision tooling for the BrownU ESPN
+> league, refreshed nightly by GitHub Actions. For that system — and for any
+> coding agent — the sources of truth are `CLAUDE.md` (operating guide),
+> `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`, and `HANDOFF.md`. The rest of
+> this README describes only the dormant PLV clone.
+
 **Unofficial public-data clone of Pitcher List's PLV and Process+ metrics.**
 
 > ⚠️ This project is NOT affiliated with or endorsed by Pitcher List. Outputs are
@@ -254,7 +264,8 @@ including feature lists, evaluation metrics, and calibration diagnostics.
 ## Running Tests
 
 ```bash
-python -m pytest
+python scripts/ci/smoke.py                            # fast sanity subset
+python scripts/ci/run_summary.py -- python -m pytest  # full suite (compact output)
 python -m ruff check src/ tests/
 ```
 
