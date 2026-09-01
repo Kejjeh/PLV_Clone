@@ -1,5 +1,5 @@
 {
- "as_of": "2026-08-31",
+ "as_of": "2026-09-01",
  "source": "statsapi 40Man rosters",
  "players": {
   "675961": {
@@ -1472,6 +1472,12 @@
    "name": "Gordon Graceffo",
    "pos": "P"
   },
+  "684516": {
+   "team": "St. Louis Cardinals",
+   "abbr": "STL",
+   "name": "Hancel Rincon",
+   "pos": "P"
+  },
   "690928": {
    "team": "St. Louis Cardinals",
    "abbr": "STL",
@@ -2160,6 +2166,12 @@
    "team": "Texas Rangers",
    "abbr": "TEX",
    "name": "Robert Garcia",
+   "pos": "P"
+  },
+  "592866": {
+   "team": "Texas Rangers",
+   "abbr": "TEX",
+   "name": "Trevor Williams",
    "pos": "P"
   },
   "641302": {
@@ -3032,6 +3044,12 @@
    "name": "Austin Riley",
    "pos": "3B"
   },
+  "686628": {
+   "team": "Atlanta Braves",
+   "abbr": "ATL",
+   "name": "Blake Burkhalter",
+   "pos": "P"
+  },
   "608718": {
    "team": "Atlanta Braves",
    "abbr": "ATL",
@@ -3151,6 +3169,12 @@
    "abbr": "ATL",
    "name": "Joey Wentz",
    "pos": "P"
+  },
+  "571657": {
+   "team": "Atlanta Braves",
+   "abbr": "ATL",
+   "name": "Kyle Farmer",
+   "pos": "DH"
   },
   "657041": {
    "team": "Atlanta Braves",
@@ -3570,7 +3594,7 @@
    "team": "Miami Marlins",
    "abbr": "MIA",
    "name": "Agustín Ramírez",
-   "pos": "C"
+   "pos": "DH"
   },
   "677053": {
    "team": "Miami Marlins",
@@ -3979,6 +4003,12 @@
    "abbr": "NYY",
    "name": "Jazz Chisholm Jr.",
    "pos": "2B"
+  },
+  "670167": {
+   "team": "New York Yankees",
+   "abbr": "NYY",
+   "name": "John Schreiber",
+   "pos": "P"
   },
   "676609": {
    "team": "New York Yankees",
@@ -5072,11 +5102,11 @@
    "name": "Leody Taveras",
    "pos": "CF"
   },
-  "676679": {
+  "673357": {
    "team": "Baltimore Orioles",
    "abbr": "BAL",
-   "name": "Luis Vázquez",
-   "pos": "SS"
+   "name": "Luis Robert Jr.",
+   "pos": "CF"
   },
   "675919": {
    "team": "Baltimore Orioles",
@@ -5216,12 +5246,6 @@
    "name": "Brayan Bello",
    "pos": "P"
   },
-  "695391": {
-   "team": "Boston Red Sox",
-   "abbr": "BOS",
-   "name": "Brett Harris",
-   "pos": "3B"
-  },
   "702332": {
    "team": "Boston Red Sox",
    "abbr": "BOS",
@@ -5305,6 +5329,12 @@
    "abbr": "BOS",
    "name": "Jarren Duran",
    "pos": "LF"
+  },
+  "699151": {
+   "team": "Boston Red Sox",
+   "abbr": "BOS",
+   "name": "Jedixson Paez",
+   "pos": "P"
   },
   "670912": {
    "team": "Boston Red Sox",
@@ -6662,6 +6692,12 @@
    "name": "Javier Báez",
    "pos": "SS"
   },
+  "807726": {
+   "team": "Detroit Tigers",
+   "abbr": "DET",
+   "name": "John Peck",
+   "pos": "SS"
+  },
   "434378": {
    "team": "Detroit Tigers",
    "abbr": "DET",
@@ -6745,12 +6781,6 @@
    "abbr": "DET",
    "name": "Spencer Torkelson",
    "pos": "1B"
-  },
-  "663432": {
-   "team": "Detroit Tigers",
-   "abbr": "DET",
-   "name": "Tanner Rainey",
-   "pos": "P"
   },
   "699073": {
    "team": "Detroit Tigers",
@@ -7183,12 +7213,6 @@
    "abbr": "KC",
    "name": "John Rave",
    "pos": "RF"
-  },
-  "670167": {
-   "team": "Kansas City Royals",
-   "abbr": "KC",
-   "name": "John Schreiber",
-   "pos": "P"
   },
   "663697": {
    "team": "Kansas City Royals",
@@ -8095,12 +8119,6 @@
    "abbr": "NYM",
    "name": "Kodai Senga",
    "pos": "P"
-  },
-  "673357": {
-   "team": "New York Mets",
-   "abbr": "NYM",
-   "name": "Luis Robert Jr.",
-   "pos": "CF"
   },
   "620443": {
    "team": "New York Mets",

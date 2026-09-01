@@ -27,8 +27,18 @@
   "prediction_settlement": null,
   "reason_tag": "process_red_flag",
   "record_schema": 2,
-  "settled_at": null,
-  "settlement": null,
+  "settled_at": "2026-09-01",
+  "settlement": {
+    "actual_fp_per_unit": 0.4024390243902439,
+    "classification": "CAUTION_NEUTRAL",
+    "event_unit": "PA",
+    "n_events": 82,
+    "proj_per": 0.5625521959958637,
+    "proj_units_note": "native",
+    "residual": -0.16011317160561978,
+    "threshold": 0.02,
+    "window_days": 21
+  },
   "snapshot_date": "2026-08-11",
   "verdict_top": "CAUTION"
 }
