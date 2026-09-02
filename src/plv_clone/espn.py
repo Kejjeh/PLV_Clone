@@ -113,15 +113,24 @@ def _is_auth_error(exc_or_msg) -> bool:
     return any(tok in str(exc_or_msg).lower() for tok in _AUTH_ERROR_HINTS)
 
 
-@lru_cache(maxsize=1)
-def _get_league():
-    """Return authenticated ESPN League object (cached for process lifetime)."""
+@lru_cache(maxsize=8)
+def get_league(year: int | None = None):
+    """Return an authenticated ESPN League for *year* (default: current season).
+
+    The year-aware sibling of :func:`_get_league` — same credential check,
+    same retry/backoff, same auth-error fast-fail — for callers that need a
+    HISTORICAL season (the synthetic-calibration backfills fetch 2024/2025).
+    Cached per year. The current-season path should keep using
+    :func:`_get_league`: only that one gets the FA snapshot wrapper.
+    """
     if not (LEAGUE_ID and SWID and ESPN_S2):
         raise RuntimeError(
             "ESPN credentials missing. Set ESPN_LEAGUE_ID, ESPN_SWID, ESPN_S2 "
             "(and optionally ESPN_YEAR) in your environment or in a `.env` file. "
             "See .env.example for the format."
         )
+    if year is None:
+        year = YEAR
     try:
         from espn_api.baseball import League
         # Retry with backoff (audit 2026-07-19 M3): the League constructor is
@@ -132,7 +141,7 @@ def _get_league():
             try:
                 league = League(
                     league_id=LEAGUE_ID,
-                    year=YEAR,
+                    year=year,
                     espn_s2=ESPN_S2,
                     swid=SWID,
                 )
@@ -149,8 +158,6 @@ def _get_league():
                       f"({type(_le).__name__}: {_le}) — retry {_attempt}/2 "
                       f"in {_delay}s")
                 _t.sleep(_delay)
-        if os.environ.get("PLV_ESPN_SNAPSHOT") == "1":
-            _wrap_free_agents_with_snapshot(league)
         return league
     except ImportError:
         raise ImportError(
@@ -168,3 +175,17 @@ def _get_league():
             friendly = f"ESPN API connection failed: {msg or e.__class__.__name__}"
         logger.error(friendly)
         raise RuntimeError(friendly) from e
+
+
+@lru_cache(maxsize=1)
+def _get_league():
+    """Return the authenticated CURRENT-season League (process-lifetime cache).
+
+    Thin wrapper over :func:`get_league` that adds the one current-season-only
+    behavior: the optional disk FA-snapshot wrapper the nightly refresh
+    enables via PLV_ESPN_SNAPSHOT=1.
+    """
+    league = get_league(YEAR)
+    if os.environ.get("PLV_ESPN_SNAPSHOT") == "1":
+        _wrap_free_agents_with_snapshot(league)
+    return league

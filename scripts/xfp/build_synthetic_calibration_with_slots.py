@@ -27,7 +27,6 @@ Output: ``data/research/calibration_panel_per_player.parquet`` (atomic write).
 """
 from __future__ import annotations
 import argparse
-import os
 import sys
 from pathlib import Path
 from typing import Optional
@@ -47,14 +46,10 @@ BE_SLOTS = {'BE', 'IL', 'IR'}
 PITCHER_POS = {'SP', 'RP', 'P'}
 
 
-def _get_league(year: int):
-    from espn_api.baseball import League
-    return League(
-        league_id=int(os.environ['ESPN_LEAGUE_ID']),
-        year=year,
-        espn_s2=os.environ['ESPN_S2'],
-        swid=os.environ['ESPN_SWID'],
-    )
+# Auth home is plv_clone.espn (single source): get_league(year) carries the
+# credential check, retry/backoff, and auth-error fast-fail this bare copy
+# lacked, and is year-aware for the multi-year backfill loop.
+from plv_clone.espn import get_league as _get_league  # noqa: E402
 
 
 def _resolve_mlbam(name: str, position: str, pro_team: Optional[str]) -> Optional[int]:

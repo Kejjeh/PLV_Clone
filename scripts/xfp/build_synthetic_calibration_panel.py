@@ -26,7 +26,6 @@ Honesty caveats baked in:
 from __future__ import annotations
 import argparse
 import math
-import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -46,14 +45,10 @@ def _win_probability(my_proj, opp_proj, sigma_total):
     return 0.5 * (1 + math.erf(z / math.sqrt(2)))
 
 
-def _get_league(year: int):
-    from espn_api.baseball import League
-    return League(
-        league_id=int(os.environ['ESPN_LEAGUE_ID']),
-        year=year,
-        espn_s2=os.environ['ESPN_S2'],
-        swid=os.environ['ESPN_SWID'],
-    )
+# Auth home is plv_clone.espn (single source): get_league(year) carries the
+# credential check, retry/backoff, and auth-error fast-fail this bare copy
+# lacked, and is year-aware for the historical backfill seasons.
+from plv_clone.espn import get_league as _get_league  # noqa: E402
 
 
 def build_panel(year: int = 2025, prior_k: float = 3.0) -> pd.DataFrame:
