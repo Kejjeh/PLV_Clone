@@ -123,11 +123,13 @@ def main():
                     'fantasy_positions_display']
         pos_keep = [c for c in pos_keep if c in pos_frame.columns]
         out = out.merge(pos_frame[pos_keep], on='batter', how='left')
-        report_position_match_rate(out)
         # Use the map's batter_name if present, else the substrate player_name
         if 'batter_name' in out.columns:
             out['player_name'] = out['batter_name'].fillna(out['player_name'])
             out = out.drop(columns=['batter_name'])
+    # Unconditional: the empty-ladder case must not be the one silent branch
+    # (the helper warns loudly when the column is absent entirely).
+    report_position_match_rate(out)
 
     # PA premium — playing-time bonus relative to league avg of 3.5 PA/game.
     # Approximate games played from PA / 3.5 (rough). For a hitter with PA close to

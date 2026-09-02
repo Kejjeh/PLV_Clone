@@ -304,9 +304,13 @@ def mark_ungradeable(
     - carries no fp_gained, so summarize() / dpwin_resolution() skip it and
       the scorecard's §7-§9 math is unchanged;
     - sets settled_at (the mirror idempotency gate requires it);
-    - only fires once the attribution horizon has passed — reconcile can no
-      longer retro-attach a surface, so ungradeable-today is
-      ungradeable-forever, never a foreclosure of a recoverable record.
+    - only fires once the attribution horizon has passed, and even then the
+      mark is PROVISIONAL: the settle driver refuses to adopt an ungradeable
+      mirror block onto a record that has since become pairable (a late
+      reconcile can stamp executed_at / attach a rejected_name days later —
+      failed nights are tolerated and the 30-day tx window catches up), so a
+      repaired record self-heals into a real grade instead of being
+      foreclosed.
 
     Returns the record unchanged when it is pairable, already carries a
     paired settlement, is still inside the horizon, or has an unparseable

@@ -194,6 +194,9 @@ def get_league(year: int | None = None):
     return _league_for_year(YEAR if year is None else int(year))
 
 
+# Re-pointed below to _clear_league_caches once _get_league exists — a
+# partial clear here would leave _get_league's maxsize-1 cache serving a
+# stale League while direct get_league() calls get a fresh one.
 get_league.cache_clear = _league_for_year.cache_clear
 
 
@@ -233,3 +236,4 @@ def _clear_league_caches():
 
 
 _get_league.cache_clear = _clear_league_caches
+get_league.cache_clear = _clear_league_caches

@@ -456,9 +456,11 @@ def main():
                             'fantasy_positions_display']
                 if c in pos_frame.columns]
         valid = valid.merge(pos_frame[keep], on='batter', how='left')
-        report_position_match_rate(valid)
     if 'primary_position' not in valid.columns:
         valid['primary_position'] = None
+    # Unconditional: the empty-ladder case (no cache, no network, no legacy
+    # file) is the WORST failure and must not be the one silent branch.
+    report_position_match_rate(valid)
 
     # PA projection: actual PA-pace × games-remaining
     games_played_so_far = max(latest_split, 1)

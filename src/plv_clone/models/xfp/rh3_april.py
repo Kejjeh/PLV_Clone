@@ -435,8 +435,12 @@ def main():
             .drop_duplicates('batter')
         valid = valid.drop_duplicates('batter').merge(names, on='batter', how='left')
         # Live position source (ADR-0009 edge-sever) — see rh3.py.
+        # SEASON_YEAR, not multiyr max: in the documented multiyr-lag scenario
+        # (the same one the name_year guard above exists for) the substrate
+        # max is the PRIOR season and would fetch last year's position map.
         from plv_clone.data.player_positions import load_position_frame
-        pos_frame = load_position_frame(int(multiyr['year'].max()))
+        from plv_clone.league_config import SEASON_YEAR
+        pos_frame = load_position_frame(SEASON_YEAR)
         if not pos_frame.empty:
             keep = [c for c in ['batter', 'primary_position', 'fantasy_positions',
                                 'fantasy_positions_display']

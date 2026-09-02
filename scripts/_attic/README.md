@@ -1,5 +1,11 @@
 # _attic — quarantined legacy PLV scripts
 
+> This directory is listed in `.gitignore` (a CodeGraph-index exclusion, not
+> a git removal — the moved files stay tracked because `git mv` preserves
+> index entries). Consequence: add NEW files here only via `git mv` of an
+> already-tracked file, or `git add -f`; a plain `git add` is silently
+> ignored.
+
 **Date:** 2026-07-04
 **Why:** 2026-07-04 whole-repo audit (evidence: `.cache/audit0704b/quarantine.txt`)
 verified zero references from any live tree (refresh stages, skills, tests,

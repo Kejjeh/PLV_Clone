@@ -700,11 +700,20 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         #    instead of re-fetching game logs to recompute it every night.
         if (prior is not None and prior.counterfactual_settlement
                 and not rec.counterfactual_settlement):
-            rec = replace(
-                rec,
-                counterfactual_settlement=prior.counterfactual_settlement,
-                settled_at=rec.settled_at or prior.settled_at,
-            )
+            # Self-heal (issue #54 verify pass): an ungradeable terminal is
+            # PROVISIONAL against a repaired source record. If a late
+            # reconcile (failed night, 30-day tx window) has since stamped
+            # executed_at or attached a rejected_name, the record is now
+            # genuinely pairable — skip adopting the ungradeable block so the
+            # pairable branch below grades it for real and overwrites the
+            # mirror. Graded/lookup-failure blocks are still adopted as-is.
+            _prior_blk = prior.counterfactual_settlement
+            if not (_prior_blk.get('ungradeable') and _CF_is_pairable(rec)):
+                rec = replace(
+                    rec,
+                    counterfactual_settlement=_prior_blk,
+                    settled_at=rec.settled_at or prior.settled_at,
+                )
         if _CF_is_pairable(rec) and not rec.counterfactual_settlement:
             try:
                 rec2 = _settle_counterfactual_one(rec, today, gamelog_cache)

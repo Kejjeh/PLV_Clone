@@ -25,7 +25,9 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-ROOT     = Path(__file__).resolve().parent.parent
+# parents[2]: this file moved to scripts/_attic/ (2026-09-01) — one level
+# deeper than its original scripts/ home, where parent.parent was the root.
+ROOT     = Path(__file__).resolve().parents[2]
 TEMPLATE = ROOT / "app" / "reports" / "process_report_template.html"
 OUT_DIR  = ROOT / "data" / "outputs"
 APP_DIR  = ROOT / "app"

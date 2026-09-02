@@ -547,7 +547,7 @@ def generate_report_cmd(
     try:
         from generate_report import run as report_run
     except ImportError:
-        typer.echo("ERROR: could not import scripts/generate_report.py", err=True)
+        typer.echo("ERROR: could not import scripts/_attic/generate_report.py", err=True)
         raise typer.Exit(1)
 
     rc = report_run(year)

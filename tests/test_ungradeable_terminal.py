@@ -167,6 +167,44 @@ def test_run_marks_persists_and_reuses(tmp_path, monkeypatch):
     assert s2["ungradeable_marked"] == 0
 
 
+def test_late_reconcile_repair_self_heals_the_terminal_mark(tmp_path, monkeypatch):
+    """A record marked ungradeable, then repaired by a lagging reconcile
+    (executed_at stamped / rejected_name attached after the horizon), must
+    settle for REAL on the next run — the mirror's provisional block is not
+    adopted onto a now-pairable record (verify pass 2026-09-01)."""
+    def _games(mlbam_id, season, group):
+        # 2 games inside the July window; chosen (111) outscores rejected (222)
+        base = {"plateAppearances": 4, "runs": 1, "totalBases": 2, "rbi": 1,
+                "baseOnBalls": 1, "hitByPitch": 0, "stolenBases": 0,
+                "strikeOuts": 1}
+        pts = 2 if int(mlbam_id) == 111 else 1
+        return [dict(base, date=f"2026-07-0{d}", runs=pts) for d in (2, 3)]
+    monkeypatch.setattr(SD, "_fetch_gamelog", _games)
+
+    # Run 1: no-surface record gets terminally marked.
+    _write_source(tmp_path, _record(executed_at=None, counterfactual=None))
+    s1 = SD.run(today=TODAY, root=tmp_path)
+    assert s1["ungradeable_marked"] == 1
+    mirror = tmp_path / "settled" / SNAP / f"{SNAP}_test_guy_H_001.json"
+    assert json.loads(mirror.read_text(encoding="utf-8"))[
+        "counterfactual_settlement"]["ungradeable"] is True
+
+    # Late reconcile repairs the SOURCE record: stamps execution + rival.
+    _write_source(tmp_path, _record(
+        executed_at=f"{SNAP}T10:00:00",
+        counterfactual={"rejected_name": "Other Guy", "rejected_mlbam": 222,
+                        "rejected_bucket": "H", "dpwin_gap": 0.01}))
+
+    # Run 2: the provisional block is NOT adopted; the record grades for real.
+    s2 = SD.run(today=TODAY, root=tmp_path)
+    assert s2["ungradeable_marked"] == 0
+    assert s2["paired_settled"] == 1
+    blk = json.loads(mirror.read_text(encoding="utf-8"))[
+        "counterfactual_settlement"]
+    assert not blk.get("ungradeable")
+    assert "fp_gained" in blk
+
+
 # ── 5. constant sync ──────────────────────────────────────────────────────
 
 def test_horizon_matches_reconcile_attribution_days():

@@ -361,7 +361,12 @@ def report_position_match_rate(
     are never changed — the failure just can't hide.
     """
     if "primary_position" not in df.columns or len(df) == 0:
+        # The TOTAL-failure case (no cache, no network, no legacy fallback)
+        # must be at least as loud as a partial mismatch — this is exactly
+        # the everyone-collapses-to-UTIL scenario the guard exists for.
         print(f"  {source} position match rate: n/a")
+        print(f"  !! WARNING: no positions available from the {source} at "
+              "all — every hitter falls into the UTIL replacement bucket")
         return 0.0
     rate = float(df["primary_position"].notna().mean())
     print(f"  {source} position match rate: {rate:.0%}")
