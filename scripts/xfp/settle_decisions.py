@@ -73,6 +73,8 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from plv_clone.decisions.logger import is_pairable as _CF_is_pairable  # noqa: E402
+from plv_clone.decisions.logger import is_executed_record as _CF_is_executed  # noqa: E402
+from plv_clone.decisions.counterfactual import mark_ungradeable as _CF_mark_ungradeable  # noqa: E402
 from plv_clone.decisions import (  # noqa: E402
     DECISIONS_ROOT,
     DecisionRecord,
@@ -682,6 +684,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
 
     paired_settled = 0
     prediction_settled = 0
+    ungradeable_marked = 0
 
     for rec in records:
         # Existing settled mirror (if any), loaded FIRST so both the paired
@@ -718,6 +721,24 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
             except Exception as exc:
                 print(f'  WARN paired settlement failed for {rec.decision_id}: '
                       f'{type(exc).__name__}: {exc}')
+
+        # 0.25 Terminal ungradeable marking (issue #54's structural half): an
+        #      executed record that is NOT pairable can never be graded — no
+        #      surface was attached, no same-bucket rival existed, or the move
+        #      never got an execution stamp. Without a terminal block those
+        #      records look "awaiting window" forever and are re-walked
+        #      nightly. mark_ungradeable is a no-op inside the attribution
+        #      horizon (reconcile can still retro-attach a surface), so a
+        #      fresh move is never foreclosed. No network on this path.
+        if (_CF_is_executed(rec) and not _CF_is_pairable(rec)
+                and not rec.counterfactual_settlement):
+            rec4 = _CF_mark_ungradeable(rec, today=today)
+            if rec4.counterfactual_settlement:
+                rec = rec4
+                ungradeable_marked += 1
+                mirror = _merge_paired_into_mirror(prior, rec)
+                _atomic_write_json(_settled_path(root, rec), asdict(mirror))
+                prior = mirror
 
         # 0.5 Prediction (v4) settlement — the third independent question:
         #     was the stated CLAIM right? Gated on the claim's own horizon,
@@ -779,6 +800,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         "reused_settled": reused_settled,
         "paired_settled": paired_settled,
         "prediction_settled": prediction_settled,
+        "ungradeable_marked": ungradeable_marked,
         "pending": pending,
         "ripe_but_pending": ripe_pending,
         "not_ripe": not_ripe,
@@ -789,6 +811,7 @@ def run(*, today: date, root: Path = DEFAULT_DECISIONS_ROOT) -> dict:
         f"  settled {len(settled_out)} ({newly_settled} new, "
         f"{reused_settled} reused) | "
         f"paired {paired_settled} new | "
+        f"ungradeable {ungradeable_marked} marked | "
         f"predictions {prediction_settled} new | "
         f"pending {pending} ({not_ripe} not-ripe, "
         f"{ripe_pending} ripe-waiting-events)"

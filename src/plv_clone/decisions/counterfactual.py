@@ -254,6 +254,91 @@ def settle_counterfactual(
                    or datetime.now().isoformat(timespec="seconds"))
 
 
+#: Days reconcile_decisions can still retro-attribute a dpwin surface to an
+#: executed move (mirrors reconcile_decisions.ATTRIBUTION_DAYS — the sync is
+#: pinned by tests/test_ungradeable_terminal.py). Inside this horizon a
+#: surface-less record is RECOVERABLE, not ungradeable.
+ATTRIBUTION_HORIZON_DAYS = 2
+
+
+def ungradeable_reason(record: DecisionRecord) -> Optional[str]:
+    """Why this record can NEVER be paired-graded, or None if it can be.
+
+    The permanent populations behind issue #54 (2026-08-28 census: 3,091 of
+    3,101 records), each with its own reason so the diagnosis survives:
+
+      'no_surface_attached'     — counterfactual is None: no dpwin run was
+                                  attributable when the move was made
+                                  (dominated by pre-ledger history).
+      'no_alternative_recorded' — a surface existed but produced no
+                                  unexecuted same-bucket rival
+                                  (rejected_name null — the Baez shape).
+      'no_execution_timestamp'  — a rejected alternative exists but the
+                                  move never got an executed_at stamp, so
+                                  there is no window to measure over.
+
+    Exhaustive by construction: is_pairable() is exactly
+    executed_at AND rejected_name, so a non-pairable record falls into one
+    of the three. A pairable record returns None — grade it, don't mark it.
+    """
+    if is_pairable(record):
+        return None
+    cf = getattr(record, "counterfactual", None)
+    if not cf:
+        return "no_surface_attached"
+    if not cf.get("rejected_name"):
+        return "no_alternative_recorded"
+    return "no_execution_timestamp"
+
+
+def mark_ungradeable(
+    record: DecisionRecord, *, today: Optional[date] = None
+) -> DecisionRecord:
+    """Terminal UNSETTLEABLE block for a record that can never be paired-graded.
+
+    Issue #54's structural half: without a terminal marker, a never-pairable
+    record is indistinguishable from one merely awaiting its window, so it is
+    re-walked nightly forever. Conservative by design:
+
+    - reuses the existing UNSETTLEABLE classification (no new vocabulary);
+    - carries no fp_gained, so summarize() / dpwin_resolution() skip it and
+      the scorecard's §7-§9 math is unchanged;
+    - sets settled_at (the mirror idempotency gate requires it);
+    - only fires once the attribution horizon has passed — reconcile can no
+      longer retro-attach a surface, so ungradeable-today is
+      ungradeable-forever, never a foreclosure of a recoverable record.
+
+    Returns the record unchanged when it is pairable, already carries a
+    paired settlement, is still inside the horizon, or has an unparseable
+    snapshot_date (unparseable -> do nothing, the conservative branch).
+    """
+    if record.counterfactual_settlement:
+        return record
+    reason = ungradeable_reason(record)
+    if reason is None:
+        return record
+    if today is None:
+        today = date.today()
+    try:
+        snap = date.fromisoformat(str(record.snapshot_date))
+    except ValueError:
+        return record
+    if (today - snap).days <= ATTRIBUTION_HORIZON_DAYS:
+        return record
+    block = {
+        "classification": UNSETTLEABLE,
+        "ungradeable": True,
+        "reason": reason,
+        "low_sample": True,
+    }
+    return replace(
+        record,
+        counterfactual_settlement=block,
+        settled_at=record.settled_at
+        or datetime.now().isoformat(timespec="seconds"),
+    )
+
+
 def summarize(records: list[DecisionRecord]) -> dict:
     """Aggregate paired settlements into a regret summary.
 

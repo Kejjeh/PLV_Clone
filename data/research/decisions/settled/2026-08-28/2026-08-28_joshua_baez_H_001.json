@@ -1,0 +1,43 @@
+{
+  "action": "drop",
+  "bucket": "H",
+  "confidence": null,
+  "counterfactual": {
+    "base_pwin": null,
+    "dpwin_chosen": null,
+    "dpwin_gap": null,
+    "dpwin_rejected": null,
+    "dtitle_equity_chosen": null,
+    "regime": null,
+    "rejected_bucket": null,
+    "rejected_mlbam": null,
+    "rejected_name": null,
+    "source_run_id": "2026-08-28T012505_7"
+  },
+  "counterfactual_settlement": {
+    "classification": "UNSETTLEABLE",
+    "low_sample": true,
+    "reason": "no_alternative_recorded",
+    "ungradeable": true
+  },
+  "decision_id": "2026-08-28_joshua_baez_H_001",
+  "executed_at": "2026-08-28T14:10:03",
+  "inputs": {
+    "bucket_source": "dpwin_row",
+    "dropped_name": "Joshua Baez",
+    "id_source": "mlbam",
+    "inputs_schema": 3,
+    "reconciled_from": "transactions_history",
+    "run_match_note": "4 candidate runs preceded the move, took latest (2026-08-28T012505_7)"
+  },
+  "mlbam_id": 695491,
+  "player_name": "Joshua Baez",
+  "prediction": null,
+  "prediction_settlement": null,
+  "reason_tag": "auto_reconciled",
+  "record_schema": 3,
+  "settled_at": "2026-09-01T23:24:00",
+  "settlement": null,
+  "snapshot_date": "2026-08-28",
+  "verdict_top": "DROP"
+}

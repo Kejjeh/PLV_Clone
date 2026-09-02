@@ -431,9 +431,16 @@ def _load_records_where(keep) -> list:
 
 
 def _load_paired_records(today: date) -> list:
-    """Every v3 record carrying a paired settlement, from both trees."""
+    """Every v3 record carrying a paired settlement, from both trees.
+
+    Terminal ungradeable blocks (issue #54: never-pairable records marked so
+    they stop looking "awaiting window") are excluded — they carry no
+    fp_gained, so including them would only flip the "no paired settlements
+    yet" guidance while adding nothing to §7-§9.
+    """
     return _load_records_where(
-        lambda r: bool(getattr(r, "counterfactual_settlement", None)))
+        lambda r: bool(getattr(r, "counterfactual_settlement", None))
+        and not (getattr(r, "counterfactual_settlement") or {}).get("ungradeable"))
 
 
 def _load_prediction_records() -> list:
