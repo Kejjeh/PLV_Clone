@@ -46,10 +46,13 @@ except ImportError:
 
 from plv_clone.league_config import SEASON_YEAR
 
-LEAGUE_ID = int(os.environ.get("ESPN_LEAGUE_ID", "0"))
+# `or` (not a dict default) so a SET-but-blank var — a blank .env template
+# line, an empty CI secret — falls back instead of crashing every importer
+# at int('') (verify pass 2026-09-01).
+LEAGUE_ID = int(os.environ.get("ESPN_LEAGUE_ID") or "0")
 # Default from league_config so a rollover is ONE bump; ESPN_YEAR still
 # overrides for a historical pull (issue #59).
-YEAR      = int(os.environ.get("ESPN_YEAR", str(SEASON_YEAR)))
+YEAR      = int(os.environ.get("ESPN_YEAR") or str(SEASON_YEAR))
 SWID      = os.environ.get("ESPN_SWID", "")
 ESPN_S2   = os.environ.get("ESPN_S2", "")
 
@@ -70,6 +73,9 @@ def _wrap_free_agents_with_snapshot(league) -> None:
     call. Filtered pulls (position/position_id kwargs) are never cached.
     TTL: ``PLV_ESPN_SNAPSHOT_TTL_MIN`` (default 180 min ~ one refresh run).
     """
+    if getattr(league, "_plv_fa_snapshot_wrapped", False):
+        return
+
     import pickle
     import time as _time
 
@@ -100,6 +106,10 @@ def _wrap_free_agents_with_snapshot(league) -> None:
         return fas
 
     league.free_agents = cached_free_agents
+    # Idempotency marker: _get_league can be re-entered after a cache_clear
+    # while the per-year cache still holds this object; wrapping twice would
+    # chain cached_free_agents around itself (verify pass 2026-09-01).
+    league._plv_fa_snapshot_wrapped = True
 
 
 def _is_auth_error(exc_or_msg) -> bool:
@@ -114,23 +124,16 @@ def _is_auth_error(exc_or_msg) -> bool:
 
 
 @lru_cache(maxsize=8)
-def get_league(year: int | None = None):
-    """Return an authenticated ESPN League for *year* (default: current season).
-
-    The year-aware sibling of :func:`_get_league` — same credential check,
-    same retry/backoff, same auth-error fast-fail — for callers that need a
-    HISTORICAL season (the synthetic-calibration backfills fetch 2024/2025).
-    Cached per year. The current-season path should keep using
-    :func:`_get_league`: only that one gets the FA snapshot wrapper.
-    """
+def _league_for_year(year: int):
+    """Auth core: one authenticated League per season — always reach it
+    through :func:`get_league` (which normalizes the year argument so a
+    season can never occupy two cache keys)."""
     if not (LEAGUE_ID and SWID and ESPN_S2):
         raise RuntimeError(
             "ESPN credentials missing. Set ESPN_LEAGUE_ID, ESPN_SWID, ESPN_S2 "
             "(and optionally ESPN_YEAR) in your environment or in a `.env` file. "
             "See .env.example for the format."
         )
-    if year is None:
-        year = YEAR
     try:
         from espn_api.baseball import League
         # Retry with backoff (audit 2026-07-19 M3): the League constructor is
@@ -177,6 +180,23 @@ def get_league(year: int | None = None):
         raise RuntimeError(friendly) from e
 
 
+def get_league(year: int | None = None):
+    """Return an authenticated ESPN League for *year* (default: current season).
+
+    The year-aware sibling of :func:`_get_league` — same credential check,
+    same retry/backoff, same auth-error fast-fail — for callers that need a
+    HISTORICAL season (the synthetic-calibration backfills fetch 2024/2025).
+    Exactly one cache entry per season: get_league(), get_league(None) and
+    get_league(2026) all normalize to the same key. The current-season path
+    should keep using :func:`_get_league` — only that one applies the FA
+    snapshot wrapper (which mutates the shared cached League in place).
+    """
+    return _league_for_year(YEAR if year is None else int(year))
+
+
+get_league.cache_clear = _league_for_year.cache_clear
+
+
 @lru_cache(maxsize=1)
 def _get_league():
     """Return the authenticated CURRENT-season League (process-lifetime cache).
@@ -187,5 +207,29 @@ def _get_league():
     """
     league = get_league(YEAR)
     if os.environ.get("PLV_ESPN_SNAPSHOT") == "1":
-        _wrap_free_agents_with_snapshot(league)
+        try:
+            _wrap_free_agents_with_snapshot(league)
+        except Exception as e:  # parity: the wrap used to sit inside the
+            # friendly-error mapper, so callers catching RuntimeError kept
+            # working even when snapshot config was malformed.
+            friendly = ("ESPN API connection failed: "
+                        f"{str(e).strip() or e.__class__.__name__}")
+            logger.error(friendly)
+            raise RuntimeError(friendly) from e
     return league
+
+
+# app/espn_connector.py advertises `_get_league.cache_clear()` as the way to
+# force a fresh authenticated League (e.g. after refreshing expired cookies).
+# The League object now lives in the per-year cache, so clearing only the
+# zero-arg wrapper would hand back the same stale session — chain the clears
+# (verify pass 2026-09-01).
+_wrapper_lru_clear = _get_league.cache_clear
+
+
+def _clear_league_caches():
+    _league_for_year.cache_clear()
+    _wrapper_lru_clear()
+
+
+_get_league.cache_clear = _clear_league_caches
