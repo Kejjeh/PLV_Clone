@@ -4,7 +4,8 @@ Fantasy-baseball projection models + decision tooling for the **BrownU** ESPN
 league (8-team H2H points; Josh's team: **New York Ligers**). The active
 system is the xFP layer (`src/plv_clone/` package + `scripts/xfp/` engines);
 the repo's namesake PLV/Process+ clone is **dormant** (ADR-0009). State:
-production-stable, refreshed nightly by self-hosted GitHub Actions.
+**OFFSEASON** — 2026 season ended 2026-09-01 (playoff loss); all scheduled
+workflows disabled. Restart checklist: HANDOFF.md.
 Orientation: `docs/ARCHITECTURE.md` (map) · `docs/DECISIONS.md` (settled —
 don't re-litigate) · `HANDOFF.md` (state of play, next steps).
 

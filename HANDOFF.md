@@ -1,8 +1,42 @@
 # HANDOFF — state of play (2026-09-01)
 
 Written for a cold-start agent on a small budget. Read `CLAUDE.md` first,
-then this. Season context: 2026 BrownU season, playoffs approaching
-(periods 18+); the daily cadence is fully automated.
+then this.
+
+## OFFSEASON — wound down 2026-09-01
+
+The 2026 season is over (Josh lost in the playoffs). Wind-down actions
+taken, all reversible:
+
+- All 5 GitHub Actions workflows disabled via `gh workflow disable`
+  (daily-refresh, live-matchup, monday-brief, pl-cache, build-report).
+- All Claude scheduled tasks already paused (daily-edge-briefing,
+  rehab-master-check, plus expired one-shots).
+- Nothing deleted; GitHub Pages dashboards remain up as static artifacts;
+  data caches remain on disk.
+
+### Restart checklist (spring 2027)
+
+1. Refresh ESPN cookies in the gitignored `.env` (`ESPN_SWID` / `ESPN_S2`
+   expire; harvest per `.env.example`) and confirm the new league year.
+2. Bump `SEASON_YEAR` in `src/plv_clone/league_config.py` — the single
+   rollover switch by design (issue #59).
+3. Check the `espn-api>=0.35,<0.47` pin still works against the new season;
+   bump the ceiling deliberately if not.
+4. Re-verify league settings (scoring, roster slots, SP cap, RP floor)
+   against `docs/memory/league_rules.md` — edit `cap_math.py` constants only
+   if the league actually changed.
+5. Bootstrap the new year's caches: `scripts/xfp/refresh_xfp_statcast.py`
+   for the new season, then one manual `refresh_dashboards.py`.
+6. Re-enable automation: `gh workflow enable <name>.yml` × 5; re-enable the
+   two recurring Claude scheduled tasks if wanted.
+7. `python scripts/ci/smoke.py` + a `/matchup-audit` on the first built
+   dashboard before trusting anything.
+
+The offseason is the right window for the P1/P2 items below — especially
+positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
+
+## Season context at shutdown
 
 ## Done and working
 
