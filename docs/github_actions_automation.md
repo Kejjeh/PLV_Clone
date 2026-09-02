@@ -18,7 +18,8 @@ committed.
 ### 1. ESPN secrets — already done ✅
 
 `ESPN_LEAGUE_ID`, `ESPN_S2`, `ESPN_SWID`, `ESPN_YEAR` already exist as repo
-secrets (the existing `build-report.yml` uses them and runs green), so the
+secrets (the since-archived `build-report.yml` — now at
+`docs/archive/workflows/` — used them and ran green), so the
 cloud live job authenticates to ESPN out of the box.
 
 ### 2. Cross-repo publish credential — already done ✅ (write-scoped deploy key)

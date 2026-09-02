@@ -18,7 +18,7 @@ evidence, and say so explicitly. Architecture decisions live as ADRs in
 | [0006](adr/0006-snapshot-rating-no-deep-core.md) | No deep `rate_snapshot` core; the hard nuclei are already in `lib/archetype_engine.py` / `lib/sp_start_snapshots.py` | `RoleSpec` adapter layer over the 3 snapshot builders |
 | [0007](adr/0007-skills-consolidation-scope.md) | Name normalization has TWO legitimate concerns; only projection-join `_norm`s merged onto `name_match.join_key` | "Merge all the `_norm`s" — the ESPN-ownership and triangulate normalizations are verified non-equivalent |
 | [0008](adr/0008-lens-stack-as-context-metadata.md) | Lens stack is context metadata, never a projection input (enforced by tests, not discipline) | Folding lenses into FEATS — OOS study showed ΔR² ≈ 0 / negative |
-| [0009](adr/0009-plv-legacy-subsystem-dormant-retained.md) | PLV/Process+ legacy subsystem: dormant, retained. One live edge: `master_hitter_2026.csv` feeds rh3 positions | Archive/delete now — would make the stale-positions defect permanent |
+| [0009](adr/0009-plv-legacy-subsystem-dormant-retained.md) | PLV/Process+ legacy subsystem: dormant, retained. **Addendum 2026-09-01**: the master_hitter position edge is SEVERED (live map via `player_positions.load_position_frame`), scripts-side drivers archived, weekly `plv update` retired; the PACKAGE stays (step 2.55 + tests + CLI) | Archive/delete the package too — still has live package-level consumers |
 
 ## Modeling methodology (closed research families)
 
@@ -66,6 +66,17 @@ evidence, and say so explicitly. Architecture decisions live as ADRs in
 - **New model features require `/validate-feature`** (9-rule protocol);
   Rule 9 baseline must include ALL existing production features (the rh3/rp3
   v2 lesson: stripped baselines over-claimed lift 4×).
+
+- **Never-pairable decision records get a TERMINAL ungradeable mark**
+  (2026-09-01, closed issue #54): UNSETTLEABLE + `ungradeable: true` +
+  per-population reason, written only past the 2-day attribution horizon,
+  invisible to §7-§9 scorecard math. Rejected alternative: proxy actuals
+  for unrostered FAs — grades a counterfactual nobody measured.
+- **Hitter positions come from the live MLB-API map** (2026-09-01,
+  ADR-0009 addendum): `player_positions.load_position_frame(year)`,
+  nightly cache in `data/reference/`. Rejected: ESPN `get_all_teams()`
+  (covers only ~230 league-rostered players — misses the FA/call-up case)
+  and per-consumer fetches (single-owner doctrine).
 
 ## Repo/process decisions
 

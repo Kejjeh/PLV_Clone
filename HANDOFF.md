@@ -9,7 +9,9 @@ The 2026 season is over (Josh lost in the playoffs). Wind-down actions
 taken, all reversible:
 
 - All 5 GitHub Actions workflows disabled via `gh workflow disable`
-  (daily-refresh, live-matchup, monday-brief, pl-cache, build-report).
+  (daily-refresh, live-matchup, monday-brief, pl-cache, build-report —
+  build-report was later ARCHIVED outright with the legacy chain, so only
+  the first four exist to re-enable in 2027).
 - All Claude scheduled tasks already paused (daily-edge-briefing,
   rehab-master-check, plus expired one-shots).
 - Nothing deleted; GitHub Pages dashboards remain up as static artifacts;
@@ -40,10 +42,11 @@ positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
 
 ## Done and working
 
-- **Nightly automation is green**: `daily-refresh.yml` (self-hosted, 11:00
-  UTC) runs the pytest gate then `refresh_dashboards.py`; last run 2026-08-31
-  committed and published. `live-matchup.yml`, `monday-brief.yml`,
-  `pl-cache.yml`, `build-report.yml` also active.
+- **Nightly automation ran green all season**: `daily-refresh.yml`
+  (self-hosted, 11:00 UTC) runs the pytest gate then
+  `refresh_dashboards.py`; last run 2026-08-31 committed and published.
+  `live-matchup.yml`, `monday-brief.yml`, `pl-cache.yml` likewise
+  (`build-report.yml` archived 2026-09-01; all disabled for the offseason).
 - **Test suite green** (verified 2026-09-01): 2447 passed, 3 data-gated
   skips, 1 expected xfail (stale PL cache, cadence-aware), 98s via
   `python scripts/ci/run_summary.py -- python -m pytest`.
@@ -58,23 +61,33 @@ positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
 
 ## In progress
 
-- **Issue [#54](https://github.com/Kejjeh/PLV_Clone/issues/54)** (only open
-  issue): counterfactual pairing never completes when the rejected side is an
-  unrostered FA with no actuals. The "fixable half" shipped in commit
-  `74c50819`; what remains is the structurally unfixable half — needs a
-  decision on how to grade rejected-FA counterfactuals (proxy actuals from
-  MLB logs vs. mark ungradeable). Code: `lib/dpwin_history.py` +
-  `scripts/xfp/reconcile_decisions.py` (settlement path).
-- **ADR-0009 follow-up**: rh3 hitter positions come from
-  `data/outputs/master_hitter_2026.csv`, last regenerated **2026-05-16** by
-  the dormant PLV pipeline — new call-ups get `primary_position=None`.
-  Fix = source positions from ESPN `get_all_teams()` or MLB Stats API in
-  `src/plv_clone/models/xfp/rh3.py` (optional position join) +
-  `scripts/xfp/xfp_h2_lock.py`; that also unlocks archiving the whole legacy
-  chain (see the ADR's follow-up section).
 - **Availability-overlay (Study C)**: failed its auto-ship gate 2026-08-12;
   `build_period_xfp_board.py` emits `*_diag` columns only. Diagnostic-only is
   the CURRENT INTENDED state — do not promote without a new validation run.
+
+## Completed in the 2026-09-01 offseason pass (was "in progress")
+
+- **ADR-0009 edge severed** (commit `0f780a1e`): rh3/rh3_april/xfp_h2_lock
+  (+ verdict_backtest) take positions from
+  `player_positions.load_position_frame()` over a nightly MLB-API cache
+  (`data/reference/player_positions_{year}.json`, new refresh_all stage).
+  A ratchet test keeps the consumers severed. NOTE: the old HANDOFF text
+  claimed months-stale positions; in fact a weekly `plv update` (step 1.98,
+  added 2026-07-20) kept them ≤7 days stale — the ADR addendum has the
+  corrected history.
+- **Legacy PLV scripts-side chain archived** (commit `9158041b`):
+  refresh.ps1 / fetch_fangraphs.py / generate_report.py → `scripts/_attic/`
+  (batch 2 in its README); build-report.yml → `docs/archive/workflows/`;
+  step 1.98 retired. The PACKAGE stays dormant-retained (step 2.55 +
+  tests + CLI still need it); `validate_outputs.py` stays (test-pinned).
+- **Issue #54 closed** (commit `e442c640`): never-pairable executed records
+  get a terminal UNSETTLEABLE block (`ungradeable: true`, per-population
+  reason) once the 2-day attribution horizon passes. Real-ledger effect:
+  exactly 3 records (Baez ×2, Grisham) — the census's 3,091 were mostly
+  verdict-only records, never pairing candidates.
+- **`get_league(year)` factory** (commit `beea4b73`): both synthetic-
+  calibration scripts now use the single auth home; bare `_get_league`
+  copies deleted.
 
 ## Known issues (with repro)
 
@@ -98,30 +111,25 @@ positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
 
 ## Next steps (each ≈ one small session)
 
-**P0 — none.** Nothing is on fire; automation carries the daily load.
+**P0 — none.** Offseason; automation intentionally disabled.
 
-**P1**
-1. *Positions un-staling (ADR-0009 follow-up).* Replace the
-   `master_hitter_2026.csv` position join in rh3/h2 with a live source.
-   Accept: a 2026 call-up gets a non-null `primary_position` in
-   `xfp_rh3_projections.csv`; smoke + `test_schema_stability_h.py` green.
-   Escalate to Opus (touches a production model file).
-2. *Decide issue #54's unfixable half.* Write the decision into the issue
-   and `docs/DECISIONS.md`; implement "mark ungradeable" (conservative) in
-   `lib/dpwin_history.py` settlement. Accept: reconcile run completes with
-   explicit `ungradeable` rows instead of hanging pairs; issue closed.
-3. *Kill the duplicate `_get_league`* in
-   `build_synthetic_calibration_panel.py`. Accept: imports from
-   `plv_clone.espn`, smoke green. Sonnet-safe.
+**P1 — all three completed 2026-09-01** (see "Completed" above).
 
 **P2**
-4. *Trim `requirements.lock` to the project closure* (freeze inside a clean
+1. *Trim `requirements.lock` to the project closure* (freeze inside a clean
    venv built from `pip install -e ".[dev]"`). Accept: fresh-venv install +
    smoke green using only the new lock.
-5. *Migrate hardcoded roots opportunistically* — whenever touching one of
+2. *Migrate hardcoded roots opportunistically* — whenever touching one of
    the 91 files, swap to `plv_clone.paths.ROOT`. Never as a mass sweep.
-6. *Dedupe the process_report template* (verify which one
-   `generate_report.py` reads; delete the orphan). Sonnet-safe.
+3. *Dedupe the process_report template* (verify which one
+   `scripts/_attic/generate_report.py` reads; delete the orphan).
+   Sonnet-safe.
+4. *Residual-path sibling of #54*: `PENDING_NO_ID` records retry forever in
+   `settle_decisions.py` (~:497). Same terminal-state pattern applies;
+   needs its own decision (out of #54's scope by design).
+5. *`xfp_h2_lock.py` `approx_games=35` freeze* (~:135): pa_premium has been
+   computed against a frozen May game count all season. Fixing changes
+   output values — do it at season start 2027 with a fresh A/B.
 
 ## Open questions (for Josh)
 

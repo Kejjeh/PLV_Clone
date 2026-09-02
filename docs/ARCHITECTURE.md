@@ -72,13 +72,15 @@ volume. Consumers multiply; never hand-multiply by flat constants.
   the model files refuse unregistered FEATS entries. New features go through
   `/validate-feature`, nothing else.
 
-## Automation (GitHub Actions — 4 of 5 run SELF-HOSTED on Josh's PC)
+## Automation (GitHub Actions — 3 of 4 run SELF-HOSTED on Josh's PC)
 
 - `daily-refresh.yml` (11:00 UTC): pytest gate → `refresh_dashboards.py`.
   Runs in the real working tree `C:\Users\Joshua\plv_clone` (not a checkout)
   so `.env`, the nested xfp-model repo, and git creds all work.
 - `live-matchup.yml` (hourly, game hours): live scores → matchup rebuild →
-  publish. `monday-brief.yml`, `pl-cache.yml` (cloud), `build-report.yml`.
+  publish. `monday-brief.yml`, `pl-cache.yml` (cloud). (`build-report.yml`
+  was archived to `docs/archive/workflows/` with the legacy PLV chain,
+  2026-09-01.)
 - Publishing is gated: model-rebuild failure writes `.cache/PUBLISH_GATED`
   and skips the push; the driver itself still exits 0.
 
