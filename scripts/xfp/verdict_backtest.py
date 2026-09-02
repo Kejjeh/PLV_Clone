@@ -333,8 +333,11 @@ def run_hitters(rolling, multiyr) -> pd.DataFrame:
     ci_table, overall_sigma = b["ci_table"], b["overall_sigma"]
     pred_buckets = {int(k): np.array(v) for k, v in b["pred_buckets"].items()}
 
-    # position lookup
-    mh = pd.read_csv(RH3.MASTER_HITTER) if RH3.MASTER_HITTER.exists() else None
+    # position lookup — live map (ADR-0009 addendum 2026-09-01)
+    from plv_clone.data.player_positions import load_position_frame
+    from plv_clone.league_config import SEASON_YEAR
+    _pos = load_position_frame(SEASON_YEAR)
+    mh = _pos if not _pos.empty else None
     out_rows = []
     d26 = rolling[rolling["year"] == 2026]
     for split in sorted(d26["split_day"].unique()):

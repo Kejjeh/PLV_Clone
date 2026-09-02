@@ -2,9 +2,9 @@
 
 Severs the ADR-0009 master_hitter edge: rh3 / rh3_april / xfp_h2_lock used to
 take hitter positions from data/outputs/master_hitter_2026.csv, written by the
-dormant PLV chain (weekly `plv update`, step 1.98) — so a call-up could sit
-positionless for up to 7 days and the ACTIVE layer depended on the DORMANT one
-executing. This driver refreshes the same position map that chain used
+dormant PLV chain's weekly `plv update` (a retired refresh step) — so a
+call-up could sit positionless for up to 7 days and the ACTIVE layer depended
+on the DORMANT one executing. This driver refreshes the same position map that chain used
 (plv_clone.data.player_positions.build_position_map — /sports/1/players for
 the FULL season universe, fielding GS for ESPN-style eligibility) into
 

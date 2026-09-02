@@ -35,8 +35,12 @@ def test_refresh_driver_visibility_contracts():
     assert 'ok_rolling = run' in src and 'not ok_rolling' in src
     # (C) calibration idle-gate requires the JSON too
     assert 'calibration_summary.json' in src
-    # (D) plv rebuild gated on a success stamp, not the output csv
-    assert 'plv_update_last_ok' in src
+    # (D) the weekly plv rebuild is RETIRED (ADR-0009 addendum 2026-09-01):
+    #     the tombstone must stay so the step is not silently re-added, and
+    #     no run() may issue plv update from the nightly again.
+    assert '1.98. RETIRED' in src
+    assert "run('1.98" not in src and 'plv_clone.cli update' not in \
+        src.split('1.98. RETIRED')[0]
     # (E) per-artifact withholding consults every builder flag
     for flag in ('ok_index', 'ok_matchup', 'ok_tri_page', 'ok_xfp_board'):
         assert f"'{flag}" in src or flag in src.split('_page_ok = {')[1][:400]

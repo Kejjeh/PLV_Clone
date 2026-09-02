@@ -111,12 +111,8 @@ python scripts/ci/smoke.py
 # Run the full test suite (always via the summarizer — raw pytest floods context)
 python scripts/ci/run_summary.py -- python -m pytest
 
-# Validate pipeline outputs
+# Validate pipeline outputs (legacy PLV layer)
 python scripts/validate_outputs.py
-
-# Run a specific review pipeline (plv or process+)
-python scripts/run_plv_review.py
-python scripts/run_process_review.py
 
 # Check for ruff lint errors
 python -m ruff check src/ tests/

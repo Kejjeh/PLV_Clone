@@ -537,10 +537,12 @@ def generate_report_cmd(
     import sys
     from pathlib import Path
 
-    # Add scripts/ to path so we can import generate_report.
+    # generate_report.py was archived to scripts/_attic/ (2026-09-01,
+    # ADR-0009 addendum) — this command still works for a historical rebuild.
     # cli.py lives at src/plv_clone/cli.py → 3 parents up = project root.
     scripts_dir = Path(__file__).resolve().parents[2] / "scripts"
-    sys.path.insert(0, str(scripts_dir))
+    for _d in (scripts_dir, scripts_dir / "_attic"):
+        sys.path.insert(0, str(_d))
 
     try:
         from generate_report import run as report_run

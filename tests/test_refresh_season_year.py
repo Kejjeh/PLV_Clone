@@ -70,9 +70,13 @@ def test_the_statcast_pull_names_no_season_literal(issued):
         "run of a new season it would keep growing the OLD season's parquet")
 
 
-def test_the_plv_board_rebuild_names_no_season_literal(issued):
-    cmd = _only(issued(), "plv_clone.cli update")
-    assert not SEASON_LITERAL.findall(cmd), f"season pinned in {cmd!r}"
+def test_the_plv_board_rebuild_is_retired(issued):
+    """Step 1.98 (weekly `plv update`) was retired 2026-09-01 — positions come
+    from the live map (ADR-0009 addendum). The nightly must not quietly
+    re-grow a dependency on the dormant chain; a re-added step would also
+    need this file's season-literal check back."""
+    hits = [c for c in issued() if "plv_clone.cli update" in c]
+    assert not hits, f"the nightly issues plv update again: {hits!r}"
 
 
 def test_the_sb_gamelog_pull_targets_the_current_season(issued):

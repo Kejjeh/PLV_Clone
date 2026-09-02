@@ -45,3 +45,47 @@ and `pitcher_points.py` consume plv_scores/process_plus outputs.
 
 Replace the rh3/h2 position source with a live one (ESPN or MLB Stats API),
 then revisit: the whole legacy chain becomes archive-eligible in one move.
+
+## Addendum 2026-09-01 — edge severed; scripts-side drivers archived
+
+Corrections to the text above, which had gone stale:
+
+- Four of the seven listed drivers (`gen_leaderboards.py`,
+  `run_plv_review.py`, `run_process_review.py`, `validate_pl_plv.py`) were
+  already archived to `scripts/_attic/` on 2026-07-04.
+- "a chain entirely separate from refresh_dashboards.py, which contains
+  zero plv-cli calls" was false from 2026-07-20 (commit e21f10c7): step
+  1.98 ran `plv update` WEEKLY, so master_hitter_2026.csv was ≤7 days
+  stale — not frozen at 2026-05-16 — and the ACTIVE layer depended on the
+  DORMANT chain executing.
+- The edge had six readers, not one: rh3.py, rh3_april.py, xfp_h2_lock.py
+  (nightly, gating), xfp_volume_pipeline.py (dead constant),
+  xfp_h_eval.py (historical 2023/2024 vintages), generate_report.py.
+
+What changed today:
+
+- **Edge severed.** Positions come from
+  `plv_clone.data.player_positions.load_position_frame()` over a nightly
+  cache (`data/reference/player_positions_{year}.json`) built by the new
+  `build_player_positions.py` refresh_all stage — same `build_position_map`
+  the chain used, so semantics are identical. A ratchet test
+  (`tests/test_position_source.py`) keeps the consumers severed.
+- **Step 1.98 retired**; the weekly `plv update` no longer runs. PLV
+  boards, masters, and fantasy exports are frozen at their last build;
+  `python -X utf8 -m plv_clone.cli update` rebuilds by hand if ever needed.
+- **Archived** (batch 2 in `scripts/_attic/README.md`): `refresh.ps1`,
+  `fetch_fangraphs.py`, `generate_report.py`; `build-report.yml` moved to
+  `docs/archive/workflows/` (it cron'd every 4h year-round).
+
+Still retained deliberately:
+
+- The PACKAGE (`src/plv_clone/models/plv_model.py`, `pipelines/`, the
+  `plv` CLI) stays dormant-retained: `refresh_pitch_features.py` (nightly
+  step 2.55) imports `pipelines.build_pitch_dataset`, the test suite pins
+  the PLV/Process+ math, and the CLI is the only documented rebuild path.
+- `scripts/validate_outputs.py` — pinned by
+  `tests/test_export_integrity.py` (sys.path `import validate_outputs`).
+- `tests/test_contract_schemas.py`'s master-file contracts SKIP when the
+  files are absent; the frozen masters keep them active. If the masters
+  are ever deleted, those contracts deactivate silently — retire them in
+  the same change.

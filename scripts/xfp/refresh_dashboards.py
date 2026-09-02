@@ -388,32 +388,14 @@ def main():
         'python -X utf8 scripts/xfp/research/early_season_trending_2026.py',
         timeout=300)
 
-    # 1.98. PLV target boards (hitter_pre_breakout / breakout_flags + master_*,
-    # process_plus_rolling). `plv update` does a full-season pitch-feature
-    # rebuild (heavy, ~minutes), so it runs on a WEEKLY cadence via an mtime gate
-    # on its pre_breakout output — same pattern as the bx priors (1.95). Skipped
-    # on --no-models (the fast path never does the heavy PLV rebuild). Fail-soft:
-    # these are display-only boards; no publish-critical dashboard gates on them.
-    if not args.no_models:
-        # Gate on a last-SUCCESS stamp, not the output csv's mtime (issue
-        # #38): a persistently-failing rebuild left the csv frozen, so the
-        # step re-ran and burned up to 1800s EVERY night, unobserved.
-        _pb_stamp = ROOT / '.cache' / 'plv_update_last_ok'
-        _pb_fresh = (_pb_stamp.exists()
-                     and (time.time() - _pb_stamp.stat().st_mtime) < 7 * 86400)
-        if _pb_fresh:
-            print('\n  1.98. PLV target boards fresh (<7 days) — skip weekly rebuild')
-        else:
-            # No season literal (item 42): cli.update's --year already defaults
-            # to the current calendar year.
-            ok_plv = run('1.98. Rebuild PLV target boards (plv update, weekly, stamp-gated)',
-                         'python -X utf8 -m plv_clone.cli update',
-                         timeout=1800)
-            if ok_plv:
-                _pb_stamp.parent.mkdir(parents=True, exist_ok=True)
-                _pb_stamp.write_text(datetime.now().isoformat(), encoding='utf-8')
-            else:
-                print('  ⚠ plv update failed — will retry next run (stamp not written)')
+    # 1.98. RETIRED 2026-09-01 (ADR-0009 addendum). This slot ran the weekly
+    # stamp-gated `plv update` — the dormant PLV chain — solely to keep
+    # master_hitter_{year}.csv's positions fresh for rh3/h2. Positions now
+    # come from the live map (refresh_all stage 'Player position map', read
+    # via player_positions.load_position_frame), so the active layer no
+    # longer depends on the dormant chain executing. The PLV boards/masters
+    # are frozen as of the last run; rebuild by hand with
+    # `python -X utf8 -m plv_clone.cli update` if ever needed.
 
     # ok_models gates the git publish (steps 5/6): a failed model rebuild means
     # every downstream dashboard is rendered from STALE projections — publishing
