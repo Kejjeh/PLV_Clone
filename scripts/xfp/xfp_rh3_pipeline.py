@@ -11,7 +11,7 @@ from plv_clone.models.xfp.rh3 import *  # noqa: F401,F403  re-export public name
 from plv_clone.models.xfp.rh3 import (  # noqa: F401  explicit re-export for symbols external scripts reference
     # Constants
     ROOT,
-    ROLLING_CSV, MULTIYR_CSV, H2_PROJ_CSV, IL_CSV, MASTER_HITTER,
+    ROLLING_CSV, MULTIYR_CSV, IL_CSV,
     MODEL_PKL, PROJ_CSV,
     H2_LOCKED_CSV, XWOBA_RESID_CSV,
     TARGET, EVAL_PA_MIN, ROS_PA_MIN, TRAIN_YEARS, PRIOR_K_PA,

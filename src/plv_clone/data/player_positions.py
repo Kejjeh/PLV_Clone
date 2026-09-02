@@ -271,7 +271,11 @@ def build_position_map(
         records = df.assign(is_multi_position=df["is_multi_position"].tolist()).to_dict(
             orient="records"
         )
-        cache_path.write_text(json.dumps(records, indent=2))
+        # Atomic tmp+replace (issue #34 class): the nightly cache has
+        # uncoordinated readers, a mid-write read must never see a torn file.
+        tmp = cache_path.with_suffix(cache_path.suffix + ".tmp")
+        tmp.write_text(json.dumps(records, indent=2), encoding="utf-8")
+        tmp.replace(cache_path)
         logger.info("Position map cached -> %s", cache_path)
     elif cache_path and df.empty:
         logger.warning(
@@ -280,6 +284,92 @@ def build_position_map(
         )
 
     return df
+
+
+#: Column contract for :func:`load_position_frame` — the merge frame the xfp
+#: hitter surfaces (rh3, rh3_april, xfp_h2_lock) left-join on ``batter``.
+POSITION_FRAME_COLS = [
+    "batter", "batter_name", "primary_position",
+    "fantasy_positions", "fantasy_positions_display",
+]
+
+
+def load_position_frame(
+    year: int,
+    cache_dir: Path | None = None,
+    legacy_master: Path | None = None,
+) -> pd.DataFrame:
+    """Read-side position frame for the ACTIVE xfp layer (severs the ADR-0009
+    master_hitter edge).
+
+    Returns one row per player with :data:`POSITION_FRAME_COLS`, keyed on
+    ``batter`` (MLBAM id). Source order:
+
+    1. the cache written nightly by ``scripts/xfp/build_player_positions.py``
+       (``data/reference/player_positions_{year}.json``) — read regardless of
+       age: the DRIVER owns freshness, the reader never blocks on it;
+    2. a live :func:`build_position_map` fetch when no cache exists (cold
+       clone; the fetchers fail soft to empty);
+    3. the legacy ``master_hitter_{year}.csv`` if present (transition
+       fallback: a machine with neither cache nor network still gets the
+       last-known positions);
+    4. an empty frame carrying the contract columns — consumers left-merge,
+       so positions degrade to null rather than crashing.
+    """
+    if cache_dir is None:
+        from plv_clone.paths import DATA
+        cache_dir = DATA / "reference"
+
+    df = build_position_map(year, cache_dir=cache_dir, max_cache_age_days=None)
+    if not df.empty:
+        out = df.rename(columns={"player_id": "batter",
+                                 "player_name_pos": "batter_name"})
+        # build_position_map can emit '' (never resolved a primary); the
+        # legacy master carried NaN there. Normalize so notna()-based match
+        # rates and the UTIL replacement bucket see one missing shape.
+        if "primary_position" in out.columns:
+            out.loc[out["primary_position"] == "", "primary_position"] = None
+        keep = [c for c in POSITION_FRAME_COLS if c in out.columns]
+        return out[keep].drop_duplicates("batter")
+
+    if legacy_master is None:
+        from plv_clone.paths import OUTPUTS
+        legacy_master = OUTPUTS / f"master_hitter_{year}.csv"
+    if legacy_master.exists():
+        logger.warning(
+            "Position cache unavailable — falling back to legacy %s",
+            legacy_master.name,
+        )
+        mh = pd.read_csv(legacy_master)
+        keep = [c for c in POSITION_FRAME_COLS if c in mh.columns]
+        if "batter" in keep and "primary_position" in keep:
+            return mh[keep].drop_duplicates("batter")
+
+    return pd.DataFrame(columns=POSITION_FRAME_COLS)
+
+
+def report_position_match_rate(
+    df: pd.DataFrame,
+    source: str = "position map",
+    warn_below: float = 0.5,
+) -> float:
+    """Print the share of rows with a resolved primary_position.
+
+    Match-rate visibility guard (audit 2026-07-19 R5): a stale or id-desynced
+    position source silently drops primary_position → every hitter collapses
+    into the UTIL replacement bucket and replacement_delta distorts. Values
+    are never changed — the failure just can't hide.
+    """
+    if "primary_position" not in df.columns or len(df) == 0:
+        print(f"  {source} position match rate: n/a")
+        return 0.0
+    rate = float(df["primary_position"].notna().mean())
+    print(f"  {source} position match rate: {rate:.0%}")
+    if rate < warn_below:
+        print(f"  !! WARNING: <{warn_below:.0%} of hitters matched the "
+              f"{source} — replacement buckets are collapsing to UTIL; the "
+              "position cache is stale or id-desynced")
+    return rate
 
 
 def enrich_hitters(

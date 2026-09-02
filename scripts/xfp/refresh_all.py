@@ -41,6 +41,10 @@ SCRIPTS = ROOT / 'scripts' / 'xfp'
 STAGES = [
     # Counting / API pulls (slow, daily-stable)
     ('Pitcher counting stats (MLB API)',         'build_pitcher_counting.py',     'counting',      True),
+    # NON-gating: on a failed pull build_position_map refuses to overwrite
+    # the cache, so H2/RH3 below read yesterday's positions instead of dying
+    # (ADR-0009 edge-sever — positions no longer come from master_hitter).
+    ('Player position map (MLB API)',            'build_player_positions.py',     None,            False),
     ('Team strength index (statcast-based)',     'build_team_strength.py',        'team-strength', True),
     # NON-gating (issue #37): nothing inside refresh_all consumes the
     # schedule artifact — it feeds matchup/boom/triangulate OUTSIDE this

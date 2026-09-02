@@ -8,7 +8,7 @@ from __future__ import annotations
 from plv_clone.models.xfp.rh3_april import *  # noqa: F401,F403
 from plv_clone.models.xfp.rh3_april import (  # noqa: F401
     ROOT,
-    ROLLING_CSV, MULTIYR_CSV, H2_PROJ_CSV, IL_CSV, MASTER_HITTER,
+    ROLLING_CSV, MULTIYR_CSV, IL_CSV,
     MODEL_PKL, PROJ_CSV,
     H2_LOCKED_CSV, XWOBA_RESID_CSV,
     TARGET, EVAL_PA_MIN, ROS_PA_MIN, TRAIN_YEARS, PRIOR_K_PA,

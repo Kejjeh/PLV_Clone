@@ -41,11 +41,9 @@ warnings.filterwarnings('ignore')
 ROOT = Path(__file__).resolve().parents[4]
 ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_hitters_2018_2026.csv'
 MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2026.csv'
-H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
 ROS_OPP_SP_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'ros_opp_sp_xwoba_per_hitter.csv'
 BX_PRIORS_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'bx_priors_2018_2026.csv'
-MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 HITTER_RATINGS_MASTER = ROOT / 'data' / 'research' / 'hitter_ratings_master.csv'
 MODEL_PKL   = ROOT / 'data' / 'models' / 'xfp_rh3_pipeline.pkl'
 PROJ_CSV    = ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'
@@ -446,23 +444,19 @@ def main():
     names = multiyr[multiyr['year'] == proj_year][['batter', 'player_name', 'team']] \
         .drop_duplicates('batter')
     valid = valid.drop_duplicates('batter').merge(names, on='batter', how='left')
-    if MASTER_HITTER.exists():
-        mh = pd.read_csv(MASTER_HITTER)
+    # Live position source (ADR-0009 edge-sever): the nightly cache built by
+    # scripts/xfp/build_player_positions.py, not the dormant chain's
+    # master CSV — so a call-up gets a position the same night.
+    from plv_clone.data.player_positions import (
+        load_position_frame, report_position_match_rate,
+    )
+    pos_frame = load_position_frame(proj_year)
+    if not pos_frame.empty:
         keep = [c for c in ['batter', 'primary_position', 'fantasy_positions',
                             'fantasy_positions_display']
-                if c in mh.columns]
-        valid = valid.merge(mh[keep], on='batter', how='left')
-        # Match-rate visibility guard (audit 2026-07-19 R5): a desynced master
-        # CSV silently drops primary_position -> everyone collapses to the
-        # UTIL replacement bucket and replacement_delta distorts. Values
-        # unchanged — surface the match rate so the failure can't hide.
-        if 'primary_position' in valid.columns:
-            _pos_match = float(valid['primary_position'].notna().mean())
-            print(f'  master_hitter position match rate: {_pos_match:.0%}')
-            if _pos_match < 0.5:
-                print('  !! WARNING: <50% of hitters matched master_hitter — '
-                      'replacement buckets are collapsing to UTIL; the master '
-                      'CSV is stale or id-desynced')
+                if c in pos_frame.columns]
+        valid = valid.merge(pos_frame[keep], on='batter', how='left')
+        report_position_match_rate(valid)
     if 'primary_position' not in valid.columns:
         valid['primary_position'] = None
 

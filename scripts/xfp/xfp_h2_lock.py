@@ -26,7 +26,6 @@ warnings.filterwarnings('ignore')
 
 ROOT = Path(__file__).resolve().parents[2]
 SUBSTRATE = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2026.csv'
-MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 MODEL_OUT = ROOT / 'data' / 'models' / 'xfp_h2_pipeline.pkl'
 PROJ_OUT = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 
@@ -112,15 +111,20 @@ def main():
     )
     out = valid.merge(actuals, on='batter', how='left')
 
-    # Position map: hijack the 2026 master_hitter (the latest position-enriched file)
-    if MASTER_HITTER.exists():
-        mh = pd.read_csv(MASTER_HITTER)
-        if 'primary_position' in mh.columns:
-            mh_keep = ['batter', 'batter_name', 'primary_position', 'fantasy_positions',
-                       'fantasy_positions_display']
-            mh_keep = [c for c in mh_keep if c in mh.columns]
-            out = out.merge(mh[mh_keep], on='batter', how='left')
-        # Use master_hitter's batter_name if present, otherwise fall back to substrate player_name
+    # Position map: live nightly cache (ADR-0009 edge-sever — no longer the
+    # dormant chain's master CSV).
+    from plv_clone.data.player_positions import (
+        load_position_frame, report_position_match_rate,
+    )
+    from plv_clone.league_config import SEASON_YEAR
+    pos_frame = load_position_frame(SEASON_YEAR)
+    if not pos_frame.empty and 'primary_position' in pos_frame.columns:
+        pos_keep = ['batter', 'batter_name', 'primary_position', 'fantasy_positions',
+                    'fantasy_positions_display']
+        pos_keep = [c for c in pos_keep if c in pos_frame.columns]
+        out = out.merge(pos_frame[pos_keep], on='batter', how='left')
+        report_position_match_rate(out)
+        # Use the map's batter_name if present, else the substrate player_name
         if 'batter_name' in out.columns:
             out['player_name'] = out['batter_name'].fillna(out['player_name'])
             out = out.drop(columns=['batter_name'])

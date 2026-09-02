@@ -51,7 +51,6 @@ CACHE = ROOT / 'data' / 'research' / 'xfp_cache'
 ROLLING_CSV = CACHE / 'rolling_hitters_2018_2026.csv'
 MULTIYR_CSV = CACHE / 'hitters_multiyr_2015_2026.csv'
 IL_CSV = CACHE / 'il_split_features_2018_2026.csv'
-MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_volume_projections.csv'
 
 TARGET = 'ros_pa_per_teamgame'

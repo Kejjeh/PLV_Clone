@@ -53,9 +53,7 @@ warnings.filterwarnings('ignore')
 ROOT = Path(__file__).resolve().parents[4]
 ROLLING_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'rolling_hitters_2018_2026.csv'
 MULTIYR_CSV = ROOT / 'data' / 'research' / 'xfp_cache' / 'hitters_multiyr_2015_2026.csv'
-H2_PROJ_CSV = ROOT / 'data' / 'outputs' / 'xfp_h2_projections.csv'
 IL_CSV      = ROOT / 'data' / 'research' / 'xfp_cache' / 'il_split_features_2018_2026.csv'
-MASTER_HITTER = ROOT / 'data' / 'outputs' / 'master_hitter_2026.csv'
 MODEL_PKL   = ROOT / 'data' / 'models' / 'xfp_rh3_april_pipeline.pkl'
 PROJ_CSV    = ROOT / 'data' / 'outputs' / 'xfp_rh3_april_projections.csv'
 
@@ -436,12 +434,14 @@ def main():
         names = multiyr[multiyr['year'] == name_year][['batter', 'player_name', 'team']] \
             .drop_duplicates('batter')
         valid = valid.drop_duplicates('batter').merge(names, on='batter', how='left')
-        if MASTER_HITTER.exists():
-            mh = pd.read_csv(MASTER_HITTER)
+        # Live position source (ADR-0009 edge-sever) — see rh3.py.
+        from plv_clone.data.player_positions import load_position_frame
+        pos_frame = load_position_frame(int(multiyr['year'].max()))
+        if not pos_frame.empty:
             keep = [c for c in ['batter', 'primary_position', 'fantasy_positions',
                                 'fantasy_positions_display']
-                    if c in mh.columns]
-            valid = valid.merge(mh[keep], on='batter', how='left')
+                    if c in pos_frame.columns]
+            valid = valid.merge(pos_frame[keep], on='batter', how='left')
         if 'primary_position' not in valid.columns:
             valid['primary_position'] = None
 
