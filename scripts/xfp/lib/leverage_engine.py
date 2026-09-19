@@ -87,6 +87,9 @@ from build_matchup_dashboard import (  # noqa: E402
     FALLBACK_SP_PER_START,
 )
 from scripts.xfp.lib.pitcher_role import detect_pitcher_role  # noqa: E402
+from plv_clone.utils.name_match import (  # hitter collision guard
+    resolve_id, KNOWN_COLLISIONS as _KNOWN_COLLISIONS,
+)
 from scripts.xfp.lib.boom_bust import (  # noqa: E402
     SP_BOOM, SP_BUST, H_BOOM, H_BUST, RP_BOOM, RP_BUST,
 )
@@ -214,6 +217,16 @@ def _blend_draws(rng, emp: list[float], mean: float, sigma: float,
     """One game/start worth of FP draws. Empirical bootstrap with prob
     w = n_emp/(n_emp+k); parametric normal otherwise. Falls back cleanly to
     pure-parametric (thin history) or pure-empirical (no model mean)."""
+    # NaN is truthy and survives `or` — a NaN per-start/per-game mean or sigma
+    # used to reach rng.normal and poison every draw for that player. NaN
+    # draws then read as LOSSES in pwin() (NaN > x is False), silently dragging
+    # P(win) toward 0 and making "drop him" the top-ranked move. A non-finite
+    # mean is MISSING (empirical-or-zero path); a non-finite sigma is the
+    # 1e-6 floor. Found 2026-09-18; pinned by tests/test_leverage_nan_guard.py.
+    if mean is not None and not np.isfinite(float(mean)):
+        mean = None
+    if sigma is not None and not np.isfinite(float(sigma)):
+        sigma = None
     sigma = max(float(sigma or 0) or 1e-6, 1e-6)
     n_emp = len(emp)
     if mean is None:
@@ -256,12 +269,51 @@ def _rp_total_draws(rng, n_rem_games: int, p_app: float, emp, mean_app,
 
 
 
+def load_dq_by_mlbam(path) -> dict:
+    """{mlbam: data_quality_tag} from the rp3 CSV, row-tolerant.
+
+    Was one `astype(int)` over the whole column inside a bare except: a single
+    NaN `pitcher` cell emptied the ENTIRE map (the marcel_il gotcha-#1 guard)
+    for every SP, silently. Now a bad row is skipped and the rest survive.
+    Fix 2026-09-18; pinned by tests/test_leverage_dq_map.py.
+    """
+    try:
+        df = pd.read_csv(path, usecols=['pitcher', 'data_quality_tag'])
+    except Exception:
+        return {}
+    out = {}
+    for pid, tag in zip(df['pitcher'], df['data_quality_tag']):
+        try:
+            if pd.isna(pid):
+                continue
+            out[int(pid)] = tag
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
 def resolve_player_mlbam(p):
-    """Collision-safe mlbam for a rostered ESPN player object."""
+    """Collision-safe mlbam for a rostered ESPN player object.
+
+    Pitchers go through the KNOWN_PITCHER_COLLISIONS gate inside
+    `_resolve_pitcher_mlbam`. Hitters used to skip straight to the
+    first-loaded-wins name cache, so a same-name hitter (both Max Muncys) drew
+    whichever id loaded first — and that id is the MC draw key AND the
+    boxscore `emp_series` join, so the wrong man's game log drove the other's
+    simulated week. The dashboard's hitter branch already disambiguated via
+    `resolve_id`; the engine now does the same (fix 2026-09-18, pinned by
+    tests/test_leverage_hitter_collision.py).
+    """
     pos = (p.position or '?')
     if pos in ('SP', 'RP', 'P'):
         return _resolve_pitcher_mlbam(p.name, team=(p.proTeam or None),
                                       role=(pos if pos in ('SP', 'RP') else None))
+    if p.name in _KNOWN_COLLISIONS:
+        pid = resolve_id(p.name, kind='batter',
+                         team=(getattr(p, 'proTeam', None) or None),
+                         position=pos)
+        if pid is not None:
+            return int(pid)
     return player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
 
 
@@ -374,12 +426,7 @@ def build_state(verbose=True, banked_override: int | None = None):
         schedules_by_team, today, week_end)
 
     # rp3 CSV frame for data_quality_tag (marcel_il gotcha #1) keyed by mlbam
-    try:
-        rp3_csv = pd.read_csv(OUT / 'xfp_rp3_projections.csv',
-                              usecols=['pitcher', 'data_quality_tag'])
-        dq_by_mlbam = dict(zip(rp3_csv['pitcher'].astype(int), rp3_csv['data_quality_tag']))
-    except Exception:
-        dq_by_mlbam = {}
+    dq_by_mlbam = load_dq_by_mlbam(OUT / 'xfp_rp3_projections.csv')
 
     def _classify(lineup, side_label):
         """-> (hitters, rps, sp_start_events) for one roster side."""
@@ -774,7 +821,7 @@ def _sp_side_total(sp_draws: list[dict], cap_remaining: int,
     return (fp * keep).sum(axis=0)
 
 
-def _resolve_keys(D, which: str, wanted) -> set:
+def _resolve_keys(D, which: str, wanted, *, strict: bool = False) -> set:
     """Map human-facing names OR mlbam ids onto the mlbam-keyed draw dict.
 
     Callers (CLI args, skill prompts, the optimizer's candidate rows) legitimately
@@ -796,6 +843,16 @@ def _resolve_keys(D, which: str, wanted) -> set:
         hits = [k for k, v in table.items() if _norm(v['name']) == nw]
         if len(hits) == 1:
             out.add(hits[0])
+        elif len(hits) == 0 and strict:
+            # A name/id that matches NOBODY in this table used to resolve to
+            # nothing and the scenario scored as if the player were never
+            # touched — "dropping him is free" (0.00pp). delta_pwin() partitions
+            # a drop across H/RP/SP and raises once it has confirmed the entry
+            # matched none of them; strict=True is that final check.
+            raise KeyError(
+                f'{w!r} matches no draw key in {which}. A player absent from the '
+                f'simulation (no projection, unresolved id, IL) cannot be scored '
+                f'as a drop — the result would be a silent 0.00pp.')
         elif len(hits) > 1:
             # refuse-to-guess, same contract as resolve_batter_id: a duplicated
             # name is exactly the case DEFECT 1 was about
@@ -915,6 +972,14 @@ def assemble(state, D, *, zero_hitters: set = frozenset(),
 
 
 def pwin(my: np.ndarray, opp: np.ndarray) -> float:
+    """P(my > opp) with ties at 0.5. REFUSES non-finite totals: a NaN trial
+    compares False on both sides and would be counted as a loss, so one
+    poisoned player silently collapses P(win) instead of failing loudly."""
+    if not (np.isfinite(my).all() and np.isfinite(opp).all()):
+        raise ValueError(
+            'pwin(): non-finite simulated totals — a NaN/inf projection reached '
+            'the draw arrays. Every NaN trial would be scored as a LOSS, so this '
+            'is refused rather than laundered into a P(win).')
     return float((my > opp).mean() + 0.5 * (my == opp).mean())
 
 
@@ -1058,6 +1123,25 @@ def delta_pwin(state, D, *, add=(), drop=(), bench=(), base_pwin=None) -> dict:
             drop_sp.add(int(d))
         else:
             drop_sp |= {m for m in sp_by_name.get(_norm(str(d)), set()) if m}
+    # Every requested drop must have landed in at least one bucket. The old
+    # behaviour — an unmatched drop resolving to nothing — scored the scenario
+    # as if the player were untouched, i.e. "dropping him costs 0.00pp", which
+    # is exactly how a rostered player with no projection or no resolved id
+    # (absent from D by construction) became the optimizer's favourite drop
+    # leg. Found 2026-09-18; pinned by tests/test_leverage_unmatched_drop.py.
+    for d in drop:
+        in_h = bool(_resolve_keys(D, 'my_h', [d]))
+        in_rp = bool(_resolve_keys(D, 'my_rp', [d]))
+        in_sp = ((isinstance(d, (int, np.integer)) and int(d) in sp_by_id)
+                 or bool(sp_by_name.get(_norm(str(d)))))
+        if not (in_h or in_rp or in_sp):
+            raise KeyError(
+                f'delta_pwin(): drop {d!r} matches no rostered player in the '
+                f'simulation (my_h / my_rp / my_sp). He is not in D — no '
+                f'projection, unresolved id, or IL — so his drop cannot be '
+                f'scored; refusing rather than reporting a free 0.00pp drop. '
+                f'Exclude him from the droppable set and list him as '
+                f'UNSCOREABLE.')
 
     # --- benches
     bench_starts, zero_hitters = set(), set()
