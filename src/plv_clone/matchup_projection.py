@@ -48,8 +48,18 @@ def _present(x) -> bool:
     fails every ``<``/``>`` comparison, so ``max(lo, min(hi, nan))`` is
     ``hi``): a missing input silently became the most favourable matchup
     multiplier. Found 2026-09-18; pinned by tests/test_matchup_nan_inputs.py.
+
+    Review repair 2026-09-19: the first version tested ``isinstance(x, float)``
+    only, so ``np.float32(nan)`` (not a Python float) still returned 1.2 and
+    ``inf`` passed as present. Now: present iff it converts to a FINITE
+    float — NaN/±inf of any numeric type (Python, numpy, pandas) is missing.
     """
-    return x is not None and not (isinstance(x, float) and math.isnan(x))
+    if x is None:
+        return False
+    try:
+        return math.isfinite(float(x))
+    except (TypeError, ValueError, OverflowError):
+        return False
 
 
 # --- hitter per-game outcome σ: units, and the constant ------------------------

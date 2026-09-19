@@ -28,3 +28,12 @@ def test_bad_row_is_skipped_not_fatal(tmp_path):
 
 def test_missing_file_is_empty(tmp_path):
     assert E.load_dq_by_mlbam(tmp_path / "nope.csv") == {}
+
+
+def test_fractional_or_malformed_ids_are_rejected_not_truncated(tmp_path):
+    """Review repair 2026-09-19: int(123.7) filed the tag under 123 — someone else."""
+    p = tmp_path / "rp3.csv"
+    pd.DataFrame({"pitcher": [123.7, 124.0, -5, "inf", 0, 125],
+                  "data_quality_tag": ["marcel_il", "data_driven_full", "x", "y", "z",
+                                       "data_driven_thin"]}).to_csv(p, index=False)
+    assert E.load_dq_by_mlbam(p) == {124: "data_driven_full", 125: "data_driven_thin"}

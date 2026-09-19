@@ -53,7 +53,10 @@ findings are filed OPEN in §4 of that audit with repro sketches — O1
 `opp_probable_id`) are the two to take first. Offline rendered
 complete/stale/missing evidence: `docs/audits/offline_scenarios_2026-09-19/`
 (regenerate with `python scripts/ci/render_offline_scenarios.py`).
-Football hand-off: `docs/football_transfer_contract.md`. NOT run this pass
+Football hand-off: `docs/football_transfer_contract.md`. **Owner closeout
+2026-09-19: football (Gridiron) is the ONLY ongoing development repo; this
+branch closes the plv_clone ID/missingness milestone after Astra's review
+repairs (audit §6). No further plv_clone development is planned.** NOT run this pass
 (needs a live league read): `/matchup-audit` — run it on the first 2027
 build. Restart checklist below is unchanged.
 

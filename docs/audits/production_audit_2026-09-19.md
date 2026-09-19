@@ -239,3 +239,30 @@ Ranked by decision impact. None needs a network to reproduce unless marked.
 - Test census (`test_testqual_data_gating`): the new tests carry NO
   presence/import guards (hard imports on tracked source), so the declared
   bound (72 files / 128 sites) is unchanged.
+
+## 6. Review repairs (owner closeout, 2026-09-19)
+
+Astra independently ran the 15 changed test files at `67aa621` via
+`run_summary.py`: 54 passed. Three source-probe findings from that review,
+repaired in the closeout commit on the same branch (targeted regressions +
+smoke rerun; no further scope):
+
+- **R3b `_present` covered Python-float NaN only** — `sp_opp_factor(np.float32(nan))`
+  still returned 1.2, and ±inf passed as present. Now present iff the value
+  converts to a FINITE float (any numeric type). Valid values and clamps are
+  unchanged; controls for np.float32/64 NaN and ±inf, plus numpy-typed valid
+  inputs, in `tests/test_matchup_nan_inputs.py`.
+- **R11b collision fall-through** — `resolve_player_mlbam` called the
+  fail-closed `resolve_id` for a `KNOWN_COLLISIONS` hitter but, on `None`
+  (missing/unknown team), fell through to the first-loaded name cache / API,
+  undoing the guarantee. A known collision that cannot be settled now stays
+  `None`. Test forbids the fallback calls and covers missing/empty/unknown
+  team alongside both valid Muncys (`tests/test_leverage_hitter_collision.py`).
+- **R10b `load_dq_by_mlbam` truncation** — `int(123.7)` filed a malformed id
+  under 123 (another person). Only finite, positive, integer-valued ids are
+  accepted; fractional/negative/zero/inf are rejected
+  (`tests/test_leverage_dq_map.py`).
+
+Owner direction recorded: football (Gridiron) is the only ongoing
+development repo; this PR is the closeout of the plv_clone ID/missingness
+milestone. Astra to review; nothing further is planned here.

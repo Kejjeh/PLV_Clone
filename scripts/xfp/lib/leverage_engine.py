@@ -286,9 +286,16 @@ def load_dq_by_mlbam(path) -> dict:
         try:
             if pd.isna(pid):
                 continue
-            out[int(pid)] = tag
+            f = float(pid)
         except (TypeError, ValueError):
             continue
+        # Review repair 2026-09-19: int() TRUNCATES, so a malformed
+        # fractional id (123.7) would have been filed under 123 — another
+        # person. Only an integer-valued id (123 / 123.0 from a NaN-able
+        # column) is accepted; anything else is malformed and skipped.
+        if not math.isfinite(f) or not f.is_integer() or f <= 0:
+            continue
+        out[int(f)] = tag
     return out
 
 
@@ -312,8 +319,13 @@ def resolve_player_mlbam(p):
         pid = resolve_id(p.name, kind='batter',
                          team=(getattr(p, 'proTeam', None) or None),
                          position=pos)
-        if pid is not None:
-            return int(pid)
+        # Review repair 2026-09-19: resolve_id's contract is FAIL-CLOSED —
+        # None means "ambiguous / unknown team, refuse to guess". Falling
+        # through to the first-loaded name cache or the API here undid that
+        # guarantee and handed back whichever namesake loaded first. A known
+        # collision that cannot be settled stays unresolved (the engine keys
+        # him by name, loudly), never a guessed id.
+        return int(pid) if pid is not None else None
     return player_mlbam_lookup(p.name) or _resolve_mlbam_via_api(p.name)
 
 

@@ -48,3 +48,30 @@ def test_no_factor_ever_returns_nan():
     for v in (NAN, None, 0.0, 1.0):
         assert not math.isnan(sp_opp_factor(v))
         assert not math.isnan(hitter_opp_factor(v, v, CFG)[0])
+
+
+# ── review repair 2026-09-19: numeric missingness covers every non-finite scalar type ──
+
+import numpy as np
+import pytest
+
+
+@pytest.mark.parametrize("bad", [np.float32("nan"), np.float64("nan"), float("inf"),
+                                 float("-inf"), np.float32("inf"), np.float64("-inf")])
+def test_non_finite_scalars_of_any_numeric_type_are_missing(bad):
+    assert sp_opp_factor(bad) == 1.0
+    assert hitter_opp_factor(bad, 0.90, CFG) == (0.90, None)     # falls to the team index
+    assert hitter_opp_factor(bad, bad, CFG) == (1.0, None)
+
+
+@pytest.mark.parametrize("good, expected", [(np.float32(0.5), 1.20), (np.float64(2.0), 0.80),
+                                            (1.0, 1.0), (np.float32(1.0), 1.0)])
+def test_valid_values_still_score_and_clamp_identically(good, expected):
+    assert sp_opp_factor(good) == pytest.approx(expected)
+
+
+def test_valid_hitter_rate_of_numpy_type_takes_the_sp_branch():
+    f, opp = hitter_opp_factor(np.float64(14.0), 0.90, CFG)
+    assert f == pytest.approx(11.5 / 14.0) and opp == pytest.approx(14.0)   # inside the 0.70-1.30 clamp
+    f, opp = hitter_opp_factor(np.float64(23.0), 0.90, CFG)
+    assert f == pytest.approx(0.70) and opp == pytest.approx(23.0)          # 11.5/23 = 0.5 -> clamp lo, unchanged
