@@ -39,6 +39,29 @@ def _clamp(x: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, x))
 
 
+def _present(x) -> bool:
+    """True for a usable numeric input: not None and not NaN.
+
+    ``if not x`` is the wrong missing-test for a float that can be NaN — NaN
+    is truthy, so a NaN opponent index or opposing-SP rate used to fall
+    through to ``1/NaN`` and ``_clamp`` then returned the UPPER bound (NaN
+    fails every ``<``/``>`` comparison, so ``max(lo, min(hi, nan))`` is
+    ``hi``): a missing input silently became the most favourable matchup
+    multiplier. Found 2026-09-18; pinned by tests/test_matchup_nan_inputs.py.
+
+    Review repair 2026-09-19: the first version tested ``isinstance(x, float)``
+    only, so ``np.float32(nan)`` (not a Python float) still returned 1.2 and
+    ``inf`` passed as present. Now: present iff it converts to a FINITE
+    float — NaN/±inf of any numeric type (Python, numpy, pandas) is missing.
+    """
+    if x is None:
+        return False
+    try:
+        return math.isfinite(float(x))
+    except (TypeError, ValueError, OverflowError):
+        return False
+
+
 # --- hitter per-game outcome σ: units, and the constant ------------------------
 # Calibrated 2026-07-29.  Script: scripts/xfp/validate_hitter_sigma_scale.py.
 # Memo: data/research/validation_runs/hitter_sigma_scale_2026-07-29.md.
@@ -169,7 +192,7 @@ class SPStartCtx:
 def sp_opp_factor(opp_bat_index: Optional[float]) -> float:
     """Opposing-offense factor for an SP start: a strong opposing lineup
     suppresses the start.  ``1/idx`` clamped to ±20%."""
-    if not opp_bat_index:
+    if not _present(opp_bat_index) or not opp_bat_index:
         return 1.0
     return _clamp(1.0 / opp_bat_index, *_SP_OPP_CLAMP)
 
@@ -236,12 +259,12 @@ def hitter_opp_factor(opp_per_start: Optional[float],
     is not None``), so a zero-projection SP still takes the SP branch (neutral
     factor) rather than silently falling through to the team index.  Returns
     (factor, opp_proj_for_breakdown)."""
-    if opp_per_start is not None:
+    if _present(opp_per_start):
         if opp_per_start:
             return _clamp(cfg.league_avg_sp_fp_per_start / opp_per_start,
                           *_HIT_OPP_SP_CLAMP), opp_per_start
         return 1.0, opp_per_start
-    if team_pit_index is not None:
+    if _present(team_pit_index):
         return _clamp(team_pit_index, *_HIT_OPP_TEAM_CLAMP), None
     return 1.0, None
 

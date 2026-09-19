@@ -534,13 +534,28 @@ def get_matchup():
 # plv_clone.projections.ProjectionStore.rp3(live_il=True).
 
 
+def _num_or(value, default=0):
+    """`value or default` that also treats NaN as missing.
+
+    `r.get('col') or 0` does NOT default a NaN cell (NaN is truthy), so an
+    empty CSV cell used to flow into the projection maps as NaN and from there
+    into sums, the SP cap sort and the MC draws. Fix 2026-09-18.
+    """
+    try:
+        if value is None or pd.isna(value):
+            return default
+    except (TypeError, ValueError):
+        return default
+    return value or default
+
+
 def load_projections():
     from plv_clone.projections import PROJECTIONS
     rh3 = PROJECTIONS.rh3().drop_duplicates('player_name')
     rh3['nk'] = rh3['player_name'].map(_norm)
     # MA1: per-player sigma. MA2 hitter: rh3.recency_form_gap (xpwOBA delta vs prior).
-    rh3_map = {r['nk']: {'per_game': r.get('xfp_rh3_per_game') or 0,
-                          'per_pa': r.get('xfp_rh3_per_pa') or 0,
+    rh3_map = {r['nk']: {'per_game': _num_or(r.get('xfp_rh3_per_game')),
+                          'per_pa': _num_or(r.get('xfp_rh3_per_pa')),
                           'prior_fp_per_pa': r.get('prior_fp_per_pa'),
                           'recency_form_gap': r.get('recency_form_gap'),
                           'sigma': r.get('xfp_rh3_sigma'),
@@ -565,8 +580,8 @@ def load_projections():
             except (TypeError, ValueError):
                 continue
             _RH3_BY_BATTER[_bid] = {
-                'per_game': r.get('xfp_rh3_per_game') or 0,
-                'per_pa': r.get('xfp_rh3_per_pa') or 0,
+                'per_game': _num_or(r.get('xfp_rh3_per_game')),
+                'per_pa': _num_or(r.get('xfp_rh3_per_pa')),
                 'prior_fp_per_pa': r.get('prior_fp_per_pa'),
                 'recency_form_gap': r.get('recency_form_gap'),
                 'sigma': r.get('xfp_rh3_sigma'),
@@ -575,21 +590,35 @@ def load_projections():
                 'sigma_factor': r.get('batter_sigma_factor'),
             }
 
-    rp3 = PROJECTIONS.rp3(live_il=True).drop_duplicates('player_name')
+    _rp3_full = PROJECTIONS.rp3(live_il=True)
+    rp3 = _rp3_full.drop_duplicates('player_name')
     rp3['nk'] = rp3['player_name'].map(_norm)
-    rp3_map = {r['nk']: {'per_start': r.get('xfp_rp3_per_start') or 0,
-                          'per_start_sched': r.get('xfp_rp3_per_start_sched') or 0,
-                          'sigma': r.get('xfp_rp3_sigma')}
-                for _, r in rp3.iterrows()}
-    # mlbam → rp3 lookup (for opposing-SP factor)
-    sp_id = pd.read_csv(CACHE / 'sp_multiyr_2015_2025.csv',
-                          usecols=['pitcher', 'player_name']).drop_duplicates('player_name')
-    sp_id['nk'] = sp_id['player_name'].map(_norm)
+
+    def _rp3_info(r):
+        return {'per_start': _num_or(r.get('xfp_rp3_per_start')),
+                'per_start_sched': _num_or(r.get('xfp_rp3_per_start_sched')),
+                'sigma': _num_or(r.get('xfp_rp3_sigma'), None)}
+
+    rp3_map = {r['nk']: _rp3_info(r) for _, r in rp3.iterrows()}
+    # mlbam → rp3 lookup (opposing-SP factor + the KNOWN_PITCHER_COLLISIONS
+    # branch in project_player). Keyed by rp3's OWN `pitcher` column over the
+    # FULL frame (fix 2026-09-18). It used to be assembled by name-joining the
+    # frozen 2015-2025 SP cache back onto rp3_map, which (a) had no entry for
+    # any current-season debutant — 16 of 376 rp3 rows on the 2026-08-31
+    # artifact — so their starts fell back to the team pit_index, and (b) for
+    # a same-name pair attached ONE pitcher's rp3 row to the OTHER's cached
+    # id, defeating the collision branch that reads this map to be safe.
+    # Pinned by tests/test_matchup_rp3_by_mlbam_identity.py.
     rp3_by_mlbam = {}
-    for _, r in sp_id.iterrows():
-        rp_info = rp3_map.get(r['nk'])
-        if rp_info and rp_info['per_start']:
-            rp3_by_mlbam[int(r['pitcher'])] = rp_info
+    if 'pitcher' in _rp3_full.columns:
+        for _, r in _rp3_full.iterrows():
+            try:
+                _pid = int(r['pitcher'])
+            except (TypeError, ValueError):
+                continue
+            info = _rp3_info(r)
+            if info['per_start']:
+                rp3_by_mlbam[_pid] = info
 
     rprs2 = PROJECTIONS.rprs2().drop_duplicates('name_api')
     rprs2['nk'] = rprs2['name_api'].map(_norm)
@@ -608,8 +637,8 @@ def load_projections():
         if sigma is not None and sigma <= 0:
             _bad_band.append(str(r.get('name_api') or r.get('player_name') or '?'))
             sigma = None
-        rprs2_map[r['nk']] = {'xfp_ros': r.get('xfp_ros') or 0,
-                              'xfp_full_year': r.get('xfp_full_year') or 0,
+        rprs2_map[r['nk']] = {'xfp_ros': _num_or(r.get('xfp_ros')),
+                              'xfp_full_year': _num_or(r.get('xfp_full_year')),
                               'role': r.get('role_lag1') or 'middle',
                               'sigma': sigma,
                               'mlbam': int(r['pitcher']) if pd.notna(r.get('pitcher')) else None}
@@ -881,6 +910,26 @@ _MCFG = _mproj.MatchupConfig(
 )
 
 
+def espn_game_date(epoch_ms) -> date:
+    """Calendar date (America/New_York) of an ESPN first-pitch epoch-ms stamp.
+
+    Defect fixed 2026-09-18: this was ``date.fromtimestamp(ms/1000)``, which
+    converts in the PROCESS-LOCAL zone. On the UTC live-matchup runner every
+    first pitch at/after 20:00 ET (all West-Coast night games) landed on
+    TOMORROW — shifting a hitter's game a day, dropping the period's last-night
+    games past ``week_end`` entirely, and desynchronising the (team, date,
+    ordinal) key from ``fetch_completed_games`` (which keys on MLB's ET block
+    date) so the double-count guard silently stopped matching. The MLB-API
+    sibling path (``fetch_schedules_by_team``) documents and fixes exactly this;
+    the primary ESPN path had never received it. Pinned by
+    tests/test_espn_schedule_et_dates.py.
+    """
+    from datetime import datetime as _dt
+    from zoneinfo import ZoneInfo
+    return _dt.fromtimestamp(float(epoch_ms) / 1000.0,
+                             tz=ZoneInfo('America/New_York')).date()
+
+
 def fetch_espn_week_schedule(league, week_start, week_end):
     """Pull team game schedules from ESPN's proGamesByScoringPeriod.
 
@@ -928,7 +977,7 @@ def fetch_espn_week_schedule(league, week_start, week_end):
         games = []
         for _sp, game_list in team.get('proGamesByScoringPeriod', {}).items():
             for g in game_list:
-                cal = date.fromtimestamp(g['date'] / 1000)
+                cal = espn_game_date(g['date'])
                 if not (week_start <= cal <= week_end):
                     continue
                 home_id = g['homeProTeamId']
@@ -1114,6 +1163,44 @@ def drop_completed(games, mlb_id, completed):
             continue
         out.append(g)
     return out
+
+
+def drop_completed_starts(starts, team_games, mlb_id, completed):
+    """SP starts minus those on a team-date whose games are ALL final.
+
+    `starts` is one pitcher's list ({'date': ...}); `team_games` his team's
+    schedule list for the window (one entry per GAME). A start is dropped only
+    when every game of that team on that date is completed — a split
+    doubleheader with game 1 final and game 2 (his start) pending keeps the
+    start, because the ordinal-keyed `drop_completed` still returns game 2.
+    """
+    if not completed or not starts:
+        return starts
+    out = []
+    for st in starts:
+        d = st.get('date')
+        same_day = [g for g in (team_games or []) if g.get('date') == d]
+        if same_day and not drop_completed(same_day, mlb_id, completed):
+            continue                      # every game that day is final
+        out.append(st)
+    return out
+
+
+def remaining_cap(period_cap, banked) -> int:
+    """SP starts still available in the period for a TODAY-forward projection.
+
+    Defect fixed 2026-09-18: main() applied the FULL period cap to a
+    projection that only contains starts from today onward — the banked starts
+    (already in the live score) were not subtracted, so in a 2-week playoff
+    round with 12 of 20 banked the page let 20 MORE starts score while its own
+    cap panel said 12/20. leverage_engine had it right (cap_remaining_mine);
+    the dashboard now uses the same arithmetic. None banked (ESPN fetch
+    failed) keeps the full cap, which is the pre-fix behaviour and is labelled
+    on the page by render_cap_status.
+    """
+    if banked is None:
+        return int(period_cap)
+    return max(int(period_cap) - int(banked), 0)
 
 
 def player_mlbam_lookup(name, cache={}):
@@ -1405,6 +1492,12 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         all_starts = sp_starts_by_pitcher.get(int(mlbam), [])
         starts = [s for s in all_starts
                   if today_s <= s['date'] <= week_end_s]
+        # A start whose game is already FINAL is in the live WTD score AND in
+        # ESPN's banked statId-33 count; keeping it here counted its FP twice
+        # and consumed a cap slot twice (the hitter/RP branch above has gone
+        # through drop_completed since 2026-08-29; the SP branch had not).
+        # Fixed 2026-09-18; pinned by tests/test_sp_completed_start_dropped.py.
+        starts = drop_completed_starts(starts, games, mlb_id, completed_games)
 
         # Collision-safe: for a same-name SP key rp3 by the resolved id, not the
         # shared norm-name key (which would grab whichever Logan Allen loaded first).
@@ -1456,6 +1549,10 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         # Any rostered pitcher not routed to the SP branch above (true RPs, or a
         # former starter now relieving) is projected here via rprs2.
         rp_info = rprs2_map.get(nk, {})
+        if not rp_info:
+            # MISSING is not ZERO: without this badge an RP with no rprs2 row
+            # rendered identically to a 60-day-IL reliever (fix 2026-09-18).
+            out['badges'].append('⚠ no proj')
         role = rp_info.get('role') or 'middle'
         rp_mlbam = rp_info.get('mlbam')
         # Use observed appearance rate (Bayesian-shrunk toward role prior) when
@@ -1493,6 +1590,11 @@ def project_player(player, schedules_by_team, sp_starts_by_pitcher, rh3_map,
         if rh is None:
             rh = rh3_map.get(nk, {})
         per_game_base = rh.get('per_game') or 0
+        if not rh or not per_game_base:
+            # MISSING is not ZERO (fix 2026-09-18): a hitter absent from rh3
+            # (debutant, name-key miss) used to render exactly like an IL'd
+            # player — Units —, Rest +0.0, no badge. Name it.
+            out['badges'].append('⚠ no proj')
         if not per_game_base or not rem: return out
 
         # MA3: lineup-spot adjuster (uses mlbam → lineup map)
@@ -3505,8 +3607,12 @@ def main():
     # Apply SP cap (period-aware: 10/week, 16 for the ASG period, 20 for a
     # 2-week playoff round). A single week's ≤~7 starts fall under a 16/20 cap
     # — so nothing is wrongly zeroed during a multi-week period.
-    my_capped = apply_sp_cap(my_proj, cap=sp_cap)
-    opp_capped = apply_sp_cap(opp_proj, cap=sp_cap)
+    # Cap the TODAY-FORWARD projection at what is left of the period cap, not
+    # the whole cap (fix 2026-09-18, see remaining_cap). Both sides.
+    my_cap_rem = remaining_cap(sp_cap, _banked_mine)
+    opp_cap_rem = remaining_cap(sp_cap, _banked_meta.get('opp_banked'))
+    my_capped = apply_sp_cap(my_proj, cap=my_cap_rem)
+    opp_capped = apply_sp_cap(opp_proj, cap=opp_cap_rem)
     if my_capped > 0: print(f'  Ligers SP cap removed {my_capped:.1f} FP')
     if opp_capped > 0: print(f'  Opp SP cap removed {opp_capped:.1f} FP')
 
@@ -3617,7 +3723,7 @@ def main():
                                                 rprs2_map, ts_map, today, week_end, adj=shadow_adj,
                                                 completed_games=completed_games)
                       for p in mu['opp_lineup']}
-        apply_sp_cap(my_proj_s, cap=sp_cap); apply_sp_cap(opp_proj_s, cap=sp_cap)
+        apply_sp_cap(my_proj_s, cap=my_cap_rem); apply_sp_cap(opp_proj_s, cap=opp_cap_rem)
         # Slot-aware filter for shadow log (mirrors live aggregation 2026-06-03)
         my_active_s = {p.name: my_proj_s[p.name] for p in mu['my_lineup']
                        if _is_active_slot(p) and p.name in my_proj_s}
