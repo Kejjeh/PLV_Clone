@@ -1,13 +1,14 @@
 """Smoke tests for the shared batter_rolling_features cache.
 
-Strategy: the full build is fast (~1s) so we just (re)build once at
-session start and inspect the resulting CSV. If the CSV is older than
-1 hour we rebuild; otherwise reuse the artifact.
+Strategy: the full build is fast (~1s), so build once per module into a
+temp directory and inspect that CSV. It used to rebuild the git-tracked
+data/research/xfp_cache/batter_rolling_features.csv in place whenever it was
+over an hour old, so every test run rewrote tracked data (with date-dependent
+L21d values) and left the working tree dirty.
 """
 from __future__ import annotations
 import subprocess
 import sys
-import time
 from pathlib import Path
 
 import pandas as pd
@@ -33,20 +34,18 @@ EXPECTED_COLUMNS = {
 
 
 @pytest.fixture(scope='module')
-def cache_df() -> pd.DataFrame:
+def cache_df(tmp_path_factory) -> pd.DataFrame:
     statcast_2026 = CACHE / 'statcast_2026.parquet'
     if not statcast_2026.exists():
         pytest.skip('statcast parquet cache missing; cannot run end-to-end builder test')
-    # Rebuild if missing or stale (>1h old)
-    stale = (not OUT_CSV.exists()) or (time.time() - OUT_CSV.stat().st_mtime > 3600)
-    if stale:
-        r = subprocess.run(
-            [sys.executable, '-X', 'utf8', str(BUILDER)],
-            cwd=str(ROOT), capture_output=True, text=True, timeout=600,
-        )
-        assert r.returncode == 0, f'builder failed: {r.stderr[-500:]}'
-    assert OUT_CSV.exists(), 'builder did not produce the expected CSV'
-    return pd.read_csv(OUT_CSV)
+    out = tmp_path_factory.mktemp('batter_rolling_features') / 'batter_rolling_features.csv'
+    r = subprocess.run(
+        [sys.executable, '-X', 'utf8', str(BUILDER), '--out', str(out)],
+        cwd=str(ROOT), capture_output=True, text=True, timeout=600,
+    )
+    assert r.returncode == 0, f'builder failed: {r.stderr[-500:]}'
+    assert out.exists(), 'builder did not produce the expected CSV'
+    return pd.read_csv(out)
 
 
 def test_cache_file_and_columns(cache_df):

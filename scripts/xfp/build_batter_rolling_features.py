@@ -89,9 +89,12 @@ def _statcast_union_sql() -> str:
     return f"read_parquet([{files}], union_by_name=True)"
 
 
-def main():
+def main(out_csv: Path | None = None):
+    # Live mode writes the git-tracked cache unless told otherwise; the smoke
+    # test passes --out so that running the suite never rewrites tracked data.
+    out_csv = Path(out_csv) if out_csv else OUT_CSV
     t0 = time.time()
-    print(f'[build_batter_rolling_features] start  out={OUT_CSV}')
+    print(f'[build_batter_rolling_features] start  out={out_csv}')
 
     con = duckdb.connect()
     con.execute("PRAGMA threads=8")
@@ -372,12 +375,12 @@ def main():
             out[c] = pd.NA
     out = out[cols].sort_values('total_career_pa', ascending=False)
 
-    OUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-    out.to_csv(OUT_CSV, index=False)
-    size_kb = OUT_CSV.stat().st_size / 1024
+    out_csv.parent.mkdir(parents=True, exist_ok=True)
+    out.to_csv(out_csv, index=False)
+    size_kb = out_csv.stat().st_size / 1024
     elapsed = time.time() - t0
     print(f'[build_batter_rolling_features] wrote {len(out)} rows  '
-          f'{size_kb:,.0f} KB  in {elapsed:.1f}s  → {OUT_CSV}')
+          f'{size_kb:,.0f} KB  in {elapsed:.1f}s  → {out_csv}')
 
 
 def _marker_select(suffix: str, where: str) -> str:
@@ -574,6 +577,13 @@ def _parse_args(argv=None):
              '(filters pitches with game_date <= as_of). Default: live mode '
              '(latest L150 + L21d cache).',
     )
+    p.add_argument(
+        '--out',
+        type=Path,
+        default=None,
+        help='Live mode only: write the CSV here instead of the tracked cache '
+             f'({OUT_CSV.relative_to(ROOT).as_posix()}). Tests use this.',
+    )
     return p.parse_args(argv)
 
 
@@ -582,4 +592,4 @@ if __name__ == '__main__':
     if args.as_of is not None:
         build_as_of(args.as_of)
     else:
-        main()
+        main(out_csv=args.out)
