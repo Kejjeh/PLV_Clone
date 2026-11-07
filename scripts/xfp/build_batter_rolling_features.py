@@ -589,6 +589,9 @@ def _parse_args(argv=None):
 
 if __name__ == '__main__':
     args = _parse_args()
+    if args.as_of is not None and args.out is not None:
+        sys.exit('--out applies to live mode only; --as-of always writes '
+                 'batter_rolling_features_<as_of>.csv in the cache directory.')
     if args.as_of is not None:
         build_as_of(args.as_of)
     else:
