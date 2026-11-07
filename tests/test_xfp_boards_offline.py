@@ -156,6 +156,13 @@ def test_sp_board_injected_return_date_reflected(sp_model_seams, monkeypatch):
 def test_hitter_board_offline_schema_buckets_and_no_network(hitter_model_seams,
                                                             monkeypatch):
     monkeypatch.setattr(B, "LeagueState", _NoNetwork)
+    # RoS totals scale by the days left before B.SEASON_END, and B.TODAY is
+    # date.today() captured at import. Unpinned, the xfp_ros > 0 assertion below
+    # passed all season and failed every day after SEASON_END, because RoS is
+    # correctly 0 once no games remain. Pin an in-season date, relative to
+    # SEASON_END so it survives a season changeover, so this checks the scaling
+    # rather than the calendar.
+    monkeypatch.setattr(B, "TODAY", B.SEASON_END - timedelta(days=60))
     roster = _roster_df([
         ("Good Hitter", 2, "OF", "NYY", ["OF", "UTIL"], "OF", False, "ACTIVE", None),
     ])
