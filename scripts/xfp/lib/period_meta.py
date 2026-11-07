@@ -36,6 +36,27 @@ from plv_clone.cap_math import (  # noqa: F401  (re-exported for callers)
 )
 
 
+def today_et(now=None) -> date:
+    """Today's date on the BrownU game calendar (America/New_York).
+
+    The default `today` for every resolver here. It was `date.today()` —
+    the process-local clock, which is UTC in the cloud container and on the
+    hosted runners — so any caller that did not pass `today=` (run_roster_audit,
+    lineup_optimizer, build_period_xfp_board, weekly_cap_check --period)
+    resolved the window on the UTC calendar: from 20:00 ET on a Sunday it was
+    already Monday and the week rolled a period early. Fixing the default at
+    the owner covers every caller at once (don't-do #18). 2026-09-18; pinned by
+    tests/test_period_meta_et_default.py. `now` is an injection seam.
+    """
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+    et = ZoneInfo("America/New_York")
+    now = now if now is not None else datetime.now(et)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=et)
+    return now.astimezone(et).date()
+
+
 def _calendar_weeks(period, mp) -> int:
     """True CALENDAR-week span of a period. The ASG block (period 15) spans two
     calendar weeks but ESPN lists it as a single scoring index, so trust its
@@ -134,7 +155,7 @@ def resolve_period_meta(league, period, *, today: date | None = None) -> dict:
         exists, else the current Mon .. Mon+7×weeks-1 span (a plain single-week
         period → a Mon–Sun week, byte-identical to before).
 
-    ``today`` defaults to ``date.today()``; callers with a timezone-correct
+    ``today`` defaults to ``today_et()`` (ET); callers with a timezone-correct
     "today" (e.g. the dashboard's ET helper) pass it explicitly so the derived
     week window matches their other date math.
 
@@ -142,7 +163,7 @@ def resolve_period_meta(league, period, *, today: date | None = None) -> dict:
         ``{period, weeks, sp_cap, week_start, week_end, covered}``.
     """
     if today is None:
-        today = date.today()
+        today = today_et()
     try:
         mp = getattr(getattr(league, "settings", None), "matchup_periods", {}) or {}
     except Exception:

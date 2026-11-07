@@ -470,6 +470,37 @@ def _hitter_games(state, cands) -> dict:
     return g
 
 
+def scoreable_in_D(D, player: dict) -> bool:
+    """True iff a roster record has draws in D (my_h / my_rp / my_sp).
+
+    A rostered player with no projection row or no resolved mlbam is excluded
+    from the simulation by build_state, so his drop CANNOT be scored: the
+    engine now refuses it (delta_pwin raises) instead of reporting a free
+    0.00pp drop. The optimizer therefore keeps him out of the droppable set
+    and names him as UNSCOREABLE (2026-09-18; tests/test_optimizer_unscoreable.py).
+    """
+    if not any(k in D for k in ('my_h', 'my_rp', 'my_sp')):
+        return True          # no draw tables at all (toy/test D) -> cannot judge, keep him
+    key = _draw_key(player)
+    if key in D.get('my_h', {}) or key in D.get('my_rp', {}):
+        return True
+    m = player.get('mlbam')
+    nk = _norm(player.get('name') or '')
+    for d in D.get('my_sp', []) or []:
+        ev = d.get('event', {})
+        if m and ev.get('mlbam'):
+            if int(ev['mlbam']) == int(m):
+                return True
+            continue                     # both carry ids: ids decide, never names
+        if _norm(ev.get('name') or '') == nk:
+            return True
+    return False
+
+
+def unscoreable_players(D, roster) -> list[dict]:
+    return [p for p in roster if not p.get('on_il') and not scoreable_in_D(D, p)]
+
+
 def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
                        prior_adds=(), prior_drop_keys=(), cur_pwin=None,
                        exclude_drops=(), verbose=True, bench_scratch=(),
@@ -505,6 +536,15 @@ def score_single_moves(state, D, roster, cands, base_p, *, hgames=None,
     # would see a phantom short roster and block every later step
     droppables = [p for p in roster if not p.get('on_il')
                   and not any(RR.same_player(p, x) for x in exclude_drops)]
+    # Players the engine holds no draws for cannot be scored as drops (their
+    # "drop" used to read 0.00pp — free). Skip them, loudly, once per call.
+    _unsc = [p for p in droppables if not scoreable_in_D(D, p)]
+    if _unsc:
+        droppables = [p for p in droppables if p not in _unsc]
+        if verbose:
+            print(f'  !! {len(_unsc)} rostered player(s) UNSCOREABLE as drops '
+                  f'(no projection / unresolved id — absent from the simulation): '
+                  f'{", ".join(p["name"] for p in _unsc)}. Verify them by hand.')
     _legal_kw = dict(cap_remaining=state['cap_remaining_mine'],
                      hitter_games=hgames,
                      days_remaining=state.get('days_remaining'),
@@ -781,7 +821,7 @@ def assemble_plan(res: dict, base_p: float) -> dict:
 def build_payload(*, plan, res, base_p, regime, period, sims, seed,
                   cap_remaining, wv, generated_at=None, week_start=None,
                   week_end=None, banked=None, sp_cap=None,
-                  banked_provisional=None) -> dict:
+                  banked_provisional=None, unscoreable=None) -> dict:
     """The weekly_optimizer.json payload — extracted from main() so its shape
     (which the Monday brief consumes) is testable without ESPN.
 
@@ -800,6 +840,11 @@ def build_payload(*, plan, res, base_p, regime, period, sims, seed,
         'banked': banked, 'sp_cap': sp_cap,
         'banked_provisional': banked_provisional,
         'cap_remaining': cap_remaining,
+        # Rostered players the simulation holds NO draws for (no projection /
+        # unresolved id). They were never offered as drops; a consumer must
+        # not read this run as a full-roster evaluation when this is non-empty.
+        'unscoreable_drops': [{'name': p.get('name'), 'bucket': p.get('bucket'),
+                               'mlbam': p.get('mlbam')} for p in (unscoreable or [])],
         # plan[] semantics (fix 2026-07-30): `dpwin` is each move's MARGINAL
         # gain given the moves before it — the marginals sum to
         # `plan_total_dpwin`, and `pwin_after` is the honest running P(win).
@@ -1002,7 +1047,8 @@ def main() -> int:
                             week_end=state['week_end'],
                             banked=state['banked_mine'],
                             sp_cap=state['sp_cap'],
-                            banked_provisional=state.get('banked_provisional'))
+                            banked_provisional=state.get('banked_provisional'),
+                            unscoreable=unscoreable_players(D, state['my_roster']))
 
     if not args.no_log and res['rounds']:
         try:

@@ -27,6 +27,68 @@ from scripts.xfp.lib.bucket_dispatch import _flip_lastfirst  # shared 'Last, Fir
 _BS_PITCHERS = ROOT / 'data' / 'research' / 'xfp_cache' / 'boxscore_pitchers.parquet'
 _BS_LOOKBACK_DAYS = 14
 
+# Projection CSVs are rebuilt nightly (refresh_dashboards.py, ~11:00 UTC) and
+# reflect games through YESTERDAY (gotcha #9). Anything older than this many
+# days is a projection from another era of the season and must be labelled
+# STALE, never "fresh". The age is measured from file mtime — the only as-of
+# signal the projection CSVs carry (they have no built_at column), so a fresh
+# checkout reads as 0d even when the data is old; the label is therefore a
+# floor on staleness, not a ceiling.
+PROJECTION_MAX_AGE_DAYS = 2
+
+
+def fmt_days(x) -> str:
+    """Days-until-return cell. ESPN routinely has NO returnDate (DTD, early IL
+    stints) -> league_state leaves days_until_return None/NaN; ``int(NaN)``
+    raised ValueError and killed the whole audit (2026-09-18). '?' is honest."""
+    try:
+        if x is None or pd.isna(x):
+            return '?'
+        return str(int(x))
+    except (TypeError, ValueError):
+        return '?'
+
+
+def out_mask(roster: pd.DataFrame) -> pd.Series:
+    """True for players who cannot score: an IL lineup slot OR a strict IL
+    injury state. NOT ``injured`` — ESPN sets that for DAY_TO_DAY too, and a
+    DTD starter with a probable still pitches (il_states.py; don't-do #2).
+    The old ``~roster['injured']`` filter dropped DTD arms from the healthy-SP
+    count (understating projected starts -> 'streaming needed' at the cap)
+    and from the drop-candidate pool. 2026-09-18."""
+    from plv_clone.il_states import IL_STATES_STRICT
+    slot_il = roster['lineup_slot'].astype(str).str.upper().isin(['IL', 'IR'])
+    status = roster['injury_status'].astype(str).str.upper() if 'injury_status' in roster.columns \
+        else pd.Series('', index=roster.index)
+    return slot_il | status.isin(IL_STATES_STRICT)
+
+
+def projection_age_note(ages: dict) -> str:
+    """One-line freshness verdict for the projection CSVs, derived from ages.
+
+    ``ages`` maps model name -> age in days (int) or None (file missing).
+    Defect fixed 2026-09-18: the report printed the literal suffix ``— fresh.``
+    after the ages regardless of their values, so ``rp3 40d — fresh.`` was a
+    real, laundered line. The verdict now names every stale/missing model.
+    """
+    parts, stale, missing = [], [], []
+    for k, a in ages.items():
+        if a is None:
+            parts.append(f"{k} MISSING")
+            missing.append(k)
+            continue
+        parts.append(f"{k} {int(a)}d")
+        if int(a) > PROJECTION_MAX_AGE_DAYS:
+            stale.append(f"{k} {int(a)}d")
+    if not stale and not missing:
+        return f"_Projections: {', '.join(parts)} — fresh (≤{PROJECTION_MAX_AGE_DAYS}d)._"
+    flags = []
+    if stale:
+        flags.append(f"STALE (>{PROJECTION_MAX_AGE_DAYS}d): {', '.join(stale)}")
+    if missing:
+        flags.append(f"MISSING: {', '.join(missing)}")
+    return f"_Projections: {', '.join(parts)} — {'; '.join(flags)}. Re-run refresh_dashboards.py before trusting ranks._"
+
 
 def _load_bs_last_start() -> dict[int, dict]:
     """Return {mlbam_id: most-recent-start-row} from boxscore bridge (last 14d)."""
@@ -106,13 +168,18 @@ def main():
 
     roster = get_my_roster_with_injuries()
 
+    # Anchored on ROOT (was CWD-relative: running from any other directory
+    # raised FileNotFoundError on the age check before a single row loaded).
     proj_files = {
-        'rh3': 'data/outputs/xfp_rh3_projections.csv',
-        'rp3': 'data/outputs/xfp_rp3_projections.csv',
-        'rprs2': 'data/outputs/xfp_rprs2_projections.csv',
+        'rh3': str(ROOT / 'data' / 'outputs' / 'xfp_rh3_projections.csv'),
+        'rp3': str(ROOT / 'data' / 'outputs' / 'xfp_rp3_projections.csv'),
+        'rprs2': str(ROOT / 'data' / 'outputs' / 'xfp_rprs2_projections.csv'),
     }
     ages = {}
     for k, f in proj_files.items():
+        if not os.path.exists(f):
+            ages[k] = None
+            continue
         mtime = datetime.fromtimestamp(os.path.getmtime(f))
         ages[k] = (datetime.now() - mtime).days
 
@@ -177,11 +244,8 @@ def main():
         axis=1,
     )
 
-    healthy_sp_count = (
-        (roster['effective_role'] == 'SP') &
-        (roster['lineup_slot'] != 'IL') &
-        (~roster['injured'])
-    ).sum()
+    _out = out_mask(roster)
+    healthy_sp_count = ((roster['effective_role'] == 'SP') & (~_out)).sum()
     from plv_clone.cap_math import projected_starts as _cap_proj
     projected_starts = _cap_proj(healthy_sp_count)
 
@@ -191,7 +255,7 @@ def main():
     # Banked count is ESPN's authoritative statId-33 counter (the x/16 on-screen).
     from scripts.xfp.lib.period_meta import resolve_current_period_meta, espn_period_meta
     _league = _ls._get_league()
-    _pmeta = resolve_current_period_meta(_league)   # reads live currentMatchupPeriod
+    _pmeta = resolve_current_period_meta(_league)   # live currentMatchupPeriod; today defaults to ET (period_meta.today_et)
     _period = _pmeta['period']
     sp_cap = _pmeta['sp_cap']
     _weeks = _pmeta['weeks']
@@ -207,11 +271,11 @@ def main():
     hitters = join_proj(hitters, rh3, rh3_idx, 'xfp_rh3_per_pa')
     hit_drops = rank_drop_candidates(hitters, 3)
 
-    sps = roster[(roster['effective_role'] == 'SP') & (~roster['injured'])].copy()
+    sps = roster[(roster['effective_role'] == 'SP') & (~_out)].copy()
     sps = join_proj(sps, rp3, rp3_idx, 'xfp_rp3_per_start')
     sp_drops = rank_drop_candidates(sps, 3)
 
-    rps = roster[(roster['effective_role'] == 'RP') & (~roster['injured'])].copy()
+    rps = roster[(roster['effective_role'] == 'RP') & (~_out)].copy()
     rps = join_proj(rps, rprs2, rprs2_idx, 'xfp_ros')
     rp_drops = rank_drop_candidates(rps, 2)
 
@@ -263,7 +327,7 @@ def main():
 
     # ─── Output ────────────────────────────────────────────────────────
     print(f"# Roster audit — {date.today().isoformat()}\n")
-    print(f"_Projections: rh3 {ages['rh3']}d, rp3 {ages['rp3']}d, rprs2 {ages['rprs2']}d — fresh._\n")
+    print(projection_age_note(ages) + "\n")
 
     print("## Slot occupancy")
     print(f"**IL slots: {il_used}/3 used | Bench: {be_used}/4 used | Active: {active}/22 used**\n")
@@ -279,11 +343,13 @@ def main():
     for _, r in il_df.iterrows():
         frees = "Yes" if r['lineup_slot'] == 'IL' else "No"
         inj = f"{r['injury_type']} {r['injury_detail']} ({r['injury_side']})"
-        print(f"| {r['player_name']} | {r['lineup_slot']} | {r['status_code']} | {inj} | {r['return_date']} | {int(r['days_until_return'])} | {frees} |")
+        print(f"| {r['player_name']} | {r['lineup_slot']} | {r['status_code']} | {inj} | {r['return_date']} | {fmt_days(r['days_until_return'])} | {frees} |")
     returns_7d = (il_df['days_until_return'] <= 7).sum()
     returns_30d = (il_df['days_until_return'] <= 30).sum()
     il_frees_30d = ((il_df['lineup_slot'] == 'IL') & (il_df['days_until_return'] <= 30)).sum()
-    print(f"\n_Summary: {returns_7d} returns ≤7d, {returns_30d} ≤30d, {il_frees_30d} IL slots free up within 30d._\n")
+    _unknown = int(il_df['days_until_return'].isna().sum()) if len(il_df) else 0
+    _unk = f", {_unknown} with NO return date (not counted)" if _unknown else ""
+    print(f"\n_Summary: {returns_7d} returns ≤7d, {returns_30d} ≤30d, {il_frees_30d} IL slots free up within 30d{_unk}._\n")
 
     print("## SP cap math")
     _cov = ('OVERRIDE' if _pmeta['covered']
@@ -309,13 +375,13 @@ def main():
         print("→ At cap, no streaming needed this period.")
     print("\nForward-looking SP transitions:")
     running = healthy_sp_count
-    for _, r in il_df[il_df['position'] == 'SP'].sort_values('days_until_return').iterrows():
+    for _, r in il_df[il_df['effective_role'] == 'SP'].sort_values('days_until_return').iterrows():
         running += 1
         from plv_clone.cap_math import projected_starts as _cap_proj2
         proj = _cap_proj2(running)
         g = sp_cap - proj * _weeks
         note = "⚠ FORCED DROP" if g < -0.5 else ("streaming still OK" if g > 0.5 else "at cap")
-        print(f"  - {r['return_date']} (+{int(r['days_until_return'])}d): {r['player_name']} → {running} SPs → {proj:.1f}/wk ({note})")
+        print(f"  - {r['return_date']} (+{fmt_days(r['days_until_return'])}d): {r['player_name']} → {running} SPs → {proj:.1f}/wk ({note})")
     print()
 
     print("## Drop candidates (bottom-3 per bucket)\n")

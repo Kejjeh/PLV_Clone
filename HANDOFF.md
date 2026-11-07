@@ -38,6 +38,28 @@ taken, all reversible:
 The offseason is the right window for the P1/P2 items below — especially
 positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
 
+## 2026-09-19 offseason trust pass (branch `claude/nifty-curie-v7r6kd`, draft PR for Astra)
+
+Read `docs/audits/production_audit_2026-09-19.md` first. Thirteen concrete
+defects in the ACTIVE decision layer were reproduced offline and repaired
+with pinning tests (NaN-blind matchup factors, NaN poisoning the P(win) MC,
+unmatched drops scoring 0.00pp, ESPN schedule dates in UTC, finalized SP
+starts double-counted, matchup cap ignoring banked starts, `rp3_by_mlbam`
+built by name, hitter collision guard missing in the engine, roster-audit
+"fresh" literal / `int(NaN)` crash / DTD-as-out, period resolver defaulting
+to the UTC clock, dq-map wipe, missing≠zero badges). Fourteen further
+findings are filed OPEN in §4 of that audit with repro sketches — O1
+(`/cap-check` under-counts starts) and O2 (ESPN path never hydrates
+`opp_probable_id`) are the two to take first. Offline rendered
+complete/stale/missing evidence: `docs/audits/offline_scenarios_2026-09-19/`
+(regenerate with `python scripts/ci/render_offline_scenarios.py`).
+Football hand-off: `docs/football_transfer_contract.md`. **Owner closeout
+2026-09-19: football (Gridiron) is the ONLY ongoing development repo; this
+branch closes the plv_clone ID/missingness milestone after Astra's review
+repairs (audit §6). No further plv_clone development is planned.** NOT run this pass
+(needs a live league read): `/matchup-audit` — run it on the first 2027
+build. Restart checklist below is unchanged.
+
 ## Season context at shutdown
 
 ## Done and working
@@ -114,6 +136,16 @@ positions un-staling (P1-1) and the `requirements.lock` rebuild (P2-4).
 **P0 — none.** Offseason; automation intentionally disabled.
 
 **P1 — all three completed 2026-09-01** (see "Completed" above).
+
+**P1 (from the 2026-09-19 audit, §4)**
+1. *O1 `/cap-check` early-return drops every SP's second turn once a probable
+   exists* — `weekly_cap_check._project_starts`; repro on the existing test
+   fixtures with one confirmed Monday. Systematic under-count at the cap.
+2. *O2 ESPN schedule path never fills `opp_probable_id`* — hydrate from
+   `fetch_schedules_by_team` so the hitter opposing-SP factor is live.
+3. *O8 mtime is the only as-of signal for the projection CSVs* — write an
+   `xfp_projections_meta.json {built_at, data_through}` sidecar from
+   `refresh_dashboards.py`; consumers prefer it over mtime.
 
 **P2**
 1. *Trim `requirements.lock` to the project closure* (freeze inside a clean
