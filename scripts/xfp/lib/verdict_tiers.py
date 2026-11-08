@@ -1,6 +1,6 @@
 """verdict_tiers — the canonical Sustainability-bucket vocabulary + classifier.
 
-CONTEXT.md defines the **Sustainability bucket** as a domain concept, but it lived
+GLOSSARY.md defines the **Sustainability bucket** as a domain concept, but it lived
 as string literals + a duplicated if/elif chain in both pitcher_sustainability and
 hitter_sustainability (identical structure; only the fp_delta threshold differed —
 2.0 fp/start for SP, 0.5 fp/game for H). This is the one home for it.
@@ -11,7 +11,7 @@ matching tier strings, so a rename is one edit.
 """
 from __future__ import annotations
 
-# Canonical Sustainability-bucket names (CONTEXT.md "Sustainability bucket").
+# Canonical Sustainability-bucket names (GLOSSARY.md "Sustainability bucket").
 SUSTAINABILITY_TIERS = {
     "LEGIT", "IMPROVING", "NOISE", "REGRESS", "BAD_LUCK", "STABLE", "MIXED",
 }

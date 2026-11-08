@@ -33,7 +33,7 @@ from typing import Optional
 
 import pandas as pd
 
-from plv_clone.cap_math import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP  # noqa: F401  (CONTEXT.md)
+from plv_clone.cap_math import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP  # noqa: F401  (GLOSSARY.md)
 from plv_clone.league_config import SEASON_YEAR
 from plv_clone.utils.name_match import fuzzy_match_name, merge_with_model
 
