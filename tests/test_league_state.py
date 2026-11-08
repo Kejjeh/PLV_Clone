@@ -80,7 +80,7 @@ def _clean_ttl_cache():
 # ── Tests ────────────────────────────────────────────────────────────────
 
 def test_il_slots_counts_lineup_slot_not_injured_flag():
-    """The load-bearing distinction from ADR-0004 and CONTEXT.md.
+    """The load-bearing distinction from ADR-0004 and GLOSSARY.md.
 
     Roster has TWO injured players:
       - Player A: ``lineup_slot=='IL'`` and ``injured==True``
@@ -321,7 +321,7 @@ def test_available_fa_meaningful_sp_drops_callup_starter():
 
 
 def test_imports_at_advertised_paths():
-    """The two public import paths CONTEXT.md and the task spec promise."""
+    """The two public import paths GLOSSARY.md and the task spec promise."""
     from plv_clone.league_state import LeagueState as LS  # noqa: F401
     from plv_clone.utils.name_match import (  # noqa: F401
         fuzzy_match_name,
@@ -330,7 +330,7 @@ def test_imports_at_advertised_paths():
 
 
 def test_constants_exposed_for_callers():
-    """CONTEXT.md says league_state imports cap_math constants."""
+    """GLOSSARY.md says league_state imports cap_math constants."""
     from plv_clone.league_state import IL_SLOT_COUNT, RP_SLOT_CAP, SP_CAP
 
     assert SP_CAP == 10

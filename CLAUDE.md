@@ -142,6 +142,10 @@ Guards before any claim: `/roster-verify` (is-mine) · `/player-id-resolve` ·
 `/pitcher-role`. Domain masters: `/daily-rhythm` · `/moves` ·
 `/player-verdict` · `/all-boards` · `/form-check`. Routing table:
 `docs/memory/skills_cheatsheet.md`; enforced catalog:
-`.claude/skills/SKILL_REGISTRY.md`. Josh's host memory dir under his Windows
+`.claude/skills/SKILL_REGISTRY.md`. General engineering (load without being asked):
+a board or number looks wrong → `diagnosing-bugs` · model/pipeline code → `sop-fail-loud` ·
+a change regenerates committed boards/data → `sop-regenerate-outputs` · a scoring or
+methodology call → `sop-owner-decision` · GitHub issues → `triage` / `to-tickets` ·
+before merging → `code-review`. Josh's host memory dir under his Windows
 user profile is NOT reachable from Linux containers — cite via
 `docs/memory/host_memory_index.md`, don't read.

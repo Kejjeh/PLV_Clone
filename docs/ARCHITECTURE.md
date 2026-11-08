@@ -48,7 +48,7 @@ volume. Consumers multiply; never hand-multiply by flat constants.
   `src/plv_clone/models/xfp/` (rh3.py, rp3.py, rprs2.py + engine.py toolkit)
   are production; `scripts/xfp/` holds engines, skill drivers, and research.
   The package boundary is the authoritative "is this production?" test
-  (CONTEXT.md).
+  (GLOSSARY.md).
 - **Single-source modules** — never duplicate these concerns:
   `espn.py` (auth + cached `_get_league`), `paths.py` (ROOT/DATA/OUTPUTS,
   `PLV_ROOT` override), `config.py` (pydantic-settings, `PLV_` prefix),
